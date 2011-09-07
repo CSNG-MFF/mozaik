@@ -1,0 +1,10 @@
+{
+    'component': 'MozaikLite.components.stimuli.arrays.StaticImageStimulus',
+    'name': 'lena_zoom',
+    'params': {
+        'path': 'lena_zoom.png',
+        'frame_duration': 50.0,
+        'size_in_degrees': (4.0, 5.0), # degrees
+        'max_luminance': 90.0, # cd/m²
+    }
+}

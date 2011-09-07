@@ -1,0 +1,66 @@
+{
+    #CorticalUniformSheet parameters
+    
+    'component': 'MozaikLite.framework.sheets.CorticalUniformSheet',
+    
+    'params':{
+	'name':'V1_Exc',
+	'sx':100.0,
+        'sy':100.0,
+	'density':1.0,
+        
+	'magnification_factor':1.0,
+    	
+	'cell': {
+    	    'model': 'IF_cond_exp',
+        	'params': {
+        	    'v_thresh':-57.0,
+    		    'v_rest': -70.0,
+    	    	    'v_reset': -70.0,
+    		    'tau_refrac': 2.0,
+		'tau_m': 10.0,
+		'cm': 0.29,
+    		'e_rev_E': 0.0,
+    		'e_rev_I': -75.0,
+		'tau_syn_E': 1.5,
+    		'tau_syn_I': 10.0, 
+		},
+	   'initial_values': {
+                'v': -70.0,
+            }
+
+        }
+    },
+    
+    'ExcExcConnection': {
+	    'connection_probability': 0.1, 
+	    'weights': 0.0,                
+            'propagation_constant': 1.5,    
+	    'synapse_dynamics' : 'None',        
+    },        
+
+    'ExcInhConnection': {
+	    'connection_probability': 0.1, 
+	    'weights': 0.0,                
+            'propagation_constant': 1.5,    
+	    'synapse_dynamics' : 'None',        
+    },
+
+    'AfferentConnection': {
+            'aspect_ratio': UniformDist(min=1.0, max=1.0),
+            'size':         UniformDist(min=0.56, max=0.56),
+            'orientation':  UniformDist(min=1.57, max=1.57),
+            'phase':        UniformDist(min=0.0, max=0.0),
+            'frequency':    UniformDist(min=0.8, max=0.8),
+            'propagation_constant': 1.5,    
+            'topological' : False,
+            'probabilistic' : False,
+    
+	    'specific_arborization': {
+		    'synapse_dynamics' : 'None',
+		    'weight_factor': 0.0022,
+	    }
+	    
+    }        
+  
+}
