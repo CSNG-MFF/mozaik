@@ -47,7 +47,7 @@ class Neurotools(Analysis):
           # get all recordings
           segments = self.datastore.get_recordings(None,[])
           self.spike_data_dict = segments_to_dict_of_SpikeList(segments)
-          self.vm_data_dict = segments_to_dict_of_AnalogSignalList(segments)
+          (self.vm_data_dict,self.g_syn_e_data_dict,self.g_syn_i_data_dict) = segments_to_dict_of_AnalogSignalList(segments)
           
             
 
@@ -71,5 +71,21 @@ class VmPlot(Neurotools):
           
           for sheet in self.vm_data_dict:
               for vm,st in zip(self.vm_data_dict[sheet][0],self.vm_data_dict[sheet][1]):
-                  vm[-1].plot()
+                  vm[-1].plot(ylabel='Vm')
+                  pylab.title(sheet+ ': ' + str(st))
+
+class GSynPlot(Neurotools):
+      
+      def analyse(self): 
+          print 'Starting GSynPlot analysis'
+          Neurotools.analyse(self)
+          
+          for sheet in self.vm_data_dict:
+              for gsyn_e,gsyn_i,st in zip(self.g_syn_e_data_dict[sheet][0],self.g_syn_i_data_dict[sheet][0],self.vm_data_dict[sheet][1]):
+                  pylab.figure()
+                  f=pylab.subplot(111)
+                  gsyn_e[-1].plot(display=f,kwargs={'color':'r','label':'exc'})
+                  gsyn_i[-1].plot(display=f,kwargs={'color':'b','label':'inh'})
+                  pylab.ylabel('g_syn')
+                  pylab.legend()
                   pylab.title(sheet+ ': ' + str(st))

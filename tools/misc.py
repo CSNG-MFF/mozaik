@@ -56,6 +56,38 @@ def get_vm_to_dic(vm,pop):
     dictionary[idd] = z[:,2]
     return dictionary
 
+def get_gsyn_to_dicts(gsyn,pop):
+    #order according to ids
+    dictionary_e = {} 
+    dictionary_i = {} 
+
+    for idd in xrange(0,len(pop)):
+        dictionary_e[idd]=[]
+        dictionary_i[idd]=[]
+
+    if len(gsyn) == 0:
+       return (dictionary_e,dictionary_i)
+
+    gsyn = gsyn[gsyn[:,0].argsort(),:]
+    
+    idd = gsyn[0,0];
+    start = 0
+    
+    for i in xrange(0,len(gsyn)):
+        if gsyn[i,0] != idd:
+           z = gsyn[start:i,:]
+           z = z[z[:,1].argsort(),:]
+           dictionary_e[idd] = z[:,2]
+           dictionary_i[idd] = z[:,3]
+           idd = gsyn[i,0]
+           start = i;
+
+    z = gsyn[start:,:]
+    z = z[z[:,1].argsort(),:]
+    dictionary_e[idd] = z[:,2]
+    dictionary_i[idd] = z[:,3]
+    return (dictionary_e,dictionary_i)
+
 
 def spike_dic_to_list(d):
     sp = []
@@ -96,13 +128,17 @@ def segments_to_dict_of_SpikeList(segments):
     return dd
 
 
+
 def segments_to_dict_of_AnalogSignalList(segments):
+    return (_segments_to_dict_of_AnalogSignalList(segments,'vm'),_segments_to_dict_of_AnalogSignalList(segments,'gsyn_e'),_segments_to_dict_of_AnalogSignalList(segments,'gsyn_i'))
+
+def _segments_to_dict_of_AnalogSignalList(segments,signal_name):
     # it turns neo segment list to a dictionary of tuples
     # each key in dictionary corresponds to a sheet and contains 
     # a tuple of arrays containing the spiketrains  and corresponding stimuli
     dd = {}
     for seg in segments:
-        d = analog_segment_to_dict(seg)
+        d = analog_segment_to_dict(seg,signal_name)
         sp = seg._analogsignals[0].sampling_period
         for k in d.keys():
             (sig,idds) = d[k]
@@ -113,11 +149,11 @@ def segments_to_dict_of_AnalogSignalList(segments):
             st.append(parse_stimuls_id(seg.stimulus))
     return dd
 
-def analog_segment_to_dict(seg):
+def analog_segment_to_dict(seg,signal_name):
     sheets={}
     for s in seg.sheets: 
         d = {}
-        for k in seg.__getattr__(s+'_vm'):
+        for k in seg.__getattr__(s+'_'+signal_name):
             t = seg._analogsignals[k]
             d[t.index] = numpy.array(t)
         sheets[s] = ([signals.AnalogSignal(d[k],dt=t.sampling_period) for k in d.keys()],d.keys())

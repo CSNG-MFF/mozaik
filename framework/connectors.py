@@ -13,12 +13,21 @@ from pyNN import random, space
 from MozaikLite.tools.misc import sample_from_bin_distribution
 
 class MozaikLiteVisualSystemConnector(VisualSystemConnector):
-    
+      required_parameters = ParameterSet({
+      'target_synapses' : str,
+      })
+      
       def __init__(self, network, source, target, parameters):
           VisualSystemConnector.__init__(self, network, source,target,parameters)
 
     
       def connection_field_plot_continuous(self,index,weights,afferent=True,density=30):
+          
+          #!HACKALERT
+          # this is only for compatibility with original mozaik retinas
+          # should be deleted once everything is unified
+          if not isinstance(source,Population):
+             source = source.pop
           
           weights =  self.proj.getWeights(format='array')
           print 'max:',numpy.max(weights)
@@ -39,10 +48,10 @@ class MozaikLiteVisualSystemConnector(VisualSystemConnector):
                     y.append(p.positions[1][i])
                     w.append(ww)
               
-          bx = min([min(x),min(y)])  
-          by = max([max(x),max(y)])  
-          xi = numpy.linspace(min(x),max(x),100)
-          yi = numpy.linspace(min(y),max(y),100)
+          bx = min([min(p.positions[0]),min(p.positions[0])])  
+          by = max([max(p.positions[1]),max(p.positions[1])])  
+          xi = numpy.linspace(min(p.positions[0]),max(p.positions[0]),100)
+          yi = numpy.linspace(min(p.positions[1]),max(p.positions[1]),100)
           zi = griddata(x,y,w,xi,yi)
           pylab.figure()
           pylab.imshow(zi)
@@ -75,6 +84,8 @@ class MozaikLiteVisualSystemConnector(VisualSystemConnector):
           import pylab    
           pylab.figure()
           pylab.scatter(x,y,c=w,s=20)
+          pylab.xlim(min(p.positions[0]),max(p.positions[0]))
+          pylab.ylim(min(p.positions[1]),max(p.positions[1]))
           pylab.colorbar()
           #pylab.show()
           #pylab.title('Connection field from %s to %s of neuron %d' % (self.proj.pre.name,self.proj.post.name,index))
@@ -111,7 +122,7 @@ class ExponentialProbabilisticArborization(MozaikLiteVisualSystemConnector):
 
         method = self.sim.DistanceDependentProbabilityConnector(arborization_expression,allow_self_connections=False, weights=parameters.weights, delays=delay_expression, space=space.Space(axes='xy'), safe=True, verbose=False, n_connections=None)
 
-        self.proj = self.sim.Projection(source.pop, target.pop, method, synapse_dynamics=parameters.synapse_dynamics, label=self.name, rng=None)
+        self.proj = self.sim.Projection(source.pop, target.pop, method, synapse_dynamics=parameters.synapse_dynamics, label=self.name, rng=None, target=parameters.target_synapses)
         
 class UniformProbabilisticArborization(MozaikLiteVisualSystemConnector):
 
@@ -132,7 +143,7 @@ class UniformProbabilisticArborization(MozaikLiteVisualSystemConnector):
                 synapse_dynamics = parameters.synapse_dynamics
 	        
             method = self.sim.FixedProbabilityConnector(parameters.connection_probability,allow_self_connections=False, weights=parameters.weights, delays=parameters.propagation_constant, space=space.Space(axes='xy'), safe=True)
-            self.proj = self.sim.Projection(source.pop, target.pop, method, synapse_dynamics=synapse_dynamics, label=self.name, rng=None)
+            self.proj = self.sim.Projection(source.pop, target.pop, method, synapse_dynamics=synapse_dynamics, label=self.name, rng=None, target=parameters.target_synapses)
 
 class SpecificArborization(MozaikLiteVisualSystemConnector):
 	  """
@@ -166,7 +177,7 @@ class SpecificArborization(MozaikLiteVisualSystemConnector):
             # should be deleted once everything is unified
             if not isinstance(source,Population):
                 source = source.pop
-            self.proj = self.sim.Projection(source, target.pop, method, synapse_dynamics=synapse_dynamics, label=self.name, rng=None)
+            self.proj = self.sim.Projection(source, target.pop, method, synapse_dynamics=synapse_dynamics, label=self.name, rng=None, target=parameters.target_synapses)
 
 class SpecificProbabilisticArborization(MozaikLiteVisualSystemConnector):
 	  """
@@ -179,6 +190,7 @@ class SpecificProbabilisticArborization(MozaikLiteVisualSystemConnector):
 	  required_parameters = ParameterSet({
 	    'synapse_dynamics' : str,        # string indetifying the synaptic plasticity mechanism (None for no plasticity)
         'weight_factor': float, # the base size of weights
+        'num_samples' : int
 	  })
 	  
 	  def __init__(self, network, source, target, connection_list,parameters,name):
@@ -190,7 +202,7 @@ class SpecificProbabilisticArborization(MozaikLiteVisualSystemConnector):
             else:
                 synapse_dynamics = parameters.synapse_dynamics
 
-            samples = sample_from_bin_distribution([c[2] for c in connection_list],10000)
+            samples = sample_from_bin_distribution([c[2] for c in connection_list],parameters.num_samples)
             
             connection_list = [connection_list[s] for s in samples]
             connection_list = [(a,b,parameters.weight_factor,d) for (a,b,c,d) in connection_list]
@@ -202,7 +214,7 @@ class SpecificProbabilisticArborization(MozaikLiteVisualSystemConnector):
             # should be deleted once everything is unified
             if not isinstance(source,Population):
                 source = source.pop
-            self.proj = self.sim.Projection(source, target.pop, method, synapse_dynamics=synapse_dynamics, label=self.name, rng=None)
+            self.proj = self.sim.Projection(source, target.pop, method, synapse_dynamics=synapse_dynamics, label=self.name, rng=None, target=parameters.target_synapses)
 
 
 
@@ -278,4 +290,3 @@ class GaborConnector(MozaikComponent):
                  
              on_proj.connection_field_plot_scatter(len(target.pop)-1,on_weights)   
              off_proj.connection_field_plot_scatter(len(target.pop)-1,off_weights)   
-             

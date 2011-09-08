@@ -1,3 +1,5 @@
+#!/usr/bin/ipython
+
 from MozaikLite.framework.experiment import MeasureOrientationTuningFullfield, MeasureSpontaneousActivity
 from MozaikLite.models.model import JensModel
 from MozaikLite.framework.experiment_controller import run_experiments
@@ -6,7 +8,7 @@ from pyNN import nest as sim
 jens_model = JensModel(sim)
 
 experiment_list =   [
-                       MeasureOrientationTuningFullfield(jens_model,2,0.8,2,10*7)
+                       MeasureOrientationTuningFullfield(jens_model,1,0.8,2,57*7)
                        #MeasureSpontaneousActivity(jens_model,143*7)
                     ]
 

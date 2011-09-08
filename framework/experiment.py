@@ -1,5 +1,5 @@
 from MozaikLite.stimuli.stimulus_generator import FullfieldDriftingSinusoidalGrating, Null
-from MozaikLite.analysis.analysis import RasterPlot,OrientationTuning, VmPlot
+from MozaikLite.analysis.analysis import RasterPlot,OrientationTuning, VmPlot, GSynPlot
 import numpy
 
 class Experiment(object):
@@ -39,8 +39,9 @@ class MeasureOrientationTuningFullfield(Experiment):
 
     def do_analysis(self,data_store):
         print 'Doing Analysis'
-        RasterPlot(data_store).analyse()
+        #RasterPlot(data_store).analyse()
         VmPlot(data_store).analyse()
+        GSynPlot(data_store).analyse()
         OrientationTuning(data_store).analyse()
         
 
@@ -62,5 +63,6 @@ class MeasureSpontaneousActivity(Experiment):
         print 'Doing Analysis'
         RasterPlot(data_store).analyse()
         VmPlot(data_store).analyse()
+        GSynPlot(data_store).analyse()
         OrientationTuning(data_store).analyse()
         

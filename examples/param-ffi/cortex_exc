@@ -36,7 +36,8 @@
 	    'connection_probability': 0.1, 
 	    'weights': 0.0,                
             'propagation_constant': 1.5,    
-	    'synapse_dynamics' : 'None',        
+	    'synapse_dynamics' : 'None',   
+	    'target_synapses' : 'excitatory',     
     },        
 
     'ExcInhConnection': {
@@ -44,21 +45,24 @@
 	    'weights': 0.0,                
             'propagation_constant': 1.5,    
 	    'synapse_dynamics' : 'None',        
+	    'target_synapses' : 'excitatory',
     },
 
     'AfferentConnection': {
-            'aspect_ratio': UniformDist(min=1.0, max=1.0),
-            'size':         UniformDist(min=0.56, max=0.56),
-            'orientation':  UniformDist(min=1.57, max=1.57),
+            'aspect_ratio': UniformDist(min=0.333333, max=0.33333),
+            'size':         UniformDist(min=0.7, max=0.7),
+            'orientation':  UniformDist(min=0, max=0),
             'phase':        UniformDist(min=0.0, max=0.0),
             'frequency':    UniformDist(min=0.8, max=0.8),
             'propagation_constant': 1.5,    
             'topological' : False,
-            'probabilistic' : False,
-    
+            'probabilistic' : True,
+	    
 	    'specific_arborization': {
 		    'synapse_dynamics' : 'None',
-		    'weight_factor': 0.0022,
+		    'weight_factor': 0.001,
+		    'num_samples' : 60,
+		    'target_synapses' : 'excitatory',
 	    }
 	    
     }        

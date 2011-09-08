@@ -20,6 +20,7 @@ from MozaikLite.framework.sheets import Sheet
 
 logger = logging.getLogger("MozaikLite")
 
+
 class Model(MozaikComponent):
     
     required_parameters = ParameterSet({
@@ -60,8 +61,12 @@ class Model(MozaikComponent):
             if sheet.to_record:
                 sheet.record('spikes')
                 sheet.record('v')
+                sheet.record('g_syn')
+                
                 p[sheet.name+'_spikes']=[]
                 p[sheet.name+'_vm']=[]
+                p[sheet.name+'_gsyn_e']=[]
+                p[sheet.name+'_gsyn_i']=[]
                 p['sheets'].append(sheet.name)
 
         s = Segment(**p) 

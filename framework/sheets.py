@@ -18,7 +18,7 @@ from pyNN.errors import NothingToWriteError
 from neo.core.spiketrain import SpikeTrain
 from neo.core.segment import Segment
 from neo.core.analogsignal import AnalogSignal
-from MozaikLite.tools.misc import get_spikes_to_dic, get_vm_to_dic
+from MozaikLite.tools.misc import get_spikes_to_dic, get_vm_to_dic,get_gsyn_to_dicts
 
 logger = logging.getLogger("Mozaik")
 
@@ -70,7 +70,7 @@ class Sheet(MozaikComponent):
             return context
 
     def record(self, variable, cells='all'):
-        func_mapping = {'spikes': 'record', 'v': 'record_v'} # need to add conductances
+        func_mapping = {'spikes': 'record', 'v': 'record_v','g_syn':'record_gsyn'} # need to add conductances
         record_method = func_mapping[variable]
         if cells == 'all':
             logger.debug('Recording %s from all cells in population "%s"' % (variable, self.name))
@@ -85,34 +85,11 @@ class Sheet(MozaikComponent):
         else:
             raise Exception("cells must be 'all', a dict, or an int. Actual value of %s" % str(cells))
 
-    def write(self, output_dir, file_type=pyNN.recording.files.StandardTextFile):
-
-        if not os.path.exists(output_dir):
-            os.mkdir(output_dir)
-        self.filenames = {}
-        self.file_type = file_type
-        spike_file = file_type("%s/%s.spikes" % (output_dir, self.name), mode='w')
-        vm_file = file_type("%s/%s.v" % (output_dir, self.name), mode='w')
-        self.filenames[self.pop.label] = {}
-        try:
-            self.pop.printSpikes(spike_file)
-            self.filenames[self.pop.label]['spikes'] = spike_file.name
-            logging.debug("Writing spikes from population %s to file %s." % (self.pop, spike_file))
-        except NothingToWriteError, errmsg:
-            logger.debug(errmsg)
-        try:
-            self.pop.print_v(vm_file)
-            self.filenames[self.pop.label]['v'] = vm_file.name
-            logging.debug("Writing Vm from population %s to file %s." % (self.pop, vm_file))
-        except NothingToWriteError, errmsg:
-            logger.debug(errmsg)
-        return self.filenames
-
     def write_neo_object(self,segment,tstop):
         try:
             spikes = get_spikes_to_dic(self.pop.getSpikes(),self.pop)
             for k in spikes.keys():
-                # it assumes segment implements and add function which takes the id of a neuorn and the corresponding its SpikeTrain
+                # it assumes segment implements and add function which takes the id of a neuron and the corresponding its SpikeTrain
                 st = SpikeTrain(spikes[k],0,tstop,quantities.ms)
                 st.index = k
                 segment._spiketrains.append(st)
@@ -131,6 +108,22 @@ class Sheet(MozaikComponent):
             logging.debug("Writing Vm from population %s to neo object." % (self.pop))
         except NothingToWriteError, errmsg:
             logger.debug(errmsg)
+        try:
+            gsyn_e,gsyn_i = get_gsyn_to_dicts(self.pop.get_gsyn(),self.pop)
+            for k in v.keys():
+                # it assumes segment implements and add function which takes the id of a neuorn and the corresponding its SpikeTrain
+                st_e = AnalogSignal(gsyn_e[k],sampling_period=self.network.sim.get_time_step()*quantities.ms)
+                st_i = AnalogSignal(gsyn_i[k],sampling_period=self.network.sim.get_time_step()*quantities.ms)
+                st_e.index = k
+                st_i.index = k
+                segment._analogsignals.append(st_e)
+                segment.__getattr__(self.name+'_gsyn_e').append(len(segment._analogsignals)-1)
+                segment._analogsignals.append(st_i)
+                segment.__getattr__(self.name+'_gsyn_i').append(len(segment._analogsignals)-1)
+            logging.debug("Writing Vm from population %s to neo object." % (self.pop))
+        except NothingToWriteError, errmsg:
+            logger.debug(errmsg)
+
         
         return segment
 
