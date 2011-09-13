@@ -1,11 +1,12 @@
-# the visualization for mozaik objects
-# it is based on the matplotlib 
-# one important concept the visualization code should follow is that it should not
-# itself call figure() or subplot() commands, instead assume that they were already
-# called before it. This allows for a simple encapsulation of the individual figures 
-# into more complex matplotlib figures.
+# this file contains visualization code not conforming the Plotting framework defined in the 
+# MozaikLite.visualization.plotting module
+#
+# most of this code is likely being  used as a debugging visualization tools 
+# or is generic visualization tools that can in turn be used by plotting algorithms
 
 import pylab
+import numpy
+from MozaikLite.stimuli.stimulus_generator import parse_stimuls_id,load_from_string
 
 def plot_layer_activity(sheet,value_to_plot,cortical_coordinates=False,labels=True):
     """
@@ -35,14 +36,3 @@ def plot_layer_activity(sheet,value_to_plot,cortical_coordinates=False,labels=Tr
 	   pylab.ylabel('y (° of visual field)')
 
 
-
-
-
-
-
-def plot_connection_field(neuron):
-    """ 
-    will plot the connection of pyNN neuron
-    """
-
-    

@@ -1,5 +1,7 @@
 from MozaikLite.stimuli.stimulus_generator import FullfieldDriftingSinusoidalGrating, Null
-from MozaikLite.analysis.analysis import RasterPlot,OrientationTuning, VmPlot, GSynPlot
+from MozaikLite.analysis.analysis import AveragedOrientationTuning, Neurotools
+from MozaikLite.visualization.plotting import GSynPlot,RasterPlot,VmPlot,CyclicTuningCurvePlot
+from NeuroTools.parameters import ParameterSet, ParameterDist
 import numpy
 
 class Experiment(object):
@@ -39,11 +41,12 @@ class MeasureOrientationTuningFullfield(Experiment):
 
     def do_analysis(self,data_store):
         print 'Doing Analysis'
-        #RasterPlot(data_store).analyse()
-        VmPlot(data_store).analyse()
-        GSynPlot(data_store).analyse()
-        OrientationTuning(data_store).analyse()
-        
+        AveragedOrientationTuning(data_store).analyse()
+        Neurotools(data_store).analyse()
+        GSynPlot(data_store,ParameterSet({'data_name' : 'NeurotoolsData',})).plot()
+        RasterPlot(data_store,ParameterSet({'data_name' : 'NeurotoolsData',})).plot()
+        CyclicTuningCurvePlot(data_store,ParameterSet({'neuron' : 0, 'tuning_curve_name' : 'TuningCurve', 'ylabel' : 'Activity', 'sheet_name' : 'V1_Exc'})).plot()
+        CyclicTuningCurvePlot(data_store,ParameterSet({'neuron' : 0, 'tuning_curve_name' : 'TuningCurve', 'ylabel' : 'Activity', 'sheet_name' : 'V1_Inh'})).plot()
 
 
 class MeasureSpontaneousActivity(Experiment):
@@ -61,8 +64,5 @@ class MeasureSpontaneousActivity(Experiment):
 
     def do_analysis(self,data_store):
         print 'Doing Analysis'
-        RasterPlot(data_store).analyse()
-        VmPlot(data_store).analyse()
-        GSynPlot(data_store).analyse()
-        OrientationTuning(data_store).analyse()
-        
+        Neurotools(data_store).analyse()
+        RasterPlot(ParameterSet({'data_name' : 'Neurotools',})).plot()

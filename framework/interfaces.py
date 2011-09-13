@@ -82,45 +82,50 @@ class VisualStimulus(VisualObject):
         return [self.img]
   
 
-class MozaikComponent(object):
-    """Base class for visual system components and connectors."""
+class MozaikLiteParametrizeObject(object):
+    """Base class for for all MozailLite objects using the dynamic parametrization framwork."""
     
     required_parameters = ParameterSet({})
     version = __version__
+
+    def check_parameters(self, parameters):
+            def walk(tP, P, section=None):
+                if set(tP.keys()) != set(P.keys()):
+                    raise KeyError("Invalid parameters for %s.%s Required: %s. Supplied: %s" % (self.__class__.__name__, section or '', tP.keys(), P.keys()))
+                for k,v in tP.items():
+                    if isinstance(v, ParameterSet):
+                        assert isinstance(P[k], ParameterSet), "Type mismatch: %s !=  ParameterSet, for %s " % (type(P[k]),P[k]) 
+                        walk(v, P[k],section=k)
+                    else:
+                        assert isinstance(P[k], v), "Type mismatch: %s !=  %s, for %s" % (v,type(P[k]),P[k])
+            try:
+                # we first need to collect the required parameters from all the classes along the parent path
+                new_param_dict={}
+                for cls in self.__class__.__mro__:
+                # some parents might not define required_parameters 
+                # if they do not require one or they are the object class
+                    if hasattr(cls, 'required_parameters'):
+                        new_param_dict.update(cls.required_parameters.as_dict())
+                walk(ParameterSet(new_param_dict), parameters)
+            except AssertionError as err:
+                raise Exception("%s\nInvalid parameters.\nNeed %s\nSupplied %s" % (err,ParameterSet(new_param_dict),
+                                                                               parameters))  
+                                                                               
+                                                                               
+    def __init__(self, parameters):
+            """
+            """
+            self.check_parameters(parameters)
+            self.parameters = parameters
+                                                                                   
+class MozaikComponent(MozaikLiteParametrizeObject):
+    """Base class for visual system components and connectors."""
     
     def __init__(self, network, parameters):
         """
-        
         """
+        MozaikLiteParametrizeObject.__init__(self, parameters)
         self.network = network
-        self.check_parameters(parameters)
-        self.parameters = parameters
-    
-    def check_parameters(self, parameters):
-        def walk(tP, P, section=None):
-            if set(tP.keys()) != set(P.keys()):
-                raise KeyError("Invalid parameters for %s.%s Required: %s. Supplied: %s" % (self.__class__.__name__, section or '', tP.keys(), P.keys()))
-            for k,v in tP.items():
-                if isinstance(v, ParameterSet):
-                    assert isinstance(P[k], ParameterSet), "Type mismatch: %s !=  ParameterSet, for %s " % (type(P[k]),P[k]) 
-                    walk(v, P[k],section=k)
-                else:
-                    assert isinstance(P[k], v), "Type mismatch: %s !=  %s, for %s" % (v,type(P[k]),P[k])
-        try:
-    	    # we first need to collect the required parameters from all the classes along the parent path
-    	    new_param_dict={}
-    	    for cls in self.__class__.__mro__:
-    		# some parents might not define required_parameters 
-    		# if they do not require one or they are the object class
-                if hasattr(cls, 'required_parameters'):
-                    new_param_dict.update(cls.required_parameters.as_dict())
-            walk(ParameterSet(new_param_dict), parameters)
-        except AssertionError as err:
-            raise Exception("%s\nInvalid parameters.\nNeed %s\nSupplied %s" % (err,ParameterSet(new_param_dict),
-                                                                           parameters))  
-    
-    def end(self):
-        pass
     
 
 class VisualSystemConnector(MozaikComponent):

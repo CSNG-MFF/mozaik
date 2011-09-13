@@ -14,7 +14,8 @@ def _colapse(dd,axis):
     
 def colapse(value_list,stimuli_list,parameter_indexes=[]):
     ## it colapses the value_list acording to stimuli with the same value 
-    ## of parameters whose indexes are listed in the <parameter_indexes> and replaces the collapsed parameters in the 
+    ## of parameters whose indexes are listed in the <parameter_indexes> and 
+    ## replaces the collapsed parameters in the 
     ## stimuli_list with *
     d = {}
     for v,s in zip(value_list,stimuli_list):

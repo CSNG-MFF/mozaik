@@ -78,7 +78,6 @@ class Model(MozaikComponent):
             if sheet.to_record:
                 sheet.write_neo_object(s,stimulus.duration)
 
-        self.retina.end()
         self.visual_space.clear()
         self.reset()
         for sheet in self.sheets:    
