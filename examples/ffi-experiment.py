@@ -7,7 +7,7 @@ from pyNN import nest as sim
 jens_model = JensModel(sim)
 
 experiment_list =   [
-                       MeasureOrientationTuningFullfield(jens_model,8,0.8,2,57*7)
+                       MeasureOrientationTuningFullfield(jens_model,10,0.8,2,144*7)
                        #MeasureSpontaneousActivity(jens_model,143*7)
                     ]
 

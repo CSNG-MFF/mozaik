@@ -1,6 +1,6 @@
 from MozaikLite.stimuli.stimulus_generator import FullfieldDriftingSinusoidalGrating, Null
 from MozaikLite.analysis.analysis import AveragedOrientationTuning, Neurotools
-from MozaikLite.visualization.plotting import GSynPlot,RasterPlot,VmPlot,CyclicTuningCurvePlot
+from MozaikLite.visualization.plotting import GSynPlot,RasterPlot,VmPlot,CyclicTuningCurvePlot,OverviewPlot
 from NeuroTools.parameters import ParameterSet, ParameterDist
 import numpy
 
@@ -25,26 +25,27 @@ class Experiment(object):
 class MeasureOrientationTuningFullfield(Experiment):
     
     def __init__(self,model,num_orientations,spatial_frequency,temporal_frequency,grating_duration):
-        for i in xrange(0,num_orientations):
-            self.stimuli.append(FullfieldDriftingSinusoidalGrating([   
-                            7, # frame duration (roughly like a movie) - is this fast enough?
-                            model.visual_field.size[0], 
-                            0.0,
-                            0.0,
-                            90.0, #max_luminance 
-                            grating_duration, # stimulus duration
-                            40, #density
-                            numpy.pi/num_orientations*i, #orientation
-                            spatial_frequency,
-                            temporal_frequency, #stimulus duration - we want to get one full sweep of phases
-                        ]))    
+        
+        for j in [0.2,0.5,0.7,1.0]:
+            for i in xrange(0,num_orientations):
+                self.stimuli.append(FullfieldDriftingSinusoidalGrating([   
+                                7, # frame duration (roughly like a movie) - is this fast enough?
+                                model.visual_field.size[0], 
+                                0.0,
+                                0.0,
+                                j*90.0, #max_luminance 
+                                grating_duration, # stimulus duration
+                                40, #density
+                                numpy.pi/num_orientations*i, #orientation
+                                spatial_frequency,
+                                temporal_frequency, #stimulus duration - we want to get one full sweep of phases
+                            ]))    
 
     def do_analysis(self,data_store):
         print 'Doing Analysis'
         AveragedOrientationTuning(data_store).analyse()
         Neurotools(data_store).analyse()
-        GSynPlot(data_store,ParameterSet({'data_name' : 'NeurotoolsData',})).plot()
-        RasterPlot(data_store,ParameterSet({'data_name' : 'NeurotoolsData',})).plot()
+        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Exc'})).plot()
         CyclicTuningCurvePlot(data_store,ParameterSet({'neuron' : 0, 'tuning_curve_name' : 'TuningCurve', 'ylabel' : 'Activity', 'sheet_name' : 'V1_Exc'})).plot()
         CyclicTuningCurvePlot(data_store,ParameterSet({'neuron' : 0, 'tuning_curve_name' : 'TuningCurve', 'ylabel' : 'Activity', 'sheet_name' : 'V1_Inh'})).plot()
 

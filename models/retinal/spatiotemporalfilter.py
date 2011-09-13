@@ -81,10 +81,10 @@ class SpatioTemporalReceptiveField(object):
         logger.debug("  before normalization: min=%g, max=%g" % 
                          (kernel.min(), kernel.max()))
         kernel = kernel/(nx*ny*nt) # normalize to make the kernel sum quasi-independent of the quantization
-        import pylab
-        pylab.figure()
-        pylab.imshow(kernel[:,:,5],interpolation='nearest')
-        pylab.colorbar()
+        #import pylab
+        #pylab.figure()
+        #pylab.imshow(kernel[:,:,5],interpolation='nearest')
+        #pylab.colorbar()
         
         logger.debug("  after normalization: min=%g, max=%g, sum=%g" % 
                          (kernel.min(), kernel.max(), kernel.sum()))
@@ -430,11 +430,11 @@ class SpatioTemporalFilterRetinaLGN(Sheet):
             for i in xrange(0,1):
                 a = [cell.response_current()['amplitudes'][i] for cell in input_cells[rf_type]]
                 #if rf_type == self.rf_types[0]:
-                import pylab
-                pylab.figure()
-                pylab.title('AAA')
-                pylab.imshow(numpy.reshape(a,(len(x_values),len(y_values))),interpolation='nearest')
-                pylab.colorbar()
+                #import pylab
+                #pylab.figure()
+                #pylab.title('AAA')
+                #pylab.imshow(numpy.reshape(a,(len(x_values),len(y_values))),interpolation='nearest')
+                #pylab.colorbar()
             
             
         return input_currents

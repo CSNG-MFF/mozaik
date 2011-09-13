@@ -25,7 +25,7 @@ class AveragedOrientationTuning(Analysis):
                 # transform spikes trains due to stimuly to mean_rates
                 mean_rates = [numpy.array(s.mean_rates())  for s in sp]
                 # collapse against all parameters other then orientation
-                (mean_rates,s) = colapse(mean_rates,st,parameter_indexes=[0,1,2,3,4,5,6,8,9])
+                (mean_rates,s) = colapse(mean_rates,st,parameter_indexes=[])
                 # take a sum of each 
                 def _mean(a):
                     l = len(a)
