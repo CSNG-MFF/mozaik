@@ -9,11 +9,9 @@ from NeuroTools.parameters import ParameterSet
 from MozaikLite.framework import load_component
 from MozaikLite.framework.interfaces import MozaikComponent
 from MozaikLite.framework.space import VisualSpace, VisualRegion
-
+from MozaikLite.tools.misc import create_segment_for_sheets
 from MozaikLite.framework.connectors import ExponentialProbabilisticArborization,UniformProbabilisticArborization,GaborConnector
 from MozaikLite.stimuli.stimulus_generator import Null
-
-from neo.core.segment import Segment
 from NeuroTools import signals, plotting, visualization, visual_logging, datastore
 
 from MozaikLite.framework.sheets import Sheet
@@ -54,22 +52,15 @@ class Model(MozaikComponent):
         self.visual_space.add_object(str(stimulus),stimulus)
         
         # create empty arrays in annotations to store the sheet identity of stored data
-        p={'stimulus':'','sheets':[]}
-
- 
+        sh = []
         for sheet in self.sheets:   
             if sheet.to_record:
                 sheet.record('spikes')
                 sheet.record('v')
                 sheet.record('g_syn')
-                
-                p[sheet.name+'_spikes']=[]
-                p[sheet.name+'_vm']=[]
-                p[sheet.name+'_gsyn_e']=[]
-                p[sheet.name+'_gsyn_i']=[]
-                p['sheets'].append(sheet.name)
-
-        s = Segment(**p) 
+                sh.append(sheet) 
+               
+        s = create_segment_for_sheets(sh)
 
         self.retina.present_stimulus(self.visual_space,stimulus.duration)        
         self.run(stimulus.duration)

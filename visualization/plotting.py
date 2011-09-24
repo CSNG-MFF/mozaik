@@ -128,8 +128,8 @@ class NeurotoolsPlot(Plotting):
 
 class RasterPlot(NeurotoolsPlot):
       def subplot(self,subplotspec): 
-          gs = gridspec.GridSpecFromSubplotSpec(1, len(self.spike_data_dict), subplot_spec=subplotspec)    
-          for sp,st,idx in zip(self.spike_data_dict[0],self.spike_data_dict[1],numpy.arange(0,len(self.spike_data_dict),1)):
+          gs = gridspec.GridSpecFromSubplotSpec(1, len(self.spike_data_dict[1]), subplot_spec=subplotspec)    
+          for sp,st,idx in zip(self.spike_data_dict[0],self.spike_data_dict[1],numpy.arange(0,len(self.spike_data_dict[1]),1)):
               ax = pylab.subplot(gs[0,idx])
               sp.raster_plot(display=ax)
               #print sheet + ' mean rate is:' + numpy.str(numpy.mean(numpy.array(sp.mean_rates())))
@@ -141,8 +141,8 @@ class RasterPlot(NeurotoolsPlot):
 
 class VmPlot(NeurotoolsPlot):
       def subplot(self,subplotspec):           
-          gs = gridspec.GridSpecFromSubplotSpec(1, len(self.vm_data_dict), subplot_spec=subplotspec)    
-          for vm,st,idx in zip(self.vm_data_dict[0],self.vm_data_dict[1],numpy.arange(0,len(self.vm_data_dict),1)):
+          gs = gridspec.GridSpecFromSubplotSpec(1, len(self.vm_data_dict[1]), subplot_spec=subplotspec)    
+          for vm,st,idx in zip(self.vm_data_dict[0],self.vm_data_dict[1],numpy.arange(0,len(self.vm_data_dict[1]),1)):
               ax = pylab.subplot(gs[0,idx])
               vm[-1].plot(display=ax,ylabel='Vm')
               if idx == 0:
@@ -152,9 +152,8 @@ class VmPlot(NeurotoolsPlot):
 
 class GSynPlot(NeurotoolsPlot):
       def subplot(self,subplotspec): 
-          gs = gridspec.GridSpecFromSubplotSpec(1, len(self.g_syn_e_data_dict), subplot_spec=subplotspec)  
-      
-          for gsyn_e,gsyn_i,st,idx in zip(self.g_syn_e_data_dict[0],self.g_syn_i_data_dict[0],self.vm_data_dict[1],numpy.arange(0,len(self.g_syn_e_data_dict),1)):
+          gs = gridspec.GridSpecFromSubplotSpec(1, len(self.g_syn_e_data_dict[1]), subplot_spec=subplotspec)  
+          for gsyn_e,gsyn_i,st,idx in zip(self.g_syn_e_data_dict[0],self.g_syn_i_data_dict[0],self.g_syn_i_data_dict[1],numpy.arange(0,len(self.g_syn_e_data_dict[1]),1)):
               ax = pylab.subplot(gs[0,idx])
               gsyn_e[-1].plot(display=ax,kwargs={'color':'r','label':'exc'})
               gsyn_i[-1].plot(display=ax,kwargs={'color':'b','label':'inh'})
@@ -173,5 +172,5 @@ class OverviewPlot(NeurotoolsPlot):
           gs = gridspec.GridSpecFromSubplotSpec(3, 1, subplot_spec=subplotspec)  
           RasterPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name})).subplot(gs[0,0])
           GSynPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name})).subplot(gs[1,0])
-          RasterPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name})).subplot(gs[2,0])          
+          VmPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name})).subplot(gs[2,0])          
           

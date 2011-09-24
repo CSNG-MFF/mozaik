@@ -26,7 +26,7 @@ class MeasureOrientationTuningFullfield(Experiment):
     
     def __init__(self,model,num_orientations,spatial_frequency,temporal_frequency,grating_duration):
         
-        for j in [0.2,0.5,0.7,1.0]:
+        for j in [0.5,0.8,1.0]:
             for i in xrange(0,num_orientations):
                 self.stimuli.append(FullfieldDriftingSinusoidalGrating([   
                                 7, # frame duration (roughly like a movie) - is this fast enough?
@@ -46,6 +46,7 @@ class MeasureOrientationTuningFullfield(Experiment):
         AveragedOrientationTuning(data_store).analyse()
         Neurotools(data_store).analyse()
         OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Exc'})).plot()
+        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Inh'})).plot()
         CyclicTuningCurvePlot(data_store,ParameterSet({'neuron' : 0, 'tuning_curve_name' : 'TuningCurve', 'ylabel' : 'Activity', 'sheet_name' : 'V1_Exc'})).plot()
         CyclicTuningCurvePlot(data_store,ParameterSet({'neuron' : 0, 'tuning_curve_name' : 'TuningCurve', 'ylabel' : 'Activity', 'sheet_name' : 'V1_Inh'})).plot()
 
@@ -66,4 +67,5 @@ class MeasureSpontaneousActivity(Experiment):
     def do_analysis(self,data_store):
         print 'Doing Analysis'
         Neurotools(data_store).analyse()
-        RasterPlot(ParameterSet({'data_name' : 'Neurotools',})).plot()
+        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Exc'})).plot()
+        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Inh'})).plot()

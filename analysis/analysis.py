@@ -47,8 +47,30 @@ class Neurotools(Analysis):
           segments = self.datastore.get_recordings(None,[])
           spike_data_dict = segments_to_dict_of_SpikeList(segments)
           (vm_data_dict,g_syn_e_data_dict,g_syn_i_data_dict) = segments_to_dict_of_AnalogSignalList(segments)
-          
           for sheet in vm_data_dict.keys():
               self.datastore.add_analysis_result(NeurotoolsData(spike_data_dict[sheet],vm_data_dict[sheet],g_syn_e_data_dict[sheet],g_syn_i_data_dict[sheet]),sheet_name=sheet)
             
 
+class GSTA(Analysis):
+      """
+      Computes conductance spike triggered average
+      """
+    
+      def analyse(self):
+            print 'Starting Spike Triggered Analysis of Conductances'
+            
+            segments = self.datastore.get_recordings(None,[])
+            data = segments_to_dict_of_SpikeList(segments)
+            
+            for sheet in data:
+                (sp,st) = data[sheet]
+                # transform spikes trains due to stimuly to mean_rates
+                mean_rates = [numpy.array(s.mean_rates())  for s in sp]
+                # collapse against all parameters other then orientation
+                (mean_rates,s) = colapse(mean_rates,st,parameter_indexes=[])
+                # take a sum of each 
+                def _mean(a):
+                    l = len(a)
+                    return sum(a)/l
+                mean_rates = [_mean(a) for a in mean_rates]  
+                self.datastore.add_analysis_result(TuningCurve(mean_rates,s,7,sheet),sheet_name=sheet)

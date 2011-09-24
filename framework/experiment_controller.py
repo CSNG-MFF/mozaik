@@ -1,11 +1,10 @@
-from MozaikLite.storage.datastore import DataStore
+from MozaikLite.storage.datastore import Hdf5DataStore
 from NeuroTools.parameters import ParameterSet
 
 def run_experiments(model,root_directory,experiment_list):
     # first lets run all the measurements required by the experiments
     print 'Starting Experiemnts'
-    
-    data_store = DataStore(load=False,parameters=ParameterSet({root_directory:'./'}))
+    data_store = Hdf5DataStore(load=False,parameters=ParameterSet({'root_directory':root_directory}))
         
     for experiment in experiment_list:
         print 'Starting experiment: ', experiment.__class__.__name__
@@ -19,7 +18,17 @@ def run_experiments(model,root_directory,experiment_list):
     for experiment in experiment_list:    
         experiment.do_analysis(data_store)
 
-    #print 'Saving Datastore'
-    #data_store.save()
+    print 'Saving Datastore'
+    data_store.save()
 
 
+
+
+def run_analysis(root_directory,experiment_list):    
+    
+    data_store = Hdf5DataStore(load=True,parameters=ParameterSet({'root_directory':root_directory}))
+    
+    print 'Starting Analysis'
+    # next lets perform the corresponding analysis
+    for experiment in experiment_list:    
+        experiment.do_analysis(data_store)

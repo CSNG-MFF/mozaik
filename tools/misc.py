@@ -1,5 +1,6 @@
 from NeuroTools import signals
 from MozaikLite.stimuli.stimulus_generator import parse_stimuls_id,load_from_string
+from neo.core.segment import Segment
 import numpy
 
 def get_spikes_to_dic(spikes,pop):
@@ -120,17 +121,18 @@ def segments_to_dict_of_SpikeList(segments):
             (spikes,idds,tstart,tstop) = d[k]
             if not dd.has_key(k):
                dd[k] = ([],[])
-            (sp,st) = dd[k]        
-            print tstart
-            print tstop
+            (sp,st) = dd[k]  
             sp.append(signals.SpikeList(spikes,idds,t_start=tstart,t_stop=tstop))
             st.append(parse_stimuls_id(seg.stimulus))
+    
     return dd
 
 
 
 def segments_to_dict_of_AnalogSignalList(segments):
     return (_segments_to_dict_of_AnalogSignalList(segments,'vm'),_segments_to_dict_of_AnalogSignalList(segments,'gsyn_e'),_segments_to_dict_of_AnalogSignalList(segments,'gsyn_i'))
+
+
 
 def _segments_to_dict_of_AnalogSignalList(segments,signal_name):
     # it turns neo segment list to a dictionary of tuples
@@ -178,3 +180,14 @@ def sample_from_bin_distribution(bins, number_of_samples):
         si.append(numpy.nonzero(s < cs)[0][0])
     
     return si
+
+def create_segment_for_sheets(sheets):
+       p={'stimulus':'','sheets':[]}
+       for sheet in sheets:   
+           p[sheet.name+'_spikes']=[]
+           p[sheet.name+'_vm']=[]
+           p[sheet.name+'_gsyn_e']=[]
+           p[sheet.name+'_gsyn_i']=[]
+           p['sheets'].append(sheet.name)
+
+       return Segment(**p) 
