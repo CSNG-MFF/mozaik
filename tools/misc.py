@@ -102,10 +102,10 @@ def spike_dic_to_list(d):
     
 def spike_segment_to_dict(seg):
     sheets={}
-    for s in seg.sheets: 
+    for s in seg.annotations['sheets']: 
         d = {}
-        for k in seg.__getattr__(s+'_spikes'):
-            t = seg._spiketrains[k]
+        for k in seg.annotations[s+'_spikes']:
+            t = seg.spiketrains[k]
             d[t.index] = numpy.array(t)
         sheets[s] = (spike_dic_to_list(d),d.keys(),float(t.t_start),float(t.t_stop))
     return sheets
@@ -141,7 +141,7 @@ def _segments_to_dict_of_AnalogSignalList(segments,signal_name):
     dd = {}
     for seg in segments:
         d = analog_segment_to_dict(seg,signal_name)
-        sp = seg._analogsignals[0].sampling_period
+        sp = seg.analogsignals[0].sampling_period
         for k in d.keys():
             (sig,idds) = d[k]
             if not dd.has_key(k):
@@ -153,10 +153,10 @@ def _segments_to_dict_of_AnalogSignalList(segments,signal_name):
 
 def analog_segment_to_dict(seg,signal_name):
     sheets={}
-    for s in seg.sheets: 
+    for s in seg.annotations['sheets']: 
         d = {}
-        for k in seg.__getattr__(s+'_'+signal_name):
-            t = seg._analogsignals[k]
+        for k in seg.annotations[s+'_'+signal_name]:
+            t = seg.analogsignals[k]
             d[t.index] = numpy.array(t)
         sheets[s] = ([signals.AnalogSignal(d[k],dt=t.sampling_period) for k in d.keys()],d.keys())
     return sheets

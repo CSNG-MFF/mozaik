@@ -72,10 +72,10 @@ class DataStoreView(MozaikLiteParametrizeObject):
         recordings = []
         
         if stimuli_name == None:
-           for seg in self.block._segments: 
+           for seg in self.block.segments: 
                recordings.append(seg)  
         else:   
-            for seg in self.block._segments:
+            for seg in self.block.segments:
                 sid = parse_stimuls_id(seg.stimulus)
                 if sid.name == stimuli_name:
                    if params: 
@@ -102,10 +102,23 @@ class DataStoreView(MozaikLiteParametrizeObject):
            
         return node[result_id]    
     
-    def fromDataStoreView(data_store_view):
-        new_dsv = DataStoreView(data_store_view.parameters)
-        
-        
+    def _analysis_result_copy(self,d):
+        nd = {}
+        for k in d.keys():
+            if k != 'data':
+               nd[k] =  _analysis_result_copy(d[k])
+            else:
+               nd[k] = d[k].copy() 
+        return nd    
+
+    def analysis_result_copy(self):
+        return _analysis_result_copy(self.analysis_results)
+                
+    def recordings_copy(self):
+        return self.block.segments[:]
+
+    def fromDataStoreView(self):
+        return DataStoreView(ParameterSet({}))
 
 class DataStore(DataStoreView):
     """
@@ -165,7 +178,7 @@ class Hdf5DataStore(DataStore):
         #iom = IOManager(filename=self.parameters.root_directory+'/datastore.hdf5');
         #self.block = iom.get('/block_0')
         # now just construct the stimulus dictionary
-        #for s in self.block._segments:
+        #for s in self.block.segments:
         #    self.stimulus_dict[s.stimulus]=True
         
         f = open(self.parameters.root_directory+'/datastore.analysis.pickle','r')
@@ -183,7 +196,7 @@ class Hdf5DataStore(DataStore):
     def add_recording(self,segment,stimulus):
         # we get recordings as seg
         segment.stimulus = str(stimulus)
-        self.block._segments.append(segment)
+        self.block.segments.append(segment)
         self.stimulus_dict[str(stimulus)]=True
 
     def add_analysis_result(self,result,sheet_name=None,neuron_idx=None):

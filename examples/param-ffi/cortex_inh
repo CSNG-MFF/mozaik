@@ -33,8 +33,8 @@
     
     'InhExcConnection': {
 	    'connection_probability': 1.0, 
-#	    'weights': 0.03,                
-	    'weights': 0.0,                
+	    'weights': 0.03,                
+#	    'weights': 0.0,                
             'propagation_constant': 1.5,    
 	    'synapse_dynamics' : 'None',        
 	    'target_synapses' : 'inhibitory',
