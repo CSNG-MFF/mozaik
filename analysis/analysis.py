@@ -96,26 +96,26 @@ class GSTA(Analysis):
                 asl_i = []
                     
                 for n in self.parameters.neurons:
-                    asl_e.append(self.do_gsta(g_e[n],sp[n]))
-                    asl_i.append(self.do_gsta(g_i[n],sp[n]))
+                    asl_e.append(self.do_gsta(g_e,sp,n))
+                    asl_i.append(self.do_gsta(g_i,sp,n))
                 
                 self.datastore.add_analysis_result(ConductanceSignalList(asl_e,asl_i,sheet,self.parameters.neurons,tags=self.tags),sheet_name=sheet)
                 
                 
-      def do_gsta(self,analog_signal,sp):
-          dt = analog_signal[0].dt
+      def do_gsta(self,analog_signal,sp,n):
+          dt = analog_signal[0][n].dt
           gstal = int(self.parameters.length/dt)
           gsta = numpy.zeros(2*gstal+1,)
-          
+          count = 0
           for (ans,spike) in zip(analog_signal,sp):
-              for time in spike.spike_times:
-                  if time > ans.t_start  and time < ans.t_stop:
-                     idx = int((time - ans.t_start)/dt)
-                     if idx - gstal > 0 and (idx + gstal+1) <= len(ans):
-                        gsta = gsta +  ans.signal[idx-gstal:idx+gstal+1]
+              for time in spike[n].spike_times:
+                  if time > ans[n].t_start  and time < ans[n].t_stop:
+                     idx = int((time - ans[n].t_start)/dt)
+                     if idx - gstal > 0 and (idx + gstal+1) <= len(ans[n]):
+                        gsta = gsta +  ans[n].signal[idx-gstal:idx+gstal+1]
+                        count +=1
           
-          
-          return signals.AnalogSignal(gsta/len(sp),dt=dt,t_start=-gstal*dt,t_stop=(gstal+1)*dt)          
+          return signals.AnalogSignal(gsta/count,dt=dt,t_start=-gstal*dt,t_stop=(gstal+1)*dt)          
            
           
           
