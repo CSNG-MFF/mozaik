@@ -118,7 +118,6 @@ class NeurotoolsPlot(Plotting):
         ar = self.datastore.get_analysis_result('NeurotoolsData',sheet_name = parameters.sheet_name)    
         if len(ar) > 1:
            print 'ERROR: There should not be more than one NeuroTools analysis datastructure in storage currently!!!!'
-           return 
 
         ar = ar[0]    
         self.vm_data_dict = ar.vm_data_dict
@@ -128,8 +127,8 @@ class NeurotoolsPlot(Plotting):
 
 class RasterPlot(NeurotoolsPlot):
       def subplot(self,subplotspec): 
-          gs = gridspec.GridSpecFromSubplotSpec(1, len(self.spike_data_dict), subplot_spec=subplotspec)    
-          for sp,st,idx in zip(self.spike_data_dict[0],self.spike_data_dict[1],numpy.arange(0,len(self.spike_data_dict),1)):
+          gs = gridspec.GridSpecFromSubplotSpec(1, len(self.spike_data_dict[1]), subplot_spec=subplotspec)    
+          for sp,st,idx in zip(self.spike_data_dict[0],self.spike_data_dict[1],numpy.arange(0,len(self.spike_data_dict[1]),1)):
               ax = pylab.subplot(gs[0,idx])
               sp.raster_plot(display=ax)
               #print sheet + ' mean rate is:' + numpy.str(numpy.mean(numpy.array(sp.mean_rates())))
@@ -141,8 +140,8 @@ class RasterPlot(NeurotoolsPlot):
 
 class VmPlot(NeurotoolsPlot):
       def subplot(self,subplotspec):           
-          gs = gridspec.GridSpecFromSubplotSpec(1, len(self.vm_data_dict), subplot_spec=subplotspec)    
-          for vm,st,idx in zip(self.vm_data_dict[0],self.vm_data_dict[1],numpy.arange(0,len(self.vm_data_dict),1)):
+          gs = gridspec.GridSpecFromSubplotSpec(1, len(self.vm_data_dict[1]), subplot_spec=subplotspec)    
+          for vm,st,idx in zip(self.vm_data_dict[0],self.vm_data_dict[1],numpy.arange(0,len(self.vm_data_dict[1]),1)):
               ax = pylab.subplot(gs[0,idx])
               vm[-1].plot(display=ax,ylabel='Vm')
               if idx == 0:
@@ -152,9 +151,8 @@ class VmPlot(NeurotoolsPlot):
 
 class GSynPlot(NeurotoolsPlot):
       def subplot(self,subplotspec): 
-          gs = gridspec.GridSpecFromSubplotSpec(1, len(self.g_syn_e_data_dict), subplot_spec=subplotspec)  
-      
-          for gsyn_e,gsyn_i,st,idx in zip(self.g_syn_e_data_dict[0],self.g_syn_i_data_dict[0],self.vm_data_dict[1],numpy.arange(0,len(self.g_syn_e_data_dict),1)):
+          gs = gridspec.GridSpecFromSubplotSpec(1, len(self.g_syn_e_data_dict[1]), subplot_spec=subplotspec)  
+          for gsyn_e,gsyn_i,st,idx in zip(self.g_syn_e_data_dict[0],self.g_syn_i_data_dict[0],self.g_syn_i_data_dict[1],numpy.arange(0,len(self.g_syn_e_data_dict[1]),1)):
               ax = pylab.subplot(gs[0,idx])
               gsyn_e[-1].plot(display=ax,kwargs={'color':'r','label':'exc'})
               gsyn_i[-1].plot(display=ax,kwargs={'color':'b','label':'inh'})
@@ -165,13 +163,82 @@ class GSynPlot(NeurotoolsPlot):
           pylab.legend()  
           
 class OverviewPlot(NeurotoolsPlot):
-      required_parameters = ParameterSet({
-            'sheet_name' : str,  #the name of the sheet for which to plot
-      })
       
       def subplot(self,subplotspec):
           gs = gridspec.GridSpecFromSubplotSpec(3, 1, subplot_spec=subplotspec)  
           RasterPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name})).subplot(gs[0,0])
           GSynPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name})).subplot(gs[1,0])
-          RasterPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name})).subplot(gs[2,0])          
+          VmPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name})).subplot(gs[2,0])          
+
+class LinePlot(Plotting):          
+      """
+      Many plots plot many identical plots in a row for multiple data in a list they get
+      This is a smaller helper class that mitigates some of the code repetition in such cases
+      
+      Note that the inherited class has to implement!:
+      _subplot(self,idx,ax) 
+      
+      which plots the individual plot. The idx is index in whatever datastructure list we are plotting ans 
+      axis is the axis that has to be used for plotting.
+      """ 
+      def  __init__(self,datastore,parameters):
+           Plotting.__init__(self,datastore,parameters)    
+           self.length = None
+      
+      def subplot(self,subplotspec): 
+          if not self.length:
+             print 'Error, class that derives from RowPlot has to specify the length parameter'
+             return
+
+          gs = gridspec.GridSpecFromSubplotSpec(1, self.length, subplot_spec=subplotspec)  
+          for idx in xrange(0,self.length):
+              ax = pylab.subplot(gs[0,idx])
+              self._subplot(idx,ax)
           
+class AnalogSignalListPlot(LinePlot):
+        required_parameters = ParameterSet({
+            'sheet_name' : str,  #the name of the sheet for which to plot
+            'ylabel' : str,  #what to put as ylabel
+        })
+    
+        def  __init__(self,datastore,parameters):
+            LinePlot.__init__(self,datastore,parameters)
+            self.analog_signal_list = self.datastore.get_analysis_result('AnalogSignalList',sheet_name = parameters.sheet_name)    
+            if len(self.analog_signal_list) > 1:
+              print 'ERROR: Warning currently only the first AnalogSignalList will be plotted'
+            self.analog_signal_list = self.analog_signal_list[0]
+            self.asl = self.analog_signal_list.asl
+            self.length = len(self.asl)
+            
+    
+        def _subplot(self,idx,ax):
+              self.asl[idx].plot(display=ax,kwargs={'color':'b'})
+              if idx == 0:
+                 pylab.ylabel(self.parameters.ylabel)
+
+
+class ConductanceSignalListPlot(LinePlot):
+        required_parameters = ParameterSet({
+            'sheet_name' : str,  #the name of the sheet for which to plot
+        })
+    
+        def  __init__(self,datastore,parameters):
+            LinePlot.__init__(self,datastore,parameters)
+            self.conductance_signal_list = self.datastore.get_analysis_result('ConductanceSignalList',sheet_name = parameters.sheet_name)    
+            if len(self.conductance_signal_list) > 1:
+              print 'ERROR: Warning currently only the first ConductanceSignalList will be plotted'
+            self.conductance_signal_list = self.conductance_signal_list[0]
+            self.e_con = self.conductance_signal_list.e_con
+            self.i_con = self.conductance_signal_list.i_con
+            self.length = len(self.e_con)
+            
+    
+        def _subplot(self,idx,ax):
+              print 'DASDASDA'
+              print self.i_con[idx].signal
+              self.e_con[idx].plot(display=ax,kwargs={'color':'r','label':'exc'})
+              self.i_con[idx].plot(display=ax,kwargs={'color':'b','label':'inh'})
+              if idx == 0:
+                 pylab.ylabel('Conductance(S)')
+
+

@@ -106,10 +106,10 @@ class Sheet(MozaikComponent):
             spikes = get_spikes_to_dic(self.pop.getSpikes(),self.pop)
             for k in spikes.keys():
                 # it assumes segment implements and add function which takes the id of a neuron and the corresponding its SpikeTrain
-                st = SpikeTrain(spikes[k],0,tstop,quantities.ms)
+                st = SpikeTrain(spikes[k],t_start=0,t_stop=tstop,units=quantities.ms)
                 st.index = k
-                segment._spiketrains.append(st)
-                segment.__getattr__(self.name+'_spikes').append(len(segment._spiketrains)-1)
+                segment.spiketrains.append(st)
+                segment.annotations[self.name+'_spikes'].append(len(segment.spiketrains)-1)
             logging.debug("Writing spikes from population %s to neo object." % (self.pop))
         except NothingToWriteError, errmsg:
             logger.debug(errmsg)
@@ -117,10 +117,10 @@ class Sheet(MozaikComponent):
             v = get_vm_to_dic(self.pop.get_v(),self.pop)
             for k in v.keys():
                 # it assumes segment implements and add function which takes the id of a neuorn and the corresponding its SpikeTrain
-                st = AnalogSignal(v[k],sampling_period=self.network.sim.get_time_step()*quantities.ms)
+                st = AnalogSignal(v[k],units=quantities.mV,sampling_period=self.network.sim.get_time_step()*quantities.ms)
                 st.index = k
-                segment._analogsignals.append(st)
-                segment.__getattr__(self.name+'_vm').append(len(segment._analogsignals)-1)
+                segment.analogsignals.append(st)
+                segment.annotations[self.name+'_vm'].append(len(segment.analogsignals)-1)
             logging.debug("Writing Vm from population %s to neo object." % (self.pop))
         except NothingToWriteError, errmsg:
             logger.debug(errmsg)
@@ -128,14 +128,14 @@ class Sheet(MozaikComponent):
             gsyn_e,gsyn_i = get_gsyn_to_dicts(self.pop.get_gsyn(),self.pop)
             for k in v.keys():
                 # it assumes segment implements and add function which takes the id of a neuorn and the corresponding its SpikeTrain
-                st_e = AnalogSignal(gsyn_e[k],sampling_period=self.network.sim.get_time_step()*quantities.ms)
-                st_i = AnalogSignal(gsyn_i[k],sampling_period=self.network.sim.get_time_step()*quantities.ms)
+                st_e = AnalogSignal(0.001*gsyn_e[k],sampling_period=self.network.sim.get_time_step()*quantities.ms,units=quantities.S)
+                st_i = AnalogSignal(0.001*gsyn_i[k],sampling_period=self.network.sim.get_time_step()*quantities.ms,units=quantities.S)
                 st_e.index = k
                 st_i.index = k
-                segment._analogsignals.append(st_e)
-                segment.__getattr__(self.name+'_gsyn_e').append(len(segment._analogsignals)-1)
-                segment._analogsignals.append(st_i)
-                segment.__getattr__(self.name+'_gsyn_i').append(len(segment._analogsignals)-1)
+                segment.analogsignals.append(st_e)
+                segment.annotations[self.name+'_gsyn_e'].append(len(segment.analogsignals)-1)
+                segment.analogsignals.append(st_i)
+                segment.annotations[self.name+'_gsyn_i'].append(len(segment.analogsignals)-1)
             logging.debug("Writing Vm from population %s to neo object." % (self.pop))
         except NothingToWriteError, errmsg:
             logger.debug(errmsg)

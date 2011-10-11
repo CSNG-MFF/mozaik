@@ -1,5 +1,6 @@
 from NeuroTools import signals
 from MozaikLite.stimuli.stimulus_generator import parse_stimuls_id,load_from_string
+from neo.core.segment import Segment
 import numpy
 
 def get_spikes_to_dic(spikes,pop):
@@ -101,10 +102,10 @@ def spike_dic_to_list(d):
     
 def spike_segment_to_dict(seg):
     sheets={}
-    for s in seg.sheets: 
+    for s in seg.annotations['sheets']: 
         d = {}
-        for k in seg.__getattr__(s+'_spikes'):
-            t = seg._spiketrains[k]
+        for k in seg.annotations[s+'_spikes']:
+            t = seg.spiketrains[k]
             d[t.index] = numpy.array(t)
         sheets[s] = (spike_dic_to_list(d),d.keys(),float(t.t_start),float(t.t_stop))
     return sheets
@@ -120,17 +121,18 @@ def segments_to_dict_of_SpikeList(segments):
             (spikes,idds,tstart,tstop) = d[k]
             if not dd.has_key(k):
                dd[k] = ([],[])
-            (sp,st) = dd[k]        
-            print tstart
-            print tstop
+            (sp,st) = dd[k]  
             sp.append(signals.SpikeList(spikes,idds,t_start=tstart,t_stop=tstop))
             st.append(parse_stimuls_id(seg.stimulus))
+    
     return dd
 
 
 
 def segments_to_dict_of_AnalogSignalList(segments):
     return (_segments_to_dict_of_AnalogSignalList(segments,'vm'),_segments_to_dict_of_AnalogSignalList(segments,'gsyn_e'),_segments_to_dict_of_AnalogSignalList(segments,'gsyn_i'))
+
+
 
 def _segments_to_dict_of_AnalogSignalList(segments,signal_name):
     # it turns neo segment list to a dictionary of tuples
@@ -139,7 +141,7 @@ def _segments_to_dict_of_AnalogSignalList(segments,signal_name):
     dd = {}
     for seg in segments:
         d = analog_segment_to_dict(seg,signal_name)
-        sp = seg._analogsignals[0].sampling_period
+        sp = seg.analogsignals[0].sampling_period
         for k in d.keys():
             (sig,idds) = d[k]
             if not dd.has_key(k):
@@ -151,10 +153,10 @@ def _segments_to_dict_of_AnalogSignalList(segments,signal_name):
 
 def analog_segment_to_dict(seg,signal_name):
     sheets={}
-    for s in seg.sheets: 
+    for s in seg.annotations['sheets']: 
         d = {}
-        for k in seg.__getattr__(s+'_'+signal_name):
-            t = seg._analogsignals[k]
+        for k in seg.annotations[s+'_'+signal_name]:
+            t = seg.analogsignals[k]
             d[t.index] = numpy.array(t)
         sheets[s] = ([signals.AnalogSignal(d[k],dt=t.sampling_period) for k in d.keys()],d.keys())
     return sheets
@@ -178,3 +180,14 @@ def sample_from_bin_distribution(bins, number_of_samples):
         si.append(numpy.nonzero(s < cs)[0][0])
     
     return si
+
+def create_segment_for_sheets(sheets):
+       p={'stimulus':'','sheets':[]}
+       for sheet in sheets:   
+           p[sheet.name+'_spikes']=[]
+           p[sheet.name+'_vm']=[]
+           p[sheet.name+'_gsyn_e']=[]
+           p[sheet.name+'_gsyn_i']=[]
+           p['sheets'].append(sheet.name)
+
+       return Segment(**p) 

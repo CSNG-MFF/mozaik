@@ -106,10 +106,10 @@ class FullfieldDriftingSinusoidalGrating(Stimulus):
             self.current_phase=0
             while True:
                 import pylab
-                if self.current_phase==0:
-                   pylab.figure()
-                   pylab.imshow(topo.pattern.basic.SineGrating(orientation=self.params[0],frequency=self.params[1],phase=self.current_phase,size=self.parameters.size_in_degrees[0],bounds=BoundingBox(radius=self.parameters.size_in_degrees[0]/2),scale=self.parameters.max_luminance,xdensity=self.density,ydensity=self.density)())
-                   pylab.title('image')
+                #if self.current_phase==0:
+                #   pylab.figure()
+                #   pylab.imshow(topo.pattern.basic.SineGrating(orientation=self.params[0],frequency=self.params[1],phase=self.current_phase,size=self.parameters.size_in_degrees[0],bounds=BoundingBox(radius=self.parameters.size_in_degrees[0]/2),scale=self.parameters.max_luminance,xdensity=self.density,ydensity=self.density)())
+                #   pylab.title('image')
                 yield (topo.pattern.basic.SineGrating(orientation=self.params[0],frequency=self.params[1],phase=self.current_phase,size=self.parameters.size_in_degrees[0],bounds=BoundingBox(radius=self.parameters.size_in_degrees[0]/2),scale=self.parameters.max_luminance,xdensity=self.density,ydensity=self.density)(),[self.current_phase])
                 self.current_phase+= 2*numpy.pi*(self.parameters.frame_duration/1000.0)*self.params[2]
 

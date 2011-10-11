@@ -4,103 +4,65 @@ from neo.core.block import Block
 from neo.core.spiketrain import SpikeTrain
 from neo.io.hdf5io import IOManager
 from MozaikLite.stimuli.stimulus_generator import load_from_string, parse_stimuls_id
+from MozaikLite.framework.interfaces import MozaikLiteParametrizeObject
 from NeuroTools.parameters import ParameterSet
 import pickle
 
-class DataStore(object):
+
+class DataStoreView(MozaikLiteParametrizeObject):
     """
-        Data store should aggregate all data and analysis results collected across experiments
-        and a given model. 
-        
-        Experiments results storage:
-        
-        TODO
-        
-        Analysis results storage:
-        
-        There are three categories of results that map to the MoziakLite model structural building blocks:
-        
-        Model specific - most general
-        Sheet specific 
-        Neuron specific
-        
-        This is a nested structure of which each level is addressed with appropriate identifier
-        and all levels can hold results. In future this structure might be extended with 
-        more levels depending on the native structures added to MozaikLite 
-        (i.e. cortical area, cortical layer etc.)
-        
-        Further at each level the analysis results are addressed by the AnalysisDataStructure
-        identifier. The call with this specification returns a set of AnalysisDataStructure's
-        that correspond to the above addressing. This can be a list. If further more specific 
-        'addressing' is required it has to be done by the corresponding visualization or analysis 
-        code that asked for the AnalysisDataStructure's based on the knowledge of their content.
+    This class represents a subset of a DataStore and defines the query interface and 
+    the structure in which the data are stored in the memory of any datastore. Main role 
+    of this class is to allow for creating subsets of data stored in the DataStore, so that one can 
+    restrict other parts of Mozaik to work only over these subsets. This is done via means of queries
+    (see storage.queries) which produce DataStoreView objects and can be chained to work like filters.
+
+    Note that the actual datastores inherit from this object and defines how the data
+    are actualy stored on other media (i.e. HD via i.e. hdf5 file format).
+
+    Data store should aggregate all data and analysis results collected across experiments
+    and a given model. 
+
+    Experiments results storage:
+
+    TODO
+
+    Analysis results storage:
+
+    There are three categories of results that map to the MoziakLite model structural building blocks:
+
+    Model specific - most general
+    Sheet specific 
+    Neuron specific
+
+    This is a nested structure of which each level is addressed with appropriate identifier
+    and all levels can hold results. In future this structure might be extended with 
+    more levels depending on the native structures added to MozaikLite 
+    (i.e. cortical area, cortical layer etc.)
+
+    Further at each level the analysis results are addressed by the AnalysisDataStructure
+    identifier. The call with this specification returns a set of AnalysisDataStructure's
+    that correspond to the above addressing. This can be a list. If further more specific 
+    'addressing' is required it has to be done by the corresponding visualization or analysis 
+    code that asked for the AnalysisDataStructure's based on the knowledge of their content.
+    Or specific querie filters can be written that understand the specific type
+    of AnalysisDataStructure and can filter them based on their internal data.
     """
     
-    required_parameters = ParameterSet({
-        'root_directory':str,
-    })
-    
-    def __init__(self, load,parameters):
+    def __init__(self,parameters):
         """
         Just check the parameters, and load the data.
         """
-        self.check_parameters(parameters)
-        self.parameters = parameters
-        
+        MozaikLiteParametrizeObject.__init__(self,parameters)
         # we will hold the recordings as one neo Block
         self.block = Block()
-        
-        # used as a set to quickly identify whether a stimulus was already presented
-        # stimuli are otherwise saved with segments within the block as annotations
-        self.stimulus_dict = {}
-        
         self.analysis_results = {}
         self.analysis_results['data'] = {}
         
-        # load the datastore
-        if load: 
-            self.load()
-        
-        
-    
-    def check_parameters(self, parameters):
-        def walk(tP, P, section=None):
-            if set(tP.keys()) != set(P.keys()):
-                raise KeyError("Invalid parameters for %s.%s Required: %s. Supplied: %s" % (self.__class__.__name__, section or '', tP.keys(), P.keys()))
-            for k,v in tP.items():
-                if isinstance(v, ParameterSet):
-                    assert isinstance(P[k], ParameterSet), "Type mismatch: %s !=  ParameterSet, for %s " % (type(P[k]),P[k]) 
-                    walk(v, P[k],section=k)
-                else:
-                    assert isinstance(P[k], v), "Type mismatch: %s !=  %s, for %s" % (v,type(P[k]),P[k])
-        try:
-    	    # we first need to collect the required parameters from all the classes along the parent path
-            new_param_dict={}
-	    for cls in self.__class__.__mro__:
-	        # some parents might not define required_parameters 
-	        # if they do not require one or they are the object class
-	        if hasattr(cls, 'required_parameters'):
-		       new_param_dict.update(cls.required_parameters.as_dict())
-	    walk(ParameterSet(new_param_dict), parameters)
-    	except AssertionError as err:
-            raise Exception("%s\nInvalid parameters.\nNeed %s\nSupplied %s" % (err,ParameterSet(new_param_dict),parameters))  
-
-
-    def identify_unpresented_stimuli(self,stimuli):
-        """
-        It will filter out from stimuli all those which have already been presented.
-        """
-        
-        unpresented_stimuli = []
-        for s in stimuli:
-            if not self.stimulus_dict.has_key(str(s)):
-               unpresented_stimuli.append(s)
-        return unpresented_stimuli
-    
     def get_recordings(self,stimuli_name,params=None):
         """
         It will return all recordings to stimuli with name stimuli_name        
-        Additionally one can filter our parameters:
+        Additionally one can filter out parameters:
         params is a list that should have the same number of elements as the 
         number of free parameters of the given stimulus. Each parameter can be
         set either to '*' indicating pick any stimulus with respect to this parameter
@@ -110,10 +72,10 @@ class DataStore(object):
         recordings = []
         
         if stimuli_name == None:
-           for seg in self.block._segments: 
+           for seg in self.block.segments: 
                recordings.append(seg)  
         else:   
-            for seg in self.block._segments:
+            for seg in self.block.segments:
                 sid = parse_stimuls_id(seg.stimulus)
                 if sid.name == stimuli_name:
                    if params: 
@@ -128,14 +90,96 @@ class DataStore(object):
                        recordings.append(seg) 
         
         return recordings
+
+
+    def get_analysis_result(self,result_id,sheet_name=None,neuron_idx=None):
+        if not sheet_name:
+           node = self.analysis_results['data'] 
+        elif not neuron_idx:
+           node = self.analysis_results[sheet_name]['data'] 
+        else:
+           node = self.analysis_results[sheet_name][neuron_idx]['data'] 
+           
+        return node[result_id]    
+    
+    def _analysis_result_copy(self,d):
+        nd = {}
+        for k in d.keys():
+            if k != 'data':
+               nd[k] =  _analysis_result_copy(d[k])
+            else:
+               nd[k] = d[k].copy() 
+        return nd    
+
+    def analysis_result_copy(self):
+        return _analysis_result_copy(self.analysis_results)
+                
+    def recordings_copy(self):
+        return self.block.segments[:]
+
+    def fromDataStoreView(self):
+        return DataStoreView(ParameterSet({}))
+
+class DataStore(DataStoreView):
+    """
+    Abstract DataStore class the declares the parameters, and enforces the interface
+    """
+    
+    required_parameters = ParameterSet({
+        'root_directory':str,
+    })
+    
+    def __init__(self, load,parameters):
+        """
+        Just check the parameters, and load the data.
+        """
+        DataStoreView.__init__(self,parameters)
+        
+        # used as a set to quickly identify whether a stimulus was already presented
+        # stimuli are otherwise saved with segments within the block as annotations
+        self.stimulus_dict = {}
+        
+        # load the datastore
+        if load: 
+            self.load()
+        
+    def identify_unpresented_stimuli(self,stimuli):
+        """
+        It will filter out from stimuli all those which have already been presented.
+        """
+        
+        unpresented_stimuli = []
+        for s in stimuli:
+            if not self.stimulus_dict.has_key(str(s)):
+               unpresented_stimuli.append(s)
+        return unpresented_stimuli
+        
+    def load(self):
+        pass
+        
+    def save(self):
+        pass    
+    
+    def add_recording(self,segment,stimulus):
+        pass
+    
+    def add_analysis_result(self,result,sheet_name=None,neuron_idx=None):
+        pass        
+
+class Hdf5DataStore(DataStore):
+    """
+    An DataStore that saves all it's data in a hdf5 file and an associated analysis results file, 
+    which just becomes the pickled self.analysis_results dictionary.
+        
+    """
     
     def load(self):
         #load the data
-        iom = IOManager(filename=self.parameters.root_directory+'/datastore.hdf5');
-        self.block = iom.get('/block_0')
+        #iom = IOManager(filename=self.parameters.root_directory+'/datastore.hdf5');
+        #self.block = iom.get('/block_0')
         # now just construct the stimulus dictionary
-        for s in self.block._segments:
-            self.stimulus_dict[s.stimulus]=True
+        #for s in self.block.segments:
+        #    self.stimulus_dict[s.stimulus]=True
         
         f = open(self.parameters.root_directory+'/datastore.analysis.pickle','r')
         self.analysis_results = pickle.load(f)
@@ -143,8 +187,8 @@ class DataStore(object):
             
     def save(self):
         #save the recording itself
-        iom = IOManager(filename=self.parameters.root_directory+'/datastore.hdf5');
-        iom.write_block(self.block)
+        #iom = IOManager(filename=self.parameters.root_directory+'/datastore.hdf5');
+        #iom.write_block(self.block)
         f = open(self.parameters.root_directory+'/datastore.analysis.pickle','w')
         pickle.dump(self.analysis_results,f)
         
@@ -152,7 +196,7 @@ class DataStore(object):
     def add_recording(self,segment,stimulus):
         # we get recordings as seg
         segment.stimulus = str(stimulus)
-        self.block._segments.append(segment)
+        self.block.segments.append(segment)
         self.stimulus_dict[str(stimulus)]=True
 
     def add_analysis_result(self,result,sheet_name=None,neuron_idx=None):
@@ -176,13 +220,4 @@ class DataStore(object):
         else:
             node[result.identifier] = [result]
         
-    def get_analysis_result(self,result_id,sheet_name=None,neuron_idx=None):
-        if not sheet_name:
-           node = self.analysis_results['data'] 
-        elif not neuron_idx:
-           node = self.analysis_results[sheet_name]['data'] 
-        else:
-           node = self.analysis_results[sheet_name][neuron_idx]['data'] 
-           
-        return node[result_id]    
            
