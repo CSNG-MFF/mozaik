@@ -36,8 +36,6 @@ class Sheet(MozaikComponent):
         'name':str,
     })
 
-    pop = None # this will be populated by PyNN population, in the derived classes
-
     def __init__(self, network, parameters):
         """
         Sheet is an abstraction of a 2D continuouse sheet of neurons, roughly corresponding to the PyNN Population class with
@@ -58,17 +56,35 @@ class Sheet(MozaikComponent):
         self.sim = self.network.sim
         self.name = parameters.name # the name of the population
         self.to_record = False
+		self._pop = None
+	
+    def pop():
+        doc = "PyNN population"
+        def fget(self):
+			if !self._pop:
+			   print 'Population have not been yet set in sheet: ', self.name , '!'
+		    return self._pop
+		    
+        def fset(self, value):
+            self._pop = value
+            self._neuron_annotations = [{} for i in xrange(0,len(value)]
+        return locals()  
+    pop = property(**pop()) #this will be populated by PyNN population, in the derived classes		
     
-    def describe(self, template='default', render=lambda t,c: Template(t).safe_substitute(c)):
-        context = {
-            'name': self.__class__.__name__,
-
-        }
-        if template:
-            render(template, context)
-        else:
-            return context
-
+    def add_neuron_annotation(neuron_number,key,value,protected=True):
+		if !self._pop:
+			   print 'Population have not been yet set in sheet: ', self.name , '!'
+		if protected and self._neuron_annotations[i].has_key(key) and self._neuron_annotations[i][key][0]:
+			   print 'The annotation<', key , '> for neuron ' , str(i), ' is protected. Annotation not updated'
+		else:
+			self._neuron_annotations[i][key] =  (protected,value)
+    
+    def get_neuron_annotation(neuron_number,key):
+		if !self._pop:
+			   print 'Population have not been yet set in sheet: ', self.name , '!'
+		return self._neuron_annotations[i][key][1]
+    
+    
     def record(self, variable, cells='all'):
         func_mapping = {'spikes': 'record', 'v': 'record_v','g_syn':'record_gsyn'} # need to add conductances
         record_method = func_mapping[variable]

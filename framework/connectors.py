@@ -21,6 +21,9 @@ class MozaikLiteVisualSystemConnector(VisualSystemConnector):
           VisualSystemConnector.__init__(self, network, source,target,parameters)
 
     
+	  def connect(self):
+		  pass
+    
       def connection_field_plot_continuous(self,index,weights,afferent=True,density=30):
           
           #!HACKALERT
@@ -107,22 +110,21 @@ class ExponentialProbabilisticArborization(MozaikLiteVisualSystemConnector):
         self.name = name
         
         if isinstance(target, SheetWithMagnificationFactor):
-            dist = "target.dvf_2_dcs(d)"
+            self.dist = "self.target.dvf_2_dcs(d)"
         else:
-            dist = "d"
+            self.dist = "d"
     		
         if parameters.synapse_dynamics == 'None':
-            synapse_dynamics = None
+            self.synapse_dynamics = None
         else:
-	        synapse_dynamics = parameters.synapse_dynamics
+	        self.synapse_dynamics = parameters.synapse_dynamics
 	
-
-        arborization_expression = "exp(-abs(("+ dist + ")/" + str(parameters.arborization_spread) + "))"
-        delay_expression = dist + "*" + parameters.propagation_constant 
-
-        method = self.sim.DistanceDependentProbabilityConnector(arborization_expression,allow_self_connections=False, weights=parameters.weights, delays=delay_expression, space=space.Space(axes='xy'), safe=True, verbose=False, n_connections=None)
-
-        self.proj = self.sim.Projection(source.pop, target.pop, method, synapse_dynamics=parameters.synapse_dynamics, label=self.name, rng=None, target=parameters.target_synapses)
+	def connect(self):
+        self.arborization_expression = "exp(-abs(("+ self.dist + ")/" + str(self.parameters.arborization_spread) + "))"
+        self.delay_expression = self.dist + "*" + self.parameters.propagation_constant 
+	
+        method = self.sim.DistanceDependentProbabilityConnector(self.arborization_expression,self.allow_self_connections=False, weights=self.parameters.weights, delays=self.delay_expression, space=space.Space(axes='xy'), safe=True, verbose=False, n_connections=None)
+        self.proj = self.sim.Projection(self.source.pop, self.target.pop, method, synapse_dynamics=self.synapse_dynamics, label=self.name, rng=None, target=self.parameters.target_synapses)
         
 class UniformProbabilisticArborization(MozaikLiteVisualSystemConnector):
 
@@ -138,12 +140,13 @@ class UniformProbabilisticArborization(MozaikLiteVisualSystemConnector):
             MozaikLiteVisualSystemConnector.__init__(self, network, source,target,parameters)
             self.name = name
             if parameters.synapse_dynamics == 'None':
-                synapse_dynamics = None
+                self.synapse_dynamics = None
             else:
-                synapse_dynamics = parameters.synapse_dynamics
-	        
-            method = self.sim.FixedProbabilityConnector(parameters.connection_probability,allow_self_connections=False, weights=parameters.weights, delays=parameters.propagation_constant, space=space.Space(axes='xy'), safe=True)
-            self.proj = self.sim.Projection(source.pop, target.pop, method, synapse_dynamics=synapse_dynamics, label=self.name, rng=None, target=parameters.target_synapses)
+                self.synapse_dynamics = parameters.synapse_dynamics
+		
+		def connect(self):
+            method = self.sim.FixedProbabilityConnector(self.parameters.connection_probability,allow_self_connections=False, weights=self.parameters.weights, delays=self.parameters.propagation_constant, space=space.Space(axes='xy'), safe=True)
+            self.proj = self.sim.Projection(self.source.pop, self.target.pop, method, synapse_dynamics=self.synapse_dynamics, label=self.name, rng=None, target=self.parameters.target_synapses)
 
 class SpecificArborization(MozaikLiteVisualSystemConnector):
 	  """
@@ -161,23 +164,20 @@ class SpecificArborization(MozaikLiteVisualSystemConnector):
 	  def __init__(self, network, source, target, connection_list,parameters,name):
     	    MozaikLiteVisualSystemConnector.__init__(self, network, source,target,parameters)
             self.name = name
-            
-            connection_list = [(a,b,c*parameters.weight_factor,d) for (a,b,c,d) in connection_list]
-
-            method  =  self.sim.FromListConnector(connection_list)
-            
+            self.method  =  self.sim.FromListConnector(connection_list)
             if parameters.synapse_dynamics == 'None':
-                synapse_dynamics = None
+                self.synapse_dynamics = None
             else:
-                synapse_dynamics = parameters.synapse_dynamics
+                self.synapse_dynamics = parameters.synapse_dynamics
 
-	        
+      def connect(self):	        
             #!HACKALERT
             # this is only for compatibility with original mozaik retinas
             # should be deleted once everything is unified
-            if not isinstance(source,Population):
-                source = source.pop
-            self.proj = self.sim.Projection(source, target.pop, method, synapse_dynamics=synapse_dynamics, label=self.name, rng=None, target=parameters.target_synapses)
+            self.connection_list = [(a,b,c*self.parameters.weight_factor,d) for (a,b,c,d) in self.connection_list]
+            if not isinstance(self.source,Population):
+                self.source = self.source.pop
+            self.proj = self.sim.Projection(self.source, self.target.pop, self.method, synapse_dynamics=self.synapse_dynamics, label=self.name, rng=None, target=self.parameters.target_synapses)
 
 class SpecificProbabilisticArborization(MozaikLiteVisualSystemConnector):
 	  """
@@ -201,22 +201,73 @@ class SpecificProbabilisticArborization(MozaikLiteVisualSystemConnector):
                 synapse_dynamics = None
             else:
                 synapse_dynamics = parameters.synapse_dynamics
-
-            samples = sample_from_bin_distribution([c[2] for c in connection_list],parameters.num_samples)
+            self.connection_list = connect_list    
+                
+	  def connect(self):
+            samples = sample_from_bin_distribution([c[2] for c in self.connection_list],self.parameters.num_samples)
             
-            connection_list = [connection_list[s] for s in samples]
-            connection_list = [(a,b,parameters.weight_factor,d) for (a,b,c,d) in connection_list]
+            self.connection_list = [self.connection_list[s] for s in samples]
+            self.connection_list = [(a,b,self.parameters.weight_factor,d) for (a,b,c,d) in self.connection_list]
 
             method  =  self.sim.FromListConnector(connection_list)  
             
             #!HACKALERT
             # this is only for compatibility with original mozaik retinas
             # should be deleted once everything is unified
-            if not isinstance(source,Population):
-                source = source.pop
-            self.proj = self.sim.Projection(source, target.pop, method, synapse_dynamics=synapse_dynamics, label=self.name, rng=None, target=parameters.target_synapses)
+            if not isinstance(self.source,Population):
+                self.source = self.source.pop
+            self.proj = self.sim.Projection(self.source, self.target.pop, method, synapse_dynamics=self.synapse_dynamics, label=self.name, rng=None, target=self.parameters.target_synapses)
 
 
+class RFSpecificProbabilisticArborization(MozaikLiteVisualSystemConnector):
+	  """
+	  This connector implements the standard V1 functionally specific connection rule:
+	  
+	  Excitatory synapses are more likely on cooriented in-phase neurons
+	  Inhibitory synapses are more likely to cooriented anti-phase neurons
+	  """
+	  
+	  required_parameters = ParameterSet({
+	    'synapse_dynamics' : str, # string indetifying the synaptic plasticity mechanism (None for no plasticity)
+        'weight_factor': float, # the base size of weights
+        'num_samples' : int
+        'or_sigma' : float, # how sharply does the probability of connection fall of with orientation difference
+        'phase_sigma' : float, # how sharply does the probability of connection fall of with phase difference
+	  })
+	  
+	  def __init__(self, network, source, target, parameters,name):
+    	    MozaikLiteVisualSystemConnector.__init__(self, network, source,target,parameters)
+            self.name = name
+            
+            if parameters.synapse_dynamics == 'None':
+                synapse_dynamics = None
+            else:
+                synapse_dynamics = parameters.synapse_dynamics
+            
+            
+	  def connect(self):
+		  weights = []
+		  
+		  
+		  for (neuron1,i) in zip(target.pop,numpy.arange(0,len(target.pop),1)):
+			  for (neuron2,j) in zip(source.pop,numpy.arange(0,len(source.pop),1)):
+				    
+				    or_dist = (source.get_neuron_annotation(i,'LGNAfferentOrientation') - source.get_neuron_annotation(j,'LGNAfferentOrientation')) % numpy.pi/2
+				    
+				    if self.parameters.target_synapses == 'excitator':
+						    phase_dist = (source.get_neuron_annotation(i,'LGNAfferentPhase') - source.get_neuron_annotation(j,'LGNAfferentPhase')) % numpy.pi
+					if self.parameters.target_synapses == 'inhibitory':
+							phase_dist = numpy.pi - (source.get_neuron_annotation(i,'LGNAfferentPhase') - source.get_neuron_annotation(j,'LGNAfferentPhase')) % numpy.pi
+					else:
+						print 'Unknown type of synapse!' 
+						return	
+				    
+				    or_gauss = exp(-or_dist*or_dist/2*self.parameters.or_sigma)/numpy.sqrt(2*numpy.pi*self.parameters.or_sigma*self.parameters.or_sigma)
+				    phase_gauss = exp(-phase_dist*phase_dist/2*self.parameters.phase_sigma)/numpy.sqrt(2*numpy.pi*self.parameters.phase_sigma*self.parameters.phase_sigma)
+					w = or_dist*phase_gauss*or_gauss
+					weights.append((i,j,w,self.parameters.propagation_constant))
+		  
+		  SpecificProbabilisticArborization(self.network, self.source, self.target, weights,self.parameters,self.name)
 
 def gabor(x1,y1,x2,y2,orientation,frequency,phase,size,aspect_ratio):
         from numpy import cos,sin
@@ -265,21 +316,27 @@ class GaborConnector(MozaikComponent):
              off_weights=[]
              z = []
              z =1
-             
-             for (neuron1,i) in zip(on,numpy.arange(0,len(on),1)):
-                for (neuron2,j) in zip(target.pop,numpy.arange(0,len(target.pop),1)):
-                    
-                    orientation = parameters.orientation.next()[0]
-                    aspect_ratio = parameters.aspect_ratio.next()[0]
-                    frequency = parameters.frequency.next()[0]
-                    size = parameters.size.next()[0]
-                    phase = parameters.phase.next()[0]
+             for (neuron2,j) in zip(target.pop,numpy.arange(0,len(target.pop),1)):
+                orientation = parameters.orientation.next()[0]
+                aspect_ratio = parameters.aspect_ratio.next()[0]
+                frequency = parameters.frequency.next()[0]
+                size = parameters.size.next()[0]
+                phase = parameters.phase.next()[0]
+ 
+				target.add_neuron_annotation(j,'LGNAfferentOrientation',orientation,protected=True)
+				target.add_neuron_annotation(j,'LGNAfferentAspectRatio',aspect_ratio,protected=True)
+				target.add_neuron_annotation(j,'LGNAfferentFrequency',frequency,protected=True)
+				target.add_neuron_annotation(j,'LGNAfferentSize',size,protected=True)
+				target.add_neuron_annotation(j,'LGNAfferentPhase',phase,protected=True)
+				 
+				for (neuron1,i) in zip(on,numpy.arange(0,len(on),1)):
                     if parameters.topological:
                         on_weights.append((i,j,numpy.max((0,gabor(on.positions[0][i],on.positions[1][i],target.pop.positions[0][j],target.pop.positions[1][j],orientation,frequency,phase,size,aspect_ratio))),parameters.propagation_constant))
                         off_weights.append((i,j,-numpy.min((0,gabor(off.positions[0][i],off.positions[1][i],target.pop.positions[0][j],target.pop.positions[1][j],orientation,frequency,phase,size,aspect_ratio))),parameters.propagation_constant))
                     else:
                         on_weights.append((i,j,numpy.max((0,gabor(on.positions[0][i],on.positions[1][i],0,0,orientation,frequency,phase,size,aspect_ratio))),parameters.propagation_constant))
                         off_weights.append((i,j,-numpy.min((0,gabor(off.positions[0][i],off.positions[1][i],0,0,orientation,frequency,phase,size,aspect_ratio))),parameters.propagation_constant))
+             
              if parameters.probabilistic:
                  on_proj =  SpecificProbabilisticArborization(network,lgn_on,target,on_weights,parameters.specific_arborization,'ON_to_[' + target.name + ']')
                  off_proj = SpecificProbabilisticArborization(network,lgn_off,target,off_weights,parameters.specific_arborization,'OFF_to_[' + target.name + ']')
