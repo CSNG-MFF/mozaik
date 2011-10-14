@@ -46,7 +46,7 @@ class VisualRegion(object):
         self.bottom = location[1] - half_height
         self.width = self.right - self.left
         self.height = self.top - self.bottom
-
+    
     def __eq__(self, other):
         return (self.location == other.location) and (self.size == other.size)
     
@@ -57,7 +57,7 @@ class VisualRegion(object):
         lr = self.right <= another_region.left or self.left >= another_region.right
         tb = self.top <= another_region.bottom or self.bottom >= another_region.top
         return not(lr or tb)
-
+    
     def intersection(self, another_region):
         if not self.overlaps(another_region):
             raise Exception("Regions do not overlap.")
@@ -70,7 +70,7 @@ class VisualRegion(object):
         centre = ((left + right)/2.0, (top + bottom)/2.0)
         size = (right-left, top-bottom)
         return VisualRegion(centre, size)
-
+    
     def describe(self):
         s = """Region of visual space centred at %(location)s of size %(size)s.
                Edges: left=%(left)g, right=%(right)g, top=%(top)g, bottom=%(bottom)g""" % self.__dict__

@@ -23,125 +23,126 @@ from MozaikLite.tools.misc import get_spikes_to_dic, get_vm_to_dic,get_gsyn_to_d
 logger = logging.getLogger("Mozaik")
 
 class Sheet(MozaikComponent):
-    """
-    """
-
-    required_parameters = ParameterSet({
+        """
+        """
+        
+        required_parameters = ParameterSet({
         'cell': ParameterSet({
             'model': str, # the cell type of the sheet
             'params': ParameterSet,
             'initial_values': ParameterSet,
         }),
-
+        
         'name':str,
-    })
+        })
+        
+        def __init__(self, network, parameters):
+            """
+            Sheet is an abstraction of a 2D continuouse sheet of neurons, roughly corresponding to the PyNN Population class with
+            the added spatial structure.
+            
+            The spatial position of all cells is kept within the PyNN Population object. Each sheet is assumed to be centered around (0,0) origin,
+            corresponding to whatever excentricity the model is looking at. The internal representation of space is degrees of visual field.
+            Thus x,y coordinates of a cell in all sheets correspond to the degrees of visual field this cell is away from the origin.
+            However, the sheet and derived classes/methods are supposed to accept parameters in units that are most natural for the given
+            parameter and recalculate these into the internal degrees of visual field representation.
+            
+            The units in visual space should be in degrees.
+            The units for cortical space should be in μm.
+            The units for time are in ms.
+            """
+            MozaikComponent.__init__(self, network, parameters)
+            self.network.register_sheet(self)
+            self.sim = self.network.sim
+            self.name = parameters.name # the name of the population
+            self.to_record = False
+            self._pop = None
+        
+        def pop():
+            doc = "PyNN population"
 
-    def __init__(self, network, parameters):
-        """
-        Sheet is an abstraction of a 2D continuouse sheet of neurons, roughly corresponding to the PyNN Population class with
-        the added spatial structure.
-
-        The spatial position of all cells is kept within the PyNN Population object. Each sheet is assumed to be centered around (0,0) origin,
-        corresponding to whatever excentricity the model is looking at. The internal representation of space is degrees of visual field.
-        Thus x,y coordinates of a cell in all sheets correspond to the degrees of visual field this cell is away from the origin.
-        However, the sheet and derived classes/methods are supposed to accept parameters in units that are most natural for the given
-        parameter and recalculate these into the internal degrees of visual field representation.
-
-        The units in visual space should be in degrees.
-        The units for cortical space should be in μm.
-        The units for time are in ms.
-        """
-        MozaikComponent.__init__(self, network, parameters)
-        self.network.register_sheet(self)
-        self.sim = self.network.sim
-        self.name = parameters.name # the name of the population
-        self.to_record = False
-		self._pop = None
-	
-    def pop():
-        doc = "PyNN population"
         def fget(self):
-			if !self._pop:
-			   print 'Population have not been yet set in sheet: ', self.name , '!'
-		    return self._pop
-		    
+            if not self._pop:
+                print 'Population have not been yet set in sheet: ', self.name , '!'
+            return self._pop
+            
         def fset(self, value):
             self._pop = value
-            self._neuron_annotations = [{} for i in xrange(0,len(value)]
-        return locals()  
-    pop = property(**pop()) #this will be populated by PyNN population, in the derived classes		
-    
-    def add_neuron_annotation(neuron_number,key,value,protected=True):
-		if !self._pop:
-			   print 'Population have not been yet set in sheet: ', self.name , '!'
-		if protected and self._neuron_annotations[i].has_key(key) and self._neuron_annotations[i][key][0]:
-			   print 'The annotation<', key , '> for neuron ' , str(i), ' is protected. Annotation not updated'
-		else:
-			self._neuron_annotations[i][key] =  (protected,value)
-    
-    def get_neuron_annotation(neuron_number,key):
-		if !self._pop:
-			   print 'Population have not been yet set in sheet: ', self.name , '!'
-		return self._neuron_annotations[i][key][1]
-    
-    
-    def record(self, variable, cells='all'):
-        func_mapping = {'spikes': 'record', 'v': 'record_v','g_syn':'record_gsyn'} # need to add conductances
-        record_method = func_mapping[variable]
-        if cells == 'all':
-            logger.debug('Recording %s from all cells in population "%s"' % (variable, self.name))
-            getattr(self.pop, record_method)()
-        elif isinstance(cells, dict):
-            logger.debug('Recording %s from a subset of cells in population "%s" ' % (variable, self.name))
-            getattr(self.pop, record_method)(cells[name])
-        elif isinstance(cells, int):
-            n = cells
-            logger.debug('Recording %s from a subset of %d cells in population "%s" ' % (variable, n, self.name))
-            getattr(self.pop, record_method)(n)
-        else:
-            raise Exception("cells must be 'all', a dict, or an int. Actual value of %s" % str(cells))
-
-    def write_neo_object(self,segment,tstop):
-        try:
-            spikes = get_spikes_to_dic(self.pop.getSpikes(),self.pop)
-            for k in spikes.keys():
-                # it assumes segment implements and add function which takes the id of a neuron and the corresponding its SpikeTrain
-                st = SpikeTrain(spikes[k],t_start=0,t_stop=tstop,units=quantities.ms)
-                st.index = k
-                segment.spiketrains.append(st)
-                segment.annotations[self.name+'_spikes'].append(len(segment.spiketrains)-1)
-            logging.debug("Writing spikes from population %s to neo object." % (self.pop))
-        except NothingToWriteError, errmsg:
-            logger.debug(errmsg)
-        try:
-            v = get_vm_to_dic(self.pop.get_v(),self.pop)
-            for k in v.keys():
-                # it assumes segment implements and add function which takes the id of a neuorn and the corresponding its SpikeTrain
-                st = AnalogSignal(v[k],units=quantities.mV,sampling_period=self.network.sim.get_time_step()*quantities.ms)
-                st.index = k
-                segment.analogsignals.append(st)
-                segment.annotations[self.name+'_vm'].append(len(segment.analogsignals)-1)
-            logging.debug("Writing Vm from population %s to neo object." % (self.pop))
-        except NothingToWriteError, errmsg:
-            logger.debug(errmsg)
-        try:
-            gsyn_e,gsyn_i = get_gsyn_to_dicts(self.pop.get_gsyn(),self.pop)
-            for k in v.keys():
-                # it assumes segment implements and add function which takes the id of a neuorn and the corresponding its SpikeTrain
-                st_e = AnalogSignal(0.001*gsyn_e[k],sampling_period=self.network.sim.get_time_step()*quantities.ms,units=quantities.S)
-                st_i = AnalogSignal(0.001*gsyn_i[k],sampling_period=self.network.sim.get_time_step()*quantities.ms,units=quantities.S)
-                st_e.index = k
-                st_i.index = k
-                segment.analogsignals.append(st_e)
-                segment.annotations[self.name+'_gsyn_e'].append(len(segment.analogsignals)-1)
-                segment.analogsignals.append(st_i)
-                segment.annotations[self.name+'_gsyn_i'].append(len(segment.analogsignals)-1)
-            logging.debug("Writing Vm from population %s to neo object." % (self.pop))
-        except NothingToWriteError, errmsg:
-            logger.debug(errmsg)
-
+            self._neuron_annotations = [{} for i in xrange(0,len(value))]
+            return locals()  
+            pop = property(**pop()) #this will be populated by PyNN population, in the derived classes		
         
-        return segment
+        def add_neuron_annotation(self,neuron_number,key,value,protected=True):
+            if not self._pop:
+                   print 'Population have not been yet set in sheet: ', self.name , '!'
+            if protected and self._neuron_annotations[i].has_key(key) and self._neuron_annotations[i][key][0]:
+                   print 'The annotation<', key , '> for neuron ' , str(i), ' is protected. Annotation not updated'
+            else:
+                self._neuron_annotations[i][key] =  (protected,value)
+            
+        def get_neuron_annotation(self,neuron_number,key):
+            if not self._pop:
+                   print 'Population have not been yet set in sheet: ', self.name , '!'
+            return self._neuron_annotations[i][key][1]
+        
+        
+        def record(self, variable, cells='all'):
+            func_mapping = {'spikes': 'record', 'v': 'record_v','g_syn':'record_gsyn'} # need to add conductances
+            record_method = func_mapping[variable]
+            if cells == 'all':
+                logger.debug('Recording %s from all cells in population "%s"' % (variable, self.name))
+                getattr(self.pop, record_method)()
+            elif isinstance(cells, dict):
+                logger.debug('Recording %s from a subset of cells in population "%s" ' % (variable, self.name))
+                getattr(self.pop, record_method)(cells[name])
+            elif isinstance(cells, int):
+                n = cells
+                logger.debug('Recording %s from a subset of %d cells in population "%s" ' % (variable, n, self.name))
+                getattr(self.pop, record_method)(n)
+            else:
+                raise Exception("cells must be 'all', a dict, or an int. Actual value of %s" % str(cells))
+        
+        def write_neo_object(self,segment,tstop):
+            try:
+                spikes = get_spikes_to_dic(self.pop.getSpikes(),self.pop)
+                for k in spikes.keys():
+                    # it assumes segment implements and add function which takes the id of a neuron and the corresponding its SpikeTrain
+                    st = SpikeTrain(spikes[k],t_start=0,t_stop=tstop,units=quantities.ms)
+                    st.index = k
+                    segment.spiketrains.append(st)
+                    segment.annotations[self.name+'_spikes'].append(len(segment.spiketrains)-1)
+                logging.debug("Writing spikes from population %s to neo object." % (self.pop))
+            except NothingToWriteError, errmsg:
+                logger.debug(errmsg)
+            try:
+                v = get_vm_to_dic(self.pop.get_v(),self.pop)
+                for k in v.keys():
+                    # it assumes segment implements and add function which takes the id of a neuorn and the corresponding its SpikeTrain
+                    st = AnalogSignal(v[k],units=quantities.mV,sampling_period=self.network.sim.get_time_step()*quantities.ms)
+                    st.index = k
+                    segment.analogsignals.append(st)
+                    segment.annotations[self.name+'_vm'].append(len(segment.analogsignals)-1)
+                logging.debug("Writing Vm from population %s to neo object." % (self.pop))
+            except NothingToWriteError, errmsg:
+                logger.debug(errmsg)
+            try:
+                gsyn_e,gsyn_i = get_gsyn_to_dicts(self.pop.get_gsyn(),self.pop)
+                for k in v.keys():
+                    # it assumes segment implements and add function which takes the id of a neuorn and the corresponding its SpikeTrain
+                    st_e = AnalogSignal(0.001*gsyn_e[k],sampling_period=self.network.sim.get_time_step()*quantities.ms,units=quantities.S)
+                    st_i = AnalogSignal(0.001*gsyn_i[k],sampling_period=self.network.sim.get_time_step()*quantities.ms,units=quantities.S)
+                    st_e.index = k
+                    st_i.index = k
+                    segment.analogsignals.append(st_e)
+                    segment.annotations[self.name+'_gsyn_e'].append(len(segment.analogsignals)-1)
+                    segment.analogsignals.append(st_i)
+                    segment.annotations[self.name+'_gsyn_i'].append(len(segment.analogsignals)-1)
+                logging.debug("Writing Vm from population %s to neo object." % (self.pop))
+            except NothingToWriteError, errmsg:
+                logger.debug(errmsg)
+            
+        
+            return segment
 
 class RetinalUniformSheet(Sheet):
 
