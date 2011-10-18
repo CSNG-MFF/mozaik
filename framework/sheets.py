@@ -25,18 +25,15 @@ logger = logging.getLogger("Mozaik")
 class Sheet(MozaikComponent):
     """
     """
-
+    
     required_parameters = ParameterSet({
         'cell': ParameterSet({
             'model': str, # the cell type of the sheet
             'params': ParameterSet,
             'initial_values': ParameterSet,
         }),
-
         'name':str,
     })
-
-    pop = None # this will be populated by PyNN population, in the derived classes
 
     def __init__(self, network, parameters):
         """
@@ -58,6 +55,36 @@ class Sheet(MozaikComponent):
         self.sim = self.network.sim
         self.name = parameters.name # the name of the population
         self.to_record = False
+        self._pop = None
+    
+    def pop():
+        doc = "PyNN population"
+
+        def fget(self):
+            if not self._pop:
+                    print 'Population have not been yet set in sheet: ', self.name , '!'
+            return self._pop
+            
+        def fset(self, value):
+                self._pop = value
+                self._neuron_annotations = [{} for i in xrange(0,len(value))]
+        return locals()  
+    
+    pop = property(**pop()) #this will be populated by PyNN population, in the derived classes		
+    
+    def add_neuron_annotation(self,neuron_number,key,value,protected=True):
+        if not self._pop:
+            print 'Population have not been yet set in sheet: ', self.name , '!'
+        if protected and self._neuron_annotations[neuron_number].has_key(key) and self._neuron_annotations[neuron_number][key][0]:
+            print 'The annotation<', key , '> for neuron ' , str(i), ' is protected. Annotation not updated'
+        else:
+            self._neuron_annotations[neuron_number][key] =  (protected,value)
+        
+    def get_neuron_annotation(self,neuron_number,key):
+        if not self._pop:
+               print 'Population have not been yet set in sheet: ', self.name , '!'
+        return self._neuron_annotations[neuron_number][key][1]
+
     
     def describe(self, template='default', render=lambda t,c: Template(t).safe_substitute(c)):
         context = {
@@ -123,8 +150,7 @@ class Sheet(MozaikComponent):
         except NothingToWriteError, errmsg:
             logger.debug(errmsg)
 
-        
-        return segment
+            return segment
 
 class RetinalUniformSheet(Sheet):
 

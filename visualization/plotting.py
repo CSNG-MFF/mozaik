@@ -234,7 +234,7 @@ class VmPlot(PerStimulusPlot):
           three_tick_axis(ax.yaxis)
           
           if idx == 0:
-            pylab.ylabel('Vm')
+            pylab.ylabel('Vm(mV)')
           else:
             pylab.ylabel('')
           pylab.rc('axes', linewidth=1)            
@@ -270,7 +270,7 @@ class GSynPlot(PerStimulusPlot):
           disable_top_right_axis(ax)
           
           if idx == 0:
-            pylab.ylabel('nS')
+            pylab.ylabel('G(nS)')
           else:
             pylab.ylabel('')
           
@@ -341,8 +341,9 @@ class ConductanceSignalListPlot(LinePlot):
               self.e_con[idx].plot(display=ax,kwargs={'color':'r','label':'exc'})
               self.i_con[idx].plot(display=ax,kwargs={'color':'b','label':'inh'})
               if idx == 0:
-                 pylab.ylabel('Conductance(S)')
+                 pylab.ylabel('G(S)')
 
               disable_top_right_axis(ax)      
               three_tick_axis(ax.yaxis)        
+              three_tick_axis(ax.xaxis)                      
               pylab.rc('axes', linewidth=1)  
