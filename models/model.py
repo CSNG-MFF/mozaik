@@ -10,7 +10,7 @@ from MozaikLite.framework import load_component
 from MozaikLite.framework.interfaces import MozaikComponent
 from MozaikLite.framework.space import VisualSpace, VisualRegion
 from MozaikLite.tools.misc import create_segment_for_sheets
-from MozaikLite.framework.connectors import ExponentialProbabilisticArborization,UniformProbabilisticArborization,GaborConnector
+from MozaikLite.framework.connectors import ExponentialProbabilisticArborization,UniformProbabilisticArborization,GaborConnector, RFSpecificProbabilisticArborization
 from MozaikLite.stimuli.stimulus_generator import Null
 from NeuroTools import signals, plotting, visualization, visual_logging, datastore
 
@@ -150,10 +150,10 @@ class JensModel(Model):
         
 
         # initialize projections
-        UniformProbabilisticArborization(self,cortex_exc,cortex_exc,self.parameters.cortex_exc.ExcExcConnection,'V1ExcExcConnection')
-        UniformProbabilisticArborization(self,cortex_exc,cortex_inh,self.parameters.cortex_exc.ExcInhConnection,'V1ExcInhConnection')
-        UniformProbabilisticArborization(self,cortex_inh,cortex_exc,self.parameters.cortex_inh.InhExcConnection,'V1InhExcConnection')
-        UniformProbabilisticArborization(self,cortex_inh,cortex_inh,self.parameters.cortex_inh.InhInhConnection,'V1InhInhConnection')
+        RFSpecificProbabilisticArborization(self,cortex_exc,cortex_exc,self.parameters.cortex_exc.ExcExcConnection,'V1ExcExcConnection')
+        RFSpecificProbabilisticArborization(self,cortex_exc,cortex_inh,self.parameters.cortex_exc.ExcInhConnection,'V1ExcInhConnection')
+        RFSpecificProbabilisticArborization(self,cortex_inh,cortex_exc,self.parameters.cortex_inh.InhExcConnection,'V1InhExcConnection')
+        RFSpecificProbabilisticArborization(self,cortex_inh,cortex_inh,self.parameters.cortex_inh.InhInhConnection,'V1InhInhConnection')
 
         GaborConnector(self,self.retina.layers["A"].populations['X_ON'],self.retina.layers["A"].populations['X_OFF'],cortex_exc,self.parameters.cortex_exc.AfferentConnection,'V1AffConnection')
         GaborConnector(self,self.retina.layers["A"].populations['X_ON'],self.retina.layers["A"].populations['X_OFF'],cortex_inh,self.parameters.cortex_inh.AfferentConnection,'V1AffInhConnection')

@@ -86,6 +86,9 @@ class MozaikLiteVisualSystemConnector(VisualSystemConnector):
           
           import pylab    
           pylab.figure()
+          print x
+          print y 
+          print w
           pylab.scatter(x,y,c=w,s=20)
           pylab.xlim(min(p.positions[0]),max(p.positions[0]))
           pylab.ylim(min(p.positions[1]),max(p.positions[1]))
@@ -189,8 +192,8 @@ class SpecificProbabilisticArborization(MozaikLiteVisualSystemConnector):
 	  
 	  required_parameters = ParameterSet({
 	    'synapse_dynamics' : str,        # string indetifying the synaptic plasticity mechanism (None for no plasticity)
-        'weight_factor': float, # the base size of weights
-        'num_samples' : int
+            'weight_factor': float, # the base size of weights
+	    'num_samples' : int
 	  })
 	  
 	  def __init__(self, network, source, target, connection_list,parameters,name):
@@ -198,10 +201,10 @@ class SpecificProbabilisticArborization(MozaikLiteVisualSystemConnector):
             self.name = name
             
             if parameters.synapse_dynamics == 'None':
-                synapse_dynamics = None
+                self.synapse_dynamics = None
             else:
-                synapse_dynamics = parameters.synapse_dynamics
-            self.connection_list = connect_list    
+                self.synapse_dynamics = parameters.synapse_dynamics
+            self.connection_list = connection_list    
                 
 	  def connect(self):
 		samples = sample_from_bin_distribution([c[2] for c in self.connection_list],self.parameters.num_samples)
@@ -209,7 +212,7 @@ class SpecificProbabilisticArborization(MozaikLiteVisualSystemConnector):
 		self.connection_list = [self.connection_list[s] for s in samples]
 		self.connection_list = [(a,b,self.parameters.weight_factor,d) for (a,b,c,d) in self.connection_list]
 		
-		method  =  self.sim.FromListConnector(connection_list)  
+		method  =  self.sim.FromListConnector(self.connection_list)  
 		
 		#!HACKALERT
 		# this is only for compatibility with original mozaik retinas
@@ -219,7 +222,7 @@ class SpecificProbabilisticArborization(MozaikLiteVisualSystemConnector):
 		self.proj = self.sim.Projection(self.source, self.target.pop, method, synapse_dynamics=self.synapse_dynamics, label=self.name, rng=None, target=self.parameters.target_synapses)
 
 
-class RFSpecificProbabilisticArborization(MozaikLiteVisualSystemConnector):
+class RFSpecificProbabilisticArborization(MozaikComponent):
 		"""
 		This connector implements the standard V1 functionally specific connection rule:
 
@@ -228,22 +231,17 @@ class RFSpecificProbabilisticArborization(MozaikLiteVisualSystemConnector):
 		"""
 
 		required_parameters = ParameterSet({
-		'synapse_dynamics' : str, # string indetifying the synaptic plasticity mechanism (None for no plasticity)
-		'weight_factor': float, # the base size of weights
-		'num_samples' : int,
+                'probabilistic': bool, # should the weights be probabilistic or directly proportianal to the gabor profile		
 		'or_sigma' : float, # how sharply does the probability of connection fall of with orientation difference
 		'phase_sigma' : float, # how sharply does the probability of connection fall of with phase difference
+		'specific_arborization' : ParameterSet,
 		})
 
 		def __init__(self, network, source, target, parameters,name):
-			MozaikLiteVisualSystemConnector.__init__(self, network, source,target,parameters)
+			MozaikComponent.__init__(self,network,parameters)
 			self.name = name
-			
-			if parameters.synapse_dynamics == 'None':
-				synapse_dynamics = None
-			else:
-				synapse_dynamics = parameters.synapse_dynamics
-            
+			self.souce = source
+			self.target = target
             
 		def connect(self):
 			weights = []
@@ -266,8 +264,10 @@ class RFSpecificProbabilisticArborization(MozaikLiteVisualSystemConnector):
 					phase_gauss = exp(-phase_dist*phase_dist/2*self.parameters.phase_sigma)/numpy.sqrt(2*numpy.pi*self.parameters.phase_sigma*self.parameters.phase_sigma)
 					w = or_dist*phase_gauss*or_gauss
 					weights.append((i,j,w,self.parameters.propagation_constant))
-
-			SpecificProbabilisticArborization(self.network, self.source, self.target, weights,self.parameters,self.name)
+			if self.parameters.probabilistic:
+				SpecificProbabilisticArborization(self.network, self.source, self.target, weights,self.parameters.specific_arborization,self.name).connect()
+			else:
+				SpecificArborization(self.network, self.source, self.target, weights,self.parameters.specific_arborization,self.name).connect()
 
 def gabor(x1,y1,x2,y2,orientation,frequency,phase,size,aspect_ratio):
         from numpy import cos,sin
@@ -337,13 +337,16 @@ class GaborConnector(MozaikComponent):
 						on_weights.append((i,j,numpy.max((0,gabor(on.positions[0][i],on.positions[1][i],0,0,orientation,frequency,phase,size,aspect_ratio))),parameters.propagation_constant))
 						off_weights.append((i,j,-numpy.min((0,gabor(off.positions[0][i],off.positions[1][i],0,0,orientation,frequency,phase,size,aspect_ratio))),parameters.propagation_constant))
              
+             
              if parameters.probabilistic:
                  on_proj =  SpecificProbabilisticArborization(network,lgn_on,target,on_weights,parameters.specific_arborization,'ON_to_[' + target.name + ']')
                  off_proj = SpecificProbabilisticArborization(network,lgn_off,target,off_weights,parameters.specific_arborization,'OFF_to_[' + target.name + ']')
              else:
                  on_proj =  SpecificArborization(network,lgn_on,target,on_weights,parameters.specific_arborization,'ON_to_[' + target.name + ']')
                  off_proj = SpecificArborization(network,lgn_off,target,off_weights,parameters.specific_arborization,'OFF_to_[' + target.name + ']')
+             
+             on_proj.connect()
+             off_proj.connect()
                  
-                 
-             on_proj.connection_field_plot_scatter(len(target.pop)-1,on_weights)   
-             off_proj.connection_field_plot_scatter(len(target.pop)-1,off_weights)   
+             #on_proj.connection_field_plot_scatter(len(target.pop)-1,on_weights)   
+             #off_proj.connection_field_plot_scatter(len(target.pop)-1,off_weights)   

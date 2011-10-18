@@ -7,7 +7,7 @@
 	'name':'V1_Inh',
 	'sx':100.0,
         'sy':100.0,
-	'density':1.0,
+	'density':20.0,
         
 	'magnification_factor':1.0,
     	
@@ -32,27 +32,36 @@
     },
     
     'InhExcConnection': {
-	    'connection_probability': 1.0, 
-	    'weights': 0.03,                
-#	    'weights': 0.0,                
-            'propagation_constant': 1.5,    
-	    'synapse_dynamics' : 'None',        
-	    'target_synapses' : 'inhibitory',
+	    'or_sigma' : 0.3,
+	    'phase_sigma' : 0.3,
+            'probabilistic' : True,
+	    'specific_arborization': {
+		    'synapse_dynamics' : 'None',
+		    'weight_factor': 0.0009,
+		    'num_samples' : 60,
+		    'target_synapses' : 'inhibitory',
+	    }
+
     },        
 
     'InhInhConnection': {
-	    'connection_probability': 0.1, 
-	    'weights': 0.0,                
-            'propagation_constant': 1.5,    
-	    'synapse_dynamics' : 'None',    
-	    'target_synapses' : 'inhibitory',
+	    'or_sigma' : 0.3,
+	    'phase_sigma' : 0.3,
+            'probabilistic' : True,
+	    'specific_arborization': {
+		    'synapse_dynamics' : 'None',
+		    'weight_factor': 0.0009,
+		    'num_samples' : 60,
+		    'target_synapses' : 'inhibitory',
+	    }
+	    
     },
 
     'AfferentConnection': {
             'aspect_ratio': UniformDist(min=0.33333333, max=0.3333333),
             'size':         UniformDist(min=0.7, max=0.7),
-            'orientation':  UniformDist(min=0, max=0),
-            'phase':        UniformDist(min=3.14, max=3.14),
+            'orientation':  UniformDist(min=0, max=1.57),
+            'phase':        UniformDist(min=0, max=3.14),
             'frequency':    UniformDist(min=0.8, max=0.8),
             'propagation_constant': 1.5,    
             'topological' : False,

@@ -61,29 +61,30 @@ class Sheet(MozaikComponent):
         def pop():
             doc = "PyNN population"
 
-        def fget(self):
-            if not self._pop:
-                print 'Population have not been yet set in sheet: ', self.name , '!'
-            return self._pop
+    	    def fget(self):
+        	if not self._pop:
+            	    print 'Population have not been yet set in sheet: ', self.name , '!'
+                return self._pop
             
-        def fset(self, value):
-            self._pop = value
-            self._neuron_annotations = [{} for i in xrange(0,len(value))]
+	    def fset(self, value):
+    	        self._pop = value
+        	self._neuron_annotations = [{} for i in xrange(0,len(value))]
             return locals()  
-            pop = property(**pop()) #this will be populated by PyNN population, in the derived classes		
+        pop = property(**pop()) #this will be populated by PyNN population, in the derived classes		
         
         def add_neuron_annotation(self,neuron_number,key,value,protected=True):
-            if not self._pop:
-                   print 'Population have not been yet set in sheet: ', self.name , '!'
-            if protected and self._neuron_annotations[i].has_key(key) and self._neuron_annotations[i][key][0]:
-                   print 'The annotation<', key , '> for neuron ' , str(i), ' is protected. Annotation not updated'
-            else:
-                self._neuron_annotations[i][key] =  (protected,value)
+    	    if not self._pop:
+                print 'Population have not been yet set in sheet: ', self.name , '!'
+                
+            if protected and self._neuron_annotations[neuron_number].has_key(key) and self._neuron_annotations[neuron_number][key][0]:
+		print 'The annotation<', key , '> for neuron ' , str(i), ' is protected. Annotation not updated'
+    	    else:
+    	        self._neuron_annotations[neuron_number][key] =  (protected,value)
             
         def get_neuron_annotation(self,neuron_number,key):
             if not self._pop:
                    print 'Population have not been yet set in sheet: ', self.name , '!'
-            return self._neuron_annotations[i][key][1]
+            return self._neuron_annotations[neuron_number][key][1]
         
         
         def record(self, variable, cells='all'):
