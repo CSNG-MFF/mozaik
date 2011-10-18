@@ -9,14 +9,12 @@ from NeuroTools.parameters import ParameterSet
 from MozaikLite.framework import load_component
 from MozaikLite.framework.interfaces import MozaikComponent
 from MozaikLite.framework.space import VisualSpace, VisualRegion
-from MozaikLite.tools.misc import create_segment_for_sheets
+from MozaikLite.tools.misc import create_segment_for_sheet
 from MozaikLite.framework.connectors import ExponentialProbabilisticArborization,UniformProbabilisticArborization,GaborConnector
 from MozaikLite.stimuli.stimulus_generator import Null
 from NeuroTools import signals, plotting, visualization, visual_logging, datastore
 
 from MozaikLite.framework.sheets import Sheet
-
-logger = logging.getLogger("MozaikLite")
 
 
 class Model(MozaikComponent):
@@ -59,32 +57,27 @@ class Model(MozaikComponent):
                 sheet.record('v')
                 sheet.record('g_syn')
                 sh.append(sheet) 
-               
-        s = create_segment_for_sheets(sh)
 
         self.retina.present_stimulus(self.visual_space,stimulus.duration)        
         self.run(stimulus.duration)
         
+        segments = []
+        
         for sheet in self.sheets:    
             if sheet.to_record:
+                s = create_segment_for_sheet(sheet.name)
                 sheet.write_neo_object(s,stimulus.duration)
+                segments.append(s)
 
         self.visual_space.clear()
         self.reset()
         for sheet in self.sheets:    
             if sheet.to_record:
                 sheet.pop._record(None)
-        return s
+        return segments
 
 
     def __init__(self,sim):
-        logger.info("Creating Model object using the %s simulator." % sim.__name__)
-        self.sim = sim
-        self.visual_field = VisualRegion((0,0), (1,1))
-        self.node = self.sim.setup() # should have some parameters here
-        self.sheets = []
-        self.connectors = []
-
         
         # Read parameters
         if len(sys.argv) > 1:
@@ -92,7 +85,6 @@ class Model(MozaikComponent):
         else:
             parameters_url = "param-ffi/" + self.__class__.__name__ + "/defaults"
         self.parameters = ParameterSet(parameters_url) 
-        MozaikComponent.__init__(self, self, self.parameters);        
         
         # Create results directory
         timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
@@ -100,10 +92,26 @@ class Model(MozaikComponent):
         os.mkdir(self.results_dir)
         self.parameters.save(self.results_dir + "parameters", expand_urls=True)
         
+        global logger
+        logger = logging.getLogger("MozaikLite")
+        
         # Set-up logging
         init_logging(self.results_dir + "log", file_level=logging.DEBUG, console_level=logging.DEBUG) # NeuroTools version
         visual_logging.basicConfig(self.results_dir + "visual_log.zip", level=logging.DEBUG)
         
+        logger.info("Creating Model object using the %s simulator." % sim.__name__)
+        
+        
+        # ABOVE CODE SHOULD BE PUT AWAY!
+        
+        MozaikComponent.__init__(self, self, self.parameters);        
+        
+        self.sim = sim
+        self.visual_field = VisualRegion((0,0), (1,1))
+        self.node = self.sim.setup() # should have some parameters here
+        self.sheets = []
+        self.connectors = []
+
         # Set-up visual stimulus
         self.visual_space = VisualSpace(self.parameters.screen.update_interval,self.parameters.screen.background_luminance)
         self.t = 0
@@ -147,7 +155,6 @@ class JensModel(Model):
         
         cortex_exc.to_record = True
         cortex_inh.to_record = True
-        
 
         # initialize projections
         UniformProbabilisticArborization(self,cortex_exc,cortex_exc,self.parameters.cortex_exc.ExcExcConnection,'V1ExcExcConnection')

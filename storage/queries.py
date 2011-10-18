@@ -1,8 +1,9 @@
 from MozaikLite.framework.interfaces import MozaikLiteParametrizeObject
 from MozaikLite.storage.datastore import Hdf5DataStore
 from MozaikLite.stimuli.stimulus_generator import load_from_string, parse_stimuls_id
-from MozaikLite.tools.misc import create_segment_for_sheets
 from NeuroTools.parameters import ParameterSet
+from MozaikLite.stimuli.stimulus_generator import colapse
+import numpy
 
 class Query(MozaikLiteParametrizeObject):
     """
@@ -25,27 +26,44 @@ class Query(MozaikLiteParametrizeObject):
         MozaikLiteParametrizeObject.__init__(self,parameters)
 
     def query(self,dsv):
+        raise NotImplementedError
         pass
 
 
 ########################################################################
-def select_stimuli_type_query(dsv,stimulus_id=None): 
+def select_stimuli_type_query(dsv,stimulus_name,params=None): 
     new_dsv = dsv.fromDataStoreView()
     new_dsv.analysis_results = dsv.analysis_result_copy()
-    
-    for s in dsv.block.segments:
-        sid = parse_stimuls_id(s.stimulus)
-        if sid.name == stimuli_name:
-           new_dsv.block.segments.append(s) 
 
+   
+    for seg in dsv.block.segments:
+        sid = parse_stimuls_id(seg.annotations['stimulus'])
+        if sid.name == stimulus_name:
+           if params: 
+                flag=True    
+                for (i,f) in enumerate(params):
+                    if f != '*' and float(f) != float(sid.parameters[i]):
+                       flag=False;
+                       break;
+                if flag:
+                    new_dsv.block.segments.append(seg) 
+           else:
+               new_dsv.block.segments.append(seg) 
     return new_dsv
 
 class SelectStimuliTypeQuery(Query):
     """
-    This query selects recordings in response to a selected query type.
+    It will return all recordings to stimuli with name stimuli_name        
+    Additionally one can filter out parameters:
+    params is a list that should have the same number of elements as the 
+    number of free parameters of the given stimulus. Each parameter can be
+    set either to '*' indicating pick any stimulus with respect to this parameter
+    or to a number which indicates pick only stimuli that have this value of the 
+    parameter.
     """
     required_parameters = ParameterSet({
-     'stimulus_id' : str
+     'stimulus_id' : str,
+     'params' : list
     })
       
     def query(self,dsv):  
@@ -58,33 +76,8 @@ def select_result_sheet_query(dsv,sheet_name):
     new_dsv.analysis_results = dsv.analysis_result_copy()
     
     for seg in dsv.block.segments:
-        ns = create_segment_for_sheets([sheet_name])
-        ns.stimulus = seg.stimulus
-        
-        for s in seg.sheets: 
-            if s == sheet_name:
-                    idxs = ns.annotations[s+'_'+'_spikes']
-                    for k in seg.annotations[s+'_'+'_spikes']:
-                        ns.spiketrains.append(seg._spiketrains[k])
-                        idxs.append(len(ns._spiketrains)-1)
-                        
-                    idxs = ns.annotations[s+'_'+'_vm']
-                    for k in seg.annotations[s+'_'+'_vm']:
-                        ns.analogsignals.append(seg._analogsignals[k])
-                        idxs.append(len(ns._analogsignals)-1)
-
-                    idxs = ns.annotations[s+'_'+'_gsyn_e']
-                    for k in seg.annotations[s+'_'+'_gsyn_e']:
-                        ns.analogsignals.append(seg._analogsignals[k])
-                        idxs.append(len(ns._analogsignals)-1)
-
-                    idxs = ns.annotations[s+'_'+'_gsyn_i']
-                    for k in seg.annotations[s+'_'+'_gsyn_i']:
-                        ns.analogsignals.append(seg._analogsignals[k])
-                        idxs.append(len(ns._analogsignals)-1)
-                        
-         
-        new_dsv.block.segments.append(ns)
+        if seg.annotations['sheet_name'] == sheet_name:
+            new_dsv.block.segments.append(seg)
     return new_dsv    
 
 
@@ -134,8 +127,42 @@ class TagBasedQuery(Query):
     })
     def query(self,dsv):  
         return tag_based_query(dsv,**self.parameters)    
+########################################################################                      
 
-########################################################################              
-        
 
+
+########################################################################
+def partition_by_stimulus_paramter_query(dsv,stimulus_paramter_index):  
+        st = dsv.get_stimuli()
+        print st
+        values,st = colapse(numpy.arange(0,len(st),1),st,parameter_indexes=[stimulus_paramter_index])
+        dsvs = []
+        print values
+        for vals in values:
+            new_dsv = dsv.fromDataStoreView()
+            new_dsv.analysis_results = dsv.analysis_result_copy()
+            for v in vals:
+                print v
+                new_dsv.block.segments.append(dsv.block.segments[v])
+            dsvs.append(new_dsv)
+        return dsvs
+
+
+class PartitionByStimulusParamterQuery(Query):
     
+    """
+    This query will take all recordings and return list of DataStoreViews
+    each holding recordings measured to the same stimulus with exception of
+    the paramter reference by stimulus_paramter_index
+    
+    This way the datastoreview is partitioned into subsets each holding 
+    recordings to the same stimulus with the same paramter values with the
+    exception to the stimulus_paramter_index
+    """
+    required_parameters = ParameterSet({
+     'stimulus_paramter_index' : list, # list of tags the the query will look for
+    })
+    
+    def query(self,dsv):  
+        return partition_by_stimulus_paramter_query(dsv,**self.parameters)    
+########################################################################

@@ -93,7 +93,6 @@ class Sheet(MozaikComponent):
                 st = SpikeTrain(spikes[k],t_start=0,t_stop=tstop,units=quantities.ms)
                 st.index = k
                 segment.spiketrains.append(st)
-                segment.annotations[self.name+'_spikes'].append(len(segment.spiketrains)-1)
             logging.debug("Writing spikes from population %s to neo object." % (self.pop))
         except NothingToWriteError, errmsg:
             logger.debug(errmsg)
@@ -104,7 +103,7 @@ class Sheet(MozaikComponent):
                 st = AnalogSignal(v[k],units=quantities.mV,sampling_period=self.network.sim.get_time_step()*quantities.ms)
                 st.index = k
                 segment.analogsignals.append(st)
-                segment.annotations[self.name+'_vm'].append(len(segment.analogsignals)-1)
+                segment.annotations['vm'].append(len(segment.analogsignals)-1)
             logging.debug("Writing Vm from population %s to neo object." % (self.pop))
         except NothingToWriteError, errmsg:
             logger.debug(errmsg)
@@ -112,14 +111,14 @@ class Sheet(MozaikComponent):
             gsyn_e,gsyn_i = get_gsyn_to_dicts(self.pop.get_gsyn(),self.pop)
             for k in v.keys():
                 # it assumes segment implements and add function which takes the id of a neuorn and the corresponding its SpikeTrain
-                st_e = AnalogSignal(0.001*gsyn_e[k],sampling_period=self.network.sim.get_time_step()*quantities.ms,units=quantities.S)
-                st_i = AnalogSignal(0.001*gsyn_i[k],sampling_period=self.network.sim.get_time_step()*quantities.ms,units=quantities.S)
+                st_e = AnalogSignal(0.000001*gsyn_e[k],sampling_period=self.network.sim.get_time_step()*quantities.ms,units=quantities.S)
+                st_i = AnalogSignal(0.000001*gsyn_i[k],sampling_period=self.network.sim.get_time_step()*quantities.ms,units=quantities.S)
                 st_e.index = k
                 st_i.index = k
                 segment.analogsignals.append(st_e)
-                segment.annotations[self.name+'_gsyn_e'].append(len(segment.analogsignals)-1)
+                segment.annotations['gsyn_e'].append(len(segment.analogsignals)-1)
                 segment.analogsignals.append(st_i)
-                segment.annotations[self.name+'_gsyn_i'].append(len(segment.analogsignals)-1)
+                segment.annotations['gsyn_i'].append(len(segment.analogsignals)-1)
             logging.debug("Writing Vm from population %s to neo object." % (self.pop))
         except NothingToWriteError, errmsg:
             logger.debug(errmsg)

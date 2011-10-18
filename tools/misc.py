@@ -181,13 +181,9 @@ def sample_from_bin_distribution(bins, number_of_samples):
     
     return si
 
-def create_segment_for_sheets(sheets):
-       p={'stimulus':'','sheets':[]}
-       for sheet in sheets:   
-           p[sheet.name+'_spikes']=[]
-           p[sheet.name+'_vm']=[]
-           p[sheet.name+'_gsyn_e']=[]
-           p[sheet.name+'_gsyn_i']=[]
-           p['sheets'].append(sheet.name)
-
+def create_segment_for_sheet(sheet):
+       p={'stimulus':'','sheet_name':sheet}
+       p['vm'] = []
+       p['gsyn_e'] = []
+       p['gsyn_i'] = []
        return Segment(**p) 

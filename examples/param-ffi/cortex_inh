@@ -7,7 +7,7 @@
 	'name':'V1_Inh',
 	'sx':100.0,
         'sy':100.0,
-	'density':1.0,
+	'density':5.0,
         
 	'magnification_factor':1.0,
     	
@@ -61,7 +61,7 @@
 	    
 	    'specific_arborization': {
 		    'synapse_dynamics' : 'None',
-		    'weight_factor': 0.0009,
+		    'weight_factor': 0.001,
 		    'num_samples' : 60,
 		    'target_synapses' : 'excitatory',
 	    }

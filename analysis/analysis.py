@@ -1,8 +1,9 @@
 from MozaikLite.tools.misc import segments_to_dict_of_SpikeList,segments_to_dict_of_AnalogSignalList
-from analysis_helper_functions import colapse
+from MozaikLite.stimuli.stimulus_generator import colapse
 from MozaikLite.analysis.analysis_data_structures import TuningCurve, NeurotoolsData, ConductanceSignalList
 from MozaikLite.framework.interfaces import MozaikLiteParametrizeObject
 from NeuroTools.parameters import ParameterSet
+from MozaikLite.storage.queries import select_stimuli_type_query,select_result_sheet_query
 from NeuroTools import signals
 import pylab
 import quantities
@@ -26,27 +27,30 @@ class Analysis(MozaikLiteParametrizeObject):
         self.tags = tags
 
     def analyse(self):
+        raise NotImplementedError
         pass
+        
 
 class AveragedOrientationTuning(Analysis):
     
       def analyse(self):
             print 'Starting OrientationTuning analysis'
-            segments = self.datastore.get_recordings('FullfieldDriftingSinusoidalGrating',[])
-            data = segments_to_dict_of_SpikeList(segments)
-            
-            for sheet in data:
-                (sp,st) = data[sheet]
-                # transform spikes trains due to stimuly to mean_rates
+            dsv = select_stimuli_type_query(self.datastore,'FullfieldDriftingSinusoidalGrating')
+
+            for sheet in dsv.sheets():
+                dsv1 = select_result_sheet_query(dsv,sheet)
+                sp = dsv1.get_spike_lists()
+                st = dsv1.get_stimuli()
+                # transform spike trains due to stimuly to mean_rates
                 mean_rates = [numpy.array(s.mean_rates())  for s in sp]
                 # collapse against all parameters other then orientation
-                (mean_rates,s) = colapse(mean_rates,st,parameter_indexes=[])
+                (mean_rates,s) = colapse(mean_rates,st,parameter_indexes=[7])
                 # take a sum of each 
                 def _mean(a):
                     l = len(a)
                     return sum(a)/l
                 mean_rates = [_mean(a) for a in mean_rates]  
-                self.datastore.add_analysis_result(TuningCurve(mean_rates,s,7,sheet,tags=self.tags),sheet_name=sheet)
+                self.datastore.add_analysis_result(TuningCurve(mean_rates,s,8,sheet,tags=self.tags),sheet_name=sheet)
             
 class Neurotools(Analysis):
       """
@@ -57,7 +61,7 @@ class Neurotools(Analysis):
       def analyse(self):
           print 'Starting Neurotools analysis'
           # get all recordings
-          segments = self.datastore.get_recordings(None,[])
+          dsv = self.datastore
           spike_data_dict = segments_to_dict_of_SpikeList(segments)
           (vm_data_dict,g_syn_e_data_dict,g_syn_i_data_dict) = segments_to_dict_of_AnalogSignalList(segments)
           for sheet in vm_data_dict.keys():
@@ -83,22 +87,22 @@ class GSTA(Analysis):
       def analyse(self):
             print 'Starting Spike Triggered Analysis of Conductances'
             
-            segments = self.datastore.get_recordings(None,[])
-            spikes = segments_to_dict_of_SpikeList(segments)
-            (vm_data_dict,g_syn_e_data_dict,g_syn_i_data_dict) = segments_to_dict_of_AnalogSignalList(segments)  
-            
-            for sheet in spikes.keys():
-                (sp,st) = spikes[sheet]
-                (g_e,st) = g_syn_e_data_dict[sheet]
-                (g_i,st) = g_syn_i_data_dict[sheet]
-                
+            dsv = self.datastore
+            print dsv.sheets()
+            for sheet in dsv.sheets():
+                dsv1 = select_result_sheet_query(dsv,sheet)
+                sp = dsv1.get_spike_lists()
+                st = dsv1.get_stimuli()
+                g_e = dsv1.get_gsyn_e_lists()
+                g_i = dsv1.get_gsyn_i_lists()
+
                 asl_e = []
                 asl_i = []
-                    
                 for n in self.parameters.neurons:
                     asl_e.append(self.do_gsta(g_e,sp,n))
                     asl_i.append(self.do_gsta(g_i,sp,n))
                 
+                print sheet
                 self.datastore.add_analysis_result(ConductanceSignalList(asl_e,asl_i,sheet,self.parameters.neurons,tags=self.tags),sheet_name=sheet)
                 
                 
@@ -114,7 +118,8 @@ class GSTA(Analysis):
                      if idx - gstal > 0 and (idx + gstal+1) <= len(ans[n]):
                         gsta = gsta +  ans[n].signal[idx-gstal:idx+gstal+1]
                         count +=1
-          
+          if count == 0:
+             count = 1
           return signals.AnalogSignal(gsta/count,dt=dt,t_start=-gstal*dt,t_stop=(gstal+1)*dt)          
            
           

@@ -3,10 +3,14 @@ from neo.core.segment import Segment
 from neo.core.block import Block
 from neo.core.spiketrain import SpikeTrain
 from neo.io.hdf5io import IOManager
+from NeuroTools import signals
 from MozaikLite.stimuli.stimulus_generator import load_from_string, parse_stimuls_id
+from MozaikLite.tools.misc import spike_dic_to_list
 from MozaikLite.framework.interfaces import MozaikLiteParametrizeObject
 from NeuroTools.parameters import ParameterSet
+
 import pickle
+import numpy
 
 
 class DataStoreView(MozaikLiteParametrizeObject):
@@ -17,7 +21,7 @@ class DataStoreView(MozaikLiteParametrizeObject):
     restrict other parts of Mozaik to work only over these subsets. This is done via means of queries
     (see storage.queries) which produce DataStoreView objects and can be chained to work like filters.
 
-    Note that the actual datastores inherit from this object and defines how the data
+    Note that the actual datastores inherit from this object and define how the data
     are actualy stored on other media (i.e. HD via i.e. hdf5 file format).
 
     Data store should aggregate all data and analysis results collected across experiments
@@ -25,7 +29,16 @@ class DataStoreView(MozaikLiteParametrizeObject):
 
     Experiments results storage:
 
-    TODO
+    These are stored a a simple list in the self.block.segments variable. Each segment corresponds to recordings
+    from a single sheet to a single stimulus. The information about the sheet stimulus are stored in the segments
+    but are not exposed to the user. Instead there is a set of function that the user can use to access the results:
+    
+    sheets(self):
+    get_stimuli(self):
+    get_spike_lists(self):
+    get_vm_lists(self):
+    get_gsyn_e_lists(self):
+    get_gsyn_i_lists(self):
 
     Analysis results storage:
 
@@ -59,39 +72,84 @@ class DataStoreView(MozaikLiteParametrizeObject):
         self.analysis_results = {}
         self.analysis_results['data'] = {}
         
-    def get_recordings(self,stimuli_name,params=None):
-        """
-        It will return all recordings to stimuli with name stimuli_name        
-        Additionally one can filter out parameters:
-        params is a list that should have the same number of elements as the 
-        number of free parameters of the given stimulus. Each parameter can be
-        set either to '*' indicating pick any stimulus with respect to this parameter
-        or to a number which indicates pick only stimuli that have this value of the 
-        parameter.
-        """
-        recordings = []
+    def get_segments(self):
+        return self.block.segments
         
-        if stimuli_name == None:
-           for seg in self.block.segments: 
-               recordings.append(seg)  
-        else:   
-            for seg in self.block.segments:
-                sid = parse_stimuls_id(seg.stimulus)
-                if sid.name == stimuli_name:
-                   if params: 
-                        flag=True    
-                        for (f,i) in zip(params,len(params)):
-                            if f != '*' and float(f) != sid.parameters[i]:
-                               flag=False;
-                               break;
-                        if flag:
-                            recordings.append(seg) 
-                   else:
-                       recordings.append(seg) 
+    def sheets(self):
+        """
+        Returns the list of all sheets that are present in at least one of the segments in the give DataStoreView
+        """
+        sheets={}
+        for s in self.block.segments:
+            sheets[s.annotations['sheet_name']] = 1
+        return sheets.keys()
+    
+    def get_stimuli(self):
+        """
+        Returns a list of stimuli ids. The order of the stimuli ids corresponds to the order of
+        segments returned by the get_segments() call.
+        """
+        return [s.annotations['stimulus'] for s in self.block.segments]
         
-        return recordings
+    
+        
+    def get_spike_lists(self):
+        """
+        Returns a list of Neurotools SpikeList objects. The order of the spikelists corresponds to the order of
+        segments returned by the get_segments() call.
+        """
+        sl = []    
+        for s in self.block.segments:
+            t_start = s.spiketrains[0].t_start
+            t_stop = s.spiketrains[0].t_stop
+           
+            d = {}
+            for st in s.spiketrains:
+                d[st.index] = numpy.array(st)
+           
+            spikes = signals.SpikeList(spike_dic_to_list(d),d.keys(),float(t_start),float(t_stop))
+            sl.append(spikes)
+        return sl    
+        
+    def get_vm_lists(self):
+        """
+        Returns a list of Neurotools SpikeList objects. The order of the spikelists corresponds to the order of
+        segments returned by the get_segments() call.
+        """
+        ass = []    
+        for s in self.block.segments:
+            a = []
+            for i in s.annotations['vm']:
+                a.append(signals.AnalogSignal(s.analogsignals[i],dt=s.analogsignals[i].sampling_period))
+            ass.append(a)    
+        return ass    
 
+    def get_gsyn_e_lists(self):
+        """
+        Returns a list of Neurotools SpikeList objects. The order of the spikelists corresponds to the order of
+        segments returned by the get_segments() call.
+        """
+        ass = []    
+        for s in self.block.segments:
+            a = []
+            for i in s.annotations['gsyn_e']:
+                a.append(signals.AnalogSignal(s.analogsignals[i],dt=s.analogsignals[i].sampling_period))
+            ass.append(a)
+        return ass
 
+    def get_gsyn_i_lists(self):
+        """
+        Returns a list of Neurotools SpikeList objects. The order of the spikelists corresponds to the order of
+        segments returned by the get_segments() call.
+        """
+        ass = []    
+        for s in self.block.segments:
+            a = []
+            for i in s.annotations['gsyn_i']:
+                a.append(signals.AnalogSignal(s.analogsignals[i],dt=s.analogsignals[i].sampling_period))
+            ass.append(a)
+        return ass    
+   
     def get_analysis_result(self,result_id,sheet_name=None,neuron_idx=None):
         if not sheet_name:
            node = self.analysis_results['data'] 
@@ -106,13 +164,13 @@ class DataStoreView(MozaikLiteParametrizeObject):
         nd = {}
         for k in d.keys():
             if k != 'data':
-               nd[k] =  _analysis_result_copy(d[k])
+               nd[k] =  self._analysis_result_copy(d[k])
             else:
                nd[k] = d[k].copy() 
         return nd    
 
     def analysis_result_copy(self):
-        return _analysis_result_copy(self.analysis_results)
+        return self._analysis_result_copy(self.analysis_results)
                 
     def recordings_copy(self):
         return self.block.segments[:]
@@ -155,15 +213,19 @@ class DataStore(DataStoreView):
         return unpresented_stimuli
         
     def load(self):
+        raise NotImplementedError
         pass
         
     def save(self):
+        raise NotImplementedError
         pass    
     
     def add_recording(self,segment,stimulus):
+        raise NotImplementedError
         pass
     
     def add_analysis_result(self,result,sheet_name=None,neuron_idx=None):
+        raise NotImplementedError
         pass        
 
 class Hdf5DataStore(DataStore):
@@ -195,8 +257,9 @@ class Hdf5DataStore(DataStore):
     
     def add_recording(self,segment,stimulus):
         # we get recordings as seg
-        segment.stimulus = str(stimulus)
-        self.block.segments.append(segment)
+        for s in segment:
+            s.annotations['stimulus'] = str(stimulus)
+        self.block.segments.extend(segment)
         self.stimulus_dict[str(stimulus)]=True
 
     def add_analysis_result(self,result,sheet_name=None,neuron_idx=None):
@@ -220,4 +283,24 @@ class Hdf5DataStore(DataStore):
         else:
             node[result.identifier] = [result]
         
-           
+class PickledDataStore(Hdf5DataStore):
+    """
+    An DataStore that saves all it's data as a simple pickled files 
+    """
+    
+    def load(self):
+        f = open(self.parameters.root_directory+'/datastore.recordings.pickle','r')
+        self.block = pickle.load(f)
+        for s in self.block.segments:
+            self.stimulus_dict[s.stimulus]=True
+        
+        f = open(self.parameters.root_directory+'/datastore.analysis.pickle','r')
+        self.analysis_results = pickle.load(f)
+        
+            
+    def save(self):
+        f = open(self.parameters.root_directory+'/datastore.recordings.pickle','w')
+        pickle.dump(self.block,f)
+        
+        f = open(self.parameters.root_directory+'/datastore.analysis.pickle','w')
+        pickle.dump(self.analysis_results,f)
