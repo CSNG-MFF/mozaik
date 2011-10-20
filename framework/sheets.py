@@ -19,6 +19,8 @@ from neo.core.spiketrain import SpikeTrain
 from neo.core.segment import Segment
 from neo.core.analogsignal import AnalogSignal
 from MozaikLite.tools.misc import get_spikes_to_dic, get_vm_to_dic,get_gsyn_to_dicts
+from MozaikLite.tools.misc import create_segment_for_sheet
+
 
 logger = logging.getLogger("Mozaik")
 
@@ -112,13 +114,14 @@ class Sheet(MozaikComponent):
         else:
             raise Exception("cells must be 'all', a dict, or an int. Actual value of %s" % str(cells))
 
-    def write_neo_object(self,segment,tstop):
+    def write_neo_object(self,tstop):
+        segment = create_segment_for_sheet(self.name)
         try:
             spikes = get_spikes_to_dic(self.pop.getSpikes(),self.pop)
             for k in spikes.keys():
                 # it assumes segment implements and add function which takes the id of a neuron and the corresponding its SpikeTrain
                 st = SpikeTrain(spikes[k],t_start=0,t_stop=tstop,units=quantities.ms)
-                st.index = k
+                st.annotations['index'] = k
                 segment.spiketrains.append(st)
             logging.debug("Writing spikes from population %s to neo object." % (self.pop))
         except NothingToWriteError, errmsg:
@@ -128,7 +131,7 @@ class Sheet(MozaikComponent):
             for k in v.keys():
                 # it assumes segment implements and add function which takes the id of a neuorn and the corresponding its SpikeTrain
                 st = AnalogSignal(v[k],units=quantities.mV,sampling_period=self.network.sim.get_time_step()*quantities.ms)
-                st.index = k
+                st.annotations['index'] = k
                 segment.analogsignals.append(st)
                 segment.annotations['vm'].append(len(segment.analogsignals)-1)
             logging.debug("Writing Vm from population %s to neo object." % (self.pop))
@@ -140,8 +143,8 @@ class Sheet(MozaikComponent):
                 # it assumes segment implements and add function which takes the id of a neuorn and the corresponding its SpikeTrain
                 st_e = AnalogSignal(0.000001*gsyn_e[k],sampling_period=self.network.sim.get_time_step()*quantities.ms,units=quantities.S)
                 st_i = AnalogSignal(0.000001*gsyn_i[k],sampling_period=self.network.sim.get_time_step()*quantities.ms,units=quantities.S)
-                st_e.index = k
-                st_i.index = k
+                st_e.annotations['index'] = k
+                st_i.annotations['index'] = k
                 segment.analogsignals.append(st_e)
                 segment.annotations['gsyn_e'].append(len(segment.analogsignals)-1)
                 segment.analogsignals.append(st_i)
@@ -150,7 +153,7 @@ class Sheet(MozaikComponent):
         except NothingToWriteError, errmsg:
             logger.debug(errmsg)
 
-            return segment
+        return segment
 
 class RetinalUniformSheet(Sheet):
 
@@ -163,10 +166,10 @@ class RetinalUniformSheet(Sheet):
     def __init__(self, network, parameters):
         """
         """
-        logger.info("Creating %s" % self.__class__.__name__)
+        logger.info("Creating %s with %d neurons." % (self.__class__.__name__,int(parameters.sx*parameters.sy*parameters.density)))
         Sheet.__init__(self, network, parameters)
         rs = space.RandomStructure(boundary=space.Cuboid(parameters.sx,parameters.sy,0),origin=(0.0, 0.0, 0.0))
-        self.pop = self.sim.Population(self, parameters.sx*parameters.sy*density, getattr(sim, self.parameters.cell.model), self.parameters.cell.model.params,rs,self.name)
+        self.pop = self.sim.Population(int(parameters.sx*parameters.sy*parameters.density), getattr(self.network.sim, self.parameters.cell.model), self.parameters.cell.params,rs,self.name)
         for var, val in self.parameters.cell.initial_values.items():
             self.pop.initialize(var, val)
 

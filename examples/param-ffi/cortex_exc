@@ -7,7 +7,7 @@
 	'name':'V1_Exc',
 	'sx':100.0,
         'sy':100.0,
-	'density':10.0,
+	'density':5.0,
         
 	'magnification_factor':1.0,
     	
@@ -16,7 +16,7 @@
         	'params': {
         	    'v_thresh':-57.0,
     		    'v_rest': -70.0,
-    	    	    'v_reset': -70.0,
+    	    	    'v_reset': -65.0,
     		    'tau_refrac': 2.0,
 		'tau_m': 10.0,
 		'cm': 0.29,
@@ -26,7 +26,7 @@
     		'tau_syn_I': 10.0, 
 		},
 	   'initial_values': {
-                'v': -70.0,
+                'v': -60.0,
             }
 
         }
@@ -34,7 +34,7 @@
     
     'ExcExcConnection': {
 	    'connection_probability': 0.1, 
-	    'weights': 0.0,                
+	    'weights': 0.0001,                
             'propagation_constant': 1.5,    
 	    'synapse_dynamics' : 'None',   
 	    'target_synapses' : 'excitatory',     
@@ -42,7 +42,7 @@
 
     'ExcInhConnection': {
 	    'connection_probability': 0.1, 
-	    'weights': 0.0,                
+	    'weights': 0.0001,                
             'propagation_constant': 1.5,    
 	    'synapse_dynamics' : 'None',        
 	    'target_synapses' : 'excitatory',
@@ -60,7 +60,7 @@
 	    
 	    'specific_arborization': {
 		    'synapse_dynamics' : 'None',
-		    'weight_factor': 0.005,
+		    'weight_factor': 0.0015,
 		    'num_samples' : 60,
 		    'target_synapses' : 'excitatory',
 	    }

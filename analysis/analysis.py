@@ -1,9 +1,11 @@
 from MozaikLite.tools.misc import segments_to_dict_of_SpikeList,segments_to_dict_of_AnalogSignalList
 from MozaikLite.stimuli.stimulus_generator import colapse
-from MozaikLite.analysis.analysis_data_structures import TuningCurve, NeurotoolsData, ConductanceSignalList
+from MozaikLite.analysis.analysis_data_structures import TuningCurve, NeurotoolsData, ConductanceSignalList , AnalogSignalList
+from MozaikLite.analysis.analysis_helper_functions import time_histogram_across_trials
 from MozaikLite.framework.interfaces import MozaikLiteParametrizeObject
 from NeuroTools.parameters import ParameterSet
-from MozaikLite.storage.queries import select_stimuli_type_query,select_result_sheet_query
+from MozaikLite.storage.queries import select_stimuli_type_query,select_result_sheet_query, partition_by_stimulus_paramter_query
+
 from NeuroTools import signals
 import pylab
 import quantities
@@ -51,22 +53,6 @@ class AveragedOrientationTuning(Analysis):
                     return sum(a)/l
                 mean_rates = [_mean(a) for a in mean_rates]  
                 self.datastore.add_analysis_result(TuningCurve(mean_rates,s,8,sheet,tags=self.tags),sheet_name=sheet)
-            
-class Neurotools(Analysis):
-      """
-      Turn the data into Neurotools data structures that can than be visualized 
-      via numerous Neurotools analysis tools
-      """
-          
-      def analyse(self):
-          print 'Starting Neurotools analysis'
-          # get all recordings
-          dsv = self.datastore
-          spike_data_dict = segments_to_dict_of_SpikeList(segments)
-          (vm_data_dict,g_syn_e_data_dict,g_syn_i_data_dict) = segments_to_dict_of_AnalogSignalList(segments)
-          for sheet in vm_data_dict.keys():
-              self.datastore.add_analysis_result(NeurotoolsData(spike_data_dict[sheet],vm_data_dict[sheet],g_syn_e_data_dict[sheet],g_syn_i_data_dict[sheet],tags=self.tags),sheet_name=sheet)
-            
 
 class GSTA(Analysis):
       """
@@ -88,7 +74,6 @@ class GSTA(Analysis):
             print 'Starting Spike Triggered Analysis of Conductances'
             
             dsv = self.datastore
-            print dsv.sheets()
             for sheet in dsv.sheets():
                 dsv1 = select_result_sheet_query(dsv,sheet)
                 sp = dsv1.get_spike_lists()
@@ -101,8 +86,6 @@ class GSTA(Analysis):
                 for n in self.parameters.neurons:
                     asl_e.append(self.do_gsta(g_e,sp,n))
                     asl_i.append(self.do_gsta(g_i,sp,n))
-                
-                print sheet
                 self.datastore.add_analysis_result(ConductanceSignalList(asl_e,asl_i,sheet,self.parameters.neurons,tags=self.tags),sheet_name=sheet)
                 
                 
@@ -124,4 +107,38 @@ class GSTA(Analysis):
            
           
           
-          
+class Precision(Analysis):
+      """
+      Computes the precision as the autocorrelation between the PSTH of different trials
+      """
+      
+      required_parameters = ParameterSet({
+        'neurons' : list, #the list of neuron indexes for which to compute the 
+        'bin_length' : float, #(ms) the size of bin to construct the PSTH from
+      })
+
+      
+      def analyse(self):
+            print 'Starting Spike Triggered Analysis of Conductances'
+            dsv = self.datastore
+            for sheet in dsv.sheets():
+                dsv1 = select_result_sheet_query(dsv,sheet)
+                dsvs = partition_by_stimulus_paramter_query(dsv1,7)
+                
+                for dsv in dsvs:
+                    sl = dsv.get_spike_lists()
+                    t_start = sl[0].t_start
+                    t_stop = sl[0].t_stop
+                    duration = t_stop-t_start
+                    
+                    hist = time_histogram_across_trials(sl,self.parameters.bin_length)
+                    al = []
+                    for n in self.parameters.neurons:
+                        ac = numpy.correlate(hist[n], hist[n], mode='full')
+                        if numpy.sum(numpy.power(hist[n],2)) != 0:
+                            ac = ac / numpy.sum(numpy.power(hist[n],2))
+                       
+                        al.append(signals.AnalogSignal(ac,dt=self.parameters.bin_length*quantities.ms,t_start=-duration,t_stop=duration-self.parameters.bin_length))
+                        
+                    self.datastore.add_analysis_result(AnalogSignalList(al,sheet,self.parameters.neurons,tags=self.tags),sheet_name=sheet)    
+                        

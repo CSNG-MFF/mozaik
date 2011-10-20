@@ -105,7 +105,9 @@ class DataStoreView(MozaikLiteParametrizeObject):
            
             d = {}
             for st in s.spiketrains:
-                d[st.index] = numpy.array(st)
+                print st
+                print st.annotations
+                d[st.annotations['index']] = numpy.array(st)
            
             spikes = signals.SpikeList(spike_dic_to_list(d),d.keys(),float(t_start),float(t_stop))
             sl.append(spikes)
@@ -292,7 +294,7 @@ class PickledDataStore(Hdf5DataStore):
         f = open(self.parameters.root_directory+'/datastore.recordings.pickle','r')
         self.block = pickle.load(f)
         for s in self.block.segments:
-            self.stimulus_dict[s.stimulus]=True
+            self.stimulus_dict[s.annotations['stimulus']]=True
         
         f = open(self.parameters.root_directory+'/datastore.analysis.pickle','r')
         self.analysis_results = pickle.load(f)

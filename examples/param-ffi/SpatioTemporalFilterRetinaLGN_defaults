@@ -1,9 +1,10 @@
 {
     'component': 'MozaikLite.models.retinal.spatiotemporalfilter.SpatioTemporalFilterRetinaLGN',
     'params': {
-	'name' : 'STRFRetina',
         'density': 50.0, # neurons per degree squared
         'size'  : (3.0,3.0), # the effective size of the modelled section of retina/lgn
+        'name' : 'Retina',
+        'linear_scaler': 2.0,
         'receptive_field': {
             #'func': 'lambda x,y,t,p: numpy.sin(t)',
             'func': 'cai97.stRF_2d',
@@ -50,7 +51,7 @@
         },
         'noise': {
             'mean': 0.0,
-            'stdev': 2.8 # nA
+            'stdev': 1.4 # nA
         }
     }
 }

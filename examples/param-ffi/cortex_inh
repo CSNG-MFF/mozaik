@@ -16,7 +16,7 @@
         	'params': {
         	    'v_thresh':-57.0,
     		    'v_rest': -70.0,
-    	    	    'v_reset': -70.0,
+    	    	    'v_reset': -65.0,
     		    'tau_refrac': 2.0,
 		'tau_m': 6.4,
 		'cm': 0.141,
@@ -26,16 +26,14 @@
     		'tau_syn_I': 10.0, 
 		},
             'initial_values': {
-                'v': -70.0,
+                'v': -60.0,
             }
         }
     },
     
     'InhExcConnection': {
 	    'connection_probability': 1.0, 
-	    'weights': 0.01,                
-#	    'weights': 0.03,                
-#	    'weights': 0.0,                
+	    'weights': 0.002,                
             'propagation_constant': 1.5,    
 	    'synapse_dynamics' : 'None',        
 	    'target_synapses' : 'inhibitory',
@@ -43,7 +41,7 @@
 
     'InhInhConnection': {
 	    'connection_probability': 0.1, 
-	    'weights': 0.0,                
+	    'weights': 0.002,                
             'propagation_constant': 1.5,    
 	    'synapse_dynamics' : 'None',    
 	    'target_synapses' : 'inhibitory',
@@ -61,7 +59,7 @@
 	    
 	    'specific_arborization': {
 		    'synapse_dynamics' : 'None',
-		    'weight_factor': 0.001,
+		    'weight_factor': 0.0008,
 		    'num_samples' : 60,
 		    'target_synapses' : 'excitatory',
 	    }

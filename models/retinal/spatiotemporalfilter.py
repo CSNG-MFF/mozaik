@@ -4,9 +4,9 @@ Retina/LGN model based on that developed by Jens Kremkow (CNRS-INCM/ALUF)
 """
 
 import numpy
-from MozaikLite.framework.containers import Layer
 from MozaikLite.framework.space import VisualSpace, VisualRegion
-from MozaikLite.framework.sheets import Sheet
+from MozaikLite.framework.interfaces import MozaikComponent
+from MozaikLite.framework.sheets import Sheet,RetinalUniformSheet
 import cai97
 import logging
 from NeuroTools import visual_logging
@@ -208,6 +208,7 @@ class SpatioTemporalFilterRetinaLGN(Sheet):
     required_parameters = ParameterSet({
         'density': float, # neurons per degree squared
         'size' : tuple, # degrees of visual field
+        'linear_scaler': float, # linear scaler that the RF output is multiplied with
         'receptive_field': ParameterSet({
             'func': str,
             'func_params':ParameterSet,
@@ -230,11 +231,10 @@ class SpatioTemporalFilterRetinaLGN(Sheet):
     })
     
     def __init__(self, network, parameters):
-        Sheet.__init__(self, network, parameters)       
+        MozaikComponent.__init__(self, network, parameters)       
         self.shape = (int(self.parameters.size[0] * numpy.sqrt(self.parameters.density)),int(self.parameters.size[1] * numpy.sqrt(self.parameters.density)))
-        self.layers = {"A":  Layer([], label="A"),}
+        self.sheets = {}
         self._built = False
-        self._to_record = [] # to allow record() to be called before present_stimulus()
         self.rf_types = ('X_ON', 'X_OFF')
 
         sim = self.network.sim                
@@ -251,20 +251,14 @@ class SpatioTemporalFilterRetinaLGN(Sheet):
         self.scs={}
         self.ncs={}
         for rf_type in self.rf_types:
-            p = sim.Population(self.shape[0]*self.shape[1],
-                               getattr(sim, self.parameters.cell.model),
-                               self.parameters.cell.params,grid,
-                               label=rf_type)
-            for var, val in self.parameters.cell.initial_values.items():
-                p.initialize(var, val)
-            self.pops[rf_type] = p    
-            self.layers["A"].add_population(p)                           
+            p = RetinalUniformSheet(network,ParameterSet({'sx': self.parameters.size[0], 'sy': self.parameters.size[1], 'density': self.parameters.density, 'cell': self.parameters.cell, 'name' : rf_type }))
+            self.sheets[rf_type] = p
 
         for rf_type in self.rf_types:            
                 self.scs[rf_type] = []
                 self.ncs[rf_type] = []
                 
-                for lgn_cell in self.pops[rf_type]:
+                for lgn_cell in self.sheets[rf_type].pop:
                     scs = sim.StepCurrentSource([0],[0])
                     
                     ncs = sim.NoisyCurrentSource(mean=self.parameters.noise.mean,
@@ -294,9 +288,9 @@ class SpatioTemporalFilterRetinaLGN(Sheet):
         for rf_type in self.rf_types:            
                 assert isinstance(input_currents[rf_type], list)        
                 
-                for lgn_cell, input_current,scs,ncs in zip(self.pops[rf_type], input_currents[rf_type],self.scs[rf_type],self.ncs[rf_type]):
+                for lgn_cell, input_current,scs,ncs in zip(self.sheets[rf_type].pop, input_currents[rf_type],self.scs[rf_type],self.ncs[rf_type]):
                     assert isinstance(input_current, dict)
-                    scs._set(input_current['times'],input_current['amplitudes'])
+                    scs._set(input_current['times'],self.parameters.linear_scaler*input_current['amplitudes'])
                     
                     
         # for debugging/testing
@@ -313,54 +307,15 @@ class SpatioTemporalFilterRetinaLGN(Sheet):
 
         # if record() has already been called, setup the recording now
         self._built = True
-        for variable, cells in self._to_record: # this allows record() to be called before present_stimulus()
-            self.record(variable, cells)
+        
+        
+        for variable in ['spikes','v','g_syn']:
+            self.record(variable)    
+        
              
         return input_current_array # for debugging/testing
 
 
-    def write_neo_object(self,segment,tstop):
-        try:
-            spikes = get_spikes_to_dic(self.layers["A"].populations['X_ON'].getSpikes(),self.layers["A"].populations['X_ON'])
-            for k in spikes.keys():
-                # it assumes segment implements and add function which takes the id of a neuorn and the corresponding its SpikeTrain
-                st = SpikeTrain(spikes[k],0,tstop,quantities.ms)
-                st.index = k
-                segment._spiketrains.append(st)
-                segment.__getattr__('Retina_ON'+'_spikes').append(len(segment._spiketrains)-1)
-                
-            spikes = get_spikes_to_dic(self.layers["A"].populations['X_OFF'].getSpikes(),self.layers["A"].populations['X_OFF'])
-            for k in spikes.keys():
-                # it assumes segment implements and add function which takes the id of a neuorn and the corresponding its SpikeTrain
-                st = SpikeTrain(spikes[k],0,tstop,quantities.ms)
-                st.index = k
-                segment._spiketrains.append(st)
-                segment.__getattr__('Retina_OFF'+'_spikes').append(len(segment._spiketrains)-1)
-            logging.debug("Writing spikes from Retina to neo object.")
-        except NothingToWriteError, errmsg:
-            logger.debug(errmsg)
-        try:
-            v = get_vm_to_dic(self.layers["A"].populations['X_ON'].get_v(),self.layers["A"].populations['X_ON'])
-            for k in v.keys():
-                ## it assumes segment implements and add function which takes the id of a neuorn and the corresponding its SpikeTrain
-                st = AnalogSignal(v[k],sampling_period=self.network.sim.get_time_step()*quantities.ms)
-                st.index = k
-                segment._analogsignals.append(st)
-                segment.__getattr__('Retina_ON'+'_vm').append(len(segment._analogsignals)-1)
-            
-            v = get_vm_to_dic(self.layers["A"].populations['X_OFF'].get_v(),self.layers["A"].populations['X_OFF'])
-            for k in v.keys():
-                ## it assumes segment implements and add function which takes the id of a neuorn and the corresponding its SpikeTrain
-                st = AnalogSignal(v[k],sampling_period=self.network.sim.get_time_step()*quantities.ms)
-                st.index = k
-                segment._analogsignals.append(st)
-                segment.__getattr__('Retina_OFF'+'_vm').append(len(segment._analogsignals)-1)                
-                
-            logging.debug("Writing Vm from Retina to neo object.")
-        except NothingToWriteError, errmsg:
-            logger.debug(errmsg)
-        
-        return segment
 
                 
     def _calculate_input_currents(self, visual_space, duration):
@@ -439,15 +394,18 @@ class SpatioTemporalFilterRetinaLGN(Sheet):
             
         return input_currents
     
-    
-    
-    def record(self, variable, cells='all'):  
-        for name,layer in self.layers.items():
-            if cells == 'all' or isinstance(cells, int):
-                layer.record(variable, cells)
-            elif isinstance(cells, dict):
-                layer.record(variable, cells[name])
-            else:
-                raise Exception("cells must be 'all', a dict, or an int. Actual value of %s" % str(cells))
+    def write_neo_object(self,tstop):
+        for k in rf:
+            rf[k].write_neo_object(self,tstop)
+        
+    def record(self, variable, cells='all'): 
+        if self.to_record: 
+            for name,sheet in self.sheets.items():
+                if cells == 'all' or isinstance(cells, int):
+                    sheet.record(variable, cells)
+                elif isinstance(cells, dict):
+                    sheet.record(variable, cells[name])
+                else:
+                    raise Exception("cells must be 'all', a dict, or an int. Actual value of %s" % str(cells))
         
     

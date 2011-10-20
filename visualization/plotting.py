@@ -150,6 +150,7 @@ class PerStimulusPlot(LinePlot):
 class RasterPlot(PerStimulusPlot):
       required_parameters = ParameterSet({
         'trial_averaged_histogram' : bool,  #should the plot show also the trial averaged histogram
+        'neurons' : list,
       })
     
       def _subplot(self,idx,gs):
@@ -162,11 +163,12 @@ class RasterPlot(PerStimulusPlot):
          sp = self.dsvs[idx].get_spike_lists()  
          
          t_stop = sp[0].t_stop
-         num_n = len(sp[0])
+         num_n = len(self.parameters.neurons)
          num_t = len(sp)
          
          for i,spike_list in enumerate(sp):
-            for j,spike_train in enumerate(spike_list):
+            for j in self.parameters.neurons:
+                spike_train = spike_list[j]
                 ax.plot(spike_train.spike_times,[j*(num_t+1) + i + 1 for x in xrange(0,len(spike_train.spike_times))],',',color='#848484')
              
          for j in xrange(0,num_n-1):   
@@ -179,7 +181,7 @@ class RasterPlot(PerStimulusPlot):
          remove_x_tick_labels()
          remove_y_tick_labels()
          if idx == 0:
-           pylab.ylabel('Nuron/Trial #')
+           pylab.ylabel('Neuron/Trial #')
          else:
            pylab.ylabel('')
         
@@ -188,7 +190,8 @@ class RasterPlot(PerStimulusPlot):
          all_spikes = []
          
          for i,spike_list in enumerate(sp):
-            for j,spike_train in enumerate(spike_list):
+            for j in self.parameters.neurons:
+                spike_train = spike_list[j]
                 all_spikes.extend(spike_train.spike_times)
          
          if all_spikes != []:
@@ -287,7 +290,7 @@ class OverviewPlot(Plotting):
       })
       def subplot(self,subplotspec):
           gs = gridspec.GridSpecFromSubplotSpec(3, 1, subplot_spec=subplotspec)  
-          RasterPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name, 'trial_averaged_histogram' : True})).subplot(gs[0,0])
+          RasterPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name, 'trial_averaged_histogram' : True, 'neurons' : [0]})).subplot(gs[0,0])
           GSynPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : 0})).subplot(gs[1,0])
           VmPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : 0})).subplot(gs[2,0])          
 
@@ -317,6 +320,7 @@ class AnalogSignalListPlot(LinePlot):
               
               disable_top_right_axis(ax)  
               three_tick_axis(ax.yaxis)            
+              three_tick_axis(ax.xaxis)                      
               pylab.rc('axes', linewidth=1)
 
 class ConductanceSignalListPlot(LinePlot):

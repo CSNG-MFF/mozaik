@@ -1,5 +1,5 @@
 from MozaikLite.stimuli.stimulus_generator import FullfieldDriftingSinusoidalGrating, Null
-from MozaikLite.analysis.analysis import AveragedOrientationTuning, Neurotools, GSTA
+from MozaikLite.analysis.analysis import AveragedOrientationTuning,  GSTA, Precision
 from MozaikLite.visualization.plotting import GSynPlot,RasterPlot,VmPlot,CyclicTuningCurvePlot,OverviewPlot, ConductanceSignalListPlot
 from MozaikLite.visualization.jens_paper_plots import Figure2
 from NeuroTools.parameters import ParameterSet, ParameterDist
@@ -22,7 +22,7 @@ class Experiment(object):
         
     def run(self,data_store,stimuli):
         for s in stimuli:
-            print 'Presenting stimulus: ',str(s)
+            print 'Presenting stimulus: ',str(s) , '\n'
             segments = self.model.present_stimulus_and_record(s)
             data_store.add_recording(segments,s)
     
@@ -55,8 +55,11 @@ class MeasureOrientationTuningFullfield(Experiment):
         print 'Doing Analysis'
         AveragedOrientationTuning(data_store,ParameterSet({})).analyse()
         GSTA(data_store,ParameterSet({'neurons' : [0], 'length' : 50.0 }),tags=['GSTA1']).analyse()
+        Precision(data_store,ParameterSet({'neurons' : [0], 'bin_length' : 1.0 })).analyse()
+        
         OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Exc'})).plot()
         OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Inh'})).plot()
+        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'X_ON'})).plot()
         Figure2(data_store,ParameterSet({'sheet_name' : 'V1_Exc'})).plot()
         
 
@@ -77,6 +80,5 @@ class MeasureSpontaneousActivity(Experiment):
 
     def do_analysis(self,data_store):
         print 'Doing Analysis'
-        Neurotools(data_store).analyse()
-        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Exc'})).plot()
-        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Inh'})).plot()
+        #OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Exc'})).plot()
+        #OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Inh'})).plot()

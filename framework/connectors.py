@@ -24,17 +24,8 @@ class MozaikLiteVisualSystemConnector(VisualSystemConnector):
 	  def connect(self):
 		  pass
     
-      def connection_field_plot_continuous(self,index,weights,afferent=True,density=30):
-          
-          #!HACKALERT
-          # this is only for compatibility with original mozaik retinas
-          # should be deleted once everything is unified
-          if not isinstance(source,Population):
-             source = source.pop
-          
+      def connection_field_plot_continuous(self,index,afferent=True,density=30):
           weights =  self.proj.getWeights(format='array')
-          print 'max:',numpy.max(weights)
-          print 'min:', numpy.min(weights)
           x = []
           y = []
           w = []
@@ -58,20 +49,16 @@ class MozaikLiteVisualSystemConnector(VisualSystemConnector):
           zi = griddata(x,y,w,xi,yi)
           pylab.figure()
           pylab.imshow(zi)
+          pylab.title('Connection field from %s to %s of neuron %d' % (self.source.name,self.target.name,index))
           pylab.colorbar()
-          #pylab.title('Connection field from %s to %s of neuron %d' % (self.proj.pre.name,self.proj.post.name,index))
+          
 
-      def connection_field_plot_scatter(self,index,weights,afferent=True,density=30):
+      def connection_field_plot_scatter(self,index,afferent=True,density=30):
           
           weights =  self.proj.getWeights(format='array')
-          
-          print 'max:',numpy.max(weights)
-          print 'min:', numpy.min(weights)
           x = []
           y = []
           w = []
-          print index
-          print numpy.shape(weights)
           if afferent:
                  weights = weights[:,index].ravel()
                  p = self.proj.pre
@@ -84,17 +71,14 @@ class MozaikLiteVisualSystemConnector(VisualSystemConnector):
                     y.append(p.positions[1][i])
                     w.append(ww)
           
-          import pylab    
           pylab.figure()
-          print x
-          print y 
-          print w
           pylab.scatter(x,y,c=w,s=20)
           pylab.xlim(min(p.positions[0]),max(p.positions[0]))
           pylab.ylim(min(p.positions[1]),max(p.positions[1]))
           pylab.colorbar()
+          pylab.title('Connection field from %s to %s of neuron %d' % (self.source.name,self.target.name,index))
           #pylab.show()
-          #pylab.title('Connection field from %s to %s of neuron %d' % (self.proj.pre.name,self.proj.post.name,index))
+          
 
 
 class ExponentialProbabilisticArborization(MozaikLiteVisualSystemConnector):
@@ -147,57 +131,54 @@ class UniformProbabilisticArborization(MozaikLiteVisualSystemConnector):
             else:
                 self.synapse_dynamics = parameters.synapse_dynamics
 		
-		def connect(self):
-			method = self.sim.FixedProbabilityConnector(self.parameters.connection_probability,allow_self_connections=False, weights=self.parameters.weights, delays=self.parameters.propagation_constant, space=space.Space(axes='xy'), safe=True)
-			self.proj = self.sim.Projection(self.source.pop, self.target.pop, method, synapse_dynamics=self.synapse_dynamics, label=self.name, rng=None, target=self.parameters.target_synapses)
+        def connect(self):
+            method = self.sim.FixedProbabilityConnector(self.parameters.connection_probability,allow_self_connections=False, weights=self.parameters.weights, delays=self.parameters.propagation_constant, space=space.Space(axes='xy'), safe=True)
+            self.proj = self.sim.Projection(self.source.pop, self.target.pop, method, synapse_dynamics=self.synapse_dynamics, label=self.name, rng=None, target=self.parameters.target_synapses)
 
 class SpecificArborization(MozaikLiteVisualSystemConnector):
-		"""
-		Generic connector which gets directly list of connections as the list of quadruplets as accepted by the
-		pyNN FromListConnector.
+        """
+        Generic connector which gets directly list of connections as the list of quadruplets as accepted by the
+        pyNN FromListConnector.
+        
+        This connector cannot be parametrized directly via the parameter file because that does not suport list of tuples.
+        """
 		
-		This connector cannot be parametrized directly via the parameter file because that does not suport list of tuples.
-		"""
-		
-		required_parameters = ParameterSet({
-		'synapse_dynamics' : str, # string indetifying the synaptic plasticity mechanism (None for no plasticity)
-		'weight_factor': float, # weight scaler
-		})
-		
-		def __init__(self, network, source, target, connection_list,parameters,name):
-			MozaikLiteVisualSystemConnector.__init__(self, network, source,target,parameters)
-			self.name = name
-			self.method  =  self.sim.FromListConnector(connection_list)
-			if parameters.synapse_dynamics == 'None':
-				self.synapse_dynamics = None
-			else:
-				self.synapse_dynamics = parameters.synapse_dynamics
+        required_parameters = ParameterSet({
+            'synapse_dynamics' : str, # string indetifying the synaptic plasticity mechanism (None for no plasticity)
+            'weight_factor': float, # weight scaler
+        })
+            
+        def __init__(self, network, source, target, connection_list,parameters,name):
+            MozaikLiteVisualSystemConnector.__init__(self, network, source,target,parameters)
+            self.name = name
+            self.connection_list = connection_list    
+            if parameters.synapse_dynamics == 'None':
+                self.synapse_dynamics = None
+            else:
+                self.synapse_dynamics = parameters.synapse_dynamics
 
-		def connect(self):	        
-			#!HACKALERT
-			# this is only for compatibility with original mozaik retinas
-			# should be deleted once everything is unified
-			self.connection_list = [(a,b,c*self.parameters.weight_factor,d) for (a,b,c,d) in self.connection_list]
-			if not isinstance(self.source,Population):
-				self.source = self.source.pop
-			self.proj = self.sim.Projection(self.source, self.target.pop, self.method, synapse_dynamics=self.synapse_dynamics, label=self.name, rng=None, target=self.parameters.target_synapses)
+        def connect(self):	        
+            self.connection_list = [(a,b,c*self.parameters.weight_factor,d) for (a,b,c,d) in self.connection_list]
+            self.method  =  self.sim.FromListConnector(self.connection_list)
+        
+            self.proj = self.sim.Projection(self.source.pop, self.target.pop, self.method, synapse_dynamics=self.synapse_dynamics, label=self.name, rng=None, target=self.parameters.target_synapses)
 
 class SpecificProbabilisticArborization(MozaikLiteVisualSystemConnector):
-	  """
-	  Generic connector which gets directly list of connections as the list of quadruplets as accepted by the
-	  pyNN FromListConnector.
-	  
-	  This connector cannot be parametrized directly via the parameter file because that does not suport list of tuples.
-	  """
-	  
-	  required_parameters = ParameterSet({
-	    'synapse_dynamics' : str,        # string indetifying the synaptic plasticity mechanism (None for no plasticity)
+        """
+        Generic connector which gets directly list of connections as the list of quadruplets as accepted by the
+        pyNN FromListConnector.
+        
+        This connector cannot be parametrized directly via the parameter file because that does not suport list of tuples.
+        """
+        
+        required_parameters = ParameterSet({
+        'synapse_dynamics' : str,        # string indetifying the synaptic plasticity mechanism (None for no plasticity)
             'weight_factor': float, # the base size of weights
-	    'num_samples' : int
-	  })
-	  
-	  def __init__(self, network, source, target, connection_list,parameters,name):
-    	    MozaikLiteVisualSystemConnector.__init__(self, network, source,target,parameters)
+        'num_samples' : int
+        })
+        
+        def __init__(self, network, source, target, connection_list,parameters,name):
+            MozaikLiteVisualSystemConnector.__init__(self, network, source,target,parameters)
             self.name = name
             
             if parameters.synapse_dynamics == 'None':
@@ -206,23 +187,30 @@ class SpecificProbabilisticArborization(MozaikLiteVisualSystemConnector):
                 self.synapse_dynamics = parameters.synapse_dynamics
             self.connection_list = connection_list    
                 
-	  def connect(self):
-		samples = sample_from_bin_distribution([c[2] for c in self.connection_list],self.parameters.num_samples)
-		
-		self.connection_list = [self.connection_list[s] for s in samples]
-		self.connection_list = [(a,b,self.parameters.weight_factor,d) for (a,b,c,d) in self.connection_list]
-		
-		method  =  self.sim.FromListConnector(self.connection_list)  
-		
-		#!HACKALERT
-		# this is only for compatibility with original mozaik retinas
-		# should be deleted once everything is unified
-		if not isinstance(self.source,Population):
-			self.source = self.source.pop
-		self.proj = self.sim.Projection(self.source, self.target.pop, method, synapse_dynamics=self.synapse_dynamics, label=self.name, rng=None, target=self.parameters.target_synapses)
+        def connect(self):
+            
+            cl = []
+            d={}
+            
+            for i,(s,t,w,delay) in enumerate(self.connection_list):
+                if d.has_key(t):
+                   d[t].append(i)
+                else:
+                   d[t] = [i]
+            
+            for k in d.keys():
+                w = [self.connection_list[i][2] for i in d[k]]
+                
+                samples = sample_from_bin_distribution(w,self.parameters.num_samples)
+                
+                a = [self.connection_list[d[k][s]] for s in samples]
+                cl.extend([(a,b,self.parameters.weight_factor,de) for (a,b,c,de) in a])
+            
+            method  =  self.sim.FromListConnector(cl)  
+            self.proj = self.sim.Projection(self.source.pop, self.target.pop, method, synapse_dynamics=self.synapse_dynamics, label=self.name, rng=None, target=self.parameters.target_synapses)
 
 
-class RFSpecificProbabilisticArborization(MozaikComponent):
+class V1RFSpecificProbabilisticArborization(MozaikComponent):
 		"""
 		This connector implements the standard V1 functionally specific connection rule:
 
@@ -299,23 +287,12 @@ class GaborConnector(MozaikComponent):
       def __init__(self, network, lgn_on, lgn_off, target, parameters,name):
     	     MozaikComponent.__init__(self, network,parameters)
              self.name = name
-             
-             # this is only for compatibility with original mozaik retinas
-             # should be deleted once everything is unified
-             if isinstance(lgn_on,Population):
-                on = lgn_on
-             else:
-                on = on.pop
-
-             if isinstance(lgn_off,Population):
-                off = lgn_off
-             else:
-                off = off.pop
+             on = lgn_on.pop
+             off = lgn_off.pop
              
              on_weights=[] 
              off_weights=[]
-             z = []
-             z =1
+             
              for (neuron2,j) in zip(target.pop,numpy.arange(0,len(target.pop),1)):
 				orientation = parameters.orientation.next()[0]
 				aspect_ratio = parameters.aspect_ratio.next()[0]
@@ -348,5 +325,5 @@ class GaborConnector(MozaikComponent):
              on_proj.connect()
              off_proj.connect()
                  
-             #on_proj.connection_field_plot_scatter(len(target.pop)-1,on_weights)   
-             #off_proj.connection_field_plot_scatter(len(target.pop)-1,off_weights)   
+             on_proj.connection_field_plot_scatter(len(target.pop)-1)   
+             off_proj.connection_field_plot_scatter(len(target.pop)-1)   

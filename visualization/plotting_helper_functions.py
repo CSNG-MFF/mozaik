@@ -11,16 +11,12 @@ def disable_top_right_axis(ax):
 
 def three_tick_axis(axis):
     nticks = len([t for t in axis.get_major_ticks()])
-    print 'DASDASDASDASDASDAS'
-    print [t for t in axis.get_major_ticks()]
-    print nticks
     if (nticks % 2) != 0:
        middle_tick = int(nticks) / 2  
     else:
        middle_tick = 0
        
     for i,tick in enumerate(axis.get_major_ticks()):
-        print tick.label1
         if i != 0 and i != (nticks-1) and i != middle_tick:
            tick.tick2On = False     
            tick.tick1On = False     

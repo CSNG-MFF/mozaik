@@ -106,7 +106,7 @@ def spike_segment_to_dict(seg):
         d = {}
         for k in seg.annotations[s+'_spikes']:
             t = seg.spiketrains[k]
-            d[t.index] = numpy.array(t)
+            d[t.annotations['index']] = numpy.array(t)
         sheets[s] = (spike_dic_to_list(d),d.keys(),float(t.t_start),float(t.t_stop))
     return sheets
     
@@ -157,7 +157,7 @@ def analog_segment_to_dict(seg,signal_name):
         d = {}
         for k in seg.annotations[s+'_'+signal_name]:
             t = seg.analogsignals[k]
-            d[t.index] = numpy.array(t)
+            d[t.annotations['index']] = numpy.array(t)
         sheets[s] = ([signals.AnalogSignal(d[k],dt=t.sampling_period) for k in d.keys()],d.keys())
     return sheets
 
