@@ -5,7 +5,7 @@ Retina/LGN model based on that developed by Jens Kremkow (CNRS-INCM/ALUF)
 
 import numpy
 from MozaikLite.framework.space import VisualSpace, VisualRegion
-from MozaikLite.framework.interfaces import MozaikComponent
+from MozaikLite.framework.interfaces import MozaikRetina
 from MozaikLite.framework.sheets import Sheet,RetinalUniformSheet
 import cai97
 import logging
@@ -202,7 +202,7 @@ class CellWithReceptiveField(object):
         return {'times': time_points, 'amplitudes': response}
 
 
-class SpatioTemporalFilterRetinaLGN(Sheet):
+class SpatioTemporalFilterRetinaLGN(MozaikRetina):
     """Retina/LGN model with spatiotemporal receptive field."""
     
     required_parameters = ParameterSet({
@@ -230,14 +230,14 @@ class SpatioTemporalFilterRetinaLGN(Sheet):
         }),
     })
     
-    def __init__(self, network, parameters):
-        MozaikComponent.__init__(self, network, parameters)       
+    def __init__(self, model, parameters):
+        MozaikRetina.__init__(self, model, parameters)       
         self.shape = (int(self.parameters.size[0] * numpy.sqrt(self.parameters.density)),int(self.parameters.size[1] * numpy.sqrt(self.parameters.density)))
         self.sheets = {}
         self._built = False
         self.rf_types = ('X_ON', 'X_OFF')
 
-        sim = self.network.sim                
+        sim = self.model.sim                
 
         # creat the grid of cells so that they are evenly spaced in the a region of size visual_field.size 
         # centered on 0,0
@@ -251,7 +251,7 @@ class SpatioTemporalFilterRetinaLGN(Sheet):
         self.scs={}
         self.ncs={}
         for rf_type in self.rf_types:
-            p = RetinalUniformSheet(network,ParameterSet({'sx': self.parameters.size[0], 'sy': self.parameters.size[1], 'density': self.parameters.density, 'cell': self.parameters.cell, 'name' : rf_type }))
+            p = RetinalUniformSheet(model,ParameterSet({'sx': self.parameters.size[0], 'sy': self.parameters.size[1], 'density': self.parameters.density, 'cell': self.parameters.cell, 'name' : rf_type }))
             self.sheets[rf_type] = p
 
         for rf_type in self.rf_types:            
@@ -269,7 +269,7 @@ class SpatioTemporalFilterRetinaLGN(Sheet):
                     lgn_cell.inject(scs)
                     lgn_cell.inject(ncs)
     
-    def present_stimulus(self, visual_space, duration=None):
+    def process_visual_input(self, visual_space, duration=None):
         """
         Present a visual stimulus to the model, and create the LGN output (relay)
         neurons. If the stimulus and model parameters have been used previously,
@@ -280,7 +280,7 @@ class SpatioTemporalFilterRetinaLGN(Sheet):
         logger.info("Presenting visual stimulus from visual space %s" % visual_space)
         visual_space.set_duration(duration) # needed for proper caching
         self.input = visual_space # needed for caching
-        sim = self.network.sim
+        sim = self.model.sim
         
         logger.debug("Generating output spikes...")
         input_currents = self._calculate_input_currents(visual_space, duration)
@@ -308,10 +308,8 @@ class SpatioTemporalFilterRetinaLGN(Sheet):
         # if record() has already been called, setup the recording now
         self._built = True
         
-        
-        for variable in ['spikes','v','g_syn']:
-            self.record(variable)    
-        
+        #for variable in ['spikes','v','g_syn']:
+        #    self.record(variable)    
              
         return input_current_array # for debugging/testing
 
@@ -394,18 +392,18 @@ class SpatioTemporalFilterRetinaLGN(Sheet):
             
         return input_currents
     
-    def write_neo_object(self,tstop):
-        for k in rf:
-            rf[k].write_neo_object(self,tstop)
+    #def write_neo_object(self,tstop):
+        #for k in rf:
+            #rf[k].write_neo_object(self,tstop)
         
-    def record(self, variable, cells='all'): 
-        if self.to_record: 
-            for name,sheet in self.sheets.items():
-                if cells == 'all' or isinstance(cells, int):
-                    sheet.record(variable, cells)
-                elif isinstance(cells, dict):
-                    sheet.record(variable, cells[name])
-                else:
-                    raise Exception("cells must be 'all', a dict, or an int. Actual value of %s" % str(cells))
+    #def record(self, variable, cells='all'): 
+        #if self.to_record: 
+            #for name,sheet in self.sheets.items():
+                #if cells == 'all' or isinstance(cells, int):
+                    #sheet.record(variable, cells)
+                #elif isinstance(cells, dict):
+                    #sheet.record(variable, cells[name])
+                #else:
+                    #raise Exception("cells must be 'all', a dict, or an int. Actual value of %s" % str(cells))
         
     

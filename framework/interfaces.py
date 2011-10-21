@@ -81,7 +81,6 @@ class VisualStimulus(VisualObject):
         self.update()
         return [self.img]
   
-
 class MozaikLiteParametrizeObject(object):
     """Base class for for all MozailLite objects using the dynamic parametrization framwork."""
     
@@ -121,24 +120,37 @@ class MozaikLiteParametrizeObject(object):
 class MozaikComponent(MozaikLiteParametrizeObject):
     """Base class for visual system components and connectors."""
     
-    def __init__(self, network, parameters):
+    def __init__(self, model, parameters):
         """
         """
         MozaikLiteParametrizeObject.__init__(self, parameters)
-        self.network = network
+        self.model = model
+
+class MozaikRetina(MozaikComponent):
+      
+      def process_visual_input(self, visual_space, duration=None):  
+          """
+          This method is responsible for presenting the stimulus to the visual_space
+          and in turn to the retina, and all the mechanisms that are responsible to
+          passing the output of the retina (in whatever form desired) to the Sheet objects
+          that are connected to it and thus represent the interface between the 
+          retina and the rest of the model
+          """
+          raise NotImplementedError
+          pass
     
 
 class VisualSystemConnector(MozaikComponent):
     """Base class for objects that connect visual system components."""
     version = __version__
     
-    def __init__(self, network, source, target, parameters):
+    def __init__(self, model, source, target, parameters):
         logger.info("Creating %s between %s and %s" % (self.__class__.__name__,
                                                        source.__class__.__name__,
                                                        target.__class__.__name__))
-        MozaikComponent.__init__(self, network, parameters)
-        self.network.register_connector(self)
-        self.sim = self.network.sim
+        MozaikComponent.__init__(self, model, parameters)
+        self.model.register_connector(self)
+        self.sim = self.model.sim
         self.source = source
         self.target = target
         self.input = source

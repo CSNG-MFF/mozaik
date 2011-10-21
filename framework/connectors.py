@@ -21,8 +21,9 @@ class MozaikLiteVisualSystemConnector(VisualSystemConnector):
           VisualSystemConnector.__init__(self, network, source,target,parameters)
 
     
-	  def connect(self):
-		  pass
+      def connect(self):
+        raise NotImplementedError
+        pass
     
       def connection_field_plot_continuous(self,index,afferent=True,density=30):
           weights =  self.proj.getWeights(format='array')

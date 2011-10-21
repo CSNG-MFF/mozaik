@@ -37,7 +37,7 @@ class Sheet(MozaikComponent):
         'name':str,
     })
 
-    def __init__(self, network, parameters):
+    def __init__(self, model, parameters):
         """
         Sheet is an abstraction of a 2D continuouse sheet of neurons, roughly corresponding to the PyNN Population class with
         the added spatial structure.
@@ -52,9 +52,9 @@ class Sheet(MozaikComponent):
         The units for cortical space should be in μm.
         The units for time are in ms.
         """
-        MozaikComponent.__init__(self, network, parameters)
-        self.network.register_sheet(self)
-        self.sim = self.network.sim
+        MozaikComponent.__init__(self, model, parameters)
+        self.model.register_sheet(self)
+        self.sim = self.model.sim
         self.name = parameters.name # the name of the population
         self.to_record = False
         self._pop = None
@@ -130,7 +130,7 @@ class Sheet(MozaikComponent):
             v = get_vm_to_dic(self.pop.get_v(),self.pop)
             for k in v.keys():
                 # it assumes segment implements and add function which takes the id of a neuorn and the corresponding its SpikeTrain
-                st = AnalogSignal(v[k],units=quantities.mV,sampling_period=self.network.sim.get_time_step()*quantities.ms)
+                st = AnalogSignal(v[k],units=quantities.mV,sampling_period=self.model.sim.get_time_step()*quantities.ms)
                 st.annotations['index'] = k
                 segment.analogsignals.append(st)
                 segment.annotations['vm'].append(len(segment.analogsignals)-1)
@@ -141,8 +141,8 @@ class Sheet(MozaikComponent):
             gsyn_e,gsyn_i = get_gsyn_to_dicts(self.pop.get_gsyn(),self.pop)
             for k in v.keys():
                 # it assumes segment implements and add function which takes the id of a neuorn and the corresponding its SpikeTrain
-                st_e = AnalogSignal(0.000001*gsyn_e[k],sampling_period=self.network.sim.get_time_step()*quantities.ms,units=quantities.S)
-                st_i = AnalogSignal(0.000001*gsyn_i[k],sampling_period=self.network.sim.get_time_step()*quantities.ms,units=quantities.S)
+                st_e = AnalogSignal(0.000001*gsyn_e[k],sampling_period=self.model.sim.get_time_step()*quantities.ms,units=quantities.S)
+                st_i = AnalogSignal(0.000001*gsyn_i[k],sampling_period=self.model.sim.get_time_step()*quantities.ms,units=quantities.S)
                 st_e.annotations['index'] = k
                 st_i.annotations['index'] = k
                 segment.analogsignals.append(st_e)
@@ -163,13 +163,13 @@ class RetinalUniformSheet(Sheet):
         'density': float, # neurons/(degree^2)
     })
 
-    def __init__(self, network, parameters):
+    def __init__(self, model, parameters):
         """
         """
         logger.info("Creating %s with %d neurons." % (self.__class__.__name__,int(parameters.sx*parameters.sy*parameters.density)))
-        Sheet.__init__(self, network, parameters)
+        Sheet.__init__(self, model, parameters)
         rs = space.RandomStructure(boundary=space.Cuboid(parameters.sx,parameters.sy,0),origin=(0.0, 0.0, 0.0))
-        self.pop = self.sim.Population(int(parameters.sx*parameters.sy*parameters.density), getattr(self.network.sim, self.parameters.cell.model), self.parameters.cell.params,rs,self.name)
+        self.pop = self.sim.Population(int(parameters.sx*parameters.sy*parameters.density), getattr(self.model.sim, self.parameters.cell.model), self.parameters.cell.params,rs,self.name)
         for var, val in self.parameters.cell.initial_values.items():
             self.pop.initialize(var, val)
 
@@ -180,11 +180,11 @@ class SheetWithMagnificationFactor(Sheet):
         'magnification_factor': float, # μm / degree
     })
 
-    def __init__(self, network, parameters):
+    def __init__(self, model, parameters):
         """
         """
         logger.info("Creating %s with %d neurons." % (self.__class__.__name__,int(parameters.sx*parameters.sy/10000*parameters.density)))
-        Sheet.__init__(self, network, parameters)
+        Sheet.__init__(self, model, parameters)
         self.magnification_factor = parameters.magnification_factor
 
     def vf_2_cs(self,degree_x,degree_y):
@@ -216,13 +216,13 @@ class CorticalUniformSheet(SheetWithMagnificationFactor):
         'density': float, #neurons/(100 μm^2)
     })
 
-    def __init__(self, network, parameters):
+    def __init__(self, model, parameters):
         """
         """
-        SheetWithMagnificationFactor.__init__(self, network, parameters)
+        SheetWithMagnificationFactor.__init__(self, model, parameters)
         dx,dy = self.cs_2_vf(parameters.sx,parameters.sy)
         rs = space.RandomStructure(boundary=space.Cuboid(dx,dy,0),origin=(0.0, 0.0, 0.0))
-        self.pop = self.sim.Population(int(parameters.sx*parameters.sy/10000*parameters.density), getattr(self.network.sim, self.parameters.cell.model), self.parameters.cell.params,rs,self.name)
+        self.pop = self.sim.Population(int(parameters.sx*parameters.sy/10000*parameters.density), getattr(self.model.sim, self.parameters.cell.model), self.parameters.cell.params,rs,self.name)
         
         for var, val in self.parameters.cell.initial_values.items():
             self.pop.initialize(var, val)

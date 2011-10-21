@@ -23,6 +23,9 @@ from NeuroTools.parameters import ParameterSet, ParameterDist
 from MozaikLite.storage.queries import select_stimuli_type_query,select_result_sheet_query, partition_by_stimulus_paramter_query
 from MozaikLite.visualization.plotting_helper_functions import *
 
+
+
+
 class Plotting(MozaikLiteParametrizeObject):
     
     def  __init__(self,datastore,parameters):
@@ -129,7 +132,7 @@ class LinePlot(Plotting):
           if not self.length:
              print 'Error, class that derives from LinePlot has to specify the length parameter'
              return
-
+          
           gs = gridspec.GridSpecFromSubplotSpec(1, self.length, subplot_spec=subplotspec)  
           for idx in xrange(0,self.length):
               self._subplot(idx,gs[0,idx])
@@ -146,7 +149,8 @@ class PerStimulusPlot(LinePlot):
         self.dsv = select_result_sheet_query(datastore,self.parameters.sheet_name)
         self.dsvs = partition_by_stimulus_paramter_query(self.dsv,7)    
         self.length = len(self.dsvs)
-
+        
+    
 class RasterPlot(PerStimulusPlot):
       required_parameters = ParameterSet({
         'trial_averaged_histogram' : bool,  #should the plot show also the trial averaged histogram

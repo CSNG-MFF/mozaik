@@ -3,7 +3,7 @@ from MozaikLite.analysis.analysis import AveragedOrientationTuning,  GSTA, Preci
 from MozaikLite.visualization.plotting import GSynPlot,RasterPlot,VmPlot,CyclicTuningCurvePlot,OverviewPlot, ConductanceSignalListPlot
 from MozaikLite.visualization.jens_paper_plots import Figure2
 from NeuroTools.parameters import ParameterSet, ParameterDist
-from MozaikLite.storage.queries import TagBasedQuery
+from MozaikLite.storage.queries import TagBasedQuery, select_result_sheet_query
 
 import numpy
 
@@ -55,7 +55,9 @@ class MeasureOrientationTuningFullfield(Experiment):
         print 'Doing Analysis'
         AveragedOrientationTuning(data_store,ParameterSet({})).analyse()
         GSTA(data_store,ParameterSet({'neurons' : [0], 'length' : 50.0 }),tags=['GSTA1']).analyse()
-        Precision(data_store,ParameterSet({'neurons' : [0], 'bin_length' : 1.0 })).analyse()
+        
+        
+        Precision(select_result_sheet_query(data_store,"V1_Exc"),ParameterSet({'neurons' : [0], 'bin_length' : 1.0 })).analyse()
         
         OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Exc'})).plot()
         OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Inh'})).plot()

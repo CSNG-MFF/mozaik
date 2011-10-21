@@ -57,7 +57,7 @@ class Model(MozaikComponent):
                 sheet.record('g_syn')
                 sh.append(sheet) 
 
-        self.retina.present_stimulus(self.visual_space,stimulus.duration)        
+        self.retina.process_visual_input(self.visual_space,stimulus.duration)        
         self.run(stimulus.duration)
         
         segments = []
@@ -71,7 +71,7 @@ class Model(MozaikComponent):
         self.reset()
         for sheet in self.sheets:    
             if sheet.to_record:
-                sheet.pop._record(None)
+               sheet.pop._record(None)
         return segments
 
 
@@ -153,7 +153,8 @@ class JensModel(Model):
         
         cortex_exc.to_record = True
         cortex_inh.to_record = True
-        self.retina.to_record = True
+        self.retina.sheets['X_ON'].to_record = True
+        self.retina.sheets['X_OFF'].to_record = True
         # initialize projections
         
         UniformProbabilisticArborization(self,cortex_exc,cortex_exc,self.parameters.cortex_exc.ExcExcConnection,'V1ExcExcConnection').connect()

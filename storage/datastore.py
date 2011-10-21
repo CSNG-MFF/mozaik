@@ -60,9 +60,16 @@ class DataStoreView(MozaikLiteParametrizeObject):
     code that asked for the AnalysisDataStructure's based on the knowledge of their content.
     Or specific querie filters can be written that understand the specific type
     of AnalysisDataStructure and can filter them based on their internal data.
+    
+    DataStoreView also keeps a reference to a full Datastore <full_datastore> from which it was originally created 
+    (this might be have happened via a chain of DSVs). This is on order to allow for operations that
+    work over DSV to insert their results into the original full datastore as this is (almost?) always
+    the desired behaviours (note DSV does not actually have functions to add new recordings or analysis 
+    results).
+    
     """
     
-    def __init__(self,parameters):
+    def __init__(self,parameters,full_datastore):
         """
         Just check the parameters, and load the data.
         """
@@ -71,6 +78,7 @@ class DataStoreView(MozaikLiteParametrizeObject):
         self.block = Block()
         self.analysis_results = {}
         self.analysis_results['data'] = {}
+        self.full_datastore = full_datastore # should be self if actually the instance is actually DataStore
         
     def get_segments(self):
         return self.block.segments
@@ -105,8 +113,6 @@ class DataStoreView(MozaikLiteParametrizeObject):
            
             d = {}
             for st in s.spiketrains:
-                print st
-                print st.annotations
                 d[st.annotations['index']] = numpy.array(st)
            
             spikes = signals.SpikeList(spike_dic_to_list(d),d.keys(),float(t_start),float(t_stop))
@@ -159,8 +165,11 @@ class DataStoreView(MozaikLiteParametrizeObject):
            node = self.analysis_results[sheet_name]['data'] 
         else:
            node = self.analysis_results[sheet_name][neuron_idx]['data'] 
-           
-        return node[result_id]    
+        
+        if node.has_key(result_id):
+            return node[result_id]    
+        else:
+            return []
     
     def _analysis_result_copy(self,d):
         nd = {}
@@ -178,7 +187,7 @@ class DataStoreView(MozaikLiteParametrizeObject):
         return self.block.segments[:]
 
     def fromDataStoreView(self):
-        return DataStoreView(ParameterSet({}))
+        return DataStoreView(ParameterSet({}),self.full_datastore)
 
 class DataStore(DataStoreView):
     """
@@ -193,7 +202,7 @@ class DataStore(DataStoreView):
         """
         Just check the parameters, and load the data.
         """
-        DataStoreView.__init__(self,parameters)
+        DataStoreView.__init__(self,parameters,self)
         
         # used as a set to quickly identify whether a stimulus was already presented
         # stimuli are otherwise saved with segments within the block as annotations

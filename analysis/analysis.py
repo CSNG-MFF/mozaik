@@ -52,7 +52,7 @@ class AveragedOrientationTuning(Analysis):
                     l = len(a)
                     return sum(a)/l
                 mean_rates = [_mean(a) for a in mean_rates]  
-                self.datastore.add_analysis_result(TuningCurve(mean_rates,s,8,sheet,tags=self.tags),sheet_name=sheet)
+                self.datastore.full_datastore.add_analysis_result(TuningCurve(mean_rates,s,8,sheet,tags=self.tags),sheet_name=sheet)
 
 class GSTA(Analysis):
       """
@@ -86,7 +86,7 @@ class GSTA(Analysis):
                 for n in self.parameters.neurons:
                     asl_e.append(self.do_gsta(g_e,sp,n))
                     asl_i.append(self.do_gsta(g_i,sp,n))
-                self.datastore.add_analysis_result(ConductanceSignalList(asl_e,asl_i,sheet,self.parameters.neurons,tags=self.tags),sheet_name=sheet)
+                self.datastore.full_datastore.add_analysis_result(ConductanceSignalList(asl_e,asl_i,sheet,self.parameters.neurons,tags=self.tags),sheet_name=sheet)
                 
                 
       def do_gsta(self,analog_signal,sp,n):
@@ -119,7 +119,7 @@ class Precision(Analysis):
 
       
       def analyse(self):
-            print 'Starting Spike Triggered Analysis of Conductances'
+            print 'Starting Precision Analysis'
             dsv = self.datastore
             for sheet in dsv.sheets():
                 dsv1 = select_result_sheet_query(dsv,sheet)
@@ -139,6 +139,6 @@ class Precision(Analysis):
                             ac = ac / numpy.sum(numpy.power(hist[n],2))
                        
                         al.append(signals.AnalogSignal(ac,dt=self.parameters.bin_length*quantities.ms,t_start=-duration,t_stop=duration-self.parameters.bin_length))
-                        
-                    self.datastore.add_analysis_result(AnalogSignalList(al,sheet,self.parameters.neurons,tags=self.tags),sheet_name=sheet)    
+                    print 'Adding AnalogSignalList', sheet
+                    self.datastore.full_datastore.add_analysis_result(AnalogSignalList(al,sheet,self.parameters.neurons,tags=self.tags),sheet_name=sheet)    
                         
