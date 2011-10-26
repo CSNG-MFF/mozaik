@@ -1,18 +1,53 @@
-# the visualization for mozaik objects
-# it is based on the matplotlib and the GridSpec object
-# Each plot should implement two plotting functions:  plot and subplot
+"""
+The visualization for mozaik objects  it is based on the matplotlib and the GridSpec object
 
-# The much more important one is subplot that accepts a SubplotSpec object (see matplotlib doc) as input which will 
-# tell it where to plot. It can in turn create another SubplotSpec within
-# the given SubplotSpec and call other plot commands to plot within specific subregions
-# of the SubplotSpec. This allows natural way of nesting plots.
+The plotting framwork is divided into two main concepts, represented by the two high-level
+classes Plotting and SimplePlot.
 
-# the plot function can either not be defined in which case it defaults to the Plotting.plot 
-# which simply creates a figure and calls subplot with SuplotSpec spanning the whole figure.
-# Alternatively one can define the plot function if one wants to add some additional decorations
-# if one know the figures is plotted on its own, that would otherwise prevent flexible use in
-# nesting via the subplot 
+The SimplePlot represent the low-level plotting. It is assumed that this plot has only a single 
+axis that is drawn into the region defined by the GridSpec instance that is passed into it. The 
+role of the set of classes derived from SimplePlot is to standardize the low level looks of all 
+figures (mainly related to axis, lables, titles etc.), and should assume data given to them in a 
+format that is easy to use by the given plot. In order to unify the look of figures
+it defines three functions pre_plot, plot, and post_plot. The actual plotting that 
+user defines is typically defined in 
+the plot function while the pre_plot and post_plot functions handle the pre and post plotting 
+adjustments to the plot (i.e. the typical post_plot function for example adjusts the ticks of 
+the axis to a common format other such axis related properties). When defining a new SimplePlot 
+function user is encoureged to push as much of it's 'decorating' funcitonality into the post 
+and pre plot function and define only the absolute minimum
+in the plot function. At the same time, there is already a set of classes implementing 
+a general common look provided, and so users are encoureged to use these as much as possible. If 
+their formatting features are not sufficient or incompatible with a given plot, users are encoureged
+to define new virtual class that defines the formatting in the pre and post plot functions 
+(and thus sepperating it from the plot itself), and incorporating these as low as possible within 
+the hierarchy of the SimplePlot classes to re-use as much of the previous work as possible.
 
+NOTE SimplePlot now resides in sepparate module visualization.simple_plot
+
+The Plotting class (and its children) define the high level plotting mechanisms. They 
+are mainly responsible for hierarchical organization of figures with multiple plots, 
+any mechanisms that require consideration of several plots at the same time, 
+and the translation of the data form the general format provided by Datastore,
+to specific format that the SimplePlot plots require. In general the Plotting 
+instances should not do any plotting of axes them selves (but instead calling the 
+SimplePlot instances to do the actual plotting), with the exception
+of multi-plot figures whith complicated inter-plot dependencies, for which it is
+not practical to break them down into single plot instances.
+
+
+Each Plotting class should implement two plotting functions:  plot and subplot 
+The much more important one is subplot that accepts a SubplotSpec object (see matplotlib doc) 
+as input which will tell it where to plot. It can in turn create another SubplotSpec within
+the given SubplotSpec and call other plot commands to plot within specific subregions
+of the SubplotSpec. This allows natural way of nesting plots.
+
+The plot function can either not be defined in which case it defaults to the Plotting.plot, 
+which simply creates a figure and calls subplot with SuplotSpec spanning the whole figure.
+Alternatively, one can define the plot function if one wants to add some additional decorations,
+in case the figure is plotted on its own (i.e. becomes the highest-level), and that would otherwise 
+prevent flexible use in nesting via the subplot.
+"""
 
 import pylab
 import matplotlib.gridspec as gridspec
@@ -21,10 +56,7 @@ from MozaikLite.framework.interfaces import MozaikLiteParametrizeObject
 from MozaikLite.stimuli.stimulus_generator import parse_stimuls_id,load_from_string
 from NeuroTools.parameters import ParameterSet, ParameterDist
 from MozaikLite.storage.queries import select_stimuli_type_query,select_result_sheet_query, partition_by_stimulus_paramter_query
-from MozaikLite.visualization.plotting_helper_functions import *
-
-
-
+from simple_plot import *
 
 class Plotting(MozaikLiteParametrizeObject):
     
@@ -42,6 +74,8 @@ class Plotting(MozaikLiteParametrizeObject):
         gs.update(left=0.05, right=0.95, top=0.95, bottom=0.05)
         self.subplot(gs[0,0])
 
+          
+              
 class PlotTuningCurve(Plotting):
     """
     values - contain a list of lists of values, the outer list corresponding
@@ -156,62 +190,34 @@ class RasterPlot(PerStimulusPlot):
         'trial_averaged_histogram' : bool,  #should the plot show also the trial averaged histogram
         'neurons' : list,
       })
+
+      def  __init__(self,datastore,parameters):
+           PerStimulusPlot.__init__(self,datastore,parameters)
+           if self.parameters.neurons == []:
+              self.parameters.neurons = None 
     
       def _subplot(self,idx,gs):
-          
-         gs = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=gs)  
+         sp = [self.dsvs[idx].get_spike_lists()]
          
-         pylab.rc('axes', linewidth=3)
-         
-         ax = pylab.subplot(gs[:3,0])   
-         sp = self.dsvs[idx].get_spike_lists()  
-         
-         t_stop = sp[0].t_stop
-         num_n = len(self.parameters.neurons)
-         num_t = len(sp)
-         
-         for i,spike_list in enumerate(sp):
-            for j in self.parameters.neurons:
-                spike_train = spike_list[j]
-                ax.plot(spike_train.spike_times,[j*(num_t+1) + i + 1 for x in xrange(0,len(spike_train.spike_times))],',',color='#848484')
-             
-         for j in xrange(0,num_n-1):   
-            ax.axhline(j*(num_t+1)+num_t+1,c='k')
-         
-         pylab.xlim(0,t_stop)
-         
-         disable_xticks(ax)
-         disable_top_right_axis(ax)
-         remove_x_tick_labels()
-         remove_y_tick_labels()
-         if idx == 0:
-           pylab.ylabel('Neuron/Trial #')
-         else:
-           pylab.ylabel('')
-        
-         ### lets do the histogram
-         ax = pylab.subplot(gs[3,0])   
-         all_spikes = []
-         
-         for i,spike_list in enumerate(sp):
-            for j in self.parameters.neurons:
-                spike_train = spike_list[j]
-                all_spikes.extend(spike_train.spike_times)
-         
-         if all_spikes != []:
-             ax.hist(all_spikes,bins=numpy.arange(0,t_stop,1),color='k')
-             if idx == 0:
-               pylab.ylabel('(spk/ms)')
+         if self.parameters.trial_averaged_histogram:
+             gs = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=gs)  
+             # first the raster
+             if idx != 0:
+                 SpikeRasterPlot(sp,neurons=self.parameters.neurons,x_axis=False,y_axis=False,x_label=None,y_label=None)(gs[:3,0])
              else:
-               pylab.ylabel('')
-         
-         pylab.xlim(0,t_stop)
-         pylab.xticks([0,t_stop/2,t_stop])
-         
-         disable_top_right_axis(ax)
-         three_tick_axis(ax.yaxis)
-                 
-         pylab.rc('axes', linewidth=1)
+                 SpikeRasterPlot(sp,neurons=self.parameters.neurons,x_axis=False,x_label=None)(gs[:3,0])
+                    
+             ### lets do the histogram
+             if idx != 0:
+                 SpikeHistogramPlot(sp,neurons=self.parameters.neurons,y_axis=False,y_label=None)(gs[3,0])
+             else:
+                 SpikeHistogramPlot(sp,neurons=self.parameters.neurons)(gs[3,0])
+         else:
+             if idx != 0:
+                SpikeRasterPlot(sp,neurons=self.parameters.neurons,y_axis=False,y_label=None)(gs)
+             else:
+                SpikeRasterPlot(sp,neurons=self.parameters.neurons)(gs)
+             
 
 class VmPlot(PerStimulusPlot):
       required_parameters = ParameterSet({
@@ -294,7 +300,7 @@ class OverviewPlot(Plotting):
       })
       def subplot(self,subplotspec):
           gs = gridspec.GridSpecFromSubplotSpec(3, 1, subplot_spec=subplotspec)  
-          RasterPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name, 'trial_averaged_histogram' : True, 'neurons' : [0]})).subplot(gs[0,0])
+          RasterPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name, 'trial_averaged_histogram' : True, 'neurons' : []})).subplot(gs[0,0])
           GSynPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : 0})).subplot(gs[1,0])
           VmPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : 0})).subplot(gs[2,0])          
 

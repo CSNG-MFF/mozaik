@@ -139,7 +139,7 @@ class Sheet(MozaikComponent):
             logger.debug(errmsg)
         try:
             gsyn_e,gsyn_i = get_gsyn_to_dicts(self.pop.get_gsyn(),self.pop)
-            for k in v.keys():
+            for k in gsyn_e.keys():
                 # it assumes segment implements and add function which takes the id of a neuorn and the corresponding its SpikeTrain
                 st_e = AnalogSignal(0.000001*gsyn_e[k],sampling_period=self.model.sim.get_time_step()*quantities.ms,units=quantities.S)
                 st_i = AnalogSignal(0.000001*gsyn_i[k],sampling_period=self.model.sim.get_time_step()*quantities.ms,units=quantities.S)
