@@ -1,0 +1,15 @@
+{
+    'screen': {
+        'update_interval': 7.0, # ms
+        'background_luminance': 45.0, # cd/m²
+    },
+    'retina_lgn': url("param-ffi/SpatioTemporalFilterRetinaLGN_defaults"),
+    'cortex_exc': url("param-ffi/cortex_exc"),
+    'cortex_inh': url("param-ffi/cortex_inh"),
+    'visual_field': {
+        'centre': (0.0, 0.0), # degrees (x,y)
+        'size': (6.8, 6.8), # degrees (width, height)
+    },
+    'results_dir': '/home/jan/projects/MozaikLite/examples/',
+    'name' : 'Jens Model',
+}
