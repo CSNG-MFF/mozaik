@@ -23,8 +23,9 @@ class Experiment(object):
     def run(self,data_store,stimuli):
         for s in stimuli:
             print 'Presenting stimulus: ',str(s) , '\n'
-            segments = self.model.present_stimulus_and_record(s)
+            (segments,retinal_input) = self.model.present_stimulus_and_record(s)
             data_store.add_recording(segments,s)
+            data_store.add_retinal_stimulus(retinal_input,s)
     
     def do_analysis(self):
         raise NotImplementedError
@@ -49,7 +50,7 @@ class MeasureOrientationTuningFullfield(Experiment):
                                     numpy.pi/num_orientations*i, #orientation
                                     spatial_frequency,
                                     temporal_frequency, #stimulus duration - we want to get one full sweep of phases
-                                ]))    
+                                ],ParameterSet({})))    
 
     def do_analysis(self,data_store):
         print 'Doing Analysis'
@@ -78,7 +79,7 @@ class MeasureSpontaneousActivity(Experiment):
                             duration, # stimulus duration
                             40, #density
                             0 # trial number
-                        ]))    
+                        ],ParameterSet({})))    
 
     def do_analysis(self,data_store):
         print 'Doing Analysis'

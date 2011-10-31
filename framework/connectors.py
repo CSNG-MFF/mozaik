@@ -11,6 +11,7 @@ from pyNN.common import Population
 from NeuroTools.parameters import ParameterSet, ParameterDist
 from pyNN import random, space
 from MozaikLite.tools.misc import sample_from_bin_distribution
+from scipy.interpolate import RectBivariateSpline
 
 class MozaikLiteVisualSystemConnector(VisualSystemConnector):
       required_parameters = ParameterSet({
@@ -269,6 +270,36 @@ def gabor(x1,y1,x2,y2,orientation,frequency,phase,size,aspect_ratio):
 
 
 class GaborConnector(MozaikComponent):
+      """
+      Connector that creates gabor projection. The individual gabor parameters are drawn from 
+      distributions specified in the parameter set:
+      
+      `aspect_ratio`  -  aspect ratio of the gabor
+      `size`          -  the size of the gabor  RFs in degrees of visual field
+      `orientation`   -  the orientation of the gabor RFs
+      `phase`         -  the phase of the gabor RFs
+      `frequency`     -  the frequency of the gabor in degrees of visual field 
+      
+      Other parameters:
+      
+      `topological`          -  should the receptive field centers vary with the position of the given neurons in the target sheet
+                                (note positions of neurons are always stored in visual field coordinates)
+      `probabilistic`        -  should the weights be probabilistic or directly proportianal to the gabor profile
+      `propagation_constant` -  ms/μm the constant that will determinine the distance dependent delays on the connections
+                                (HACKALERT: currently this is a fixed constant for this projection! This is ok if we assume this is a inter-area 
+                                 projection which is the only obvious equivalent in cortex.)
+      'or_map': 
+      
+      Also it is possible to generate the parameters from maps. Currently the orientation and phase map is supported, the rest of parameters are 
+      taken from the above parameters. Note that the map is assumed to fit the area spanned by the target population of neurons.
+      
+      `or_map`             - is a orientation map supplied?
+      `or_map_location`    - if or_map is True where can one find the map. It has to be a file containing a single pickled 2d numpy array
+          
+      `phase_map`          - is a phase map supplied?
+      `phase_map_location` - if phase_map is True where can one find the map. It has to be a file containing a single pickled 2d numpy array
+      """
+      
       required_parameters = ParameterSet({
           'aspect_ratio': ParameterDist, #aspect ratio of the gabor
           'size':         ParameterDist, #the size of the gabor  RFs in degrees of visual field
@@ -277,11 +308,18 @@ class GaborConnector(MozaikComponent):
           'frequency':    ParameterDist, #the frequency of the gabor in degrees of visual field 
           
           'topological': bool, # should the receptive field centers vary with the position of the given neurons 
+                               # (note positions of neurons are always stored in visual field coordinates)
           'probabilistic': bool, # should the weights be probabilistic or directly proportianal to the gabor profile
           'propagation_constant': float,    #ms/μm the constant that will determinine the distance dependent delays on the connections
           
           'specific_arborization' : ParameterSet,
-        
+          
+          'or_map' : bool, # is a orientation map supplied?
+          'or_map_location' : str, # if or_map is True where can one find the map. It has to be a file containing a single pickled 2d numpy array
+          
+          'phase_map' : bool, # is a phase map supplied?
+          'phase_map_location' : str, # if phase_map is True where can one find the map. It has to be a file containing a single pickled 2d numpy array
+          
       })
 	    
 
@@ -294,26 +332,53 @@ class GaborConnector(MozaikComponent):
              on_weights=[] 
              off_weights=[]
              
+             import pickle
+             t_size = target.size_in_degrees()
+             or_map = None
+             if self.parameters.or_map:
+                f = open(self.parameters.or_map_location,'r')
+                or_map = pickle.load(f)
+                coords_x = numpy.linspace(-t_size[0]/2.0,t_size[0]/2.0,numpy.shape(or_map)[0])    
+                coords_y = numpy.linspace(-t_size[1]/2.0,t_size[1]/2.0,numpy.shape(or_map)[1])    
+                or_map = RectBivariateSpline(coords_x, coords_y, or_map)
+                
+             phase_map = None
+             if self.parameters.phase_map:
+                f = open(self.parameters.phase_map_location,'r')
+                phase_map = pickle.load(f)   
+                coords_x = numpy.linspace(-t_size[0]/2.0,t_size[0]/2.0,numpy.shape(phase_map)[0])    
+                coords_y = numpy.linspace(-t_size[1]/2.0,t_size[1]/2.0,numpy.shape(phase_map)[1])    
+                phase_map = RectBivariateSpline(coords_x, coords_y, phase_map)
+             
              for (neuron2,j) in zip(target.pop,numpy.arange(0,len(target.pop),1)):
-				orientation = parameters.orientation.next()[0]
-				aspect_ratio = parameters.aspect_ratio.next()[0]
-				frequency = parameters.frequency.next()[0]
-				size = parameters.size.next()[0]
-				phase = parameters.phase.next()[0]
+                 
+                if or_map:
+                   orientation = or_map(on.positions[0][j],on.positions[1][j]) 
+                else: 
+                   orientation = parameters.orientation.next()[0]
+
+                if phase_map:
+                   phase = phase_map(on.positions[0][j],on.positions[1][j]) 
+                else: 
+                   phase = parameters.phase.next()[0] 
+                    
+                aspect_ratio = parameters.aspect_ratio.next()[0]
+                frequency = parameters.frequency.next()[0]
+                size = parameters.size.next()[0]
 				
-				target.add_neuron_annotation(j,'LGNAfferentOrientation',orientation,protected=True)
-				target.add_neuron_annotation(j,'LGNAfferentAspectRatio',aspect_ratio,protected=True)
-				target.add_neuron_annotation(j,'LGNAfferentFrequency',frequency,protected=True)
-				target.add_neuron_annotation(j,'LGNAfferentSize',size,protected=True)
-				target.add_neuron_annotation(j,'LGNAfferentPhase',phase,protected=True)
-				 
-				for (neuron1,i) in zip(on,numpy.arange(0,len(on),1)):
-					if parameters.topological:
-						on_weights.append((i,j,numpy.max((0,gabor(on.positions[0][i],on.positions[1][i],target.pop.positions[0][j],target.pop.positions[1][j],orientation,frequency,phase,size,aspect_ratio))),parameters.propagation_constant))
-						off_weights.append((i,j,-numpy.min((0,gabor(off.positions[0][i],off.positions[1][i],target.pop.positions[0][j],target.pop.positions[1][j],orientation,frequency,phase,size,aspect_ratio))),parameters.propagation_constant))
-					else:
-						on_weights.append((i,j,numpy.max((0,gabor(on.positions[0][i],on.positions[1][i],0,0,orientation,frequency,phase,size,aspect_ratio))),parameters.propagation_constant))
-						off_weights.append((i,j,-numpy.min((0,gabor(off.positions[0][i],off.positions[1][i],0,0,orientation,frequency,phase,size,aspect_ratio))),parameters.propagation_constant))
+                target.add_neuron_annotation(j,'LGNAfferentOrientation',orientation,protected=True)
+                target.add_neuron_annotation(j,'LGNAfferentAspectRatio',aspect_ratio,protected=True)
+                target.add_neuron_annotation(j,'LGNAfferentFrequency',frequency,protected=True)
+                target.add_neuron_annotation(j,'LGNAfferentSize',size,protected=True)
+                target.add_neuron_annotation(j,'LGNAfferentPhase',phase,protected=True)
+                 
+                for (neuron1,i) in zip(on,numpy.arange(0,len(on),1)):
+                    if parameters.topological:
+                        on_weights.append((i,j,numpy.max((0,gabor(on.positions[0][i],on.positions[1][i],target.pop.positions[0][j],target.pop.positions[1][j],orientation,frequency,phase,size,aspect_ratio))),parameters.propagation_constant))
+                        off_weights.append((i,j,-numpy.min((0,gabor(off.positions[0][i],off.positions[1][i],target.pop.positions[0][j],target.pop.positions[1][j],orientation,frequency,phase,size,aspect_ratio))),parameters.propagation_constant))
+                    else:
+                        on_weights.append((i,j,numpy.max((0,gabor(on.positions[0][i],on.positions[1][i],0,0,orientation,frequency,phase,size,aspect_ratio))),parameters.propagation_constant))
+                        off_weights.append((i,j,-numpy.min((0,gabor(off.positions[0][i],off.positions[1][i],0,0,orientation,frequency,phase,size,aspect_ratio))),parameters.propagation_constant))
              
              
              if parameters.probabilistic:

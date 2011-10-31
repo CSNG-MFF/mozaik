@@ -58,6 +58,11 @@
             'topological' : False,
             'probabilistic' : True,
 	    
+	    'or_map' : True,
+	    'or_map_location' : './or_map',
+	    'phase_map' : True,
+	    'phase_map_location' : './phase_map',
+	    
 	    'specific_arborization': {
 		    'synapse_dynamics' : 'None',
 		    'weight_factor': 0.0015,

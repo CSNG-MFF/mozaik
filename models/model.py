@@ -1,9 +1,3 @@
-from datetime import datetime
-import sys,os
-import logging
-
-from NeuroTools import init_logging
-from NeuroTools import visual_logging
 from NeuroTools.parameters import ParameterSet
 
 from MozaikLite.framework import load_component
@@ -51,61 +45,37 @@ class Model(MozaikComponent):
         # create empty arrays in annotations to store the sheet identity of stored data
         sh = []
         for sheet in self.sheets:   
-            if sheet.to_record:
-                sheet.record('spikes')
-                sheet.record('v')
-                sheet.record('g_syn')
-                sh.append(sheet) 
+            sheet.record('spikes')
+            sheet.record('v')
+            sheet.record('g_syn')
+            sh.append(sheet) 
 
-        self.retina.process_visual_input(self.visual_space,stimulus.duration)        
+        retinal_input = self.retina.process_visual_input(self.visual_space,stimulus.duration)        
+        
+        print type(retinal_input[0])
+        print retinal_input[0]
+        
         self.run(stimulus.duration)
         
         segments = []
         
         for sheet in self.sheets:    
-            if sheet.to_record:
+            if sheet.to_record != None:
                 s = sheet.write_neo_object(stimulus.duration)
                 segments.append(s)
 
         self.visual_space.clear()
         self.reset()
         for sheet in self.sheets:    
-            if sheet.to_record:
+            if sheet.to_record != None:
                sheet.pop._record(None)
-        return segments
+        return (segments,retinal_input)
 
 
-    def __init__(self,sim):
-        
-        # Read parameters
-        if len(sys.argv) > 1:
-            parameters_url = sys.argv[1]
-        else:
-            parameters_url = "param-ffi/" + self.__class__.__name__ + "/defaults"
-        self.parameters = ParameterSet(parameters_url) 
-        
-        # Create results directory
-        timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
-        self.results_dir = self.parameters.results_dir + timestamp + '/'
-        os.mkdir(self.results_dir)
-        self.parameters.save(self.results_dir + "parameters", expand_urls=True)
-        
-        global logger
-        logger = logging.getLogger("MozaikLite")
-        
-        # Set-up logging
-        init_logging(self.results_dir + "log", file_level=logging.DEBUG, console_level=logging.DEBUG) # NeuroTools version
-        visual_logging.basicConfig(self.results_dir + "visual_log.zip", level=logging.DEBUG)
-        
-        logger.info("Creating Model object using the %s simulator." % sim.__name__)
-        
-        
-        # ABOVE CODE SHOULD BE PUT AWAY!
-        
-        MozaikComponent.__init__(self, self, self.parameters);        
+    def __init__(self,sim,parameters):
+        MozaikComponent.__init__(self, self, parameters);        
         
         self.sim = sim
-        self.visual_field = VisualRegion((0,0), (1,1))
         self.node = self.sim.setup() # should have some parameters here
         self.sheets = []
         self.connectors = []
@@ -119,13 +89,13 @@ class Model(MozaikComponent):
         #if the desired quantities have already been recorded
         #for tstop or greater
         #if not, call
-        logger.info("Simulating the network for %s ms" % tstop)
+        print ("Simulating the network for %s ms" % tstop)
         self.sim.run(tstop)
         self.t += tstop
         
     def reset(self):
         # can this interferre with cache ?
-        logger.info("Resetting the network")
+        print ("Resetting the network")
         self.sim.reset()
         self.t=0
     
@@ -137,8 +107,8 @@ class Model(MozaikComponent):
 
 
 class JensModel(Model):
-    def __init__(self,simulator):
-        Model.__init__(self,simulator)        
+    def __init__(self,simulator,parameters):
+        Model.__init__(self,simulator,parameters)        
         # Load components
         CortexExc = load_component(self.parameters.cortex_exc.component)
         CortexInh = load_component(self.parameters.cortex_inh.component)
@@ -151,10 +121,10 @@ class JensModel(Model):
         cortex_exc = CortexExc(self, self.parameters.cortex_exc.params)
         cortex_inh = CortexInh(self, self.parameters.cortex_inh.params)
         
-        cortex_exc.to_record = True
-        cortex_inh.to_record = True
-        self.retina.sheets['X_ON'].to_record = True
-        self.retina.sheets['X_OFF'].to_record = True
+        cortex_exc.to_record = 'all'
+        cortex_inh.to_record = 'all'
+        self.retina.sheets['X_ON'].to_record = 'all' #[0,1,2,3,4,5,6,7,8,9,10]
+        self.retina.sheets['X_OFF'].to_record = 'all' #[0,1,2,3,4,5,6,7,8,9,10]
         # initialize projections
         
         UniformProbabilisticArborization(self,cortex_exc,cortex_exc,self.parameters.cortex_exc.ExcExcConnection,'V1ExcExcConnection').connect()

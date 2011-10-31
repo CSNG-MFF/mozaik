@@ -24,12 +24,14 @@ class Figure2(Plotting):
           
           print len(lgn_on_dsv.get_spike_lists()[0])
           
-          SpikeRasterPlot(lgn_spikes,neurons=[0],x_axis=False,x_label=None, colors = ['#FACC2E','#0080FF'])(gs[1:4,0:5])
-          SpikeHistogramPlot(lgn_spikes,neurons=[0], x_axis=False,x_label=None, colors = ['#FACC2E','#0080FF'])(gs[4:5,0:5])
-          SpikeRasterPlot(lgn_spikes,neurons=[100],x_axis=False,x_label=None, colors = ['#FACC2E','#0080FF'])(gs[7:10,0:5])
+          SpikeRasterPlot(lgn_spikes,neurons=[0],x_axis=False,xlabel=None, colors = ['#FACC2E','#0080FF'])(gs[1:4,0:5])
+          SpikeHistogramPlot(lgn_spikes,neurons=[0], x_axis=False,xlabel=None, colors = ['#FACC2E','#0080FF'])(gs[4:5,0:5])
+          SpikeRasterPlot(lgn_spikes,neurons=[100],x_axis=False,xlabel=None, colors = ['#FACC2E','#0080FF'])(gs[7:10,0:5])
           SpikeHistogramPlot(lgn_spikes,neurons=[100], colors = ['#FACC2E','#0080FF'])(gs[10:11,0:5])
           
-          RasterPlot(dsv,ParameterSet({'sheet_name' : self.parameters.sheet_name, 'trial_averaged_histogram' : True, 'neurons' : [0]})).subplot(gs[0:4,6:14])
+          SpikeRasterPlot([dsv.get_spike_lists()],neurons=[0],x_axis=False,xlabel=None)(gs[:3,6:14])
+          SpikeHistogramPlot([dsv.get_spike_lists()],neurons=[0], x_axis=False,xlabel=None)(gs[3:4,6:14])
+          
           VmPlot(dsv,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : 0})).subplot(gs[4:8,6:14])          
           GSynPlot(dsv,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : 0})).subplot(gs[8:12,6:14])
           

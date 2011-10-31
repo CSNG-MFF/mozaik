@@ -203,18 +203,18 @@ class RasterPlot(PerStimulusPlot):
              gs = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=gs)  
              # first the raster
              if idx != 0:
-                 SpikeRasterPlot(sp,neurons=self.parameters.neurons,x_axis=False,y_axis=False,x_label=None,y_label=None)(gs[:3,0])
+                 SpikeRasterPlot(sp,neurons=self.parameters.neurons,x_axis=False,y_axis=False,xlabel=None,ylabel=None)(gs[:3,0])
              else:
-                 SpikeRasterPlot(sp,neurons=self.parameters.neurons,x_axis=False,x_label=None)(gs[:3,0])
+                 SpikeRasterPlot(sp,neurons=self.parameters.neurons,x_axis=False,xlabel=None)(gs[:3,0])
                     
              ### lets do the histogram
              if idx != 0:
-                 SpikeHistogramPlot(sp,neurons=self.parameters.neurons,y_axis=False,y_label=None)(gs[3,0])
+                 SpikeHistogramPlot(sp,neurons=self.parameters.neurons,y_axis=False,ylabel=None)(gs[3,0])
              else:
                  SpikeHistogramPlot(sp,neurons=self.parameters.neurons)(gs[3,0])
          else:
              if idx != 0:
-                SpikeRasterPlot(sp,neurons=self.parameters.neurons,y_axis=False,y_label=None)(gs)
+                SpikeRasterPlot(sp,neurons=self.parameters.neurons,y_axis=False,ylabel=None)(gs)
              else:
                 SpikeRasterPlot(sp,neurons=self.parameters.neurons)(gs)
              

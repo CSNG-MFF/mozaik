@@ -5,6 +5,9 @@ from NeuroTools.parameters import ParameterSet
 from MozaikLite.stimuli.stimulus_generator import colapse
 import numpy
 
+
+
+########################################################################
 class Query(MozaikLiteParametrizeObject):
     """
     Query accepts a DataStoreView and returns a DataStoreView with potentially reduced
@@ -149,7 +152,6 @@ def partition_by_stimulus_paramter_query(dsv,stimulus_paramter_index):
 
 
 class PartitionByStimulusParamterQuery(Query):
-    
     """
     This query will take all recordings and return list of DataStoreViews
     each holding recordings measured to the same stimulus with exception of

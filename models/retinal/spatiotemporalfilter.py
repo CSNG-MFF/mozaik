@@ -81,10 +81,6 @@ class SpatioTemporalReceptiveField(object):
         logger.debug("  before normalization: min=%g, max=%g" % 
                          (kernel.min(), kernel.max()))
         kernel = kernel/(nx*ny*nt) # normalize to make the kernel sum quasi-independent of the quantization
-        #import pylab
-        #pylab.figure()
-        #pylab.imshow(kernel[:,:,5],interpolation='nearest')
-        #pylab.colorbar()
         
         logger.debug("  after normalization: min=%g, max=%g, sum=%g" % 
                          (kernel.min(), kernel.max(), kernel.sum()))
@@ -236,17 +232,7 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
         self.sheets = {}
         self._built = False
         self.rf_types = ('X_ON', 'X_OFF')
-
         sim = self.model.sim                
-
-        # creat the grid of cells so that they are evenly spaced in the a region of size visual_field.size 
-        # centered on 0,0
-        grid = Grid2D(aspect_ratio=self.shape[0]/self.shape[1], 
-                      dx=1/numpy.sqrt(self.parameters.density), 
-                      dy=1/numpy.sqrt(self.parameters.density), 
-                      x0=-self.parameters.size[0]/2,
-                      y0=-self.parameters.size[0]/2)
-        
         self.pops={}
         self.scs={}
         self.ncs={}
@@ -272,10 +258,7 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
     def process_visual_input(self, visual_space, duration=None):
         """
         Present a visual stimulus to the model, and create the LGN output (relay)
-        neurons. If the stimulus and model parameters have been used previously,
-        the spike times will be loaded from the cache, and the output neurons
-        will be `SpikeSourceArray`s, otherwise, they will be the cell type
-        specified in `self.parameters.lgn_cell.model`.
+        neurons.
         """
         logger.info("Presenting visual stimulus from visual space %s" % visual_space)
         visual_space.set_duration(duration) # needed for proper caching
@@ -283,7 +266,7 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
         sim = self.model.sim
         
         logger.debug("Generating output spikes...")
-        input_currents = self._calculate_input_currents(visual_space, duration)
+        (input_currents,retinal_input) = self._calculate_input_currents(visual_space, duration)
         
         for rf_type in self.rf_types:            
                 assert isinstance(input_currents[rf_type], list)        
@@ -307,14 +290,8 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
 
         # if record() has already been called, setup the recording now
         self._built = True
-        
-        #for variable in ['spikes','v','g_syn']:
-        #    self.record(variable)    
              
-        return input_current_array # for debugging/testing
-
-
-
+        return retinal_input
                 
     def _calculate_input_currents(self, visual_space, duration):
         """
@@ -354,23 +331,19 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
                     cell.initialize(visual_space.background_luminance, duration)
                     input_cells[rf_type].append(cell)
         
-        # if debugging, plot kernel
-        #k = cell.receptive_field.kernel
-        #vmin = k.min(); vmax = k.max()
-        #for slice in k.transpose():
-        #    visual_logging.debug(slice, vmin=vmin, vmax=vmax)
-        
-        # now process the frames
         logger.debug("Processing frames")
         
         t = 0
+        retinal_input = []
         while t < duration:
             for rf_type in self.rf_types:
                 for cell in input_cells[rf_type]:
                     cell.view(visual_space)
             t = visual_space.update()
+            
+            retinal_input.append(visual_space.input.img)
             progress_bar(t/duration)
-                    
+        
         input_currents = {}
         for rf_type in self.rf_types:
             input_currents[rf_type] = [cell.response_current() for cell in input_cells[rf_type]]
@@ -379,31 +352,10 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
             #visual_logging.debug(cell0_currents['amplitudes'], cell0_currents['times'],
             #                     "Time (ms)", "Current (nA)", "Input current values for %s cell #0" % rf_type)
 
-            #for i in xrange(0,len(input_cells[rf_type][0].response_current()['amplitudes'])):
+
             for i in xrange(0,1):
                 a = [cell.response_current()['amplitudes'][i] for cell in input_cells[rf_type]]
-                #if rf_type == self.rf_types[0]:
-                #import pylab
-                #pylab.figure()
-                #pylab.title('AAA')
-                #pylab.imshow(numpy.reshape(a,(len(x_values),len(y_values))),interpolation='nearest')
-                #pylab.colorbar()
             
             
-        return input_currents
-    
-    #def write_neo_object(self,tstop):
-        #for k in rf:
-            #rf[k].write_neo_object(self,tstop)
-        
-    #def record(self, variable, cells='all'): 
-        #if self.to_record: 
-            #for name,sheet in self.sheets.items():
-                #if cells == 'all' or isinstance(cells, int):
-                    #sheet.record(variable, cells)
-                #elif isinstance(cells, dict):
-                    #sheet.record(variable, cells[name])
-                #else:
-                    #raise Exception("cells must be 'all', a dict, or an int. Actual value of %s" % str(cells))
-        
+        return (input_currents,retinal_input)
     

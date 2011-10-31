@@ -26,12 +26,10 @@ class VisualStimulus(VisualObject):
         VisualObject.__init__(self, location, size_in_degrees) # for now, we always put the stimulus in the centre of the visual field
         self.frame_duration = frame_duration
         self.max_luminance = max_luminance
-        self.parameters = ParameterSet({
-                            'frame_duration': frame_duration,
-                            'size_in_degrees': size_in_degrees,
-                            'max_luminance': max_luminance,
-                            'location': location
-                          })
+        self.frame_duration = frame_duration
+        self.size_in_degrees = size_in_degrees
+        self.max_luminance = max_luminance
+        self.location = location
         self.input = None
         self._frames = self.frames()
         self.update()
@@ -51,6 +49,7 @@ class VisualStimulus(VisualObject):
         """
         try:
             self.img, self.variables = self._frames.next()
+            
         except StopIteration:
             self.visible = False
         else:
@@ -134,7 +133,10 @@ class MozaikRetina(MozaikComponent):
           and in turn to the retina, and all the mechanisms that are responsible to
           passing the output of the retina (in whatever form desired) to the Sheet objects
           that are connected to it and thus represent the interface between the 
-          retina and the rest of the model
+          retina and the rest of the model.
+          
+          The method should return the list of 2d numpy arrays containing the 
+          raw frames of the  visual input to the retina.
           """
           raise NotImplementedError
           pass

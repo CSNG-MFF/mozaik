@@ -56,9 +56,14 @@ class Sheet(MozaikComponent):
         self.model.register_sheet(self)
         self.sim = self.model.sim
         self.name = parameters.name # the name of the population
-        self.to_record = False
+        self.to_record = None
         self._pop = None
     
+    def size_in_degrees(self):
+        """Returns the x,y size in degrees of visual field of the given area"""
+        raise NotImplementedError
+        pass
+        
     def pop():
         doc = "PyNN population"
 
@@ -98,21 +103,23 @@ class Sheet(MozaikComponent):
         else:
             return context
 
-    def record(self, variable, cells='all'):
-        func_mapping = {'spikes': 'record', 'v': 'record_v','g_syn':'record_gsyn'} # need to add conductances
-        record_method = func_mapping[variable]
-        if cells == 'all':
-            logger.debug('Recording %s from all cells in population "%s"' % (variable, self.name))
-            getattr(self.pop, record_method)()
-        elif isinstance(cells, dict):
-            logger.debug('Recording %s from a subset of cells in population "%s" ' % (variable, self.name))
-            getattr(self.pop, record_method)(cells[name])
-        elif isinstance(cells, int):
-            n = cells
-            logger.debug('Recording %s from a subset of %d cells in population "%s" ' % (variable, n, self.name))
-            getattr(self.pop, record_method)(n)
-        else:
-            raise Exception("cells must be 'all', a dict, or an int. Actual value of %s" % str(cells))
+    def record(self, variable):
+        if self.to_record != None:
+            cells = self.to_record
+            func_mapping = {'spikes': 'record', 'v': 'record_v','g_syn':'record_gsyn'} # need to add conductances
+            record_method = func_mapping[variable]
+            if cells == 'all':
+                logger.debug('Recording %s from all cells in population "%s"' % (variable, self.name))
+                getattr(self.pop, record_method)()
+            elif isinstance(cells, list):
+                logger.debug('Recording %s from a subset of cells in population "%s" ' % (variable, self.name))
+                getattr(self.pop[cells], record_method)()
+            elif isinstance(cells, int):
+                n = cells
+                logger.debug('Recording %s from a subset of %d cells in population "%s" ' % (variable, n, self.name))
+                getattr(self.pop, record_method)(n)
+            else:
+                raise Exception("cells must be 'all', a list, or an int. Actual value of %s" % str(cells))
 
     def write_neo_object(self,tstop):
         segment = create_segment_for_sheet(self.name)
@@ -172,12 +179,17 @@ class RetinalUniformSheet(Sheet):
         self.pop = self.sim.Population(int(parameters.sx*parameters.sy*parameters.density), getattr(self.model.sim, self.parameters.cell.model), self.parameters.cell.params,rs,self.name)
         for var, val in self.parameters.cell.initial_values.items():
             self.pop.initialize(var, val)
+            
+    def size_in_degrees(self):            
+        return (self.parameters.sx, self.parameters.sy)
 
 
 class SheetWithMagnificationFactor(Sheet):
 
     required_parameters = ParameterSet({
         'magnification_factor': float, # μm / degree
+        'sx': float,      #μm, x size of the region
+        'sy': float,      #μm, y size of the region
     })
 
     def __init__(self, model, parameters):
@@ -207,12 +219,13 @@ class SheetWithMagnificationFactor(Sheet):
         """
         return distance_vf*self.magnification_factor
 
+    def size_in_degrees(self):            
+        return self.cs_2_vf(self.parameters.sx, self.parameters.sy)
+
 
 class CorticalUniformSheet(SheetWithMagnificationFactor):
 
     required_parameters = ParameterSet({
-        'sx': float,      #μm, x size of the region
-        'sy': float,      #μm, y size of the region
         'density': float, #neurons/(100 μm^2)
     })
 

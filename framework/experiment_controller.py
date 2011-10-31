@@ -1,7 +1,41 @@
 from MozaikLite.storage.datastore import Hdf5DataStore,PickledDataStore
 from NeuroTools.parameters import ParameterSet
+import sys 
+import os 
+from datetime import datetime
+from NeuroTools import logging
+from NeuroTools import init_logging
+from NeuroTools import visual_logging
 
-def run_experiments(model,root_directory,experiment_list):
+global root_directory
+root_directory = './'
+
+def setup_experiment(simulation_name,sim):
+    # Read parameters
+    if len(sys.argv) > 1:
+        parameters_url = sys.argv[1]
+    else:
+        raise ValueError , "No parameter file supplied"
+    
+    parameters = ParameterSet(parameters_url) 
+    
+    # Create results directory
+    timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
+    root_direcotory =  parameters.results_dir + simulation_name + '_' + timestamp + '/'
+    os.mkdir(root_direcotory)
+    parameters.save(root_direcotory + "parameters", expand_urls=True)
+    
+    logger = logging.getLogger("MozaikLite")
+    
+    # Set-up logging
+    init_logging(root_direcotory + "log", file_level=logging.DEBUG, console_level=logging.DEBUG) # NeuroTools version
+    visual_logging.basicConfig(root_direcotory + "visual_log.zip", level=logging.DEBUG)
+    
+    logger.info("Creating Model object using the %s simulator." % sim.__name__)
+    return parameters
+ 
+
+def run_experiments(model,experiment_list):
     # first lets run all the measurements required by the experiments
     print 'Starting Experiemnts'
     data_store = PickledDataStore(load=False,parameters=ParameterSet({'root_directory':root_directory}))

@@ -77,6 +77,7 @@ class DataStoreView(MozaikLiteParametrizeObject):
         # we will hold the recordings as one neo Block
         self.block = Block()
         self.analysis_results = {}
+        self.retinal_stimulus = {}
         self.analysis_results['data'] = {}
         self.full_datastore = full_datastore # should be self if actually the instance is actually DataStore
         
@@ -171,6 +172,10 @@ class DataStoreView(MozaikLiteParametrizeObject):
         else:
             return []
     
+
+    def get_retinal_stimulus(self,stimulus):
+        return self.retinal_stimulus[stimulus]
+   
     def _analysis_result_copy(self,d):
         nd = {}
         for k in d.keys():
@@ -239,6 +244,10 @@ class DataStore(DataStoreView):
         raise NotImplementedError
         pass        
 
+    def add_retinal_stimulus(self,data,stimulus):
+        raise NotImplementedError
+        pass        
+
 class Hdf5DataStore(DataStore):
     """
     An DataStore that saves all it's data in a hdf5 file and an associated analysis results file, 
@@ -273,6 +282,9 @@ class Hdf5DataStore(DataStore):
         self.block.segments.extend(segment)
         self.stimulus_dict[str(stimulus)]=True
 
+    def add_retinal_stimulus(self,data,stimulus):
+        self.retinal_stimulus[str(stimulus)] = data
+        
     def add_analysis_result(self,result,sheet_name=None,neuron_idx=None):
         if not sheet_name:
             node = self.analysis_results['data']
@@ -308,10 +320,20 @@ class PickledDataStore(Hdf5DataStore):
         f = open(self.parameters.root_directory+'/datastore.analysis.pickle','r')
         self.analysis_results = pickle.load(f)
         
+        f = open(self.parameters.root_directory+'/datastore.retinal.stimulus.pickle','r')
+        self.retinal_stimulus = pickle.load(f)
+        
             
     def save(self):
         f = open(self.parameters.root_directory+'/datastore.recordings.pickle','w')
         pickle.dump(self.block,f)
+        f.close()
+        
+        f = open(self.parameters.root_directory+'/datastore.retinal.stimulus.pickle','w')
+        pickle.dump(self.retinal_stimulus,f)
+        f.close()                
         
         f = open(self.parameters.root_directory+'/datastore.analysis.pickle','w')
         pickle.dump(self.analysis_results,f)
+        f.close()
+        

@@ -261,7 +261,8 @@ class VisualSpace(object):
                 else:
                     #logger.debug("Warning: region %s does not overlap this object (%s)." % (region.describe(), obj.describe()))
                     pass
-
+        
+        
         return numpy.where(scene != TRANSPARENT, scene, self.background_luminance)
         
     def get_maximum_duration(self):
