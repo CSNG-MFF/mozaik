@@ -6,7 +6,7 @@ import numpy
 def get_spikes_to_dic(spikes,pop):
     #order according to ids
     dictionary = {}  
-    for idd in xrange(0,len(pop.all())):
+    for idd,t in enumerate(pop.all()):
         dictionary[idd]=numpy.array([])
 
     if len(spikes) == 0:
@@ -33,7 +33,7 @@ def get_vm_to_dic(vm,pop):
     #order according to ids
     dictionary = {} 
 
-    for idd in xrange(0,len(pop.all())):
+    for idd,t in enumerate(pop.all()):
         dictionary[idd]=numpy.array([])
 
     if len(vm) == 0:
@@ -62,7 +62,7 @@ def get_gsyn_to_dicts(gsyn,pop):
     dictionary_e = {} 
     dictionary_i = {} 
 
-    for idd in xrange(0,len(pop.all())):
+    for idd,t in enumerate(pop.all()):
         dictionary_e[idd]=numpy.array([])
         dictionary_i[idd]=numpy.array([])
 
@@ -110,22 +110,22 @@ def spike_segment_to_dict(seg):
         sheets[s] = (spike_dic_to_list(d),d.keys(),float(t.t_start),float(t.t_stop))
     return sheets
     
-def segments_to_dict_of_SpikeList(segments):
-    # it turns neo segment list to a dictionary of tuples
-    # each key in dictionary corresponds to a sheet and contains 
-    # a tuple of arrays containing the spiketrains  and corresponding stimuli
-    dd = {}
-    for seg in segments:
-        d = spike_segment_to_dict(seg)
-        for k in d.keys():
-            (spikes,idds,tstart,tstop) = d[k]
-            if not dd.has_key(k):
-               dd[k] = ([],[])
-            (sp,st) = dd[k]  
-            sp.append(signals.SpikeList(spikes,idds,t_start=tstart,t_stop=tstop))
-            st.append(parse_stimuls_id(seg.stimulus))
+#def segments_to_dict_of_SpikeList(segments):
+    ## it turns neo segment list to a dictionary of tuples
+    ## each key in dictionary corresponds to a sheet and contains 
+    ## a tuple of arrays containing the spiketrains  and corresponding stimuli
+    #dd = {}
+    #for seg in segments:
+        #d = spike_segment_to_dict(seg)
+        #for k in d.keys():
+            #(spikes,idds,tstart,tstop) = d[k]
+            #if not dd.has_key(k):
+               #dd[k] = ([],[])
+            #(sp,st) = dd[k]  
+            #sp.append(signals.SpikeList(spikes,idds,t_start=tstart,t_stop=tstop))
+            #st.append(parse_stimuls_id(seg.stimulus))
     
-    return dd
+    #return dd
 
 
 

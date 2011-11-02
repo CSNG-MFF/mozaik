@@ -1,4 +1,4 @@
-from MozaikLite.tools.misc import segments_to_dict_of_SpikeList,segments_to_dict_of_AnalogSignalList
+#from MozaikLite.tools.misc import segments_to_dict_of_SpikeList,segments_to_dict_of_AnalogSignalList
 from MozaikLite.stimuli.stimulus_generator import colapse
 from MozaikLite.analysis.analysis_data_structures import TuningCurve, NeurotoolsData, ConductanceSignalList , AnalogSignalList
 from MozaikLite.analysis.analysis_helper_functions import time_histogram_across_trials
