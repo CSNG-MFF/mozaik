@@ -237,8 +237,8 @@ class V1RFSpecificProbabilisticArborization(MozaikComponent):
 			weights = []
 
 
-			for (neuron1,i) in zip(target.pop,numpy.arange(0,len(target.pop),1)):
-				for (neuron2,j) in zip(source.pop,numpy.arange(0,len(source.pop),1)):
+			for (i,neuron1) in enumerate(target.pop.all()):
+				for (j,neuron2) in enumerate(source.pop.all()):
 
 					or_dist = (source.get_neuron_annotation(i,'LGNAfferentOrientation') - source.get_neuron_annotation(j,'LGNAfferentOrientation')) % numpy.pi/2
 					
@@ -350,7 +350,7 @@ class GaborConnector(MozaikComponent):
                 coords_y = numpy.linspace(-t_size[1]/2.0,t_size[1]/2.0,numpy.shape(phase_map)[1])    
                 phase_map = RectBivariateSpline(coords_x, coords_y, phase_map)
              
-             for (neuron2,j) in zip(target.pop,numpy.arange(0,len(target.pop),1)):
+             for (j,neuron2) in enumerate(target.pop.all()):
                  
                 if or_map:
                    orientation = or_map(on.positions[0][j],on.positions[1][j]) 
@@ -372,7 +372,7 @@ class GaborConnector(MozaikComponent):
                 target.add_neuron_annotation(j,'LGNAfferentSize',size,protected=True)
                 target.add_neuron_annotation(j,'LGNAfferentPhase',phase,protected=True)
                  
-                for (neuron1,i) in zip(on,numpy.arange(0,len(on),1)):
+                for (i,neuron1) in enumerate(on.all()):
                     if parameters.topological:
                         on_weights.append((i,j,numpy.max((0,gabor(on.positions[0][i],on.positions[1][i],target.pop.positions[0][j],target.pop.positions[1][j],orientation,frequency,phase,size,aspect_ratio))),parameters.propagation_constant))
                         off_weights.append((i,j,-numpy.min((0,gabor(off.positions[0][i],off.positions[1][i],target.pop.positions[0][j],target.pop.positions[1][j],orientation,frequency,phase,size,aspect_ratio))),parameters.propagation_constant))

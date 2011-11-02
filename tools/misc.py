@@ -6,7 +6,7 @@ import numpy
 def get_spikes_to_dic(spikes,pop):
     #order according to ids
     dictionary = {}  
-    for idd in xrange(0,len(pop)):
+    for idd in xrange(0,len(pop.all())):
         dictionary[idd]=numpy.array([])
 
     if len(spikes) == 0:
@@ -33,7 +33,7 @@ def get_vm_to_dic(vm,pop):
     #order according to ids
     dictionary = {} 
 
-    for idd in xrange(0,len(pop)):
+    for idd in xrange(0,len(pop.all())):
         dictionary[idd]=numpy.array([])
 
     if len(vm) == 0:
@@ -62,7 +62,7 @@ def get_gsyn_to_dicts(gsyn,pop):
     dictionary_e = {} 
     dictionary_i = {} 
 
-    for idd in xrange(0,len(pop)):
+    for idd in xrange(0,len(pop.all())):
         dictionary_e[idd]=numpy.array([])
         dictionary_i[idd]=numpy.array([])
 
