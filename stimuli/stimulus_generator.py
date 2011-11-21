@@ -142,11 +142,7 @@ class FullfieldDriftingSinusoidalGrating(Stimulus):
             
             self.current_phase=0
             while True:
-                #import pylab
-                #if self.current_phase==0:
-                #   pylab.figure()
-                #   pylab.imshow(topo.pattern.basic.SineGrating(orientation=self.params[0],frequency=self.params[1],phase=self.current_phase,size=self.parameters.size_in_degrees[0],bounds=BoundingBox(radius=self.parameters.size_in_degrees[0]/2),scale=self.parameters.max_luminance,xdensity=self.density,ydensity=self.density)())
-                #   pylab.title('image')
+                
                 yield (topo.pattern.basic.SineGrating(orientation=self.params[0],frequency=self.params[1],phase=self.current_phase,size=self.size_in_degrees[0],bounds=BoundingBox(radius=self.size_in_degrees[0]/2),scale=self.max_luminance,xdensity=self.density,ydensity=self.density)(),[self.current_phase])
                 self.current_phase+= 2*numpy.pi*(self.frame_duration/1000.0)*self.params[2]
 
@@ -168,17 +164,15 @@ class NaturalImageWithEyeMovement(Stimulus):
     A visual stimulus that simulates an eye movement over a static image
     
     Parameter order:
-    `image_size_x`       -  The size of the image in degrees of visual space 
-    `image_size_y`       -  The size of the image in degrees of visual space 
-    `idd`                -  JAHACK: this is probably just a hack for now how to 
-                            make two stimuli with different external(hidden) parameters  
-                            to have unique parameter combinations
+    'eye_movement_period' -  # (ms) the time between two consequitve eye movements recorded in the eye_path file
+    `idd`                 -  JAHACK: this is probably just a hack for now how to 
+                             make two stimuli with different external(hidden) parameters  
+                             to have unique parameter combinations
     """    
     
     required_parameters = ParameterSet({
           'image_location' : str, # path to the static image 
           'eye_path_location' : str,  # path to a file containing the eye_path as a pickled list of tuples containing the coordinates
-          'eye_movement_period' : str, # (ms) the time between two consequitve eye movements recorded in the eye_path file
     })
     
     def __init__(self, parameters, external_parameters):
@@ -193,7 +187,7 @@ class NaturalImageWithEyeMovement(Stimulus):
             """
             self.time=0
             while True:
-                location = self.eye_path[numpy.floor(self.duration*self.time/self.parameters.eye_movement_period)]
+                location = self.eye_path[numpy.floor(self.duration*self.time/self.eye_movement_period)]
                 image = topo.pattern.image.Image(filename=self.parameters.eye_path_location,
                                              x=location[0],
                                              y=location[1],

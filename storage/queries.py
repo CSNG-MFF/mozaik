@@ -37,6 +37,7 @@ class Query(MozaikLiteParametrizeObject):
 def select_stimuli_type_query(dsv,stimulus_name,params=None): 
     new_dsv = dsv.fromDataStoreView()
     new_dsv.analysis_results = dsv.analysis_result_copy()
+    new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
 
    
     for seg in dsv.block.segments:
@@ -77,6 +78,7 @@ class SelectStimuliTypeQuery(Query):
 def select_result_sheet_query(dsv,sheet_name):  
     new_dsv = dsv.fromDataStoreView()
     new_dsv.analysis_results = dsv.analysis_result_copy()
+    new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
     
     for seg in dsv.block.segments:
         if seg.annotations['sheet_name'] == sheet_name:
@@ -97,6 +99,7 @@ class SelectResultSheetQuery(Query):
 def tag_based_query(dsv,tags=[]):  
         new_dsv = dsv.fromDataStoreView()
         new_dsv.block.segments = dsv.recordings_copy()
+        new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
         new_dsv.analysis_results = _tag_based_query(dsv.analysis_results,tags)
         return new_dsv
         

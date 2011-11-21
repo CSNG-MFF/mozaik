@@ -9,6 +9,21 @@ def disable_top_right_axis(ax):
     for tick in ax.xaxis.get_major_ticks():
         tick.tick2On = False
 
+def disable_bottom_axis(ax):
+    for loc, spine in ax.spines.iteritems():
+            if loc in ['bottom']:
+               spine.set_color('none') # don't draw spine
+    for tick in ax.xaxis.get_major_ticks():
+        tick.tick1On = False
+
+def disable_left_axis(ax):
+    for loc, spine in ax.spines.iteritems():
+            if loc in ['left']:
+               spine.set_color('none') # don't draw spine
+    for tick in ax.yaxis.get_major_ticks():
+        tick.tick1On = False
+
+
 def three_tick_axis(axis):
     nticks = len([t for t in axis.get_major_ticks()])
     if (nticks % 2) != 0:

@@ -38,18 +38,17 @@ class Model(MozaikComponent):
     record the activity in the model to this stimulus sequence 
     and return it as a neo object.
     """
-    
     def present_stimulus_and_record(self,stimulus):
         self.visual_space.add_object(str(stimulus),stimulus)
         
         # create empty arrays in annotations to store the sheet identity of stored data
         sh = []
         for sheet in self.sheets:   
+            #if self.first_time:
             sheet.record('spikes')
             sheet.record('v')
             sheet.record('g_syn')
             sh.append(sheet) 
-
         retinal_input = self.retina.process_visual_input(self.visual_space,stimulus.duration)        
         
         print type(retinal_input[0])
@@ -66,15 +65,18 @@ class Model(MozaikComponent):
 
         self.visual_space.clear()
         self.reset()
+        
         for sheet in self.sheets:    
             if sheet.to_record != None:
                sheet.pop._record(None)
+        
+        self.first_time = False
         return (segments,retinal_input)
 
 
     def __init__(self,sim,parameters):
         MozaikComponent.__init__(self, self, parameters);        
-        
+        self.first_time=True
         self.sim = sim
         self.node = self.sim.setup() # should have some parameters here
         self.sheets = []

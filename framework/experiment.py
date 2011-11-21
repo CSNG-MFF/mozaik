@@ -1,6 +1,6 @@
 from MozaikLite.stimuli.stimulus_generator import FullfieldDriftingSinusoidalGrating, Null
 from MozaikLite.analysis.analysis import AveragedOrientationTuning,  GSTA, Precision
-from MozaikLite.visualization.plotting import GSynPlot,RasterPlot,VmPlot,CyclicTuningCurvePlot,OverviewPlot, ConductanceSignalListPlot
+from MozaikLite.visualization.plotting import GSynPlot,RasterPlot,VmPlot,CyclicTuningCurvePlot,OverviewPlot, ConductanceSignalListPlot, RetinalInputMovie
 from MozaikLite.visualization.jens_paper_plots import Figure2
 from NeuroTools.parameters import ParameterSet, ParameterDist
 from MozaikLite.storage.queries import TagBasedQuery, select_result_sheet_query
@@ -56,16 +56,45 @@ class MeasureOrientationTuningFullfield(Experiment):
         print 'Doing Analysis'
         AveragedOrientationTuning(data_store,ParameterSet({})).analyse()
         GSTA(data_store,ParameterSet({'neurons' : [0], 'length' : 50.0 }),tags=['GSTA1']).analyse()
-        
-        
         Precision(select_result_sheet_query(data_store,"V1_Exc"),ParameterSet({'neurons' : [0], 'bin_length' : 1.0 })).analyse()
         
         OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Exc'})).plot()
+        
         OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Inh'})).plot()
         OverviewPlot(data_store,ParameterSet({'sheet_name' : 'X_ON'})).plot()
         Figure2(data_store,ParameterSet({'sheet_name' : 'V1_Exc'})).plot()
+        RetinalInputMovie(data_store,ParameterSet({'frame_rate': 10})).plot()
         
+class MeasureNaturalImagesWithEyeMovement(Experiment):
+    
+    def __init__(self,model,):
+        self.model = model
+        for k in xrange(0,num_trials):
+            self.stimuli.append(FullfieldDriftingSinusoidalGrating([   
+                            7, # frame duration (roughly like a movie) - is this fast enough?
+                            model.visual_field.size[0], 
+                            0.0,
+                            0.0,
+                            j*90.0, #max_luminance 
+                            grating_duration, # stimulus duration
+                            40, #density
+                            k, # trial number
+                            numpy.pi/num_orientations*i, #orientation
+                            spatial_frequency,
+                            temporal_frequency, #stimulus duration - we want to get one full sweep of phases
+                        ],ParameterSet({})))    
 
+    def do_analysis(self,data_store):
+        print 'Doing Analysis'
+        AveragedOrientationTuning(data_store,ParameterSet({})).analyse()
+        GSTA(data_store,ParameterSet({'neurons' : [0], 'length' : 50.0 }),tags=['GSTA1']).analyse()
+        Precision(select_result_sheet_query(data_store,"V1_Exc"),ParameterSet({'neurons' : [0], 'bin_length' : 1.0 })).analyse()
+        
+        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Exc'})).plot()
+        
+        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Inh'})).plot()
+        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'X_ON'})).plot()
+        Figure2(data_store,ParameterSet({'sheet_name' : 'V1_Exc'})).plot()
 
 class MeasureSpontaneousActivity(Experiment):
     

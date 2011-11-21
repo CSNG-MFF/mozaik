@@ -1,17 +1,17 @@
 """
-The visualization for mozaik objects  it is based on the matplotlib and the GridSpec object
+The visualization for mozaik objects is based on the matplotlib and the GridSpec object
 
 The plotting framwork is divided into two main concepts, represented by the two high-level
-classes Plotting and SimplePlot.
+classes Plotting (this file) and SimplePlot (see simple_plot.py).
 
 The SimplePlot represent the low-level plotting. It is assumed that this plot has only a single 
 axis that is drawn into the region defined by the GridSpec instance that is passed into it. The 
 role of the set of classes derived from SimplePlot is to standardize the low level looks of all 
 figures (mainly related to axis, lables, titles etc.), and should assume data given to them in a 
 format that is easy to use by the given plot. In order to unify the look of figures
-it defines three functions pre_plot, plot, and post_plot. The actual plotting that 
+it defines four functions pre_axis_plot,pre_plot, plot, and post_plot. The actual plotting that 
 user defines is typically defined in 
-the plot function while the pre_plot and post_plot functions handle the pre and post plotting 
+the plot function while the pre_axis_plot, pre_plot and post_plot functions handle the pre and post plotting 
 adjustments to the plot (i.e. the typical post_plot function for example adjusts the ticks of 
 the axis to a common format other such axis related properties). When defining a new SimplePlot 
 function user is encoureged to push as much of it's 'decorating' funcitonality into the post 
@@ -20,7 +20,7 @@ in the plot function. At the same time, there is already a set of classes implem
 a general common look provided, and so users are encoureged to use these as much as possible. If 
 their formatting features are not sufficient or incompatible with a given plot, users are encoureged
 to define new virtual class that defines the formatting in the pre and post plot functions 
-(and thus sepperating it from the plot itself), and incorporating these as low as possible within 
+(and thus sepparating it from the plot itself), and incorporating these as low as possible within 
 the hierarchy of the SimplePlot classes to re-use as much of the previous work as possible.
 
 NOTE SimplePlot now resides in sepparate module visualization.simple_plot
@@ -69,10 +69,11 @@ class Plotting(MozaikLiteParametrizeObject):
         pass
     
     def plot(self):
-        pylab.figure(facecolor='w')
+        self.fig = pylab.figure(facecolor='w')
         gs = gridspec.GridSpec(1, 1)
         gs.update(left=0.05, right=0.95, top=0.95, bottom=0.05)
         self.subplot(gs[0,0])
+        
 
           
               
@@ -360,4 +361,19 @@ class ConductanceSignalListPlot(LinePlot):
               disable_top_right_axis(ax)      
               three_tick_axis(ax.yaxis)        
               three_tick_axis(ax.xaxis)                      
-              pylab.rc('axes', linewidth=1)  
+              pylab.rc('axes', linewidth=1) 
+              
+              
+class RetinalInputMovie(Plotting):
+      required_parameters = ParameterSet({
+            'frame_rate' : int,  #the desired frame rate (per sec), it might be less if the computer is too slow
+      })
+      
+      
+      def  __init__(self,datastore,parameters):
+           Plotting.__init__(self,datastore,parameters)    
+           self.length = None
+           self.retinal_input = datastore.get_retinal_stimulus()[0]
+           
+      def subplot(self,subplotspec): 
+          PixelMovie(self.retinal_input,1.0/self.parameters.frame_rate*1000,x_axis=False,y_axis=False)(subplotspec)

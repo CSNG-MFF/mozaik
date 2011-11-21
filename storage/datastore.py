@@ -173,8 +173,11 @@ class DataStoreView(MozaikLiteParametrizeObject):
             return []
     
 
-    def get_retinal_stimulus(self,stimulus):
-        return self.retinal_stimulus[stimulus]
+    def get_retinal_stimulus(self,stimuli=None):
+        if stimuli == None:
+           return self.retinal_stimulus.values()
+        else:
+           return [self.retinal_stimulus[s] for s in stimuli]
    
     def _analysis_result_copy(self,d):
         nd = {}
@@ -184,6 +187,12 @@ class DataStoreView(MozaikLiteParametrizeObject):
             else:
                nd[k] = d[k].copy() 
         return nd    
+
+    def retinal_stimulus_copy(self):
+        new_dict = {}
+        for k in self.retinal_stimulus.keys():
+            new_dict[k] = self.retinal_stimulus[k]
+        return new_dict
 
     def analysis_result_copy(self):
         return self._analysis_result_copy(self.analysis_results)

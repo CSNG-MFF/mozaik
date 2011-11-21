@@ -1,5 +1,5 @@
 import MozaikLite.storage.queries as queries
-from MozaikLite.visualization.plotting import Plotting,RasterPlot,GSynPlot,VmPlot,ConductanceSignalListPlot,AnalogSignalListPlot
+from MozaikLite.visualization.plotting import Plotting,RasterPlot,GSynPlot,VmPlot,ConductanceSignalListPlot,AnalogSignalListPlot,RetinalInputMovie
 from NeuroTools.parameters import ParameterSet, ParameterDist
 import matplotlib.gridspec as gridspec
 from MozaikLite.storage.queries import select_stimuli_type_query,select_result_sheet_query, partition_by_stimulus_paramter_query
@@ -22,7 +22,6 @@ class Figure2(Plotting):
           lgn_off_dsv = queries.select_result_sheet_query(dsv,'X_OFF')
           lgn_spikes = [lgn_on_dsv.get_spike_lists(),lgn_off_dsv.get_spike_lists()]
           
-          print len(lgn_on_dsv.get_spike_lists()[0])
           
           SpikeRasterPlot(lgn_spikes,neurons=[0],x_axis=False,xlabel=None, colors = ['#FACC2E','#0080FF'])(gs[1:4,0:5])
           SpikeHistogramPlot(lgn_spikes,neurons=[0], x_axis=False,xlabel=None, colors = ['#FACC2E','#0080FF'])(gs[4:5,0:5])

@@ -11,7 +11,7 @@ class SimplePlot(object):
         One general policy is that any overwriting of the standard style default values
         by the `Plotting` mechanisms should take precedence over those done by specific 
         instances of `SimplePlot`. In order to enforce this precedence, the modifiable
-        parameters of the classes should be stored in the common `dictionary`parameters.
+        parameters of the classes should be stored in the common `dictionary` parameters.
         Each class derived from `SimplePlot` should add its modifiable parameters into the 
         `parameters` dictionary in its constructor.
         
@@ -22,7 +22,7 @@ class SimplePlot(object):
         In order to do so, the `parameters` dictionary is accessible via the __getattr__
         and __setattr__ functions. 
         
-        *Note, this reason all `SimplePlot` classes need to 
+        *Note, for this reason all `SimplePlot` classes need to 
         take care that none of the modifiable attributes is also defined as a class attribute.*
         """
         def pre_plot(self):      
@@ -37,7 +37,7 @@ class SimplePlot(object):
               raise NotImplementedError
               pass
 
-        def post_axis_plot(self):
+        def pre_axis_plot(self):
               raise NotImplementedError
               pass
 
@@ -102,7 +102,7 @@ class StandardStyle(SimplePlot):
        def __init__(self,**kwargs):
               """
               fontsize            Font size to be used for tick labels and axis labels
-              tick_style          The stile of ticks to be plotted 
+              ?_tick_style        The stile of ticks to be plotted 
                                   Available styles are:
                                      Min - plots three ticks, 2 on sides one in the middle (if even number of xticks supplied only the side ones will be plotted)
                                      Custom - will plot tikcs as defined by x/yticks arguments
@@ -111,7 +111,9 @@ class StandardStyle(SimplePlot):
               x_label             what is the xlabel (None means no label will be plotted)
               y_label             what is the ylabel (None means no label will be plotted)
               top_right_border    Whether to plot the top and right border of the axis
-              False               what is the title (None means no label will be plotted)
+              left_border         Whether to plot the left border of the axis
+              bottom_border       Whether to plot the right border of the axis
+              title               what is the title (None means no label will be plotted)
               xlim                what are the xlims (None means matplotlib will infer from data)
               ylim                what are the ylims (None means matplotlib will infer from data)
               xticks              what are the xtikcs (note that the tick style, and x_axis can override/modify these)
@@ -126,6 +128,8 @@ class StandardStyle(SimplePlot):
               self.parameters["xlabel"] = None # what is the xlabel (None means no label will be plotted)
               self.parameters["ylabel"] = None # what is the ylabel (None means no label will be plotted)
               self.parameters["top_right_border"] = False # Whether to plot the top and right border of the axis
+              self.parameters["left_border"] = True # Whether to plot the left border of the axis
+              self.parameters["bottom_border"] = True # Whether to plot the bottom border of the axis
               self.parameters["title"] = None  # what is the title (None means no label will be plotted)
               self.parameters["xlim"] = None   # what are the xlims (None means matplotlib will infer from data)
               self.parameters["ylim"] = None   # what are the ylims (None means matplotlib will infer from data)
@@ -148,9 +152,6 @@ class StandardStyle(SimplePlot):
 
            if self.ylim:
               pylab.ylim(self.ylim)
-
-           if not self.top_right_border:
-              disable_top_right_axis(self.axis)
                 
            if not self.x_axis:
                disable_xticks(self.axis)
@@ -167,6 +168,15 @@ class StandardStyle(SimplePlot):
         
            if self.xlabel:
               pylab.xlabel(self.xlabel)
+
+           if not self.top_right_border:
+              disable_top_right_axis(self.axis)
+
+           if not self.left_border:
+              disable_left_axis(self.axis)
+
+           if not self.bottom_border:
+              disable_bottom_axis(self.axis)
 
            pylab.rc('axes', linewidth=1)         
         
@@ -194,9 +204,9 @@ class StandardStyle(SimplePlot):
 
 class SpikeRasterPlot(StandardStyle):         
       """
-      This function plots the raster plot of spikes in the spike_list argument. 
+      This function plots the raster plot of spikes in the `spike_lists` argument. 
       
-      The spike list argument is a list of list of SpikeList objects.
+      The `spike_lists` argument is a list of list of SpikeList objects.
       The top level list corresponds to different sets of spikes that should 
       be plotted over each other. They have to contain the same number of neurons. 
       Each set of spikes will be colored by the color on corresponding postion of the 
@@ -305,3 +315,68 @@ class SpikeHistogramPlot(SpikeRasterPlot):
         self.xticks = [0,t_stop/2,t_stop]
         self.xlim = (0,t_stop)    
         self.xlabel = 'time (ms)'
+
+animation_list = []
+
+class StandardStyleAnimatedPlot(StandardStyle):
+      """
+      This is an abstract class helping construction of animated graphs.
+      
+      Each class subclassing from this class should implement the `SimplePlot`
+      `plot()` function in which it should draw the first frame of the animation
+      with all the corresponding decorations.
+      
+      Second it needs to implement the `plot_next_frame` function which should replot the data
+      in the plot corresponding to the next frame. 
+      This function needs to keep track of the frame number itself if it needs it.
+      Note that advanced usage of matplotlib is recomanded here so that not the 
+      whole graph is always replotted but only new data are set to the graph.
+      
+      The `StandardStyleAnimatedPlot` will take care of the updating of the figure,
+      so now `draw()` or `show()` or event commands should be issued.
+      """
+      def __init__(self,frame_duration,**kwargs):
+          StandardStyle.__init__(self,**kwargs)
+          self.lock=False
+          self.frame_duration = frame_duration
+          self.artists = []
+          
+      def plot_next_frame(self):
+          raise NotImplementedError
+          pass
+      
+      @staticmethod # hack to make it compatible with FuncAnimation - we have to make it static
+      def _plot_next_frame(b,self):  
+          a = self.plot_next_frame()
+          return a,
+
+      def post_plot(self):                
+          StandardStyle.post_plot(self)
+          import matplotlib.animation as animation
+          ani = animation.FuncAnimation(self.axis.figure, StandardStyleAnimatedPlot._plot_next_frame, fargs=(self,),interval=self.frame_duration, blit=True)
+          global animation_list
+          animation_list.append(ani)
+          
+          
+          
+  
+class PixelMovie(StandardStyleAnimatedPlot):
+      def __init__(self,movie,frame_duration,**kwargs):
+          StandardStyleAnimatedPlot.__init__(self,frame_duration,**kwargs)
+          self.movie = movie
+          self.l = len(movie)
+          self.i = 0
+          self.parameters["left_border"] = False
+          self.parameters["bottom_border"] = False
+          
+      def plot_next_frame(self):
+            self.im.set_array(self.movie[self.i])
+            self.i=self.i+1
+            if self.i == self.l:
+               self.i = 0
+            return self.im
+            
+      def plot(self):  
+          self.im  = self.axis.imshow(self.movie[0],interpolation='nearest')
+            
+
