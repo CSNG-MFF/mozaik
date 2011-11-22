@@ -1,4 +1,4 @@
-from MozaikLite.stimuli.stimulus_generator import FullfieldDriftingSinusoidalGrating, Null
+from MozaikLite.stimuli.topographica_based import FullfieldDriftingSinusoidalGrating, Null, NaturalImageWithEyeMovement
 from MozaikLite.analysis.analysis import AveragedOrientationTuning,  GSTA, Precision
 from MozaikLite.visualization.plotting import GSynPlot,RasterPlot,VmPlot,CyclicTuningCurvePlot,OverviewPlot, ConductanceSignalListPlot, RetinalInputMovie
 from MozaikLite.visualization.jens_paper_plots import Figure2
@@ -41,6 +41,7 @@ class MeasureOrientationTuningFullfield(Experiment):
                     self.stimuli.append(FullfieldDriftingSinusoidalGrating([   
                                     7, # frame duration (roughly like a movie) - is this fast enough?
                                     model.visual_field.size[0], 
+                                    model.visual_field.size[0], 
                                     0.0,
                                     0.0,
                                     j*90.0, #max_luminance 
@@ -67,40 +68,38 @@ class MeasureOrientationTuningFullfield(Experiment):
         
 class MeasureNaturalImagesWithEyeMovement(Experiment):
     
-    def __init__(self,model,):
+    def __init__(self,model,stimulus_duration,num_trials):
         self.model = model
         for k in xrange(0,num_trials):
-            self.stimuli.append(FullfieldDriftingSinusoidalGrating([   
+            self.stimuli.append(NaturalImageWithEyeMovement([   
                             7, # frame duration (roughly like a movie) - is this fast enough?
+                            model.visual_field.size[0], 
                             model.visual_field.size[0], 
                             0.0,
                             0.0,
-                            j*90.0, #max_luminance 
-                            grating_duration, # stimulus duration
-                            40, #density
+                            90.0, #max_luminance 
+                            stimulus_duration, # stimulus duration
+                            2, #density
                             k, # trial number
-                            numpy.pi/num_orientations*i, #orientation
-                            spatial_frequency,
-                            temporal_frequency, #stimulus duration - we want to get one full sweep of phases
-                        ],ParameterSet({})))    
+                            40, # x size of image
+                            6.66, # eye movement period
+                            1 # idd
+                        ],'eye_path.pickle','image_naturelle_HIGH.bmp'))    
+
 
     def do_analysis(self,data_store):
         print 'Doing Analysis'
-        AveragedOrientationTuning(data_store,ParameterSet({})).analyse()
-        GSTA(data_store,ParameterSet({'neurons' : [0], 'length' : 50.0 }),tags=['GSTA1']).analyse()
-        Precision(select_result_sheet_query(data_store,"V1_Exc"),ParameterSet({'neurons' : [0], 'bin_length' : 1.0 })).analyse()
-        
         OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Exc'})).plot()
-        
         OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Inh'})).plot()
         OverviewPlot(data_store,ParameterSet({'sheet_name' : 'X_ON'})).plot()
-        Figure2(data_store,ParameterSet({'sheet_name' : 'V1_Exc'})).plot()
+        RetinalInputMovie(data_store,ParameterSet({'frame_rate': 10})).plot()
 
 class MeasureSpontaneousActivity(Experiment):
     
     def __init__(self,model,duration):
             self.stimuli.append(Null([   
                             7, # frame duration (roughly like a movie) - is this fast enough?
+                            model.visual_field.size[0], 
                             model.visual_field.size[0], 
                             0.0,
                             0.0,

@@ -377,6 +377,6 @@ class PixelMovie(StandardStyleAnimatedPlot):
             return self.im
             
       def plot(self):  
-          self.im  = self.axis.imshow(self.movie[0],interpolation='nearest')
+          self.im  = self.axis.imshow(self.movie[0],interpolation='nearest',cmap='gray')
             
 

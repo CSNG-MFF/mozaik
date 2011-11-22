@@ -182,7 +182,7 @@ class PerStimulusPlot(LinePlot):
     def  __init__(self,datastore,parameters):
         Plotting.__init__(self,datastore,parameters)
         self.dsv = select_result_sheet_query(datastore,self.parameters.sheet_name)
-        self.dsvs = partition_by_stimulus_paramter_query(self.dsv,7)    
+        self.dsvs = partition_by_stimulus_paramter_query(self.dsv,8)    
         self.length = len(self.dsvs)
         
     
@@ -364,7 +364,7 @@ class ConductanceSignalListPlot(LinePlot):
               pylab.rc('axes', linewidth=1) 
               
               
-class RetinalInputMovie(Plotting):
+class RetinalInputMovie(LinePlot):
       required_parameters = ParameterSet({
             'frame_rate' : int,  #the desired frame rate (per sec), it might be less if the computer is too slow
       })
@@ -373,7 +373,8 @@ class RetinalInputMovie(Plotting):
       def  __init__(self,datastore,parameters):
            Plotting.__init__(self,datastore,parameters)    
            self.length = None
-           self.retinal_input = datastore.get_retinal_stimulus()[0]
-           
-      def subplot(self,subplotspec): 
-          PixelMovie(self.retinal_input,1.0/self.parameters.frame_rate*1000,x_axis=False,y_axis=False)(subplotspec)
+           self.retinal_input = datastore.get_retinal_stimulus()
+           self.length = len(self.retinal_input)
+       
+      def _subplot(self,idx,gs):
+          PixelMovie(self.retinal_input[idx],1.0/self.parameters.frame_rate*1000,x_axis=False,y_axis=False)(gs)

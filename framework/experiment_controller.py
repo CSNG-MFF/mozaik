@@ -52,8 +52,8 @@ def run_experiments(model,experiment_list):
     for experiment in experiment_list:    
         experiment.do_analysis(data_store)
 
-    print 'Saving Datastore'
-    data_store.save()
+    #print 'Saving Datastore'
+    #data_store.save()
 
 
 

@@ -4,7 +4,6 @@ from MozaikLite.framework import load_component
 from MozaikLite.framework.interfaces import MozaikComponent
 from MozaikLite.framework.space import VisualSpace, VisualRegion
 from MozaikLite.framework.connectors import ExponentialProbabilisticArborization,UniformProbabilisticArborization,GaborConnector, V1RFSpecificProbabilisticArborization
-from MozaikLite.stimuli.stimulus_generator import Null
 from NeuroTools import signals, plotting, visualization, visual_logging, datastore
 
 from MozaikLite.framework.sheets import Sheet
@@ -51,9 +50,6 @@ class Model(MozaikComponent):
             sh.append(sheet) 
         retinal_input = self.retina.process_visual_input(self.visual_space,stimulus.duration)        
         
-        print type(retinal_input[0])
-        print retinal_input[0]
-        
         self.run(stimulus.duration)
         
         segments = []
@@ -87,16 +83,11 @@ class Model(MozaikComponent):
         self.t = 0
         
     def run(self, tstop):
-        #should check if this network is in the cache and, if so,
-        #if the desired quantities have already been recorded
-        #for tstop or greater
-        #if not, call
         print ("Simulating the network for %s ms" % tstop)
         self.sim.run(tstop)
         self.t += tstop
         
     def reset(self):
-        # can this interferre with cache ?
         print ("Resetting the network")
         self.sim.reset()
         self.t=0

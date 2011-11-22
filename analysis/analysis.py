@@ -46,13 +46,13 @@ class AveragedOrientationTuning(Analysis):
                 # transform spike trains due to stimuly to mean_rates
                 mean_rates = [numpy.array(s.mean_rates())  for s in sp]
                 # collapse against all parameters other then orientation
-                (mean_rates,s) = colapse(mean_rates,st,parameter_indexes=[7])
+                (mean_rates,s) = colapse(mean_rates,st,parameter_indexes=[8])
                 # take a sum of each 
                 def _mean(a):
                     l = len(a)
                     return sum(a)/l
                 mean_rates = [_mean(a) for a in mean_rates]  
-                self.datastore.full_datastore.add_analysis_result(TuningCurve(mean_rates,s,8,sheet,tags=self.tags),sheet_name=sheet)
+                self.datastore.full_datastore.add_analysis_result(TuningCurve(mean_rates,s,9,sheet,tags=self.tags),sheet_name=sheet)
 
 class GSTA(Analysis):
       """

@@ -6,7 +6,8 @@
 # eg:   'SinusoidalGrating 0.0 1.0 3.14 4.3 3'
 # each stimulus should have at least 5 parameters corresponding to those all mozaik VisualStimulus object require:
 # frame_duration
-# size_in_degrees // note this is a bounding box of the stimulus which should correspond to the size of the visual field rather than the 'geometrical size'
+# size_in_degrees x// note this is a bounding box of the stimulus which should correspond to the size of the visual field rather than the 'geometrical size'
+# size_in_degrees y// note this is a bounding box of the stimulus which should correspond to the size of the visual field rather than the 'geometrical size'
 # location_x
 # location_y
 # max_luminance 
@@ -20,10 +21,11 @@
 
 
 #StimulusTaxonomy contains the list of known stimuli with the number of their free parameters
-base_stimulus_parameters = ['frame duration','size_in_degrees','x center coor', 'y center coor','maximum luminance','stimulus duration','density','trial']
+base_stimulus_parameters = ['frame duration','size_in_degrees_x','size_in_degrees_y','x center coor', 'y center coor','maximum luminance','stimulus duration','density','trial']
 
 StimulusTaxonomy = {
                         'FullfieldDriftingSinusoidalGrating' : base_stimulus_parameters + ['orientation','spatial_frequency','temporal_frequency'],
+                        'NaturalImageWithEyeMovement' : base_stimulus_parameters + ['size','eye_movement_period','idd'],
                         'Null' : base_stimulus_parameters,
                    }
 
@@ -102,7 +104,7 @@ def colapse(value_list,stimuli_list,parameter_indexes=[]):
     return ([d[k] for k in d.keys()] ,d.keys())
 
       
-class Stimulus(VisualStimulus,MozaikLiteParametrizeObject):
+class Stimulus(VisualStimulus):
         def __str__(self):
             string = self.__class__.__name__
             for p in self.vparams:
@@ -115,89 +117,14 @@ class Stimulus(VisualStimulus,MozaikLiteParametrizeObject):
                    return True
             return False
 
-        def __init__(self, parameters, external_parameters):
+        def __init__(self, parameters):
             self.vparams = parameters
-            self.params = parameters[8:] # store the rest of the params in self.params - easy way to access for the derived classes
-            self.duration = parameters[5]
-            self.density = parameters[6]
-            self.trial = parameters[7]
-            VisualStimulus.__init__(self,parameters[0],(parameters[1],parameters[1]), (parameters[2],parameters[3]), parameters[4]) 
-            MozaikLiteParametrizeObject.__init__(self,external_parameters)
+            self.params = parameters[9:] # store the rest of the params in self.params - easy way to access for the derived classes
+            self.duration = parameters[6]
+            self.density = parameters[7]
+            self.trial = parameters[8]
+            VisualStimulus.__init__(self,parameters[0],(parameters[1],parameters[2]), (parameters[3],parameters[4]), parameters[5]) 
             self.n_frames = numpy.inf # possibly very dangerous. Don't do 'for i in range(stim.n_frames)'!
 
-# The following stimuli are currently a hack that uses the topographica to generate the stimulus
-import  topo.pattern.basic
-from topo.base.boundingregion import BoundingBox
-
-class FullfieldDriftingSinusoidalGrating(Stimulus):
-    def frames(self):
-            """
-            max_luminance is interpreted as scale
-            and size_in_degrees as the bounding box size
-            parameters are in this order (after the 7 default ones)
-            orientation
-            spatial_frequency
-            temporal_frequency (Hz)
-            """
-            
-            self.current_phase=0
-            while True:
-                
-                yield (topo.pattern.basic.SineGrating(orientation=self.params[0],frequency=self.params[1],phase=self.current_phase,size=self.size_in_degrees[0],bounds=BoundingBox(radius=self.size_in_degrees[0]/2),scale=self.max_luminance,xdensity=self.density,ydensity=self.density)(),[self.current_phase])
-                self.current_phase+= 2*numpy.pi*(self.frame_duration/1000.0)*self.params[2]
 
 
-class Null(Stimulus):
-    def frames(self):
-            """
-            empty stimulus
-            """
-            while True:
-                yield topo.pattern.basic.Null(scale=0,size=self.size_in_degrees[0])(), []
-                
-
-
-
-
-class NaturalImageWithEyeMovement(Stimulus):
-    """
-    A visual stimulus that simulates an eye movement over a static image
-    
-    Parameter order:
-    'eye_movement_period' -  # (ms) the time between two consequitve eye movements recorded in the eye_path file
-    `idd`                 -  JAHACK: this is probably just a hack for now how to 
-                             make two stimuli with different external(hidden) parameters  
-                             to have unique parameter combinations
-    """    
-    
-    required_parameters = ParameterSet({
-          'image_location' : str, # path to the static image 
-          'eye_path_location' : str,  # path to a file containing the eye_path as a pickled list of tuples containing the coordinates
-    })
-    
-    def __init__(self, parameters, external_parameters):
-            Stimulus.__init__(self,parameters, external_parameters) 
-            f = open(self.parameters.eye_path_location,'r')
-            self.eye_path = pickle.load(f)
-            import topo.pattern.image 
-
-    def frames(self):
-            """
-            
-            """
-            self.time=0
-            while True:
-                location = self.eye_path[numpy.floor(self.duration*self.time/self.eye_movement_period)]
-                image = topo.pattern.image.Image(filename=self.parameters.eye_path_location,
-                                             x=location[0],
-                                             y=location[1],
-                                             orientation=0,
-                                             xdensity=self.density,
-                                             ydensity=self.density,
-                                             size=max(self.params[0],self.params[1]),
-                                             bounds=BoundingBox(radius=self.size_in_degrees[0]/2),
-                                             scale=self.parameters.max_luminance)()
-            
-                
-                yield (image,[self.time])
-                self.time = time + 1
