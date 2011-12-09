@@ -10,10 +10,7 @@ def time_histogram_across_trials(spike_trials,bin_length):
     t_stop = spike_trials[0].t_stop
     num_neurons = len(spike_trials[0])
     
-    
     num_bins = (t_stop-t_start)/bin_length
-    
-    
     
     st = [[] for i in xrange(0,num_neurons)]
     

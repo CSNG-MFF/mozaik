@@ -238,7 +238,7 @@ class SpikeRasterPlot(StandardStyle):
             neurons = [i for i in xrange(0,min(10,len(self.sps[0][0])))]
          else:
            neurons = self.neurons
-      
+          
          t_stop = self.sps[0][0].t_stop
          num_n = len(neurons) # number of neurons
          num_t = len(self.sps[0]) # number of trials

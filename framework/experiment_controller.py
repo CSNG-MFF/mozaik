@@ -11,6 +11,7 @@ global root_directory
 root_directory = './'
 
 def setup_experiment(simulation_name,sim):
+    global root_directory
     # Read parameters
     if len(sys.argv) > 1:
         parameters_url = sys.argv[1]
@@ -52,8 +53,8 @@ def run_experiments(model,experiment_list):
     for experiment in experiment_list:    
         experiment.do_analysis(data_store)
 
-    #print 'Saving Datastore'
-    #data_store.save()
+    print 'Saving Datastore'
+    data_store.save()
 
 
 

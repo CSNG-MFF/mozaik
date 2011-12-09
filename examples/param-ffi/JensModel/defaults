@@ -8,8 +8,7 @@
     'cortex_inh': url("param-ffi/cortex_inh"),
     'visual_field': {
         'centre': (0.0, 0.0), # degrees (x,y)
-#        'size': (6.8, 6.8), # degrees (width, height)
-        'size': (40, 30), # degrees (width, height)
+        'size': (6.8, 6.8), # degrees (width, height)
     },
     'results_dir': '/home/jan/projects/MozaikLite/examples/',
     'name' : 'Jens Model',

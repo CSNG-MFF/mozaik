@@ -51,7 +51,7 @@ class MeasureOrientationTuningFullfield(Experiment):
                                     numpy.pi/num_orientations*i, #orientation
                                     spatial_frequency,
                                     temporal_frequency, #stimulus duration - we want to get one full sweep of phases
-                                ],ParameterSet({})))    
+                                ]))    
 
     def do_analysis(self,data_store):
         print 'Doing Analysis'
@@ -79,7 +79,7 @@ class MeasureNaturalImagesWithEyeMovement(Experiment):
                             0.0,
                             90.0, #max_luminance 
                             stimulus_duration, # stimulus duration
-                            2, #density
+                            40, #density
                             k, # trial number
                             40, # x size of image
                             6.66, # eye movement period
@@ -107,7 +107,7 @@ class MeasureSpontaneousActivity(Experiment):
                             duration, # stimulus duration
                             40, #density
                             0 # trial number
-                        ],ParameterSet({})))    
+                        ]))    
 
     def do_analysis(self,data_store):
         print 'Doing Analysis'
