@@ -1,0 +1,411 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>MozaikLite.framework.space &mdash; MozaikLite 0.01 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.01',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="MozaikLite 0.01 documentation" href="../../../index.html" />
+    <link rel="up" title="MozaikLite.framework" href="../framework.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">MozaikLite 0.01 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../framework.html" accesskey="U">MozaikLite.framework</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for MozaikLite.framework.space</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module for dealing with visual space.</span>
+
+<span class="sd">For now, we deal only with two-dimensions, i.e. everything projected onto a</span>
+<span class="sd">plane. We ignore distortions in going from a flat plane to the curved retina.</span>
+
+<span class="sd">Could consider using matplotlib.transforms for some of this.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">scipy.ndimage</span> <span class="kn">import</span> <span class="n">interpolation</span>
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">from</span> <span class="nn">NeuroTools.parameters</span> <span class="kn">import</span> <span class="n">ParameterSet</span>
+<span class="kn">from</span> <span class="nn">MozaikLite</span> <span class="kn">import</span> <span class="n">__version__</span>
+
+<span class="n">TRANSPARENT</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s">&quot;Mozaik&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="xy2ij"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.xy2ij">[docs]</a><span class="k">def</span> <span class="nf">xy2ij</span><span class="p">(</span><span class="n">coordinates</span><span class="p">):</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">coordinates</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">coordinates</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">coordinates</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="nb">float</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="VisualRegion"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualRegion">[docs]</a><span class="k">class</span> <span class="nc">VisualRegion</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A rectangular region of visual space.&quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        `location` should be a tuple giving the coordinates of the _centre_</span>
+<span class="sd">        of the region.</span>
+<span class="sd">        `size` should be a tuple giving the size in degrees in the x (azimuthal)</span>
+<span class="sd">        and y (elevation) directions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="n">location</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">size</span>
+        <span class="k">assert</span> <span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        
+        <span class="n">half_width</span> <span class="o">=</span> <span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="mf">2.0</span>
+        <span class="n">half_height</span> <span class="o">=</span> <span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mf">2.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">left</span> <span class="o">=</span> <span class="n">location</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">half_width</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">right</span> <span class="o">=</span> <span class="n">location</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">half_width</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">top</span> <span class="o">=</span> <span class="n">location</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">half_height</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bottom</span> <span class="o">=</span> <span class="n">location</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">half_height</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">top</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom</span>
+    
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">location</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">location</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+    
+<div class="viewcode-block" id="VisualRegion.overlaps"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualRegion.overlaps">[docs]</a>    <span class="k">def</span> <span class="nf">overlaps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">another_region</span><span class="p">):</span>                    
+        <span class="n">lr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span> <span class="o">&lt;=</span> <span class="n">another_region</span><span class="o">.</span><span class="n">left</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span> <span class="o">&gt;=</span> <span class="n">another_region</span><span class="o">.</span><span class="n">right</span>
+        <span class="n">tb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">top</span> <span class="o">&lt;=</span> <span class="n">another_region</span><span class="o">.</span><span class="n">bottom</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom</span> <span class="o">&gt;=</span> <span class="n">another_region</span><span class="o">.</span><span class="n">top</span>
+        <span class="k">return</span> <span class="ow">not</span><span class="p">(</span><span class="n">lr</span> <span class="ow">or</span> <span class="n">tb</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="VisualRegion.intersection"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualRegion.intersection">[docs]</a>    <span class="k">def</span> <span class="nf">intersection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">another_region</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">overlaps</span><span class="p">(</span><span class="n">another_region</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;Regions do not overlap.&quot;</span><span class="p">)</span>
+        <span class="n">left</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">another_region</span><span class="o">.</span><span class="n">left</span><span class="p">)</span>
+        <span class="n">right</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="n">another_region</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">left</span> <span class="o">&lt;=</span> <span class="n">right</span><span class="p">,</span> <span class="s">&quot;self: </span><span class="si">%s</span><span class="se">\n</span><span class="s">another_region: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">describe</span><span class="p">(),</span> <span class="n">another_region</span><span class="o">.</span><span class="n">describe</span><span class="p">())</span>
+        <span class="n">bottom</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bottom</span><span class="p">,</span> <span class="n">another_region</span><span class="o">.</span><span class="n">bottom</span><span class="p">)</span>
+        <span class="n">top</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">top</span><span class="p">,</span> <span class="n">another_region</span><span class="o">.</span><span class="n">top</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">bottom</span> <span class="o">&lt;=</span> <span class="n">top</span>
+        <span class="n">centre</span> <span class="o">=</span> <span class="p">((</span><span class="n">left</span> <span class="o">+</span> <span class="n">right</span><span class="p">)</span><span class="o">/</span><span class="mf">2.0</span><span class="p">,</span> <span class="p">(</span><span class="n">top</span> <span class="o">+</span> <span class="n">bottom</span><span class="p">)</span><span class="o">/</span><span class="mf">2.0</span><span class="p">)</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="p">(</span><span class="n">right</span><span class="o">-</span><span class="n">left</span><span class="p">,</span> <span class="n">top</span><span class="o">-</span><span class="n">bottom</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">VisualRegion</span><span class="p">(</span><span class="n">centre</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="VisualRegion.describe"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualRegion.describe">[docs]</a>    <span class="k">def</span> <span class="nf">describe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;Region of visual space centred at </span><span class="si">%(location)s</span><span class="s"> of size </span><span class="si">%(size)s</span><span class="s">.</span>
+<span class="s">               Edges: left=</span><span class="si">%(left)g</span><span class="s">, right=</span><span class="si">%(right)g</span><span class="s">, top=</span><span class="si">%(top)g</span><span class="s">, bottom=</span><span class="si">%(bottom)g</span><span class="s">&quot;&quot;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span>
+        <span class="k">return</span> <span class="n">s</span>
+</div></div>
+<div class="viewcode-block" id="VisualObject"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualObject">[docs]</a><span class="k">class</span> <span class="nc">VisualObject</span><span class="p">(</span><span class="n">VisualRegion</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Abstract base class.&quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+        <span class="n">VisualRegion</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_zoom_cache</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_visible</span> <span class="o">=</span> <span class="bp">True</span>
+        
+<div class="viewcode-block" id="VisualObject.update"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualObject.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">NotImplementedException</span><span class="p">(</span><span class="s">&quot;Must be implemented by child class&quot;</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">_calculate_zoom</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actual_pixel_size</span><span class="p">,</span> <span class="n">desired_pixel_size</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sometimes the interpolation procedure returns a new array that is too</span>
+<span class="sd">        small due to rounding error. This is a crude attempt to work around that.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">zoom</span> <span class="o">=</span> <span class="n">actual_pixel_size</span><span class="o">/</span><span class="n">desired_pixel_size</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">zoom</span><span class="o">*</span><span class="n">i</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">round</span><span class="p">(</span><span class="n">zoom</span><span class="o">*</span><span class="n">i</span><span class="p">):</span>
+                <span class="n">zoom</span> <span class="o">*=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mf">1e-15</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">zoom</span>
+
+<div class="viewcode-block" id="VisualObject.display"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualObject.display">[docs]</a>    <span class="k">def</span> <span class="nf">display</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">pixel_size</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">region</span><span class="p">,</span> <span class="n">VisualRegion</span><span class="p">),</span> <span class="s">&quot;region must be a VisualRegion-descended object. Actually a </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="n">region</span><span class="p">)</span>
+        <span class="n">size_in_pixels</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">xy2ij</span><span class="p">(</span><span class="n">region</span><span class="o">.</span><span class="n">size</span><span class="p">)</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">pixel_size</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">view</span> <span class="o">=</span> <span class="n">TRANSPARENT</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">size_in_pixels</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">region</span><span class="o">.</span><span class="n">overlaps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="n">intersection</span> <span class="o">=</span> <span class="n">region</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">intersection</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">region</span><span class="p">)</span> <span class="c"># just a consistency check. Could be removed if necessary for performance.</span>
+            <span class="c">#logger.debug(&quot;this object: %s&quot; % self.describe())</span>
+            <span class="c">#logger.debug(&quot;region: %s&quot; % region.describe())</span>
+            <span class="c">#logger.debug(&quot;intersection: %s&quot; % intersection.describe())</span>
+            <span class="c"># convert coordinates in degrees to array index values</span>
+            <span class="n">img_relative_left</span> <span class="o">=</span> <span class="p">(</span><span class="n">intersection</span><span class="o">.</span><span class="n">left</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span>
+            <span class="c">##img_relative_right = (intersection.right - self.left)/self.width</span>
+            <span class="n">img_relative_width</span> <span class="o">=</span> <span class="n">intersection</span><span class="o">.</span><span class="n">width</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span>
+            <span class="n">img_relative_top</span> <span class="o">=</span> <span class="p">(</span><span class="n">intersection</span><span class="o">.</span><span class="n">top</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="c">##</span>
+            <span class="n">img_relative_bottom</span> <span class="o">=</span> <span class="p">(</span><span class="n">intersection</span><span class="o">.</span><span class="n">bottom</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span>
+            <span class="n">img_relative_height</span> <span class="o">=</span> <span class="n">intersection</span><span class="o">.</span><span class="n">height</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span> 
+            <span class="n">view_relative_left</span> <span class="o">=</span> <span class="p">(</span><span class="n">intersection</span><span class="o">.</span><span class="n">left</span> <span class="o">-</span> <span class="n">region</span><span class="o">.</span><span class="n">left</span><span class="p">)</span><span class="o">/</span><span class="n">region</span><span class="o">.</span><span class="n">width</span>
+            <span class="c">##view_relative_right = (intersection.right - region.left)/region.width</span>
+            <span class="n">view_relative_width</span> <span class="o">=</span> <span class="n">intersection</span><span class="o">.</span><span class="n">width</span><span class="o">/</span><span class="n">region</span><span class="o">.</span><span class="n">width</span>
+            <span class="n">view_relative_top</span> <span class="o">=</span> <span class="p">(</span><span class="n">intersection</span><span class="o">.</span><span class="n">top</span> <span class="o">-</span> <span class="n">region</span><span class="o">.</span><span class="n">bottom</span><span class="p">)</span><span class="o">/</span><span class="n">region</span><span class="o">.</span><span class="n">height</span> <span class="c">##</span>
+            <span class="n">view_relative_bottom</span> <span class="o">=</span> <span class="p">(</span><span class="n">intersection</span><span class="o">.</span><span class="n">bottom</span> <span class="o">-</span> <span class="n">region</span><span class="o">.</span><span class="n">bottom</span><span class="p">)</span><span class="o">/</span><span class="n">region</span><span class="o">.</span><span class="n">height</span>
+            <span class="n">view_relative_height</span> <span class="o">=</span> <span class="n">intersection</span><span class="o">.</span><span class="n">height</span><span class="o">/</span><span class="n">region</span><span class="o">.</span><span class="n">height</span>
+            
+            <span class="n">img_pixel_size</span> <span class="o">=</span> <span class="n">xy2ij</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span> <span class="c"># is self.size a tuple or an array?</span>
+            <span class="c">#logger.debug(&quot;img_pixel_size = %s&quot; % str(img_pixel_size))</span>
+            <span class="c">#logger.debug(&quot;img relative_left, _right, _top, _bottom = %g,%g,%g,%g&quot; % (img_relative_left, img_relative_right, img_relative_top, img_relative_bottom))</span>
+            <span class="c">#logger.debug(&quot;view relative_left, _right, _top, _bottom = %g,%g,%g,%g&quot; % (view_relative_left, view_relative_right, view_relative_top, view_relative_bottom))</span>
+            <span class="c">#logger.debug(&quot;self.img.shape = %s&quot; % str(self.img.shape))</span>
+            <span class="k">assert</span> <span class="n">img_pixel_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">img_pixel_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            
+            <span class="k">if</span> <span class="n">pixel_size</span> <span class="o">==</span> <span class="n">img_pixel_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="c">#logger.debug(&quot;Image pixel size matches desired size (%g degrees)&quot; % pixel_size)</span>
+                <span class="n">img</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">img</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c"># note that if the image is much larger than the view region, we might save some</span>
+                <span class="c"># time by not rescaling the whole image, only the part within the view region.</span>
+                <span class="n">zoom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_zoom</span><span class="p">(</span><span class="n">img_pixel_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pixel_size</span><span class="p">)</span> <span class="c">#img_pixel_size[0]/pixel_size</span>
+                <span class="c">#logger.debug(&quot;Image pixel size (%g deg) does not match desired size (%g deg). Zooming image by a factor %g&quot; % (img_pixel_size[0], pixel_size, zoom))</span>
+                <span class="k">if</span> <span class="n">zoom</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_zoom_cache</span><span class="p">:</span>
+                    <span class="n">img</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_zoom_cache</span><span class="p">[</span><span class="n">zoom</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>                  
+                    <span class="n">img</span> <span class="o">=</span> <span class="n">interpolation</span><span class="o">.</span><span class="n">zoom</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">img</span><span class="p">,</span> <span class="n">zoom</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_zoom_cache</span><span class="p">[</span><span class="n">zoom</span><span class="p">]</span> <span class="o">=</span> <span class="n">img</span>
+                
+            <span class="n">j_start</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">img_relative_left</span> <span class="o">*</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+            <span class="n">delta_j</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">img_relative_width</span> <span class="o">*</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+            <span class="n">i_start</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">numpy</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">img_relative_top</span> <span class="o">*</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+            <span class="n">delta_i</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">img_relative_height</span> <span class="o">*</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+            
+            <span class="n">l_start</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">view_relative_left</span> <span class="o">*</span> <span class="n">size_in_pixels</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span> 
+            <span class="n">delta_l</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">view_relative_width</span> <span class="o">*</span> <span class="n">size_in_pixels</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+            <span class="n">k_start</span> <span class="o">=</span> <span class="n">size_in_pixels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">numpy</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">view_relative_top</span> <span class="o">*</span> <span class="n">size_in_pixels</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span> 
+            <span class="n">delta_k</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">view_relative_height</span> <span class="o">*</span> <span class="n">size_in_pixels</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span> 
+            
+            <span class="k">assert</span> <span class="n">delta_j</span> <span class="o">==</span> <span class="n">delta_l</span><span class="p">,</span> <span class="s">&quot;delta_j = </span><span class="si">%g</span><span class="s">, delta_l = </span><span class="si">%g</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">delta_j</span><span class="p">,</span> <span class="n">delta_l</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">delta_i</span> <span class="o">==</span> <span class="n">delta_k</span>
+            
+            <span class="n">i_stop</span> <span class="o">=</span> <span class="n">i_start</span> <span class="o">+</span> <span class="n">delta_i</span>
+            <span class="n">j_stop</span> <span class="o">=</span> <span class="n">j_start</span> <span class="o">+</span> <span class="n">delta_j</span>
+            <span class="n">k_stop</span> <span class="o">=</span> <span class="n">k_start</span> <span class="o">+</span> <span class="n">delta_k</span>
+            <span class="n">l_stop</span> <span class="o">=</span> <span class="n">l_start</span> <span class="o">+</span> <span class="n">delta_l</span>
+            <span class="c">##logger.debug(&quot;i_start = %d, i_stop = %d, j_start = %d, j_stop = %d&quot; % (i_start, i_stop, j_start, j_stop))</span>
+            <span class="c">##logger.debug(&quot;k_start = %d, k_stop = %d, l_start = %d, l_stop = %d&quot; % (k_start, k_stop, l_start, l_stop))</span>
+
+            
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">view</span><span class="p">[</span><span class="n">k_start</span><span class="p">:</span><span class="n">k_start</span><span class="o">+</span><span class="n">delta_k</span><span class="p">,</span> <span class="n">l_start</span><span class="p">:</span><span class="n">l_start</span><span class="o">+</span><span class="n">delta_l</span><span class="p">]</span> <span class="o">=</span> <span class="n">img</span><span class="p">[</span><span class="n">i_start</span><span class="p">:</span><span class="n">i_start</span><span class="o">+</span><span class="n">delta_i</span><span class="p">,</span> <span class="n">j_start</span><span class="p">:</span><span class="n">j_start</span><span class="o">+</span><span class="n">delta_j</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="n">errmsg</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;i_start = </span><span class="si">%d</span><span class="s">, i_stop = </span><span class="si">%d</span><span class="s">, j_start = </span><span class="si">%d</span><span class="s">, j_stop = </span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i_start</span><span class="p">,</span> <span class="n">i_stop</span><span class="p">,</span> <span class="n">j_start</span><span class="p">,</span> <span class="n">j_stop</span><span class="p">))</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;k_start = </span><span class="si">%d</span><span class="s">, k_stop = </span><span class="si">%d</span><span class="s">, l_start = </span><span class="si">%d</span><span class="s">, l_stop = </span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">k_start</span><span class="p">,</span> <span class="n">k_stop</span><span class="p">,</span> <span class="n">l_start</span><span class="p">,</span> <span class="n">l_stop</span><span class="p">))</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;img.shape = </span><span class="si">%s</span><span class="s">, view.shape = </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">view</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;img[i_start:i_stop, j_start:j_stop].shape = </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">img</span><span class="p">[</span><span class="n">i_start</span><span class="p">:</span><span class="n">i_stop</span><span class="p">,</span> <span class="n">j_start</span><span class="p">:</span><span class="n">j_stop</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;view[k_start:k_stop, l_start:l_stop].shape = </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">view</span><span class="p">[</span><span class="n">k_start</span><span class="p">:</span><span class="n">k_stop</span><span class="p">,</span> <span class="n">l_start</span><span class="p">:</span><span class="n">l_stop</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+                <span class="k">raise</span>
+        <span class="k">assert</span> <span class="n">view</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">size_in_pixels</span><span class="p">),</span> <span class="s">&quot;view.shape = </span><span class="si">%s</span><span class="s">, should be </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">view</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">size_in_pixels</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">view</span>
+
+</div></div>
+<div class="viewcode-block" id="VisualSpace"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualSpace">[docs]</a><span class="k">class</span> <span class="nc">VisualSpace</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class to structure and simplify operations taking place in visual</span>
+<span class="sd">    space, such as stimulus presentation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">version</span> <span class="o">=</span> <span class="n">__version__</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">update_interval</span><span class="p">,</span> <span class="n">background_luminance</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_interval</span> <span class="o">=</span> <span class="n">update_interval</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">background_luminance</span> <span class="o">=</span> <span class="n">background_luminance</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="n">ParameterSet</span><span class="p">({</span>
+                            <span class="s">&#39;update_interval&#39;</span><span class="p">:</span> <span class="n">update_interval</span><span class="p">,</span>
+                            <span class="s">&#39;background_luminance&#39;</span><span class="p">:</span> <span class="n">background_luminance</span>
+                          <span class="p">})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size_in_degrees</span> <span class="o">=</span> <span class="mf">0.1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size_in_pixels</span> <span class="o">=</span> <span class="mi">1</span> <span class="c"># remove this? the viewing component should choose the pixel density it wants, and we use interpolation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">content</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame_number</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input</span> <span class="o">=</span> <span class="bp">None</span>
+    
+<div class="viewcode-block" id="VisualSpace.add_object"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualSpace.add_object">[docs]</a>    <span class="k">def</span> <span class="nf">add_object</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">visual_object</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add a VisualObject to the visual scene.&quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Adding </span><span class="si">%s</span><span class="s"> with name &#39;</span><span class="si">%s</span><span class="s">&#39; to the visual scene.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">visual_object</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">content</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">visual_object</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input</span> <span class="o">=</span> <span class="n">visual_object</span> <span class="c"># really self.input should be a list, and we should append to it, but at the moment NeuroTools.datastore can&#39;t handle multiple inputs to a component</span>
+        <span class="c"># update size_in_X, or make them properties that are recalculated each time</span>
+        </div>
+<div class="viewcode-block" id="VisualSpace.reset"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualSpace.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reset each VisualObject in the scene to its initial state.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame_number</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="VisualSpace.clear"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualSpace.clear">[docs]</a>    <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reset the visual space and clear stimuli in it </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">content</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        
+        </div>
+<div class="viewcode-block" id="VisualSpace.update"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualSpace.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Tell each VisualObject in the scene to update itself.</span>
+<span class="sd">        Returns the current time within the scene.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame_number</span> <span class="o">+=</span> <span class="mi">1</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame_number</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_interval</span>
+    </div>
+<div class="viewcode-block" id="VisualSpace.view"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualSpace.view">[docs]</a>    <span class="k">def</span> <span class="nf">view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">pixel_size</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Show the scene within a specific region.</span>
+<span class="sd">        </span>
+<span class="sd">        `region` should be a VisualRegion object.</span>
+<span class="sd">        `pixel_size` should be in degrees.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns a numpy array containing luminance values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">size_in_pixels</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">xy2ij</span><span class="p">(</span><span class="n">region</span><span class="o">.</span><span class="n">size</span><span class="p">)</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">pixel_size</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">scene</span> <span class="o">=</span> <span class="n">TRANSPARENT</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">size_in_pixels</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="n">is_visible</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">region</span><span class="o">.</span><span class="n">overlaps</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+                    <span class="n">obj_view</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">region</span><span class="p">,</span> <span class="n">pixel_size</span><span class="p">)</span>
+                    <span class="c">#print region.left, region.bottom, region.size, pixel_size, obj_view.shape, scene.shape, obj_view.min(), obj_view.max()</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">scene</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">obj_view</span> <span class="o">&gt;</span> <span class="n">scene</span><span class="p">,</span> <span class="n">obj_view</span><span class="p">,</span> <span class="n">scene</span><span class="p">)</span> <span class="c"># later objects overlay earlier ones with no transparency</span>
+                    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;Array dimensions mismatch. obj_view.shape=</span><span class="si">%s</span><span class="s">, scene.shape=</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">obj_view</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">scene</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;  region: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">region</span><span class="o">.</span><span class="n">describe</span><span class="p">())</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;  visual object: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">obj</span><span class="o">.</span><span class="n">describe</span><span class="p">())</span>
+                        <span class="k">raise</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c">#logger.debug(&quot;Warning: region %s does not overlap this object (%s).&quot; % (region.describe(), obj.describe()))</span>
+                    <span class="k">pass</span>
+        
+        
+        <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">scene</span> <span class="o">!=</span> <span class="n">TRANSPARENT</span><span class="p">,</span> <span class="n">scene</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">background_luminance</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="VisualSpace.get_maximum_duration"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualSpace.get_maximum_duration">[docs]</a>    <span class="k">def</span> <span class="nf">get_maximum_duration</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">duration</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">duration</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">duration</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_interval</span><span class="o">*</span><span class="n">obj</span><span class="o">.</span><span class="n">n_frames</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">duration</span>
+    </div>
+<div class="viewcode-block" id="VisualSpace.get_duration"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualSpace.get_duration">[docs]</a>    <span class="k">def</span> <span class="nf">get_duration</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s">&#39;duration&#39;</span><span class="p">]</span>
+    </div>
+<div class="viewcode-block" id="VisualSpace.set_duration"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualSpace.set_duration">[docs]</a>    <span class="k">def</span> <span class="nf">set_duration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">duration</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">duration</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_maximum_duration</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s">&#39;duration&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">duration</span>
+    </div>
+<div class="viewcode-block" id="VisualSpace.time_points"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualSpace.time_points">[docs]</a>    <span class="k">def</span> <span class="nf">time_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">duration</span> <span class="o">=</span> <span class="n">duration</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_maximum_duration</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_interval</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="VisualSpace.get_max_luminance"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualSpace.get_max_luminance">[docs]</a>    <span class="k">def</span> <span class="nf">get_max_luminance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">max_luminance</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    </div>
+<div class="viewcode-block" id="VisualSpace.export"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualSpace.export">[docs]</a>    <span class="k">def</span> <span class="nf">export</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">pixel_size</span><span class="p">,</span> <span class="n">output_dir</span><span class="o">=</span><span class="s">&quot;.&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Export a sequence of views of the visual space as image files.</span>
+<span class="sd">        Return a list of file paths.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">output_dir</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_duration</span><span class="p">()</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">update_interval</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="n">num_frames</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_duration</span><span class="p">()</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">update_interval</span><span class="p">)</span>
+        <span class="n">filename_fmt</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s">&quot;frame</span><span class="si">%%</span><span class="s">0</span><span class="si">%d</span><span class="s">d.png&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">num_frames</span><span class="p">)))</span>
+        <span class="n">filenames</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_frames</span><span class="p">):</span>
+            <span class="n">scene</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">region</span><span class="p">,</span> <span class="n">pixel_size</span><span class="p">)</span><span class="o">*</span><span class="mi">255</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">get_max_luminance</span><span class="p">()</span>
+            <span class="n">scene</span> <span class="o">=</span> <span class="n">scene</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;uint8&#39;</span><span class="p">)</span>
+            <span class="n">rgb_scene</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">scene</span><span class="p">,</span> <span class="n">scene</span><span class="p">,</span> <span class="n">scene</span><span class="p">))</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">fromarray</span><span class="p">(</span><span class="n">rgb_scene</span><span class="p">,</span> <span class="s">&#39;RGB&#39;</span><span class="p">)</span>
+            <span class="n">img</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">filename_fmt</span> <span class="o">%</span> <span class="n">i</span><span class="p">)</span>
+            <span class="n">filenames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">filename_fmt</span> <span class="o">%</span> <span class="n">i</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">filenames</span>
+        </div>
+<div class="viewcode-block" id="VisualSpace.describe"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualSpace.describe">[docs]</a>    <span class="k">def</span> <span class="nf">describe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;visual space with background luminance </span><span class="si">%g</span><span class="s"> cd/m2, updating every </span><span class="si">%g</span><span class="s"> ms, containing </span><span class="si">%d</span><span class="s"> objects&quot;</span> <span class="o">%</span> \
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">background_luminance</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_interval</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">content</span><span class="p">))</span>
+        </div></div>
+<span class="n">the_final_frontier</span> <span class="o">=</span> <span class="bp">True</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">MozaikLite 0.01 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../framework.html" >MozaikLite.framework</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Jan Antolik.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,456 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>MozaikLite.models.retinal.spatiotemporalfilter &mdash; MozaikLite 0.01 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.01',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="MozaikLite 0.01 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">MozaikLite 0.01 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for MozaikLite.models.retinal.spatiotemporalfilter</h1><div class="highlight"><pre>
+<span class="c"># encoding: utf-8</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Retina/LGN model based on that developed by Jens Kremkow (CNRS-INCM/ALUF)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">from</span> <span class="nn">MozaikLite.framework.space</span> <span class="kn">import</span> <span class="n">VisualSpace</span><span class="p">,</span> <span class="n">VisualRegion</span>
+<span class="kn">from</span> <span class="nn">MozaikLite.framework.interfaces</span> <span class="kn">import</span> <span class="n">MozaikRetina</span>
+<span class="kn">from</span> <span class="nn">MozaikLite.framework.sheets</span> <span class="kn">import</span> <span class="n">Sheet</span><span class="p">,</span><span class="n">RetinalUniformSheet</span>
+<span class="kn">import</span> <span class="nn">cai97</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">NeuroTools</span> <span class="kn">import</span> <span class="n">visual_logging</span>
+<span class="kn">from</span> <span class="nn">NeuroTools.plotting</span> <span class="kn">import</span> <span class="n">progress_bar</span>
+<span class="kn">from</span> <span class="nn">NeuroTools.signals.spikes</span> <span class="kn">import</span> <span class="n">SpikeList</span>
+<span class="kn">from</span> <span class="nn">NeuroTools.parameters</span> <span class="kn">import</span> <span class="n">ParameterSet</span>
+<span class="kn">from</span> <span class="nn">pyNN</span> <span class="kn">import</span> <span class="n">random</span>
+<span class="kn">from</span> <span class="nn">pyNN.space</span> <span class="kn">import</span> <span class="n">Grid2D</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s">&quot;Mozaik&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="meshgrid3D"><a class="viewcode-back" href="../../../../index.html#MozaikLite.models.retinal.spatiotemporalfilter.meshgrid3D">[docs]</a><span class="k">def</span> <span class="nf">meshgrid3D</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A slimmed-down version of http://www.scipy.org/scipy/numpy/attachment/ticket/966/meshgrid.py&quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+    <span class="n">mult_fact</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">z</span><span class="p">)))</span>
+    <span class="n">nax</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">newaxis</span>
+    <span class="k">return</span> <span class="n">x</span><span class="p">[:,</span><span class="n">nax</span><span class="p">,</span><span class="n">nax</span><span class="p">]</span><span class="o">*</span><span class="n">mult_fact</span><span class="p">,</span> \
+           <span class="n">y</span><span class="p">[</span><span class="n">nax</span><span class="p">,:,</span><span class="n">nax</span><span class="p">]</span><span class="o">*</span><span class="n">mult_fact</span><span class="p">,</span> \
+           <span class="n">z</span><span class="p">[</span><span class="n">nax</span><span class="p">,</span><span class="n">nax</span><span class="p">,:]</span><span class="o">*</span><span class="n">mult_fact</span>
+
+</div>
+<div class="viewcode-block" id="SpatioTemporalReceptiveField"><a class="viewcode-back" href="../../../../index.html#MozaikLite.models.retinal.spatiotemporalfilter.SpatioTemporalReceptiveField">[docs]</a><span class="k">class</span> <span class="nc">SpatioTemporalReceptiveField</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">func_params</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">duration</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        `func` should be a function of x, y, t, and a ParameterSet object</span>
+<span class="sd">        `func_params` should be the ParameterSet that is passed to `func`.</span>
+<span class="sd">        `width` (x-dimension) and `height` (y-dimension) are in degrees and</span>
+<span class="sd">        `duration` is in ms.</span>
+<span class="sd">        We take x=0 and y=0 at the centre of the spatial kernel</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">func</span> <span class="o">=</span> <span class="n">func</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">func_params</span> <span class="o">=</span> <span class="n">func_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">width</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">height</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">duration</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">duration</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spatial_resolution</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">inf</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temporal_resolution</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">inf</span>
+    
+<div class="viewcode-block" id="SpatioTemporalReceptiveField.quantize"><a class="viewcode-back" href="../../../../index.html#MozaikLite.models.retinal.spatiotemporalfilter.SpatioTemporalReceptiveField.quantize">[docs]</a>    <span class="k">def</span> <span class="nf">quantize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a quantized version of the receptive field. If `dx` does not</span>
+<span class="sd">        divide exactly into the width, then the actual width will be slightly</span>
+<span class="sd">        larger than the nominal width.</span>
+<span class="sd">        `dx` and `dy` should be in degrees and `dt` in ms.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">dx</span> <span class="o">==</span> <span class="n">dy</span> <span class="c"># For now, at least</span>
+        <span class="n">nx</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="o">/</span><span class="n">dx</span><span class="p">)</span>
+        <span class="n">ny</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="o">/</span><span class="n">dy</span><span class="p">)</span>
+        <span class="n">nt</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">duration</span><span class="o">/</span><span class="n">dt</span><span class="p">)</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="n">nx</span><span class="o">*</span><span class="n">dx</span>
+        <span class="n">height</span> <span class="o">=</span> <span class="n">ny</span><span class="o">*</span><span class="n">dy</span>
+        <span class="n">duration</span> <span class="o">=</span> <span class="n">nt</span><span class="o">*</span><span class="n">dt</span>
+        <span class="c"># x and y are the coordinates of the centre of each pixel</span>
+        <span class="c"># I use linspace instead of arange as arange sometimes can return inconsistent number of elements </span>
+        <span class="c"># (must have something to do with rounding errors)</span>
+        <span class="c">#x = numpy.arange(0.0, width, dx)  + dx/2.0 - width/2.0</span>
+        <span class="c">#y = numpy.arange(0.0, height, dy) + dy/2.0 - height/2.0</span>
+        
+        <span class="n">x</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">width</span><span class="o">-</span><span class="n">dx</span><span class="p">,</span> <span class="n">width</span><span class="o">/</span><span class="n">dx</span><span class="p">)</span>  <span class="o">+</span> <span class="n">dx</span><span class="o">/</span><span class="mf">2.0</span><span class="o">-</span> <span class="n">width</span><span class="o">/</span><span class="mf">2.0</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">height</span><span class="o">-</span><span class="n">dy</span><span class="p">,</span> <span class="n">height</span><span class="o">/</span><span class="n">dy</span><span class="p">)</span> <span class="o">+</span> <span class="n">dx</span><span class="o">/</span><span class="mf">2.0</span> <span class="o">-</span> <span class="n">height</span><span class="o">/</span><span class="mf">2.0</span>
+        
+        <span class="c"># t is the time at the beginning of each timestep</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+        <span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span><span class="n">T</span> <span class="o">=</span> <span class="n">meshgrid3D</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">t</span><span class="p">)</span> <span class="c"># x,y are reversed because (x,y) &lt;--&gt; (j,i)</span>
+        <span class="n">kernel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">func_params</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Created receptive field kernel: width=</span><span class="si">%g</span><span class="s">º, height=</span><span class="si">%g</span><span class="s">º, duration=</span><span class="si">%g</span><span class="s"> ms, shape=</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> 
+                         <span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="n">kernel</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;  before normalization: min=</span><span class="si">%g</span><span class="s">, max=</span><span class="si">%g</span><span class="s">&quot;</span> <span class="o">%</span> 
+                         <span class="p">(</span><span class="n">kernel</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">kernel</span><span class="o">.</span><span class="n">max</span><span class="p">()))</span>
+        <span class="n">kernel</span> <span class="o">=</span> <span class="n">kernel</span><span class="o">/</span><span class="p">(</span><span class="n">nx</span><span class="o">*</span><span class="n">ny</span><span class="o">*</span><span class="n">nt</span><span class="p">)</span> <span class="c"># normalize to make the kernel sum quasi-independent of the quantization</span>
+        
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;  after normalization: min=</span><span class="si">%g</span><span class="s">, max=</span><span class="si">%g</span><span class="s">, sum=</span><span class="si">%g</span><span class="s">&quot;</span> <span class="o">%</span> 
+                         <span class="p">(</span><span class="n">kernel</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">kernel</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="n">kernel</span><span class="o">.</span><span class="n">sum</span><span class="p">()))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span> <span class="o">=</span> <span class="n">kernel</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spatial_resolution</span> <span class="o">=</span> <span class="n">dx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temporal_resolution</span> <span class="o">=</span> <span class="n">dt</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="SpatioTemporalReceptiveField.kernel_duration"><a class="viewcode-back" href="../../../../index.html#MozaikLite.models.retinal.spatiotemporalfilter.SpatioTemporalReceptiveField.kernel_duration">[docs]</a>    <span class="k">def</span> <span class="nf">kernel_duration</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+</div>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s">&quot;Receptive field: width=</span><span class="si">%g</span><span class="s">º, height=</span><span class="si">%g</span><span class="s">º, duration=</span><span class="si">%g</span><span class="s"> ms&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span>
+            <span class="n">h</span><span class="p">,</span><span class="n">w</span> <span class="o">=</span> <span class="n">k</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s">&quot;, quantization=</span><span class="si">%s</span><span class="s">, actual width=</span><span class="si">%g</span><span class="s">º, actual_height=</span><span class="si">%g</span><span class="s">º, min=</span><span class="si">%g</span><span class="s">, max=</span><span class="si">%g</span><span class="s">.&quot;</span> <span class="o">%</span> \
+                 <span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">w</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">spatial_resolution</span><span class="p">,</span> <span class="n">h</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">spatial_resolution</span><span class="p">,</span> <span class="n">k</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">k</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s">&quot;. Not quantized.&quot;</span>
+        <span class="k">return</span> <span class="n">s</span>
+
+</div>
+<div class="viewcode-block" id="CellWithReceptiveField"><a class="viewcode-back" href="../../../../index.html#MozaikLite.models.retinal.spatiotemporalfilter.CellWithReceptiveField">[docs]</a><span class="k">class</span> <span class="nc">CellWithReceptiveField</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A model of the input current to an LGN relay cell, that multiplies, in space</span>
+<span class="sd">    and time, the luminance values impinging on its receptive field by a</span>
+<span class="sd">    spatiotemporal kernel. Spatial summation over the result of this multiplication</span>
+<span class="sd">    at each time point gives a current in nA, that may then be injected into a</span>
+<span class="sd">    relay cell.</span>
+<span class="sd">    </span>
+<span class="sd">    initialize() should be called once, before stimulus presentation</span>
+<span class="sd">    view() should be called in a loop, once for each stimulus frame</span>
+<span class="sd">    response_current() should be called at the end of stimulus presentation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">receptive_field</span><span class="p">,</span> <span class="n">gain</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="c"># position in space</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">y</span> <span class="c">#</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">receptive_field</span><span class="p">,</span> <span class="n">SpatioTemporalReceptiveField</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">receptive_field</span> <span class="o">=</span> <span class="n">receptive_field</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gain</span> <span class="o">=</span> <span class="n">gain</span> <span class="c"># (nA.m²/cd) could imagine making this a function of the background luminance</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c">#logger.debug(&quot;Created cell with receptive field centred at %gº,%gº&quot; % (x,y))</span>
+        <span class="c">#logger.debug(&quot;  &quot; + str(receptive_field))</span>
+
+<div class="viewcode-block" id="CellWithReceptiveField.initialize"><a class="viewcode-back" href="../../../../index.html#MozaikLite.models.retinal.spatiotemporalfilter.CellWithReceptiveField.initialize">[docs]</a>    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">background_luminance</span><span class="p">,</span> <span class="n">stimulus_duration</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create the array that will contain the current response, and set the</span>
+<span class="sd">        initial values on the assumption that the system was looking at a blank</span>
+<span class="sd">        screen of constant luminance prior to stimulus onset.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># we add some extra padding to avoid having to check for index out-of-bounds in view()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">response_length</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">stimulus_duration</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">receptive_field</span><span class="o">.</span><span class="n">temporal_resolution</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">receptive_field</span><span class="o">.</span><span class="n">kernel_duration</span>
+        <span class="c"># we should initialize based on multiplying the kernel by the background activity</span>
+        <span class="c"># R0 = K_0.I_0 + Sum[j=1,L-1] K_j.B</span>
+        <span class="c"># R1 = K_0.I_1 + K_1.I_0 + Sum[j=2,L-1] K_j.B</span>
+        <span class="c"># the image-dependent components will be added in view(), so we need to</span>
+        <span class="c"># initialize with the Sum[] k_j.B components</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">response</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">response_length</span><span class="p">,))</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">receptive_field</span><span class="o">.</span><span class="n">kernel_duration</span>
+        <span class="k">assert</span> <span class="n">L</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">response_length</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">L</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">response</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">background_luminance</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">receptive_field</span><span class="o">.</span><span class="n">kernel</span><span class="p">[:,:,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="n">L</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    </div>
+<div class="viewcode-block" id="CellWithReceptiveField.view"><a class="viewcode-back" href="../../../../index.html#MozaikLite.models.retinal.spatiotemporalfilter.CellWithReceptiveField.view">[docs]</a>    <span class="k">def</span> <span class="nf">view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">visual_space</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Look at the visual space and update t</span>
+<span class="sd">        Where the kernel temporal resolution is the same as the frame duration (visual space update interval):</span>
+<span class="sd">           R_i = Sum[j=0,L-1] K_j.I_i-j</span>
+<span class="sd">             where L is the kernel length/duration</span>
+<span class="sd">         Where the kernel temporal resolution = (frame duration)/α (α an integer)</span>
+<span class="sd">           R_k = Sum[j=0,L-1] K_j.I_i&#39;</span>
+<span class="sd">             where i&#39; = (k-j)//α  (// indicates integer division, discarding the remainder)</span>
+<span class="sd">         to avoid loading the entire image sequence into memory, we build up</span>
+<span class="sd">         the response array one frame at a time.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">visual_region</span> <span class="o">=</span> <span class="n">VisualRegion</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">),</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">receptive_field</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">receptive_field</span><span class="o">.</span><span class="n">height</span><span class="p">))</span>
+        <span class="n">view_array</span> <span class="o">=</span> <span class="n">visual_space</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">visual_region</span><span class="p">,</span> <span class="n">pixel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">receptive_field</span><span class="o">.</span><span class="n">spatial_resolution</span><span class="p">)</span>
+        <span class="c">#logger.debug(&quot;view_array.shape = %s&quot; % str(view_array.shape))</span>
+        <span class="c">#logger.debug(&quot;receptive_field.kernel.shape = %s&quot; % str(self.receptive_field.kernel.shape))</span>
+        <span class="c">#logger.debug(&quot;response.shape = %s&quot; % str(self.response.shape))</span>
+        <span class="k">if</span> <span class="n">visual_space</span><span class="o">.</span><span class="n">update_interval</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">receptive_field</span><span class="o">.</span><span class="n">temporal_resolution</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">errmsg</span> <span class="o">=</span> <span class="s">&quot;The receptive field temporal resolution (</span><span class="si">%g</span><span class="s"> ms) must be an integer multiple of the visual space update interval (</span><span class="si">%g</span><span class="s"> ms)&quot;</span> <span class="o">%</span> \
+                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">receptive_field</span><span class="o">.</span><span class="n">temporal_resolution</span><span class="p">,</span> <span class="n">visual_space</span><span class="o">.</span><span class="n">update_interval</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">errmsg</span><span class="p">)</span>
+        <span class="n">update_factor</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">visual_space</span><span class="o">.</span><span class="n">update_interval</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">receptive_field</span><span class="o">.</span><span class="n">temporal_resolution</span><span class="p">)</span>
+        <span class="n">product</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">receptive_field</span><span class="o">.</span><span class="n">kernel</span><span class="o">*</span><span class="n">view_array</span><span class="p">[:,:,</span><span class="n">numpy</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+        <span class="n">time_course</span> <span class="o">=</span> <span class="n">product</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="c"># sum over the space axes, leaving a time signal.</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">i</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">i</span><span class="o">+</span><span class="n">update_factor</span><span class="p">):</span>
+            <span class="c">#if self.response[j:j+self.receptive_field.kernel_duration].shape != time_course.shape:</span>
+            <span class="c">#    logger.error(&quot;Shape mismatch: %s != %s (j=%d, len(response)=%d, update_factor=%d, time_course=%s)&quot; % \</span>
+            <span class="c">#                  (self.response[j:j+self.receptive_field.kernel_duration].shape,</span>
+            <span class="c">#                   time_course.shape, j, len(self.response),</span>
+            <span class="c">#                   update_factor, time_course))</span>
+
+            <span class="c"># make sure we do not go beyond response array - this could happen if </span>
+            <span class="c"># visual_space.update_interval/self.receptive_field.temporal_resolution is not integer</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">response</span><span class="p">[</span><span class="n">j</span><span class="p">:</span><span class="n">j</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">receptive_field</span><span class="o">.</span><span class="n">kernel_duration</span><span class="p">]</span> <span class="o">+=</span> <span class="n">time_course</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">response</span><span class="p">[</span><span class="n">j</span><span class="p">:</span><span class="n">j</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">receptive_field</span><span class="o">.</span><span class="n">kernel_duration</span><span class="p">])]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">i</span> <span class="o">+=</span> <span class="n">update_factor</span> <span class="c"># we assume there is only ever 1 visual space used between initializations</span>
+</div>
+<div class="viewcode-block" id="CellWithReceptiveField.response_current"><a class="viewcode-back" href="../../../../index.html#MozaikLite.models.retinal.spatiotemporalfilter.CellWithReceptiveField.response_current">[docs]</a>    <span class="k">def</span> <span class="nf">response_current</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Multiply the response (units of luminance (cd/m²) if we assume the</span>
+<span class="sd">        kernel values are dimensionless) by the &#39;gain&#39;, to produce a current in</span>
+<span class="sd">        nA.</span>
+<span class="sd">        (&#39;gain&#39; is not a good name, but I can&#39;t think of a better one).</span>
+<span class="sd">        Returns a dictionary containing &#39;times&#39; and &#39;amplitudes&#39;.</span>
+<span class="sd">        Might be better to use a NeuroTools AnalogSignal.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gain</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">response</span><span class="p">[:</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">receptive_field</span><span class="o">.</span><span class="n">kernel_duration</span><span class="p">]</span> <span class="c"># remove the extra padding at the end</span>
+        <span class="n">time_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">receptive_field</span><span class="o">.</span><span class="n">temporal_resolution</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">response</span><span class="p">))</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s">&#39;times&#39;</span><span class="p">:</span> <span class="n">time_points</span><span class="p">,</span> <span class="s">&#39;amplitudes&#39;</span><span class="p">:</span> <span class="n">response</span><span class="p">}</span>
+
+</div></div>
+<div class="viewcode-block" id="SpatioTemporalFilterRetinaLGN"><a class="viewcode-back" href="../../../../index.html#MozaikLite.models.retinal.spatiotemporalfilter.SpatioTemporalFilterRetinaLGN">[docs]</a><span class="k">class</span> <span class="nc">SpatioTemporalFilterRetinaLGN</span><span class="p">(</span><span class="n">MozaikRetina</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retina/LGN model with spatiotemporal receptive field.&quot;&quot;&quot;</span>
+    
+    <span class="n">required_parameters</span> <span class="o">=</span> <span class="n">ParameterSet</span><span class="p">({</span>
+        <span class="s">&#39;density&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="c"># neurons per degree squared</span>
+        <span class="s">&#39;size&#39;</span> <span class="p">:</span> <span class="nb">tuple</span><span class="p">,</span> <span class="c"># degrees of visual field</span>
+        <span class="s">&#39;linear_scaler&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="c"># linear scaler that the RF output is multiplied with</span>
+        <span class="s">&#39;receptive_field&#39;</span><span class="p">:</span> <span class="n">ParameterSet</span><span class="p">({</span>
+            <span class="s">&#39;func&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="s">&#39;func_params&#39;</span><span class="p">:</span><span class="n">ParameterSet</span><span class="p">,</span>
+            <span class="s">&#39;width&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+            <span class="s">&#39;height&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+            <span class="s">&#39;spatial_resolution&#39;</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span>
+            <span class="s">&#39;temporal_resolution&#39;</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span>
+            <span class="s">&#39;duration&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+            <span class="p">}),</span>
+        <span class="s">&#39;cell&#39;</span><span class="p">:</span> <span class="n">ParameterSet</span><span class="p">({</span>
+            <span class="s">&#39;model&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="s">&#39;params&#39;</span><span class="p">:</span> <span class="n">ParameterSet</span><span class="p">,</span>
+            <span class="s">&#39;initial_values&#39;</span><span class="p">:</span> <span class="n">ParameterSet</span><span class="p">,</span>
+        <span class="p">}),</span>
+        <span class="s">&#39;gain&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="s">&#39;noise&#39;</span><span class="p">:</span> <span class="n">ParameterSet</span><span class="p">({</span>
+            <span class="s">&#39;mean&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+            <span class="s">&#39;stdev&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="c"># nA</span>
+        <span class="p">}),</span>
+    <span class="p">})</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">parameters</span><span class="p">):</span>
+        <span class="n">MozaikRetina</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">parameters</span><span class="p">)</span>       
+        <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">density</span><span class="p">)),</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">density</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sheets</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_built</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rf_types</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;X_ON&#39;</span><span class="p">,</span> <span class="s">&#39;X_OFF&#39;</span><span class="p">)</span>
+        <span class="n">sim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">sim</span>                
+        <span class="bp">self</span><span class="o">.</span><span class="n">pops</span><span class="o">=</span><span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scs</span><span class="o">=</span><span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ncs</span><span class="o">=</span><span class="p">{}</span>
+        <span class="k">for</span> <span class="n">rf_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rf_types</span><span class="p">:</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">RetinalUniformSheet</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="n">ParameterSet</span><span class="p">({</span><span class="s">&#39;sx&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s">&#39;sy&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s">&#39;density&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">density</span><span class="p">,</span> <span class="s">&#39;cell&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="s">&#39;name&#39;</span> <span class="p">:</span> <span class="n">rf_type</span> <span class="p">}))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sheets</span><span class="p">[</span><span class="n">rf_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">p</span>
+
+        <span class="k">for</span> <span class="n">rf_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rf_types</span><span class="p">:</span>            
+                <span class="bp">self</span><span class="o">.</span><span class="n">scs</span><span class="p">[</span><span class="n">rf_type</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ncs</span><span class="p">[</span><span class="n">rf_type</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                
+                <span class="k">for</span> <span class="n">lgn_cell</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sheets</span><span class="p">[</span><span class="n">rf_type</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">:</span>
+                    <span class="n">scs</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">StepCurrentSource</span><span class="p">([</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">])</span>
+                    
+                    <span class="n">ncs</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">NoisyCurrentSource</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">noise</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span>
+                                                            <span class="n">stdev</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">noise</span><span class="o">.</span><span class="n">stdev</span><span class="p">,</span>
+                                                            <span class="n">rng</span><span class="o">=</span><span class="n">random</span><span class="o">.</span><span class="n">NativeRNG</span><span class="p">())</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">scs</span><span class="p">[</span><span class="n">rf_type</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scs</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">ncs</span><span class="p">[</span><span class="n">rf_type</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ncs</span><span class="p">)</span>
+                    <span class="n">lgn_cell</span><span class="o">.</span><span class="n">inject</span><span class="p">(</span><span class="n">scs</span><span class="p">)</span>
+                    <span class="n">lgn_cell</span><span class="o">.</span><span class="n">inject</span><span class="p">(</span><span class="n">ncs</span><span class="p">)</span>
+    
+<div class="viewcode-block" id="SpatioTemporalFilterRetinaLGN.process_visual_input"><a class="viewcode-back" href="../../../../index.html#MozaikLite.models.retinal.spatiotemporalfilter.SpatioTemporalFilterRetinaLGN.process_visual_input">[docs]</a>    <span class="k">def</span> <span class="nf">process_visual_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">visual_space</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Present a visual stimulus to the model, and create the LGN output (relay)</span>
+<span class="sd">        neurons.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Presenting visual stimulus from visual space </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">visual_space</span><span class="p">)</span>
+        <span class="n">visual_space</span><span class="o">.</span><span class="n">set_duration</span><span class="p">(</span><span class="n">duration</span><span class="p">)</span> <span class="c"># needed for proper caching</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input</span> <span class="o">=</span> <span class="n">visual_space</span> <span class="c"># needed for caching</span>
+        <span class="n">sim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">sim</span>
+        
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Generating output spikes...&quot;</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">input_currents</span><span class="p">,</span><span class="n">retinal_input</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_input_currents</span><span class="p">(</span><span class="n">visual_space</span><span class="p">,</span> <span class="n">duration</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">rf_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rf_types</span><span class="p">:</span>            
+                <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_currents</span><span class="p">[</span><span class="n">rf_type</span><span class="p">],</span> <span class="nb">list</span><span class="p">)</span>        
+                
+                <span class="k">for</span> <span class="n">lgn_cell</span><span class="p">,</span> <span class="n">input_current</span><span class="p">,</span><span class="n">scs</span><span class="p">,</span><span class="n">ncs</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sheets</span><span class="p">[</span><span class="n">rf_type</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">,</span> <span class="n">input_currents</span><span class="p">[</span><span class="n">rf_type</span><span class="p">],</span><span class="bp">self</span><span class="o">.</span><span class="n">scs</span><span class="p">[</span><span class="n">rf_type</span><span class="p">],</span><span class="bp">self</span><span class="o">.</span><span class="n">ncs</span><span class="p">[</span><span class="n">rf_type</span><span class="p">]):</span>
+                    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_current</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+                    <span class="n">scs</span><span class="o">.</span><span class="n">_set</span><span class="p">(</span><span class="n">input_current</span><span class="p">[</span><span class="s">&#39;times&#39;</span><span class="p">],</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">linear_scaler</span><span class="o">*</span><span class="n">input_current</span><span class="p">[</span><span class="s">&#39;amplitudes&#39;</span><span class="p">])</span>
+                    
+                    
+        <span class="c"># for debugging/testing</span>
+        <span class="n">input_current_array</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="n">visual_space</span><span class="o">.</span><span class="n">time_points</span><span class="p">(</span><span class="n">duration</span><span class="p">))))</span>
+        <span class="n">update_factor</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">visual_space</span><span class="o">.</span><span class="n">update_interval</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">receptive_field</span><span class="o">.</span><span class="n">temporal_resolution</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;input_current_array.shape = </span><span class="si">%s</span><span class="s">, update_factor = </span><span class="si">%d</span><span class="s">, p.dim = </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">input_current_array</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">update_factor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span> <span class="c"># self.sahpe gives (x,y), so self.shape[1] is the height</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="c"># where the kernel temporal resolution is finer than the frame update interval,</span>
+                <span class="c"># we only keep the current values at the start of each frame</span>
+                <span class="n">input_current_array</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">input_currents</span><span class="p">[</span><span class="s">&#39;X_ON&#39;</span><span class="p">][</span><span class="n">k</span><span class="p">][</span><span class="s">&#39;amplitudes&#39;</span><span class="p">][::</span><span class="n">update_factor</span><span class="p">]</span>
+                <span class="n">k</span> <span class="o">+=</span> <span class="mi">1</span> 
+
+        <span class="c"># if record() has already been called, setup the recording now</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_built</span> <span class="o">=</span> <span class="bp">True</span>
+             
+        <span class="k">return</span> <span class="n">retinal_input</span>
+                </div>
+    <span class="k">def</span> <span class="nf">_calculate_input_currents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">visual_space</span><span class="p">,</span> <span class="n">duration</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the input currents for all cells.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">visual_space</span><span class="p">,</span> <span class="n">VisualSpace</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">duration</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">duration</span> <span class="o">=</span> <span class="n">visual_space</span><span class="o">.</span><span class="n">get_maximum_duration</span><span class="p">()</span>
+        
+        <span class="n">P_rf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">receptive_field</span>
+        <span class="n">rf_function</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">P_rf</span><span class="o">.</span><span class="n">func</span><span class="p">)</span>
+        
+        <span class="n">rf_ON</span> <span class="o">=</span> <span class="n">SpatioTemporalReceptiveField</span><span class="p">(</span><span class="n">rf_function</span><span class="p">,</span>
+                                             <span class="n">P_rf</span><span class="o">.</span><span class="n">func_params</span><span class="p">,</span>
+                                             <span class="n">P_rf</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">P_rf</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">P_rf</span><span class="o">.</span><span class="n">duration</span><span class="p">)</span>
+        <span class="n">rf_OFF</span> <span class="o">=</span> <span class="n">SpatioTemporalReceptiveField</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">t</span><span class="p">,</span><span class="n">p</span><span class="p">:</span> <span class="o">-</span><span class="mf">1.0</span><span class="o">*</span><span class="n">rf_function</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">t</span><span class="p">,</span><span class="n">p</span><span class="p">),</span>
+                                              <span class="n">P_rf</span><span class="o">.</span><span class="n">func_params</span><span class="p">,</span>
+                                              <span class="n">P_rf</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">P_rf</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">P_rf</span><span class="o">.</span><span class="n">duration</span><span class="p">)</span>
+        <span class="n">dx</span> <span class="o">=</span> <span class="n">dy</span> <span class="o">=</span> <span class="n">P_rf</span><span class="o">.</span><span class="n">spatial_resolution</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="n">P_rf</span><span class="o">.</span><span class="n">temporal_resolution</span>
+        <span class="k">for</span> <span class="n">rf</span> <span class="ow">in</span> <span class="n">rf_ON</span><span class="p">,</span> <span class="n">rf_OFF</span><span class="p">:</span>
+            <span class="n">rf</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+        <span class="n">rf</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;X_ON&#39;</span><span class="p">:</span> <span class="n">rf_ON</span><span class="p">,</span> <span class="s">&#39;X_OFF&#39;</span><span class="p">:</span> <span class="n">rf_OFF</span><span class="p">}</span>
+        
+        <span class="c"># create population of CellWithReceptiveFields, setting the receptive</span>
+        <span class="c"># field centres based on the size/location of self</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Creating population of `CellWithReceptiveField`s&quot;</span><span class="p">)</span>
+        <span class="n">input_cells</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">effective_visual_field_width</span><span class="p">,</span> <span class="n">effective_visual_field_height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">size</span>
+        <span class="n">x_values</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">effective_visual_field_width</span><span class="o">/</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">effective_visual_field_width</span><span class="o">/</span><span class="mf">2.0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">y_values</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">effective_visual_field_height</span><span class="o">/</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">effective_visual_field_height</span><span class="o">/</span><span class="mf">2.0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">rf_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rf_types</span><span class="p">:</span>
+            <span class="n">input_cells</span><span class="p">[</span><span class="n">rf_type</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">y_values</span><span class="p">:</span> <span class="c"># we iterate over y first to be consistent with the way</span>
+                <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">x_values</span><span class="p">:</span> <span class="c"># PyNN iterates over Populations</span>
+                    <span class="n">cell</span> <span class="o">=</span> <span class="n">CellWithReceptiveField</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">rf</span><span class="p">[</span><span class="n">rf_type</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">gain</span><span class="p">)</span>
+                    <span class="n">cell</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">visual_space</span><span class="o">.</span><span class="n">background_luminance</span><span class="p">,</span> <span class="n">duration</span><span class="p">)</span>
+                    <span class="n">input_cells</span><span class="p">[</span><span class="n">rf_type</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
+        
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Processing frames&quot;</span><span class="p">)</span>
+        
+        <span class="n">t</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">retinal_input</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">while</span> <span class="n">t</span> <span class="o">&lt;</span> <span class="n">duration</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">rf_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rf_types</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="n">input_cells</span><span class="p">[</span><span class="n">rf_type</span><span class="p">]:</span>
+                    <span class="n">cell</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">visual_space</span><span class="p">)</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">visual_space</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+            
+            <span class="n">retinal_input</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">visual_space</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">img</span><span class="p">)</span>
+            <span class="n">progress_bar</span><span class="p">(</span><span class="n">t</span><span class="o">/</span><span class="n">duration</span><span class="p">)</span>
+        
+        <span class="n">input_currents</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">rf_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rf_types</span><span class="p">:</span>
+            <span class="n">input_currents</span><span class="p">[</span><span class="n">rf_type</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">cell</span><span class="o">.</span><span class="n">response_current</span><span class="p">()</span> <span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="n">input_cells</span><span class="p">[</span><span class="n">rf_type</span><span class="p">]]</span>
+            <span class="n">cell0_currents</span> <span class="o">=</span> <span class="n">input_currents</span><span class="p">[</span><span class="n">rf_type</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Input current values for </span><span class="si">%s</span><span class="s"> cell #0: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">rf_type</span><span class="p">,</span> <span class="n">cell0_currents</span><span class="p">[</span><span class="s">&#39;amplitudes&#39;</span><span class="p">]))</span>
+            <span class="c">#visual_logging.debug(cell0_currents[&#39;amplitudes&#39;], cell0_currents[&#39;times&#39;],</span>
+            <span class="c">#                     &quot;Time (ms)&quot;, &quot;Current (nA)&quot;, &quot;Input current values for %s cell #0&quot; % rf_type)</span>
+
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="p">[</span><span class="n">cell</span><span class="o">.</span><span class="n">response_current</span><span class="p">()[</span><span class="s">&#39;amplitudes&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="n">input_cells</span><span class="p">[</span><span class="n">rf_type</span><span class="p">]]</span>
+            
+            
+        <span class="k">return</span> <span class="p">(</span><span class="n">input_currents</span><span class="p">,</span><span class="n">retinal_input</span><span class="p">)</span>
+    </div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">MozaikLite 0.01 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Jan Antolik.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,268 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>MozaikLite.storage.queries &mdash; MozaikLite 0.01 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.01',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="MozaikLite 0.01 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">MozaikLite 0.01 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for MozaikLite.storage.queries</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">MozaikLite.framework.interfaces</span> <span class="kn">import</span> <span class="n">MozaikLiteParametrizeObject</span>
+<span class="kn">from</span> <span class="nn">MozaikLite.storage.datastore</span> <span class="kn">import</span> <span class="n">Hdf5DataStore</span>
+<span class="kn">from</span> <span class="nn">MozaikLite.stimuli.stimulus_generator</span> <span class="kn">import</span> <span class="n">load_from_string</span><span class="p">,</span> <span class="n">parse_stimuls_id</span>
+<span class="kn">from</span> <span class="nn">NeuroTools.parameters</span> <span class="kn">import</span> <span class="n">ParameterSet</span>
+<span class="kn">from</span> <span class="nn">MozaikLite.stimuli.stimulus_generator</span> <span class="kn">import</span> <span class="n">colapse</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+
+
+
+<span class="c">########################################################################</span>
+<div class="viewcode-block" id="Query"><a class="viewcode-back" href="../../../index.html#MozaikLite.storage.queries.Query">[docs]</a><span class="k">class</span> <span class="nc">Query</span><span class="p">(</span><span class="n">MozaikLiteParametrizeObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Query accepts a DataStoreView and returns a DataStoreView with potentially reduced</span>
+<span class="sd">    set of recorded data or analysis results</span>
+<span class="sd">    </span>
+<span class="sd">    We recommend to write queries in a way where it can be invoked via the </span>
+<span class="sd">    ParamterSet method uding a class, but also directly as a function with</span>
+<span class="sd">    (potentially with default paramter values)</span>
+<span class="sd">    </span>
+<span class="sd">    See SelectStimuliTypeQuery for a simple example</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">required_parameters</span> <span class="o">=</span> <span class="n">ParameterSet</span><span class="p">({</span>
+    <span class="p">})</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">parameters</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Just check the parameters, and load the data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">MozaikLiteParametrizeObject</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">parameters</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Query.query"><a class="viewcode-back" href="../../../index.html#MozaikLite.storage.queries.Query.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">dsv</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        <span class="k">pass</span>
+
+
+<span class="c">########################################################################</span></div></div>
+<div class="viewcode-block" id="select_stimuli_type_query"><a class="viewcode-back" href="../../../index.html#MozaikLite.storage.queries.select_stimuli_type_query">[docs]</a><span class="k">def</span> <span class="nf">select_stimuli_type_query</span><span class="p">(</span><span class="n">dsv</span><span class="p">,</span><span class="n">stimulus_name</span><span class="p">,</span><span class="n">params</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span> 
+    <span class="n">new_dsv</span> <span class="o">=</span> <span class="n">dsv</span><span class="o">.</span><span class="n">fromDataStoreView</span><span class="p">()</span>
+    <span class="n">new_dsv</span><span class="o">.</span><span class="n">analysis_results</span> <span class="o">=</span> <span class="n">dsv</span><span class="o">.</span><span class="n">analysis_result_copy</span><span class="p">()</span>
+    <span class="n">new_dsv</span><span class="o">.</span><span class="n">retinal_stimulus</span> <span class="o">=</span> <span class="n">dsv</span><span class="o">.</span><span class="n">retinal_stimulus_copy</span><span class="p">()</span>
+
+   
+    <span class="k">for</span> <span class="n">seg</span> <span class="ow">in</span> <span class="n">dsv</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">segments</span><span class="p">:</span>
+        <span class="n">sid</span> <span class="o">=</span> <span class="n">parse_stimuls_id</span><span class="p">(</span><span class="n">seg</span><span class="o">.</span><span class="n">annotations</span><span class="p">[</span><span class="s">&#39;stimulus&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">sid</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">stimulus_name</span><span class="p">:</span>
+           <span class="k">if</span> <span class="n">params</span><span class="p">:</span> 
+                <span class="n">flag</span><span class="o">=</span><span class="bp">True</span>    
+                <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">f</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">f</span> <span class="o">!=</span> <span class="s">&#39;*&#39;</span> <span class="ow">and</span> <span class="nb">float</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sid</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+                       <span class="n">flag</span><span class="o">=</span><span class="bp">False</span><span class="p">;</span>
+                       <span class="k">break</span><span class="p">;</span>
+                <span class="k">if</span> <span class="n">flag</span><span class="p">:</span>
+                    <span class="n">new_dsv</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">seg</span><span class="p">)</span> 
+           <span class="k">else</span><span class="p">:</span>
+               <span class="n">new_dsv</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">seg</span><span class="p">)</span> 
+    <span class="k">return</span> <span class="n">new_dsv</span>
+</div>
+<div class="viewcode-block" id="SelectStimuliTypeQuery"><a class="viewcode-back" href="../../../index.html#MozaikLite.storage.queries.SelectStimuliTypeQuery">[docs]</a><span class="k">class</span> <span class="nc">SelectStimuliTypeQuery</span><span class="p">(</span><span class="n">Query</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    It will return all recordings to stimuli with name stimuli_name        </span>
+<span class="sd">    Additionally one can filter out parameters:</span>
+<span class="sd">    params is a list that should have the same number of elements as the </span>
+<span class="sd">    number of free parameters of the given stimulus. Each parameter can be</span>
+<span class="sd">    set either to &#39;*&#39; indicating pick any stimulus with respect to this parameter</span>
+<span class="sd">    or to a number which indicates pick only stimuli that have this value of the </span>
+<span class="sd">    parameter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">required_parameters</span> <span class="o">=</span> <span class="n">ParameterSet</span><span class="p">({</span>
+     <span class="s">&#39;stimulus_id&#39;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+     <span class="s">&#39;params&#39;</span> <span class="p">:</span> <span class="nb">list</span>
+    <span class="p">})</span>
+      
+<div class="viewcode-block" id="SelectStimuliTypeQuery.query"><a class="viewcode-back" href="../../../index.html#MozaikLite.storage.queries.SelectStimuliTypeQuery.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">dsv</span><span class="p">):</span>  
+        <span class="k">return</span> <span class="n">select_stimuli_type_query</span><span class="p">(</span><span class="n">dsv</span><span class="p">,</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">paramters</span><span class="p">)</span>    
+<span class="c">########################################################################</span>
+
+<span class="c">########################################################################</span></div></div>
+<div class="viewcode-block" id="select_result_sheet_query"><a class="viewcode-back" href="../../../index.html#MozaikLite.storage.queries.select_result_sheet_query">[docs]</a><span class="k">def</span> <span class="nf">select_result_sheet_query</span><span class="p">(</span><span class="n">dsv</span><span class="p">,</span><span class="n">sheet_name</span><span class="p">):</span>  
+    <span class="n">new_dsv</span> <span class="o">=</span> <span class="n">dsv</span><span class="o">.</span><span class="n">fromDataStoreView</span><span class="p">()</span>
+    <span class="n">new_dsv</span><span class="o">.</span><span class="n">analysis_results</span> <span class="o">=</span> <span class="n">dsv</span><span class="o">.</span><span class="n">analysis_result_copy</span><span class="p">()</span>
+    <span class="n">new_dsv</span><span class="o">.</span><span class="n">retinal_stimulus</span> <span class="o">=</span> <span class="n">dsv</span><span class="o">.</span><span class="n">retinal_stimulus_copy</span><span class="p">()</span>
+    
+    <span class="k">for</span> <span class="n">seg</span> <span class="ow">in</span> <span class="n">dsv</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">segments</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">seg</span><span class="o">.</span><span class="n">annotations</span><span class="p">[</span><span class="s">&#39;sheet_name&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">sheet_name</span><span class="p">:</span>
+            <span class="n">new_dsv</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">seg</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">new_dsv</span>    
+
+</div>
+<div class="viewcode-block" id="SelectResultSheetQuery"><a class="viewcode-back" href="../../../index.html#MozaikLite.storage.queries.SelectResultSheetQuery">[docs]</a><span class="k">class</span> <span class="nc">SelectResultSheetQuery</span><span class="p">(</span><span class="n">Query</span><span class="p">):</span>
+    
+    <span class="n">required_parameters</span> <span class="o">=</span> <span class="n">ParameterSet</span><span class="p">({</span>
+     <span class="s">&#39;sheet_name&#39;</span> <span class="p">:</span> <span class="nb">str</span>
+    <span class="p">})</span>
+<div class="viewcode-block" id="SelectResultSheetQuery.query"><a class="viewcode-back" href="../../../index.html#MozaikLite.storage.queries.SelectResultSheetQuery.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">dsv</span><span class="p">):</span>  
+        <span class="k">return</span> <span class="n">select_result_sheet_query</span><span class="p">(</span><span class="n">dsv</span><span class="p">,</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">paramters</span><span class="p">)</span>    
+<span class="c">########################################################################      </span>
+
+<span class="c">########################################################################          </span></div></div>
+<div class="viewcode-block" id="tag_based_query"><a class="viewcode-back" href="../../../index.html#MozaikLite.storage.queries.tag_based_query">[docs]</a><span class="k">def</span> <span class="nf">tag_based_query</span><span class="p">(</span><span class="n">dsv</span><span class="p">,</span><span class="n">tags</span><span class="o">=</span><span class="p">[]):</span>  
+        <span class="n">new_dsv</span> <span class="o">=</span> <span class="n">dsv</span><span class="o">.</span><span class="n">fromDataStoreView</span><span class="p">()</span>
+        <span class="n">new_dsv</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">segments</span> <span class="o">=</span> <span class="n">dsv</span><span class="o">.</span><span class="n">recordings_copy</span><span class="p">()</span>
+        <span class="n">new_dsv</span><span class="o">.</span><span class="n">retinal_stimulus</span> <span class="o">=</span> <span class="n">dsv</span><span class="o">.</span><span class="n">retinal_stimulus_copy</span><span class="p">()</span>
+        <span class="n">new_dsv</span><span class="o">.</span><span class="n">analysis_results</span> <span class="o">=</span> <span class="n">_tag_based_query</span><span class="p">(</span><span class="n">dsv</span><span class="o">.</span><span class="n">analysis_results</span><span class="p">,</span><span class="n">tags</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_dsv</span>
+        </div>
+<span class="k">def</span> <span class="nf">_tag_based_query</span><span class="p">(</span><span class="n">d</span><span class="p">,</span><span class="n">tags</span><span class="p">):</span>
+    <span class="n">nd</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="s">&#39;data&#39;</span><span class="p">:</span>
+           <span class="n">nd</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span>  <span class="n">_tag_based_query</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">],</span><span class="n">tags</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+           <span class="n">nd</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+           
+           <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+               <span class="n">nd</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+               <span class="k">for</span> <span class="n">ar</span> <span class="ow">in</span> <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">key</span><span class="p">]:</span>
+                   <span class="n">flag</span><span class="o">=</span><span class="bp">True</span> 
+                   <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tags</span><span class="p">:</span>
+                       <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">t</span> <span class="ow">in</span> <span class="n">ar</span><span class="o">.</span><span class="n">tags</span><span class="p">):</span> 
+                          <span class="n">flag</span> <span class="o">=</span> <span class="bp">False</span> 
+
+                   <span class="k">if</span> <span class="n">flag</span><span class="p">:</span>
+                      <span class="n">nd</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ar</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">nd</span>
+
+<div class="viewcode-block" id="TagBasedQuery"><a class="viewcode-back" href="../../../index.html#MozaikLite.storage.queries.TagBasedQuery">[docs]</a><span class="k">class</span> <span class="nc">TagBasedQuery</span><span class="p">(</span><span class="n">Query</span><span class="p">):</span>
+    
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This query filters out all AnalysisDataStructure&#39;s corresponding to the given tags</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">required_parameters</span> <span class="o">=</span> <span class="n">ParameterSet</span><span class="p">({</span>
+     <span class="s">&#39;tags&#39;</span> <span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="c"># list of tags the the query will look for</span>
+    <span class="p">})</span>
+<div class="viewcode-block" id="TagBasedQuery.query"><a class="viewcode-back" href="../../../index.html#MozaikLite.storage.queries.TagBasedQuery.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">dsv</span><span class="p">):</span>  
+        <span class="k">return</span> <span class="n">tag_based_query</span><span class="p">(</span><span class="n">dsv</span><span class="p">,</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span>    
+<span class="c">########################################################################                      </span>
+
+
+
+<span class="c">########################################################################</span></div></div>
+<div class="viewcode-block" id="partition_by_stimulus_paramter_query"><a class="viewcode-back" href="../../../index.html#MozaikLite.storage.queries.partition_by_stimulus_paramter_query">[docs]</a><span class="k">def</span> <span class="nf">partition_by_stimulus_paramter_query</span><span class="p">(</span><span class="n">dsv</span><span class="p">,</span><span class="n">stimulus_paramter_index</span><span class="p">):</span>  
+        <span class="n">st</span> <span class="o">=</span> <span class="n">dsv</span><span class="o">.</span><span class="n">get_stimuli</span><span class="p">()</span>
+        <span class="k">print</span> <span class="n">st</span>
+        <span class="n">values</span><span class="p">,</span><span class="n">st</span> <span class="o">=</span> <span class="n">colapse</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">st</span><span class="p">),</span><span class="mi">1</span><span class="p">),</span><span class="n">st</span><span class="p">,</span><span class="n">parameter_indexes</span><span class="o">=</span><span class="p">[</span><span class="n">stimulus_paramter_index</span><span class="p">])</span>
+        <span class="n">dsvs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">print</span> <span class="n">values</span>
+        <span class="k">for</span> <span class="n">vals</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="n">new_dsv</span> <span class="o">=</span> <span class="n">dsv</span><span class="o">.</span><span class="n">fromDataStoreView</span><span class="p">()</span>
+            <span class="n">new_dsv</span><span class="o">.</span><span class="n">analysis_results</span> <span class="o">=</span> <span class="n">dsv</span><span class="o">.</span><span class="n">analysis_result_copy</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vals</span><span class="p">:</span>
+                <span class="k">print</span> <span class="n">v</span>
+                <span class="n">new_dsv</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dsv</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">segments</span><span class="p">[</span><span class="n">v</span><span class="p">])</span>
+            <span class="n">dsvs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_dsv</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">dsvs</span>
+
+</div>
+<div class="viewcode-block" id="PartitionByStimulusParamterQuery"><a class="viewcode-back" href="../../../index.html#MozaikLite.storage.queries.PartitionByStimulusParamterQuery">[docs]</a><span class="k">class</span> <span class="nc">PartitionByStimulusParamterQuery</span><span class="p">(</span><span class="n">Query</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This query will take all recordings and return list of DataStoreViews</span>
+<span class="sd">    each holding recordings measured to the same stimulus with exception of</span>
+<span class="sd">    the paramter reference by stimulus_paramter_index</span>
+<span class="sd">    </span>
+<span class="sd">    This way the datastoreview is partitioned into subsets each holding </span>
+<span class="sd">    recordings to the same stimulus with the same paramter values with the</span>
+<span class="sd">    exception to the stimulus_paramter_index</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">required_parameters</span> <span class="o">=</span> <span class="n">ParameterSet</span><span class="p">({</span>
+     <span class="s">&#39;stimulus_paramter_index&#39;</span> <span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="c"># list of tags the the query will look for</span>
+    <span class="p">})</span>
+    
+<div class="viewcode-block" id="PartitionByStimulusParamterQuery.query"><a class="viewcode-back" href="../../../index.html#MozaikLite.storage.queries.PartitionByStimulusParamterQuery.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">dsv</span><span class="p">):</span>  
+        <span class="k">return</span> <span class="n">partition_by_stimulus_paramter_query</span><span class="p">(</span><span class="n">dsv</span><span class="p">,</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span>    
+<span class="c">########################################################################</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">MozaikLite 0.01 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Jan Antolik.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

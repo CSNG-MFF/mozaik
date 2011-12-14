@@ -1,0 +1,1884 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Welcome to MozaikLite’s documentation! &mdash; MozaikLite 0.01 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.01',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="MozaikLite 0.01 documentation" href="#" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="#">MozaikLite 0.01 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="welcome-to-mozaiklite-s-documentation">
+<h1>Welcome to MozaikLite&#8217;s documentation!<a class="headerlink" href="#welcome-to-mozaiklite-s-documentation" title="Permalink to this headline">¶</a></h1>
+<p>Contents:</p>
+<div class="toctree-wrapper compound">
+<ul class="simple">
+</ul>
+</div>
+<span class="target" id="module-MozaikLite.framework.experiment"></span><dl class="class">
+<dt id="MozaikLite.framework.experiment.Experiment">
+<em class="property">class </em><tt class="descclassname">MozaikLite.framework.experiment.</tt><tt class="descname">Experiment</tt><a class="reference internal" href="_modules/MozaikLite/framework/experiment.html#Experiment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.experiment.Experiment" title="Permalink to this definition">¶</a></dt>
+<dd><p>The experiment defines the list of stimuli that it needs to present to the brain.
+This stimuli presentations have to be independent - e.g. should not temporarily 
+depend on others. It should also specify the analysis of the recorded results 
+that it performs. This can be left empty if analysis will be done later.</p>
+<dl class="method">
+<dt id="MozaikLite.framework.experiment.Experiment.do_analysis">
+<tt class="descname">do_analysis</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/experiment.html#Experiment.do_analysis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.experiment.Experiment.do_analysis" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.framework.experiment.Experiment.return_stimuli">
+<tt class="descname">return_stimuli</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/experiment.html#Experiment.return_stimuli"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.experiment.Experiment.return_stimuli" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.framework.experiment.Experiment.run">
+<tt class="descname">run</tt><big>(</big><em>data_store</em>, <em>stimuli</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/experiment.html#Experiment.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.experiment.Experiment.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MozaikLite.framework.experiment.Experiment.stimuli">
+<tt class="descname">stimuli</tt><em class="property"> = []</em><a class="headerlink" href="#MozaikLite.framework.experiment.Experiment.stimuli" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.framework.experiment.MeasureNaturalImagesWithEyeMovement">
+<em class="property">class </em><tt class="descclassname">MozaikLite.framework.experiment.</tt><tt class="descname">MeasureNaturalImagesWithEyeMovement</tt><big>(</big><em>model</em>, <em>stimulus_duration</em>, <em>num_trials</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/experiment.html#MeasureNaturalImagesWithEyeMovement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.experiment.MeasureNaturalImagesWithEyeMovement" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="MozaikLite.framework.experiment.MeasureNaturalImagesWithEyeMovement.do_analysis">
+<tt class="descname">do_analysis</tt><big>(</big><em>data_store</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/experiment.html#MeasureNaturalImagesWithEyeMovement.do_analysis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.experiment.MeasureNaturalImagesWithEyeMovement.do_analysis" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.framework.experiment.MeasureOrientationTuningFullfield">
+<em class="property">class </em><tt class="descclassname">MozaikLite.framework.experiment.</tt><tt class="descname">MeasureOrientationTuningFullfield</tt><big>(</big><em>model</em>, <em>num_orientations</em>, <em>spatial_frequency</em>, <em>temporal_frequency</em>, <em>grating_duration</em>, <em>num_trials</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/experiment.html#MeasureOrientationTuningFullfield"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.experiment.MeasureOrientationTuningFullfield" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="MozaikLite.framework.experiment.MeasureOrientationTuningFullfield.do_analysis">
+<tt class="descname">do_analysis</tt><big>(</big><em>data_store</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/experiment.html#MeasureOrientationTuningFullfield.do_analysis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.experiment.MeasureOrientationTuningFullfield.do_analysis" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.framework.experiment.MeasureSpontaneousActivity">
+<em class="property">class </em><tt class="descclassname">MozaikLite.framework.experiment.</tt><tt class="descname">MeasureSpontaneousActivity</tt><big>(</big><em>model</em>, <em>duration</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/experiment.html#MeasureSpontaneousActivity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.experiment.MeasureSpontaneousActivity" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="MozaikLite.framework.experiment.MeasureSpontaneousActivity.do_analysis">
+<tt class="descname">do_analysis</tt><big>(</big><em>data_store</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/experiment.html#MeasureSpontaneousActivity.do_analysis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.experiment.MeasureSpontaneousActivity.do_analysis" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-MozaikLite.framework.connectors"></span><dl class="class">
+<dt id="MozaikLite.framework.connectors.ExponentialProbabilisticArborization">
+<em class="property">class </em><tt class="descclassname">MozaikLite.framework.connectors.</tt><tt class="descname">ExponentialProbabilisticArborization</tt><big>(</big><em>network</em>, <em>source</em>, <em>target</em>, <em>parameters</em>, <em>name</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/connectors.html#ExponentialProbabilisticArborization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.connectors.ExponentialProbabilisticArborization" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="MozaikLite.framework.connectors.ExponentialProbabilisticArborization.required_parameters">
+<tt class="descname">required_parameters</tt><em class="property"> = {'weights': &lt;type 'float'&gt;, 'propagaion_constant': &lt;type 'float'&gt;, 'arborization_constant': &lt;type 'float'&gt;, 'synapse_dynamics': &lt;type 'str'&gt;}</em><a class="headerlink" href="#MozaikLite.framework.connectors.ExponentialProbabilisticArborization.required_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.framework.connectors.GaborConnector">
+<em class="property">class </em><tt class="descclassname">MozaikLite.framework.connectors.</tt><tt class="descname">GaborConnector</tt><big>(</big><em>network</em>, <em>lgn_on</em>, <em>lgn_off</em>, <em>target</em>, <em>parameters</em>, <em>name</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/connectors.html#GaborConnector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.connectors.GaborConnector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connector that creates gabor projection. The individual gabor parameters are drawn from 
+distributions specified in the parameter set:</p>
+<p><cite>aspect_ratio</cite>  -  aspect ratio of the gabor
+<cite>size</cite>          -  the size of the gabor  RFs in degrees of visual field
+<cite>orientation</cite>   -  the orientation of the gabor RFs
+<cite>phase</cite>         -  the phase of the gabor RFs
+<cite>frequency</cite>     -  the frequency of the gabor in degrees of visual field</p>
+<p>Other parameters:</p>
+<dl class="docutils">
+<dt><cite>topological</cite>          -  should the receptive field centers vary with the position of the given neurons in the target sheet</dt>
+<dd>(note positions of neurons are always stored in visual field coordinates)</dd>
+</dl>
+<p><cite>probabilistic</cite>        -  should the weights be probabilistic or directly proportianal to the gabor profile
+<cite>propagation_constant</cite> -  ms/μm the constant that will determinine the distance dependent delays on the connections</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>(HACKALERT: currently this is a fixed constant for this projection! This is ok if we assume this is a inter-area </dt>
+<dd>projection which is the only obvious equivalent in cortex.)</dd>
+</dl>
+</div></blockquote>
+<p>&#8216;or_map&#8217;:</p>
+<p>Also it is possible to generate the parameters from maps. Currently the orientation and phase map is supported, the rest of parameters are 
+taken from the above parameters. Note that the map is assumed to fit the area spanned by the target population of neurons.</p>
+<p><cite>or_map</cite>             - is a orientation map supplied?
+<cite>or_map_location</cite>    - if or_map is True where can one find the map. It has to be a file containing a single pickled 2d numpy array</p>
+<p><cite>phase_map</cite>          - is a phase map supplied?
+<cite>phase_map_location</cite> - if phase_map is True where can one find the map. It has to be a file containing a single pickled 2d numpy array</p>
+<dl class="attribute">
+<dt id="MozaikLite.framework.connectors.GaborConnector.required_parameters">
+<tt class="descname">required_parameters</tt><em class="property"> = {'phase_map': &lt;type 'bool'&gt;, 'orientation': &lt;class 'NeuroTools.random.ParameterDist'&gt;, 'specific_arborization': &lt;class 'NeuroTools.parameters.ParameterSet'&gt;, 'topological': &lt;type 'bool'&gt;, 'aspect_ratio': &lt;class 'NeuroTools.random.ParameterDist'&gt;, 'frequency': &lt;class 'NeuroTools.random.ParameterDist'&gt;, 'or_map_location': &lt;type 'str'&gt;, 'or_map': &lt;type 'bool'&gt;, 'phase': &lt;class 'NeuroTools.random.ParameterDist'&gt;, 'propagation_constant': &lt;type 'float'&gt;, 'probabilistic': &lt;type 'bool'&gt;, 'phase_map_location': &lt;type 'str'&gt;, 'size': &lt;class 'NeuroTools.random.ParameterDist'&gt;}</em><a class="headerlink" href="#MozaikLite.framework.connectors.GaborConnector.required_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.framework.connectors.MozaikLiteVisualSystemConnector">
+<em class="property">class </em><tt class="descclassname">MozaikLite.framework.connectors.</tt><tt class="descname">MozaikLiteVisualSystemConnector</tt><big>(</big><em>network</em>, <em>source</em>, <em>target</em>, <em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/connectors.html#MozaikLiteVisualSystemConnector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.connectors.MozaikLiteVisualSystemConnector" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="MozaikLite.framework.connectors.MozaikLiteVisualSystemConnector.connect">
+<tt class="descname">connect</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/connectors.html#MozaikLiteVisualSystemConnector.connect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.connectors.MozaikLiteVisualSystemConnector.connect" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.framework.connectors.MozaikLiteVisualSystemConnector.connection_field_plot_continuous">
+<tt class="descname">connection_field_plot_continuous</tt><big>(</big><em>index</em>, <em>afferent=True</em>, <em>density=30</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/connectors.html#MozaikLiteVisualSystemConnector.connection_field_plot_continuous"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.connectors.MozaikLiteVisualSystemConnector.connection_field_plot_continuous" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.framework.connectors.MozaikLiteVisualSystemConnector.connection_field_plot_scatter">
+<tt class="descname">connection_field_plot_scatter</tt><big>(</big><em>index</em>, <em>afferent=True</em>, <em>density=30</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/connectors.html#MozaikLiteVisualSystemConnector.connection_field_plot_scatter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.connectors.MozaikLiteVisualSystemConnector.connection_field_plot_scatter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MozaikLite.framework.connectors.MozaikLiteVisualSystemConnector.required_parameters">
+<tt class="descname">required_parameters</tt><em class="property"> = {'target_synapses': &lt;type 'str'&gt;}</em><a class="headerlink" href="#MozaikLite.framework.connectors.MozaikLiteVisualSystemConnector.required_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.framework.connectors.SpecificArborization">
+<em class="property">class </em><tt class="descclassname">MozaikLite.framework.connectors.</tt><tt class="descname">SpecificArborization</tt><big>(</big><em>network</em>, <em>source</em>, <em>target</em>, <em>connection_list</em>, <em>parameters</em>, <em>name</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/connectors.html#SpecificArborization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.connectors.SpecificArborization" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generic connector which gets directly list of connections as the list of quadruplets as accepted by the
+pyNN FromListConnector.</p>
+<p>This connector cannot be parametrized directly via the parameter file because that does not suport list of tuples.</p>
+<dl class="method">
+<dt id="MozaikLite.framework.connectors.SpecificArborization.connect">
+<tt class="descname">connect</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/connectors.html#SpecificArborization.connect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.connectors.SpecificArborization.connect" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MozaikLite.framework.connectors.SpecificArborization.required_parameters">
+<tt class="descname">required_parameters</tt><em class="property"> = {'synapse_dynamics': &lt;type 'str'&gt;, 'weight_factor': &lt;type 'float'&gt;}</em><a class="headerlink" href="#MozaikLite.framework.connectors.SpecificArborization.required_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.framework.connectors.SpecificProbabilisticArborization">
+<em class="property">class </em><tt class="descclassname">MozaikLite.framework.connectors.</tt><tt class="descname">SpecificProbabilisticArborization</tt><big>(</big><em>network</em>, <em>source</em>, <em>target</em>, <em>connection_list</em>, <em>parameters</em>, <em>name</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/connectors.html#SpecificProbabilisticArborization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.connectors.SpecificProbabilisticArborization" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generic connector which gets directly list of connections as the list of quadruplets as accepted by the
+pyNN FromListConnector.</p>
+<p>This connector cannot be parametrized directly via the parameter file because that does not suport list of tuples.</p>
+<dl class="method">
+<dt id="MozaikLite.framework.connectors.SpecificProbabilisticArborization.connect">
+<tt class="descname">connect</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/connectors.html#SpecificProbabilisticArborization.connect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.connectors.SpecificProbabilisticArborization.connect" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MozaikLite.framework.connectors.SpecificProbabilisticArborization.required_parameters">
+<tt class="descname">required_parameters</tt><em class="property"> = {'synapse_dynamics': &lt;type 'str'&gt;, 'weight_factor': &lt;type 'float'&gt;, 'num_samples': &lt;type 'int'&gt;}</em><a class="headerlink" href="#MozaikLite.framework.connectors.SpecificProbabilisticArborization.required_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.framework.connectors.UniformProbabilisticArborization">
+<em class="property">class </em><tt class="descclassname">MozaikLite.framework.connectors.</tt><tt class="descname">UniformProbabilisticArborization</tt><big>(</big><em>network</em>, <em>source</em>, <em>target</em>, <em>parameters</em>, <em>name</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/connectors.html#UniformProbabilisticArborization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.connectors.UniformProbabilisticArborization" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="MozaikLite.framework.connectors.UniformProbabilisticArborization.connect">
+<tt class="descname">connect</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/connectors.html#UniformProbabilisticArborization.connect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.connectors.UniformProbabilisticArborization.connect" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MozaikLite.framework.connectors.UniformProbabilisticArborization.required_parameters">
+<tt class="descname">required_parameters</tt><em class="property"> = {'propagation_constant': &lt;type 'float'&gt;, 'connection_probability': &lt;type 'float'&gt;, 'weights': &lt;type 'float'&gt;, 'synapse_dynamics': &lt;type 'str'&gt;}</em><a class="headerlink" href="#MozaikLite.framework.connectors.UniformProbabilisticArborization.required_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.framework.connectors.V1RFSpecificProbabilisticArborization">
+<em class="property">class </em><tt class="descclassname">MozaikLite.framework.connectors.</tt><tt class="descname">V1RFSpecificProbabilisticArborization</tt><big>(</big><em>network</em>, <em>source</em>, <em>target</em>, <em>parameters</em>, <em>name</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/connectors.html#V1RFSpecificProbabilisticArborization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.connectors.V1RFSpecificProbabilisticArborization" title="Permalink to this definition">¶</a></dt>
+<dd><p>This connector implements the standard V1 functionally specific connection rule:</p>
+<p>Excitatory synapses are more likely on cooriented in-phase neurons
+Inhibitory synapses are more likely to cooriented anti-phase neurons</p>
+<dl class="method">
+<dt id="MozaikLite.framework.connectors.V1RFSpecificProbabilisticArborization.connect">
+<tt class="descname">connect</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/connectors.html#V1RFSpecificProbabilisticArborization.connect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.connectors.V1RFSpecificProbabilisticArborization.connect" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MozaikLite.framework.connectors.V1RFSpecificProbabilisticArborization.required_parameters">
+<tt class="descname">required_parameters</tt><em class="property"> = {'probabilistic': &lt;type 'bool'&gt;, 'phase_sigma': &lt;type 'float'&gt;, 'specific_arborization': &lt;class 'NeuroTools.parameters.ParameterSet'&gt;, 'or_sigma': &lt;type 'float'&gt;}</em><a class="headerlink" href="#MozaikLite.framework.connectors.V1RFSpecificProbabilisticArborization.required_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="MozaikLite.framework.connectors.gabor">
+<tt class="descclassname">MozaikLite.framework.connectors.</tt><tt class="descname">gabor</tt><big>(</big><em>x1</em>, <em>y1</em>, <em>x2</em>, <em>y2</em>, <em>orientation</em>, <em>frequency</em>, <em>phase</em>, <em>size</em>, <em>aspect_ratio</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/connectors.html#gabor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.connectors.gabor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<span class="target" id="module-MozaikLite.framework.experiment_controller"></span><dl class="function">
+<dt id="MozaikLite.framework.experiment_controller.run_analysis">
+<tt class="descclassname">MozaikLite.framework.experiment_controller.</tt><tt class="descname">run_analysis</tt><big>(</big><em>root_directory</em>, <em>experiment_list</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/experiment_controller.html#run_analysis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.experiment_controller.run_analysis" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MozaikLite.framework.experiment_controller.run_experiments">
+<tt class="descclassname">MozaikLite.framework.experiment_controller.</tt><tt class="descname">run_experiments</tt><big>(</big><em>model</em>, <em>experiment_list</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/experiment_controller.html#run_experiments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.experiment_controller.run_experiments" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MozaikLite.framework.experiment_controller.setup_experiment">
+<tt class="descclassname">MozaikLite.framework.experiment_controller.</tt><tt class="descname">setup_experiment</tt><big>(</big><em>simulation_name</em>, <em>sim</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/experiment_controller.html#setup_experiment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.experiment_controller.setup_experiment" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<span class="target" id="module-MozaikLite.framework.interfaces"></span><p>Definition of the component interfaces. These interfaces are not currently
+checked or enforced.</p>
+<dl class="class">
+<dt id="MozaikLite.framework.interfaces.MozaikComponent">
+<em class="property">class </em><tt class="descclassname">MozaikLite.framework.interfaces.</tt><tt class="descname">MozaikComponent</tt><big>(</big><em>model</em>, <em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/interfaces.html#MozaikComponent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.interfaces.MozaikComponent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for visual system components and connectors.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.framework.interfaces.MozaikLiteParametrizeObject">
+<em class="property">class </em><tt class="descclassname">MozaikLite.framework.interfaces.</tt><tt class="descname">MozaikLiteParametrizeObject</tt><big>(</big><em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/interfaces.html#MozaikLiteParametrizeObject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.interfaces.MozaikLiteParametrizeObject" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for for all MozailLite objects using the dynamic parametrization framwork.</p>
+<dl class="method">
+<dt id="MozaikLite.framework.interfaces.MozaikLiteParametrizeObject.check_parameters">
+<tt class="descname">check_parameters</tt><big>(</big><em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/interfaces.html#MozaikLiteParametrizeObject.check_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.interfaces.MozaikLiteParametrizeObject.check_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MozaikLite.framework.interfaces.MozaikLiteParametrizeObject.required_parameters">
+<tt class="descname">required_parameters</tt><em class="property"> = {}</em><a class="headerlink" href="#MozaikLite.framework.interfaces.MozaikLiteParametrizeObject.required_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MozaikLite.framework.interfaces.MozaikLiteParametrizeObject.version">
+<tt class="descname">version</tt><em class="property"> = None</em><a class="headerlink" href="#MozaikLite.framework.interfaces.MozaikLiteParametrizeObject.version" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.framework.interfaces.MozaikRetina">
+<em class="property">class </em><tt class="descclassname">MozaikLite.framework.interfaces.</tt><tt class="descname">MozaikRetina</tt><big>(</big><em>model</em>, <em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/interfaces.html#MozaikRetina"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.interfaces.MozaikRetina" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="MozaikLite.framework.interfaces.MozaikRetina.process_visual_input">
+<tt class="descname">process_visual_input</tt><big>(</big><em>visual_space</em>, <em>duration=None</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/interfaces.html#MozaikRetina.process_visual_input"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.interfaces.MozaikRetina.process_visual_input" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method is responsible for presenting the stimulus to the visual_space
+and in turn to the retina, and all the mechanisms that are responsible to
+passing the output of the retina (in whatever form desired) to the Sheet objects
+that are connected to it and thus represent the interface between the 
+retina and the rest of the model.</p>
+<p>The method should return the list of 2d numpy arrays containing the 
+raw frames of the  visual input to the retina.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.framework.interfaces.VisualStimulus">
+<em class="property">class </em><tt class="descclassname">MozaikLite.framework.interfaces.</tt><tt class="descname">VisualStimulus</tt><big>(</big><em>frame_duration</em>, <em>size_in_degrees</em>, <em>location</em>, <em>max_luminance</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/interfaces.html#VisualStimulus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.interfaces.VisualStimulus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract base class for visual stimuli.</p>
+<dl class="method">
+<dt id="MozaikLite.framework.interfaces.VisualStimulus.export">
+<tt class="descname">export</tt><big>(</big><em>path=None</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/interfaces.html#VisualStimulus.export"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.interfaces.VisualStimulus.export" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the frames to disk. Returns a list of paths to the individual
+frames.</p>
+<dl class="docutils">
+<dt>path - the directory in which the individual frames will be saved. If</dt>
+<dd>path is None, then a temporary directory is created.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.framework.interfaces.VisualStimulus.frames">
+<tt class="descname">frames</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/interfaces.html#VisualStimulus.frames"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.interfaces.VisualStimulus.frames" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a generator which yields the frames of the stimulus in sequence.
+Each frame is returned as a tuple <cite>(img, variables)</cite> where
+<cite>img</cite> is a numpy array containing the image and <cite>variables</cite> is a list of
+variable values (e.g., orientation) associated with that frame.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.framework.interfaces.VisualStimulus.next_frame">
+<tt class="descname">next_frame</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/interfaces.html#VisualStimulus.next_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.interfaces.VisualStimulus.next_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>For creating movies with NeuroTools.visualization.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.framework.interfaces.VisualStimulus.reset">
+<tt class="descname">reset</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/interfaces.html#VisualStimulus.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.interfaces.VisualStimulus.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset to the first frame in the sequence.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.framework.interfaces.VisualStimulus.update">
+<tt class="descname">update</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/interfaces.html#VisualStimulus.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.interfaces.VisualStimulus.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the current frame to the next frame in the sequence.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="MozaikLite.framework.interfaces.VisualStimulus.version">
+<tt class="descname">version</tt><em class="property"> = None</em><a class="headerlink" href="#MozaikLite.framework.interfaces.VisualStimulus.version" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.framework.interfaces.VisualSystemConnector">
+<em class="property">class </em><tt class="descclassname">MozaikLite.framework.interfaces.</tt><tt class="descname">VisualSystemConnector</tt><big>(</big><em>model</em>, <em>source</em>, <em>target</em>, <em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/interfaces.html#VisualSystemConnector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.interfaces.VisualSystemConnector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for objects that connect visual system components.</p>
+<dl class="method">
+<dt id="MozaikLite.framework.interfaces.VisualSystemConnector.describe">
+<tt class="descname">describe</tt><big>(</big><em>template='default'</em>, <em>render=&lt;function &lt;lambda&gt; at 0x3a1a8c0&gt;</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/interfaces.html#VisualSystemConnector.describe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.interfaces.VisualSystemConnector.describe" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MozaikLite.framework.interfaces.VisualSystemConnector.version">
+<tt class="descname">version</tt><em class="property"> = None</em><a class="headerlink" href="#MozaikLite.framework.interfaces.VisualSystemConnector.version" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-MozaikLite.framework.sheets"></span><p>Sheet is an abstraction of a 2D continuouse sheet of neurons, roughly corresponding to the PyNN Population class with
+the added spatial structure.</p>
+<dl class="class">
+<dt id="MozaikLite.framework.sheets.CorticalUniformSheet">
+<em class="property">class </em><tt class="descclassname">MozaikLite.framework.sheets.</tt><tt class="descname">CorticalUniformSheet</tt><big>(</big><em>model</em>, <em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/sheets.html#CorticalUniformSheet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.sheets.CorticalUniformSheet" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="MozaikLite.framework.sheets.CorticalUniformSheet.required_parameters">
+<tt class="descname">required_parameters</tt><em class="property"> = {'density': &lt;type 'float'&gt;}</em><a class="headerlink" href="#MozaikLite.framework.sheets.CorticalUniformSheet.required_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.framework.sheets.RetinalUniformSheet">
+<em class="property">class </em><tt class="descclassname">MozaikLite.framework.sheets.</tt><tt class="descname">RetinalUniformSheet</tt><big>(</big><em>model</em>, <em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/sheets.html#RetinalUniformSheet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.sheets.RetinalUniformSheet" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="MozaikLite.framework.sheets.RetinalUniformSheet.required_parameters">
+<tt class="descname">required_parameters</tt><em class="property"> = {'sy': &lt;type 'float'&gt;, 'sx': &lt;type 'float'&gt;, 'density': &lt;type 'float'&gt;}</em><a class="headerlink" href="#MozaikLite.framework.sheets.RetinalUniformSheet.required_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.framework.sheets.RetinalUniformSheet.size_in_degrees">
+<tt class="descname">size_in_degrees</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/sheets.html#RetinalUniformSheet.size_in_degrees"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.sheets.RetinalUniformSheet.size_in_degrees" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.framework.sheets.Sheet">
+<em class="property">class </em><tt class="descclassname">MozaikLite.framework.sheets.</tt><tt class="descname">Sheet</tt><big>(</big><em>model</em>, <em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/sheets.html#Sheet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.sheets.Sheet" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="MozaikLite.framework.sheets.Sheet.add_neuron_annotation">
+<tt class="descname">add_neuron_annotation</tt><big>(</big><em>neuron_number</em>, <em>key</em>, <em>value</em>, <em>protected=True</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/sheets.html#Sheet.add_neuron_annotation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.sheets.Sheet.add_neuron_annotation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.framework.sheets.Sheet.describe">
+<tt class="descname">describe</tt><big>(</big><em>template='default'</em>, <em>render=&lt;function &lt;lambda&gt; at 0x484dc08&gt;</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/sheets.html#Sheet.describe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.sheets.Sheet.describe" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.framework.sheets.Sheet.get_neuron_annotation">
+<tt class="descname">get_neuron_annotation</tt><big>(</big><em>neuron_number</em>, <em>key</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/sheets.html#Sheet.get_neuron_annotation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.sheets.Sheet.get_neuron_annotation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MozaikLite.framework.sheets.Sheet.pop">
+<tt class="descname">pop</tt><a class="reference internal" href="_modules/MozaikLite/framework/sheets.html#Sheet.pop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.sheets.Sheet.pop" title="Permalink to this definition">¶</a></dt>
+<dd><p>PyNN population</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.framework.sheets.Sheet.record">
+<tt class="descname">record</tt><big>(</big><em>variable</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/sheets.html#Sheet.record"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.sheets.Sheet.record" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MozaikLite.framework.sheets.Sheet.required_parameters">
+<tt class="descname">required_parameters</tt><em class="property"> = {'cell': {'model': &lt;type 'str'&gt;, 'initial_values': &lt;class 'NeuroTools.parameters.ParameterSet'&gt;, 'params': &lt;class 'NeuroTools.parameters.ParameterSet'&gt;}, 'name': &lt;type 'str'&gt;}</em><a class="headerlink" href="#MozaikLite.framework.sheets.Sheet.required_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.framework.sheets.Sheet.size_in_degrees">
+<tt class="descname">size_in_degrees</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/sheets.html#Sheet.size_in_degrees"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.sheets.Sheet.size_in_degrees" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the x,y size in degrees of visual field of the given area</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.framework.sheets.Sheet.write_neo_object">
+<tt class="descname">write_neo_object</tt><big>(</big><em>tstop</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/sheets.html#Sheet.write_neo_object"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.sheets.Sheet.write_neo_object" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.framework.sheets.SheetWithMagnificationFactor">
+<em class="property">class </em><tt class="descclassname">MozaikLite.framework.sheets.</tt><tt class="descname">SheetWithMagnificationFactor</tt><big>(</big><em>model</em>, <em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/sheets.html#SheetWithMagnificationFactor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.sheets.SheetWithMagnificationFactor" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="MozaikLite.framework.sheets.SheetWithMagnificationFactor.cs_2_vf">
+<tt class="descname">cs_2_vf</tt><big>(</big><em>micro_meters_x</em>, <em>micro_meters_y</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/sheets.html#SheetWithMagnificationFactor.cs_2_vf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.sheets.SheetWithMagnificationFactor.cs_2_vf" title="Permalink to this definition">¶</a></dt>
+<dd><p>cs_2_vf converts the position (micro_meters_x,micro_meters_y) in cortical space to the position in the
+visual field (in degrees) given the magnification_factor</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.framework.sheets.SheetWithMagnificationFactor.dvf_2_dcs">
+<tt class="descname">dvf_2_dcs</tt><big>(</big><em>distance_vf</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/sheets.html#SheetWithMagnificationFactor.dvf_2_dcs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.sheets.SheetWithMagnificationFactor.dvf_2_dcs" title="Permalink to this definition">¶</a></dt>
+<dd><p>dvf_2_dcs converts the distance in visual space to the distance in cortical space given the magnification_factor</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="MozaikLite.framework.sheets.SheetWithMagnificationFactor.required_parameters">
+<tt class="descname">required_parameters</tt><em class="property"> = {'sy': &lt;type 'float'&gt;, 'sx': &lt;type 'float'&gt;, 'magnification_factor': &lt;type 'float'&gt;}</em><a class="headerlink" href="#MozaikLite.framework.sheets.SheetWithMagnificationFactor.required_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.framework.sheets.SheetWithMagnificationFactor.size_in_degrees">
+<tt class="descname">size_in_degrees</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/sheets.html#SheetWithMagnificationFactor.size_in_degrees"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.sheets.SheetWithMagnificationFactor.size_in_degrees" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.framework.sheets.SheetWithMagnificationFactor.vf_2_cs">
+<tt class="descname">vf_2_cs</tt><big>(</big><em>degree_x</em>, <em>degree_y</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/sheets.html#SheetWithMagnificationFactor.vf_2_cs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.sheets.SheetWithMagnificationFactor.vf_2_cs" title="Permalink to this definition">¶</a></dt>
+<dd><p>vf_2_cs converts the position (degree_x,degree_y) in visual field to position in cortical space (in μm)
+given the magnification_factor.</p>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-MozaikLite.framework.space"></span><p>Module for dealing with visual space.</p>
+<p>For now, we deal only with two-dimensions, i.e. everything projected onto a
+plane. We ignore distortions in going from a flat plane to the curved retina.</p>
+<p>Could consider using matplotlib.transforms for some of this.</p>
+<dl class="class">
+<dt id="MozaikLite.framework.space.VisualObject">
+<em class="property">class </em><tt class="descclassname">MozaikLite.framework.space.</tt><tt class="descname">VisualObject</tt><big>(</big><em>location</em>, <em>size</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/space.html#VisualObject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.space.VisualObject" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract base class.</p>
+<dl class="method">
+<dt id="MozaikLite.framework.space.VisualObject.display">
+<tt class="descname">display</tt><big>(</big><em>region</em>, <em>pixel_size</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/space.html#VisualObject.display"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.space.VisualObject.display" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.framework.space.VisualObject.update">
+<tt class="descname">update</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/space.html#VisualObject.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.space.VisualObject.update" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.framework.space.VisualRegion">
+<em class="property">class </em><tt class="descclassname">MozaikLite.framework.space.</tt><tt class="descname">VisualRegion</tt><big>(</big><em>location</em>, <em>size</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/space.html#VisualRegion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.space.VisualRegion" title="Permalink to this definition">¶</a></dt>
+<dd><p>A rectangular region of visual space.</p>
+<dl class="method">
+<dt id="MozaikLite.framework.space.VisualRegion.describe">
+<tt class="descname">describe</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/space.html#VisualRegion.describe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.space.VisualRegion.describe" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.framework.space.VisualRegion.intersection">
+<tt class="descname">intersection</tt><big>(</big><em>another_region</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/space.html#VisualRegion.intersection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.space.VisualRegion.intersection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.framework.space.VisualRegion.overlaps">
+<tt class="descname">overlaps</tt><big>(</big><em>another_region</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/space.html#VisualRegion.overlaps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.space.VisualRegion.overlaps" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.framework.space.VisualSpace">
+<em class="property">class </em><tt class="descclassname">MozaikLite.framework.space.</tt><tt class="descname">VisualSpace</tt><big>(</big><em>update_interval</em>, <em>background_luminance=0.0</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/space.html#VisualSpace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.space.VisualSpace" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class to structure and simplify operations taking place in visual
+space, such as stimulus presentation.</p>
+<dl class="method">
+<dt id="MozaikLite.framework.space.VisualSpace.add_object">
+<tt class="descname">add_object</tt><big>(</big><em>name</em>, <em>visual_object</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/space.html#VisualSpace.add_object"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.space.VisualSpace.add_object" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a VisualObject to the visual scene.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.framework.space.VisualSpace.clear">
+<tt class="descname">clear</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/space.html#VisualSpace.clear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.space.VisualSpace.clear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset the visual space and clear stimuli in it</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.framework.space.VisualSpace.describe">
+<tt class="descname">describe</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/space.html#VisualSpace.describe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.space.VisualSpace.describe" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.framework.space.VisualSpace.export">
+<tt class="descname">export</tt><big>(</big><em>region</em>, <em>pixel_size</em>, <em>output_dir='.'</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/space.html#VisualSpace.export"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.space.VisualSpace.export" title="Permalink to this definition">¶</a></dt>
+<dd><p>Export a sequence of views of the visual space as image files.
+Return a list of file paths.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.framework.space.VisualSpace.get_duration">
+<tt class="descname">get_duration</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/space.html#VisualSpace.get_duration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.space.VisualSpace.get_duration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.framework.space.VisualSpace.get_max_luminance">
+<tt class="descname">get_max_luminance</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/space.html#VisualSpace.get_max_luminance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.space.VisualSpace.get_max_luminance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.framework.space.VisualSpace.get_maximum_duration">
+<tt class="descname">get_maximum_duration</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/space.html#VisualSpace.get_maximum_duration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.space.VisualSpace.get_maximum_duration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.framework.space.VisualSpace.reset">
+<tt class="descname">reset</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/space.html#VisualSpace.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.space.VisualSpace.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset each VisualObject in the scene to its initial state.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.framework.space.VisualSpace.set_duration">
+<tt class="descname">set_duration</tt><big>(</big><em>duration</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/space.html#VisualSpace.set_duration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.space.VisualSpace.set_duration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.framework.space.VisualSpace.time_points">
+<tt class="descname">time_points</tt><big>(</big><em>duration=None</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/space.html#VisualSpace.time_points"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.space.VisualSpace.time_points" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.framework.space.VisualSpace.update">
+<tt class="descname">update</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/space.html#VisualSpace.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.space.VisualSpace.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tell each VisualObject in the scene to update itself.
+Returns the current time within the scene.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="MozaikLite.framework.space.VisualSpace.version">
+<tt class="descname">version</tt><em class="property"> = None</em><a class="headerlink" href="#MozaikLite.framework.space.VisualSpace.version" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.framework.space.VisualSpace.view">
+<tt class="descname">view</tt><big>(</big><em>region</em>, <em>pixel_size</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/space.html#VisualSpace.view"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.space.VisualSpace.view" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show the scene within a specific region.</p>
+<p><cite>region</cite> should be a VisualRegion object.
+<cite>pixel_size</cite> should be in degrees.</p>
+<p>Returns a numpy array containing luminance values.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="MozaikLite.framework.space.xy2ij">
+<tt class="descclassname">MozaikLite.framework.space.</tt><tt class="descname">xy2ij</tt><big>(</big><em>coordinates</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/framework/space.html#xy2ij"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.framework.space.xy2ij" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<span class="target" id="module-MozaikLite.analysis.analysis"></span><dl class="class">
+<dt id="MozaikLite.analysis.analysis.Analysis">
+<em class="property">class </em><tt class="descclassname">MozaikLite.analysis.analysis.</tt><tt class="descname">Analysis</tt><big>(</big><em>datastore</em>, <em>parameters</em>, <em>tags=</em><span class="optional">[</span><span class="optional">]</span><big>)</big><a class="reference internal" href="_modules/MozaikLite/analysis/analysis.html#Analysis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.analysis.analysis.Analysis" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="MozaikLite.analysis.analysis.Analysis.analyse">
+<tt class="descname">analyse</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/analysis/analysis.html#Analysis.analyse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.analysis.analysis.Analysis.analyse" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.analysis.analysis.AveragedOrientationTuning">
+<em class="property">class </em><tt class="descclassname">MozaikLite.analysis.analysis.</tt><tt class="descname">AveragedOrientationTuning</tt><big>(</big><em>datastore</em>, <em>parameters</em>, <em>tags=</em><span class="optional">[</span><span class="optional">]</span><big>)</big><a class="reference internal" href="_modules/MozaikLite/analysis/analysis.html#AveragedOrientationTuning"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.analysis.analysis.AveragedOrientationTuning" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="MozaikLite.analysis.analysis.AveragedOrientationTuning.analyse">
+<tt class="descname">analyse</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/analysis/analysis.html#AveragedOrientationTuning.analyse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.analysis.analysis.AveragedOrientationTuning.analyse" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.analysis.analysis.GSTA">
+<em class="property">class </em><tt class="descclassname">MozaikLite.analysis.analysis.</tt><tt class="descname">GSTA</tt><big>(</big><em>datastore</em>, <em>parameters</em>, <em>tags=</em><span class="optional">[</span><span class="optional">]</span><big>)</big><a class="reference internal" href="_modules/MozaikLite/analysis/analysis.html#GSTA"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.analysis.analysis.GSTA" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes conductance spike triggered average</p>
+<p>Note that it does not assume that spikes are aligned with the conductance sampling rate
+and will pick the bin in which the given spike falls (within the conductance sampling rate binning)
+as the center of the conductance vector that is included in the STA</p>
+<dl class="method">
+<dt id="MozaikLite.analysis.analysis.GSTA.analyse">
+<tt class="descname">analyse</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/analysis/analysis.html#GSTA.analyse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.analysis.analysis.GSTA.analyse" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.analysis.analysis.GSTA.do_gsta">
+<tt class="descname">do_gsta</tt><big>(</big><em>analog_signal</em>, <em>sp</em>, <em>n</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/analysis/analysis.html#GSTA.do_gsta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.analysis.analysis.GSTA.do_gsta" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MozaikLite.analysis.analysis.GSTA.required_parameters">
+<tt class="descname">required_parameters</tt><em class="property"> = {'length': &lt;type 'float'&gt;, 'neurons': &lt;type 'list'&gt;}</em><a class="headerlink" href="#MozaikLite.analysis.analysis.GSTA.required_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.analysis.analysis.Precision">
+<em class="property">class </em><tt class="descclassname">MozaikLite.analysis.analysis.</tt><tt class="descname">Precision</tt><big>(</big><em>datastore</em>, <em>parameters</em>, <em>tags=</em><span class="optional">[</span><span class="optional">]</span><big>)</big><a class="reference internal" href="_modules/MozaikLite/analysis/analysis.html#Precision"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.analysis.analysis.Precision" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the precision as the autocorrelation between the PSTH of different trials</p>
+<dl class="method">
+<dt id="MozaikLite.analysis.analysis.Precision.analyse">
+<tt class="descname">analyse</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/analysis/analysis.html#Precision.analyse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.analysis.analysis.Precision.analyse" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MozaikLite.analysis.analysis.Precision.required_parameters">
+<tt class="descname">required_parameters</tt><em class="property"> = {'bin_length': &lt;type 'float'&gt;, 'neurons': &lt;type 'list'&gt;}</em><a class="headerlink" href="#MozaikLite.analysis.analysis.Precision.required_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-MozaikLite.analysis.analysis_data_structures"></span><dl class="class">
+<dt id="MozaikLite.analysis.analysis_data_structures.AnalogSignalList">
+<em class="property">class </em><tt class="descclassname">MozaikLite.analysis.analysis_data_structures.</tt><tt class="descname">AnalogSignalList</tt><big>(</big><em>asl</em>, <em>sheet_name</em>, <em>indexes</em>, <em>tags=</em><span class="optional">[</span><span class="optional">]</span><big>)</big><a class="reference internal" href="_modules/MozaikLite/analysis/analysis_data_structures.html#AnalogSignalList"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.analysis.analysis_data_structures.AnalogSignalList" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a simple list of Neurotools AnalogSignal objects</p>
+<p>sheet_name - in which sheet the data were recorded
+asl - the variable containing the list of AnalogSignal objects, in the order corresponding to the</p>
+<blockquote>
+<div>order of neurons indexes in the indexes parameter</div></blockquote>
+<p>indexes - list of indexes of neurons in the original Mozaik sheet to which the AnalogSignals correspond</p>
+<dl class="attribute">
+<dt id="MozaikLite.analysis.analysis_data_structures.AnalogSignalList.identifier">
+<tt class="descname">identifier</tt><em class="property"> = 'AnalogSignalList'</em><a class="headerlink" href="#MozaikLite.analysis.analysis_data_structures.AnalogSignalList.identifier" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.analysis.analysis_data_structures.AnalysisDataStructure">
+<em class="property">class </em><tt class="descclassname">MozaikLite.analysis.analysis_data_structures.</tt><tt class="descname">AnalysisDataStructure</tt><big>(</big><em>tags=</em><span class="optional">[</span><span class="optional">]</span><big>)</big><a class="reference internal" href="_modules/MozaikLite/analysis/analysis_data_structures.html#AnalysisDataStructure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.analysis.analysis_data_structures.AnalysisDataStructure" title="Permalink to this definition">¶</a></dt>
+<dd><p>AnalysisDataStructure encupsulates data that a certain Analysis class generates
+A analysis class can generate several AnalysisDataStructure&#8217;s and one AnalysisDataStructure
+can be generated by several Analysis classes
+the goal is to offer a common interface of such data for plotting 
+i.e. many analysis can generate 2D tuning curves of several kinds but they all
+share common data structure and can be plotted in a common way</p>
+<dl class="docutils">
+<dt>identifier - </dt>
+<dd>An important parameter of each AnalysisDataStructure is identifier which is used to 
+identify data structures of common type in storage facilities
+Currently differnt datastructures with common interface should share the identifiers
+but it is not clear this is needed. If it turns out such sharing is not neccessary it 
+might be abolised and there will be one-to-one mapping between AnalysisDataStructure classes
+and identifiers</dd>
+<dt>tags - </dt>
+<dd><p class="first">Often it might be difficult to design a filter to extract the right set of recordings or analysis 
+data structures for a given analysis or visualization. For example it might be possible that many 
+types of analysis will produce the same AnalysisDataStructure but you want to plot only those
+produced from one specific one in a single figure. It might be difficult or impossible to write 
+a filter that picks only the right one. On the other hand we do not want users to define multiple 
+AnalysisDataStructures that hold the same kind of data only to be able to tell them appart.</p>
+<p>Therefore we also allow all analysis data stuctures to contain a list of tags
+(which are strings) that one can add during their creation (or later) and use 
+them to later for their identification in DataStore.</p>
+<p class="last">However, in general, we encourage users to use filter methods rather that tags to perform their
+plotting/analysis whenever possible!!!!</p>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="MozaikLite.analysis.analysis_data_structures.AnalysisDataStructure.identifier">
+<tt class="descname">identifier</tt><em class="property"> = None</em><a class="headerlink" href="#MozaikLite.analysis.analysis_data_structures.AnalysisDataStructure.identifier" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MozaikLite.analysis.analysis_data_structures.AnalysisDataStructure.tags">
+<tt class="descname">tags</tt><em class="property"> = []</em><a class="headerlink" href="#MozaikLite.analysis.analysis_data_structures.AnalysisDataStructure.tags" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.analysis.analysis_data_structures.ConductanceSignalList">
+<em class="property">class </em><tt class="descclassname">MozaikLite.analysis.analysis_data_structures.</tt><tt class="descname">ConductanceSignalList</tt><big>(</big><em>e_con</em>, <em>i_con</em>, <em>sheet_name</em>, <em>indexes</em>, <em>tags=</em><span class="optional">[</span><span class="optional">]</span><big>)</big><a class="reference internal" href="_modules/MozaikLite/analysis/analysis_data_structures.html#ConductanceSignalList"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.analysis.analysis_data_structures.ConductanceSignalList" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a simple list of Neurotools AnalogSignal objects representing the conductances
+The object holds two lists, one for excitatory and one for inhibitory conductances</p>
+<p>sheet_name - in which sheet the data were recorded
+e_asl - the variable containing the list of AnalogSignal objects corresponding to excitatory conductances,</p>
+<blockquote>
+<div>in the order corresponding to the order of neurons indexes in the indexes parameter</div></blockquote>
+<dl class="docutils">
+<dt>i_asl - the variable containing the list of AnalogSignal objects corresponding to inhibitory conductances,</dt>
+<dd>in the order corresponding to the order of neurons indexes in the indexes parameter</dd>
+</dl>
+<p>indexes - list of indexes of neurons in the original Mozaik sheet to which the AnalogSignals correspond</p>
+<dl class="attribute">
+<dt id="MozaikLite.analysis.analysis_data_structures.ConductanceSignalList.identifier">
+<tt class="descname">identifier</tt><em class="property"> = 'ConductanceSignalList'</em><a class="headerlink" href="#MozaikLite.analysis.analysis_data_structures.ConductanceSignalList.identifier" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.analysis.analysis_data_structures.NeurotoolsData">
+<em class="property">class </em><tt class="descclassname">MozaikLite.analysis.analysis_data_structures.</tt><tt class="descname">NeurotoolsData</tt><big>(</big><em>spike_data_dict</em>, <em>vm_data_dict</em>, <em>g_syn_e_data_dict</em>, <em>g_syn_i_data_dict</em>, <em>tags=</em><span class="optional">[</span><span class="optional">]</span><big>)</big><a class="reference internal" href="_modules/MozaikLite/analysis/analysis_data_structures.html#NeurotoolsData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.analysis.analysis_data_structures.NeurotoolsData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Turn the recordings into Neurotools data structures that can than be visualized 
+via numerous Neurotools analysis tools</p>
+<dl class="attribute">
+<dt id="MozaikLite.analysis.analysis_data_structures.NeurotoolsData.identifier">
+<tt class="descname">identifier</tt><em class="property"> = 'NeurotoolsData'</em><a class="headerlink" href="#MozaikLite.analysis.analysis_data_structures.NeurotoolsData.identifier" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.analysis.analysis_data_structures.TuningCurve">
+<em class="property">class </em><tt class="descclassname">MozaikLite.analysis.analysis_data_structures.</tt><tt class="descname">TuningCurve</tt><big>(</big><em>values</em>, <em>stimuli_ids</em>, <em>parameter_index</em>, <em>sheet_name</em>, <em>tags=</em><span class="optional">[</span><span class="optional">]</span><big>)</big><a class="reference internal" href="_modules/MozaikLite/analysis/analysis_data_structures.html#TuningCurve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.analysis.analysis_data_structures.TuningCurve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tuning curve holds data of a tuning curves with respect to a certain paramter of a stimulus
+It is assumed that all other paramters are either:</p>
+<blockquote>
+<div><ul class="simple">
+<li>collpased (i.e. they have been averaged out such as phase or trials in case of orientation tuning)</li>
+<li>those that are unclopased should be tread as the paramters of 
+the tuning curve (i.e. orientation tuning curves taken at different contrasts)</li>
+</ul>
+</div></blockquote>
+<p>sheet_name - in which sheet the data were recorded
+values     - is a list of lists, members of the outer list correspond</p>
+<blockquote>
+<div>to the value of the tuning curve for a stimulus at the same position in the stimuli_ids
+the inner lists contain the actual values for the measured neurons</div></blockquote>
+<p>stimuli_ids - see values description
+parameter_index - the parameter position in the stimulus id against which the tuning curve was computed</p>
+<dl class="attribute">
+<dt id="MozaikLite.analysis.analysis_data_structures.TuningCurve.identifier">
+<tt class="descname">identifier</tt><em class="property"> = 'TuningCurve'</em><a class="headerlink" href="#MozaikLite.analysis.analysis_data_structures.TuningCurve.identifier" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.analysis.analysis_data_structures.TuningCurve.to_dictonary_of_tc_parametrization">
+<tt class="descname">to_dictonary_of_tc_parametrization</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/analysis/analysis_data_structures.html#TuningCurve.to_dictonary_of_tc_parametrization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.analysis.analysis_data_structures.TuningCurve.to_dictonary_of_tc_parametrization" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-MozaikLite.analysis.analysis_helper_functions"></span><dl class="function">
+<dt id="MozaikLite.analysis.analysis_helper_functions.time_histogram_across_trials">
+<tt class="descclassname">MozaikLite.analysis.analysis_helper_functions.</tt><tt class="descname">time_histogram_across_trials</tt><big>(</big><em>spike_trials</em>, <em>bin_length</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/analysis/analysis_helper_functions.html#time_histogram_across_trials"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.analysis.analysis_helper_functions.time_histogram_across_trials" title="Permalink to this definition">¶</a></dt>
+<dd><p>spike_trials - should contain a list of SpikeList objects, each coresponding to different trial
+The function returns the histogram of spikes across trials with bin length bin_length</p>
+</dd></dl>
+
+<span class="target" id="module-MozaikLite.models.model"></span><dl class="class">
+<dt id="MozaikLite.models.model.JensModel">
+<em class="property">class </em><tt class="descclassname">MozaikLite.models.model.</tt><tt class="descname">JensModel</tt><big>(</big><em>simulator</em>, <em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/models/model.html#JensModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.models.model.JensModel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.models.model.Model">
+<em class="property">class </em><tt class="descclassname">MozaikLite.models.model.</tt><tt class="descname">Model</tt><big>(</big><em>sim</em>, <em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/models/model.html#Model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.models.model.Model" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="MozaikLite.models.model.Model.present_stimulus_and_record">
+<tt class="descname">present_stimulus_and_record</tt><big>(</big><em>stimulus</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/models/model.html#Model.present_stimulus_and_record"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.models.model.Model.present_stimulus_and_record" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.models.model.Model.register_connector">
+<tt class="descname">register_connector</tt><big>(</big><em>connector</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/models/model.html#Model.register_connector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.models.model.Model.register_connector" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.models.model.Model.register_sheet">
+<tt class="descname">register_sheet</tt><big>(</big><em>sheet</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/models/model.html#Model.register_sheet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.models.model.Model.register_sheet" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MozaikLite.models.model.Model.required_parameters">
+<tt class="descname">required_parameters</tt><em class="property"> = {'retina_lgn': &lt;class 'NeuroTools.parameters.ParameterSet'&gt;, 'screen': {'update_interval': &lt;type 'float'&gt;, 'background_luminance': &lt;type 'float'&gt;}, 'results_dir': &lt;type 'str'&gt;, 'visual_field': {'centre': &lt;type 'tuple'&gt;, 'size': &lt;type 'tuple'&gt;}, 'cortex_inh': &lt;class 'NeuroTools.parameters.ParameterSet'&gt;, 'cortex_exc': &lt;class 'NeuroTools.parameters.ParameterSet'&gt;, 'name': &lt;type 'str'&gt;}</em><a class="headerlink" href="#MozaikLite.models.model.Model.required_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Model encapsulates a mozaik model and defines interfaces
+with which one can do experiments to the model.</p>
+<p>It has to be able to present stimulus  to the visual space
+record the activity in the model to this stimulus sequence
+and return it as a neo object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.models.model.Model.reset">
+<tt class="descname">reset</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/models/model.html#Model.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.models.model.Model.reset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.models.model.Model.run">
+<tt class="descname">run</tt><big>(</big><em>tstop</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/models/model.html#Model.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.models.model.Model.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-MozaikLite.models.retinal.spatiotemporalfilter"></span><p>Retina/LGN model based on that developed by Jens Kremkow (CNRS-INCM/ALUF)</p>
+<dl class="class">
+<dt id="MozaikLite.models.retinal.spatiotemporalfilter.CellWithReceptiveField">
+<em class="property">class </em><tt class="descclassname">MozaikLite.models.retinal.spatiotemporalfilter.</tt><tt class="descname">CellWithReceptiveField</tt><big>(</big><em>x</em>, <em>y</em>, <em>receptive_field</em>, <em>gain</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/models/retinal/spatiotemporalfilter.html#CellWithReceptiveField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.models.retinal.spatiotemporalfilter.CellWithReceptiveField" title="Permalink to this definition">¶</a></dt>
+<dd><p>A model of the input current to an LGN relay cell, that multiplies, in space
+and time, the luminance values impinging on its receptive field by a
+spatiotemporal kernel. Spatial summation over the result of this multiplication
+at each time point gives a current in nA, that may then be injected into a
+relay cell.</p>
+<p>initialize() should be called once, before stimulus presentation
+view() should be called in a loop, once for each stimulus frame
+response_current() should be called at the end of stimulus presentation</p>
+<dl class="method">
+<dt id="MozaikLite.models.retinal.spatiotemporalfilter.CellWithReceptiveField.initialize">
+<tt class="descname">initialize</tt><big>(</big><em>background_luminance</em>, <em>stimulus_duration</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/models/retinal/spatiotemporalfilter.html#CellWithReceptiveField.initialize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.models.retinal.spatiotemporalfilter.CellWithReceptiveField.initialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the array that will contain the current response, and set the
+initial values on the assumption that the system was looking at a blank
+screen of constant luminance prior to stimulus onset.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.models.retinal.spatiotemporalfilter.CellWithReceptiveField.response_current">
+<tt class="descname">response_current</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/models/retinal/spatiotemporalfilter.html#CellWithReceptiveField.response_current"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.models.retinal.spatiotemporalfilter.CellWithReceptiveField.response_current" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multiply the response (units of luminance (cd/m²) if we assume the
+kernel values are dimensionless) by the &#8216;gain&#8217;, to produce a current in
+nA.
+(&#8216;gain&#8217; is not a good name, but I can&#8217;t think of a better one).
+Returns a dictionary containing &#8216;times&#8217; and &#8216;amplitudes&#8217;.
+Might be better to use a NeuroTools AnalogSignal.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.models.retinal.spatiotemporalfilter.CellWithReceptiveField.view">
+<tt class="descname">view</tt><big>(</big><em>visual_space</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/models/retinal/spatiotemporalfilter.html#CellWithReceptiveField.view"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.models.retinal.spatiotemporalfilter.CellWithReceptiveField.view" title="Permalink to this definition">¶</a></dt>
+<dd><p>Look at the visual space and update t
+Where the kernel temporal resolution is the same as the frame duration (visual space update interval):</p>
+<blockquote>
+<div><blockquote>
+<div><dl class="docutils">
+<dt>R_i = Sum[j=0,L-1] K_j.I_i-j</dt>
+<dd>where L is the kernel length/duration</dd>
+</dl>
+</div></blockquote>
+<dl class="docutils">
+<dt>Where the kernel temporal resolution = (frame duration)/α (α an integer)</dt>
+<dd><dl class="first last docutils">
+<dt>R_k = Sum[j=0,L-1] K_j.I_i&#8217;</dt>
+<dd>where i&#8217; = (k-j)//α  (// indicates integer division, discarding the remainder)</dd>
+</dl>
+</dd>
+</dl>
+<p>to avoid loading the entire image sequence into memory, we build up
+the response array one frame at a time.</p>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.models.retinal.spatiotemporalfilter.SpatioTemporalFilterRetinaLGN">
+<em class="property">class </em><tt class="descclassname">MozaikLite.models.retinal.spatiotemporalfilter.</tt><tt class="descname">SpatioTemporalFilterRetinaLGN</tt><big>(</big><em>model</em>, <em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/models/retinal/spatiotemporalfilter.html#SpatioTemporalFilterRetinaLGN"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.models.retinal.spatiotemporalfilter.SpatioTemporalFilterRetinaLGN" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retina/LGN model with spatiotemporal receptive field.</p>
+<dl class="method">
+<dt id="MozaikLite.models.retinal.spatiotemporalfilter.SpatioTemporalFilterRetinaLGN.process_visual_input">
+<tt class="descname">process_visual_input</tt><big>(</big><em>visual_space</em>, <em>duration=None</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/models/retinal/spatiotemporalfilter.html#SpatioTemporalFilterRetinaLGN.process_visual_input"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.models.retinal.spatiotemporalfilter.SpatioTemporalFilterRetinaLGN.process_visual_input" title="Permalink to this definition">¶</a></dt>
+<dd><p>Present a visual stimulus to the model, and create the LGN output (relay)
+neurons.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="MozaikLite.models.retinal.spatiotemporalfilter.SpatioTemporalFilterRetinaLGN.required_parameters">
+<tt class="descname">required_parameters</tt><em class="property"> = {'noise': {'mean': &lt;type 'float'&gt;, 'stdev': &lt;type 'float'&gt;}, 'density': &lt;type 'float'&gt;, 'cell': {'model': &lt;type 'str'&gt;, 'initial_values': &lt;class 'NeuroTools.parameters.ParameterSet'&gt;, 'params': &lt;class 'NeuroTools.parameters.ParameterSet'&gt;}, 'gain': &lt;type 'float'&gt;, 'linear_scaler': &lt;type 'float'&gt;, 'receptive_field': {'func_params': &lt;class 'NeuroTools.parameters.ParameterSet'&gt;, 'width': &lt;type 'float'&gt;, 'height': &lt;type 'float'&gt;, 'temporal_resolution': &lt;type 'float'&gt;, 'func': &lt;type 'str'&gt;, 'duration': &lt;type 'float'&gt;, 'spatial_resolution': &lt;type 'float'&gt;}, 'size': &lt;type 'tuple'&gt;}</em><a class="headerlink" href="#MozaikLite.models.retinal.spatiotemporalfilter.SpatioTemporalFilterRetinaLGN.required_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.models.retinal.spatiotemporalfilter.SpatioTemporalReceptiveField">
+<em class="property">class </em><tt class="descclassname">MozaikLite.models.retinal.spatiotemporalfilter.</tt><tt class="descname">SpatioTemporalReceptiveField</tt><big>(</big><em>func</em>, <em>func_params</em>, <em>width</em>, <em>height</em>, <em>duration</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/models/retinal/spatiotemporalfilter.html#SpatioTemporalReceptiveField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.models.retinal.spatiotemporalfilter.SpatioTemporalReceptiveField" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="MozaikLite.models.retinal.spatiotemporalfilter.SpatioTemporalReceptiveField.kernel_duration">
+<tt class="descname">kernel_duration</tt><a class="reference internal" href="_modules/MozaikLite/models/retinal/spatiotemporalfilter.html#SpatioTemporalReceptiveField.kernel_duration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.models.retinal.spatiotemporalfilter.SpatioTemporalReceptiveField.kernel_duration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.models.retinal.spatiotemporalfilter.SpatioTemporalReceptiveField.quantize">
+<tt class="descname">quantize</tt><big>(</big><em>dx</em>, <em>dy</em>, <em>dt</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/models/retinal/spatiotemporalfilter.html#SpatioTemporalReceptiveField.quantize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.models.retinal.spatiotemporalfilter.SpatioTemporalReceptiveField.quantize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a quantized version of the receptive field. If <cite>dx</cite> does not
+divide exactly into the width, then the actual width will be slightly
+larger than the nominal width.
+<cite>dx</cite> and <cite>dy</cite> should be in degrees and <cite>dt</cite> in ms.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="MozaikLite.models.retinal.spatiotemporalfilter.meshgrid3D">
+<tt class="descclassname">MozaikLite.models.retinal.spatiotemporalfilter.</tt><tt class="descname">meshgrid3D</tt><big>(</big><em>x</em>, <em>y</em>, <em>z</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/models/retinal/spatiotemporalfilter.html#meshgrid3D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.models.retinal.spatiotemporalfilter.meshgrid3D" title="Permalink to this definition">¶</a></dt>
+<dd><p>A slimmed-down version of <a class="reference external" href="http://www.scipy.org/scipy/numpy/attachment/ticket/966/meshgrid.py">http://www.scipy.org/scipy/numpy/attachment/ticket/966/meshgrid.py</a></p>
+</dd></dl>
+
+<span class="target" id="module-MozaikLite.stimuli.stimulus_generator"></span><dl class="class">
+<dt id="MozaikLite.stimuli.stimulus_generator.Stimulus">
+<em class="property">class </em><tt class="descclassname">MozaikLite.stimuli.stimulus_generator.</tt><tt class="descname">Stimulus</tt><big>(</big><em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/stimuli/stimulus_generator.html#Stimulus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.stimuli.stimulus_generator.Stimulus" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.stimuli.stimulus_generator.StimulusID">
+<em class="property">class </em><tt class="descclassname">MozaikLite.stimuli.stimulus_generator.</tt><tt class="descname">StimulusID</tt><big>(</big><em>name</em>, <em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/stimuli/stimulus_generator.html#StimulusID"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.stimuli.stimulus_generator.StimulusID" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="MozaikLite.stimuli.stimulus_generator.StimulusID.get_paramter_name">
+<tt class="descname">get_paramter_name</tt><big>(</big><em>paramter_index</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/stimuli/stimulus_generator.html#StimulusID.get_paramter_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.stimuli.stimulus_generator.StimulusID.get_paramter_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.stimuli.stimulus_generator.StimulusID.load_stimulus">
+<tt class="descname">load_stimulus</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/stimuli/stimulus_generator.html#StimulusID.load_stimulus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.stimuli.stimulus_generator.StimulusID.load_stimulus" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="MozaikLite.stimuli.stimulus_generator.colapse">
+<tt class="descclassname">MozaikLite.stimuli.stimulus_generator.</tt><tt class="descname">colapse</tt><big>(</big><em>value_list</em>, <em>stimuli_list</em>, <em>parameter_indexes=</em><span class="optional">[</span><span class="optional">]</span><big>)</big><a class="reference internal" href="_modules/MozaikLite/stimuli/stimulus_generator.html#colapse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.stimuli.stimulus_generator.colapse" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MozaikLite.stimuli.stimulus_generator.load_from_string">
+<tt class="descclassname">MozaikLite.stimuli.stimulus_generator.</tt><tt class="descname">load_from_string</tt><big>(</big><em>string</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/stimuli/stimulus_generator.html#load_from_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.stimuli.stimulus_generator.load_from_string" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MozaikLite.stimuli.stimulus_generator.parse_stimuls_id">
+<tt class="descclassname">MozaikLite.stimuli.stimulus_generator.</tt><tt class="descname">parse_stimuls_id</tt><big>(</big><em>string</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/stimuli/stimulus_generator.html#parse_stimuls_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.stimuli.stimulus_generator.parse_stimuls_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<span class="target" id="module-MozaikLite.stimuli.topographica_based"></span><dl class="class">
+<dt id="MozaikLite.stimuli.topographica_based.FullfieldDriftingSinusoidalGrating">
+<em class="property">class </em><tt class="descclassname">MozaikLite.stimuli.topographica_based.</tt><tt class="descname">FullfieldDriftingSinusoidalGrating</tt><big>(</big><em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/stimuli/topographica_based.html#FullfieldDriftingSinusoidalGrating"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.stimuli.topographica_based.FullfieldDriftingSinusoidalGrating" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="MozaikLite.stimuli.topographica_based.FullfieldDriftingSinusoidalGrating.frames">
+<tt class="descname">frames</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/stimuli/topographica_based.html#FullfieldDriftingSinusoidalGrating.frames"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.stimuli.topographica_based.FullfieldDriftingSinusoidalGrating.frames" title="Permalink to this definition">¶</a></dt>
+<dd><p>max_luminance is interpreted as scale
+and size_in_degrees as the bounding box size
+parameters are in this order (after the 7 default ones)
+orientation
+spatial_frequency
+temporal_frequency (Hz)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.stimuli.topographica_based.NaturalImageWithEyeMovement">
+<em class="property">class </em><tt class="descclassname">MozaikLite.stimuli.topographica_based.</tt><tt class="descname">NaturalImageWithEyeMovement</tt><big>(</big><em>parameters</em>, <em>eye_path_location</em>, <em>image_location</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/stimuli/topographica_based.html#NaturalImageWithEyeMovement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.stimuli.topographica_based.NaturalImageWithEyeMovement" title="Permalink to this definition">¶</a></dt>
+<dd><p>A visual stimulus that simulates an eye movement over a static image</p>
+<p>Parameter order:
+<cite>size</cite>              -    the length of the longer axis of the image in visual degrees
+<cite>eye_movement_period</cite> -  # (ms) the time between two consequitve eye movements recorded in the eye_path file
+<cite>idd</cite>                 -  JAHACK: this is probably just a hack for now how to</p>
+<blockquote>
+<div>make two stimuli with different external(hidden) parameters  
+to have unique parameter combinations</div></blockquote>
+<dl class="method">
+<dt id="MozaikLite.stimuli.topographica_based.NaturalImageWithEyeMovement.frames">
+<tt class="descname">frames</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/stimuli/topographica_based.html#NaturalImageWithEyeMovement.frames"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.stimuli.topographica_based.NaturalImageWithEyeMovement.frames" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.stimuli.topographica_based.Null">
+<em class="property">class </em><tt class="descclassname">MozaikLite.stimuli.topographica_based.</tt><tt class="descname">Null</tt><big>(</big><em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/stimuli/topographica_based.html#Null"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.stimuli.topographica_based.Null" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="MozaikLite.stimuli.topographica_based.Null.frames">
+<tt class="descname">frames</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/stimuli/topographica_based.html#Null.frames"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.stimuli.topographica_based.Null.frames" title="Permalink to this definition">¶</a></dt>
+<dd><p>empty stimulus</p>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-MozaikLite.storage.datastore"></span><dl class="class">
+<dt id="MozaikLite.storage.datastore.DataStore">
+<em class="property">class </em><tt class="descclassname">MozaikLite.storage.datastore.</tt><tt class="descname">DataStore</tt><big>(</big><em>load</em>, <em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/datastore.html#DataStore"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.datastore.DataStore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract DataStore class the declares the parameters, and enforces the interface</p>
+<dl class="method">
+<dt id="MozaikLite.storage.datastore.DataStore.add_analysis_result">
+<tt class="descname">add_analysis_result</tt><big>(</big><em>result</em>, <em>sheet_name=None</em>, <em>neuron_idx=None</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/datastore.html#DataStore.add_analysis_result"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.datastore.DataStore.add_analysis_result" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.storage.datastore.DataStore.add_recording">
+<tt class="descname">add_recording</tt><big>(</big><em>segment</em>, <em>stimulus</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/datastore.html#DataStore.add_recording"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.datastore.DataStore.add_recording" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.storage.datastore.DataStore.add_retinal_stimulus">
+<tt class="descname">add_retinal_stimulus</tt><big>(</big><em>data</em>, <em>stimulus</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/datastore.html#DataStore.add_retinal_stimulus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.datastore.DataStore.add_retinal_stimulus" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.storage.datastore.DataStore.identify_unpresented_stimuli">
+<tt class="descname">identify_unpresented_stimuli</tt><big>(</big><em>stimuli</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/datastore.html#DataStore.identify_unpresented_stimuli"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.datastore.DataStore.identify_unpresented_stimuli" title="Permalink to this definition">¶</a></dt>
+<dd><p>It will filter out from stimuli all those which have already been presented.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.storage.datastore.DataStore.load">
+<tt class="descname">load</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/datastore.html#DataStore.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.datastore.DataStore.load" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MozaikLite.storage.datastore.DataStore.required_parameters">
+<tt class="descname">required_parameters</tt><em class="property"> = {'root_directory': &lt;type 'str'&gt;}</em><a class="headerlink" href="#MozaikLite.storage.datastore.DataStore.required_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.storage.datastore.DataStore.save">
+<tt class="descname">save</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/datastore.html#DataStore.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.datastore.DataStore.save" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.storage.datastore.DataStoreView">
+<em class="property">class </em><tt class="descclassname">MozaikLite.storage.datastore.</tt><tt class="descname">DataStoreView</tt><big>(</big><em>parameters</em>, <em>full_datastore</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/datastore.html#DataStoreView"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.datastore.DataStoreView" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class represents a subset of a DataStore and defines the query interface and 
+the structure in which the data are stored in the memory of any datastore. Main role 
+of this class is to allow for creating subsets of data stored in the DataStore, so that one can 
+restrict other parts of Mozaik to work only over these subsets. This is done via means of queries
+(see storage.queries) which produce DataStoreView objects and can be chained to work like filters.</p>
+<p>Note that the actual datastores inherit from this object and define how the data
+are actualy stored on other media (i.e. HD via i.e. hdf5 file format).</p>
+<p>Data store should aggregate all data and analysis results collected across experiments
+and a given model.</p>
+<p>Experiments results storage:</p>
+<p>These are stored a a simple list in the self.block.segments variable. Each segment corresponds to recordings
+from a single sheet to a single stimulus. The information about the sheet stimulus are stored in the segments
+but are not exposed to the user. Instead there is a set of function that the user can use to access the results:</p>
+<p>sheets(self):
+get_stimuli(self):
+get_spike_lists(self):
+get_vm_lists(self):
+get_gsyn_e_lists(self):
+get_gsyn_i_lists(self):</p>
+<p>Analysis results storage:</p>
+<p>There are three categories of results that map to the MoziakLite model structural building blocks:</p>
+<p>Model specific - most general
+Sheet specific 
+Neuron specific</p>
+<p>This is a nested structure of which each level is addressed with appropriate identifier
+and all levels can hold results. In future this structure might be extended with 
+more levels depending on the native structures added to MozaikLite 
+(i.e. cortical area, cortical layer etc.)</p>
+<p>Further at each level the analysis results are addressed by the AnalysisDataStructure
+identifier. The call with this specification returns a set of AnalysisDataStructure&#8217;s
+that correspond to the above addressing. This can be a list. If further more specific 
+&#8216;addressing&#8217; is required it has to be done by the corresponding visualization or analysis 
+code that asked for the AnalysisDataStructure&#8217;s based on the knowledge of their content.
+Or specific querie filters can be written that understand the specific type
+of AnalysisDataStructure and can filter them based on their internal data.</p>
+<p>DataStoreView also keeps a reference to a full Datastore &lt;full_datastore&gt; from which it was originally created 
+(this might be have happened via a chain of DSVs). This is on order to allow for operations that
+work over DSV to insert their results into the original full datastore as this is (almost?) always
+the desired behaviours (note DSV does not actually have functions to add new recordings or analysis 
+results).</p>
+<dl class="method">
+<dt id="MozaikLite.storage.datastore.DataStoreView.analysis_result_copy">
+<tt class="descname">analysis_result_copy</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/datastore.html#DataStoreView.analysis_result_copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.datastore.DataStoreView.analysis_result_copy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.storage.datastore.DataStoreView.fromDataStoreView">
+<tt class="descname">fromDataStoreView</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/datastore.html#DataStoreView.fromDataStoreView"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.datastore.DataStoreView.fromDataStoreView" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.storage.datastore.DataStoreView.get_analysis_result">
+<tt class="descname">get_analysis_result</tt><big>(</big><em>result_id</em>, <em>sheet_name=None</em>, <em>neuron_idx=None</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/datastore.html#DataStoreView.get_analysis_result"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.datastore.DataStoreView.get_analysis_result" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.storage.datastore.DataStoreView.get_gsyn_e_lists">
+<tt class="descname">get_gsyn_e_lists</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/datastore.html#DataStoreView.get_gsyn_e_lists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.datastore.DataStoreView.get_gsyn_e_lists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of Neurotools SpikeList objects. The order of the spikelists corresponds to the order of
+segments returned by the get_segments() call.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.storage.datastore.DataStoreView.get_gsyn_i_lists">
+<tt class="descname">get_gsyn_i_lists</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/datastore.html#DataStoreView.get_gsyn_i_lists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.datastore.DataStoreView.get_gsyn_i_lists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of Neurotools SpikeList objects. The order of the spikelists corresponds to the order of
+segments returned by the get_segments() call.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.storage.datastore.DataStoreView.get_retinal_stimulus">
+<tt class="descname">get_retinal_stimulus</tt><big>(</big><em>stimuli=None</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/datastore.html#DataStoreView.get_retinal_stimulus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.datastore.DataStoreView.get_retinal_stimulus" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.storage.datastore.DataStoreView.get_segments">
+<tt class="descname">get_segments</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/datastore.html#DataStoreView.get_segments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.datastore.DataStoreView.get_segments" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.storage.datastore.DataStoreView.get_spike_lists">
+<tt class="descname">get_spike_lists</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/datastore.html#DataStoreView.get_spike_lists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.datastore.DataStoreView.get_spike_lists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of Neurotools SpikeList objects. The order of the spikelists corresponds to the order of
+segments returned by the get_segments() call.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.storage.datastore.DataStoreView.get_stimuli">
+<tt class="descname">get_stimuli</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/datastore.html#DataStoreView.get_stimuli"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.datastore.DataStoreView.get_stimuli" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of stimuli ids. The order of the stimuli ids corresponds to the order of
+segments returned by the get_segments() call.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.storage.datastore.DataStoreView.get_vm_lists">
+<tt class="descname">get_vm_lists</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/datastore.html#DataStoreView.get_vm_lists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.datastore.DataStoreView.get_vm_lists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of Neurotools SpikeList objects. The order of the spikelists corresponds to the order of
+segments returned by the get_segments() call.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.storage.datastore.DataStoreView.recordings_copy">
+<tt class="descname">recordings_copy</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/datastore.html#DataStoreView.recordings_copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.datastore.DataStoreView.recordings_copy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.storage.datastore.DataStoreView.retinal_stimulus_copy">
+<tt class="descname">retinal_stimulus_copy</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/datastore.html#DataStoreView.retinal_stimulus_copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.datastore.DataStoreView.retinal_stimulus_copy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.storage.datastore.DataStoreView.sheets">
+<tt class="descname">sheets</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/datastore.html#DataStoreView.sheets"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.datastore.DataStoreView.sheets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the list of all sheets that are present in at least one of the segments in the give DataStoreView</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.storage.datastore.Hdf5DataStore">
+<em class="property">class </em><tt class="descclassname">MozaikLite.storage.datastore.</tt><tt class="descname">Hdf5DataStore</tt><big>(</big><em>load</em>, <em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/datastore.html#Hdf5DataStore"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.datastore.Hdf5DataStore" title="Permalink to this definition">¶</a></dt>
+<dd><p>An DataStore that saves all it&#8217;s data in a hdf5 file and an associated analysis results file, 
+which just becomes the pickled self.analysis_results dictionary.</p>
+<dl class="method">
+<dt id="MozaikLite.storage.datastore.Hdf5DataStore.add_analysis_result">
+<tt class="descname">add_analysis_result</tt><big>(</big><em>result</em>, <em>sheet_name=None</em>, <em>neuron_idx=None</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/datastore.html#Hdf5DataStore.add_analysis_result"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.datastore.Hdf5DataStore.add_analysis_result" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.storage.datastore.Hdf5DataStore.add_recording">
+<tt class="descname">add_recording</tt><big>(</big><em>segment</em>, <em>stimulus</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/datastore.html#Hdf5DataStore.add_recording"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.datastore.Hdf5DataStore.add_recording" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.storage.datastore.Hdf5DataStore.add_retinal_stimulus">
+<tt class="descname">add_retinal_stimulus</tt><big>(</big><em>data</em>, <em>stimulus</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/datastore.html#Hdf5DataStore.add_retinal_stimulus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.datastore.Hdf5DataStore.add_retinal_stimulus" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.storage.datastore.Hdf5DataStore.load">
+<tt class="descname">load</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/datastore.html#Hdf5DataStore.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.datastore.Hdf5DataStore.load" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.storage.datastore.Hdf5DataStore.save">
+<tt class="descname">save</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/datastore.html#Hdf5DataStore.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.datastore.Hdf5DataStore.save" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.storage.datastore.PickledDataStore">
+<em class="property">class </em><tt class="descclassname">MozaikLite.storage.datastore.</tt><tt class="descname">PickledDataStore</tt><big>(</big><em>load</em>, <em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/datastore.html#PickledDataStore"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.datastore.PickledDataStore" title="Permalink to this definition">¶</a></dt>
+<dd><p>An DataStore that saves all it&#8217;s data as a simple pickled files</p>
+<dl class="method">
+<dt id="MozaikLite.storage.datastore.PickledDataStore.load">
+<tt class="descname">load</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/datastore.html#PickledDataStore.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.datastore.PickledDataStore.load" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.storage.datastore.PickledDataStore.save">
+<tt class="descname">save</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/datastore.html#PickledDataStore.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.datastore.PickledDataStore.save" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-MozaikLite.storage.queries"></span><dl class="class">
+<dt id="MozaikLite.storage.queries.PartitionByStimulusParamterQuery">
+<em class="property">class </em><tt class="descclassname">MozaikLite.storage.queries.</tt><tt class="descname">PartitionByStimulusParamterQuery</tt><big>(</big><em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/queries.html#PartitionByStimulusParamterQuery"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.queries.PartitionByStimulusParamterQuery" title="Permalink to this definition">¶</a></dt>
+<dd><p>This query will take all recordings and return list of DataStoreViews
+each holding recordings measured to the same stimulus with exception of
+the paramter reference by stimulus_paramter_index</p>
+<p>This way the datastoreview is partitioned into subsets each holding 
+recordings to the same stimulus with the same paramter values with the
+exception to the stimulus_paramter_index</p>
+<dl class="method">
+<dt id="MozaikLite.storage.queries.PartitionByStimulusParamterQuery.query">
+<tt class="descname">query</tt><big>(</big><em>dsv</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/queries.html#PartitionByStimulusParamterQuery.query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.queries.PartitionByStimulusParamterQuery.query" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MozaikLite.storage.queries.PartitionByStimulusParamterQuery.required_parameters">
+<tt class="descname">required_parameters</tt><em class="property"> = {'stimulus_paramter_index': &lt;type 'list'&gt;}</em><a class="headerlink" href="#MozaikLite.storage.queries.PartitionByStimulusParamterQuery.required_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.storage.queries.Query">
+<em class="property">class </em><tt class="descclassname">MozaikLite.storage.queries.</tt><tt class="descname">Query</tt><big>(</big><em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/queries.html#Query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.queries.Query" title="Permalink to this definition">¶</a></dt>
+<dd><p>Query accepts a DataStoreView and returns a DataStoreView with potentially reduced
+set of recorded data or analysis results</p>
+<p>We recommend to write queries in a way where it can be invoked via the 
+ParamterSet method uding a class, but also directly as a function with
+(potentially with default paramter values)</p>
+<p>See SelectStimuliTypeQuery for a simple example</p>
+<dl class="method">
+<dt id="MozaikLite.storage.queries.Query.query">
+<tt class="descname">query</tt><big>(</big><em>dsv</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/queries.html#Query.query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.queries.Query.query" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MozaikLite.storage.queries.Query.required_parameters">
+<tt class="descname">required_parameters</tt><em class="property"> = {}</em><a class="headerlink" href="#MozaikLite.storage.queries.Query.required_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.storage.queries.SelectResultSheetQuery">
+<em class="property">class </em><tt class="descclassname">MozaikLite.storage.queries.</tt><tt class="descname">SelectResultSheetQuery</tt><big>(</big><em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/queries.html#SelectResultSheetQuery"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.queries.SelectResultSheetQuery" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="MozaikLite.storage.queries.SelectResultSheetQuery.query">
+<tt class="descname">query</tt><big>(</big><em>dsv</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/queries.html#SelectResultSheetQuery.query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.queries.SelectResultSheetQuery.query" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MozaikLite.storage.queries.SelectResultSheetQuery.required_parameters">
+<tt class="descname">required_parameters</tt><em class="property"> = {'sheet_name': &lt;type 'str'&gt;}</em><a class="headerlink" href="#MozaikLite.storage.queries.SelectResultSheetQuery.required_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.storage.queries.SelectStimuliTypeQuery">
+<em class="property">class </em><tt class="descclassname">MozaikLite.storage.queries.</tt><tt class="descname">SelectStimuliTypeQuery</tt><big>(</big><em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/queries.html#SelectStimuliTypeQuery"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.queries.SelectStimuliTypeQuery" title="Permalink to this definition">¶</a></dt>
+<dd><p>It will return all recordings to stimuli with name stimuli_name        
+Additionally one can filter out parameters:
+params is a list that should have the same number of elements as the 
+number of free parameters of the given stimulus. Each parameter can be
+set either to &#8216;*&#8217; indicating pick any stimulus with respect to this parameter
+or to a number which indicates pick only stimuli that have this value of the 
+parameter.</p>
+<dl class="method">
+<dt id="MozaikLite.storage.queries.SelectStimuliTypeQuery.query">
+<tt class="descname">query</tt><big>(</big><em>dsv</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/queries.html#SelectStimuliTypeQuery.query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.queries.SelectStimuliTypeQuery.query" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MozaikLite.storage.queries.SelectStimuliTypeQuery.required_parameters">
+<tt class="descname">required_parameters</tt><em class="property"> = {'stimulus_id': &lt;type 'str'&gt;, 'params': &lt;type 'list'&gt;}</em><a class="headerlink" href="#MozaikLite.storage.queries.SelectStimuliTypeQuery.required_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.storage.queries.TagBasedQuery">
+<em class="property">class </em><tt class="descclassname">MozaikLite.storage.queries.</tt><tt class="descname">TagBasedQuery</tt><big>(</big><em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/queries.html#TagBasedQuery"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.queries.TagBasedQuery" title="Permalink to this definition">¶</a></dt>
+<dd><p>This query filters out all AnalysisDataStructure&#8217;s corresponding to the given tags</p>
+<dl class="method">
+<dt id="MozaikLite.storage.queries.TagBasedQuery.query">
+<tt class="descname">query</tt><big>(</big><em>dsv</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/queries.html#TagBasedQuery.query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.queries.TagBasedQuery.query" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MozaikLite.storage.queries.TagBasedQuery.required_parameters">
+<tt class="descname">required_parameters</tt><em class="property"> = {'tags': &lt;type 'list'&gt;}</em><a class="headerlink" href="#MozaikLite.storage.queries.TagBasedQuery.required_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="MozaikLite.storage.queries.partition_by_stimulus_paramter_query">
+<tt class="descclassname">MozaikLite.storage.queries.</tt><tt class="descname">partition_by_stimulus_paramter_query</tt><big>(</big><em>dsv</em>, <em>stimulus_paramter_index</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/queries.html#partition_by_stimulus_paramter_query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.queries.partition_by_stimulus_paramter_query" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MozaikLite.storage.queries.select_result_sheet_query">
+<tt class="descclassname">MozaikLite.storage.queries.</tt><tt class="descname">select_result_sheet_query</tt><big>(</big><em>dsv</em>, <em>sheet_name</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/queries.html#select_result_sheet_query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.queries.select_result_sheet_query" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MozaikLite.storage.queries.select_stimuli_type_query">
+<tt class="descclassname">MozaikLite.storage.queries.</tt><tt class="descname">select_stimuli_type_query</tt><big>(</big><em>dsv</em>, <em>stimulus_name</em>, <em>params=None</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/queries.html#select_stimuli_type_query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.queries.select_stimuli_type_query" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MozaikLite.storage.queries.tag_based_query">
+<tt class="descclassname">MozaikLite.storage.queries.</tt><tt class="descname">tag_based_query</tt><big>(</big><em>dsv</em>, <em>tags=</em><span class="optional">[</span><span class="optional">]</span><big>)</big><a class="reference internal" href="_modules/MozaikLite/storage/queries.html#tag_based_query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.storage.queries.tag_based_query" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<span class="target" id="module-MozaikLite.tools.misc"></span><dl class="function">
+<dt id="MozaikLite.tools.misc.analog_segment_to_dict">
+<tt class="descclassname">MozaikLite.tools.misc.</tt><tt class="descname">analog_segment_to_dict</tt><big>(</big><em>seg</em>, <em>signal_name</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/tools/misc.html#analog_segment_to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.tools.misc.analog_segment_to_dict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MozaikLite.tools.misc.create_segment_for_sheet">
+<tt class="descclassname">MozaikLite.tools.misc.</tt><tt class="descname">create_segment_for_sheet</tt><big>(</big><em>sheet</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/tools/misc.html#create_segment_for_sheet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.tools.misc.create_segment_for_sheet" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MozaikLite.tools.misc.get_gsyn_to_dicts">
+<tt class="descclassname">MozaikLite.tools.misc.</tt><tt class="descname">get_gsyn_to_dicts</tt><big>(</big><em>gsyn</em>, <em>pop</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/tools/misc.html#get_gsyn_to_dicts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.tools.misc.get_gsyn_to_dicts" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MozaikLite.tools.misc.get_spikes_to_dic">
+<tt class="descclassname">MozaikLite.tools.misc.</tt><tt class="descname">get_spikes_to_dic</tt><big>(</big><em>spikes</em>, <em>pop</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/tools/misc.html#get_spikes_to_dic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.tools.misc.get_spikes_to_dic" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MozaikLite.tools.misc.get_vm_to_dic">
+<tt class="descclassname">MozaikLite.tools.misc.</tt><tt class="descname">get_vm_to_dic</tt><big>(</big><em>vm</em>, <em>pop</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/tools/misc.html#get_vm_to_dic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.tools.misc.get_vm_to_dic" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MozaikLite.tools.misc.sample_from_bin_distribution">
+<tt class="descclassname">MozaikLite.tools.misc.</tt><tt class="descname">sample_from_bin_distribution</tt><big>(</big><em>bins</em>, <em>number_of_samples</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/tools/misc.html#sample_from_bin_distribution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.tools.misc.sample_from_bin_distribution" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MozaikLite.tools.misc.segments_to_dict_of_AnalogSignalList">
+<tt class="descclassname">MozaikLite.tools.misc.</tt><tt class="descname">segments_to_dict_of_AnalogSignalList</tt><big>(</big><em>segments</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/tools/misc.html#segments_to_dict_of_AnalogSignalList"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.tools.misc.segments_to_dict_of_AnalogSignalList" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MozaikLite.tools.misc.spike_dic_to_list">
+<tt class="descclassname">MozaikLite.tools.misc.</tt><tt class="descname">spike_dic_to_list</tt><big>(</big><em>d</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/tools/misc.html#spike_dic_to_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.tools.misc.spike_dic_to_list" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MozaikLite.tools.misc.spike_segment_to_dict">
+<tt class="descclassname">MozaikLite.tools.misc.</tt><tt class="descname">spike_segment_to_dict</tt><big>(</big><em>seg</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/tools/misc.html#spike_segment_to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.tools.misc.spike_segment_to_dict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<span class="target" id="module-MozaikLite.visualization.plotting"></span><p>The visualization for mozaik objects is based on the matplotlib and the GridSpec object</p>
+<p>The plotting framwork is divided into two main concepts, represented by the two high-level
+classes Plotting (this file) and SimplePlot (see simple_plot.py).</p>
+<p>The SimplePlot represent the low-level plotting. It is assumed that this plot has only a single 
+axis that is drawn into the region defined by the GridSpec instance that is passed into it. The 
+role of the set of classes derived from SimplePlot is to standardize the low level looks of all 
+figures (mainly related to axis, lables, titles etc.), and should assume data given to them in a 
+format that is easy to use by the given plot. In order to unify the look of figures
+it defines four functions pre_axis_plot,pre_plot, plot, and post_plot. The actual plotting that 
+user defines is typically defined in 
+the plot function while the pre_axis_plot, pre_plot and post_plot functions handle the pre and post plotting 
+adjustments to the plot (i.e. the typical post_plot function for example adjusts the ticks of 
+the axis to a common format other such axis related properties). When defining a new SimplePlot 
+function user is encoureged to push as much of it&#8217;s &#8216;decorating&#8217; funcitonality into the post 
+and pre plot function and define only the absolute minimum
+in the plot function. At the same time, there is already a set of classes implementing 
+a general common look provided, and so users are encoureged to use these as much as possible. If 
+their formatting features are not sufficient or incompatible with a given plot, users are encoureged
+to define new virtual class that defines the formatting in the pre and post plot functions 
+(and thus sepparating it from the plot itself), and incorporating these as low as possible within 
+the hierarchy of the SimplePlot classes to re-use as much of the previous work as possible.</p>
+<p>NOTE SimplePlot now resides in sepparate module visualization.simple_plot</p>
+<p>The Plotting class (and its children) define the high level plotting mechanisms. They 
+are mainly responsible for hierarchical organization of figures with multiple plots, 
+any mechanisms that require consideration of several plots at the same time, 
+and the translation of the data form the general format provided by Datastore,
+to specific format that the SimplePlot plots require. In general the Plotting 
+instances should not do any plotting of axes them selves (but instead calling the 
+SimplePlot instances to do the actual plotting), with the exception
+of multi-plot figures whith complicated inter-plot dependencies, for which it is
+not practical to break them down into single plot instances.</p>
+<p>Each Plotting class should implement two plotting functions:  plot and subplot 
+The much more important one is subplot that accepts a SubplotSpec object (see matplotlib doc) 
+as input which will tell it where to plot. It can in turn create another SubplotSpec within
+the given SubplotSpec and call other plot commands to plot within specific subregions
+of the SubplotSpec. This allows natural way of nesting plots.</p>
+<p>The plot function can either not be defined in which case it defaults to the Plotting.plot, 
+which simply creates a figure and calls subplot with SuplotSpec spanning the whole figure.
+Alternatively, one can define the plot function if one wants to add some additional decorations,
+in case the figure is plotted on its own (i.e. becomes the highest-level), and that would otherwise 
+prevent flexible use in nesting via the subplot.</p>
+<dl class="class">
+<dt id="MozaikLite.visualization.plotting.AnalogSignalListPlot">
+<em class="property">class </em><tt class="descclassname">MozaikLite.visualization.plotting.</tt><tt class="descname">AnalogSignalListPlot</tt><big>(</big><em>datastore</em>, <em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/plotting.html#AnalogSignalListPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.plotting.AnalogSignalListPlot" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="MozaikLite.visualization.plotting.AnalogSignalListPlot.required_parameters">
+<tt class="descname">required_parameters</tt><em class="property"> = {'sheet_name': &lt;type 'str'&gt;, 'ylabel': &lt;type 'str'&gt;}</em><a class="headerlink" href="#MozaikLite.visualization.plotting.AnalogSignalListPlot.required_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.visualization.plotting.ConductanceSignalListPlot">
+<em class="property">class </em><tt class="descclassname">MozaikLite.visualization.plotting.</tt><tt class="descname">ConductanceSignalListPlot</tt><big>(</big><em>datastore</em>, <em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/plotting.html#ConductanceSignalListPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.plotting.ConductanceSignalListPlot" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="MozaikLite.visualization.plotting.ConductanceSignalListPlot.required_parameters">
+<tt class="descname">required_parameters</tt><em class="property"> = {'sheet_name': &lt;type 'str'&gt;}</em><a class="headerlink" href="#MozaikLite.visualization.plotting.ConductanceSignalListPlot.required_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.visualization.plotting.CyclicTuningCurvePlot">
+<em class="property">class </em><tt class="descclassname">MozaikLite.visualization.plotting.</tt><tt class="descname">CyclicTuningCurvePlot</tt><big>(</big><em>datastore</em>, <em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/plotting.html#CyclicTuningCurvePlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.plotting.CyclicTuningCurvePlot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tuning curve over cyclic domain</p>
+<dl class="method">
+<dt id="MozaikLite.visualization.plotting.CyclicTuningCurvePlot.subplot">
+<tt class="descname">subplot</tt><big>(</big><em>subplotspec</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/plotting.html#CyclicTuningCurvePlot.subplot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.plotting.CyclicTuningCurvePlot.subplot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.visualization.plotting.GSynPlot">
+<em class="property">class </em><tt class="descclassname">MozaikLite.visualization.plotting.</tt><tt class="descname">GSynPlot</tt><big>(</big><em>datastore</em>, <em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/plotting.html#GSynPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.plotting.GSynPlot" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="MozaikLite.visualization.plotting.GSynPlot.required_parameters">
+<tt class="descname">required_parameters</tt><em class="property"> = {'neuron': &lt;type 'int'&gt;}</em><a class="headerlink" href="#MozaikLite.visualization.plotting.GSynPlot.required_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.visualization.plotting.LinePlot">
+<em class="property">class </em><tt class="descclassname">MozaikLite.visualization.plotting.</tt><tt class="descname">LinePlot</tt><big>(</big><em>datastore</em>, <em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/plotting.html#LinePlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.plotting.LinePlot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Many plots plot many identical plots in a row for multiple data in a list they get
+This is a smaller helper class that mitigates some of the code repetition in such cases</p>
+<p>Note that the inherited class has to implement!:
+_subplot(self,idx,ax)</p>
+<p>which plots the individual plot. The idx is index in whatever datastructure list we are plotting ans 
+axis is the axis that has to be used for plotting.</p>
+<dl class="method">
+<dt id="MozaikLite.visualization.plotting.LinePlot.subplot">
+<tt class="descname">subplot</tt><big>(</big><em>subplotspec</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/plotting.html#LinePlot.subplot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.plotting.LinePlot.subplot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.visualization.plotting.OverviewPlot">
+<em class="property">class </em><tt class="descclassname">MozaikLite.visualization.plotting.</tt><tt class="descname">OverviewPlot</tt><big>(</big><em>datastore</em>, <em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/plotting.html#OverviewPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.plotting.OverviewPlot" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="MozaikLite.visualization.plotting.OverviewPlot.required_parameters">
+<tt class="descname">required_parameters</tt><em class="property"> = {'sheet_name': &lt;type 'str'&gt;}</em><a class="headerlink" href="#MozaikLite.visualization.plotting.OverviewPlot.required_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.visualization.plotting.OverviewPlot.subplot">
+<tt class="descname">subplot</tt><big>(</big><em>subplotspec</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/plotting.html#OverviewPlot.subplot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.plotting.OverviewPlot.subplot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.visualization.plotting.PerStimulusPlot">
+<em class="property">class </em><tt class="descclassname">MozaikLite.visualization.plotting.</tt><tt class="descname">PerStimulusPlot</tt><big>(</big><em>datastore</em>, <em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/plotting.html#PerStimulusPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.plotting.PerStimulusPlot" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="MozaikLite.visualization.plotting.PerStimulusPlot.required_parameters">
+<tt class="descname">required_parameters</tt><em class="property"> = {'sheet_name': &lt;type 'str'&gt;}</em><a class="headerlink" href="#MozaikLite.visualization.plotting.PerStimulusPlot.required_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.visualization.plotting.PlotTuningCurve">
+<em class="property">class </em><tt class="descclassname">MozaikLite.visualization.plotting.</tt><tt class="descname">PlotTuningCurve</tt><big>(</big><em>datastore</em>, <em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/plotting.html#PlotTuningCurve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.plotting.PlotTuningCurve" title="Permalink to this definition">¶</a></dt>
+<dd><p>values - contain a list of lists of values, the outer list corresponding
+to stimuli the inner to neurons.</p>
+<p>stimuli_ids - contain liest of stimuli ids corresponding to the values</p>
+<dl class="docutils">
+<dt>parameter_index - corresponds to the parameter that should be plotted as </dt>
+<dd><ul class="first last simple">
+<li>a tuning curve</li>
+</ul>
+</dd>
+</dl>
+<p>neurons - which</p>
+<dl class="attribute">
+<dt id="MozaikLite.visualization.plotting.PlotTuningCurve.required_parameters">
+<tt class="descname">required_parameters</tt><em class="property"> = {'sheet_name': &lt;type 'str'&gt;, 'neuron': &lt;type 'int'&gt;, 'tuning_curve_name': &lt;type 'str'&gt;, 'ylabel': &lt;type 'str'&gt;}</em><a class="headerlink" href="#MozaikLite.visualization.plotting.PlotTuningCurve.required_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.visualization.plotting.PlotTuningCurve.subplot">
+<tt class="descname">subplot</tt><big>(</big><em>subplotspec</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/plotting.html#PlotTuningCurve.subplot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.plotting.PlotTuningCurve.subplot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.visualization.plotting.Plotting">
+<em class="property">class </em><tt class="descclassname">MozaikLite.visualization.plotting.</tt><tt class="descname">Plotting</tt><big>(</big><em>datastore</em>, <em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/plotting.html#Plotting"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.plotting.Plotting" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="MozaikLite.visualization.plotting.Plotting.plot">
+<tt class="descname">plot</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/plotting.html#Plotting.plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.plotting.Plotting.plot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.visualization.plotting.Plotting.subplot">
+<tt class="descname">subplot</tt><big>(</big><em>subplotspec</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/plotting.html#Plotting.subplot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.plotting.Plotting.subplot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.visualization.plotting.RasterPlot">
+<em class="property">class </em><tt class="descclassname">MozaikLite.visualization.plotting.</tt><tt class="descname">RasterPlot</tt><big>(</big><em>datastore</em>, <em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/plotting.html#RasterPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.plotting.RasterPlot" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="MozaikLite.visualization.plotting.RasterPlot.required_parameters">
+<tt class="descname">required_parameters</tt><em class="property"> = {'trial_averaged_histogram': &lt;type 'bool'&gt;, 'neurons': &lt;type 'list'&gt;}</em><a class="headerlink" href="#MozaikLite.visualization.plotting.RasterPlot.required_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.visualization.plotting.RetinalInputMovie">
+<em class="property">class </em><tt class="descclassname">MozaikLite.visualization.plotting.</tt><tt class="descname">RetinalInputMovie</tt><big>(</big><em>datastore</em>, <em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/plotting.html#RetinalInputMovie"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.plotting.RetinalInputMovie" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="MozaikLite.visualization.plotting.RetinalInputMovie.required_parameters">
+<tt class="descname">required_parameters</tt><em class="property"> = {'frame_rate': &lt;type 'int'&gt;}</em><a class="headerlink" href="#MozaikLite.visualization.plotting.RetinalInputMovie.required_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.visualization.plotting.VmPlot">
+<em class="property">class </em><tt class="descclassname">MozaikLite.visualization.plotting.</tt><tt class="descname">VmPlot</tt><big>(</big><em>datastore</em>, <em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/plotting.html#VmPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.plotting.VmPlot" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="MozaikLite.visualization.plotting.VmPlot.required_parameters">
+<tt class="descname">required_parameters</tt><em class="property"> = {'neuron': &lt;type 'int'&gt;}</em><a class="headerlink" href="#MozaikLite.visualization.plotting.VmPlot.required_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="MozaikLite.visualization.plotting.fromat_stimulus_id">
+<tt class="descclassname">MozaikLite.visualization.plotting.</tt><tt class="descname">fromat_stimulus_id</tt><big>(</big><em>stimulus_id</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/plotting.html#fromat_stimulus_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.plotting.fromat_stimulus_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<span class="target" id="module-MozaikLite.visualization.simple_plot"></span><dl class="class">
+<dt id="MozaikLite.visualization.simple_plot.PixelMovie">
+<em class="property">class </em><tt class="descclassname">MozaikLite.visualization.simple_plot.</tt><tt class="descname">PixelMovie</tt><big>(</big><em>movie</em>, <em>frame_duration</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/simple_plot.html#PixelMovie"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.simple_plot.PixelMovie" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="MozaikLite.visualization.simple_plot.PixelMovie.plot">
+<tt class="descname">plot</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/simple_plot.html#PixelMovie.plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.simple_plot.PixelMovie.plot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.visualization.simple_plot.PixelMovie.plot_next_frame">
+<tt class="descname">plot_next_frame</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/simple_plot.html#PixelMovie.plot_next_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.simple_plot.PixelMovie.plot_next_frame" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.visualization.simple_plot.SimplePlot">
+<em class="property">class </em><tt class="descclassname">MozaikLite.visualization.simple_plot.</tt><tt class="descname">SimplePlot</tt><big>(</big><em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/simple_plot.html#SimplePlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.simple_plot.SimplePlot" title="Permalink to this definition">¶</a></dt>
+<dd><p>One general policy is that any overwriting of the standard style default values
+by the <cite>Plotting</cite> mechanisms should take precedence over those done by specific 
+instances of <cite>SimplePlot</cite>. In order to enforce this precedence, the modifiable
+parameters of the classes should be stored in the common <cite>dictionary</cite> parameters.
+Each class derived from <cite>SimplePlot</cite> should add its modifiable parameters into the 
+<cite>parameters</cite> dictionary in its constructor.</p>
+<p>The kwargs passed to the instances of <cite>SimplePlot</cite> from the <cite>Plotting</cite> mechanisms
+will be stored. At the beginning of the __call__ the dictionary will be updated 
+with these stored kwargs, and the updated parameters (note not all have to be present)
+will be marked. These marked parameters will not be then modifiable any further. 
+In order to do so, the <cite>parameters</cite> dictionary is accessible via the __getattr__
+and __setattr__ functions.</p>
+<p><em>Note, for this reason all `SimplePlot` classes need to 
+take care that none of the modifiable attributes is also defined as a class attribute.</em></p>
+<dl class="method">
+<dt id="MozaikLite.visualization.simple_plot.SimplePlot.plot">
+<tt class="descname">plot</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/simple_plot.html#SimplePlot.plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.simple_plot.SimplePlot.plot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.visualization.simple_plot.SimplePlot.post_plot">
+<tt class="descname">post_plot</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/simple_plot.html#SimplePlot.post_plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.simple_plot.SimplePlot.post_plot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.visualization.simple_plot.SimplePlot.pre_axis_plot">
+<tt class="descname">pre_axis_plot</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/simple_plot.html#SimplePlot.pre_axis_plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.simple_plot.SimplePlot.pre_axis_plot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.visualization.simple_plot.SimplePlot.pre_plot">
+<tt class="descname">pre_plot</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/simple_plot.html#SimplePlot.pre_plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.simple_plot.SimplePlot.pre_plot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.visualization.simple_plot.SimplePlot.update_params">
+<tt class="descname">update_params</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/simple_plot.html#SimplePlot.update_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.simple_plot.SimplePlot.update_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the modifiable parameters and sets them to be further un-modifiable</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.visualization.simple_plot.SpikeHistogramPlot">
+<em class="property">class </em><tt class="descclassname">MozaikLite.visualization.simple_plot.</tt><tt class="descname">SpikeHistogramPlot</tt><big>(</big><em>spike_lists</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/simple_plot.html#SpikeHistogramPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.simple_plot.SpikeHistogramPlot" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function plots the raster plot of spikes in the spike_list argument.</p>
+<p>The spike list argument is a list of list of SpikeList objects.
+The top level list corresponds to different sets of spikes that should 
+be plotted over each other. They have to contain the same number of neurons. 
+Each set of spikes will be colored by the color on corresponding postion of the 
+colors parameter. If None all colors will be set to &#8216;#848484&#8217; (gray).</p>
+<p>The second level list contains different trials of the populations responses 
+stored in the individual SpikeList objects.</p>
+<p>Each trial will be plotted as a sepparate line of spikes, and these will be
+grouped by the neurons. Only neurons in the neurons parameter will be plotted.
+If neurons are None, the first neuron will be plotted.</p>
+<dl class="method">
+<dt id="MozaikLite.visualization.simple_plot.SpikeHistogramPlot.plot">
+<tt class="descname">plot</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/simple_plot.html#SpikeHistogramPlot.plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.simple_plot.SpikeHistogramPlot.plot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.visualization.simple_plot.SpikeRasterPlot">
+<em class="property">class </em><tt class="descclassname">MozaikLite.visualization.simple_plot.</tt><tt class="descname">SpikeRasterPlot</tt><big>(</big><em>spike_lists</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/simple_plot.html#SpikeRasterPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.simple_plot.SpikeRasterPlot" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function plots the raster plot of spikes in the <cite>spike_lists</cite> argument.</p>
+<p>The <cite>spike_lists</cite> argument is a list of list of SpikeList objects.
+The top level list corresponds to different sets of spikes that should 
+be plotted over each other. They have to contain the same number of neurons. 
+Each set of spikes will be colored by the color on corresponding postion of the 
+colors parameter (matplotlib readable color formats accapted). 
+If None all colors will be set to &#8216;#848484&#8217; (gray).</p>
+<p>The second level list contains different trials of the populations responses 
+stored in the individual SpikeList objects.</p>
+<p>Each trial will be plotted as a sepparate line of spikes, and these will be
+grouped by the neurons. Only neurons in the neurons parameter will be plotted.
+If neurons are None, (up to) first 10 neurons will be plotted.</p>
+<dl class="method">
+<dt id="MozaikLite.visualization.simple_plot.SpikeRasterPlot.plot">
+<tt class="descname">plot</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/simple_plot.html#SpikeRasterPlot.plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.simple_plot.SpikeRasterPlot.plot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.visualization.simple_plot.StandardStyle">
+<em class="property">class </em><tt class="descclassname">MozaikLite.visualization.simple_plot.</tt><tt class="descname">StandardStyle</tt><big>(</big><em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/simple_plot.html#StandardStyle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.simple_plot.StandardStyle" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="MozaikLite.visualization.simple_plot.StandardStyle.post_plot">
+<tt class="descname">post_plot</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/simple_plot.html#StandardStyle.post_plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.simple_plot.StandardStyle.post_plot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.visualization.simple_plot.StandardStyle.pre_axis_plot">
+<tt class="descname">pre_axis_plot</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/simple_plot.html#StandardStyle.pre_axis_plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.simple_plot.StandardStyle.pre_axis_plot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.visualization.simple_plot.StandardStyle.pre_plot">
+<tt class="descname">pre_plot</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/simple_plot.html#StandardStyle.pre_plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.simple_plot.StandardStyle.pre_plot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.visualization.simple_plot.StandardStyle.ticks">
+<tt class="descname">ticks</tt><big>(</big><em>x_tick_style</em>, <em>y_tick_style</em>, <em>xticks</em>, <em>yticks</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/simple_plot.html#StandardStyle.ticks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.simple_plot.StandardStyle.ticks" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MozaikLite.visualization.simple_plot.StandardStyleAnimatedPlot">
+<em class="property">class </em><tt class="descclassname">MozaikLite.visualization.simple_plot.</tt><tt class="descname">StandardStyleAnimatedPlot</tt><big>(</big><em>frame_duration</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/simple_plot.html#StandardStyleAnimatedPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.simple_plot.StandardStyleAnimatedPlot" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is an abstract class helping construction of animated graphs.</p>
+<p>Each class subclassing from this class should implement the <cite>SimplePlot</cite>
+<cite>plot()</cite> function in which it should draw the first frame of the animation
+with all the corresponding decorations.</p>
+<p>Second it needs to implement the <cite>plot_next_frame</cite> function which should replot the data
+in the plot corresponding to the next frame. 
+This function needs to keep track of the frame number itself if it needs it.
+Note that advanced usage of matplotlib is recomanded here so that not the 
+whole graph is always replotted but only new data are set to the graph.</p>
+<p>The <cite>StandardStyleAnimatedPlot</cite> will take care of the updating of the figure,
+so now <cite>draw()</cite> or <cite>show()</cite> or event commands should be issued.</p>
+<dl class="method">
+<dt id="MozaikLite.visualization.simple_plot.StandardStyleAnimatedPlot.plot_next_frame">
+<tt class="descname">plot_next_frame</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/simple_plot.html#StandardStyleAnimatedPlot.plot_next_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.simple_plot.StandardStyleAnimatedPlot.plot_next_frame" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.visualization.simple_plot.StandardStyleAnimatedPlot.post_plot">
+<tt class="descname">post_plot</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/simple_plot.html#StandardStyleAnimatedPlot.post_plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.simple_plot.StandardStyleAnimatedPlot.post_plot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-MozaikLite.visualization.plotting_helper_functions"></span><dl class="function">
+<dt id="MozaikLite.visualization.plotting_helper_functions.disable_bottom_axis">
+<tt class="descclassname">MozaikLite.visualization.plotting_helper_functions.</tt><tt class="descname">disable_bottom_axis</tt><big>(</big><em>ax</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/plotting_helper_functions.html#disable_bottom_axis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.plotting_helper_functions.disable_bottom_axis" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MozaikLite.visualization.plotting_helper_functions.disable_left_axis">
+<tt class="descclassname">MozaikLite.visualization.plotting_helper_functions.</tt><tt class="descname">disable_left_axis</tt><big>(</big><em>ax</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/plotting_helper_functions.html#disable_left_axis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.plotting_helper_functions.disable_left_axis" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MozaikLite.visualization.plotting_helper_functions.disable_top_right_axis">
+<tt class="descclassname">MozaikLite.visualization.plotting_helper_functions.</tt><tt class="descname">disable_top_right_axis</tt><big>(</big><em>ax</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/plotting_helper_functions.html#disable_top_right_axis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.plotting_helper_functions.disable_top_right_axis" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MozaikLite.visualization.plotting_helper_functions.disable_xticks">
+<tt class="descclassname">MozaikLite.visualization.plotting_helper_functions.</tt><tt class="descname">disable_xticks</tt><big>(</big><em>ax</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/plotting_helper_functions.html#disable_xticks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.plotting_helper_functions.disable_xticks" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MozaikLite.visualization.plotting_helper_functions.disable_yticks">
+<tt class="descclassname">MozaikLite.visualization.plotting_helper_functions.</tt><tt class="descname">disable_yticks</tt><big>(</big><em>ax</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/plotting_helper_functions.html#disable_yticks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.plotting_helper_functions.disable_yticks" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MozaikLite.visualization.plotting_helper_functions.remove_x_tick_labels">
+<tt class="descclassname">MozaikLite.visualization.plotting_helper_functions.</tt><tt class="descname">remove_x_tick_labels</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/plotting_helper_functions.html#remove_x_tick_labels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.plotting_helper_functions.remove_x_tick_labels" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MozaikLite.visualization.plotting_helper_functions.remove_y_tick_labels">
+<tt class="descclassname">MozaikLite.visualization.plotting_helper_functions.</tt><tt class="descname">remove_y_tick_labels</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/plotting_helper_functions.html#remove_y_tick_labels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.plotting_helper_functions.remove_y_tick_labels" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MozaikLite.visualization.plotting_helper_functions.three_tick_axis">
+<tt class="descclassname">MozaikLite.visualization.plotting_helper_functions.</tt><tt class="descname">three_tick_axis</tt><big>(</big><em>axis</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/plotting_helper_functions.html#three_tick_axis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.plotting_helper_functions.three_tick_axis" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<span class="target" id="module-MozaikLite.visualization.jens_paper_plots"></span><dl class="class">
+<dt id="MozaikLite.visualization.jens_paper_plots.Figure2">
+<em class="property">class </em><tt class="descclassname">MozaikLite.visualization.jens_paper_plots.</tt><tt class="descname">Figure2</tt><big>(</big><em>datastore</em>, <em>parameters</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/jens_paper_plots.html#Figure2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.jens_paper_plots.Figure2" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="MozaikLite.visualization.jens_paper_plots.Figure2.required_parameters">
+<tt class="descname">required_parameters</tt><em class="property"> = {'sheet_name': &lt;type 'str'&gt;}</em><a class="headerlink" href="#MozaikLite.visualization.jens_paper_plots.Figure2.required_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MozaikLite.visualization.jens_paper_plots.Figure2.subplot">
+<tt class="descname">subplot</tt><big>(</big><em>subplotspec</em><big>)</big><a class="reference internal" href="_modules/MozaikLite/visualization/jens_paper_plots.html#Figure2.subplot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#MozaikLite.visualization.jens_paper_plots.Figure2.subplot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
+<li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
+<li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Welcome to MozaikLite&#8217;s documentation!</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="#">MozaikLite 0.01 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Jan Antolik.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

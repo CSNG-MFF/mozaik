@@ -1,0 +1,475 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>MozaikLite.visualization.plotting &mdash; MozaikLite 0.01 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.01',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="MozaikLite 0.01 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">MozaikLite 0.01 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for MozaikLite.visualization.plotting</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">The visualization for mozaik objects is based on the matplotlib and the GridSpec object</span>
+
+<span class="sd">The plotting framwork is divided into two main concepts, represented by the two high-level</span>
+<span class="sd">classes Plotting (this file) and SimplePlot (see simple_plot.py).</span>
+
+<span class="sd">The SimplePlot represent the low-level plotting. It is assumed that this plot has only a single </span>
+<span class="sd">axis that is drawn into the region defined by the GridSpec instance that is passed into it. The </span>
+<span class="sd">role of the set of classes derived from SimplePlot is to standardize the low level looks of all </span>
+<span class="sd">figures (mainly related to axis, lables, titles etc.), and should assume data given to them in a </span>
+<span class="sd">format that is easy to use by the given plot. In order to unify the look of figures</span>
+<span class="sd">it defines four functions pre_axis_plot,pre_plot, plot, and post_plot. The actual plotting that </span>
+<span class="sd">user defines is typically defined in </span>
+<span class="sd">the plot function while the pre_axis_plot, pre_plot and post_plot functions handle the pre and post plotting </span>
+<span class="sd">adjustments to the plot (i.e. the typical post_plot function for example adjusts the ticks of </span>
+<span class="sd">the axis to a common format other such axis related properties). When defining a new SimplePlot </span>
+<span class="sd">function user is encoureged to push as much of it&#39;s &#39;decorating&#39; funcitonality into the post </span>
+<span class="sd">and pre plot function and define only the absolute minimum</span>
+<span class="sd">in the plot function. At the same time, there is already a set of classes implementing </span>
+<span class="sd">a general common look provided, and so users are encoureged to use these as much as possible. If </span>
+<span class="sd">their formatting features are not sufficient or incompatible with a given plot, users are encoureged</span>
+<span class="sd">to define new virtual class that defines the formatting in the pre and post plot functions </span>
+<span class="sd">(and thus sepparating it from the plot itself), and incorporating these as low as possible within </span>
+<span class="sd">the hierarchy of the SimplePlot classes to re-use as much of the previous work as possible.</span>
+
+<span class="sd">NOTE SimplePlot now resides in sepparate module visualization.simple_plot</span>
+
+<span class="sd">The Plotting class (and its children) define the high level plotting mechanisms. They </span>
+<span class="sd">are mainly responsible for hierarchical organization of figures with multiple plots, </span>
+<span class="sd">any mechanisms that require consideration of several plots at the same time, </span>
+<span class="sd">and the translation of the data form the general format provided by Datastore,</span>
+<span class="sd">to specific format that the SimplePlot plots require. In general the Plotting </span>
+<span class="sd">instances should not do any plotting of axes them selves (but instead calling the </span>
+<span class="sd">SimplePlot instances to do the actual plotting), with the exception</span>
+<span class="sd">of multi-plot figures whith complicated inter-plot dependencies, for which it is</span>
+<span class="sd">not practical to break them down into single plot instances.</span>
+
+
+<span class="sd">Each Plotting class should implement two plotting functions:  plot and subplot </span>
+<span class="sd">The much more important one is subplot that accepts a SubplotSpec object (see matplotlib doc) </span>
+<span class="sd">as input which will tell it where to plot. It can in turn create another SubplotSpec within</span>
+<span class="sd">the given SubplotSpec and call other plot commands to plot within specific subregions</span>
+<span class="sd">of the SubplotSpec. This allows natural way of nesting plots.</span>
+
+<span class="sd">The plot function can either not be defined in which case it defaults to the Plotting.plot, </span>
+<span class="sd">which simply creates a figure and calls subplot with SuplotSpec spanning the whole figure.</span>
+<span class="sd">Alternatively, one can define the plot function if one wants to add some additional decorations,</span>
+<span class="sd">in case the figure is plotted on its own (i.e. becomes the highest-level), and that would otherwise </span>
+<span class="sd">prevent flexible use in nesting via the subplot.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">pylab</span>
+<span class="kn">import</span> <span class="nn">matplotlib.gridspec</span> <span class="kn">as</span> <span class="nn">gridspec</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">from</span> <span class="nn">MozaikLite.framework.interfaces</span> <span class="kn">import</span> <span class="n">MozaikLiteParametrizeObject</span>
+<span class="kn">from</span> <span class="nn">MozaikLite.stimuli.stimulus_generator</span> <span class="kn">import</span> <span class="n">parse_stimuls_id</span><span class="p">,</span><span class="n">load_from_string</span>
+<span class="kn">from</span> <span class="nn">NeuroTools.parameters</span> <span class="kn">import</span> <span class="n">ParameterSet</span><span class="p">,</span> <span class="n">ParameterDist</span>
+<span class="kn">from</span> <span class="nn">MozaikLite.storage.queries</span> <span class="kn">import</span> <span class="n">select_stimuli_type_query</span><span class="p">,</span><span class="n">select_result_sheet_query</span><span class="p">,</span> <span class="n">partition_by_stimulus_paramter_query</span>
+<span class="kn">from</span> <span class="nn">simple_plot</span> <span class="kn">import</span> <span class="o">*</span>
+
+<div class="viewcode-block" id="Plotting"><a class="viewcode-back" href="../../../index.html#MozaikLite.visualization.plotting.Plotting">[docs]</a><span class="k">class</span> <span class="nc">Plotting</span><span class="p">(</span><span class="n">MozaikLiteParametrizeObject</span><span class="p">):</span>
+    
+    <span class="k">def</span>  <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">datastore</span><span class="p">,</span><span class="n">parameters</span><span class="p">):</span>
+         <span class="n">MozaikLiteParametrizeObject</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">parameters</span><span class="p">)</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">datastore</span> <span class="o">=</span> <span class="n">datastore</span>
+    
+<div class="viewcode-block" id="Plotting.subplot"><a class="viewcode-back" href="../../../index.html#MozaikLite.visualization.plotting.Plotting.subplot">[docs]</a>    <span class="k">def</span> <span class="nf">subplot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">subplotspec</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        <span class="k">pass</span>
+    </div>
+<div class="viewcode-block" id="Plotting.plot"><a class="viewcode-back" href="../../../index.html#MozaikLite.visualization.plotting.Plotting.plot">[docs]</a>    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">facecolor</span><span class="o">=</span><span class="s">&#39;w&#39;</span><span class="p">)</span>
+        <span class="n">gs</span> <span class="o">=</span> <span class="n">gridspec</span><span class="o">.</span><span class="n">GridSpec</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">gs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+        
+
+          
+              </div></div>
+<div class="viewcode-block" id="PlotTuningCurve"><a class="viewcode-back" href="../../../index.html#MozaikLite.visualization.plotting.PlotTuningCurve">[docs]</a><span class="k">class</span> <span class="nc">PlotTuningCurve</span><span class="p">(</span><span class="n">Plotting</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    values - contain a list of lists of values, the outer list corresponding</span>
+<span class="sd">    to stimuli the inner to neurons.</span>
+<span class="sd">    </span>
+<span class="sd">    stimuli_ids - contain liest of stimuli ids corresponding to the values</span>
+<span class="sd">    </span>
+<span class="sd">    parameter_index - corresponds to the parameter that should be plotted as </span>
+<span class="sd">                    - a tuning curve</span>
+<span class="sd">                    </span>
+<span class="sd">    neurons - which        &quot;&quot;&quot;</span>
+
+    <span class="n">required_parameters</span> <span class="o">=</span> <span class="n">ParameterSet</span><span class="p">({</span>
+	  <span class="s">&#39;tuning_curve_name&#39;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span>  <span class="c">#the name of the tuning curve</span>
+      <span class="s">&#39;neuron&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="c"># which neuron to plot</span>
+      <span class="s">&#39;sheet_name&#39;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="c"># from which layer to plot the tuning curve</span>
+      <span class="s">&#39;ylabel&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="c"># ylabel to write on the graph</span>
+	<span class="p">})</span>
+
+    
+    <span class="k">def</span>  <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">datastore</span><span class="p">,</span><span class="n">parameters</span><span class="p">):</span>
+        <span class="n">Plotting</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">datastore</span><span class="p">,</span><span class="n">parameters</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tuning_curves</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">datastore</span><span class="o">.</span><span class="n">get_analysis_result</span><span class="p">(</span><span class="n">parameters</span><span class="o">.</span><span class="n">tuning_curve_name</span><span class="p">,</span><span class="n">sheet_name</span><span class="o">=</span><span class="n">parameters</span><span class="o">.</span><span class="n">sheet_name</span><span class="p">)</span>
+    
+<div class="viewcode-block" id="PlotTuningCurve.subplot"><a class="viewcode-back" href="../../../index.html#MozaikLite.visualization.plotting.PlotTuningCurve.subplot">[docs]</a>    <span class="k">def</span> <span class="nf">subplot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">subplotspec</span><span class="p">):</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">subplotspec</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">tc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tuning_curves</span><span class="p">:</span>
+            <span class="n">tc</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">to_dictonary_of_tc_parametrization</span><span class="p">()</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">neuron</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span>  <span class="n">tc</span><span class="p">:</span>
+                <span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)</span> <span class="o">=</span> <span class="n">tc</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                <span class="n">par</span><span class="p">,</span><span class="n">val</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="nb">sorted</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">b</span><span class="p">,</span><span class="n">a</span><span class="p">[:,</span><span class="n">n</span><span class="p">])))</span>
+                <span class="n">pylab</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">par</span><span class="p">,</span><span class="n">val</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="n">fromat_stimulus_id</span><span class="p">(</span><span class="n">parse_stimuls_id</span><span class="p">(</span><span class="n">k</span><span class="p">)))</span>
+            <span class="n">pylab</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&#39;Orientation tuning curve, Neuron: </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">n</span><span class="p">)</span>
+            <span class="n">pylab</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">ylabel</span><span class="p">)</span>
+            <span class="n">pylab</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+            </div></div>
+<div class="viewcode-block" id="CyclicTuningCurvePlot"><a class="viewcode-back" href="../../../index.html#MozaikLite.visualization.plotting.CyclicTuningCurvePlot">[docs]</a><span class="k">class</span> <span class="nc">CyclicTuningCurvePlot</span><span class="p">(</span><span class="n">PlotTuningCurve</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Tuning curve over cyclic domain</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="CyclicTuningCurvePlot.subplot"><a class="viewcode-back" href="../../../index.html#MozaikLite.visualization.plotting.CyclicTuningCurvePlot.subplot">[docs]</a>    <span class="k">def</span> <span class="nf">subplot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">subplotspec</span><span class="p">):</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">neuron</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">subplotspec</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">tc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tuning_curves</span><span class="p">:</span>
+            <span class="n">tc</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">to_dictonary_of_tc_parametrization</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span>  <span class="n">tc</span><span class="p">:</span>
+                <span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)</span> <span class="o">=</span> <span class="n">tc</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                <span class="n">par</span><span class="p">,</span><span class="n">val</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="nb">sorted</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">b</span><span class="p">,</span><span class="n">a</span><span class="p">[:,</span><span class="n">n</span><span class="p">])))</span>
+                <span class="c"># make the tuning curve to wrap around  </span>
+                <span class="n">par</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">par</span><span class="p">)</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+                <span class="n">par</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">par</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">val</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">pylab</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">val</span><span class="p">)),</span><span class="n">val</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="n">fromat_stimulus_id</span><span class="p">(</span><span class="n">parse_stimuls_id</span><span class="p">(</span><span class="n">k</span><span class="p">)))</span>
+                <span class="n">pylab</span><span class="o">.</span><span class="n">hold</span><span class="p">(</span><span class="s">&#39;on&#39;</span><span class="p">)</span>
+            <span class="n">pylab</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">ylabel</span><span class="p">)</span>
+            <span class="n">pylab</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Orientation&#39;</span><span class="p">)</span>
+            <span class="n">pylab</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">val</span><span class="p">)),[</span><span class="s">&quot;</span><span class="si">%.2f</span><span class="s">&quot;</span><span class="o">%</span> <span class="nb">float</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">par</span><span class="p">])</span>
+            <span class="n">pylab</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&#39;Orientation tuning curve, Neuron: </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">n</span><span class="p">)</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+        
+        </div></div>
+<div class="viewcode-block" id="fromat_stimulus_id"><a class="viewcode-back" href="../../../index.html#MozaikLite.visualization.plotting.fromat_stimulus_id">[docs]</a><span class="k">def</span> <span class="nf">fromat_stimulus_id</span><span class="p">(</span><span class="n">stimulus_id</span><span class="p">):</span>
+    <span class="n">string</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">stimulus_id</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">p</span> <span class="o">!=</span> <span class="s">&#39;*&#39;</span> <span class="ow">and</span> <span class="n">p</span> <span class="o">!=</span> <span class="s">&#39;x&#39;</span><span class="p">:</span>
+            <span class="n">string</span> <span class="o">=</span> <span class="n">string</span> <span class="o">+</span> <span class="s">&#39; &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">string</span>
+
+</div>
+<div class="viewcode-block" id="LinePlot"><a class="viewcode-back" href="../../../index.html#MozaikLite.visualization.plotting.LinePlot">[docs]</a><span class="k">class</span> <span class="nc">LinePlot</span><span class="p">(</span><span class="n">Plotting</span><span class="p">):</span>          
+      <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">      Many plots plot many identical plots in a row for multiple data in a list they get</span>
+<span class="sd">      This is a smaller helper class that mitigates some of the code repetition in such cases</span>
+<span class="sd">      </span>
+<span class="sd">      Note that the inherited class has to implement!:</span>
+<span class="sd">      _subplot(self,idx,ax) </span>
+<span class="sd">      </span>
+<span class="sd">      which plots the individual plot. The idx is index in whatever datastructure list we are plotting ans </span>
+<span class="sd">      axis is the axis that has to be used for plotting.</span>
+<span class="sd">      &quot;&quot;&quot;</span> 
+      <span class="k">def</span>  <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">datastore</span><span class="p">,</span><span class="n">parameters</span><span class="p">):</span>
+           <span class="n">Plotting</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">datastore</span><span class="p">,</span><span class="n">parameters</span><span class="p">)</span>    
+           <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">=</span> <span class="bp">None</span>
+      
+<div class="viewcode-block" id="LinePlot.subplot"><a class="viewcode-back" href="../../../index.html#MozaikLite.visualization.plotting.LinePlot.subplot">[docs]</a>      <span class="k">def</span> <span class="nf">subplot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">subplotspec</span><span class="p">):</span> 
+          <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="p">:</span>
+             <span class="k">print</span> <span class="s">&#39;Error, class that derives from LinePlot has to specify the length parameter&#39;</span>
+             <span class="k">return</span>
+          
+          <span class="n">gs</span> <span class="o">=</span> <span class="n">gridspec</span><span class="o">.</span><span class="n">GridSpecFromSubplotSpec</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="p">,</span> <span class="n">subplot_spec</span><span class="o">=</span><span class="n">subplotspec</span><span class="p">)</span>  
+          <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="p">):</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">_subplot</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span><span class="n">gs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">idx</span><span class="p">])</span>
+
+</div></div>
+<div class="viewcode-block" id="PerStimulusPlot"><a class="viewcode-back" href="../../../index.html#MozaikLite.visualization.plotting.PerStimulusPlot">[docs]</a><span class="k">class</span> <span class="nc">PerStimulusPlot</span><span class="p">(</span><span class="n">LinePlot</span><span class="p">):</span>
+    
+    <span class="n">required_parameters</span> <span class="o">=</span> <span class="n">ParameterSet</span><span class="p">({</span>
+      <span class="s">&#39;sheet_name&#39;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span>  <span class="c">#the name of the sheet for which to plot</span>
+	<span class="p">})</span>
+
+    <span class="k">def</span>  <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">datastore</span><span class="p">,</span><span class="n">parameters</span><span class="p">):</span>
+        <span class="n">Plotting</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">datastore</span><span class="p">,</span><span class="n">parameters</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dsv</span> <span class="o">=</span> <span class="n">select_result_sheet_query</span><span class="p">(</span><span class="n">datastore</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">sheet_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dsvs</span> <span class="o">=</span> <span class="n">partition_by_stimulus_paramter_query</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dsv</span><span class="p">,</span><span class="mi">8</span><span class="p">)</span>    
+        <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dsvs</span><span class="p">)</span>
+        
+    </div>
+<div class="viewcode-block" id="RasterPlot"><a class="viewcode-back" href="../../../index.html#MozaikLite.visualization.plotting.RasterPlot">[docs]</a><span class="k">class</span> <span class="nc">RasterPlot</span><span class="p">(</span><span class="n">PerStimulusPlot</span><span class="p">):</span>
+      <span class="n">required_parameters</span> <span class="o">=</span> <span class="n">ParameterSet</span><span class="p">({</span>
+        <span class="s">&#39;trial_averaged_histogram&#39;</span> <span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>  <span class="c">#should the plot show also the trial averaged histogram</span>
+        <span class="s">&#39;neurons&#39;</span> <span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+      <span class="p">})</span>
+
+      <span class="k">def</span>  <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">datastore</span><span class="p">,</span><span class="n">parameters</span><span class="p">):</span>
+           <span class="n">PerStimulusPlot</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">datastore</span><span class="p">,</span><span class="n">parameters</span><span class="p">)</span>
+           <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">neurons</span> <span class="o">==</span> <span class="p">[]:</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">neurons</span> <span class="o">=</span> <span class="bp">None</span> 
+    
+      <span class="k">def</span> <span class="nf">_subplot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">idx</span><span class="p">,</span><span class="n">gs</span><span class="p">):</span>
+         <span class="n">sp</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dsvs</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">get_spike_lists</span><span class="p">()]</span>
+         
+         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">trial_averaged_histogram</span><span class="p">:</span>
+             <span class="n">gs</span> <span class="o">=</span> <span class="n">gridspec</span><span class="o">.</span><span class="n">GridSpecFromSubplotSpec</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">subplot_spec</span><span class="o">=</span><span class="n">gs</span><span class="p">)</span>  
+             <span class="c"># first the raster</span>
+             <span class="k">if</span> <span class="n">idx</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                 <span class="n">SpikeRasterPlot</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">neurons</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">neurons</span><span class="p">,</span><span class="n">x_axis</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">y_axis</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">xlabel</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">ylabel</span><span class="o">=</span><span class="bp">None</span><span class="p">)(</span><span class="n">gs</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+             <span class="k">else</span><span class="p">:</span>
+                 <span class="n">SpikeRasterPlot</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">neurons</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">neurons</span><span class="p">,</span><span class="n">x_axis</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">xlabel</span><span class="o">=</span><span class="bp">None</span><span class="p">)(</span><span class="n">gs</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+                    
+             <span class="c">### lets do the histogram</span>
+             <span class="k">if</span> <span class="n">idx</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                 <span class="n">SpikeHistogramPlot</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">neurons</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">neurons</span><span class="p">,</span><span class="n">y_axis</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">ylabel</span><span class="o">=</span><span class="bp">None</span><span class="p">)(</span><span class="n">gs</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+             <span class="k">else</span><span class="p">:</span>
+                 <span class="n">SpikeHistogramPlot</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">neurons</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">neurons</span><span class="p">)(</span><span class="n">gs</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+         <span class="k">else</span><span class="p">:</span>
+             <span class="k">if</span> <span class="n">idx</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">SpikeRasterPlot</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">neurons</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">neurons</span><span class="p">,</span><span class="n">y_axis</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">ylabel</span><span class="o">=</span><span class="bp">None</span><span class="p">)(</span><span class="n">gs</span><span class="p">)</span>
+             <span class="k">else</span><span class="p">:</span>
+                <span class="n">SpikeRasterPlot</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">neurons</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">neurons</span><span class="p">)(</span><span class="n">gs</span><span class="p">)</span>
+             
+</div>
+<div class="viewcode-block" id="VmPlot"><a class="viewcode-back" href="../../../index.html#MozaikLite.visualization.plotting.VmPlot">[docs]</a><span class="k">class</span> <span class="nc">VmPlot</span><span class="p">(</span><span class="n">PerStimulusPlot</span><span class="p">):</span>
+      <span class="n">required_parameters</span> <span class="o">=</span> <span class="n">ParameterSet</span><span class="p">({</span>
+        <span class="s">&#39;neuron&#39;</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span>  <span class="c">#we can only plot one neuron - which one ?</span>
+	  <span class="p">})</span>
+    
+      <span class="k">def</span> <span class="nf">_subplot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">idx</span><span class="p">,</span><span class="n">gs</span><span class="p">):</span>
+          <span class="n">pylab</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s">&#39;axes&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+          <span class="n">ax</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">)</span>
+          <span class="n">vms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dsvs</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">get_vm_lists</span><span class="p">()</span>
+          <span class="n">mean_v</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">vms</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">neuron</span><span class="p">]</span><span class="o">.</span><span class="n">signal</span><span class="p">))</span>
+          <span class="n">time_axis</span> <span class="o">=</span> <span class="n">vms</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">neuron</span><span class="p">]</span><span class="o">.</span><span class="n">time_axis</span><span class="p">()</span>
+          <span class="n">t_stop</span> <span class="o">=</span>  <span class="n">vms</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">neuron</span><span class="p">]</span><span class="o">.</span><span class="n">t_stop</span> <span class="o">-</span> <span class="p">(</span><span class="n">time_axis</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">time_axis</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+          
+          
+                    
+          <span class="k">for</span> <span class="n">vm</span> <span class="ow">in</span> <span class="n">vms</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time_axis</span><span class="p">,</span><span class="n">vm</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">neuron</span><span class="p">]</span><span class="o">.</span><span class="n">signal</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s">&quot;#848484&quot;</span><span class="p">)</span>                
+            <span class="n">mean_v</span> <span class="o">=</span> <span class="n">mean_v</span> <span class="o">+</span> <span class="n">vm</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">neuron</span><span class="p">]</span><span class="o">.</span><span class="n">signal</span>   
+          
+          <span class="n">mean_v</span> <span class="o">=</span> <span class="n">mean_v</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">vms</span><span class="p">)</span>
+          <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time_axis</span><span class="p">,</span><span class="n">mean_v</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s">&#39;k&#39;</span><span class="p">,</span><span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>              
+          <span class="n">disable_top_right_axis</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>            
+          
+          <span class="n">pylab</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">t_stop</span><span class="p">)</span>
+          <span class="n">pylab</span><span class="o">.</span><span class="n">xticks</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="n">t_stop</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="n">t_stop</span><span class="p">])</span>
+          <span class="n">three_tick_axis</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="p">)</span>
+          
+          <span class="k">if</span> <span class="n">idx</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">pylab</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Vm(mV)&#39;</span><span class="p">)</span>
+          <span class="k">else</span><span class="p">:</span>
+            <span class="n">pylab</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+          <span class="n">pylab</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s">&#39;axes&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>            
+</div>
+<div class="viewcode-block" id="GSynPlot"><a class="viewcode-back" href="../../../index.html#MozaikLite.visualization.plotting.GSynPlot">[docs]</a><span class="k">class</span> <span class="nc">GSynPlot</span><span class="p">(</span><span class="n">PerStimulusPlot</span><span class="p">):</span>
+
+      <span class="n">required_parameters</span> <span class="o">=</span> <span class="n">ParameterSet</span><span class="p">({</span>
+        <span class="s">&#39;neuron&#39;</span> <span class="p">:</span> <span class="nb">int</span>  <span class="c">#we can only plot one neuron - which one ?</span>
+	  <span class="p">})</span>
+    
+      <span class="k">def</span> <span class="nf">_subplot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">idx</span><span class="p">,</span><span class="n">gs</span><span class="p">):</span>
+          <span class="n">pylab</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s">&#39;axes&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+          <span class="n">ax</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">)</span>
+          <span class="n">gsyn_es</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dsvs</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">get_gsyn_e_lists</span><span class="p">()</span>  
+          <span class="n">gsyn_is</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dsvs</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">get_gsyn_i_lists</span><span class="p">()</span>  
+          <span class="n">mean_gsyn_e</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">gsyn_es</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">neuron</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">signal</span><span class="p">))</span>
+          <span class="n">mean_gsyn_i</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">gsyn_is</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">neuron</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">signal</span><span class="p">))</span>
+          <span class="n">time_axis</span> <span class="o">=</span> <span class="n">gsyn_es</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">neuron</span><span class="p">]</span><span class="o">.</span><span class="n">time_axis</span><span class="p">()</span>
+          <span class="n">t_stop</span> <span class="o">=</span> <span class="n">gsyn_es</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">neuron</span><span class="p">]</span><span class="o">.</span><span class="n">t_stop</span> <span class="o">-</span> <span class="p">(</span><span class="n">time_axis</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">time_axis</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+          
+          <span class="k">for</span> <span class="n">e</span><span class="p">,</span><span class="n">i</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">gsyn_es</span><span class="p">,</span><span class="n">gsyn_is</span><span class="p">):</span>
+            <span class="n">p1</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time_axis</span><span class="p">,</span><span class="n">e</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">neuron</span><span class="p">]</span><span class="o">.</span><span class="n">signal</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">9</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s">&#39;#F5A9A9&#39;</span><span class="p">)</span>            
+            <span class="n">p2</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time_axis</span><span class="p">,</span><span class="n">i</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">neuron</span><span class="p">]</span><span class="o">.</span><span class="n">signal</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">9</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s">&#39;#A9BCF5&#39;</span><span class="p">)</span>              
+            <span class="n">mean_gsyn_e</span> <span class="o">=</span> <span class="n">mean_gsyn_e</span> <span class="o">+</span> <span class="n">e</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">neuron</span><span class="p">]</span><span class="o">.</span><span class="n">signal</span>
+            <span class="n">mean_gsyn_i</span> <span class="o">=</span> <span class="n">mean_gsyn_i</span> <span class="o">+</span> <span class="n">i</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">neuron</span><span class="p">]</span><span class="o">.</span><span class="n">signal</span>
+          
+          <span class="n">mean_gsyn_i</span> <span class="o">=</span> <span class="n">mean_gsyn_i</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">gsyn_is</span><span class="p">)</span>
+          <span class="n">mean_gsyn_e</span> <span class="o">=</span> <span class="n">mean_gsyn_e</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">gsyn_es</span><span class="p">)</span>
+            
+          <span class="n">p1</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time_axis</span><span class="p">,</span><span class="n">mean_gsyn_e</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">9</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s">&#39;r&#39;</span><span class="p">,</span><span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>            
+          <span class="n">p2</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time_axis</span><span class="p">,</span><span class="n">mean_gsyn_i</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">9</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>              
+          
+          <span class="n">disable_top_right_axis</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+          
+          <span class="k">if</span> <span class="n">idx</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">pylab</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;G(nS)&#39;</span><span class="p">)</span>
+          <span class="k">else</span><span class="p">:</span>
+            <span class="n">pylab</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+          
+          <span class="n">pylab</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">t_stop</span><span class="p">)</span>
+          <span class="n">pylab</span><span class="o">.</span><span class="n">xticks</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="n">t_stop</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="n">t_stop</span><span class="p">])</span>
+          <span class="n">three_tick_axis</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="p">)</span>
+                    
+          <span class="n">pylab</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="n">p1</span><span class="p">,</span><span class="n">p2</span><span class="p">],[</span><span class="s">&#39;exc&#39;</span><span class="p">,</span><span class="s">&#39;inh&#39;</span><span class="p">])</span>  
+          <span class="n">pylab</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s">&#39;axes&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+          </div>
+<div class="viewcode-block" id="OverviewPlot"><a class="viewcode-back" href="../../../index.html#MozaikLite.visualization.plotting.OverviewPlot">[docs]</a><span class="k">class</span> <span class="nc">OverviewPlot</span><span class="p">(</span><span class="n">Plotting</span><span class="p">):</span>
+      <span class="n">required_parameters</span> <span class="o">=</span> <span class="n">ParameterSet</span><span class="p">({</span>
+            <span class="s">&#39;sheet_name&#39;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span>  <span class="c">#the name of the sheet for which to plot</span>
+      <span class="p">})</span>
+<div class="viewcode-block" id="OverviewPlot.subplot"><a class="viewcode-back" href="../../../index.html#MozaikLite.visualization.plotting.OverviewPlot.subplot">[docs]</a>      <span class="k">def</span> <span class="nf">subplot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">subplotspec</span><span class="p">):</span>
+          <span class="n">gs</span> <span class="o">=</span> <span class="n">gridspec</span><span class="o">.</span><span class="n">GridSpecFromSubplotSpec</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">subplot_spec</span><span class="o">=</span><span class="n">subplotspec</span><span class="p">)</span>  
+          <span class="n">RasterPlot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datastore</span><span class="p">,</span><span class="n">ParameterSet</span><span class="p">({</span><span class="s">&#39;sheet_name&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">sheet_name</span><span class="p">,</span> <span class="s">&#39;trial_averaged_histogram&#39;</span> <span class="p">:</span> <span class="bp">True</span><span class="p">,</span> <span class="s">&#39;neurons&#39;</span> <span class="p">:</span> <span class="p">[]}))</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+          <span class="n">GSynPlot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datastore</span><span class="p">,</span><span class="n">ParameterSet</span><span class="p">({</span><span class="s">&#39;sheet_name&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">sheet_name</span><span class="p">,</span><span class="s">&#39;neuron&#39;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">}))</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+          <span class="n">VmPlot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datastore</span><span class="p">,</span><span class="n">ParameterSet</span><span class="p">({</span><span class="s">&#39;sheet_name&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">sheet_name</span><span class="p">,</span><span class="s">&#39;neuron&#39;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">}))</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>          
+
+          </div></div>
+<div class="viewcode-block" id="AnalogSignalListPlot"><a class="viewcode-back" href="../../../index.html#MozaikLite.visualization.plotting.AnalogSignalListPlot">[docs]</a><span class="k">class</span> <span class="nc">AnalogSignalListPlot</span><span class="p">(</span><span class="n">LinePlot</span><span class="p">):</span>
+        <span class="n">required_parameters</span> <span class="o">=</span> <span class="n">ParameterSet</span><span class="p">({</span>
+            <span class="s">&#39;sheet_name&#39;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span>  <span class="c">#the name of the sheet for which to plot</span>
+            <span class="s">&#39;ylabel&#39;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span>  <span class="c">#what to put as ylabel</span>
+        <span class="p">})</span>
+    
+        <span class="k">def</span>  <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">datastore</span><span class="p">,</span><span class="n">parameters</span><span class="p">):</span>
+            <span class="n">LinePlot</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">datastore</span><span class="p">,</span><span class="n">parameters</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">analog_signal_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">datastore</span><span class="o">.</span><span class="n">get_analysis_result</span><span class="p">(</span><span class="s">&#39;AnalogSignalList&#39;</span><span class="p">,</span><span class="n">sheet_name</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">sheet_name</span><span class="p">)</span>    
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">analog_signal_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+              <span class="k">print</span> <span class="s">&#39;ERROR: Warning currently only the first AnalogSignalList will be plotted&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">analog_signal_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analog_signal_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">asl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analog_signal_list</span><span class="o">.</span><span class="n">asl</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">asl</span><span class="p">)</span>
+            
+    
+        <span class="k">def</span> <span class="nf">_subplot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">idx</span><span class="p">,</span><span class="n">gs</span><span class="p">):</span>
+              <span class="n">pylab</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s">&#39;axes&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+              <span class="n">ax</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">)</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">asl</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">display</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span><span class="n">kwargs</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;color&#39;</span><span class="p">:</span><span class="s">&#39;b&#39;</span><span class="p">})</span>
+              <span class="k">if</span> <span class="n">idx</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                 <span class="n">pylab</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">ylabel</span><span class="p">)</span>
+              
+              <span class="n">disable_top_right_axis</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>  
+              <span class="n">three_tick_axis</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="p">)</span>            
+              <span class="n">three_tick_axis</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="p">)</span>                      
+              <span class="n">pylab</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s">&#39;axes&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ConductanceSignalListPlot"><a class="viewcode-back" href="../../../index.html#MozaikLite.visualization.plotting.ConductanceSignalListPlot">[docs]</a><span class="k">class</span> <span class="nc">ConductanceSignalListPlot</span><span class="p">(</span><span class="n">LinePlot</span><span class="p">):</span>
+        <span class="n">required_parameters</span> <span class="o">=</span> <span class="n">ParameterSet</span><span class="p">({</span>
+            <span class="s">&#39;sheet_name&#39;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span>  <span class="c">#the name of the sheet for which to plot</span>
+        <span class="p">})</span>
+    
+        <span class="k">def</span>  <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">datastore</span><span class="p">,</span><span class="n">parameters</span><span class="p">):</span>
+            <span class="n">LinePlot</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">datastore</span><span class="p">,</span><span class="n">parameters</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">conductance_signal_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">datastore</span><span class="o">.</span><span class="n">get_analysis_result</span><span class="p">(</span><span class="s">&#39;ConductanceSignalList&#39;</span><span class="p">,</span><span class="n">sheet_name</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">sheet_name</span><span class="p">)</span>    
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conductance_signal_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+              <span class="k">print</span> <span class="s">&#39;ERROR: Warning currently only the first ConductanceSignalList will be plotted&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">conductance_signal_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conductance_signal_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">e_con</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conductance_signal_list</span><span class="o">.</span><span class="n">e_con</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">i_con</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conductance_signal_list</span><span class="o">.</span><span class="n">i_con</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">e_con</span><span class="p">)</span>
+            
+    
+        <span class="k">def</span> <span class="nf">_subplot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">idx</span><span class="p">,</span><span class="n">gs</span><span class="p">):</span>
+              <span class="n">pylab</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s">&#39;axes&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+              <span class="n">ax</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">)</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">e_con</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">display</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span><span class="n">kwargs</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;color&#39;</span><span class="p">:</span><span class="s">&#39;r&#39;</span><span class="p">,</span><span class="s">&#39;label&#39;</span><span class="p">:</span><span class="s">&#39;exc&#39;</span><span class="p">})</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">i_con</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">display</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span><span class="n">kwargs</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;color&#39;</span><span class="p">:</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;label&#39;</span><span class="p">:</span><span class="s">&#39;inh&#39;</span><span class="p">})</span>
+              <span class="k">if</span> <span class="n">idx</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                 <span class="n">pylab</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;G(S)&#39;</span><span class="p">)</span>
+
+              <span class="n">disable_top_right_axis</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>      
+              <span class="n">three_tick_axis</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="p">)</span>        
+              <span class="n">three_tick_axis</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="p">)</span>                      
+              <span class="n">pylab</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s">&#39;axes&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> 
+              
+              </div>
+<div class="viewcode-block" id="RetinalInputMovie"><a class="viewcode-back" href="../../../index.html#MozaikLite.visualization.plotting.RetinalInputMovie">[docs]</a><span class="k">class</span> <span class="nc">RetinalInputMovie</span><span class="p">(</span><span class="n">LinePlot</span><span class="p">):</span>
+      <span class="n">required_parameters</span> <span class="o">=</span> <span class="n">ParameterSet</span><span class="p">({</span>
+            <span class="s">&#39;frame_rate&#39;</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span>  <span class="c">#the desired frame rate (per sec), it might be less if the computer is too slow</span>
+      <span class="p">})</span>
+      
+      
+      <span class="k">def</span>  <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">datastore</span><span class="p">,</span><span class="n">parameters</span><span class="p">):</span>
+           <span class="n">Plotting</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">datastore</span><span class="p">,</span><span class="n">parameters</span><span class="p">)</span>    
+           <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">=</span> <span class="bp">None</span>
+           <span class="bp">self</span><span class="o">.</span><span class="n">retinal_input</span> <span class="o">=</span> <span class="n">datastore</span><span class="o">.</span><span class="n">get_retinal_stimulus</span><span class="p">()</span>
+           <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">retinal_input</span><span class="p">)</span>
+       
+      <span class="k">def</span> <span class="nf">_subplot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">idx</span><span class="p">,</span><span class="n">gs</span><span class="p">):</span>
+          <span class="n">PixelMovie</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">retinal_input</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span><span class="mf">1.0</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">frame_rate</span><span class="o">*</span><span class="mi">1000</span><span class="p">,</span><span class="n">x_axis</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">y_axis</span><span class="o">=</span><span class="bp">False</span><span class="p">)(</span><span class="n">gs</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">MozaikLite 0.01 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Jan Antolik.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>
