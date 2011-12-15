@@ -103,23 +103,10 @@ class Sheet(MozaikComponent):
         else:
             return context
 
-    def record(self, variable):
+    def record(self, variables):
         if self.to_record != None:
             cells = self.to_record
-            func_mapping = {'spikes': 'record', 'v': 'record_v','g_syn':'record_gsyn'} # need to add conductances
-            record_method = func_mapping[variable]
-            if cells == 'all':
-                logger.debug('Recording %s from all cells in population "%s"' % (variable, self.name))
-                getattr(self.pop, record_method)()
-            elif isinstance(cells, list):
-                logger.debug('Recording %s from a subset of cells in population "%s" ' % (variable, self.name))
-                getattr(self.pop[cells], record_method)()
-            elif isinstance(cells, int):
-                n = cells
-                logger.debug('Recording %s from a subset of %d cells in population "%s" ' % (variable, n, self.name))
-                getattr(self.pop, record_method)(n)
-            else:
-                raise Exception("cells must be 'all', a list, or an int. Actual value of %s" % str(cells))
+            self.pop.record(variables)
 
     def write_neo_object(self,tstop):
         segment = create_segment_for_sheet(self.name)

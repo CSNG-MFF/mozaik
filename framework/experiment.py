@@ -10,7 +10,7 @@ import numpy
 class Experiment(object):
     """
     The experiment defines the list of stimuli that it needs to present to the brain.
-    This stimuli presentations have to be independent - e.g. should not temporarily 
+    These stimuli presentations have to be independent - e.g. should not temporarily 
     depend on others. It should also specify the analysis of the recorded results 
     that it performs. This can be left empty if analysis will be done later.
     """

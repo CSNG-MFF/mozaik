@@ -9,8 +9,10 @@ Welcome to MozaikLite's documentation!
 Contents:
 
 .. toctree::
-   :maxdepth: 2
-
+   :maxdepth: 4
+   introduction
+    
+    
 .. automodule:: MozaikLite.framework.experiment
    :members:   
    :undoc-members:
@@ -96,8 +98,6 @@ Contents:
 .. automodule:: MozaikLite.visualization.jens_paper_plots
    :members:   
    :undoc-members:
-
-
 
 Indices and tables
 ==================
