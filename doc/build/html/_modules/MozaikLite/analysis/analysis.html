@@ -63,7 +63,7 @@
 <span class="kn">import</span> <span class="nn">quantities</span>
 <span class="kn">import</span> <span class="nn">numpy</span> 
 
-<div class="viewcode-block" id="Analysis"><a class="viewcode-back" href="../../../index.html#MozaikLite.analysis.analysis.Analysis">[docs]</a><span class="k">class</span> <span class="nc">Analysis</span><span class="p">(</span><span class="n">MozaikLiteParametrizeObject</span><span class="p">):</span>
+<div class="viewcode-block" id="Analysis"><a class="viewcode-back" href="../../../MozaikLite.analysis.html#MozaikLite.analysis.analysis.Analysis">[docs]</a><span class="k">class</span> <span class="nc">Analysis</span><span class="p">(</span><span class="n">MozaikLiteParametrizeObject</span><span class="p">):</span>
     
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">datastore</span><span class="p">,</span><span class="n">parameters</span><span class="p">,</span><span class="n">tags</span><span class="o">=</span><span class="p">[]):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -80,14 +80,14 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">datastore</span> <span class="o">=</span> <span class="n">datastore</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tags</span> <span class="o">=</span> <span class="n">tags</span>
 
-<div class="viewcode-block" id="Analysis.analyse"><a class="viewcode-back" href="../../../index.html#MozaikLite.analysis.analysis.Analysis.analyse">[docs]</a>    <span class="k">def</span> <span class="nf">analyse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Analysis.analyse"><a class="viewcode-back" href="../../../MozaikLite.analysis.html#MozaikLite.analysis.analysis.Analysis.analyse">[docs]</a>    <span class="k">def</span> <span class="nf">analyse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
         <span class="k">pass</span>
         
 </div></div>
-<div class="viewcode-block" id="AveragedOrientationTuning"><a class="viewcode-back" href="../../../index.html#MozaikLite.analysis.analysis.AveragedOrientationTuning">[docs]</a><span class="k">class</span> <span class="nc">AveragedOrientationTuning</span><span class="p">(</span><span class="n">Analysis</span><span class="p">):</span>
+<div class="viewcode-block" id="AveragedOrientationTuning"><a class="viewcode-back" href="../../../MozaikLite.analysis.html#MozaikLite.analysis.analysis.AveragedOrientationTuning">[docs]</a><span class="k">class</span> <span class="nc">AveragedOrientationTuning</span><span class="p">(</span><span class="n">Analysis</span><span class="p">):</span>
     
-<div class="viewcode-block" id="AveragedOrientationTuning.analyse"><a class="viewcode-back" href="../../../index.html#MozaikLite.analysis.analysis.AveragedOrientationTuning.analyse">[docs]</a>      <span class="k">def</span> <span class="nf">analyse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="AveragedOrientationTuning.analyse"><a class="viewcode-back" href="../../../MozaikLite.analysis.html#MozaikLite.analysis.analysis.AveragedOrientationTuning.analyse">[docs]</a>      <span class="k">def</span> <span class="nf">analyse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
             <span class="k">print</span> <span class="s">&#39;Starting OrientationTuning analysis&#39;</span>
             <span class="n">dsv</span> <span class="o">=</span> <span class="n">select_stimuli_type_query</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datastore</span><span class="p">,</span><span class="s">&#39;FullfieldDriftingSinusoidalGrating&#39;</span><span class="p">)</span>
 
@@ -106,7 +106,7 @@
                 <span class="n">mean_rates</span> <span class="o">=</span> <span class="p">[</span><span class="n">_mean</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">mean_rates</span><span class="p">]</span>  
                 <span class="bp">self</span><span class="o">.</span><span class="n">datastore</span><span class="o">.</span><span class="n">full_datastore</span><span class="o">.</span><span class="n">add_analysis_result</span><span class="p">(</span><span class="n">TuningCurve</span><span class="p">(</span><span class="n">mean_rates</span><span class="p">,</span><span class="n">s</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="n">sheet</span><span class="p">,</span><span class="n">tags</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tags</span><span class="p">),</span><span class="n">sheet_name</span><span class="o">=</span><span class="n">sheet</span><span class="p">)</span>
 </div></div>
-<div class="viewcode-block" id="GSTA"><a class="viewcode-back" href="../../../index.html#MozaikLite.analysis.analysis.GSTA">[docs]</a><span class="k">class</span> <span class="nc">GSTA</span><span class="p">(</span><span class="n">Analysis</span><span class="p">):</span>
+<div class="viewcode-block" id="GSTA"><a class="viewcode-back" href="../../../MozaikLite.analysis.html#MozaikLite.analysis.analysis.GSTA">[docs]</a><span class="k">class</span> <span class="nc">GSTA</span><span class="p">(</span><span class="n">Analysis</span><span class="p">):</span>
       <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">      Computes conductance spike triggered average</span>
 <span class="sd">      </span>
@@ -122,7 +122,7 @@
       <span class="p">})</span>
 
       
-<div class="viewcode-block" id="GSTA.analyse"><a class="viewcode-back" href="../../../index.html#MozaikLite.analysis.analysis.GSTA.analyse">[docs]</a>      <span class="k">def</span> <span class="nf">analyse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="GSTA.analyse"><a class="viewcode-back" href="../../../MozaikLite.analysis.html#MozaikLite.analysis.analysis.GSTA.analyse">[docs]</a>      <span class="k">def</span> <span class="nf">analyse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
             <span class="k">print</span> <span class="s">&#39;Starting Spike Triggered Analysis of Conductances&#39;</span>
             
             <span class="n">dsv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">datastore</span>
@@ -141,7 +141,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">datastore</span><span class="o">.</span><span class="n">full_datastore</span><span class="o">.</span><span class="n">add_analysis_result</span><span class="p">(</span><span class="n">ConductanceSignalList</span><span class="p">(</span><span class="n">asl_e</span><span class="p">,</span><span class="n">asl_i</span><span class="p">,</span><span class="n">sheet</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">neurons</span><span class="p">,</span><span class="n">tags</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tags</span><span class="p">),</span><span class="n">sheet_name</span><span class="o">=</span><span class="n">sheet</span><span class="p">)</span>
                 
                 </div>
-<div class="viewcode-block" id="GSTA.do_gsta"><a class="viewcode-back" href="../../../index.html#MozaikLite.analysis.analysis.GSTA.do_gsta">[docs]</a>      <span class="k">def</span> <span class="nf">do_gsta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">analog_signal</span><span class="p">,</span><span class="n">sp</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+<div class="viewcode-block" id="GSTA.do_gsta"><a class="viewcode-back" href="../../../MozaikLite.analysis.html#MozaikLite.analysis.analysis.GSTA.do_gsta">[docs]</a>      <span class="k">def</span> <span class="nf">do_gsta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">analog_signal</span><span class="p">,</span><span class="n">sp</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
           <span class="n">dt</span> <span class="o">=</span> <span class="n">analog_signal</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">dt</span>
           <span class="n">gstal</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">length</span><span class="o">/</span><span class="n">dt</span><span class="p">)</span>
           <span class="n">gsta</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">gstal</span><span class="o">+</span><span class="mi">1</span><span class="p">,)</span>
@@ -159,7 +159,7 @@
            
           
           </div></div>
-<div class="viewcode-block" id="Precision"><a class="viewcode-back" href="../../../index.html#MozaikLite.analysis.analysis.Precision">[docs]</a><span class="k">class</span> <span class="nc">Precision</span><span class="p">(</span><span class="n">Analysis</span><span class="p">):</span>
+<div class="viewcode-block" id="Precision"><a class="viewcode-back" href="../../../MozaikLite.analysis.html#MozaikLite.analysis.analysis.Precision">[docs]</a><span class="k">class</span> <span class="nc">Precision</span><span class="p">(</span><span class="n">Analysis</span><span class="p">):</span>
       <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">      Computes the precision as the autocorrelation between the PSTH of different trials</span>
 <span class="sd">      &quot;&quot;&quot;</span>
@@ -170,7 +170,7 @@
       <span class="p">})</span>
 
       
-<div class="viewcode-block" id="Precision.analyse"><a class="viewcode-back" href="../../../index.html#MozaikLite.analysis.analysis.Precision.analyse">[docs]</a>      <span class="k">def</span> <span class="nf">analyse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Precision.analyse"><a class="viewcode-back" href="../../../MozaikLite.analysis.html#MozaikLite.analysis.analysis.Precision.analyse">[docs]</a>      <span class="k">def</span> <span class="nf">analyse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
             <span class="k">print</span> <span class="s">&#39;Starting Precision Analysis&#39;</span>
             <span class="n">dsv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">datastore</span>
             <span class="k">for</span> <span class="n">sheet</span> <span class="ow">in</span> <span class="n">dsv</span><span class="o">.</span><span class="n">sheets</span><span class="p">():</span>

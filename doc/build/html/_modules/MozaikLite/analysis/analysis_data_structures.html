@@ -53,7 +53,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span>
 <span class="kn">from</span> <span class="nn">MozaikLite.stimuli.stimulus_generator</span> <span class="kn">import</span> <span class="n">parse_stimuls_id</span>
 
-<div class="viewcode-block" id="AnalysisDataStructure"><a class="viewcode-back" href="../../../index.html#MozaikLite.analysis.analysis_data_structures.AnalysisDataStructure">[docs]</a><span class="k">class</span> <span class="nc">AnalysisDataStructure</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="AnalysisDataStructure"><a class="viewcode-back" href="../../../MozaikLite.analysis.html#MozaikLite.analysis.analysis_data_structures.AnalysisDataStructure">[docs]</a><span class="k">class</span> <span class="nc">AnalysisDataStructure</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
       <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">      AnalysisDataStructure encupsulates data that a certain Analysis class generates</span>
 <span class="sd">      A analysis class can generate several AnalysisDataStructure&#39;s and one AnalysisDataStructure</span>
@@ -92,7 +92,7 @@
           <span class="bp">self</span><span class="o">.</span><span class="n">tags</span> <span class="o">=</span> <span class="n">tags</span>      
 
           </div>
-<div class="viewcode-block" id="TuningCurve"><a class="viewcode-back" href="../../../index.html#MozaikLite.analysis.analysis_data_structures.TuningCurve">[docs]</a><span class="k">class</span> <span class="nc">TuningCurve</span><span class="p">(</span><span class="n">AnalysisDataStructure</span><span class="p">):</span>
+<div class="viewcode-block" id="TuningCurve"><a class="viewcode-back" href="../../../MozaikLite.analysis.html#MozaikLite.analysis.analysis_data_structures.TuningCurve">[docs]</a><span class="k">class</span> <span class="nc">TuningCurve</span><span class="p">(</span><span class="n">AnalysisDataStructure</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">             Tuning curve holds data of a tuning curves with respect to a certain paramter of a stimulus</span>
 <span class="sd">             It is assumed that all other paramters are either: </span>
@@ -117,7 +117,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">stimuli_ids</span> <span class="o">=</span> <span class="n">stimuli_ids</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">parameter_index</span> <span class="o">=</span> <span class="n">parameter_index</span>
 
-<div class="viewcode-block" id="TuningCurve.to_dictonary_of_tc_parametrization"><a class="viewcode-back" href="../../../index.html#MozaikLite.analysis.analysis_data_structures.TuningCurve.to_dictonary_of_tc_parametrization">[docs]</a>        <span class="k">def</span> <span class="nf">to_dictonary_of_tc_parametrization</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="TuningCurve.to_dictonary_of_tc_parametrization"><a class="viewcode-back" href="../../../MozaikLite.analysis.html#MozaikLite.analysis.analysis_data_structures.TuningCurve.to_dictonary_of_tc_parametrization">[docs]</a>        <span class="k">def</span> <span class="nf">to_dictonary_of_tc_parametrization</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
             <span class="c"># creat dictionary where stimulus_id indexes all the different </span>
             <span class="c"># values and corresponding data for the given </span>
             <span class="c"># neurons throught the range of the paramter against which the tuning curve was computed</span>
@@ -143,7 +143,7 @@
             
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span>
 </div></div>
-<div class="viewcode-block" id="AnalogSignalList"><a class="viewcode-back" href="../../../index.html#MozaikLite.analysis.analysis_data_structures.AnalogSignalList">[docs]</a><span class="k">class</span> <span class="nc">AnalogSignalList</span><span class="p">(</span><span class="n">AnalysisDataStructure</span><span class="p">):</span>
+<div class="viewcode-block" id="AnalogSignalList"><a class="viewcode-back" href="../../../MozaikLite.analysis.html#MozaikLite.analysis.analysis_data_structures.AnalogSignalList">[docs]</a><span class="k">class</span> <span class="nc">AnalogSignalList</span><span class="p">(</span><span class="n">AnalysisDataStructure</span><span class="p">):</span>
        <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">         This is a simple list of Neurotools AnalogSignal objects</span>
 
@@ -160,7 +160,7 @@
            <span class="bp">self</span><span class="o">.</span><span class="n">asl</span> <span class="o">=</span> <span class="n">asl</span>
            <span class="bp">self</span><span class="o">.</span><span class="n">indexes</span> <span class="o">=</span> <span class="n">indexes</span>
 </div>
-<div class="viewcode-block" id="ConductanceSignalList"><a class="viewcode-back" href="../../../index.html#MozaikLite.analysis.analysis_data_structures.ConductanceSignalList">[docs]</a><span class="k">class</span> <span class="nc">ConductanceSignalList</span><span class="p">(</span><span class="n">AnalysisDataStructure</span><span class="p">):</span>
+<div class="viewcode-block" id="ConductanceSignalList"><a class="viewcode-back" href="../../../MozaikLite.analysis.html#MozaikLite.analysis.analysis_data_structures.ConductanceSignalList">[docs]</a><span class="k">class</span> <span class="nc">ConductanceSignalList</span><span class="p">(</span><span class="n">AnalysisDataStructure</span><span class="p">):</span>
        <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">         This is a simple list of Neurotools AnalogSignal objects representing the conductances</span>
 <span class="sd">         The object holds two lists, one for excitatory and one for inhibitory conductances</span>
@@ -183,7 +183,7 @@
 
       
 </div>
-<div class="viewcode-block" id="NeurotoolsData"><a class="viewcode-back" href="../../../index.html#MozaikLite.analysis.analysis_data_structures.NeurotoolsData">[docs]</a><span class="k">class</span> <span class="nc">NeurotoolsData</span><span class="p">(</span><span class="n">AnalysisDataStructure</span><span class="p">):</span>
+<div class="viewcode-block" id="NeurotoolsData"><a class="viewcode-back" href="../../../MozaikLite.analysis.html#MozaikLite.analysis.analysis_data_structures.NeurotoolsData">[docs]</a><span class="k">class</span> <span class="nc">NeurotoolsData</span><span class="p">(</span><span class="n">AnalysisDataStructure</span><span class="p">):</span>
       <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">      Turn the recordings into Neurotools data structures that can than be visualized </span>
 <span class="sd">      via numerous Neurotools analysis tools</span>

@@ -77,7 +77,7 @@
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s">&quot;Mozaik&quot;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Sheet"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.sheets.Sheet">[docs]</a><span class="k">class</span> <span class="nc">Sheet</span><span class="p">(</span><span class="n">MozaikComponent</span><span class="p">):</span>
+<div class="viewcode-block" id="Sheet"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.sheets.Sheet">[docs]</a><span class="k">class</span> <span class="nc">Sheet</span><span class="p">(</span><span class="n">MozaikComponent</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
@@ -112,12 +112,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">to_record</span> <span class="o">=</span> <span class="bp">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_pop</span> <span class="o">=</span> <span class="bp">None</span>
     
-<div class="viewcode-block" id="Sheet.size_in_degrees"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.sheets.Sheet.size_in_degrees">[docs]</a>    <span class="k">def</span> <span class="nf">size_in_degrees</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Sheet.size_in_degrees"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.sheets.Sheet.size_in_degrees">[docs]</a>    <span class="k">def</span> <span class="nf">size_in_degrees</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns the x,y size in degrees of visual field of the given area&quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
         <span class="k">pass</span>
         </div>
-<div class="viewcode-block" id="Sheet.pop"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.sheets.Sheet.pop">[docs]</a>    <span class="k">def</span> <span class="nf">pop</span><span class="p">():</span>
+<div class="viewcode-block" id="Sheet.pop"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.sheets.Sheet.pop">[docs]</a>    <span class="k">def</span> <span class="nf">pop</span><span class="p">():</span>
         <span class="n">doc</span> <span class="o">=</span> <span class="s">&quot;PyNN population&quot;</span>
 
         <span class="k">def</span> <span class="nf">fget</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -132,7 +132,7 @@
     </div>
     <span class="n">pop</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="o">**</span><span class="n">pop</span><span class="p">())</span> <span class="c">#this will be populated by PyNN population, in the derived classes		</span>
     
-<div class="viewcode-block" id="Sheet.add_neuron_annotation"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.sheets.Sheet.add_neuron_annotation">[docs]</a>    <span class="k">def</span> <span class="nf">add_neuron_annotation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">neuron_number</span><span class="p">,</span><span class="n">key</span><span class="p">,</span><span class="n">value</span><span class="p">,</span><span class="n">protected</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+<div class="viewcode-block" id="Sheet.add_neuron_annotation"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.sheets.Sheet.add_neuron_annotation">[docs]</a>    <span class="k">def</span> <span class="nf">add_neuron_annotation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">neuron_number</span><span class="p">,</span><span class="n">key</span><span class="p">,</span><span class="n">value</span><span class="p">,</span><span class="n">protected</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pop</span><span class="p">:</span>
             <span class="k">print</span> <span class="s">&#39;Population have not been yet set in sheet: &#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="p">,</span> <span class="s">&#39;!&#39;</span>
         <span class="k">if</span> <span class="n">protected</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neuron_annotations</span><span class="p">[</span><span class="n">neuron_number</span><span class="p">]</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neuron_annotations</span><span class="p">[</span><span class="n">neuron_number</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span>
@@ -140,13 +140,13 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_neuron_annotations</span><span class="p">[</span><span class="n">neuron_number</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span>  <span class="p">(</span><span class="n">protected</span><span class="p">,</span><span class="n">value</span><span class="p">)</span>
         </div>
-<div class="viewcode-block" id="Sheet.get_neuron_annotation"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.sheets.Sheet.get_neuron_annotation">[docs]</a>    <span class="k">def</span> <span class="nf">get_neuron_annotation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">neuron_number</span><span class="p">,</span><span class="n">key</span><span class="p">):</span>
+<div class="viewcode-block" id="Sheet.get_neuron_annotation"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.sheets.Sheet.get_neuron_annotation">[docs]</a>    <span class="k">def</span> <span class="nf">get_neuron_annotation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">neuron_number</span><span class="p">,</span><span class="n">key</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pop</span><span class="p">:</span>
                <span class="k">print</span> <span class="s">&#39;Population have not been yet set in sheet: &#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="p">,</span> <span class="s">&#39;!&#39;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neuron_annotations</span><span class="p">[</span><span class="n">neuron_number</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
 
     </div>
-<div class="viewcode-block" id="Sheet.describe"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.sheets.Sheet.describe">[docs]</a>    <span class="k">def</span> <span class="nf">describe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template</span><span class="o">=</span><span class="s">&#39;default&#39;</span><span class="p">,</span> <span class="n">render</span><span class="o">=</span><span class="k">lambda</span> <span class="n">t</span><span class="p">,</span><span class="n">c</span><span class="p">:</span> <span class="n">Template</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">.</span><span class="n">safe_substitute</span><span class="p">(</span><span class="n">c</span><span class="p">)):</span>
+<div class="viewcode-block" id="Sheet.describe"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.sheets.Sheet.describe">[docs]</a>    <span class="k">def</span> <span class="nf">describe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template</span><span class="o">=</span><span class="s">&#39;default&#39;</span><span class="p">,</span> <span class="n">render</span><span class="o">=</span><span class="k">lambda</span> <span class="n">t</span><span class="p">,</span><span class="n">c</span><span class="p">:</span> <span class="n">Template</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">.</span><span class="n">safe_substitute</span><span class="p">(</span><span class="n">c</span><span class="p">)):</span>
         <span class="n">context</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span>
 
@@ -156,7 +156,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">context</span>
 </div>
-<div class="viewcode-block" id="Sheet.record"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.sheets.Sheet.record">[docs]</a>    <span class="k">def</span> <span class="nf">record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable</span><span class="p">):</span>
+<div class="viewcode-block" id="Sheet.record"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.sheets.Sheet.record">[docs]</a>    <span class="k">def</span> <span class="nf">record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_record</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">cells</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_record</span>
             <span class="n">func_mapping</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;spikes&#39;</span><span class="p">:</span> <span class="s">&#39;record&#39;</span><span class="p">,</span> <span class="s">&#39;v&#39;</span><span class="p">:</span> <span class="s">&#39;record_v&#39;</span><span class="p">,</span><span class="s">&#39;g_syn&#39;</span><span class="p">:</span><span class="s">&#39;record_gsyn&#39;</span><span class="p">}</span> <span class="c"># need to add conductances</span>
@@ -174,7 +174,7 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;cells must be &#39;all&#39;, a list, or an int. Actual value of </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">cells</span><span class="p">))</span>
 </div>
-<div class="viewcode-block" id="Sheet.write_neo_object"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.sheets.Sheet.write_neo_object">[docs]</a>    <span class="k">def</span> <span class="nf">write_neo_object</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">tstop</span><span class="p">):</span>
+<div class="viewcode-block" id="Sheet.write_neo_object"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.sheets.Sheet.write_neo_object">[docs]</a>    <span class="k">def</span> <span class="nf">write_neo_object</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">tstop</span><span class="p">):</span>
         <span class="n">segment</span> <span class="o">=</span> <span class="n">create_segment_for_sheet</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">spikes</span> <span class="o">=</span> <span class="n">get_spikes_to_dic</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="o">.</span><span class="n">getSpikes</span><span class="p">(),</span><span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">)</span>
@@ -215,7 +215,7 @@
 
         <span class="k">return</span> <span class="n">segment</span>
 </div></div>
-<div class="viewcode-block" id="RetinalUniformSheet"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.sheets.RetinalUniformSheet">[docs]</a><span class="k">class</span> <span class="nc">RetinalUniformSheet</span><span class="p">(</span><span class="n">Sheet</span><span class="p">):</span>
+<div class="viewcode-block" id="RetinalUniformSheet"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.sheets.RetinalUniformSheet">[docs]</a><span class="k">class</span> <span class="nc">RetinalUniformSheet</span><span class="p">(</span><span class="n">Sheet</span><span class="p">):</span>
 
     <span class="n">required_parameters</span> <span class="o">=</span> <span class="n">ParameterSet</span><span class="p">({</span>
         <span class="s">&#39;sx&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="c">#degrees, x size of the region</span>
@@ -233,11 +233,11 @@
         <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">initial_values</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
             
-<div class="viewcode-block" id="RetinalUniformSheet.size_in_degrees"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.sheets.RetinalUniformSheet.size_in_degrees">[docs]</a>    <span class="k">def</span> <span class="nf">size_in_degrees</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>            
+<div class="viewcode-block" id="RetinalUniformSheet.size_in_degrees"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.sheets.RetinalUniformSheet.size_in_degrees">[docs]</a>    <span class="k">def</span> <span class="nf">size_in_degrees</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>            
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">sx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">sy</span><span class="p">)</span>
 
 </div></div>
-<div class="viewcode-block" id="SheetWithMagnificationFactor"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.sheets.SheetWithMagnificationFactor">[docs]</a><span class="k">class</span> <span class="nc">SheetWithMagnificationFactor</span><span class="p">(</span><span class="n">Sheet</span><span class="p">):</span>
+<div class="viewcode-block" id="SheetWithMagnificationFactor"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.sheets.SheetWithMagnificationFactor">[docs]</a><span class="k">class</span> <span class="nc">SheetWithMagnificationFactor</span><span class="p">(</span><span class="n">Sheet</span><span class="p">):</span>
 
     <span class="n">required_parameters</span> <span class="o">=</span> <span class="n">ParameterSet</span><span class="p">({</span>
         <span class="s">&#39;magnification_factor&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="c"># μm / degree</span>
@@ -252,31 +252,31 @@
         <span class="n">Sheet</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">parameters</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">magnification_factor</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">magnification_factor</span>
 
-<div class="viewcode-block" id="SheetWithMagnificationFactor.vf_2_cs"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.sheets.SheetWithMagnificationFactor.vf_2_cs">[docs]</a>    <span class="k">def</span> <span class="nf">vf_2_cs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">degree_x</span><span class="p">,</span><span class="n">degree_y</span><span class="p">):</span>
+<div class="viewcode-block" id="SheetWithMagnificationFactor.vf_2_cs"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.sheets.SheetWithMagnificationFactor.vf_2_cs">[docs]</a>    <span class="k">def</span> <span class="nf">vf_2_cs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">degree_x</span><span class="p">,</span><span class="n">degree_y</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        vf_2_cs converts the position (degree_x,degree_y) in visual field to position in cortical space (in μm)</span>
 <span class="sd">        given the magnification_factor.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">degree_x</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">magnification_factor</span><span class="p">,</span><span class="n">degree_y</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">magnification_factor</span><span class="p">)</span>
 </div>
-<div class="viewcode-block" id="SheetWithMagnificationFactor.cs_2_vf"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.sheets.SheetWithMagnificationFactor.cs_2_vf">[docs]</a>    <span class="k">def</span> <span class="nf">cs_2_vf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">micro_meters_x</span><span class="p">,</span><span class="n">micro_meters_y</span><span class="p">):</span>
+<div class="viewcode-block" id="SheetWithMagnificationFactor.cs_2_vf"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.sheets.SheetWithMagnificationFactor.cs_2_vf">[docs]</a>    <span class="k">def</span> <span class="nf">cs_2_vf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">micro_meters_x</span><span class="p">,</span><span class="n">micro_meters_y</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        cs_2_vf converts the position (micro_meters_x,micro_meters_y) in cortical space to the position in the</span>
 <span class="sd">        visual field (in degrees) given the magnification_factor</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">micro_meters_x</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">magnification_factor</span><span class="p">,</span><span class="n">micro_meters_x</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">magnification_factor</span><span class="p">)</span>
 </div>
-<div class="viewcode-block" id="SheetWithMagnificationFactor.dvf_2_dcs"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.sheets.SheetWithMagnificationFactor.dvf_2_dcs">[docs]</a>    <span class="k">def</span> <span class="nf">dvf_2_dcs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">distance_vf</span><span class="p">):</span>
+<div class="viewcode-block" id="SheetWithMagnificationFactor.dvf_2_dcs"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.sheets.SheetWithMagnificationFactor.dvf_2_dcs">[docs]</a>    <span class="k">def</span> <span class="nf">dvf_2_dcs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">distance_vf</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        dvf_2_dcs converts the distance in visual space to the distance in cortical space given the magnification_factor</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">distance_vf</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">magnification_factor</span>
 </div>
-<div class="viewcode-block" id="SheetWithMagnificationFactor.size_in_degrees"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.sheets.SheetWithMagnificationFactor.size_in_degrees">[docs]</a>    <span class="k">def</span> <span class="nf">size_in_degrees</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>            
+<div class="viewcode-block" id="SheetWithMagnificationFactor.size_in_degrees"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.sheets.SheetWithMagnificationFactor.size_in_degrees">[docs]</a>    <span class="k">def</span> <span class="nf">size_in_degrees</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>            
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cs_2_vf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">sx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">sy</span><span class="p">)</span>
 
 </div></div>
-<div class="viewcode-block" id="CorticalUniformSheet"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.sheets.CorticalUniformSheet">[docs]</a><span class="k">class</span> <span class="nc">CorticalUniformSheet</span><span class="p">(</span><span class="n">SheetWithMagnificationFactor</span><span class="p">):</span>
+<div class="viewcode-block" id="CorticalUniformSheet"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.sheets.CorticalUniformSheet">[docs]</a><span class="k">class</span> <span class="nc">CorticalUniformSheet</span><span class="p">(</span><span class="n">SheetWithMagnificationFactor</span><span class="p">):</span>
 
     <span class="n">required_parameters</span> <span class="o">=</span> <span class="n">ParameterSet</span><span class="p">({</span>
         <span class="s">&#39;density&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="c">#neurons/(100 μm^2)</span>

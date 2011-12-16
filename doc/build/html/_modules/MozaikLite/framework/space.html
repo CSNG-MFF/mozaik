@@ -73,11 +73,11 @@
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s">&quot;Mozaik&quot;</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="xy2ij"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.xy2ij">[docs]</a><span class="k">def</span> <span class="nf">xy2ij</span><span class="p">(</span><span class="n">coordinates</span><span class="p">):</span>
+<div class="viewcode-block" id="xy2ij"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.space.xy2ij">[docs]</a><span class="k">def</span> <span class="nf">xy2ij</span><span class="p">(</span><span class="n">coordinates</span><span class="p">):</span>
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">coordinates</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
     <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">coordinates</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">coordinates</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="nb">float</span><span class="p">)</span>
 </div>
-<div class="viewcode-block" id="VisualRegion"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualRegion">[docs]</a><span class="k">class</span> <span class="nc">VisualRegion</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="VisualRegion"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.space.VisualRegion">[docs]</a><span class="k">class</span> <span class="nc">VisualRegion</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A rectangular region of visual space.&quot;&quot;&quot;</span>
     
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
@@ -106,12 +106,12 @@
     <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
     
-<div class="viewcode-block" id="VisualRegion.overlaps"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualRegion.overlaps">[docs]</a>    <span class="k">def</span> <span class="nf">overlaps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">another_region</span><span class="p">):</span>                    
+<div class="viewcode-block" id="VisualRegion.overlaps"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.space.VisualRegion.overlaps">[docs]</a>    <span class="k">def</span> <span class="nf">overlaps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">another_region</span><span class="p">):</span>                    
         <span class="n">lr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span> <span class="o">&lt;=</span> <span class="n">another_region</span><span class="o">.</span><span class="n">left</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span> <span class="o">&gt;=</span> <span class="n">another_region</span><span class="o">.</span><span class="n">right</span>
         <span class="n">tb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">top</span> <span class="o">&lt;=</span> <span class="n">another_region</span><span class="o">.</span><span class="n">bottom</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom</span> <span class="o">&gt;=</span> <span class="n">another_region</span><span class="o">.</span><span class="n">top</span>
         <span class="k">return</span> <span class="ow">not</span><span class="p">(</span><span class="n">lr</span> <span class="ow">or</span> <span class="n">tb</span><span class="p">)</span>
     </div>
-<div class="viewcode-block" id="VisualRegion.intersection"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualRegion.intersection">[docs]</a>    <span class="k">def</span> <span class="nf">intersection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">another_region</span><span class="p">):</span>
+<div class="viewcode-block" id="VisualRegion.intersection"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.space.VisualRegion.intersection">[docs]</a>    <span class="k">def</span> <span class="nf">intersection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">another_region</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">overlaps</span><span class="p">(</span><span class="n">another_region</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;Regions do not overlap.&quot;</span><span class="p">)</span>
         <span class="n">left</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">another_region</span><span class="o">.</span><span class="n">left</span><span class="p">)</span>
@@ -124,12 +124,12 @@
         <span class="n">size</span> <span class="o">=</span> <span class="p">(</span><span class="n">right</span><span class="o">-</span><span class="n">left</span><span class="p">,</span> <span class="n">top</span><span class="o">-</span><span class="n">bottom</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">VisualRegion</span><span class="p">(</span><span class="n">centre</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
     </div>
-<div class="viewcode-block" id="VisualRegion.describe"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualRegion.describe">[docs]</a>    <span class="k">def</span> <span class="nf">describe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="VisualRegion.describe"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.space.VisualRegion.describe">[docs]</a>    <span class="k">def</span> <span class="nf">describe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;Region of visual space centred at </span><span class="si">%(location)s</span><span class="s"> of size </span><span class="si">%(size)s</span><span class="s">.</span>
 <span class="s">               Edges: left=</span><span class="si">%(left)g</span><span class="s">, right=</span><span class="si">%(right)g</span><span class="s">, top=</span><span class="si">%(top)g</span><span class="s">, bottom=</span><span class="si">%(bottom)g</span><span class="s">&quot;&quot;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span>
         <span class="k">return</span> <span class="n">s</span>
 </div></div>
-<div class="viewcode-block" id="VisualObject"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualObject">[docs]</a><span class="k">class</span> <span class="nc">VisualObject</span><span class="p">(</span><span class="n">VisualRegion</span><span class="p">):</span>
+<div class="viewcode-block" id="VisualObject"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.space.VisualObject">[docs]</a><span class="k">class</span> <span class="nc">VisualObject</span><span class="p">(</span><span class="n">VisualRegion</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Abstract base class.&quot;&quot;&quot;</span>
     
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
@@ -137,7 +137,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_zoom_cache</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">is_visible</span> <span class="o">=</span> <span class="bp">True</span>
         
-<div class="viewcode-block" id="VisualObject.update"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualObject.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="VisualObject.update"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.space.VisualObject.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">raise</span> <span class="n">NotImplementedException</span><span class="p">(</span><span class="s">&quot;Must be implemented by child class&quot;</span><span class="p">)</span>
 </div>
     <span class="k">def</span> <span class="nf">_calculate_zoom</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actual_pixel_size</span><span class="p">,</span> <span class="n">desired_pixel_size</span><span class="p">):</span>
@@ -152,7 +152,7 @@
                 <span class="n">zoom</span> <span class="o">*=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mf">1e-15</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">zoom</span>
 
-<div class="viewcode-block" id="VisualObject.display"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualObject.display">[docs]</a>    <span class="k">def</span> <span class="nf">display</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">pixel_size</span><span class="p">):</span>
+<div class="viewcode-block" id="VisualObject.display"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.space.VisualObject.display">[docs]</a>    <span class="k">def</span> <span class="nf">display</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">pixel_size</span><span class="p">):</span>
         <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">region</span><span class="p">,</span> <span class="n">VisualRegion</span><span class="p">),</span> <span class="s">&quot;region must be a VisualRegion-descended object. Actually a </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="n">region</span><span class="p">)</span>
         <span class="n">size_in_pixels</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">xy2ij</span><span class="p">(</span><span class="n">region</span><span class="o">.</span><span class="n">size</span><span class="p">)</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">pixel_size</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
         <span class="n">view</span> <span class="o">=</span> <span class="n">TRANSPARENT</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">size_in_pixels</span><span class="p">)</span>
@@ -231,7 +231,7 @@
         <span class="k">return</span> <span class="n">view</span>
 
 </div></div>
-<div class="viewcode-block" id="VisualSpace"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualSpace">[docs]</a><span class="k">class</span> <span class="nc">VisualSpace</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="VisualSpace"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.space.VisualSpace">[docs]</a><span class="k">class</span> <span class="nc">VisualSpace</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A class to structure and simplify operations taking place in visual</span>
 <span class="sd">    space, such as stimulus presentation.</span>
@@ -252,14 +252,14 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">frame_number</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">input</span> <span class="o">=</span> <span class="bp">None</span>
     
-<div class="viewcode-block" id="VisualSpace.add_object"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualSpace.add_object">[docs]</a>    <span class="k">def</span> <span class="nf">add_object</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">visual_object</span><span class="p">):</span>
+<div class="viewcode-block" id="VisualSpace.add_object"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.space.VisualSpace.add_object">[docs]</a>    <span class="k">def</span> <span class="nf">add_object</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">visual_object</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add a VisualObject to the visual scene.&quot;&quot;&quot;</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Adding </span><span class="si">%s</span><span class="s"> with name &#39;</span><span class="si">%s</span><span class="s">&#39; to the visual scene.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">visual_object</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">content</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">visual_object</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">input</span> <span class="o">=</span> <span class="n">visual_object</span> <span class="c"># really self.input should be a list, and we should append to it, but at the moment NeuroTools.datastore can&#39;t handle multiple inputs to a component</span>
         <span class="c"># update size_in_X, or make them properties that are recalculated each time</span>
         </div>
-<div class="viewcode-block" id="VisualSpace.reset"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualSpace.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="VisualSpace.reset"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.space.VisualSpace.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Reset each VisualObject in the scene to its initial state.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -267,7 +267,7 @@
         <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="n">obj</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
 </div>
-<div class="viewcode-block" id="VisualSpace.clear"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualSpace.clear">[docs]</a>    <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="VisualSpace.clear"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.space.VisualSpace.clear">[docs]</a>    <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Reset the visual space and clear stimuli in it </span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -276,7 +276,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
         
         </div>
-<div class="viewcode-block" id="VisualSpace.update"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualSpace.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="VisualSpace.update"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.space.VisualSpace.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Tell each VisualObject in the scene to update itself.</span>
 <span class="sd">        Returns the current time within the scene.</span>
@@ -287,7 +287,7 @@
         
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame_number</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_interval</span>
     </div>
-<div class="viewcode-block" id="VisualSpace.view"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualSpace.view">[docs]</a>    <span class="k">def</span> <span class="nf">view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">pixel_size</span><span class="p">):</span>
+<div class="viewcode-block" id="VisualSpace.view"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.space.VisualSpace.view">[docs]</a>    <span class="k">def</span> <span class="nf">view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">pixel_size</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Show the scene within a specific region.</span>
 <span class="sd">        </span>
@@ -318,27 +318,27 @@
         
         <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">scene</span> <span class="o">!=</span> <span class="n">TRANSPARENT</span><span class="p">,</span> <span class="n">scene</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">background_luminance</span><span class="p">)</span>
         </div>
-<div class="viewcode-block" id="VisualSpace.get_maximum_duration"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualSpace.get_maximum_duration">[docs]</a>    <span class="k">def</span> <span class="nf">get_maximum_duration</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="VisualSpace.get_maximum_duration"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.space.VisualSpace.get_maximum_duration">[docs]</a>    <span class="k">def</span> <span class="nf">get_maximum_duration</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">duration</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="n">duration</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">duration</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_interval</span><span class="o">*</span><span class="n">obj</span><span class="o">.</span><span class="n">n_frames</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">duration</span>
     </div>
-<div class="viewcode-block" id="VisualSpace.get_duration"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualSpace.get_duration">[docs]</a>    <span class="k">def</span> <span class="nf">get_duration</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="VisualSpace.get_duration"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.space.VisualSpace.get_duration">[docs]</a>    <span class="k">def</span> <span class="nf">get_duration</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s">&#39;duration&#39;</span><span class="p">]</span>
     </div>
-<div class="viewcode-block" id="VisualSpace.set_duration"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualSpace.set_duration">[docs]</a>    <span class="k">def</span> <span class="nf">set_duration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">duration</span><span class="p">):</span>
+<div class="viewcode-block" id="VisualSpace.set_duration"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.space.VisualSpace.set_duration">[docs]</a>    <span class="k">def</span> <span class="nf">set_duration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">duration</span><span class="p">):</span>
         <span class="k">assert</span> <span class="n">duration</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_maximum_duration</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s">&#39;duration&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">duration</span>
     </div>
-<div class="viewcode-block" id="VisualSpace.time_points"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualSpace.time_points">[docs]</a>    <span class="k">def</span> <span class="nf">time_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="VisualSpace.time_points"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.space.VisualSpace.time_points">[docs]</a>    <span class="k">def</span> <span class="nf">time_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="n">duration</span> <span class="o">=</span> <span class="n">duration</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_maximum_duration</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_interval</span><span class="p">)</span>
     </div>
-<div class="viewcode-block" id="VisualSpace.get_max_luminance"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualSpace.get_max_luminance">[docs]</a>    <span class="k">def</span> <span class="nf">get_max_luminance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="VisualSpace.get_max_luminance"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.space.VisualSpace.get_max_luminance">[docs]</a>    <span class="k">def</span> <span class="nf">get_max_luminance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">max_luminance</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
     </div>
-<div class="viewcode-block" id="VisualSpace.export"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualSpace.export">[docs]</a>    <span class="k">def</span> <span class="nf">export</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">pixel_size</span><span class="p">,</span> <span class="n">output_dir</span><span class="o">=</span><span class="s">&quot;.&quot;</span><span class="p">):</span>
+<div class="viewcode-block" id="VisualSpace.export"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.space.VisualSpace.export">[docs]</a>    <span class="k">def</span> <span class="nf">export</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">pixel_size</span><span class="p">,</span> <span class="n">output_dir</span><span class="o">=</span><span class="s">&quot;.&quot;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Export a sequence of views of the visual space as image files.</span>
 <span class="sd">        Return a list of file paths.</span>
@@ -360,7 +360,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">filenames</span>
         </div>
-<div class="viewcode-block" id="VisualSpace.describe"><a class="viewcode-back" href="../../../index.html#MozaikLite.framework.space.VisualSpace.describe">[docs]</a>    <span class="k">def</span> <span class="nf">describe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="VisualSpace.describe"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.space.VisualSpace.describe">[docs]</a>    <span class="k">def</span> <span class="nf">describe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s">&quot;visual space with background luminance </span><span class="si">%g</span><span class="s"> cd/m2, updating every </span><span class="si">%g</span><span class="s"> ms, containing </span><span class="si">%d</span><span class="s"> objects&quot;</span> <span class="o">%</span> \
             <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">background_luminance</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_interval</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">content</span><span class="p">))</span>
         </div></div>

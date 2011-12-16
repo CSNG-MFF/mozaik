@@ -44,7 +44,7 @@ class Model(MozaikComponent):
         sh = []
         for sheet in self.sheets:   
             #if self.first_time:
-            sheet.record(['spikes', 'v', 'g_syn'])
+            sheet.record(['spikes', 'v', 'gsyn_exc','gsyn_inh'])
             #sheet.record('spikes')
             #sheet.record('v')
             #sheet.record('g_syn')

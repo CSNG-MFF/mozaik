@@ -61,7 +61,7 @@
 <span class="kn">from</span> <span class="nn">MozaikLite.framework.sheets</span> <span class="kn">import</span> <span class="n">Sheet</span>
 
 
-<div class="viewcode-block" id="Model"><a class="viewcode-back" href="../../../index.html#MozaikLite.models.model.Model">[docs]</a><span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="n">MozaikComponent</span><span class="p">):</span>
+<div class="viewcode-block" id="Model"><a class="viewcode-back" href="../../../MozaikLite.models.html#MozaikLite.models.model.Model">[docs]</a><span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="n">MozaikComponent</span><span class="p">):</span>
     
     <span class="n">required_parameters</span> <span class="o">=</span> <span class="n">ParameterSet</span><span class="p">({</span>
         <span class="s">&#39;name&#39;</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span>
@@ -89,7 +89,7 @@
 <span class="sd">    record the activity in the model to this stimulus sequence </span>
 <span class="sd">    and return it as a neo object.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="Model.present_stimulus_and_record"><a class="viewcode-back" href="../../../index.html#MozaikLite.models.model.Model.present_stimulus_and_record">[docs]</a>    <span class="k">def</span> <span class="nf">present_stimulus_and_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">stimulus</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.present_stimulus_and_record"><a class="viewcode-back" href="../../../MozaikLite.models.html#MozaikLite.models.model.Model.present_stimulus_and_record">[docs]</a>    <span class="k">def</span> <span class="nf">present_stimulus_and_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">stimulus</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">visual_space</span><span class="o">.</span><span class="n">add_object</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">stimulus</span><span class="p">),</span><span class="n">stimulus</span><span class="p">)</span>
         
         <span class="c"># create empty arrays in annotations to store the sheet identity of stored data</span>
@@ -134,24 +134,24 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">visual_space</span> <span class="o">=</span> <span class="n">VisualSpace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">screen</span><span class="o">.</span><span class="n">update_interval</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">screen</span><span class="o">.</span><span class="n">background_luminance</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="mi">0</span>
         
-<div class="viewcode-block" id="Model.run"><a class="viewcode-back" href="../../../index.html#MozaikLite.models.model.Model.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tstop</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.run"><a class="viewcode-back" href="../../../MozaikLite.models.html#MozaikLite.models.model.Model.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tstop</span><span class="p">):</span>
         <span class="k">print</span> <span class="p">(</span><span class="s">&quot;Simulating the network for </span><span class="si">%s</span><span class="s"> ms&quot;</span> <span class="o">%</span> <span class="n">tstop</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sim</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">tstop</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">+=</span> <span class="n">tstop</span>
         </div>
-<div class="viewcode-block" id="Model.reset"><a class="viewcode-back" href="../../../index.html#MozaikLite.models.model.Model.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.reset"><a class="viewcode-back" href="../../../MozaikLite.models.html#MozaikLite.models.model.Model.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">print</span> <span class="p">(</span><span class="s">&quot;Resetting the network&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sim</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="o">=</span><span class="mi">0</span>
     </div>
-<div class="viewcode-block" id="Model.register_sheet"><a class="viewcode-back" href="../../../index.html#MozaikLite.models.model.Model.register_sheet">[docs]</a>    <span class="k">def</span> <span class="nf">register_sheet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sheet</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.register_sheet"><a class="viewcode-back" href="../../../MozaikLite.models.html#MozaikLite.models.model.Model.register_sheet">[docs]</a>    <span class="k">def</span> <span class="nf">register_sheet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sheet</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sheets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sheet</span><span class="p">)</span>
         </div>
-<div class="viewcode-block" id="Model.register_connector"><a class="viewcode-back" href="../../../index.html#MozaikLite.models.model.Model.register_connector">[docs]</a>    <span class="k">def</span> <span class="nf">register_connector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">connector</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.register_connector"><a class="viewcode-back" href="../../../MozaikLite.models.html#MozaikLite.models.model.Model.register_connector">[docs]</a>    <span class="k">def</span> <span class="nf">register_connector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">connector</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">connectors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">connector</span><span class="p">)</span>
 
 </div></div>
-<div class="viewcode-block" id="JensModel"><a class="viewcode-back" href="../../../index.html#MozaikLite.models.model.JensModel">[docs]</a><span class="k">class</span> <span class="nc">JensModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="viewcode-block" id="JensModel"><a class="viewcode-back" href="../../../MozaikLite.models.html#MozaikLite.models.model.JensModel">[docs]</a><span class="k">class</span> <span class="nc">JensModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">simulator</span><span class="p">,</span><span class="n">parameters</span><span class="p">):</span>
         <span class="n">Model</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">simulator</span><span class="p">,</span><span class="n">parameters</span><span class="p">)</span>        
         <span class="c"># Load components</span>
