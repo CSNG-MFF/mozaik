@@ -1,10 +1,10 @@
-.. MozaikLite documentation master file, created by
-   sphinx-quickstart on Fri Dec  9 15:56:30 2011.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Welcome to MozaikLite's documentation!
 ======================================
+
+This is a early pre-alpha release of *mozaik* package.
+*mozaik* is a integrated workflow framework for large scale neural simulations.
+Note that currently it is under intense development, and anything can change
+on daily basis. Alpha release of the package will follow soon.
 
 Contents:
 
