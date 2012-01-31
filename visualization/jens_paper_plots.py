@@ -20,7 +20,7 @@ class Figure2(Plotting):
           
           lgn_on_dsv = queries.select_result_sheet_query(dsv,'X_ON')
           lgn_off_dsv = queries.select_result_sheet_query(dsv,'X_OFF')
-          lgn_spikes = [lgn_on_dsv.get_spike_lists(),lgn_off_dsv.get_spike_lists()]
+          lgn_spikes = [[s.spiketrains for s in lgn_on_dsv.get_segments()],[s.spiketrains for s in lgn_off_dsv.get_segments()]]
           
           
           SpikeRasterPlot(lgn_spikes,neurons=[0],x_axis=False,xlabel=None, colors = ['#FACC2E','#0080FF'])(gs[1:4,0:5])
@@ -28,8 +28,8 @@ class Figure2(Plotting):
           SpikeRasterPlot(lgn_spikes,neurons=[100],x_axis=False,xlabel=None, colors = ['#FACC2E','#0080FF'])(gs[7:10,0:5])
           SpikeHistogramPlot(lgn_spikes,neurons=[100], colors = ['#FACC2E','#0080FF'])(gs[10:11,0:5])
           
-          SpikeRasterPlot([dsv.get_spike_lists()],neurons=[0],x_axis=False,xlabel=None)(gs[:3,6:14])
-          SpikeHistogramPlot([dsv.get_spike_lists()],neurons=[0], x_axis=False,xlabel=None)(gs[3:4,6:14])
+          SpikeRasterPlot([[s.spiketrains for s in dsv.get_segments()]],neurons=[0],x_axis=False,xlabel=None)(gs[:3,6:14])
+          SpikeHistogramPlot([[s.spiketrains for s in dsv.get_segments()]],neurons=[0], x_axis=False,xlabel=None)(gs[3:4,6:14])
           
           VmPlot(dsv,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : 0})).subplot(gs[4:8,6:14])          
           GSynPlot(dsv,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : 0})).subplot(gs[8:12,6:14])

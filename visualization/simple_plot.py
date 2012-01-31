@@ -239,7 +239,7 @@ class SpikeRasterPlot(StandardStyle):
          else:
            neurons = self.neurons
           
-         t_stop = self.sps[0][0].t_stop
+         t_stop = float(self.sps[0][0][0].t_stop)
          num_n = len(neurons) # number of neurons
          num_t = len(self.sps[0]) # number of trials
          
@@ -247,7 +247,7 @@ class SpikeRasterPlot(StandardStyle):
              for i,spike_list in enumerate(sp):
                 for j,n in enumerate(neurons):
                     spike_train = spike_list[n]
-                    self.axis.plot(spike_train.spike_times,[j*(num_t+1) + i + 1 for x in xrange(0,len(spike_train.spike_times))],',',color=colors[k])
+                    self.axis.plot(spike_train,[j*(num_t+1) + i + 1 for x in xrange(0,len(spike_train))],',',color=colors[k])
                  
              for j in xrange(0,num_n-1):   
                 self.axis.axhline(j*(num_t+1)+num_t+1,c='k')
@@ -294,7 +294,7 @@ class SpikeHistogramPlot(SpikeRasterPlot):
         else:
            neurons = self.neurons
         
-        t_stop = self.sps[0][0].t_stop
+        t_stop = float(self.sps[0][0][0].t_stop)
         num_n = len(neurons) # number of neurons
         num_t = len(self.sps[0]) # number of trials
         
@@ -304,7 +304,7 @@ class SpikeHistogramPlot(SpikeRasterPlot):
             for i,spike_list in enumerate(sp):
                 for j in neurons:
                     spike_train = spike_list[j]
-                    tmp.extend(spike_train.spike_times)
+                    tmp.extend(spike_train)
             all_spikes.append(tmp)
             
         if all_spikes != []:

@@ -1,11 +1,10 @@
 from NeuroTools.parameters import ParameterSet
+from NeuroTools import  visualization, visual_logging, datastore
 
 from MozaikLite.framework import load_component
 from MozaikLite.framework.interfaces import MozaikComponent
 from MozaikLite.framework.space import VisualSpace, VisualRegion
 from MozaikLite.framework.connectors import ExponentialProbabilisticArborization,UniformProbabilisticArborization,GaborConnector, V1RFSpecificProbabilisticArborization
-from NeuroTools import signals, plotting, visualization, visual_logging, datastore
-
 from MozaikLite.framework.sheets import Sheet
 
 
@@ -27,8 +26,6 @@ class Model(MozaikComponent):
                                })
     })
 
-    
-
     """
     Model encapsulates a mozaik model and defines interfaces 
     with which one can do experiments to the model.
@@ -43,11 +40,8 @@ class Model(MozaikComponent):
         # create empty arrays in annotations to store the sheet identity of stored data
         sh = []
         for sheet in self.sheets:   
-            #if self.first_time:
-            sheet.record(['spikes', 'v', 'gsyn_exc','gsyn_inh'])
-            #sheet.record('spikes')
-            #sheet.record('v')
-            #sheet.record('g_syn')
+            if self.first_time:
+                sheet.record(['spikes', 'v', 'gsyn_exc','gsyn_inh'])
             sh.append(sheet) 
         retinal_input = self.retina.process_visual_input(self.visual_space,stimulus.duration)        
         
@@ -57,15 +51,11 @@ class Model(MozaikComponent):
         
         for sheet in self.sheets:    
             if sheet.to_record != None:
-                s = sheet.write_neo_object(stimulus.duration)
+                s = sheet.write_neo_object()
                 segments.append(s)
 
         self.visual_space.clear()
         self.reset()
-        
-        for sheet in self.sheets:    
-            if sheet.to_record != None:
-               sheet.pop._record(None)
         
         self.first_time = False
         return (segments,retinal_input)
@@ -115,12 +105,13 @@ class JensModel(Model):
         cortex_exc = CortexExc(self, self.parameters.cortex_exc.params)
         cortex_inh = CortexInh(self, self.parameters.cortex_inh.params)
         
-        cortex_exc.to_record = 'all'
-        cortex_inh.to_record = 'all'
-        self.retina.sheets['X_ON'].to_record = 'all' #[0,1,2,3,4,5,6,7,8,9,10]
-        self.retina.sheets['X_OFF'].to_record = 'all' #[0,1,2,3,4,5,6,7,8,9,10]
+        # which neurons to record
+        cortex_exc.to_record = [0,1,2,3,4,5] #'all'
+        cortex_inh.to_record = [0,1,2,3,4,5] #'all'
+        self.retina.sheets['X_ON'].to_record = [0,1,2,3,4,5,6,7,8,9,10] #'all'
+        self.retina.sheets['X_OFF'].to_record = [0,1,2,3,4,5,6,7,8,9,10] #'all'
+
         # initialize projections
-        
         UniformProbabilisticArborization(self,cortex_exc,cortex_exc,self.parameters.cortex_exc.ExcExcConnection,'V1ExcExcConnection').connect()
         UniformProbabilisticArborization(self,cortex_exc,cortex_inh,self.parameters.cortex_exc.ExcInhConnection,'V1ExcInhConnection').connect()
         UniformProbabilisticArborization(self,cortex_inh,cortex_exc,self.parameters.cortex_inh.InhExcConnection,'V1InhExcConnection').connect()

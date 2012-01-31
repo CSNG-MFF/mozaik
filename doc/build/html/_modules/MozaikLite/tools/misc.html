@@ -55,7 +55,7 @@
 <span class="kn">from</span> <span class="nn">neo.core.segment</span> <span class="kn">import</span> <span class="n">Segment</span>
 <span class="kn">import</span> <span class="nn">numpy</span>
 
-<div class="viewcode-block" id="get_spikes_to_dic"><a class="viewcode-back" href="../../../MozaikLite.tools.html#MozaikLite.tools.misc.get_spikes_to_dic">[docs]</a><span class="k">def</span> <span class="nf">get_spikes_to_dic</span><span class="p">(</span><span class="n">spikes</span><span class="p">,</span><span class="n">pop</span><span class="p">):</span>
+<div class="viewcode-block" id="get_spikes_to_dic"><a class="viewcode-back" href="../../../tmp/MozaikLite.tools.html#MozaikLite.tools.misc.get_spikes_to_dic">[docs]</a><span class="k">def</span> <span class="nf">get_spikes_to_dic</span><span class="p">(</span><span class="n">spikes</span><span class="p">,</span><span class="n">pop</span><span class="p">):</span>
     <span class="c">#order according to ids</span>
     <span class="n">dictionary</span> <span class="o">=</span> <span class="p">{}</span>  
     <span class="k">for</span> <span class="n">idd</span><span class="p">,</span><span class="n">t</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pop</span><span class="o">.</span><span class="n">all</span><span class="p">()):</span>
@@ -81,7 +81,7 @@
     
     <span class="k">return</span> <span class="n">dictionary</span>
 </div>
-<div class="viewcode-block" id="get_vm_to_dic"><a class="viewcode-back" href="../../../MozaikLite.tools.html#MozaikLite.tools.misc.get_vm_to_dic">[docs]</a><span class="k">def</span> <span class="nf">get_vm_to_dic</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span><span class="n">pop</span><span class="p">):</span>
+<div class="viewcode-block" id="get_vm_to_dic"><a class="viewcode-back" href="../../../tmp/MozaikLite.tools.html#MozaikLite.tools.misc.get_vm_to_dic">[docs]</a><span class="k">def</span> <span class="nf">get_vm_to_dic</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span><span class="n">pop</span><span class="p">):</span>
     <span class="c">#order according to ids</span>
     <span class="n">dictionary</span> <span class="o">=</span> <span class="p">{}</span> 
 
@@ -109,7 +109,7 @@
     <span class="n">dictionary</span><span class="p">[</span><span class="n">idd</span><span class="p">]</span> <span class="o">=</span> <span class="n">z</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">dictionary</span>
 </div>
-<div class="viewcode-block" id="get_gsyn_to_dicts"><a class="viewcode-back" href="../../../MozaikLite.tools.html#MozaikLite.tools.misc.get_gsyn_to_dicts">[docs]</a><span class="k">def</span> <span class="nf">get_gsyn_to_dicts</span><span class="p">(</span><span class="n">gsyn</span><span class="p">,</span><span class="n">pop</span><span class="p">):</span>
+<div class="viewcode-block" id="get_gsyn_to_dicts"><a class="viewcode-back" href="../../../tmp/MozaikLite.tools.html#MozaikLite.tools.misc.get_gsyn_to_dicts">[docs]</a><span class="k">def</span> <span class="nf">get_gsyn_to_dicts</span><span class="p">(</span><span class="n">gsyn</span><span class="p">,</span><span class="n">pop</span><span class="p">):</span>
     <span class="c">#order according to ids</span>
     <span class="n">dictionary_e</span> <span class="o">=</span> <span class="p">{}</span> 
     <span class="n">dictionary_i</span> <span class="o">=</span> <span class="p">{}</span> 
@@ -142,7 +142,7 @@
     <span class="k">return</span> <span class="p">(</span><span class="n">dictionary_e</span><span class="p">,</span><span class="n">dictionary_i</span><span class="p">)</span>
 
 </div>
-<div class="viewcode-block" id="spike_dic_to_list"><a class="viewcode-back" href="../../../MozaikLite.tools.html#MozaikLite.tools.misc.spike_dic_to_list">[docs]</a><span class="k">def</span> <span class="nf">spike_dic_to_list</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+<div class="viewcode-block" id="spike_dic_to_list"><a class="viewcode-back" href="../../../tmp/MozaikLite.tools.html#MozaikLite.tools.misc.spike_dic_to_list">[docs]</a><span class="k">def</span> <span class="nf">spike_dic_to_list</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
     <span class="n">sp</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
         <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]:</span>
@@ -152,7 +152,7 @@
     <span class="n">sp</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">sp</span><span class="p">[</span><span class="n">sp</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">argsort</span><span class="p">(),:]</span>    
     </div>
-<div class="viewcode-block" id="spike_segment_to_dict"><a class="viewcode-back" href="../../../MozaikLite.tools.html#MozaikLite.tools.misc.spike_segment_to_dict">[docs]</a><span class="k">def</span> <span class="nf">spike_segment_to_dict</span><span class="p">(</span><span class="n">seg</span><span class="p">):</span>
+<div class="viewcode-block" id="spike_segment_to_dict"><a class="viewcode-back" href="../../../tmp/MozaikLite.tools.html#MozaikLite.tools.misc.spike_segment_to_dict">[docs]</a><span class="k">def</span> <span class="nf">spike_segment_to_dict</span><span class="p">(</span><span class="n">seg</span><span class="p">):</span>
     <span class="n">sheets</span><span class="o">=</span><span class="p">{}</span>
     <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">seg</span><span class="o">.</span><span class="n">annotations</span><span class="p">[</span><span class="s">&#39;sheets&#39;</span><span class="p">]:</span> 
         <span class="n">d</span> <span class="o">=</span> <span class="p">{}</span>
@@ -181,7 +181,7 @@
 
 
 </div>
-<div class="viewcode-block" id="segments_to_dict_of_AnalogSignalList"><a class="viewcode-back" href="../../../MozaikLite.tools.html#MozaikLite.tools.misc.segments_to_dict_of_AnalogSignalList">[docs]</a><span class="k">def</span> <span class="nf">segments_to_dict_of_AnalogSignalList</span><span class="p">(</span><span class="n">segments</span><span class="p">):</span>
+<div class="viewcode-block" id="segments_to_dict_of_AnalogSignalList"><a class="viewcode-back" href="../../../tmp/MozaikLite.tools.html#MozaikLite.tools.misc.segments_to_dict_of_AnalogSignalList">[docs]</a><span class="k">def</span> <span class="nf">segments_to_dict_of_AnalogSignalList</span><span class="p">(</span><span class="n">segments</span><span class="p">):</span>
     <span class="k">return</span> <span class="p">(</span><span class="n">_segments_to_dict_of_AnalogSignalList</span><span class="p">(</span><span class="n">segments</span><span class="p">,</span><span class="s">&#39;vm&#39;</span><span class="p">),</span><span class="n">_segments_to_dict_of_AnalogSignalList</span><span class="p">(</span><span class="n">segments</span><span class="p">,</span><span class="s">&#39;gsyn_e&#39;</span><span class="p">),</span><span class="n">_segments_to_dict_of_AnalogSignalList</span><span class="p">(</span><span class="n">segments</span><span class="p">,</span><span class="s">&#39;gsyn_i&#39;</span><span class="p">))</span>
 
 
@@ -203,7 +203,7 @@
             <span class="n">st</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parse_stimuls_id</span><span class="p">(</span><span class="n">seg</span><span class="o">.</span><span class="n">stimulus</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">dd</span>
 
-<div class="viewcode-block" id="analog_segment_to_dict"><a class="viewcode-back" href="../../../MozaikLite.tools.html#MozaikLite.tools.misc.analog_segment_to_dict">[docs]</a><span class="k">def</span> <span class="nf">analog_segment_to_dict</span><span class="p">(</span><span class="n">seg</span><span class="p">,</span><span class="n">signal_name</span><span class="p">):</span>
+<div class="viewcode-block" id="analog_segment_to_dict"><a class="viewcode-back" href="../../../tmp/MozaikLite.tools.html#MozaikLite.tools.misc.analog_segment_to_dict">[docs]</a><span class="k">def</span> <span class="nf">analog_segment_to_dict</span><span class="p">(</span><span class="n">seg</span><span class="p">,</span><span class="n">signal_name</span><span class="p">):</span>
     <span class="n">sheets</span><span class="o">=</span><span class="p">{}</span>
     <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">seg</span><span class="o">.</span><span class="n">annotations</span><span class="p">[</span><span class="s">&#39;sheets&#39;</span><span class="p">]:</span> 
         <span class="n">d</span> <span class="o">=</span> <span class="p">{}</span>
@@ -214,7 +214,7 @@
     <span class="k">return</span> <span class="n">sheets</span>
 
 </div>
-<div class="viewcode-block" id="sample_from_bin_distribution"><a class="viewcode-back" href="../../../MozaikLite.tools.html#MozaikLite.tools.misc.sample_from_bin_distribution">[docs]</a><span class="k">def</span> <span class="nf">sample_from_bin_distribution</span><span class="p">(</span><span class="n">bins</span><span class="p">,</span> <span class="n">number_of_samples</span><span class="p">):</span>
+<div class="viewcode-block" id="sample_from_bin_distribution"><a class="viewcode-back" href="../../../tmp/MozaikLite.tools.html#MozaikLite.tools.misc.sample_from_bin_distribution">[docs]</a><span class="k">def</span> <span class="nf">sample_from_bin_distribution</span><span class="p">(</span><span class="n">bins</span><span class="p">,</span> <span class="n">number_of_samples</span><span class="p">):</span>
     <span class="c"># samples from a distribution defined by a vector</span>
     <span class="c"># the sum in the vector doesn&#39;t have to add up to one</span>
     <span class="c"># it will be automatically normalized</span>
@@ -233,7 +233,7 @@
     
     <span class="k">return</span> <span class="n">si</span>
 </div>
-<div class="viewcode-block" id="create_segment_for_sheet"><a class="viewcode-back" href="../../../MozaikLite.tools.html#MozaikLite.tools.misc.create_segment_for_sheet">[docs]</a><span class="k">def</span> <span class="nf">create_segment_for_sheet</span><span class="p">(</span><span class="n">sheet</span><span class="p">):</span>
+<div class="viewcode-block" id="create_segment_for_sheet"><a class="viewcode-back" href="../../../tmp/MozaikLite.tools.html#MozaikLite.tools.misc.create_segment_for_sheet">[docs]</a><span class="k">def</span> <span class="nf">create_segment_for_sheet</span><span class="p">(</span><span class="n">sheet</span><span class="p">):</span>
        <span class="n">p</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;stimulus&#39;</span><span class="p">:</span><span class="s">&#39;&#39;</span><span class="p">,</span><span class="s">&#39;sheet_name&#39;</span><span class="p">:</span><span class="n">sheet</span><span class="p">}</span>
        <span class="n">p</span><span class="p">[</span><span class="s">&#39;vm&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
        <span class="n">p</span><span class="p">[</span><span class="s">&#39;gsyn_e&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>

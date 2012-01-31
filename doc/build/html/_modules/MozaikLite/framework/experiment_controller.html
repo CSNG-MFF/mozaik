@@ -63,7 +63,7 @@
 <span class="k">global</span> <span class="n">root_directory</span>
 <span class="n">root_directory</span> <span class="o">=</span> <span class="s">&#39;./&#39;</span>
 
-<div class="viewcode-block" id="setup_experiment"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.experiment_controller.setup_experiment">[docs]</a><span class="k">def</span> <span class="nf">setup_experiment</span><span class="p">(</span><span class="n">simulation_name</span><span class="p">,</span><span class="n">sim</span><span class="p">):</span>
+<div class="viewcode-block" id="setup_experiment"><a class="viewcode-back" href="../../../tmp/MozaikLite.framework.html#MozaikLite.framework.experiment_controller.setup_experiment">[docs]</a><span class="k">def</span> <span class="nf">setup_experiment</span><span class="p">(</span><span class="n">simulation_name</span><span class="p">,</span><span class="n">sim</span><span class="p">):</span>
     <span class="k">global</span> <span class="n">root_directory</span>
     <span class="c"># Read parameters</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
@@ -89,7 +89,7 @@
     <span class="k">return</span> <span class="n">parameters</span>
  
 </div>
-<div class="viewcode-block" id="run_experiments"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.experiment_controller.run_experiments">[docs]</a><span class="k">def</span> <span class="nf">run_experiments</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="n">experiment_list</span><span class="p">):</span>
+<div class="viewcode-block" id="run_experiments"><a class="viewcode-back" href="../../../tmp/MozaikLite.framework.html#MozaikLite.framework.experiment_controller.run_experiments">[docs]</a><span class="k">def</span> <span class="nf">run_experiments</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="n">experiment_list</span><span class="p">):</span>
     <span class="c"># first lets run all the measurements required by the experiments</span>
     <span class="k">print</span> <span class="s">&#39;Starting Experiemnts&#39;</span>
     <span class="n">data_store</span> <span class="o">=</span> <span class="n">PickledDataStore</span><span class="p">(</span><span class="n">load</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">parameters</span><span class="o">=</span><span class="n">ParameterSet</span><span class="p">({</span><span class="s">&#39;root_directory&#39;</span><span class="p">:</span><span class="n">root_directory</span><span class="p">}))</span>
@@ -112,7 +112,7 @@
 
 
 </div>
-<div class="viewcode-block" id="run_analysis"><a class="viewcode-back" href="../../../MozaikLite.framework.html#MozaikLite.framework.experiment_controller.run_analysis">[docs]</a><span class="k">def</span> <span class="nf">run_analysis</span><span class="p">(</span><span class="n">root_directory</span><span class="p">,</span><span class="n">experiment_list</span><span class="p">):</span>    
+<div class="viewcode-block" id="run_analysis"><a class="viewcode-back" href="../../../tmp/MozaikLite.framework.html#MozaikLite.framework.experiment_controller.run_analysis">[docs]</a><span class="k">def</span> <span class="nf">run_analysis</span><span class="p">(</span><span class="n">root_directory</span><span class="p">,</span><span class="n">experiment_list</span><span class="p">):</span>    
     <span class="n">data_store</span> <span class="o">=</span> <span class="n">PickledDataStore</span><span class="p">(</span><span class="n">load</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">parameters</span><span class="o">=</span><span class="n">ParameterSet</span><span class="p">({</span><span class="s">&#39;root_directory&#39;</span><span class="p">:</span><span class="n">root_directory</span><span class="p">}))</span>
     
     <span class="k">print</span> <span class="s">&#39;Starting Analysis&#39;</span>

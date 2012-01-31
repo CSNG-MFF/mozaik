@@ -9,7 +9,7 @@ on daily basis. Alpha release of the package will follow soon.
 Contents:
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
 
    introduction
    modules

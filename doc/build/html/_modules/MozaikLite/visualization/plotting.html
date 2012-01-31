@@ -110,17 +110,17 @@
 <span class="kn">from</span> <span class="nn">MozaikLite.storage.queries</span> <span class="kn">import</span> <span class="n">select_stimuli_type_query</span><span class="p">,</span><span class="n">select_result_sheet_query</span><span class="p">,</span> <span class="n">partition_by_stimulus_paramter_query</span>
 <span class="kn">from</span> <span class="nn">simple_plot</span> <span class="kn">import</span> <span class="o">*</span>
 
-<div class="viewcode-block" id="Plotting"><a class="viewcode-back" href="../../../MozaikLite.visualization.html#MozaikLite.visualization.plotting.Plotting">[docs]</a><span class="k">class</span> <span class="nc">Plotting</span><span class="p">(</span><span class="n">MozaikLiteParametrizeObject</span><span class="p">):</span>
+<div class="viewcode-block" id="Plotting"><a class="viewcode-back" href="../../../tmp/MozaikLite.visualization.html#MozaikLite.visualization.plotting.Plotting">[docs]</a><span class="k">class</span> <span class="nc">Plotting</span><span class="p">(</span><span class="n">MozaikLiteParametrizeObject</span><span class="p">):</span>
     
     <span class="k">def</span>  <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">datastore</span><span class="p">,</span><span class="n">parameters</span><span class="p">):</span>
          <span class="n">MozaikLiteParametrizeObject</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">parameters</span><span class="p">)</span>
          <span class="bp">self</span><span class="o">.</span><span class="n">datastore</span> <span class="o">=</span> <span class="n">datastore</span>
     
-<div class="viewcode-block" id="Plotting.subplot"><a class="viewcode-back" href="../../../MozaikLite.visualization.html#MozaikLite.visualization.plotting.Plotting.subplot">[docs]</a>    <span class="k">def</span> <span class="nf">subplot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">subplotspec</span><span class="p">):</span>
+<div class="viewcode-block" id="Plotting.subplot"><a class="viewcode-back" href="../../../tmp/MozaikLite.visualization.html#MozaikLite.visualization.plotting.Plotting.subplot">[docs]</a>    <span class="k">def</span> <span class="nf">subplot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">subplotspec</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
         <span class="k">pass</span>
     </div>
-<div class="viewcode-block" id="Plotting.plot"><a class="viewcode-back" href="../../../MozaikLite.visualization.html#MozaikLite.visualization.plotting.Plotting.plot">[docs]</a>    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Plotting.plot"><a class="viewcode-back" href="../../../tmp/MozaikLite.visualization.html#MozaikLite.visualization.plotting.Plotting.plot">[docs]</a>    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fig</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">facecolor</span><span class="o">=</span><span class="s">&#39;w&#39;</span><span class="p">)</span>
         <span class="n">gs</span> <span class="o">=</span> <span class="n">gridspec</span><span class="o">.</span><span class="n">GridSpec</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">gs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
@@ -129,7 +129,7 @@
 
           
               </div></div>
-<div class="viewcode-block" id="PlotTuningCurve"><a class="viewcode-back" href="../../../MozaikLite.visualization.html#MozaikLite.visualization.plotting.PlotTuningCurve">[docs]</a><span class="k">class</span> <span class="nc">PlotTuningCurve</span><span class="p">(</span><span class="n">Plotting</span><span class="p">):</span>
+<div class="viewcode-block" id="PlotTuningCurve"><a class="viewcode-back" href="../../../tmp/MozaikLite.visualization.html#MozaikLite.visualization.plotting.PlotTuningCurve">[docs]</a><span class="k">class</span> <span class="nc">PlotTuningCurve</span><span class="p">(</span><span class="n">Plotting</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    values - contain a list of lists of values, the outer list corresponding</span>
 <span class="sd">    to stimuli the inner to neurons.</span>
@@ -153,7 +153,7 @@
         <span class="n">Plotting</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">datastore</span><span class="p">,</span><span class="n">parameters</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tuning_curves</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">datastore</span><span class="o">.</span><span class="n">get_analysis_result</span><span class="p">(</span><span class="n">parameters</span><span class="o">.</span><span class="n">tuning_curve_name</span><span class="p">,</span><span class="n">sheet_name</span><span class="o">=</span><span class="n">parameters</span><span class="o">.</span><span class="n">sheet_name</span><span class="p">)</span>
     
-<div class="viewcode-block" id="PlotTuningCurve.subplot"><a class="viewcode-back" href="../../../MozaikLite.visualization.html#MozaikLite.visualization.plotting.PlotTuningCurve.subplot">[docs]</a>    <span class="k">def</span> <span class="nf">subplot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">subplotspec</span><span class="p">):</span>
+<div class="viewcode-block" id="PlotTuningCurve.subplot"><a class="viewcode-back" href="../../../tmp/MozaikLite.visualization.html#MozaikLite.visualization.plotting.PlotTuningCurve.subplot">[docs]</a>    <span class="k">def</span> <span class="nf">subplot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">subplotspec</span><span class="p">):</span>
         <span class="n">ax</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">subplotspec</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">tc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tuning_curves</span><span class="p">:</span>
             <span class="n">tc</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">to_dictonary_of_tc_parametrization</span><span class="p">()</span>
@@ -166,11 +166,11 @@
             <span class="n">pylab</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">ylabel</span><span class="p">)</span>
             <span class="n">pylab</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
             </div></div>
-<div class="viewcode-block" id="CyclicTuningCurvePlot"><a class="viewcode-back" href="../../../MozaikLite.visualization.html#MozaikLite.visualization.plotting.CyclicTuningCurvePlot">[docs]</a><span class="k">class</span> <span class="nc">CyclicTuningCurvePlot</span><span class="p">(</span><span class="n">PlotTuningCurve</span><span class="p">):</span>
+<div class="viewcode-block" id="CyclicTuningCurvePlot"><a class="viewcode-back" href="../../../tmp/MozaikLite.visualization.html#MozaikLite.visualization.plotting.CyclicTuningCurvePlot">[docs]</a><span class="k">class</span> <span class="nc">CyclicTuningCurvePlot</span><span class="p">(</span><span class="n">PlotTuningCurve</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Tuning curve over cyclic domain</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="CyclicTuningCurvePlot.subplot"><a class="viewcode-back" href="../../../MozaikLite.visualization.html#MozaikLite.visualization.plotting.CyclicTuningCurvePlot.subplot">[docs]</a>    <span class="k">def</span> <span class="nf">subplot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">subplotspec</span><span class="p">):</span>
+<div class="viewcode-block" id="CyclicTuningCurvePlot.subplot"><a class="viewcode-back" href="../../../tmp/MozaikLite.visualization.html#MozaikLite.visualization.plotting.CyclicTuningCurvePlot.subplot">[docs]</a>    <span class="k">def</span> <span class="nf">subplot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">subplotspec</span><span class="p">):</span>
         <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">neuron</span>
         <span class="n">ax</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">subplotspec</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">tc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tuning_curves</span><span class="p">:</span>
@@ -192,7 +192,7 @@
         <span class="n">pylab</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
         
         </div></div>
-<div class="viewcode-block" id="fromat_stimulus_id"><a class="viewcode-back" href="../../../MozaikLite.visualization.html#MozaikLite.visualization.plotting.fromat_stimulus_id">[docs]</a><span class="k">def</span> <span class="nf">fromat_stimulus_id</span><span class="p">(</span><span class="n">stimulus_id</span><span class="p">):</span>
+<div class="viewcode-block" id="fromat_stimulus_id"><a class="viewcode-back" href="../../../tmp/MozaikLite.visualization.html#MozaikLite.visualization.plotting.fromat_stimulus_id">[docs]</a><span class="k">def</span> <span class="nf">fromat_stimulus_id</span><span class="p">(</span><span class="n">stimulus_id</span><span class="p">):</span>
     <span class="n">string</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
     <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">stimulus_id</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">p</span> <span class="o">!=</span> <span class="s">&#39;*&#39;</span> <span class="ow">and</span> <span class="n">p</span> <span class="o">!=</span> <span class="s">&#39;x&#39;</span><span class="p">:</span>
@@ -200,7 +200,7 @@
     <span class="k">return</span> <span class="n">string</span>
 
 </div>
-<div class="viewcode-block" id="LinePlot"><a class="viewcode-back" href="../../../MozaikLite.visualization.html#MozaikLite.visualization.plotting.LinePlot">[docs]</a><span class="k">class</span> <span class="nc">LinePlot</span><span class="p">(</span><span class="n">Plotting</span><span class="p">):</span>          
+<div class="viewcode-block" id="LinePlot"><a class="viewcode-back" href="../../../tmp/MozaikLite.visualization.html#MozaikLite.visualization.plotting.LinePlot">[docs]</a><span class="k">class</span> <span class="nc">LinePlot</span><span class="p">(</span><span class="n">Plotting</span><span class="p">):</span>          
       <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">      Many plots plot many identical plots in a row for multiple data in a list they get</span>
 <span class="sd">      This is a smaller helper class that mitigates some of the code repetition in such cases</span>
@@ -215,7 +215,7 @@
            <span class="n">Plotting</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">datastore</span><span class="p">,</span><span class="n">parameters</span><span class="p">)</span>    
            <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">=</span> <span class="bp">None</span>
       
-<div class="viewcode-block" id="LinePlot.subplot"><a class="viewcode-back" href="../../../MozaikLite.visualization.html#MozaikLite.visualization.plotting.LinePlot.subplot">[docs]</a>      <span class="k">def</span> <span class="nf">subplot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">subplotspec</span><span class="p">):</span> 
+<div class="viewcode-block" id="LinePlot.subplot"><a class="viewcode-back" href="../../../tmp/MozaikLite.visualization.html#MozaikLite.visualization.plotting.LinePlot.subplot">[docs]</a>      <span class="k">def</span> <span class="nf">subplot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">subplotspec</span><span class="p">):</span> 
           <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="p">:</span>
              <span class="k">print</span> <span class="s">&#39;Error, class that derives from LinePlot has to specify the length parameter&#39;</span>
              <span class="k">return</span>
@@ -225,7 +225,7 @@
               <span class="bp">self</span><span class="o">.</span><span class="n">_subplot</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span><span class="n">gs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">idx</span><span class="p">])</span>
 
 </div></div>
-<div class="viewcode-block" id="PerStimulusPlot"><a class="viewcode-back" href="../../../MozaikLite.visualization.html#MozaikLite.visualization.plotting.PerStimulusPlot">[docs]</a><span class="k">class</span> <span class="nc">PerStimulusPlot</span><span class="p">(</span><span class="n">LinePlot</span><span class="p">):</span>
+<div class="viewcode-block" id="PerStimulusPlot"><a class="viewcode-back" href="../../../tmp/MozaikLite.visualization.html#MozaikLite.visualization.plotting.PerStimulusPlot">[docs]</a><span class="k">class</span> <span class="nc">PerStimulusPlot</span><span class="p">(</span><span class="n">LinePlot</span><span class="p">):</span>
     
     <span class="n">required_parameters</span> <span class="o">=</span> <span class="n">ParameterSet</span><span class="p">({</span>
       <span class="s">&#39;sheet_name&#39;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span>  <span class="c">#the name of the sheet for which to plot</span>
@@ -238,7 +238,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dsvs</span><span class="p">)</span>
         
     </div>
-<div class="viewcode-block" id="RasterPlot"><a class="viewcode-back" href="../../../MozaikLite.visualization.html#MozaikLite.visualization.plotting.RasterPlot">[docs]</a><span class="k">class</span> <span class="nc">RasterPlot</span><span class="p">(</span><span class="n">PerStimulusPlot</span><span class="p">):</span>
+<div class="viewcode-block" id="RasterPlot"><a class="viewcode-back" href="../../../tmp/MozaikLite.visualization.html#MozaikLite.visualization.plotting.RasterPlot">[docs]</a><span class="k">class</span> <span class="nc">RasterPlot</span><span class="p">(</span><span class="n">PerStimulusPlot</span><span class="p">):</span>
       <span class="n">required_parameters</span> <span class="o">=</span> <span class="n">ParameterSet</span><span class="p">({</span>
         <span class="s">&#39;trial_averaged_histogram&#39;</span> <span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>  <span class="c">#should the plot show also the trial averaged histogram</span>
         <span class="s">&#39;neurons&#39;</span> <span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
@@ -272,7 +272,7 @@
                 <span class="n">SpikeRasterPlot</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">neurons</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">neurons</span><span class="p">)(</span><span class="n">gs</span><span class="p">)</span>
              
 </div>
-<div class="viewcode-block" id="VmPlot"><a class="viewcode-back" href="../../../MozaikLite.visualization.html#MozaikLite.visualization.plotting.VmPlot">[docs]</a><span class="k">class</span> <span class="nc">VmPlot</span><span class="p">(</span><span class="n">PerStimulusPlot</span><span class="p">):</span>
+<div class="viewcode-block" id="VmPlot"><a class="viewcode-back" href="../../../tmp/MozaikLite.visualization.html#MozaikLite.visualization.plotting.VmPlot">[docs]</a><span class="k">class</span> <span class="nc">VmPlot</span><span class="p">(</span><span class="n">PerStimulusPlot</span><span class="p">):</span>
       <span class="n">required_parameters</span> <span class="o">=</span> <span class="n">ParameterSet</span><span class="p">({</span>
         <span class="s">&#39;neuron&#39;</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span>  <span class="c">#we can only plot one neuron - which one ?</span>
 	  <span class="p">})</span>
@@ -305,7 +305,7 @@
             <span class="n">pylab</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">)</span>
           <span class="n">pylab</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s">&#39;axes&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>            
 </div>
-<div class="viewcode-block" id="GSynPlot"><a class="viewcode-back" href="../../../MozaikLite.visualization.html#MozaikLite.visualization.plotting.GSynPlot">[docs]</a><span class="k">class</span> <span class="nc">GSynPlot</span><span class="p">(</span><span class="n">PerStimulusPlot</span><span class="p">):</span>
+<div class="viewcode-block" id="GSynPlot"><a class="viewcode-back" href="../../../tmp/MozaikLite.visualization.html#MozaikLite.visualization.plotting.GSynPlot">[docs]</a><span class="k">class</span> <span class="nc">GSynPlot</span><span class="p">(</span><span class="n">PerStimulusPlot</span><span class="p">):</span>
 
       <span class="n">required_parameters</span> <span class="o">=</span> <span class="n">ParameterSet</span><span class="p">({</span>
         <span class="s">&#39;neuron&#39;</span> <span class="p">:</span> <span class="nb">int</span>  <span class="c">#we can only plot one neuron - which one ?</span>
@@ -347,18 +347,18 @@
           <span class="n">pylab</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="n">p1</span><span class="p">,</span><span class="n">p2</span><span class="p">],[</span><span class="s">&#39;exc&#39;</span><span class="p">,</span><span class="s">&#39;inh&#39;</span><span class="p">])</span>  
           <span class="n">pylab</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s">&#39;axes&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
           </div>
-<div class="viewcode-block" id="OverviewPlot"><a class="viewcode-back" href="../../../MozaikLite.visualization.html#MozaikLite.visualization.plotting.OverviewPlot">[docs]</a><span class="k">class</span> <span class="nc">OverviewPlot</span><span class="p">(</span><span class="n">Plotting</span><span class="p">):</span>
+<div class="viewcode-block" id="OverviewPlot"><a class="viewcode-back" href="../../../tmp/MozaikLite.visualization.html#MozaikLite.visualization.plotting.OverviewPlot">[docs]</a><span class="k">class</span> <span class="nc">OverviewPlot</span><span class="p">(</span><span class="n">Plotting</span><span class="p">):</span>
       <span class="n">required_parameters</span> <span class="o">=</span> <span class="n">ParameterSet</span><span class="p">({</span>
             <span class="s">&#39;sheet_name&#39;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span>  <span class="c">#the name of the sheet for which to plot</span>
       <span class="p">})</span>
-<div class="viewcode-block" id="OverviewPlot.subplot"><a class="viewcode-back" href="../../../MozaikLite.visualization.html#MozaikLite.visualization.plotting.OverviewPlot.subplot">[docs]</a>      <span class="k">def</span> <span class="nf">subplot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">subplotspec</span><span class="p">):</span>
+<div class="viewcode-block" id="OverviewPlot.subplot"><a class="viewcode-back" href="../../../tmp/MozaikLite.visualization.html#MozaikLite.visualization.plotting.OverviewPlot.subplot">[docs]</a>      <span class="k">def</span> <span class="nf">subplot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">subplotspec</span><span class="p">):</span>
           <span class="n">gs</span> <span class="o">=</span> <span class="n">gridspec</span><span class="o">.</span><span class="n">GridSpecFromSubplotSpec</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">subplot_spec</span><span class="o">=</span><span class="n">subplotspec</span><span class="p">)</span>  
           <span class="n">RasterPlot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datastore</span><span class="p">,</span><span class="n">ParameterSet</span><span class="p">({</span><span class="s">&#39;sheet_name&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">sheet_name</span><span class="p">,</span> <span class="s">&#39;trial_averaged_histogram&#39;</span> <span class="p">:</span> <span class="bp">True</span><span class="p">,</span> <span class="s">&#39;neurons&#39;</span> <span class="p">:</span> <span class="p">[]}))</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
           <span class="n">GSynPlot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datastore</span><span class="p">,</span><span class="n">ParameterSet</span><span class="p">({</span><span class="s">&#39;sheet_name&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">sheet_name</span><span class="p">,</span><span class="s">&#39;neuron&#39;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">}))</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
           <span class="n">VmPlot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datastore</span><span class="p">,</span><span class="n">ParameterSet</span><span class="p">({</span><span class="s">&#39;sheet_name&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">sheet_name</span><span class="p">,</span><span class="s">&#39;neuron&#39;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">}))</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>          
 
           </div></div>
-<div class="viewcode-block" id="AnalogSignalListPlot"><a class="viewcode-back" href="../../../MozaikLite.visualization.html#MozaikLite.visualization.plotting.AnalogSignalListPlot">[docs]</a><span class="k">class</span> <span class="nc">AnalogSignalListPlot</span><span class="p">(</span><span class="n">LinePlot</span><span class="p">):</span>
+<div class="viewcode-block" id="AnalogSignalListPlot"><a class="viewcode-back" href="../../../tmp/MozaikLite.visualization.html#MozaikLite.visualization.plotting.AnalogSignalListPlot">[docs]</a><span class="k">class</span> <span class="nc">AnalogSignalListPlot</span><span class="p">(</span><span class="n">LinePlot</span><span class="p">):</span>
         <span class="n">required_parameters</span> <span class="o">=</span> <span class="n">ParameterSet</span><span class="p">({</span>
             <span class="s">&#39;sheet_name&#39;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span>  <span class="c">#the name of the sheet for which to plot</span>
             <span class="s">&#39;ylabel&#39;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span>  <span class="c">#what to put as ylabel</span>
@@ -386,7 +386,7 @@
               <span class="n">three_tick_axis</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="p">)</span>                      
               <span class="n">pylab</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s">&#39;axes&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 </div>
-<div class="viewcode-block" id="ConductanceSignalListPlot"><a class="viewcode-back" href="../../../MozaikLite.visualization.html#MozaikLite.visualization.plotting.ConductanceSignalListPlot">[docs]</a><span class="k">class</span> <span class="nc">ConductanceSignalListPlot</span><span class="p">(</span><span class="n">LinePlot</span><span class="p">):</span>
+<div class="viewcode-block" id="ConductanceSignalListPlot"><a class="viewcode-back" href="../../../tmp/MozaikLite.visualization.html#MozaikLite.visualization.plotting.ConductanceSignalListPlot">[docs]</a><span class="k">class</span> <span class="nc">ConductanceSignalListPlot</span><span class="p">(</span><span class="n">LinePlot</span><span class="p">):</span>
         <span class="n">required_parameters</span> <span class="o">=</span> <span class="n">ParameterSet</span><span class="p">({</span>
             <span class="s">&#39;sheet_name&#39;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span>  <span class="c">#the name of the sheet for which to plot</span>
         <span class="p">})</span>
@@ -416,7 +416,7 @@
               <span class="n">pylab</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s">&#39;axes&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> 
               
               </div>
-<div class="viewcode-block" id="RetinalInputMovie"><a class="viewcode-back" href="../../../MozaikLite.visualization.html#MozaikLite.visualization.plotting.RetinalInputMovie">[docs]</a><span class="k">class</span> <span class="nc">RetinalInputMovie</span><span class="p">(</span><span class="n">LinePlot</span><span class="p">):</span>
+<div class="viewcode-block" id="RetinalInputMovie"><a class="viewcode-back" href="../../../tmp/MozaikLite.visualization.html#MozaikLite.visualization.plotting.RetinalInputMovie">[docs]</a><span class="k">class</span> <span class="nc">RetinalInputMovie</span><span class="p">(</span><span class="n">LinePlot</span><span class="p">):</span>
       <span class="n">required_parameters</span> <span class="o">=</span> <span class="n">ParameterSet</span><span class="p">({</span>
             <span class="s">&#39;frame_rate&#39;</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span>  <span class="c">#the desired frame rate (per sec), it might be less if the computer is too slow</span>
       <span class="p">})</span>

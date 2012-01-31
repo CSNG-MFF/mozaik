@@ -198,7 +198,7 @@ class RasterPlot(PerStimulusPlot):
               self.parameters.neurons = None 
     
       def _subplot(self,idx,gs):
-         sp = [self.dsvs[idx].get_spike_lists()]
+         sp = [[s.spiketrains for s in self.dsvs[idx].get_segments()]]
          
          if self.parameters.trial_averaged_histogram:
              gs = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=gs)  
@@ -228,16 +228,17 @@ class VmPlot(PerStimulusPlot):
       def _subplot(self,idx,gs):
           pylab.rc('axes', linewidth=3)
           ax = pylab.subplot(gs)
-          vms = self.dsvs[idx].get_vm_lists()
-          mean_v = numpy.zeros(numpy.shape(vms[0][self.parameters.neuron].signal))
-          time_axis = vms[0][self.parameters.neuron].time_axis()
-          t_stop =  vms[0][self.parameters.neuron].t_stop - (time_axis[1] - time_axis[0])
+          vms = [s.get_vm() for s in self.dsvs[idx].get_segments()]
+          mean_v = numpy.zeros(numpy.shape(vms[0][self.parameters.neuron]))
           
+          sampling_period = vms[0].sampling_period
+          time_axis = numpy.arange(0,len(vms[0][self.parameters.neuron]),1) /  float(sampling_period) + float(vms[0].t_start)
+          t_stop =  float(vms[0].t_stop - sampling_period)
           
                     
           for vm in vms:
-            ax.plot(time_axis,vm[self.parameters.neuron].signal,color="#848484")                
-            mean_v = mean_v + vm[self.parameters.neuron].signal   
+            ax.plot(time_axis,vm[self.parameters.neuron],color="#848484")                
+            mean_v = mean_v + numpy.array(vm[self.parameters.neuron])
           
           mean_v = mean_v / len(vms)
           ax.plot(time_axis,mean_v,color='k',linewidth=2)              
@@ -262,18 +263,19 @@ class GSynPlot(PerStimulusPlot):
       def _subplot(self,idx,gs):
           pylab.rc('axes', linewidth=3)
           ax = pylab.subplot(gs)
-          gsyn_es = self.dsvs[idx].get_gsyn_e_lists()  
-          gsyn_is = self.dsvs[idx].get_gsyn_i_lists()  
-          mean_gsyn_e = numpy.zeros(numpy.shape(gsyn_es[0][self.parameters.neuron].copy().signal))
-          mean_gsyn_i = numpy.zeros(numpy.shape(gsyn_is[0][self.parameters.neuron].copy().signal))
-          time_axis = gsyn_es[0][self.parameters.neuron].time_axis()
-          t_stop = gsyn_es[0][self.parameters.neuron].t_stop - (time_axis[1] - time_axis[0])
+          gsyn_es = [s.get_esyn() for s in self.dsvs[idx].get_segments()]
+          gsyn_is = [s.get_isyn() for s in self.dsvs[idx].get_segments()]
+          mean_gsyn_e = numpy.zeros(numpy.shape(gsyn_es[0][self.parameters.neuron].copy()))
+          mean_gsyn_i = numpy.zeros(numpy.shape(gsyn_is[0][self.parameters.neuron].copy()))
+          sampling_period = gsyn_es[0].sampling_period
+          time_axis = numpy.arange(0,len(gsyn_es[0][self.parameters.neuron]),1) /  float(sampling_period) + float(gsyn_es[0].t_start)
+          t_stop = float(gsyn_es[0].t_stop - sampling_period)
           
           for e,i in zip(gsyn_es,gsyn_is):
-            p1 = ax.plot(time_axis,e[self.parameters.neuron].signal*10**9,color='#F5A9A9')            
-            p2 = ax.plot(time_axis,i[self.parameters.neuron].signal*10**9,color='#A9BCF5')              
-            mean_gsyn_e = mean_gsyn_e + e[self.parameters.neuron].signal
-            mean_gsyn_i = mean_gsyn_i + i[self.parameters.neuron].signal
+            p1 = ax.plot(time_axis,e[self.parameters.neuron]*10**9,color='#F5A9A9')            
+            p2 = ax.plot(time_axis,i[self.parameters.neuron]*10**9,color='#A9BCF5')              
+            mean_gsyn_e = mean_gsyn_e + numpy.array(e[self.parameters.neuron])
+            mean_gsyn_i = mean_gsyn_i + numpy.array(i[self.parameters.neuron])
           
           mean_gsyn_i = mean_gsyn_i / len(gsyn_is)
           mean_gsyn_e = mean_gsyn_e / len(gsyn_es)
@@ -325,7 +327,7 @@ class AnalogSignalListPlot(LinePlot):
         def _subplot(self,idx,gs):
               pylab.rc('axes', linewidth=3)
               ax = pylab.subplot(gs)
-              self.asl[idx].plot(display=ax,kwargs={'color':'b'})
+              pylab.plot(self.asl[idx],color = 'b')
               if idx == 0:
                  pylab.ylabel(self.parameters.ylabel)
               
@@ -353,8 +355,8 @@ class ConductanceSignalListPlot(LinePlot):
         def _subplot(self,idx,gs):
               pylab.rc('axes', linewidth=3)
               ax = pylab.subplot(gs)
-              self.e_con[idx].plot(display=ax,kwargs={'color':'r','label':'exc'})
-              self.i_con[idx].plot(display=ax,kwargs={'color':'b','label':'inh'})
+              pylab.plot(self.e_con[idx],color = 'r',label = 'exc')
+              pylab.plot(self.i_con[idx],color = 'r',label = 'inh')
               if idx == 0:
                  pylab.ylabel('G(S)')
 

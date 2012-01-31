@@ -70,7 +70,7 @@
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s">&quot;Mozaik&quot;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="meshgrid3D"><a class="viewcode-back" href="../../../../MozaikLite.models.retinal.html#MozaikLite.models.retinal.spatiotemporalfilter.meshgrid3D">[docs]</a><span class="k">def</span> <span class="nf">meshgrid3D</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+<div class="viewcode-block" id="meshgrid3D"><a class="viewcode-back" href="../../../../tmp/MozaikLite.models.retinal.html#MozaikLite.models.retinal.spatiotemporalfilter.meshgrid3D">[docs]</a><span class="k">def</span> <span class="nf">meshgrid3D</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A slimmed-down version of http://www.scipy.org/scipy/numpy/attachment/ticket/966/meshgrid.py&quot;&quot;&quot;</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
     <span class="n">y</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
@@ -82,7 +82,7 @@
            <span class="n">z</span><span class="p">[</span><span class="n">nax</span><span class="p">,</span><span class="n">nax</span><span class="p">,:]</span><span class="o">*</span><span class="n">mult_fact</span>
 
 </div>
-<div class="viewcode-block" id="SpatioTemporalReceptiveField"><a class="viewcode-back" href="../../../../MozaikLite.models.retinal.html#MozaikLite.models.retinal.spatiotemporalfilter.SpatioTemporalReceptiveField">[docs]</a><span class="k">class</span> <span class="nc">SpatioTemporalReceptiveField</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="SpatioTemporalReceptiveField"><a class="viewcode-back" href="../../../../tmp/MozaikLite.models.retinal.html#MozaikLite.models.retinal.spatiotemporalfilter.SpatioTemporalReceptiveField">[docs]</a><span class="k">class</span> <span class="nc">SpatioTemporalReceptiveField</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">func_params</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">duration</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -101,7 +101,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">spatial_resolution</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">inf</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">temporal_resolution</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">inf</span>
     
-<div class="viewcode-block" id="SpatioTemporalReceptiveField.quantize"><a class="viewcode-back" href="../../../../MozaikLite.models.retinal.html#MozaikLite.models.retinal.spatiotemporalfilter.SpatioTemporalReceptiveField.quantize">[docs]</a>    <span class="k">def</span> <span class="nf">quantize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
+<div class="viewcode-block" id="SpatioTemporalReceptiveField.quantize"><a class="viewcode-back" href="../../../../tmp/MozaikLite.models.retinal.html#MozaikLite.models.retinal.spatiotemporalfilter.SpatioTemporalReceptiveField.quantize">[docs]</a>    <span class="k">def</span> <span class="nf">quantize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a quantized version of the receptive field. If `dx` does not</span>
 <span class="sd">        divide exactly into the width, then the actual width will be slightly</span>
@@ -141,7 +141,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">temporal_resolution</span> <span class="o">=</span> <span class="n">dt</span>
 </div>
     <span class="nd">@property</span>
-<div class="viewcode-block" id="SpatioTemporalReceptiveField.kernel_duration"><a class="viewcode-back" href="../../../../MozaikLite.models.retinal.html#MozaikLite.models.retinal.spatiotemporalfilter.SpatioTemporalReceptiveField.kernel_duration">[docs]</a>    <span class="k">def</span> <span class="nf">kernel_duration</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="SpatioTemporalReceptiveField.kernel_duration"><a class="viewcode-back" href="../../../../tmp/MozaikLite.models.retinal.html#MozaikLite.models.retinal.spatiotemporalfilter.SpatioTemporalReceptiveField.kernel_duration">[docs]</a>    <span class="k">def</span> <span class="nf">kernel_duration</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
 </div>
     <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -156,7 +156,7 @@
         <span class="k">return</span> <span class="n">s</span>
 
 </div>
-<div class="viewcode-block" id="CellWithReceptiveField"><a class="viewcode-back" href="../../../../MozaikLite.models.retinal.html#MozaikLite.models.retinal.spatiotemporalfilter.CellWithReceptiveField">[docs]</a><span class="k">class</span> <span class="nc">CellWithReceptiveField</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="CellWithReceptiveField"><a class="viewcode-back" href="../../../../tmp/MozaikLite.models.retinal.html#MozaikLite.models.retinal.spatiotemporalfilter.CellWithReceptiveField">[docs]</a><span class="k">class</span> <span class="nc">CellWithReceptiveField</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A model of the input current to an LGN relay cell, that multiplies, in space</span>
 <span class="sd">    and time, the luminance values impinging on its receptive field by a</span>
@@ -179,7 +179,7 @@
         <span class="c">#logger.debug(&quot;Created cell with receptive field centred at %gº,%gº&quot; % (x,y))</span>
         <span class="c">#logger.debug(&quot;  &quot; + str(receptive_field))</span>
 
-<div class="viewcode-block" id="CellWithReceptiveField.initialize"><a class="viewcode-back" href="../../../../MozaikLite.models.retinal.html#MozaikLite.models.retinal.spatiotemporalfilter.CellWithReceptiveField.initialize">[docs]</a>    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">background_luminance</span><span class="p">,</span> <span class="n">stimulus_duration</span><span class="p">):</span>
+<div class="viewcode-block" id="CellWithReceptiveField.initialize"><a class="viewcode-back" href="../../../../tmp/MozaikLite.models.retinal.html#MozaikLite.models.retinal.spatiotemporalfilter.CellWithReceptiveField.initialize">[docs]</a>    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">background_luminance</span><span class="p">,</span> <span class="n">stimulus_duration</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create the array that will contain the current response, and set the</span>
 <span class="sd">        initial values on the assumption that the system was looking at a blank</span>
@@ -199,7 +199,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">response</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">background_luminance</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">receptive_field</span><span class="o">.</span><span class="n">kernel</span><span class="p">[:,:,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="n">L</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
     </div>
-<div class="viewcode-block" id="CellWithReceptiveField.view"><a class="viewcode-back" href="../../../../MozaikLite.models.retinal.html#MozaikLite.models.retinal.spatiotemporalfilter.CellWithReceptiveField.view">[docs]</a>    <span class="k">def</span> <span class="nf">view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">visual_space</span><span class="p">):</span>
+<div class="viewcode-block" id="CellWithReceptiveField.view"><a class="viewcode-back" href="../../../../tmp/MozaikLite.models.retinal.html#MozaikLite.models.retinal.spatiotemporalfilter.CellWithReceptiveField.view">[docs]</a>    <span class="k">def</span> <span class="nf">view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">visual_space</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Look at the visual space and update t</span>
 <span class="sd">        Where the kernel temporal resolution is the same as the frame duration (visual space update interval):</span>
@@ -235,7 +235,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">response</span><span class="p">[</span><span class="n">j</span><span class="p">:</span><span class="n">j</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">receptive_field</span><span class="o">.</span><span class="n">kernel_duration</span><span class="p">]</span> <span class="o">+=</span> <span class="n">time_course</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">response</span><span class="p">[</span><span class="n">j</span><span class="p">:</span><span class="n">j</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">receptive_field</span><span class="o">.</span><span class="n">kernel_duration</span><span class="p">])]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">i</span> <span class="o">+=</span> <span class="n">update_factor</span> <span class="c"># we assume there is only ever 1 visual space used between initializations</span>
 </div>
-<div class="viewcode-block" id="CellWithReceptiveField.response_current"><a class="viewcode-back" href="../../../../MozaikLite.models.retinal.html#MozaikLite.models.retinal.spatiotemporalfilter.CellWithReceptiveField.response_current">[docs]</a>    <span class="k">def</span> <span class="nf">response_current</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="CellWithReceptiveField.response_current"><a class="viewcode-back" href="../../../../tmp/MozaikLite.models.retinal.html#MozaikLite.models.retinal.spatiotemporalfilter.CellWithReceptiveField.response_current">[docs]</a>    <span class="k">def</span> <span class="nf">response_current</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Multiply the response (units of luminance (cd/m²) if we assume the</span>
 <span class="sd">        kernel values are dimensionless) by the &#39;gain&#39;, to produce a current in</span>
@@ -250,7 +250,7 @@
         <span class="k">return</span> <span class="p">{</span><span class="s">&#39;times&#39;</span><span class="p">:</span> <span class="n">time_points</span><span class="p">,</span> <span class="s">&#39;amplitudes&#39;</span><span class="p">:</span> <span class="n">response</span><span class="p">}</span>
 
 </div></div>
-<div class="viewcode-block" id="SpatioTemporalFilterRetinaLGN"><a class="viewcode-back" href="../../../../MozaikLite.models.retinal.html#MozaikLite.models.retinal.spatiotemporalfilter.SpatioTemporalFilterRetinaLGN">[docs]</a><span class="k">class</span> <span class="nc">SpatioTemporalFilterRetinaLGN</span><span class="p">(</span><span class="n">MozaikRetina</span><span class="p">):</span>
+<div class="viewcode-block" id="SpatioTemporalFilterRetinaLGN"><a class="viewcode-back" href="../../../../tmp/MozaikLite.models.retinal.html#MozaikLite.models.retinal.spatiotemporalfilter.SpatioTemporalFilterRetinaLGN">[docs]</a><span class="k">class</span> <span class="nc">SpatioTemporalFilterRetinaLGN</span><span class="p">(</span><span class="n">MozaikRetina</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Retina/LGN model with spatiotemporal receptive field.&quot;&quot;&quot;</span>
     
     <span class="n">required_parameters</span> <span class="o">=</span> <span class="n">ParameterSet</span><span class="p">({</span>
@@ -307,7 +307,7 @@
                     <span class="n">lgn_cell</span><span class="o">.</span><span class="n">inject</span><span class="p">(</span><span class="n">scs</span><span class="p">)</span>
                     <span class="n">lgn_cell</span><span class="o">.</span><span class="n">inject</span><span class="p">(</span><span class="n">ncs</span><span class="p">)</span>
     
-<div class="viewcode-block" id="SpatioTemporalFilterRetinaLGN.process_visual_input"><a class="viewcode-back" href="../../../../MozaikLite.models.retinal.html#MozaikLite.models.retinal.spatiotemporalfilter.SpatioTemporalFilterRetinaLGN.process_visual_input">[docs]</a>    <span class="k">def</span> <span class="nf">process_visual_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">visual_space</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="SpatioTemporalFilterRetinaLGN.process_visual_input"><a class="viewcode-back" href="../../../../tmp/MozaikLite.models.retinal.html#MozaikLite.models.retinal.spatiotemporalfilter.SpatioTemporalFilterRetinaLGN.process_visual_input">[docs]</a>    <span class="k">def</span> <span class="nf">process_visual_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">visual_space</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Present a visual stimulus to the model, and create the LGN output (relay)</span>
 <span class="sd">        neurons.</span>

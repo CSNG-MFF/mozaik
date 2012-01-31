@@ -1,16 +1,14 @@
 from NeuroTools.parameters import ParameterSet
-from neo.core.segment import Segment
 from neo.core.block import Block
-from neo.core.spiketrain import SpikeTrain
 from neo.io.hdf5io import IOManager
-from NeuroTools import signals
 from MozaikLite.stimuli.stimulus_generator import load_from_string, parse_stimuls_id
-from MozaikLite.tools.misc import spike_dic_to_list
 from MozaikLite.framework.interfaces import MozaikLiteParametrizeObject
 from NeuroTools.parameters import ParameterSet
+from neo_neurotools_wrapper import NeoNeurotoolsWrapper
 
 import pickle
 import numpy
+
 
 
 class DataStoreView(MozaikLiteParametrizeObject):
@@ -86,7 +84,7 @@ class DataStoreView(MozaikLiteParametrizeObject):
         
     def sheets(self):
         """
-        Returns the list of all sheets that are present in at least one of the segments in the give DataStoreView
+        Returns the list of all sheets that are present in at least one of the segments in the given DataStoreView
         """
         sheets={}
         for s in self.block.segments:
@@ -100,64 +98,6 @@ class DataStoreView(MozaikLiteParametrizeObject):
         """
         return [s.annotations['stimulus'] for s in self.block.segments]
         
-    
-        
-    def get_spike_lists(self):
-        """
-        Returns a list of Neurotools SpikeList objects. The order of the spikelists corresponds to the order of
-        segments returned by the get_segments() call.
-        """
-        sl = []    
-        for s in self.block.segments:
-            t_start = s.spiketrains[0].t_start
-            t_stop = s.spiketrains[0].t_stop
-           
-            d = {}
-            for st in s.spiketrains:
-                d[st.annotations['index']] = numpy.array(st)
-           
-            spikes = signals.SpikeList(spike_dic_to_list(d),d.keys(),float(t_start),float(t_stop))
-            sl.append(spikes)
-        return sl    
-        
-    def get_vm_lists(self):
-        """
-        Returns a list of Neurotools SpikeList objects. The order of the spikelists corresponds to the order of
-        segments returned by the get_segments() call.
-        """
-        ass = []    
-        for s in self.block.segments:
-            a = []
-            for i in s.annotations['vm']:
-                a.append(signals.AnalogSignal(s.analogsignals[i],dt=s.analogsignals[i].sampling_period))
-            ass.append(a)    
-        return ass    
-
-    def get_gsyn_e_lists(self):
-        """
-        Returns a list of Neurotools SpikeList objects. The order of the spikelists corresponds to the order of
-        segments returned by the get_segments() call.
-        """
-        ass = []    
-        for s in self.block.segments:
-            a = []
-            for i in s.annotations['gsyn_e']:
-                a.append(signals.AnalogSignal(s.analogsignals[i],dt=s.analogsignals[i].sampling_period))
-            ass.append(a)
-        return ass
-
-    def get_gsyn_i_lists(self):
-        """
-        Returns a list of Neurotools SpikeList objects. The order of the spikelists corresponds to the order of
-        segments returned by the get_segments() call.
-        """
-        ass = []    
-        for s in self.block.segments:
-            a = []
-            for i in s.annotations['gsyn_i']:
-                a.append(signals.AnalogSignal(s.analogsignals[i],dt=s.analogsignals[i].sampling_period))
-            ass.append(a)
-        return ass    
    
     def get_analysis_result(self,result_id,sheet_name=None,neuron_idx=None):
         if not sheet_name:
@@ -263,32 +203,25 @@ class Hdf5DataStore(DataStore):
     which just becomes the pickled self.analysis_results dictionary.
         
     """
-    
     def load(self):
         #load the data
-        #iom = IOManager(filename=self.parameters.root_directory+'/datastore.hdf5');
-        #self.block = iom.get('/block_0')
-        # now just construct the stimulus dictionary
-        #for s in self.block.segments:
-        #    self.stimulus_dict[s.stimulus]=True
+        iom = IOManager(filename=self.parameters.root_directory+'/datastore.hdf5');
+        self.block = iom.get('/block_0')
         
-        f = open(self.parameters.root_directory+'/datastore.analysis.pickle','r')
-        self.analysis_results = pickle.load(f)
-        
+        #now just construct the stimulus dictionary
+        for s in self.block.segments:
+             self.stimulus_dict[s.stimulus]=True
             
     def save(self):
         #save the recording itself
-        #iom = IOManager(filename=self.parameters.root_directory+'/datastore.hdf5');
-        #iom.write_block(self.block)
-        f = open(self.parameters.root_directory+'/datastore.analysis.pickle','w')
-        pickle.dump(self.analysis_results,f)
-        
+        iom = IOManager(filename=self.parameters.root_directory+'/datastore.hdf5');
+        iom.write_block(self.block)
     
     def add_recording(self,segment,stimulus):
         # we get recordings as seg
         for s in segment:
             s.annotations['stimulus'] = str(stimulus)
-        self.block.segments.extend(segment)
+            self.block.segments.append(NeoNeurotoolsWrapper(s))
         self.stimulus_dict[str(stimulus)]=True
 
     def add_retinal_stimulus(self,data,stimulus):
@@ -346,3 +279,4 @@ class PickledDataStore(Hdf5DataStore):
         pickle.dump(self.analysis_results,f)
         f.close()
         
+

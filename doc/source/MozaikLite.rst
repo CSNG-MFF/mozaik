@@ -13,7 +13,8 @@ Subpackages
 -----------
 
 .. toctree::
-
+    :maxdepth: 1
+   
     MozaikLite.analysis
     MozaikLite.framework
     MozaikLite.models

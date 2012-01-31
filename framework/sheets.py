@@ -18,8 +18,6 @@ from pyNN.errors import NothingToWriteError
 from neo.core.spiketrain import SpikeTrain
 from neo.core.segment import Segment
 from neo.core.analogsignal import AnalogSignal
-from MozaikLite.tools.misc import get_spikes_to_dic, get_vm_to_dic,get_gsyn_to_dicts
-from MozaikLite.tools.misc import create_segment_for_sheet
 
 
 logger = logging.getLogger("Mozaik")
@@ -108,47 +106,17 @@ class Sheet(MozaikComponent):
             cells = self.to_record
             self.pop.record(variables)
 
-    def write_neo_object(self,tstop):
-        segment = create_segment_for_sheet(self.name)
+    def write_neo_object(self): 
         try:
-            spikes = get_spikes_to_dic(self.pop.getSpikes(),self.pop)
-            for k in spikes.keys():
-                # it assumes segment implements and add function which takes the id of a neuron and the corresponding its SpikeTrain
-                st = SpikeTrain(spikes[k],t_start=0,t_stop=tstop,units=quantities.ms)
-                st.annotations['index'] = k
-                segment.spiketrains.append(st)
-            logging.debug("Writing spikes from population %s to neo object." % (self.pop))
-        except NothingToWriteError, errmsg:
-            logger.debug(errmsg)
-        try:
-            v = get_vm_to_dic(self.pop.get_v(),self.pop)
-            for k in v.keys():
-                # it assumes segment implements and add function which takes the id of a neuorn and the corresponding its SpikeTrain
-                st = AnalogSignal(v[k],units=quantities.mV,sampling_period=self.model.sim.get_time_step()*quantities.ms)
-                st.annotations['index'] = k
-                segment.analogsignals.append(st)
-                segment.annotations['vm'].append(len(segment.analogsignals)-1)
-            logging.debug("Writing Vm from population %s to neo object." % (self.pop))
-        except NothingToWriteError, errmsg:
-            logger.debug(errmsg)
-        try:
-            gsyn_e,gsyn_i = get_gsyn_to_dicts(self.pop.get_gsyn(),self.pop)
-            for k in gsyn_e.keys():
-                # it assumes segment implements and add function which takes the id of a neuorn and the corresponding its SpikeTrain
-                st_e = AnalogSignal(0.000001*gsyn_e[k],sampling_period=self.model.sim.get_time_step()*quantities.ms,units=quantities.S)
-                st_i = AnalogSignal(0.000001*gsyn_i[k],sampling_period=self.model.sim.get_time_step()*quantities.ms,units=quantities.S)
-                st_e.annotations['index'] = k
-                st_i.annotations['index'] = k
-                segment.analogsignals.append(st_e)
-                segment.annotations['gsyn_e'].append(len(segment.analogsignals)-1)
-                segment.analogsignals.append(st_i)
-                segment.annotations['gsyn_i'].append(len(segment.analogsignals)-1)
-            logging.debug("Writing Vm from population %s to neo object." % (self.pop))
+            block = self.pop.get_data(['spikes','v','gsyn_exc','gsyn_inh'],clear=True)
         except NothingToWriteError, errmsg:
             logger.debug(errmsg)
 
-        return segment
-
+        s = block.segments[0]            
+        s.annotations["sheet_name"] = self.name
+        return s
+        
+        
 class RetinalUniformSheet(Sheet):
 
     required_parameters = ParameterSet({
