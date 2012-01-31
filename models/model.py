@@ -44,19 +44,16 @@ class Model(MozaikComponent):
                 sheet.record(['spikes', 'v', 'gsyn_exc','gsyn_inh'])
             sh.append(sheet) 
         retinal_input = self.retina.process_visual_input(self.visual_space,stimulus.duration)        
-        
         self.run(stimulus.duration)
-        
+                
         segments = []
-        
         for sheet in self.sheets:    
             if sheet.to_record != None:
                 s = sheet.write_neo_object()
                 segments.append(s)
-
+                
         self.visual_space.clear()
         self.reset()
-        
         self.first_time = False
         return (segments,retinal_input)
 
@@ -106,8 +103,8 @@ class JensModel(Model):
         cortex_inh = CortexInh(self, self.parameters.cortex_inh.params)
         
         # which neurons to record
-        cortex_exc.to_record = [0,1,2,3,4,5] #'all'
-        cortex_inh.to_record = [0,1,2,3,4,5] #'all'
+        cortex_exc.to_record = [0,1,2,3,4] #'all'
+        cortex_inh.to_record = [0,1,2,3,4] #'all'
         self.retina.sheets['X_ON'].to_record = [0,1,2,3,4,5,6,7,8,9,10] #'all'
         self.retina.sheets['X_OFF'].to_record = [0,1,2,3,4,5,6,7,8,9,10] #'all'
 

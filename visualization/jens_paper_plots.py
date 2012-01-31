@@ -25,8 +25,8 @@ class Figure2(Plotting):
           
           SpikeRasterPlot(lgn_spikes,neurons=[0],x_axis=False,xlabel=None, colors = ['#FACC2E','#0080FF'])(gs[1:4,0:5])
           SpikeHistogramPlot(lgn_spikes,neurons=[0], x_axis=False,xlabel=None, colors = ['#FACC2E','#0080FF'])(gs[4:5,0:5])
-          SpikeRasterPlot(lgn_spikes,neurons=[100],x_axis=False,xlabel=None, colors = ['#FACC2E','#0080FF'])(gs[7:10,0:5])
-          SpikeHistogramPlot(lgn_spikes,neurons=[100], colors = ['#FACC2E','#0080FF'])(gs[10:11,0:5])
+          SpikeRasterPlot(lgn_spikes,neurons=[5],x_axis=False,xlabel=None, colors = ['#FACC2E','#0080FF'])(gs[7:10,0:5])
+          SpikeHistogramPlot(lgn_spikes,neurons=[5], colors = ['#FACC2E','#0080FF'])(gs[10:11,0:5])
           
           SpikeRasterPlot([[s.spiketrains for s in dsv.get_segments()]],neurons=[0],x_axis=False,xlabel=None)(gs[:3,6:14])
           SpikeHistogramPlot([[s.spiketrains for s in dsv.get_segments()]],neurons=[0], x_axis=False,xlabel=None)(gs[3:4,6:14])

@@ -51,9 +51,9 @@ class Sheet(MozaikComponent):
         The units for time are in ms.
         """
         MozaikComponent.__init__(self, model, parameters)
-        self.model.register_sheet(self)
         self.sim = self.model.sim
         self.name = parameters.name # the name of the population
+        self.model.register_sheet(self)
         self.to_record = None
         self._pop = None
     
@@ -104,14 +104,16 @@ class Sheet(MozaikComponent):
     def record(self, variables):
         if self.to_record != None:
             cells = self.to_record
-            self.pop.record(variables)
-
+            if cells != 'all':
+               self.pop[cells].record(variables)
+            else:
+               self.pop.record(variables)
+                
     def write_neo_object(self): 
         try:
             block = self.pop.get_data(['spikes','v','gsyn_exc','gsyn_inh'],clear=True)
         except NothingToWriteError, errmsg:
             logger.debug(errmsg)
-
         s = block.segments[0]            
         s.annotations["sheet_name"] = self.name
         return s

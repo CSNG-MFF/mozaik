@@ -217,9 +217,9 @@ class Hdf5DataStore(DataStore):
         iom = IOManager(filename=self.parameters.root_directory+'/datastore.hdf5');
         iom.write_block(self.block)
     
-    def add_recording(self,segment,stimulus):
+    def add_recording(self,segments,stimulus):
         # we get recordings as seg
-        for s in segment:
+        for s in segments:
             s.annotations['stimulus'] = str(stimulus)
             self.block.segments.append(NeoNeurotoolsWrapper(s))
         self.stimulus_dict[str(stimulus)]=True

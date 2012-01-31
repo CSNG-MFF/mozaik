@@ -124,8 +124,6 @@ class GSTA(Analysis):
           if count == 0:
              count = 1
           
-          print gsta
-          
           return AnalogSignal(gsta/count, t_start=-gstal*dt,sampling_rate=dt,units=analog_signal[0].units)
           
            
