@@ -145,7 +145,7 @@ class StandardStyle(SimplePlot):
        def post_plot(self):
            
            if self.title:
-              pylab.title(title)
+              pylab.title(self.title,fontsize='x-small')
            
            if self.xlim:
               pylab.xlim(self.xlim)
@@ -247,7 +247,7 @@ class SpikeRasterPlot(StandardStyle):
              for i,spike_list in enumerate(sp):
                 for j,n in enumerate(neurons):
                     spike_train = spike_list[n]
-                    self.axis.plot(spike_train,[j*(num_t+1) + i + 1 for x in xrange(0,len(spike_train))],',',color=colors[k])
+                    self.axis.plot(spike_train,[j*(num_t+1) + i + 1 for x in xrange(0,len(spike_train))],'|',color=colors[k])
                  
              for j in xrange(0,num_n-1):   
                 self.axis.axhline(j*(num_t+1)+num_t+1,c='k')

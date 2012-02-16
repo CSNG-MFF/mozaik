@@ -46,11 +46,12 @@
             },
             'initial_values': {
                 'v': -70.0,
-            }
+            },
         },
+        
         'noise': {
             'mean': 0.0,
-            'stdev': 1.4 # nA
+            'stdev': 3.0 # nA
         }
     }
 }

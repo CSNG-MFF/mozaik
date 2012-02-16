@@ -32,6 +32,17 @@ class Sheet(MozaikComponent):
             'params': ParameterSet,
             'initial_values': ParameterSet,
         }),
+        
+        'background_noise' : ParameterSet({
+            # the background noise to the population. This will be generated as Poisson
+            # note that this is optimized for NEST !!! 
+            # it used native_cell_type("poisson_generator") to generate the noise
+            
+            'exc_firing_rate' : float, 
+            'exc_weight' : float,
+            'inh_firing_rate' : float,
+            'inh_weight' : float,
+        }),
         'name':str,
     })
 
@@ -71,8 +82,11 @@ class Sheet(MozaikComponent):
             return self._pop
             
         def fset(self, value):
+                if self._pop:
+                   raise Exception("Error population has already been set. It is not allowed to do this twice!")
                 self._pop = value
                 self._neuron_annotations = [{} for i in xrange(0,len(value))]
+                self.setup_background_noise()
         return locals()  
     
     pop = property(**pop()) #this will be populated by PyNN population, in the derived classes		
@@ -114,10 +128,20 @@ class Sheet(MozaikComponent):
             block = self.pop.get_data(['spikes','v','gsyn_exc','gsyn_inh'],clear=True)
         except NothingToWriteError, errmsg:
             logger.debug(errmsg)
-        s = block.segments[0]            
+        s = block.segments[-1]   
         s.annotations["sheet_name"] = self.name
         return s
-        
+    
+    def setup_background_noise(self):
+        from pyNN.nest import native_cell_type
+        if (self.parameters.background_noise.exc_firing_rate != 0) or (self.parameters.background_noise.exc_firing_rate != 0):
+            np_exc = self.sim.Population(1, native_cell_type("poisson_generator"), {'rate' : self.parameters.background_noise.exc_firing_rate})
+            prj = self.sim.Projection(np_exc, self.pop, self.sim.AllToAllConnector(weights=self.parameters.background_noise.exc_weight),target='excitatory')
+
+        if (self.parameters.background_noise.inh_firing_rate != 0) or (self.parameters.background_noise.inh_firing_rate != 0):
+            np_inh = self.sim.Population(1, native_cell_type("poisson_generator"), {'rate' : self.parameters.background_noise.inh_firing_rate})
+            prj = self.sim.Projection(np_inh, self.pop, self.sim.AllToAllConnector(weights=self.parameters.background_noise.inh_weight),target='inhibitory')
+
         
 class RetinalUniformSheet(Sheet):
 

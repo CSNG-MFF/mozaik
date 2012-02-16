@@ -4,72 +4,100 @@
     'component': 'MozaikLite.framework.sheets.CorticalUniformSheet',
     
     'params':{
-	'name':'V1_Exc',
-	'sx':100.0,
-        'sy':100.0,
-	'density':5.0,
-        
-	'magnification_factor':1.0,
-    	
-	'cell': {
-    	    'model': 'IF_cond_exp',
-        	'params': {
-        	    'v_thresh':-57.0,
-    		    'v_rest': -70.0,
-    	    	    'v_reset': -65.0,
-    		    'tau_refrac': 2.0,
-		'tau_m': 10.0,
-		'cm': 0.29,
-    		'e_rev_E': 0.0,
-    		'e_rev_I': -75.0,
-		'tau_syn_E': 1.5,
-    		'tau_syn_I': 10.0, 
-		},
-	   'initial_values': {
-                'v': -60.0,
-            }
+                'name':'V1_Exc',
+                'sx':100.0,
+                'sy':100.0,
+                'density':1600.0,
+                    
+                'magnification_factor':1.0,
+                    
+                'cell': {
+                        'model': 'IF_cond_exp',
+                        'params': {
+                            'v_thresh':-57.0,
+                            'v_rest': -70.0,
+                            'v_reset': -70.0,
+                            'tau_refrac': 2.0,
+    		            'tau_m': 10.0,
+	    		    'cm': 0.29,
+            	            'e_rev_E': 0.0,
+	            	    'e_rev_I': -75.0,
+                    	    'tau_syn_E': 1.5,
+                            'tau_syn_I': 10.0, 
+                    },
+                   'initial_values': {
+                            'v': -60.0,
+                            'gsyn_exc' : 0.0010,
+                            'gsyn_inh' : 0.0015,
+                        }
 
-        }
+                    },
+                    
+                'background_noise' : {
+                                        'exc_firing_rate' : 14280.0, 
+                                        'exc_weight' : 0.00036,
+                                        'inh_firing_rate' : 5900.0,
+                                        'inh_weight' : 0.00020,
+                                    },
     },
     
     'ExcExcConnection': {
-	    'connection_probability': 0.1, 
-	    'weights': 0.0001,                
+	    'connection_probability': 0.04, 
+	    'weights': 0.0015,                
             'propagation_constant': 1.5,    
-	    'synapse_dynamics' : 'None',   
 	    'target_synapses' : 'excitatory',     
+	    'short_term_plasticity' : True,
+            'short_term_plasticity_params': {
+                        'U': 0.59, 
+                        #'tau_rec': 813.0, 
+                        'tau_rec': 1.0, 
+                        'tau_facil': 0.0,
+                },
+
+	    
     },        
 
     'ExcInhConnection': {
-	    'connection_probability': 0.1, 
-	    'weights': 0.0001,                
+	    'connection_probability': 0.04, 
+	    'weights': 0.0015,                
             'propagation_constant': 1.5,    
-	    'synapse_dynamics' : 'None',        
 	    'target_synapses' : 'excitatory',
+	    
+	    'short_term_plasticity' : True,
+            'short_term_plasticity_params': {
+                        'U': 0.083, 
+                        'tau_rec': 220.0, 
+                        'tau_facil': 2866.0,
+                },
     },
 
     'AfferentConnection': {
             'aspect_ratio': UniformDist(min=0.333333, max=0.33333),
             'size':         UniformDist(min=0.7, max=0.7),
-            'orientation':  UniformDist(min=0, max=0),
-            'phase':        UniformDist(min=0.0, max=0.0),
+            'orientation':  UniformDist(min=0.0, max=0.0),
+            'phase':        UniformDist(min=0.0, max=6.48),
             'frequency':    UniformDist(min=0.8, max=0.8),
             'propagation_constant': 1.5,    
             'topological' : False,
             'probabilistic' : True,
 	    
-	    'or_map' : True,
+	    'or_map' : False,
 	    'or_map_location' : './or_map',
-	    'phase_map' : True,
+	    'phase_map' : False,
 	    'phase_map_location' : './phase_map',
 	    
 	    'specific_arborization': {
-		    'synapse_dynamics' : 'None',
-		    'weight_factor': 0.0015,
+		    'weight_factor': 0.008,
 		    'num_samples' : 60,
 		    'target_synapses' : 'excitatory',
-	    }
-	    
+		    
+		    'short_term_plasticity' : False,
+	            'short_term_plasticity_params': {
+                        'U': 0.0, 
+                        'tau_rec': 0.0, 
+                        'tau_facil': 0.0,
+    	            },
+	    },
     }        
   
 }

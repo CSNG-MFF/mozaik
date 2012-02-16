@@ -237,7 +237,9 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
         self.scs={}
         self.ncs={}
         for rf_type in self.rf_types:
-            p = RetinalUniformSheet(model,ParameterSet({'sx': self.parameters.size[0], 'sy': self.parameters.size[1], 'density': self.parameters.density, 'cell': self.parameters.cell, 'name' : rf_type }))
+            
+            bn = ParameterSet({'exc_firing_rate' : 0.0,  'exc_weight' : 0.0, 'inh_firing_rate' : 0.0,'inh_weight' : 0.0 })
+            p = RetinalUniformSheet(model,ParameterSet({'sx': self.parameters.size[0], 'sy': self.parameters.size[1], 'density': self.parameters.density, 'cell': self.parameters.cell, 'name' : rf_type , 'background_noise' : bn}))
             self.sheets[rf_type] = p
 
         for rf_type in self.rf_types:            
@@ -341,8 +343,11 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
                     cell.view(visual_space)
             t = visual_space.update()
             
-            retinal_input.append(visual_space.input.img)
+            visual_region = VisualRegion((0,0), (P_rf.width, P_rf.height))
+            im = visual_space.view(visual_region, pixel_size=rf_ON.spatial_resolution)
+            retinal_input.append(im)
             progress_bar(t/duration)
+            
         
         input_currents = {}
         for rf_type in self.rf_types:
@@ -351,7 +356,7 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
             logger.debug("Input current values for %s cell #0: %s" % (rf_type, cell0_currents['amplitudes']))
             #visual_logging.debug(cell0_currents['amplitudes'], cell0_currents['times'],
             #                     "Time (ms)", "Current (nA)", "Input current values for %s cell #0" % rf_type)
-
+            
 
             for i in xrange(0,1):
                 a = [cell.response_current()['amplitudes'][i] for cell in input_cells[rf_type]]

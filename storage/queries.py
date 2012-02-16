@@ -140,15 +140,12 @@ class TagBasedQuery(Query):
 ########################################################################
 def partition_by_stimulus_paramter_query(dsv,stimulus_paramter_index):  
         st = dsv.get_stimuli()
-        print st
         values,st = colapse(numpy.arange(0,len(st),1),st,parameter_indexes=[stimulus_paramter_index])
         dsvs = []
-        print values
         for vals in values:
             new_dsv = dsv.fromDataStoreView()
             new_dsv.analysis_results = dsv.analysis_result_copy()
             for v in vals:
-                print v
                 new_dsv.block.segments.append(dsv.block.segments[v])
             dsvs.append(new_dsv)
         return dsvs

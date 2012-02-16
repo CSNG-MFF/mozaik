@@ -103,16 +103,16 @@ class JensModel(Model):
         cortex_inh = CortexInh(self, self.parameters.cortex_inh.params)
         
         # which neurons to record
-        cortex_exc.to_record = [0,1,2,3,4] #'all'
-        cortex_inh.to_record = [0,1,2,3,4] #'all'
+        cortex_exc.to_record = [0,1,2,3,4,5,6,7,8,9,10] #'all'
+        cortex_inh.to_record = [0,1,2,3,4,5,6,7,8,9,10] #'all'
         self.retina.sheets['X_ON'].to_record = [0,1,2,3,4,5,6,7,8,9,10] #'all'
         self.retina.sheets['X_OFF'].to_record = [0,1,2,3,4,5,6,7,8,9,10] #'all'
 
         # initialize projections
         UniformProbabilisticArborization(self,cortex_exc,cortex_exc,self.parameters.cortex_exc.ExcExcConnection,'V1ExcExcConnection').connect()
-        UniformProbabilisticArborization(self,cortex_exc,cortex_inh,self.parameters.cortex_exc.ExcInhConnection,'V1ExcInhConnection').connect()
-        UniformProbabilisticArborization(self,cortex_inh,cortex_exc,self.parameters.cortex_inh.InhExcConnection,'V1InhExcConnection').connect()
-        UniformProbabilisticArborization(self,cortex_inh,cortex_inh,self.parameters.cortex_inh.InhInhConnection,'V1InhInhConnection').connect()
+        #UniformProbabilisticArborization(self,cortex_exc,cortex_inh,self.parameters.cortex_exc.ExcInhConnection,'V1ExcInhConnection').connect()
+        #UniformProbabilisticArborization(self,cortex_inh,cortex_exc,self.parameters.cortex_inh.InhExcConnection,'V1InhExcConnection').connect()
+        #UniformProbabilisticArborization(self,cortex_inh,cortex_inh,self.parameters.cortex_inh.InhInhConnection,'V1InhInhConnection').connect()
         
         #V1RFSpecificProbabilisticArborization(self,cortex_exc,cortex_exc,self.parameters.cortex_exc.ExcExcConnection,'V1ExcExcConnection')
         #V1RFSpecificProbabilisticArborization(self,cortex_exc,cortex_inh,self.parameters.cortex_exc.ExcInhConnection,'V1ExcInhConnection')

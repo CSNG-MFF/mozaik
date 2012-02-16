@@ -7,7 +7,7 @@ classes Plotting (this file) and SimplePlot (see simple_plot.py).
 The SimplePlot represent the low-level plotting. It is assumed that this plot has only a single 
 axis that is drawn into the region defined by the GridSpec instance that is passed into it. The 
 role of the set of classes derived from SimplePlot is to standardize the low level looks of all 
-figures (mainly related to axis, lables, titles etc.), and should assume data given to them in a 
+figures (mainly related to axis, lables, titles etploc.), and should assume data given to them in a 
 format that is easy to use by the given plot. In order to unify the look of figures
 it defines four functions pre_axis_plot,pre_plot, plot, and post_plot. The actual plotting that 
 user defines is typically defined in 
@@ -184,8 +184,7 @@ class PerStimulusPlot(LinePlot):
         self.dsv = select_result_sheet_query(datastore,self.parameters.sheet_name)
         self.dsvs = partition_by_stimulus_paramter_query(self.dsv,8)    
         self.length = len(self.dsvs)
-        
-    
+            
 class RasterPlot(PerStimulusPlot):
       required_parameters = ParameterSet({
         'trial_averaged_histogram' : bool,  #should the plot show also the trial averaged histogram
@@ -199,14 +198,17 @@ class RasterPlot(PerStimulusPlot):
     
       def _subplot(self,idx,gs):
          sp = [[s.spiketrains for s in self.dsvs[idx].get_segments()]]
+         stimulus = self.dsvs[idx].get_stimuli()[0]
          
          if self.parameters.trial_averaged_histogram:
              gs = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=gs)  
              # first the raster
+             ax = pylab.subplot(gs[:3,0])
+             
              if idx != 0:
-                 SpikeRasterPlot(sp,neurons=self.parameters.neurons,x_axis=False,y_axis=False,xlabel=None,ylabel=None)(gs[:3,0])
+                 SpikeRasterPlot(sp,neurons=self.parameters.neurons,x_axis=False,y_axis=False,xlabel=None,ylabel=None,title=stimulus)(gs[:3,0])
              else:
-                 SpikeRasterPlot(sp,neurons=self.parameters.neurons,x_axis=False,xlabel=None)(gs[:3,0])
+                 SpikeRasterPlot(sp,neurons=self.parameters.neurons,x_axis=False,xlabel=None,title=stimulus)(gs[:3,0])
                     
              ### lets do the histogram
              if idx != 0:
@@ -215,9 +217,9 @@ class RasterPlot(PerStimulusPlot):
                  SpikeHistogramPlot(sp,neurons=self.parameters.neurons)(gs[3,0])
          else:
              if idx != 0:
-                SpikeRasterPlot(sp,neurons=self.parameters.neurons,y_axis=False,ylabel=None)(gs)
+                SpikeRasterPlot(sp,neurons=self.parameters.neurons,y_axis=False,ylabel=None,title=stimulus)(gs)
              else:
-                SpikeRasterPlot(sp,neurons=self.parameters.neurons)(gs)
+                SpikeRasterPlot(sp,neurons=self.parameters.neurons,title=stimulus)(gs)
              
 
 class VmPlot(PerStimulusPlot):
@@ -229,19 +231,20 @@ class VmPlot(PerStimulusPlot):
           pylab.rc('axes', linewidth=3)
           ax = pylab.subplot(gs)
           vms = [s.get_vm() for s in self.dsvs[idx].get_segments()]
-          mean_v = numpy.zeros(numpy.shape(vms[0][self.parameters.neuron]))
+          
+          mean_v = numpy.zeros(numpy.shape(vms[0][:,self.parameters.neuron]))
           
           sampling_period = vms[0].sampling_period
-          time_axis = numpy.arange(0,len(vms[0][self.parameters.neuron]),1) /  float(sampling_period) + float(vms[0].t_start)
+          time_axis = numpy.arange(0,len(vms[0]),1) /  float(len(vms[0])) * float(vms[0].t_stop) + float(vms[0].t_start)
           t_stop =  float(vms[0].t_stop - sampling_period)
           
-                    
           for vm in vms:
-            ax.plot(time_axis,vm[self.parameters.neuron],color="#848484")                
-            mean_v = mean_v + numpy.array(vm[self.parameters.neuron])
+            ax.plot(time_axis,vm[:,self.parameters.neuron].tolist(),color="#848484")                
+            mean_v = mean_v + numpy.array(vm[:,self.parameters.neuron])
           
+         
           mean_v = mean_v / len(vms)
-          ax.plot(time_axis,mean_v,color='k',linewidth=2)              
+          ax.plot(time_axis,mean_v.tolist(),color='k',linewidth=2)              
           disable_top_right_axis(ax)            
           
           pylab.xlim(0,t_stop)
@@ -265,23 +268,26 @@ class GSynPlot(PerStimulusPlot):
           ax = pylab.subplot(gs)
           gsyn_es = [s.get_esyn() for s in self.dsvs[idx].get_segments()]
           gsyn_is = [s.get_isyn() for s in self.dsvs[idx].get_segments()]
-          mean_gsyn_e = numpy.zeros(numpy.shape(gsyn_es[0][self.parameters.neuron].copy()))
-          mean_gsyn_i = numpy.zeros(numpy.shape(gsyn_is[0][self.parameters.neuron].copy()))
+          mean_gsyn_e = numpy.zeros(numpy.shape(gsyn_es[0][:,self.parameters.neuron].copy()))
+          mean_gsyn_i = numpy.zeros(numpy.shape(gsyn_is[0][:,self.parameters.neuron].copy()))
           sampling_period = gsyn_es[0].sampling_period
-          time_axis = numpy.arange(0,len(gsyn_es[0][self.parameters.neuron]),1) /  float(sampling_period) + float(gsyn_es[0].t_start)
+          time_axis = numpy.arange(0,len(gsyn_es[0]),1) /  float(len(gsyn_es[0])) * float(gsyn_es[0].t_stop) + float(gsyn_es[0].t_start)
+          
           t_stop = float(gsyn_es[0].t_stop - sampling_period)
-          
           for e,i in zip(gsyn_es,gsyn_is):
-            p1 = ax.plot(time_axis,e[self.parameters.neuron]*10**9,color='#F5A9A9')            
-            p2 = ax.plot(time_axis,i[self.parameters.neuron]*10**9,color='#A9BCF5')              
-            mean_gsyn_e = mean_gsyn_e + numpy.array(e[self.parameters.neuron])
-            mean_gsyn_i = mean_gsyn_i + numpy.array(i[self.parameters.neuron])
-          
-          mean_gsyn_i = mean_gsyn_i / len(gsyn_is)
-          mean_gsyn_e = mean_gsyn_e / len(gsyn_es)
+            e = e[:,self.parameters.neuron]*10**3 
+            i = i[:,self.parameters.neuron]*10**3
             
-          p1 = ax.plot(time_axis,mean_gsyn_e*10**9,color='r',linewidth=2)            
-          p2 = ax.plot(time_axis,mean_gsyn_i*10**9,color='b',linewidth=2)              
+            p1 = ax.plot(time_axis,e.tolist(),color='#F5A9A9')            
+            p2 = ax.plot(time_axis,i.tolist(),color='#A9BCF5')              
+            mean_gsyn_e = mean_gsyn_e + numpy.array(e.tolist())
+            mean_gsyn_i = mean_gsyn_i + numpy.array(i.tolist())
+         
+          mean_gsyn_i = mean_gsyn_i / len(gsyn_is) 
+          mean_gsyn_e = mean_gsyn_e / len(gsyn_es) 
+            
+          p1 = ax.plot(time_axis,mean_gsyn_e.tolist(),color='r',linewidth=2)            
+          p2 = ax.plot(time_axis,mean_gsyn_i.tolist(),color='b',linewidth=2)              
           
           disable_top_right_axis(ax)
           
@@ -294,7 +300,7 @@ class GSynPlot(PerStimulusPlot):
           pylab.xticks([0,t_stop/2,t_stop])
           three_tick_axis(ax.yaxis)
                     
-          pylab.legend([p1,p2],['exc','inh'])  
+          ax.legend([p1,p2],['exc','inh'])  
           pylab.rc('axes', linewidth=1)
           
 class OverviewPlot(Plotting):

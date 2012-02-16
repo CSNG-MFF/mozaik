@@ -38,13 +38,13 @@ class MeasureOrientationTuningFullfield(Experiment):
         for j in [1.0]:
             for i in xrange(0,num_orientations):
                 for k in xrange(0,num_trials):
-                    self.stimuli.append(FullfieldDriftingSinusoidalGrating([   
+                    self.stimuli.append(FullfieldDriftingSinusoidalGrating([
                                     7, # frame duration (roughly like a movie) - is this fast enough?
-                                    model.visual_field.size[0], 
-                                    model.visual_field.size[0], 
+                                    model.visual_field.size[0],
+                                    model.visual_field.size[0],
                                     0.0,
                                     0.0,
-                                    j*90.0, #max_luminance 
+                                    j*90.0, #max_luminance
                                     grating_duration, # stimulus duration
                                     40, #density
                                     k, # trial number
@@ -58,13 +58,12 @@ class MeasureOrientationTuningFullfield(Experiment):
         AveragedOrientationTuning(data_store,ParameterSet({})).analyse()
         GSTA(data_store,ParameterSet({'neurons' : [0], 'length' : 50.0 }),tags=['GSTA1']).analyse()
         Precision(select_result_sheet_query(data_store,"V1_Exc"),ParameterSet({'neurons' : [0], 'bin_length' : 1.0 })).analyse()
-        
         OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Exc'})).plot()
-        
         OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Inh'})).plot()
         OverviewPlot(data_store,ParameterSet({'sheet_name' : 'X_ON'})).plot()
+        #OverviewPlot(data_store,ParameterSet({'sheet_name' : 'X_OFF'})).plot()
         Figure2(data_store,ParameterSet({'sheet_name' : 'V1_Exc'})).plot()
-        RetinalInputMovie(data_store,ParameterSet({'frame_rate': 10})).plot()
+        #RetinalInputMovie(data_store,ParameterSet({'frame_rate': 10})).plot()
         
 class MeasureNaturalImagesWithEyeMovement(Experiment):
     
@@ -97,6 +96,7 @@ class MeasureNaturalImagesWithEyeMovement(Experiment):
 class MeasureSpontaneousActivity(Experiment):
     
     def __init__(self,model,duration):
+            self.model = model
             self.stimuli.append(Null([   
                             7, # frame duration (roughly like a movie) - is this fast enough?
                             model.visual_field.size[0], 
@@ -111,5 +111,6 @@ class MeasureSpontaneousActivity(Experiment):
 
     def do_analysis(self,data_store):
         print 'Doing Analysis'
-        #OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Exc'})).plot()
-        #OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Inh'})).plot()
+        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Exc'})).plot()
+        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'X_ON'})).plot()
+        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Inh'})).plot()

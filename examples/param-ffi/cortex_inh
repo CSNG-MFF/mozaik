@@ -7,7 +7,7 @@
 	'name':'V1_Inh',
 	'sx':100.0,
         'sy':100.0,
-	'density':5.0,
+	'density':400.0,
         
 	'magnification_factor':1.0,
     	
@@ -16,59 +16,88 @@
         	'params': {
         	    'v_thresh':-57.0,
     		    'v_rest': -70.0,
-    	    	    'v_reset': -65.0,
+    	    	    'v_reset': -70.0,
     		    'tau_refrac': 2.0,
-		'tau_m': 6.4,
-		'cm': 0.141,
-    		'e_rev_E': 0.0,
-    		'e_rev_I': -75.0,
-		'tau_syn_E': 1.5,
-    		'tau_syn_I': 10.0, 
-		},
+                'tau_m': 6.4,
+                'cm': 0.141,
+                'e_rev_E': 0.0,
+                'e_rev_I': -75.0,
+                'tau_syn_E': 1.5,
+                'tau_syn_I': 10.0, 
+            },
             'initial_values': {
-                'v': -60.0,
-            }
-        }
+                            'v': -60.0,
+             }
+        },
+        
+        'background_noise' : {
+                                        'exc_firing_rate' : 11500.0, 
+                                        'exc_weight' : 0.00045,
+                                        'inh_firing_rate' : 4700.0,
+                                        'inh_weight' : 0.00025,
+                            },
+
     },
     
     'InhExcConnection': {
-	    'connection_probability': 1.0, 
-	    'weights': 0.002,                
+	    'connection_probability': 0.05, 
+#	    'weights': 0.001,                
+	    'weights': 0.00,                
             'propagation_constant': 1.5,    
-	    'synapse_dynamics' : 'None',        
 	    'target_synapses' : 'inhibitory',
+	    
+            'short_term_plasticity' : False,
+            'short_term_plasticity_params': {
+                        'U': 0.0, 
+                        'tau_rec': 0.0, 
+                        'tau_facil': 0.0,
+                },
+
     },        
 
     'InhInhConnection': {
-	    'connection_probability': 0.1, 
-	    'weights': 0.002,                
+	    'connection_probability': 0.05, 
+	    'weights': 0.001,                
             'propagation_constant': 1.5,    
-	    'synapse_dynamics' : 'None',    
 	    'target_synapses' : 'inhibitory',
+
+            'short_term_plasticity' : False,
+            'short_term_plasticity_params': {
+                        'U': 0.0, 
+                        'tau_rec': 0.0, 
+                        'tau_facil': 0.0,
+                },
+
     },
 
     'AfferentConnection': {
             'aspect_ratio': UniformDist(min=0.33333333, max=0.3333333),
             'size':         UniformDist(min=0.7, max=0.7),
-            'orientation':  UniformDist(min=0, max=0),
-            'phase':        UniformDist(min=3.14, max=3.14),
+            'orientation':  UniformDist(min=0.0, max=0.0),
+            'phase':        UniformDist(min=6.48, max=6.48),
             'frequency':    UniformDist(min=0.8, max=0.8),
             'propagation_constant': 1.5,    
             'topological' : False,
             'probabilistic' : True,
 
-            'or_map' : True,
+            'or_map' : False,
             'or_map_location' : './or_map',
-            'phase_map' : True,
+            'phase_map' : False,
             'phase_map_location' : './phase_map',
 	    
 	    'specific_arborization': {
-		    'synapse_dynamics' : 'None',
-		    'weight_factor': 0.0008,
+		    'weight_factor': 0.016,
 		    'num_samples' : 60,
 		    'target_synapses' : 'excitatory',
-	    }
-	    
+        	    'short_term_plasticity' : False,
+	            'short_term_plasticity_params': {
+                        'U': 0.0, 
+                        'tau_rec': 0.0, 
+                        'tau_facil': 0.0,
+                    },
+	    },
+
+
     }        
   
 }

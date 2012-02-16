@@ -119,7 +119,7 @@ class GSTA(Analysis):
                   if time > ans.t_start  and time < ans.t_stop:
                      idx = int((time - ans.t_start)/dt)
                      if idx - gstal > 0 and (idx + gstal+1) <= len(ans[n]):
-                        gsta = gsta +  ans[n][idx-gstal:idx+gstal+1]
+                        gsta = gsta +  ans[idx-gstal:idx+gstal+1][n]
                         count +=1
           if count == 0:
              count = 1

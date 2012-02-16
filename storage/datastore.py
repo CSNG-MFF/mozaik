@@ -1,6 +1,6 @@
 from NeuroTools.parameters import ParameterSet
 from neo.core.block import Block
-from neo.io.hdf5io import IOManager
+#from neo.io.hdf5io import NeoHdf5IO
 from MozaikLite.stimuli.stimulus_generator import load_from_string, parse_stimuls_id
 from MozaikLite.framework.interfaces import MozaikLiteParametrizeObject
 from NeuroTools.parameters import ParameterSet
@@ -201,21 +201,45 @@ class Hdf5DataStore(DataStore):
     """
     An DataStore that saves all it's data in a hdf5 file and an associated analysis results file, 
     which just becomes the pickled self.analysis_results dictionary.
-        
     """
     def load(self):
         #load the data
-        iom = IOManager(filename=self.parameters.root_directory+'/datastore.hdf5');
+        iom = NeoHdf5IO(filename=self.parameters.root_directory+'/datastore.hdf5');
         self.block = iom.get('/block_0')
+        
+        # re-wrap segments
+        new = []
+        for s in self.block.segments:
+            new.append(NeoNeurotoolsWrapper(s))
+        
+        selg.block.segments  = new
         
         #now just construct the stimulus dictionary
         for s in self.block.segments:
              self.stimulus_dict[s.stimulus]=True
+             
+        f = open(self.parameters.root_directory+'/datastore.analysis.pickle','rb')
+        self.analysis_results = pickle.load(f)
+             
             
     def save(self):
+        # we need to first unwrap segments from MozaikWrapper
+        old = self.block.segments[:]
+        self.block.segments = []
+        for s in old:
+            self.block.segments.append(s.original_segment)    
+        
         #save the recording itself
-        iom = IOManager(filename=self.parameters.root_directory+'/datastore.hdf5');
+        iom = NeoHdf5IO(filename=self.parameters.root_directory+'/datastore.hdf5');
         iom.write_block(self.block)
+        
+        # put back wrapped segments
+        self.block.segments = old
+        
+        f = open(self.parameters.root_directory+'/datastore.analysis.pickle','wb')
+        pickle.dump(self.analysis_results,f)
+        f.close()
+
     
     def add_recording(self,segments,stimulus):
         # we get recordings as seg
@@ -254,29 +278,29 @@ class PickledDataStore(Hdf5DataStore):
     """
     
     def load(self):
-        f = open(self.parameters.root_directory+'/datastore.recordings.pickle','r')
+        f = open(self.parameters.root_directory+'/datastore.recordings.pickle','rb')
         self.block = pickle.load(f)
         for s in self.block.segments:
             self.stimulus_dict[s.annotations['stimulus']]=True
         
-        f = open(self.parameters.root_directory+'/datastore.analysis.pickle','r')
+        f = open(self.parameters.root_directory+'/datastore.analysis.pickle','rb')
         self.analysis_results = pickle.load(f)
         
-        f = open(self.parameters.root_directory+'/datastore.retinal.stimulus.pickle','r')
-        self.retinal_stimulus = pickle.load(f)
+        #f = open(self.parameters.root_directory+'/datastore.retinal.stimulus.pickle','rb')
+        #self.retinal_stimulus = pickle.load(f)
         
             
     def save(self):
-        f = open(self.parameters.root_directory+'/datastore.recordings.pickle','w')
+        f = open(self.parameters.root_directory+'/datastore.recordings.pickle','wb')
         pickle.dump(self.block,f)
         f.close()
-        
-        f = open(self.parameters.root_directory+'/datastore.retinal.stimulus.pickle','w')
-        pickle.dump(self.retinal_stimulus,f)
-        f.close()                
-        
-        f = open(self.parameters.root_directory+'/datastore.analysis.pickle','w')
+       
+        f = open(self.parameters.root_directory+'/datastore.analysis.pickle','wb')
         pickle.dump(self.analysis_results,f)
         f.close()
+
+        #f = open(self.parameters.root_directory+'/datastore.retinal.stimulus.pickle','wb')
+        #pickle.dump(self.retinal_stimulus,f)
+        #f.close()                
         
 
