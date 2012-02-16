@@ -34,7 +34,7 @@
                     },
                     
                 'background_noise' : {
-                                        'exc_firing_rate' : 14280.0, 
+                                        'exc_firing_rate' : 14300.0, 
                                         'exc_weight' : 0.00036,
                                         'inh_firing_rate' : 5900.0,
                                         'inh_weight' : 0.00020,
