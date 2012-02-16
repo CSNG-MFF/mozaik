@@ -88,9 +88,13 @@ class MeasureNaturalImagesWithEyeMovement(Experiment):
 
     def do_analysis(self,data_store):
         print 'Doing Analysis'
-        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Exc'})).plot()
-        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Inh'})).plot()
-        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'X_ON'})).plot()
+        
+        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Exc', 'neuron' : 0})).plot()
+        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Exc', 'neuron' : 1})).plot()
+        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Exc', 'neuron' : 2})).plot()
+        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Inh', 'neuron' : 0})).plot()
+        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'X_ON',  'neuron' : 0})).plot()
+        
         RetinalInputMovie(data_store,ParameterSet({'frame_rate': 10})).plot()
 
 class MeasureSpontaneousActivity(Experiment):
@@ -111,6 +115,8 @@ class MeasureSpontaneousActivity(Experiment):
 
     def do_analysis(self,data_store):
         print 'Doing Analysis'
-        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Exc'})).plot()
-        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'X_ON'})).plot()
-        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Inh'})).plot()
+        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'X_ON', 'neuron' : 0})).plot()
+        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Exc', 'neuron' : 0})).plot()
+        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Exc', 'neuron' : 1})).plot()
+        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Exc', 'neuron' : 2})).plot()
+        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Inh', 'neuron' : 3})).plot()

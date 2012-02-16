@@ -14,7 +14,7 @@ experiment_list =   [
                        #MeasureOrientationTuningFullfield(jens_model,num_orientations=2,spatial_frequency=0.8,temporal_frequency=2,grating_duration=143*7,num_trials=2),
                        #MeasureOrientationTuningFullfield(jens_model,num_orientations=2,spatial_frequency=0.8,temporal_frequency=2,grating_duration=143*7,num_trials=2),
                        MeasureSpontaneousActivity(jens_model,duration=147*7),
-                       #MeasureOrientationTuningFullfield(jens_model,num_orientations=2,spatial_frequency=0.8,temporal_frequency=2,grating_duration=50*7,num_trials=1),
+                       MeasureOrientationTuningFullfield(jens_model,num_orientations=2,spatial_frequency=0.8,temporal_frequency=2,grating_duration=50*7,num_trials=1),
                     ]
 
 if True:

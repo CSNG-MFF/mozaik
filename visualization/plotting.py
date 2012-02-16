@@ -306,12 +306,13 @@ class GSynPlot(PerStimulusPlot):
 class OverviewPlot(Plotting):
       required_parameters = ParameterSet({
             'sheet_name' : str,  #the name of the sheet for which to plot
+            'neuron' : int,
       })
       def subplot(self,subplotspec):
           gs = gridspec.GridSpecFromSubplotSpec(3, 1, subplot_spec=subplotspec)  
           RasterPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name, 'trial_averaged_histogram' : True, 'neurons' : []})).subplot(gs[0,0])
-          GSynPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : 0})).subplot(gs[1,0])
-          VmPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : 0})).subplot(gs[2,0])          
+          GSynPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : self.parameters.neuron})).subplot(gs[1,0])
+          VmPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : self.parameters.neuron})).subplot(gs[2,0])          
 
           
 class AnalogSignalListPlot(LinePlot):

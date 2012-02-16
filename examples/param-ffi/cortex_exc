@@ -27,17 +27,17 @@
                     },
                    'initial_values': {
                             'v': -60.0,
-                            'gsyn_exc' : 0.0010,
-                            'gsyn_inh' : 0.0015,
+                            'gsyn_exc' : 0.02,
+                            'gsyn_inh' : 0.03,
                         }
 
                     },
                     
                 'background_noise' : {
-                                        'exc_firing_rate' : 14300.0, 
-                                        'exc_weight' : 0.00036,
-                                        'inh_firing_rate' : 5900.0,
-                                        'inh_weight' : 0.00020,
+                                        'exc_firing_rate' : 2680.0, 
+                                        'exc_weight' : 0.002,
+                                        'inh_firing_rate' : 900.0,
+                                        'inh_weight' : 0.0024,
                                     },
     },
     
