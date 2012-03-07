@@ -22,11 +22,6 @@ from neo.core.analogsignalarray import AnalogSignalArray
 
 logger = logging.getLogger("Mozaik")
 
-
-import objgraph
-import config
-import resource
-
 class Sheet(MozaikComponent):
     """
     """

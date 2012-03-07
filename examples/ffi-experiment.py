@@ -1,9 +1,7 @@
 #!/usr/bin/ipython 
-
 import matplotlib
 matplotlib.use('GTKAgg') # do this before importing pylab
 from MozaikLite.framework.experiment import MeasureOrientationTuningFullfield, MeasureSpontaneousActivity, MeasureNaturalImagesWithEyeMovement
-import config
 from pyNN import nest as sim
 from MozaikLite.models.model import JensModel
 from MozaikLite.framework.experiment_controller import run_experiments, setup_experiments
@@ -31,11 +29,6 @@ if True:
     data_store = run_experiments(jens_model,experiment_list)
 else:
     data_store = PickledDataStore(load=True,parameters=ParameterSet({'root_directory':'medium_B'}))
-
-print config.hp.heap()
-
-0/0
-
 
 AveragedOrientationTuning(data_store,ParameterSet({})).analyse()
 GSTA(data_store,ParameterSet({'neurons' : [0], 'length' : 250.0 }),tags=['GSTA1']).analyse()
