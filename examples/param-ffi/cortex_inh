@@ -1,7 +1,7 @@
 {
     #CorticalUniformSheet parameters
     
-    'component': 'MozaikLite.framework.sheets.CorticalUniformSheet',
+    'component': 'mozaik.framework.sheets.CorticalUniformSheet',
     
     'params':{
 	'name':'V1_Inh',

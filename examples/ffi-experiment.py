@@ -1,16 +1,16 @@
 #!/usr/bin/ipython 
 import matplotlib
 matplotlib.use('GTKAgg') # do this before importing pylab
-from MozaikLite.framework.experiment import MeasureOrientationTuningFullfield, MeasureSpontaneousActivity, MeasureNaturalImagesWithEyeMovement
+from mozaik.framework.experiment import MeasureOrientationTuningFullfield, MeasureSpontaneousActivity, MeasureNaturalImagesWithEyeMovement
 from pyNN import nest as sim
-from MozaikLite.models.model import JensModel
-from MozaikLite.framework.experiment_controller import run_experiments, setup_experiments
-from MozaikLite.visualization.plotting import GSynPlot,RasterPlot,VmPlot,CyclicTuningCurvePlot,OverviewPlot, ConductanceSignalListPlot, RetinalInputMovie, ActivityMovie
-from MozaikLite.analysis.analysis import AveragedOrientationTuning,  GSTA, Precision
-from MozaikLite.visualization.jens_paper_plots import Figure2
-from MozaikLite.storage.datastore import Hdf5DataStore,PickledDataStore
+from mozaik.models.model import JensModel
+from mozaik.framework.experiment_controller import run_experiments, setup_experiments
+from mozaik.visualization.plotting import GSynPlot,RasterPlot,VmPlot,CyclicTuningCurvePlot,OverviewPlot, ConductanceSignalListPlot, RetinalInputMovie, ActivityMovie
+from mozaik.analysis.analysis import AveragedOrientationTuning,  GSTA, Precision
+from mozaik.visualization.jens_paper_plots import Figure2
+from mozaik.storage.datastore import Hdf5DataStore,PickledDataStore
 from NeuroTools.parameters import ParameterSet
-from MozaikLite.storage.queries import TagBasedQuery, select_result_sheet_query
+from mozaik.storage.queries import TagBasedQuery, select_result_sheet_query
 
 
 
@@ -22,7 +22,7 @@ if True:
     experiment_list =   [
                            #MeasureSpontaneousActivity(jens_model,duration=147*7),
                            #MeasureOrientationTuningFullfield(jens_model,num_orientations=8,spatial_frequency=0.8,temporal_frequency=2,grating_duration=148*7,num_trials=10),
-                           MeasureOrientationTuningFullfield(jens_model,num_orientations=8,spatial_frequency=0.8,temporal_frequency=2,grating_duration=57*7,num_trials=2),
+                           MeasureOrientationTuningFullfield(jens_model,num_orientations=1,spatial_frequency=0.8,temporal_frequency=2,grating_duration=57*7,num_trials=2),
                            #MeasureOrientationTuningFullfield(jens_model,num_orientations=8,spatial_frequency=0.8,temporal_frequency=2,grating_duration=148*7,num_trials=3),
                         ]
 
