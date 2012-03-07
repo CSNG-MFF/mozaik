@@ -49,7 +49,6 @@ This is a temporary wrapper that should be completely replaced by Neurotools onc
 been converted to use Neo data structures. 
 
 NOTE!!! Currently it is a big memory and CPU time liability!!!!
-
 NOTE!!!! We are also transposing all the Neo analogsignalarrays !!! This should be sorted in future!
 """
 class NeoNeurotoolsWrapper(MozaikSegment):

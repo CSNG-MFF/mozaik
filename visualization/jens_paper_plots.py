@@ -16,10 +16,13 @@ class Figure2(Plotting):
       def subplot(self,subplotspec):
           gs = gridspec.GridSpecFromSubplotSpec(12, 18, subplot_spec=subplotspec,hspace=1.0,wspace=1.0)  
           
-          dsv = queries.select_stimuli_type_query(self.datastore,'FullfieldDriftingSinusoidalGrating',['*','*','*','*','*',90.0,'*','*','*',0.0,'*','*'])
+          dsv = queries.select_stimuli_type_query(self.datastore,'FullfieldDriftingSinusoidalGrating',['*','*','*','*','*',27.0,'*','*','*',0.0,'*','*'])
           
           lgn_on_dsv = queries.select_result_sheet_query(dsv,'X_ON')
           lgn_off_dsv = queries.select_result_sheet_query(dsv,'X_OFF')
+          
+          print len(lgn_on_dsv.get_segments())
+          
           lgn_spikes = [[s.spiketrains for s in lgn_on_dsv.get_segments()],[s.spiketrains for s in lgn_off_dsv.get_segments()]]
           
           

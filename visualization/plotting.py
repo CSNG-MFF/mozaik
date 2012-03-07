@@ -50,13 +50,17 @@ prevent flexible use in nesting via the subplot.
 """
 
 import pylab
-import matplotlib.gridspec as gridspec
 import numpy
+import quantities as pq
+import matplotlib.gridspec as gridspec
+from scipy.interpolate import griddata
+
 from MozaikLite.framework.interfaces import MozaikLiteParametrizeObject
-from MozaikLite.stimuli.stimulus_generator import parse_stimuls_id,load_from_string
+from MozaikLite.stimuli.stimulus_generator import parse_stimuls_id,load_from_string, fromat_stimulus_id
 from NeuroTools.parameters import ParameterSet, ParameterDist
-from MozaikLite.storage.queries import select_stimuli_type_query,select_result_sheet_query, partition_by_stimulus_paramter_query
+from MozaikLite.storage.queries import *
 from simple_plot import *
+
 
 class Plotting(MozaikLiteParametrizeObject):
     
@@ -139,14 +143,6 @@ class CyclicTuningCurvePlot(PlotTuningCurve):
             pylab.title('Orientation tuning curve, Neuron: %d' % n)
         pylab.legend()
         
-        
-def fromat_stimulus_id(stimulus_id):
-    string = ''
-    for p in stimulus_id.parameters:
-        if p != '*' and p != 'x':
-            string = string + ' ' + str(p)
-    return string
-
 
 class LinePlot(Plotting):          
       """
@@ -184,6 +180,16 @@ class PerStimulusPlot(LinePlot):
         self.dsv = select_result_sheet_query(datastore,self.parameters.sheet_name)
         self.dsvs = partition_by_stimulus_paramter_query(self.dsv,8)    
         self.length = len(self.dsvs)
+
+    def subplot(self,subplotspec): 
+        if not self.length:
+           print 'Error, class that derives from LinePlot has to specify the length parameter'
+           return
+          
+        gs = gridspec.GridSpecFromSubplotSpec(1, self.length, subplot_spec=subplotspec)  
+        for idx in xrange(0,self.length):
+            self._subplot(idx,gs[0,idx])
+
             
 class RasterPlot(PerStimulusPlot):
       required_parameters = ParameterSet({
@@ -307,12 +313,20 @@ class OverviewPlot(Plotting):
       required_parameters = ParameterSet({
             'sheet_name' : str,  #the name of the sheet for which to plot
             'neuron' : int,
+            'sheet_activity' : ParameterSet, #if not empty the ParameterSet is passed to ActivityMovie which is displayed in to top row
       })
+      
       def subplot(self,subplotspec):
-          gs = gridspec.GridSpecFromSubplotSpec(3, 1, subplot_spec=subplotspec)  
-          RasterPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name, 'trial_averaged_histogram' : True, 'neurons' : []})).subplot(gs[0,0])
-          GSynPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : self.parameters.neuron})).subplot(gs[1,0])
-          VmPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : self.parameters.neuron})).subplot(gs[2,0])          
+          offset = 0 
+          if len(self.parameters.sheet_activity.keys()) != 0:
+             gs = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=subplotspec)      
+             ActivityMovie(self.datastore,self.parameters.sheet_activity).subplot(gs[0,0])
+             offset = 1 
+          else:
+             gs = gridspec.GridSpecFromSubplotSpec(3, 1, subplot_spec=subplotspec)      
+          RasterPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name, 'trial_averaged_histogram' : False, 'neurons' : []})).subplot(gs[0+offset,0])
+          GSynPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : self.parameters.neuron})).subplot(gs[1+offset,0])
+          VmPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : self.parameters.neuron})).subplot(gs[2+offset,0])
 
           
 class AnalogSignalListPlot(LinePlot):
@@ -334,11 +348,13 @@ class AnalogSignalListPlot(LinePlot):
         def _subplot(self,idx,gs):
               pylab.rc('axes', linewidth=3)
               ax = pylab.subplot(gs)
-              pylab.plot(self.asl[idx],color = 'b')
+              times = numpy.linspace(self.asl[idx].t_start.magnitude,self.asl[idx].t_stop.magnitude,len(self.asl[idx]))
+              pylab.plot(times,self.asl[idx],color = 'b')
               if idx == 0:
                  pylab.ylabel(self.parameters.ylabel)
               
               disable_top_right_axis(ax)  
+              pylab.xlim(times[0],times[-1])
               three_tick_axis(ax.yaxis)            
               three_tick_axis(ax.xaxis)                      
               pylab.rc('axes', linewidth=1)
@@ -362,11 +378,13 @@ class ConductanceSignalListPlot(LinePlot):
         def _subplot(self,idx,gs):
               pylab.rc('axes', linewidth=3)
               ax = pylab.subplot(gs)
-              pylab.plot(self.e_con[idx],color = 'r',label = 'exc')
-              pylab.plot(self.i_con[idx],color = 'r',label = 'inh')
+              times = numpy.linspace(self.e_con[idx].t_start.magnitude,self.e_con[idx].t_stop.magnitude,len(self.e_con[idx]))
+              pylab.plot(times,self.e_con[idx],color = 'r',label = 'exc')
+              pylab.plot(times,self.i_con[idx],color = 'b',label = 'inh')
               if idx == 0:
                  pylab.ylabel('G(S)')
-
+              
+              pylab.xlim(times[0],times[-1])  
               disable_top_right_axis(ax)      
               three_tick_axis(ax.yaxis)        
               three_tick_axis(ax.xaxis)                      
@@ -387,3 +405,50 @@ class RetinalInputMovie(LinePlot):
        
       def _subplot(self,idx,gs):
           PixelMovie(self.retinal_input[idx],1.0/self.parameters.frame_rate*1000,x_axis=False,y_axis=False)(gs)
+
+class ActivityMovie(PerStimulusPlot):
+      required_parameters = ParameterSet({
+            'frame_rate' : int,  #the desired frame rate (per sec), it might be less if the computer is too slow
+            'bin_width' : float, # in ms the width of the bins into which to sample spikes 
+            'scatter' :  bool,  # whether to plot neurons activity into a scatter plot (if True) or as an interpolated pixel image
+            'resolution' : int, # the number of pixels into which the activity will be interpolated in case scatter = True
+      })
+      
+
+      def  __init__(self,datastore,parameters):
+           PerStimulusPlot.__init__(self,datastore,parameters)
+    
+      def _subplot(self,idx,gs):
+         sp = [s.spiketrains for s in self.dsvs[idx].get_segments()]
+         
+         start = sp[0][0].t_start.magnitude
+         stop = sp[0][0].t_stop.magnitude
+         units = sp[0][0].t_start.units
+         bw = self.parameters.bin_width * pq.ms
+         bw = bw.rescale(units).magnitude
+         bins = numpy.arange(start,stop,bw)
+             
+         
+         h = []
+         for spike_trains in sp:
+             hh = []
+             for st in spike_trains:
+                hh.append(numpy.histogram(st.magnitude,bins, (start,stop))[0])
+             h.append(numpy.array(hh))
+         h = numpy.sum(h,axis=0)
+
+         pos = self.dsvs[0].get_neuron_postions()[self.parameters.sheet_name]
+         
+         if not self.parameters.scatter:
+             xi = numpy.linspace(numpy.min(pos[0])*1.1,numpy.max(pos[0])*1.1,self.parameters.resolution)
+             yi = numpy.linspace(numpy.min(pos[1])*1.1,numpy.max(pos[1])*1.1,self.parameters.resolution)
+      
+             movie = []
+             for i in xrange(0,numpy.shape(h)[1]):
+                 movie.append(griddata((pos[0], pos[1]), h[:,i], (xi[None,:], yi[:,None]), method='cubic'))
+                
+             PixelMovie(movie,1.0/self.parameters.frame_rate*1000,x_axis=False,y_axis=False)(gs)
+         else:
+             ScatterPlotMovie(pos[0],pos[1],h.T,1.0/self.parameters.frame_rate*1000,x_axis=False,y_axis=False, dot_size = 40)(gs)
+
+

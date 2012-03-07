@@ -31,52 +31,60 @@
         },
         
         'background_noise' : {
-                                        'exc_firing_rate' : 11500.0, 
-                                        'exc_weight' : 0.00045,
-                                        'inh_firing_rate' : 4700.0,
-                                        'inh_weight' : 0.00025,
+                                        'exc_firing_rate' : 2680.0, 
+                                        'exc_weight' : 0.002,
+                                        'inh_firing_rate' : 900.0,
+                                        'inh_weight' : 0.0024,
                             },
 
     },
     
     'InhExcConnection': {
-	    'connection_probability': 0.05, 
-#	    'weights': 0.001,                
-	    'weights': 0.00,                
-            'propagation_constant': 1.5,    
-	    'target_synapses' : 'inhibitory',
-	    
-            'short_term_plasticity' : False,
-            'short_term_plasticity_params': {
-                        'U': 0.0, 
-                        'tau_rec': 0.0, 
-                        'tau_facil': 0.0,
-                },
-
+            'probabilistic' : True,
+    	    'or_sigma' : 0.3,
+            'phase_sigma' : 0.6,
+            'specific_arborization' : {
+#				        'weights': 0.001,
+                        'weights': 0.0,
+                        'num_samples' : 90,
+                        'delay': 2.0,    
+                        'target_synapses' : 'inhibitory',
+                        'short_term_plasticity' : False,
+                        'short_term_plasticity_params': {
+                                    'U': 0.0, 
+                                    'tau_rec': 0.0, 
+                                    'tau_facil': 0.0,
+                            },
+            },
     },        
 
     'InhInhConnection': {
-	    'connection_probability': 0.05, 
-	    'weights': 0.001,                
-            'propagation_constant': 1.5,    
-	    'target_synapses' : 'inhibitory',
+	    'probabilistic' : True,
+        'or_sigma' : 0.3,
+	    'phase_sigma' : 0.6,
+	    'specific_arborization' : {
+#				        'weights': 0.001,
+				        'weights': 0.0,
+				        'num_samples' : 90,
+                        'delay': 2.0,    
+                        'target_synapses' : 'inhibitory',
 
-            'short_term_plasticity' : False,
-            'short_term_plasticity_params': {
-                        'U': 0.0, 
-                        'tau_rec': 0.0, 
-                        'tau_facil': 0.0,
-                },
-
+                        'short_term_plasticity' : False,
+                        'short_term_plasticity_params': {
+                                    'U': 0.0, 
+                                    'tau_rec': 0.0, 
+                                    'tau_facil': 0.0,
+                            },
+        },
     },
 
     'AfferentConnection': {
-            'aspect_ratio': UniformDist(min=0.33333333, max=0.3333333),
-            'size':         UniformDist(min=0.7, max=0.7),
-            'orientation':  UniformDist(min=0.0, max=0.0),
-            'phase':        UniformDist(min=6.48, max=6.48),
-            'frequency':    UniformDist(min=0.8, max=0.8),
-            'propagation_constant': 1.5,    
+            'aspect_ratio':            UniformDist(min=0.33333333, max=0.3333333),
+            'size':                    UniformDist(min=0.7, max=0.7),
+            'orientation_preference':  UniformDist(min=0.0, max=3.141592653589793),
+            'phase':                   UniformDist(min=0.0, max=6.283185307179586),
+            'frequency':               UniformDist(min=0.8, max=0.8),
+            'delay': 2.0,    
             'topological' : False,
             'probabilistic' : True,
 
@@ -86,14 +94,14 @@
             'phase_map_location' : './phase_map',
 	    
 	    'specific_arborization': {
-		    'weight_factor': 0.016,
+		    'weight_factor': 0.08,
 		    'num_samples' : 60,
 		    'target_synapses' : 'excitatory',
         	    'short_term_plasticity' : False,
 	            'short_term_plasticity_params': {
-                        'U': 0.0, 
-                        'tau_rec': 0.0, 
-                        'tau_facil': 0.0,
+                        'U': 0.083, 
+                        'tau_rec': 1.0, 
+                        'tau_facil': 2866.0,
                     },
 	    },
 

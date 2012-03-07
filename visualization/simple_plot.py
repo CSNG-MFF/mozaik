@@ -379,4 +379,30 @@ class PixelMovie(StandardStyleAnimatedPlot):
       def plot(self):  
           self.im  = self.axis.imshow(self.movie[0],interpolation='nearest',cmap='gray')
             
+class ScatterPlotMovie(StandardStyleAnimatedPlot):
+      def __init__(self,x,y,z,frame_duration,**kwargs):
+          StandardStyleAnimatedPlot.__init__(self,frame_duration,**kwargs)
+          self.z = z
+          self.x = x
+          self.y = y
+          self.l = len(z)
+          self.i = 0
+          self.parameters["dot_size"] = 20
+          self.parameters["marker"] = 'o'
+          self.parameters["left_border"] = False
+          self.parameters["bottom_border"] = False
+          
+          
+      def plot_next_frame(self):
+          self.scatter.set_array(self.z[self.i])
+          self.i=self.i+1
+          if self.i == self.l:
+             self.i = 0
+          return self.scatter
+            
+      def plot(self):  
+          vmin = 0
+          vmax = numpy.max(self.z)
+          self.scatter  = self.axis.scatter(self.x,self.y,c = self.z[0],s = self.parameters["dot_size"],marker = self.parameters["marker"],lw = 1,cmap='gray',vmin = vmin, vmax = vmax)
+          pylab.axis('equal')
 

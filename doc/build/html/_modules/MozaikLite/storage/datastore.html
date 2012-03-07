@@ -65,7 +65,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span>
 
 
-<div class="viewcode-block" id="DataStoreView"><a class="viewcode-back" href="../../../tmp/MozaikLite.storage.html#MozaikLite.storage.datastore.DataStoreView">[docs]</a><span class="k">class</span> <span class="nc">DataStoreView</span><span class="p">(</span><span class="n">MozaikLiteParametrizeObject</span><span class="p">):</span>
+<div class="viewcode-block" id="DataStoreView"><a class="viewcode-back" href="../../../MozaikLite.storage.html#MozaikLite.storage.datastore.DataStoreView">[docs]</a><span class="k">class</span> <span class="nc">DataStoreView</span><span class="p">(</span><span class="n">MozaikLiteParametrizeObject</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This class represents a subset of a DataStore and defines the query interface and </span>
 <span class="sd">    the structure in which the data are stored in the memory of any datastore. Main role </span>
@@ -133,10 +133,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">analysis_results</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">full_datastore</span> <span class="o">=</span> <span class="n">full_datastore</span> <span class="c"># should be self if actually the instance is actually DataStore</span>
         
-<div class="viewcode-block" id="DataStoreView.get_segments"><a class="viewcode-back" href="../../../tmp/MozaikLite.storage.html#MozaikLite.storage.datastore.DataStoreView.get_segments">[docs]</a>    <span class="k">def</span> <span class="nf">get_segments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="DataStoreView.get_segments"><a class="viewcode-back" href="../../../MozaikLite.storage.html#MozaikLite.storage.datastore.DataStoreView.get_segments">[docs]</a>    <span class="k">def</span> <span class="nf">get_segments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">segments</span>
         </div>
-<div class="viewcode-block" id="DataStoreView.sheets"><a class="viewcode-back" href="../../../tmp/MozaikLite.storage.html#MozaikLite.storage.datastore.DataStoreView.sheets">[docs]</a>    <span class="k">def</span> <span class="nf">sheets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="DataStoreView.sheets"><a class="viewcode-back" href="../../../MozaikLite.storage.html#MozaikLite.storage.datastore.DataStoreView.sheets">[docs]</a>    <span class="k">def</span> <span class="nf">sheets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the list of all sheets that are present in at least one of the segments in the give DataStoreView</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -145,7 +145,7 @@
             <span class="n">sheets</span><span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">annotations</span><span class="p">[</span><span class="s">&#39;sheet_name&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="k">return</span> <span class="n">sheets</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
     </div>
-<div class="viewcode-block" id="DataStoreView.get_stimuli"><a class="viewcode-back" href="../../../tmp/MozaikLite.storage.html#MozaikLite.storage.datastore.DataStoreView.get_stimuli">[docs]</a>    <span class="k">def</span> <span class="nf">get_stimuli</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="DataStoreView.get_stimuli"><a class="viewcode-back" href="../../../MozaikLite.storage.html#MozaikLite.storage.datastore.DataStoreView.get_stimuli">[docs]</a>    <span class="k">def</span> <span class="nf">get_stimuli</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns a list of stimuli ids. The order of the stimuli ids corresponds to the order of</span>
 <span class="sd">        segments returned by the get_segments() call.</span>
@@ -211,7 +211,7 @@
             <span class="n">ass</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ass</span>    
    </div>
-<div class="viewcode-block" id="DataStoreView.get_analysis_result"><a class="viewcode-back" href="../../../tmp/MozaikLite.storage.html#MozaikLite.storage.datastore.DataStoreView.get_analysis_result">[docs]</a>    <span class="k">def</span> <span class="nf">get_analysis_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">result_id</span><span class="p">,</span><span class="n">sheet_name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">neuron_idx</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="DataStoreView.get_analysis_result"><a class="viewcode-back" href="../../../MozaikLite.storage.html#MozaikLite.storage.datastore.DataStoreView.get_analysis_result">[docs]</a>    <span class="k">def</span> <span class="nf">get_analysis_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">result_id</span><span class="p">,</span><span class="n">sheet_name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">neuron_idx</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">sheet_name</span><span class="p">:</span>
            <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analysis_results</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span> 
         <span class="k">elif</span> <span class="ow">not</span> <span class="n">neuron_idx</span><span class="p">:</span>
@@ -225,7 +225,7 @@
             <span class="k">return</span> <span class="p">[]</span>
     
 </div>
-<div class="viewcode-block" id="DataStoreView.get_retinal_stimulus"><a class="viewcode-back" href="../../../tmp/MozaikLite.storage.html#MozaikLite.storage.datastore.DataStoreView.get_retinal_stimulus">[docs]</a>    <span class="k">def</span> <span class="nf">get_retinal_stimulus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">stimuli</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="DataStoreView.get_retinal_stimulus"><a class="viewcode-back" href="../../../MozaikLite.storage.html#MozaikLite.storage.datastore.DataStoreView.get_retinal_stimulus">[docs]</a>    <span class="k">def</span> <span class="nf">get_retinal_stimulus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">stimuli</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">stimuli</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">retinal_stimulus</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
@@ -240,22 +240,22 @@
                <span class="n">nd</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> 
         <span class="k">return</span> <span class="n">nd</span>    
 
-<div class="viewcode-block" id="DataStoreView.retinal_stimulus_copy"><a class="viewcode-back" href="../../../tmp/MozaikLite.storage.html#MozaikLite.storage.datastore.DataStoreView.retinal_stimulus_copy">[docs]</a>    <span class="k">def</span> <span class="nf">retinal_stimulus_copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="DataStoreView.retinal_stimulus_copy"><a class="viewcode-back" href="../../../MozaikLite.storage.html#MozaikLite.storage.datastore.DataStoreView.retinal_stimulus_copy">[docs]</a>    <span class="k">def</span> <span class="nf">retinal_stimulus_copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">new_dict</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">retinal_stimulus</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="n">new_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">retinal_stimulus</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">new_dict</span>
 </div>
-<div class="viewcode-block" id="DataStoreView.analysis_result_copy"><a class="viewcode-back" href="../../../tmp/MozaikLite.storage.html#MozaikLite.storage.datastore.DataStoreView.analysis_result_copy">[docs]</a>    <span class="k">def</span> <span class="nf">analysis_result_copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="DataStoreView.analysis_result_copy"><a class="viewcode-back" href="../../../MozaikLite.storage.html#MozaikLite.storage.datastore.DataStoreView.analysis_result_copy">[docs]</a>    <span class="k">def</span> <span class="nf">analysis_result_copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_analysis_result_copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_results</span><span class="p">)</span>
                 </div>
-<div class="viewcode-block" id="DataStoreView.recordings_copy"><a class="viewcode-back" href="../../../tmp/MozaikLite.storage.html#MozaikLite.storage.datastore.DataStoreView.recordings_copy">[docs]</a>    <span class="k">def</span> <span class="nf">recordings_copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="DataStoreView.recordings_copy"><a class="viewcode-back" href="../../../MozaikLite.storage.html#MozaikLite.storage.datastore.DataStoreView.recordings_copy">[docs]</a>    <span class="k">def</span> <span class="nf">recordings_copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">segments</span><span class="p">[:]</span>
 </div>
-<div class="viewcode-block" id="DataStoreView.fromDataStoreView"><a class="viewcode-back" href="../../../tmp/MozaikLite.storage.html#MozaikLite.storage.datastore.DataStoreView.fromDataStoreView">[docs]</a>    <span class="k">def</span> <span class="nf">fromDataStoreView</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="DataStoreView.fromDataStoreView"><a class="viewcode-back" href="../../../MozaikLite.storage.html#MozaikLite.storage.datastore.DataStoreView.fromDataStoreView">[docs]</a>    <span class="k">def</span> <span class="nf">fromDataStoreView</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">DataStoreView</span><span class="p">(</span><span class="n">ParameterSet</span><span class="p">({}),</span><span class="bp">self</span><span class="o">.</span><span class="n">full_datastore</span><span class="p">)</span>
 </div></div>
-<div class="viewcode-block" id="DataStore"><a class="viewcode-back" href="../../../tmp/MozaikLite.storage.html#MozaikLite.storage.datastore.DataStore">[docs]</a><span class="k">class</span> <span class="nc">DataStore</span><span class="p">(</span><span class="n">DataStoreView</span><span class="p">):</span>
+<div class="viewcode-block" id="DataStore"><a class="viewcode-back" href="../../../MozaikLite.storage.html#MozaikLite.storage.datastore.DataStore">[docs]</a><span class="k">class</span> <span class="nc">DataStore</span><span class="p">(</span><span class="n">DataStoreView</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Abstract DataStore class the declares the parameters, and enforces the interface</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -278,7 +278,7 @@
         <span class="k">if</span> <span class="n">load</span><span class="p">:</span> 
             <span class="bp">self</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
         
-<div class="viewcode-block" id="DataStore.identify_unpresented_stimuli"><a class="viewcode-back" href="../../../tmp/MozaikLite.storage.html#MozaikLite.storage.datastore.DataStore.identify_unpresented_stimuli">[docs]</a>    <span class="k">def</span> <span class="nf">identify_unpresented_stimuli</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">stimuli</span><span class="p">):</span>
+<div class="viewcode-block" id="DataStore.identify_unpresented_stimuli"><a class="viewcode-back" href="../../../MozaikLite.storage.html#MozaikLite.storage.datastore.DataStore.identify_unpresented_stimuli">[docs]</a>    <span class="k">def</span> <span class="nf">identify_unpresented_stimuli</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">stimuli</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        It will filter out from stimuli all those which have already been presented.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -289,34 +289,34 @@
                <span class="n">unpresented_stimuli</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">unpresented_stimuli</span>
         </div>
-<div class="viewcode-block" id="DataStore.load"><a class="viewcode-back" href="../../../tmp/MozaikLite.storage.html#MozaikLite.storage.datastore.DataStore.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="DataStore.load"><a class="viewcode-back" href="../../../MozaikLite.storage.html#MozaikLite.storage.datastore.DataStore.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
         <span class="k">pass</span>
         </div>
-<div class="viewcode-block" id="DataStore.save"><a class="viewcode-back" href="../../../tmp/MozaikLite.storage.html#MozaikLite.storage.datastore.DataStore.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="DataStore.save"><a class="viewcode-back" href="../../../MozaikLite.storage.html#MozaikLite.storage.datastore.DataStore.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
         <span class="k">pass</span>    
     </div>
-<div class="viewcode-block" id="DataStore.add_recording"><a class="viewcode-back" href="../../../tmp/MozaikLite.storage.html#MozaikLite.storage.datastore.DataStore.add_recording">[docs]</a>    <span class="k">def</span> <span class="nf">add_recording</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">segment</span><span class="p">,</span><span class="n">stimulus</span><span class="p">):</span>
+<div class="viewcode-block" id="DataStore.add_recording"><a class="viewcode-back" href="../../../MozaikLite.storage.html#MozaikLite.storage.datastore.DataStore.add_recording">[docs]</a>    <span class="k">def</span> <span class="nf">add_recording</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">segment</span><span class="p">,</span><span class="n">stimulus</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
         <span class="k">pass</span>
     </div>
-<div class="viewcode-block" id="DataStore.add_analysis_result"><a class="viewcode-back" href="../../../tmp/MozaikLite.storage.html#MozaikLite.storage.datastore.DataStore.add_analysis_result">[docs]</a>    <span class="k">def</span> <span class="nf">add_analysis_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">result</span><span class="p">,</span><span class="n">sheet_name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">neuron_idx</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="DataStore.add_analysis_result"><a class="viewcode-back" href="../../../MozaikLite.storage.html#MozaikLite.storage.datastore.DataStore.add_analysis_result">[docs]</a>    <span class="k">def</span> <span class="nf">add_analysis_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">result</span><span class="p">,</span><span class="n">sheet_name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">neuron_idx</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
         <span class="k">pass</span>        
 </div>
-<div class="viewcode-block" id="DataStore.add_retinal_stimulus"><a class="viewcode-back" href="../../../tmp/MozaikLite.storage.html#MozaikLite.storage.datastore.DataStore.add_retinal_stimulus">[docs]</a>    <span class="k">def</span> <span class="nf">add_retinal_stimulus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">data</span><span class="p">,</span><span class="n">stimulus</span><span class="p">):</span>
+<div class="viewcode-block" id="DataStore.add_retinal_stimulus"><a class="viewcode-back" href="../../../MozaikLite.storage.html#MozaikLite.storage.datastore.DataStore.add_retinal_stimulus">[docs]</a>    <span class="k">def</span> <span class="nf">add_retinal_stimulus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">data</span><span class="p">,</span><span class="n">stimulus</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
         <span class="k">pass</span>        
 </div></div>
-<div class="viewcode-block" id="Hdf5DataStore"><a class="viewcode-back" href="../../../tmp/MozaikLite.storage.html#MozaikLite.storage.datastore.Hdf5DataStore">[docs]</a><span class="k">class</span> <span class="nc">Hdf5DataStore</span><span class="p">(</span><span class="n">DataStore</span><span class="p">):</span>
+<div class="viewcode-block" id="Hdf5DataStore"><a class="viewcode-back" href="../../../MozaikLite.storage.html#MozaikLite.storage.datastore.Hdf5DataStore">[docs]</a><span class="k">class</span> <span class="nc">Hdf5DataStore</span><span class="p">(</span><span class="n">DataStore</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    An DataStore that saves all it&#39;s data in a hdf5 file and an associated analysis results file, </span>
 <span class="sd">    which just becomes the pickled self.analysis_results dictionary.</span>
 <span class="sd">        </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
-<div class="viewcode-block" id="Hdf5DataStore.load"><a class="viewcode-back" href="../../../tmp/MozaikLite.storage.html#MozaikLite.storage.datastore.Hdf5DataStore.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Hdf5DataStore.load"><a class="viewcode-back" href="../../../MozaikLite.storage.html#MozaikLite.storage.datastore.Hdf5DataStore.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c">#load the data</span>
         <span class="c">#iom = IOManager(filename=self.parameters.root_directory+&#39;/datastore.hdf5&#39;);</span>
         <span class="c">#self.block = iom.get(&#39;/block_0&#39;)</span>
@@ -328,7 +328,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">analysis_results</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
         
             </div>
-<div class="viewcode-block" id="Hdf5DataStore.save"><a class="viewcode-back" href="../../../tmp/MozaikLite.storage.html#MozaikLite.storage.datastore.Hdf5DataStore.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Hdf5DataStore.save"><a class="viewcode-back" href="../../../MozaikLite.storage.html#MozaikLite.storage.datastore.Hdf5DataStore.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c">#save the recording itself</span>
         <span class="c">#iom = IOManager(filename=self.parameters.root_directory+&#39;/datastore.hdf5&#39;);</span>
         <span class="c">#iom.write_block(self.block)</span>
@@ -336,17 +336,17 @@
         <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_results</span><span class="p">,</span><span class="n">f</span><span class="p">)</span>
         
     </div>
-<div class="viewcode-block" id="Hdf5DataStore.add_recording"><a class="viewcode-back" href="../../../tmp/MozaikLite.storage.html#MozaikLite.storage.datastore.Hdf5DataStore.add_recording">[docs]</a>    <span class="k">def</span> <span class="nf">add_recording</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">segment</span><span class="p">,</span><span class="n">stimulus</span><span class="p">):</span>
+<div class="viewcode-block" id="Hdf5DataStore.add_recording"><a class="viewcode-back" href="../../../MozaikLite.storage.html#MozaikLite.storage.datastore.Hdf5DataStore.add_recording">[docs]</a>    <span class="k">def</span> <span class="nf">add_recording</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">segment</span><span class="p">,</span><span class="n">stimulus</span><span class="p">):</span>
         <span class="c"># we get recordings as seg</span>
         <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">segment</span><span class="p">:</span>
             <span class="n">s</span><span class="o">.</span><span class="n">annotations</span><span class="p">[</span><span class="s">&#39;stimulus&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">stimulus</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">segments</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">segment</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">stimulus_dict</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">stimulus</span><span class="p">)]</span><span class="o">=</span><span class="bp">True</span>
 </div>
-<div class="viewcode-block" id="Hdf5DataStore.add_retinal_stimulus"><a class="viewcode-back" href="../../../tmp/MozaikLite.storage.html#MozaikLite.storage.datastore.Hdf5DataStore.add_retinal_stimulus">[docs]</a>    <span class="k">def</span> <span class="nf">add_retinal_stimulus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">data</span><span class="p">,</span><span class="n">stimulus</span><span class="p">):</span>
+<div class="viewcode-block" id="Hdf5DataStore.add_retinal_stimulus"><a class="viewcode-back" href="../../../MozaikLite.storage.html#MozaikLite.storage.datastore.Hdf5DataStore.add_retinal_stimulus">[docs]</a>    <span class="k">def</span> <span class="nf">add_retinal_stimulus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">data</span><span class="p">,</span><span class="n">stimulus</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">retinal_stimulus</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">stimulus</span><span class="p">)]</span> <span class="o">=</span> <span class="n">data</span>
         </div>
-<div class="viewcode-block" id="Hdf5DataStore.add_analysis_result"><a class="viewcode-back" href="../../../tmp/MozaikLite.storage.html#MozaikLite.storage.datastore.Hdf5DataStore.add_analysis_result">[docs]</a>    <span class="k">def</span> <span class="nf">add_analysis_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">result</span><span class="p">,</span><span class="n">sheet_name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">neuron_idx</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Hdf5DataStore.add_analysis_result"><a class="viewcode-back" href="../../../MozaikLite.storage.html#MozaikLite.storage.datastore.Hdf5DataStore.add_analysis_result">[docs]</a>    <span class="k">def</span> <span class="nf">add_analysis_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">result</span><span class="p">,</span><span class="n">sheet_name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">neuron_idx</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">sheet_name</span><span class="p">:</span>
             <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analysis_results</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
@@ -367,12 +367,12 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">node</span><span class="p">[</span><span class="n">result</span><span class="o">.</span><span class="n">identifier</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">result</span><span class="p">]</span>
         </div></div>
-<div class="viewcode-block" id="PickledDataStore"><a class="viewcode-back" href="../../../tmp/MozaikLite.storage.html#MozaikLite.storage.datastore.PickledDataStore">[docs]</a><span class="k">class</span> <span class="nc">PickledDataStore</span><span class="p">(</span><span class="n">Hdf5DataStore</span><span class="p">):</span>
+<div class="viewcode-block" id="PickledDataStore"><a class="viewcode-back" href="../../../MozaikLite.storage.html#MozaikLite.storage.datastore.PickledDataStore">[docs]</a><span class="k">class</span> <span class="nc">PickledDataStore</span><span class="p">(</span><span class="n">Hdf5DataStore</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    An DataStore that saves all it&#39;s data as a simple pickled files </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
-<div class="viewcode-block" id="PickledDataStore.load"><a class="viewcode-back" href="../../../tmp/MozaikLite.storage.html#MozaikLite.storage.datastore.PickledDataStore.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="PickledDataStore.load"><a class="viewcode-back" href="../../../MozaikLite.storage.html#MozaikLite.storage.datastore.PickledDataStore.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">root_directory</span><span class="o">+</span><span class="s">&#39;/datastore.recordings.pickle&#39;</span><span class="p">,</span><span class="s">&#39;r&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">block</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">segments</span><span class="p">:</span>
@@ -385,7 +385,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">retinal_stimulus</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
         
             </div>
-<div class="viewcode-block" id="PickledDataStore.save"><a class="viewcode-back" href="../../../tmp/MozaikLite.storage.html#MozaikLite.storage.datastore.PickledDataStore.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="PickledDataStore.save"><a class="viewcode-back" href="../../../MozaikLite.storage.html#MozaikLite.storage.datastore.PickledDataStore.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">root_directory</span><span class="o">+</span><span class="s">&#39;/datastore.recordings.pickle&#39;</span><span class="p">,</span><span class="s">&#39;w&#39;</span><span class="p">)</span>
         <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="p">,</span><span class="n">f</span><span class="p">)</span>
         <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>

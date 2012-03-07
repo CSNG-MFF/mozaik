@@ -90,15 +90,15 @@
 
 
 
-<div class="viewcode-block" id="load_from_string"><a class="viewcode-back" href="../../../tmp/MozaikLite.stimuli.html#MozaikLite.stimuli.stimulus_generator.load_from_string">[docs]</a><span class="k">def</span> <span class="nf">load_from_string</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+<div class="viewcode-block" id="load_from_string"><a class="viewcode-back" href="../../../MozaikLite.stimuli.html#MozaikLite.stimuli.stimulus_generator.load_from_string">[docs]</a><span class="k">def</span> <span class="nf">load_from_string</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">parse_stimuls_id</span><span class="p">(</span><span class="n">string</span><span class="p">)</span><span class="o">.</span><span class="n">load_stimulus</span><span class="p">()</span>
 </div>
-<div class="viewcode-block" id="parse_stimuls_id"><a class="viewcode-back" href="../../../tmp/MozaikLite.stimuli.html#MozaikLite.stimuli.stimulus_generator.parse_stimuls_id">[docs]</a><span class="k">def</span> <span class="nf">parse_stimuls_id</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+<div class="viewcode-block" id="parse_stimuls_id"><a class="viewcode-back" href="../../../MozaikLite.stimuli.html#MozaikLite.stimuli.stimulus_generator.parse_stimuls_id">[docs]</a><span class="k">def</span> <span class="nf">parse_stimuls_id</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
     <span class="n">words</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">rsplit</span><span class="p">();</span>
     <span class="k">return</span> <span class="n">StimulusID</span><span class="p">(</span><span class="n">words</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">words</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
 
 </div>
-<div class="viewcode-block" id="StimulusID"><a class="viewcode-back" href="../../../tmp/MozaikLite.stimuli.html#MozaikLite.stimuli.stimulus_generator.StimulusID">[docs]</a><span class="k">class</span> <span class="nc">StimulusID</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="StimulusID"><a class="viewcode-back" href="../../../MozaikLite.stimuli.html#MozaikLite.stimuli.stimulus_generator.StimulusID">[docs]</a><span class="k">class</span> <span class="nc">StimulusID</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
       
       <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">parameters</span><span class="p">):</span>
           <span class="k">assert</span> <span class="n">StimulusTaxonomy</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="s">&#39;No stimulus with name &lt;</span><span class="si">%s</span><span class="s">&gt;  in Stimulus Taxonomy&#39;</span> <span class="o">%</span> <span class="n">name</span>
@@ -119,10 +119,10 @@
                    <span class="k">return</span> <span class="bp">True</span>
             <span class="k">return</span> <span class="bp">False</span>
       
-<div class="viewcode-block" id="StimulusID.get_paramter_name"><a class="viewcode-back" href="../../../tmp/MozaikLite.stimuli.html#MozaikLite.stimuli.stimulus_generator.StimulusID.get_paramter_name">[docs]</a>      <span class="k">def</span> <span class="nf">get_paramter_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">paramter_index</span><span class="p">):</span>      
+<div class="viewcode-block" id="StimulusID.get_paramter_name"><a class="viewcode-back" href="../../../MozaikLite.stimuli.html#MozaikLite.stimuli.stimulus_generator.StimulusID.get_paramter_name">[docs]</a>      <span class="k">def</span> <span class="nf">get_paramter_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">paramter_index</span><span class="p">):</span>      
           <span class="k">return</span> <span class="n">StimulusTaxonomy</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">][</span><span class="n">paramter_index</span><span class="p">]</span>
            </div>
-<div class="viewcode-block" id="StimulusID.load_stimulus"><a class="viewcode-back" href="../../../tmp/MozaikLite.stimuli.html#MozaikLite.stimuli.stimulus_generator.StimulusID.load_stimulus">[docs]</a>      <span class="k">def</span> <span class="nf">load_stimulus</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="StimulusID.load_stimulus"><a class="viewcode-back" href="../../../MozaikLite.stimuli.html#MozaikLite.stimuli.stimulus_generator.StimulusID.load_stimulus">[docs]</a>      <span class="k">def</span> <span class="nf">load_stimulus</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
           <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
               <span class="k">assert</span> <span class="p">(</span><span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="nb">float</span><span class="p">)))</span> <span class="p">,</span> <span class="s">&#39;The parameters are not in correct format, perhaps parameter collapsing was performed&#39;</span> 
           <span class="n">cls</span> <span class="o">=</span> <span class="nb">globals</span><span class="p">()[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
@@ -141,7 +141,7 @@
            <span class="n">d</span><span class="p">[</span><span class="n">s1</span><span class="p">]</span> <span class="o">=</span> <span class="n">dd</span><span class="p">[</span><span class="n">s</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">d</span>
     
-<div class="viewcode-block" id="colapse"><a class="viewcode-back" href="../../../tmp/MozaikLite.stimuli.html#MozaikLite.stimuli.stimulus_generator.colapse">[docs]</a><span class="k">def</span> <span class="nf">colapse</span><span class="p">(</span><span class="n">value_list</span><span class="p">,</span><span class="n">stimuli_list</span><span class="p">,</span><span class="n">parameter_indexes</span><span class="o">=</span><span class="p">[]):</span>
+<div class="viewcode-block" id="colapse"><a class="viewcode-back" href="../../../MozaikLite.stimuli.html#MozaikLite.stimuli.stimulus_generator.colapse">[docs]</a><span class="k">def</span> <span class="nf">colapse</span><span class="p">(</span><span class="n">value_list</span><span class="p">,</span><span class="n">stimuli_list</span><span class="p">,</span><span class="n">parameter_indexes</span><span class="o">=</span><span class="p">[]):</span>
     <span class="c">## it colapses the value_list acording to stimuli with the same value </span>
     <span class="c">## of parameters whose indexes are listed in the &lt;parameter_indexes&gt; and </span>
     <span class="c">## replaces the collapsed parameters in the </span>
@@ -156,7 +156,7 @@
     <span class="k">return</span> <span class="p">([</span><span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span> <span class="p">,</span><span class="n">d</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 
       </div>
-<div class="viewcode-block" id="Stimulus"><a class="viewcode-back" href="../../../tmp/MozaikLite.stimuli.html#MozaikLite.stimuli.stimulus_generator.Stimulus">[docs]</a><span class="k">class</span> <span class="nc">Stimulus</span><span class="p">(</span><span class="n">VisualStimulus</span><span class="p">):</span>
+<div class="viewcode-block" id="Stimulus"><a class="viewcode-back" href="../../../MozaikLite.stimuli.html#MozaikLite.stimuli.stimulus_generator.Stimulus">[docs]</a><span class="k">class</span> <span class="nc">Stimulus</span><span class="p">(</span><span class="n">VisualStimulus</span><span class="p">):</span>
         <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
             <span class="n">string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span>
             <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vparams</span><span class="p">:</span>

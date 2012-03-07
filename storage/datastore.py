@@ -90,6 +90,10 @@ class DataStoreView(MozaikLiteParametrizeObject):
         for s in self.block.segments:
             sheets[s.annotations['sheet_name']] = 1
         return sheets.keys()
+
+    def get_neuron_postions(self):
+        return self.full_datastore.block.annotations['neuron_positions'] 
+               
     
     def get_stimuli(self):
         """
@@ -165,7 +169,12 @@ class DataStore(DataStoreView):
         # load the datastore
         if load: 
             self.load()
+            
         
+    
+    def set_neuron_positions(self,neuron_positions):
+        self.block.annotations['neuron_positions'] = neuron_positions
+       
     def identify_unpresented_stimuli(self,stimuli):
         """
         It will filter out from stimuli all those which have already been presented.

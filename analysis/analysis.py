@@ -4,7 +4,7 @@ This module contains the Mozaik analysis interface and implementation of various
 
 #from MozaikLite.tools.misc import segments_to_dict_of_SpikeList,segments_to_dict_of_AnalogSignalList
 from MozaikLite.stimuli.stimulus_generator import colapse
-from MozaikLite.analysis.analysis_data_structures import TuningCurve, NeurotoolsData, ConductanceSignalList , AnalogSignalList
+from MozaikLite.analysis.analysis_data_structures import CyclicTuningCurve,TuningCurve, NeurotoolsData, ConductanceSignalList , AnalogSignalList
 from MozaikLite.analysis.analysis_helper_functions import time_histogram_across_trials
 from MozaikLite.framework.interfaces import MozaikLiteParametrizeObject
 from NeuroTools.parameters import ParameterSet
@@ -70,7 +70,34 @@ class AveragedOrientationTuning(Analysis):
                     l = len(a)
                     return sum(a)/l
                 mean_rates = [_mean(a) for a in mean_rates]  
-                self.datastore.full_datastore.add_analysis_result(TuningCurve(mean_rates,s,9,sheet,tags=self.tags),sheet_name=sheet)
+                self.datastore.full_datastore.add_analysis_result(CyclicTuningCurve(numpy.pi,mean_rates,s,9,sheet,tags=self.tags),sheet_name=sheet)
+
+class PeriodicTuningCurvePreference_VectorAverage(Analysis):
+      """
+      This analysis takes all cyclic tuning curves
+      """
+      def analyse(self):
+            print 'Starting Orientation Preference analysis'
+            for sheet in self.datastore.sheets():
+                # get all the cyclic tuning curves 
+                self.tuning_curves = self.datastore.get_analysis_result('CyclicTuningCurve',sheet_name=parameters.sheet_name)
+                for tc in self.tc:
+                    d = tc.to_dictonary_of_tc_parametrization()
+                    result_dict = {}
+                    for k in  d:
+                        x = 0
+                        y = 0 
+                        c = 0
+                        for v,p in zip(d[k]):   
+                            x = x + cos(p / tc.period * 2 * numpy.pi) * v   
+                            y = y + syn(p / tc.period * 2 * numpy.pi) * v   
+                            c = c + 1
+                        x = x/c
+                        y = y/c
+                        result_dict[k] = nympy.sqrt(numpy.power(x,2) + numpy.power(y,2))
+                    
+                # save as some kind of structure!
+
 
 class GSTA(Analysis):
       """
@@ -112,19 +139,21 @@ class GSTA(Analysis):
       def do_gsta(self,analog_signal,sp,n):
           dt = analog_signal[0].sampling_period
           gstal = int(self.parameters.length/dt)
-          gsta = numpy.zeros(2*gstal+1,)
+          gsta = numpy.zeros(2*gstal+1,) 
           count = 0
           for (ans,spike) in zip(analog_signal,sp):
               for time in spike[n]:
                   if time > ans.t_start  and time < ans.t_stop:
                      idx = int((time - ans.t_start)/dt)
-                     if idx - gstal > 0 and (idx + gstal+1) <= len(ans[n]):
-                        gsta = gsta +  ans[idx-gstal:idx+gstal+1][n]
+                     if idx - gstal > 0 and (idx + gstal+1) <= len(ans[:,n]):
+                        gsta = gsta +  ans[idx-gstal:idx+gstal+1,n].flatten().magnitude
                         count +=1
           if count == 0:
              count = 1
+          gsta = gsta/count
+          gsta = gsta * analog_signal[0].units
           
-          return AnalogSignal(gsta/count, t_start=-gstal*dt,sampling_rate=dt,units=analog_signal[0].units)
+          return AnalogSignal(gsta, t_start=-gstal*dt,sampling_period=dt,units=analog_signal[0].units)
           
            
           
@@ -158,8 +187,8 @@ class Precision(Analysis):
                         ac = numpy.correlate(hist[n], hist[n], mode='full')
                         if numpy.sum(numpy.power(hist[n],2)) != 0:
                             ac = ac / numpy.sum(numpy.power(hist[n],2))
-                        al.append(AnalogSignal(ac, t_start=-duration,t_stop=duration-self.parameters.bin_length*t_start.units,sampling_rate=self.parameters.bin_length*quantities.ms,units=quantities.dimensionless))
-                        
+                        al.append(AnalogSignal(ac, t_start=-duration,t_stop=duration-self.parameters.bin_length*t_start.units,sampling_period=self.parameters.bin_length*quantities.ms,units=quantities.dimensionless))
+                   
                     print 'Adding AnalogSignalList', sheet
                     self.datastore.full_datastore.add_analysis_result(AnalogSignalList(al,sheet,self.parameters.neurons,tags=self.tags),sheet_name=sheet)    
                         

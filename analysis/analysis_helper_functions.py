@@ -13,12 +13,12 @@ def time_histogram_across_trials(spike_trials,bin_length):
     num_bins = float((t_stop-t_start)/bin_length)
     
     h = []
+    u = spike_trials[0][0].units
     
     for i in xrange(0,num_neurons):
         st = []
         for s in spike_trials:
-            st.extend(numpy.array(s[i]).tolist())
+            st.extend(s[i].rescale(u).magnitude.tolist())
         
-        h.append(numpy.histogram(st, bins=num_bins, range=(float(t_start),float(t_stop)))[0])
-    
+        h.append(numpy.histogram(st, bins=num_bins, range=(float(t_start),float(t_stop)))[0]*1.0)
     return h

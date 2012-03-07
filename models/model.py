@@ -4,8 +4,9 @@ from NeuroTools import  visualization, visual_logging, datastore
 from MozaikLite.framework import load_component
 from MozaikLite.framework.interfaces import MozaikComponent
 from MozaikLite.framework.space import VisualSpace, VisualRegion
-from MozaikLite.framework.connectors import ExponentialProbabilisticArborization,UniformProbabilisticArborization,GaborConnector, V1RFSpecificProbabilisticArborization
+from MozaikLite.framework.connectors import ExponentialProbabilisticArborization,UniformProbabilisticArborization,GaborConnector, V1PushPullProbabilisticArborization
 from MozaikLite.framework.sheets import Sheet
+
 
 
 class Model(MozaikComponent):
@@ -19,7 +20,9 @@ class Model(MozaikComponent):
         'results_dir' : str, 
         'cortex_inh' : ParameterSet, 
         'cortex_exc' : ParameterSet, 
-        'retina_lgn' : ParameterSet,    
+        'retina_lgn' : ParameterSet,   
+        'reset'      : bool,
+        'null_stimulus_period' : float,
         'visual_field' : ParameterSet({
                                     'centre':tuple,
                                     'size': tuple,
@@ -41,17 +44,21 @@ class Model(MozaikComponent):
         sh = []
         for sheet in self.sheets:   
             if self.first_time:
-                sheet.record(['spikes', 'v', 'gsyn_exc','gsyn_inh'])
+                sheet.record()
             sh.append(sheet) 
-        retinal_input = self.retina.process_visual_input(self.visual_space,stimulus.duration)        
+        retinal_input = self.retina.process_visual_input(self.visual_space,stimulus.duration,self.simulator_time)        
         self.run(stimulus.duration)
                 
         segments = []
         for sheet in self.sheets:    
             if sheet.to_record != None:
-                s = sheet.write_neo_object()
-                segments.append(s)
-                
+                if self.parameters.reset:
+                    s = sheet.write_neo_object()
+                    segments.append(s)
+                else:
+                    s = sheet.write_neo_object(stimulus.duration)
+                    segments.append(s)
+                    
         self.visual_space.clear()
         self.reset()
         self.first_time = False
@@ -68,17 +75,24 @@ class Model(MozaikComponent):
 
         # Set-up visual stimulus
         self.visual_space = VisualSpace(self.parameters.screen.update_interval,self.parameters.screen.background_luminance)
-        self.t = 0
+        self.simulator_time = 0
         
     def run(self, tstop):
         print ("Simulating the network for %s ms" % tstop)
         self.sim.run(tstop)
-        self.t += tstop
+        print ("Finished simulating the network for %s ms" % tstop)
+        self.simulator_time += tstop
         
     def reset(self):
         print ("Resetting the network")
-        self.sim.reset()
-        self.t=0
+        if self.parameters.reset:
+            self.sim.reset()
+            self.simulator_time=0
+        else:
+            self.retina.provide_null_input(self.visual_space,self.parameters.null_stimulus_period,self.simulator_time)
+            print ("Simulating the network for %s ms with blank stimulus" % self.parameters.null_stimulus_period)
+            self.sim.run(self.parameters.null_stimulus_period)
+            self.simulator_time+=self.parameters.null_stimulus_period
     
     def register_sheet(self, sheet):
         self.sheets.append(sheet)
@@ -86,6 +100,11 @@ class Model(MozaikComponent):
     def register_connector(self, connector):
         self.connectors.append(connector)
 
+    def neuron_positions(self):
+        pos = {}
+        for s in self.sheets:
+            pos[s.name] = s.pop.positions
+        return pos
 
 class JensModel(Model):
     def __init__(self,simulator,parameters):
@@ -103,23 +122,29 @@ class JensModel(Model):
         cortex_inh = CortexInh(self, self.parameters.cortex_inh.params)
         
         # which neurons to record
-        cortex_exc.to_record = [0,1,2,3,4,5,6,7,8,9,10] #'all'
-        cortex_inh.to_record = [0,1,2,3,4,5,6,7,8,9,10] #'all'
-        self.retina.sheets['X_ON'].to_record = [0,1,2,3,4,5,6,7,8,9,10] #'all'
-        self.retina.sheets['X_OFF'].to_record = [0,1,2,3,4,5,6,7,8,9,10] #'all'
+        
+        tr = {'spikes' : 'all', 
+              'v' : [0,1,2,3,4,5,6,7,8,9,10],
+              'gsyn_exc' :[0,1,2,3,4,5,6,7,8,9,10],
+              'gsyn_inh' : [0,1,2,3,4,5,6,7,8,9,10],
+        }
+        
+        cortex_exc.to_record = tr #'all'
+        cortex_inh.to_record = tr #'all'
+        self.retina.sheets['X_ON'].to_record = tr #'all'
+        self.retina.sheets['X_OFF'].to_record = tr #'all'
 
         # initialize projections
-        UniformProbabilisticArborization(self,cortex_exc,cortex_exc,self.parameters.cortex_exc.ExcExcConnection,'V1ExcExcConnection').connect()
+        #UniformProbabilisticArborization(self,cortex_exc,cortex_exc,self.parameters.cortex_exc.ExcExcConnection,'V1ExcExcConnection').connect()
         #UniformProbabilisticArborization(self,cortex_exc,cortex_inh,self.parameters.cortex_exc.ExcInhConnection,'V1ExcInhConnection').connect()
         #UniformProbabilisticArborization(self,cortex_inh,cortex_exc,self.parameters.cortex_inh.InhExcConnection,'V1InhExcConnection').connect()
         #UniformProbabilisticArborization(self,cortex_inh,cortex_inh,self.parameters.cortex_inh.InhInhConnection,'V1InhInhConnection').connect()
         
-        #V1RFSpecificProbabilisticArborization(self,cortex_exc,cortex_exc,self.parameters.cortex_exc.ExcExcConnection,'V1ExcExcConnection')
-        #V1RFSpecificProbabilisticArborization(self,cortex_exc,cortex_inh,self.parameters.cortex_exc.ExcInhConnection,'V1ExcInhConnection')
-        #V1RFSpecificProbabilisticArborization(self,cortex_inh,cortex_exc,self.parameters.cortex_inh.InhExcConnection,'V1InhExcConnection')
-        #V1RFSpecificProbabilisticArborization(self,cortex_inh,cortex_inh,self.parameters.cortex_inh.InhInhConnection,'V1InhInhConnection')
-
         GaborConnector(self,self.retina.sheets['X_ON'],self.retina.sheets['X_OFF'],cortex_exc,self.parameters.cortex_exc.AfferentConnection,'V1AffConnection')
         GaborConnector(self,self.retina.sheets['X_ON'],self.retina.sheets['X_OFF'],cortex_inh,self.parameters.cortex_inh.AfferentConnection,'V1AffInhConnection')
         
+        V1PushPullProbabilisticArborization(self,cortex_exc,cortex_exc,self.parameters.cortex_exc.ExcExcConnection,'V1ExcExcConnection').connect()
+        #V1PushPullProbabilisticArborization(self,cortex_exc,cortex_inh,self.parameters.cortex_exc.ExcInhConnection,'V1ExcInhConnection').connect()
+        #V1PushPullProbabilisticArborization(self,cortex_inh,cortex_exc,self.parameters.cortex_inh.InhExcConnection,'V1InhExcConnection').connect()
+        #V1PushPullProbabilisticArborization(self,cortex_inh,cortex_inh,self.parameters.cortex_inh.InhInhConnection,'V1InhInhConnection').connect()
         

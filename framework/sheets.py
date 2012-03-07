@@ -17,10 +17,15 @@ from pyNN.errors import NothingToWriteError
 
 from neo.core.spiketrain import SpikeTrain
 from neo.core.segment import Segment
-from neo.core.analogsignal import AnalogSignal
+from neo.core.analogsignalarray import AnalogSignalArray
 
 
 logger = logging.getLogger("Mozaik")
+
+
+import objgraph
+import config
+import resource
 
 class Sheet(MozaikComponent):
     """
@@ -115,21 +120,71 @@ class Sheet(MozaikComponent):
         else:
             return context
 
-    def record(self, variables):
+    def record(self):
         if self.to_record != None:
-            cells = self.to_record
-            if cells != 'all':
-               self.pop[cells].record(variables)
-            else:
-               self.pop.record(variables)
-                
-    def write_neo_object(self): 
+            for variable in self.to_record.keys():
+                cells = self.to_record[variable]
+                if cells != 'all':
+                   self.pop[cells].record(variable)
+                else:
+                   self.pop.record(variable)
+    
+    def z(self):
+        a = numpy.zeros((100000,1000))
+        return a
+            
+    def write_neo_object(self,stimulus_duration=None): 
+        """
+        Retrieve recorded data from pyNN. 
+        In case offset is set it means we want to keep only data after time offset.
+        """
+
         try:
+            #print self.name
+            #print 'before get_data'
+            #print 'Current memory usage: %iMB' % (config.hp.heap().stat.size/(1024*1024))
+            #print resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+            #objgraph.show_growth(limit=20)
+            
             block = self.pop.get_data(['spikes','v','gsyn_exc','gsyn_inh'],clear=True)
+            #self.pop.get_data(['spikes','v','gsyn_exc','gsyn_inh'],clear=True)
+            
+            #a = self.z()
+            
+            
+            #print 'after get_data'
+            #print 'Current memory usage: %iMB' % (config.hp.heap().stat.size/(1024*1024))
+            #print resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+            #objgraph.show_growth(limit=20)
+            #objgraph.get_leaking_objects()
+            
+            #objgraph.show_chain(objgraph.find_backref_chain(objgraph.by_type('SpikeTrain')[0],inspect.ismodule),filename='SpikeTrainChain.png')
+            
+            
+            #return
         except NothingToWriteError, errmsg:
             logger.debug(errmsg)
         s = block.segments[-1]   
         s.annotations["sheet_name"] = self.name
+        
+        # lets sort spike train so that it is ordered by IDs and thus hopefully population indexes
+        def compare(a, b):
+            return cmp(a.annotations['source_id'], b.annotations['source_id']) 
+        
+        from meliae import scanner
+        
+        s.spiketrains = sorted(s.spiketrains, compare)
+        if stimulus_duration != None:
+           end = s.spiketrains[0].t_stop
+           start = s.spiketrains[0].t_stop - stimulus_duration * s.spiketrains[0].t_stop.units
+           for i in xrange(0,len(s.spiketrains)): 
+               sp = s.spiketrains[i].time_slice(start,end).copy() - start
+               s.spiketrains[i] = SpikeTrain(sp.magnitude * start.units,t_start = 0 * start.units, t_stop = stimulus_duration * start.units,name = s.spiketrains[i].name,description = s.spiketrains[i].description, file_origin = s.spiketrains[i].file_origin, **s.spiketrains[i].annotations)
+
+           for i in xrange(0,len(s.analogsignalarrays)):
+               s.analogsignalarrays[i] = s.analogsignalarrays[i].time_slice(start,end).copy()
+               s.analogsignalarrays[i].t_start = 0 * start.units
+        
         return s
     
     def setup_background_noise(self):

@@ -127,7 +127,7 @@ class MozaikComponent(MozaikLiteParametrizeObject):
 
 class MozaikRetina(MozaikComponent):
       
-      def process_visual_input(self, visual_space, duration=None):  
+      def process_visual_input(self, visual_space, duration=None, offset=0):  
           """
           This method is responsible for presenting the stimulus to the visual_space
           and in turn to the retina, and all the mechanisms that are responsible to
@@ -140,7 +140,16 @@ class MozaikRetina(MozaikComponent):
           """
           raise NotImplementedError
           pass
-    
+      def provide_null_input(self, visual_space, duration=None, offset=0):  
+          """
+          This method is responsible generating retinal input in the case of no visual stimulus.
+          This method should correspond to the special case of process_visual_input method where
+          the visual_space contains 'zero' input. This methods exists for optimization purposes
+          as the 'zero' input is presented often due to it's presentation between different visual
+          stimuli to allow for models to return to spontaneous activity state.
+          """
+          raise NotImplementedError
+          pass
 
 class VisualSystemConnector(MozaikComponent):
     """Base class for objects that connect visual system components."""

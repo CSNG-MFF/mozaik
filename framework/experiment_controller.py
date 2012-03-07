@@ -11,7 +11,7 @@ class Global:
     """global variable container"""
     root_directory = './'
 
-def setup_experiment(simulation_name,sim):
+def setup_experiments(simulation_name,sim):
     # Read parameters
     if len(sys.argv) > 1:
         parameters_url = sys.argv[1]
@@ -40,26 +40,16 @@ def run_experiments(model,experiment_list):
     # first lets run all the measurements required by the experiments
     print 'Starting Experiemnts'
     data_store = PickledDataStore(load=False,parameters=ParameterSet({'root_directory':Global.root_directory}))
-        
+    data_store.set_neuron_positions(model.neuron_positions())
     for experiment in experiment_list:
         print 'Starting experiment: ', experiment.__class__.__name__
         stimuli = experiment.return_stimuli()
         unpresented_stimuli = data_store.identify_unpresented_stimuli(stimuli)
         print 'Running model'
+        
         experiment.run(data_store,unpresented_stimuli)
     
-    print 'Starting Analysis'
-    # next lets perform the corresponding analysis
-    for experiment in experiment_list:    
-        experiment.do_analysis(data_store)
-
     print 'Saving Datastore'
     data_store.save()
+    return data_store
 
-def run_analysis(root_directory,experiment_list):  
-    data_store = PickledDataStore(load=True,parameters=ParameterSet({'root_directory':root_directory}))
-    
-    print 'Starting Analysis'
-    # next lets perform the corresponding analysis
-    for experiment in experiment_list:    
-        experiment.do_analysis(data_store)

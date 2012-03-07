@@ -124,7 +124,7 @@ class UniformProbabilisticArborization(MozaikLiteVisualSystemConnector):
         required_parameters = ParameterSet({
             'connection_probability': float, #probability of connection between two neurons from the two populations
             'weights': float,                #nA, the cell type of the sheet 
-            'propagation_constant': float,    #ms/μm the constant that will determinine the distance dependent delays on the connections
+            'delay': float,    #ms delay of the connections
         })
 
 
@@ -133,7 +133,7 @@ class UniformProbabilisticArborization(MozaikLiteVisualSystemConnector):
             self.name = name
 		
         def connect(self):
-            method = self.sim.FixedProbabilityConnector(self.parameters.connection_probability,allow_self_connections=False, weights=self.parameters.weights, delays=self.parameters.propagation_constant, space=space.Space(axes='xy'), safe=True)
+            method = self.sim.FixedProbabilityConnector(self.parameters.connection_probability,allow_self_connections=False, weights=self.parameters.weights, delays=self.parameters.delay, space=space.Space(axes='xy'), safe=True)
             self.proj = self.sim.Projection(self.source.pop, self.target.pop, method, synapse_dynamics=self.short_term_plasticity, label=self.name, rng=None, target=self.parameters.target_synapses)
 
 class SpecificArborization(MozaikLiteVisualSystemConnector):
@@ -156,7 +156,6 @@ class SpecificArborization(MozaikLiteVisualSystemConnector):
         def connect(self):	        
             self.connection_list = [(a,b,c*self.parameters.weight_factor,d) for (a,b,c,d) in self.connection_list]
             self.method  =  self.sim.FromListConnector(self.connection_list)
-        
             self.proj = self.sim.Projection(self.source.pop, self.target.pop, self.method, synapse_dynamics=self.short_term_plasticity, label=self.name, rng=None, target=self.parameters.target_synapses)
 
 class SpecificProbabilisticArborization(MozaikLiteVisualSystemConnector):
@@ -201,7 +200,7 @@ class SpecificProbabilisticArborization(MozaikLiteVisualSystemConnector):
             self.proj = self.sim.Projection(self.source.pop, self.target.pop, method, synapse_dynamics=self.short_term_plasticity, label=self.name, rng=None, target=self.parameters.target_synapses)
 
 
-class V1RFSpecificProbabilisticArborization(MozaikComponent):
+class V1PushPullProbabilisticArborization(MozaikComponent):
 		"""
 		This connector implements the standard V1 functionally specific connection rule:
 
@@ -219,28 +218,28 @@ class V1RFSpecificProbabilisticArborization(MozaikComponent):
 		def __init__(self, network, source, target, parameters,name):
 			MozaikComponent.__init__(self,network,parameters)
 			self.name = name
-			self.souce = source
+			self.source = source
 			self.target = target
             
 		def connect(self):
 			weights = []
 
 
-			for (i,neuron1) in enumerate(target.pop.all()):
-				for (j,neuron2) in enumerate(source.pop.all()):
+			for (i,neuron1) in enumerate(self.target.pop.all()):
+				for (j,neuron2) in enumerate(self.source.pop.all()):
 
-					or_dist = (source.get_neuron_annotation(i,'LGNAfferentOrientation') - source.get_neuron_annotation(j,'LGNAfferentOrientation')) % numpy.pi/2
+					or_dist = (self.source.get_neuron_annotation(i,'LGNAfferentOrientation') - self.source.get_neuron_annotation(j,'LGNAfferentOrientation')) % numpy.pi/2
 					
-					if self.parameters.target_synapses == 'excitator':
-							phase_dist = (source.get_neuron_annotation(i,'LGNAfferentPhase') - source.get_neuron_annotation(j,'LGNAfferentPhase')) % numpy.pi
-					if self.parameters.target_synapses == 'inhibitory':
-							phase_dist = numpy.pi - (source.get_neuron_annotation(i,'LGNAfferentPhase') - source.get_neuron_annotation(j,'LGNAfferentPhase')) % numpy.pi
+					if self.parameters.specific_arborization.target_synapses == 'excitatory':
+							phase_dist = (self.source.get_neuron_annotation(i,'LGNAfferentPhase') - self.source.get_neuron_annotation(j,'LGNAfferentPhase')) % numpy.pi
+					if self.parameters.specific_arborization.target_synapses == 'inhibitory':
+							phase_dist = numpy.pi - (self.source.get_neuron_annotation(i,'LGNAfferentPhase') - self.source.get_neuron_annotation(j,'LGNAfferentPhase')) % numpy.pi
 					else:
 						print 'Unknown type of synapse!' 
 						return	
 					
-					or_gauss = exp(-or_dist*or_dist/2*self.parameters.or_sigma)/numpy.sqrt(2*numpy.pi*self.parameters.or_sigma*self.parameters.or_sigma)
-					phase_gauss = exp(-phase_dist*phase_dist/2*self.parameters.phase_sigma)/numpy.sqrt(2*numpy.pi*self.parameters.phase_sigma*self.parameters.phase_sigma)
+					or_gauss = exp(-or_dist*or_dist/(2*self.parameters.or_sigma))/numpy.sqrt(2*numpy.pi*self.parameters.or_sigma*self.parameters.or_sigma)
+					phase_gauss = exp(-phase_dist*phase_dist/(2*self.parameters.phase_sigma))/numpy.sqrt(2*numpy.pi*self.parameters.phase_sigma*self.parameters.phase_sigma)
 					w = or_dist*phase_gauss*or_gauss
 					weights.append((i,j,w,self.parameters.propagation_constant))
 			if self.parameters.probabilistic:
@@ -248,15 +247,15 @@ class V1RFSpecificProbabilisticArborization(MozaikComponent):
 			else:
 				SpecificArborization(self.network, self.source, self.target, weights,self.parameters.specific_arborization,self.name).connect()
 
+
+
+
 def gabor(x1,y1,x2,y2,orientation,frequency,phase,size,aspect_ratio):
         from numpy import cos,sin
         X = (x1-x2)*cos(orientation) + (y1-y2)*sin(orientation)
         Y = -(x1-x2)*sin(orientation) + (y1-y2)*cos(orientation)
         ker = - (X*X + Y*Y*(aspect_ratio**2)) / (2*(size**2))
         return numpy.exp(ker)*numpy.cos(2*numpy.pi*X*frequency+phase)
-
-
-
 
 class GaborConnector(MozaikComponent):
       """
@@ -274,17 +273,10 @@ class GaborConnector(MozaikComponent):
       `topological`          -  should the receptive field centers vary with the position of the given neurons in the target sheet
                                 (note positions of neurons are always stored in visual field coordinates)
       `probabilistic`        -  should the weights be probabilistic or directly proportianal to the gabor profile
-      `propagation_constant` -  ms/μm the constant that will determinine the distance dependent delays on the connections
-                                (HACKALERT: currently this is a fixed constant for this projection! This is ok if we assume this is a inter-area 
-                                 projection which is the only obvious equivalent in cortex.)
-      'or_map': 
-      
-      Also it is possible to generate the parameters from maps. Currently the orientation and phase map is supported, the rest of parameters are 
-      taken from the above parameters. Note that the map is assumed to fit the area spanned by the target population of neurons.
-      
+      `delay`                -  #ms/μm the delay on the projections 
+
       `or_map`             - is a orientation map supplied?
       `or_map_location`    - if or_map is True where can one find the map. It has to be a file containing a single pickled 2d numpy array
-          
       `phase_map`          - is a phase map supplied?
       `phase_map_location` - if phase_map is True where can one find the map. It has to be a file containing a single pickled 2d numpy array
       """
@@ -292,14 +284,14 @@ class GaborConnector(MozaikComponent):
       required_parameters = ParameterSet({
           'aspect_ratio': ParameterDist, #aspect ratio of the gabor
           'size':         ParameterDist, #the size of the gabor  RFs in degrees of visual field
-          'orientation':  ParameterDist, #the orientation of the gabor RFs
+          'orientation_preference':  ParameterDist, #the orientation preference of the gabor RFs (note this is the orientation of the gabor + pi/2)
           'phase':        ParameterDist, #the phase of the gabor RFs
           'frequency':    ParameterDist, #the frequency of the gabor in degrees of visual field 
           
           'topological': bool, # should the receptive field centers vary with the position of the given neurons 
                                # (note positions of neurons are always stored in visual field coordinates)
           'probabilistic': bool, # should the weights be probabilistic or directly proportianal to the gabor profile
-          'propagation_constant': float,    #ms/μm the constant that will determinine the distance dependent delays on the connections
+          'delay': float,    #ms/μm the delay on the projections
           
           'specific_arborization' : ParameterSet,
           
@@ -343,8 +335,12 @@ class GaborConnector(MozaikComponent):
                 if or_map:
                    orientation = or_map(target.pop.positions[0][j],target.pop.positions[1][j]) 
                 else: 
-                   orientation = parameters.orientation.next()[0]
-
+                   orientation = parameters.orientation_preference.next()[0]
+                
+                # HACK!!!
+                if j == 0: 
+                   orientation = 0
+                
                 if phase_map:
                    phase = phase_map(target.pop.positions[0][j],target.pop.positions[1][j]) 
                 else: 
@@ -362,11 +358,11 @@ class GaborConnector(MozaikComponent):
                  
                 for (i,neuron1) in enumerate(on.all()):
                     if parameters.topological:
-                        on_weights.append((i,j,numpy.max((0,gabor(on.positions[0][i],on.positions[1][i],target.pop.positions[0][j],target.pop.positions[1][j],orientation,frequency,phase,size,aspect_ratio))),parameters.propagation_constant))
-                        off_weights.append((i,j,-numpy.min((0,gabor(off.positions[0][i],off.positions[1][i],target.pop.positions[0][j],target.pop.positions[1][j],orientation,frequency,phase,size,aspect_ratio))),parameters.propagation_constant))
+                        on_weights.append((i,j,numpy.max((0,gabor(on.positions[0][i],on.positions[1][i],target.pop.positions[0][j],target.pop.positions[1][j],orientation+numpy.pi/2,frequency,phase,size,aspect_ratio))),parameters.delay))
+                        off_weights.append((i,j,-numpy.min((0,gabor(off.positions[0][i],off.positions[1][i],target.pop.positions[0][j],target.pop.positions[1][j],orientation+numpy.pi/2,frequency,phase,size,aspect_ratio))),parameters.delay))
                     else:
-                        on_weights.append((i,j,numpy.max((0,gabor(on.positions[0][i],on.positions[1][i],0,0,orientation,frequency,phase,size,aspect_ratio))),parameters.propagation_constant))
-                        off_weights.append((i,j,-numpy.min((0,gabor(off.positions[0][i],off.positions[1][i],0,0,orientation,frequency,phase,size,aspect_ratio))),parameters.propagation_constant))
+                        on_weights.append((i,j,numpy.max((0,gabor(on.positions[0][i],on.positions[1][i],0,0,orientation+numpy.pi/2,frequency,phase,size,aspect_ratio))),parameters.delay))
+                        off_weights.append((i,j,-numpy.min((0,gabor(off.positions[0][i],off.positions[1][i],0,0,orientation+numpy.pi/2,frequency,phase,size,aspect_ratio))),parameters.delay))
              
              
              if parameters.probabilistic:

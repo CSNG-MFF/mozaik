@@ -34,50 +34,58 @@
                     },
                     
                 'background_noise' : {
-                                        'exc_firing_rate' : 2680.0, 
-                                        'exc_weight' : 0.002,
-                                        'inh_firing_rate' : 900.0,
-                                        'inh_weight' : 0.0024,
+                                        'exc_firing_rate' : 4000.0, 
+                                        'exc_weight' : 0.001,
+                                        'inh_firing_rate' : 1150.0,
+                                        'inh_weight' : 0.0012,
                                     },
     },
-    
-    'ExcExcConnection': {
-	    'connection_probability': 0.04, 
-	    'weights': 0.0015,                
-            'propagation_constant': 1.5,    
-	    'target_synapses' : 'excitatory',     
-	    'short_term_plasticity' : True,
-            'short_term_plasticity_params': {
-                        'U': 0.59, 
-                        #'tau_rec': 813.0, 
-                        'tau_rec': 1.0, 
-                        'tau_facil': 0.0,
-                },
 
-	    
+    'ExcExcConnection': {
+	    'probabilistic' : True,
+	    'or_sigma' : 0.3,
+	    'phase_sigma' : 0.6,
+	    'specific_arborization' : {
+					    'weights': 0.0015,
+					    'num_samples' : 90,
+                        'delay': 2.0,    
+                        'target_synapses' : 'excitatory',     
+                        'short_term_plasticity' : True,
+                        'short_term_plasticity_params': {
+                            'U': 0.59, 
+                            'tau_rec': 813.0, 
+                            'tau_facil': 0.0,
+                        },
+
+        },              
     },        
 
     'ExcInhConnection': {
-	    'connection_probability': 0.04, 
-	    'weights': 0.0015,                
-            'propagation_constant': 1.5,    
-	    'target_synapses' : 'excitatory',
-	    
-	    'short_term_plasticity' : True,
-            'short_term_plasticity_params': {
-                        'U': 0.083, 
-                        'tau_rec': 220.0, 
-                        'tau_facil': 2866.0,
-                },
+	    'probabilistic' : True,
+	    'or_sigma' : 0.3,
+	    'phase_sigma' : 0.6,
+	    'specific_arborization' : {
+					    'weights': 0.0015,
+					    'num_samples' : 90,
+					    
+					    'delay': 2.0,    
+					    'target_synapses' : 'excitatory',
+					    'short_term_plasticity' : True,
+				        'short_term_plasticity_params': {
+                            'U': 0.083, 
+                            'tau_rec': 220.0, 
+                            'tau_facil': 2866.0,
+			            },
+        },
     },
 
     'AfferentConnection': {
-            'aspect_ratio': UniformDist(min=0.333333, max=0.33333),
-            'size':         UniformDist(min=0.7, max=0.7),
-            'orientation':  UniformDist(min=0.0, max=0.0),
-            'phase':        UniformDist(min=0.0, max=6.48),
-            'frequency':    UniformDist(min=0.8, max=0.8),
-            'propagation_constant': 1.5,    
+            'aspect_ratio':            UniformDist(min=0.333333, max=0.33333),
+            'size':                    UniformDist(min=0.7, max=0.7),
+            'orientation_preference':  UniformDist(min=0.0, max=3.141592653589793),
+            'phase':                   UniformDist(min=0.0, max=6.283185307179586),
+            'frequency':               UniformDist(min=0.8, max=0.8),
+            'delay': 2.0,    
             'topological' : False,
             'probabilistic' : True,
 	    
@@ -87,14 +95,14 @@
 	    'phase_map_location' : './phase_map',
 	    
 	    'specific_arborization': {
-		    'weight_factor': 0.008,
-		    'num_samples' : 60,
+		    'weight_factor': 0.04,
+		    'num_samples' : 50,
 		    'target_synapses' : 'excitatory',
 		    
 		    'short_term_plasticity' : False,
 	            'short_term_plasticity_params': {
-                        'U': 0.0, 
-                        'tau_rec': 0.0, 
+                        'U': 0.59, 
+                        'tau_rec': 1.0, 
                         'tau_facil': 0.0,
     	            },
 	    },

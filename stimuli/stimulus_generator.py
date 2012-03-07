@@ -45,6 +45,13 @@ def parse_stimuls_id(string):
     words = string.rsplit();
     return StimulusID(words[0],words[1:])
 
+def fromat_stimulus_id(stimulus_id):
+    string = ''
+    for p in stimulus_id.parameters:
+        if p != '*' and p != 'x':
+            string = string + ' ' + str(p)
+    return string
+
 
 class StimulusID(object):
       

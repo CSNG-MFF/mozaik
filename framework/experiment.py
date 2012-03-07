@@ -1,9 +1,6 @@
 from MozaikLite.stimuli.topographica_based import FullfieldDriftingSinusoidalGrating, Null, NaturalImageWithEyeMovement
-from MozaikLite.analysis.analysis import AveragedOrientationTuning,  GSTA, Precision
 from MozaikLite.visualization.plotting import GSynPlot,RasterPlot,VmPlot,CyclicTuningCurvePlot,OverviewPlot, ConductanceSignalListPlot, RetinalInputMovie
-from MozaikLite.visualization.jens_paper_plots import Figure2
 from NeuroTools.parameters import ParameterSet, ParameterDist
-from MozaikLite.storage.queries import TagBasedQuery, select_result_sheet_query
 
 import numpy
 
@@ -35,7 +32,7 @@ class MeasureOrientationTuningFullfield(Experiment):
     
     def __init__(self,model,num_orientations,spatial_frequency,temporal_frequency,grating_duration,num_trials):
         self.model = model
-        for j in [1.0]:
+        for j in [0.3]:
             for i in xrange(0,num_orientations):
                 for k in xrange(0,num_trials):
                     self.stimuli.append(FullfieldDriftingSinusoidalGrating([
@@ -54,16 +51,7 @@ class MeasureOrientationTuningFullfield(Experiment):
                                 ]))    
 
     def do_analysis(self,data_store):
-        print 'Doing Analysis'
-        AveragedOrientationTuning(data_store,ParameterSet({})).analyse()
-        GSTA(data_store,ParameterSet({'neurons' : [0], 'length' : 50.0 }),tags=['GSTA1']).analyse()
-        Precision(select_result_sheet_query(data_store,"V1_Exc"),ParameterSet({'neurons' : [0], 'bin_length' : 1.0 })).analyse()
-        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Exc'})).plot()
-        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Inh'})).plot()
-        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'X_ON'})).plot()
-        #OverviewPlot(data_store,ParameterSet({'sheet_name' : 'X_OFF'})).plot()
-        Figure2(data_store,ParameterSet({'sheet_name' : 'V1_Exc'})).plot()
-        #RetinalInputMovie(data_store,ParameterSet({'frame_rate': 10})).plot()
+        pass
         
 class MeasureNaturalImagesWithEyeMovement(Experiment):
     
@@ -87,16 +75,8 @@ class MeasureNaturalImagesWithEyeMovement(Experiment):
 
 
     def do_analysis(self,data_store):
-        print 'Doing Analysis'
+        pass
         
-        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Exc', 'neuron' : 0})).plot()
-        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Exc', 'neuron' : 1})).plot()
-        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Exc', 'neuron' : 2})).plot()
-        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Inh', 'neuron' : 0})).plot()
-        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'X_ON',  'neuron' : 0})).plot()
-        
-        RetinalInputMovie(data_store,ParameterSet({'frame_rate': 10})).plot()
-
 class MeasureSpontaneousActivity(Experiment):
     
     def __init__(self,model,duration):
@@ -114,9 +94,4 @@ class MeasureSpontaneousActivity(Experiment):
                         ]))    
 
     def do_analysis(self,data_store):
-        print 'Doing Analysis'
-        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'X_ON', 'neuron' : 0})).plot()
-        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Exc', 'neuron' : 0})).plot()
-        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Exc', 'neuron' : 1})).plot()
-        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Exc', 'neuron' : 2})).plot()
-        OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Inh', 'neuron' : 3})).plot()
+        pass

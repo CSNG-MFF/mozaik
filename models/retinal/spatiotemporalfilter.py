@@ -247,24 +247,24 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
                 self.ncs[rf_type] = []
                 
                 for lgn_cell in self.sheets[rf_type].pop:
-                    scs = sim.StepCurrentSource([0],[0])
+                    scs = sim.StepCurrentSource({'times' : [0.0], 'amplitudes' : [0.0]})
                     
-                    ncs = sim.NoisyCurrentSource(mean=self.parameters.noise.mean,
-                                                            stdev=self.parameters.noise.stdev,
-                                                            rng=random.NativeRNG())
+                    ncs = sim.NoisyCurrentSource({'mean':self.parameters.noise.mean,
+                                                            'stdev': self.parameters.noise.stdev})
+                                                            #,'rng' : random.NativeRNG()})
                     self.scs[rf_type].append(scs)
                     self.ncs[rf_type].append(ncs)
                     lgn_cell.inject(scs)
                     lgn_cell.inject(ncs)
     
-    def process_visual_input(self, visual_space, duration=None):
+    def process_visual_input(self, visual_space, duration=None, offset=0):
         """
         Present a visual stimulus to the model, and create the LGN output (relay)
         neurons.
         """
         logger.info("Presenting visual stimulus from visual space %s" % visual_space)
-        visual_space.set_duration(duration) # needed for proper caching
-        self.input = visual_space # needed for caching
+        visual_space.set_duration(duration) 
+        self.input = visual_space 
         sim = self.model.sim
         
         logger.debug("Generating output spikes...")
@@ -275,13 +275,14 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
                 
                 for lgn_cell, input_current,scs,ncs in zip(self.sheets[rf_type].pop, input_currents[rf_type],self.scs[rf_type],self.ncs[rf_type]):
                     assert isinstance(input_current, dict)
-                    scs._set(input_current['times'],self.parameters.linear_scaler*input_current['amplitudes'])
-                    
+                    t = input_current['times']+offset
+                    a = self.parameters.linear_scaler*input_current['amplitudes']
+                    scs.set_parameters(times =  t, amplitudes =a)
                     
         # for debugging/testing
         input_current_array = numpy.zeros((self.shape[1], self.shape[0], len(visual_space.time_points(duration))))
         update_factor = int(visual_space.update_interval/self.parameters.receptive_field.temporal_resolution)
-        logger.debug("input_current_array.shape = %s, update_factor = %d, p.dim = %s" % (input_current_array.shape, update_factor, self.shape))
+        #logger.debug("input_current_array.shape = %s, update_factor = %d, p.dim = %s" % (input_current_array.shape, update_factor, self.shape))
         k = 0
         for i in range(self.shape[1]): # self.sahpe gives (x,y), so self.shape[1] is the height
             for j in range(self.shape[0]):
@@ -294,7 +295,17 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
         self._built = True
              
         return retinal_input
-                
+        
+    def provide_null_input(self, visual_space, duration=None,offset=0):                  
+        input_current = {}
+        input_current['times'] = numpy.arange(0,duration,visual_space.update_interval) + offset
+        input_current['amplitudes'] = numpy.zeros((len(input_current['times']),))
+        
+        for rf_type in self.rf_types:            
+                for lgn_cell,scs,ncs in zip(self.sheets[rf_type].pop, self.scs[rf_type],self.ncs[rf_type]):
+                    scs.set_parameters(times =  input_current['times'], amplitudes = input_current['amplitudes'])
+    
+    
     def _calculate_input_currents(self, visual_space, duration):
         """
         Calculate the input currents for all cells.
@@ -323,15 +334,14 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
         logger.debug("Creating population of `CellWithReceptiveField`s")
         input_cells = {}
         effective_visual_field_width, effective_visual_field_height = self.parameters.size
-        x_values = numpy.linspace(-effective_visual_field_width/2.0, effective_visual_field_width/2.0, self.shape[0])
-        y_values = numpy.linspace(-effective_visual_field_height/2.0, effective_visual_field_height/2.0, self.shape[1])
+        #x_values = numpy.linspace(-effective_visual_field_width/2.0, effective_visual_field_width/2.0, self.shape[0])
+        #y_values = numpy.linspace(-effective_visual_field_height/2.0, effective_visual_field_height/2.0, self.shape[1])
         for rf_type in self.rf_types:
             input_cells[rf_type] = []
-            for y in y_values: # we iterate over y first to be consistent with the way
-                for x in x_values: # PyNN iterates over Populations
-                    cell = CellWithReceptiveField(x, y, rf[rf_type], self.parameters.gain)
-                    cell.initialize(visual_space.background_luminance, duration)
-                    input_cells[rf_type].append(cell)
+            for i in xrange(0,len(self.sheets[rf_type].pop.positions[0])):
+                        cell = CellWithReceptiveField(self.sheets[rf_type].pop.positions[0][i], self.sheets[rf_type].pop.positions[1][i], rf[rf_type], self.parameters.gain)
+                        cell.initialize(visual_space.background_luminance, duration)
+                        input_cells[rf_type].append(cell)
         
         logger.debug("Processing frames")
         
@@ -353,7 +363,7 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
         for rf_type in self.rf_types:
             input_currents[rf_type] = [cell.response_current() for cell in input_cells[rf_type]]
             cell0_currents = input_currents[rf_type][0]
-            logger.debug("Input current values for %s cell #0: %s" % (rf_type, cell0_currents['amplitudes']))
+            #logger.debug("Input current values for %s cell #0: %s" % (rf_type, cell0_currents['amplitudes']))
             #visual_logging.debug(cell0_currents['amplitudes'], cell0_currents['times'],
             #                     "Time (ms)", "Current (nA)", "Input current values for %s cell #0" % rf_type)
             

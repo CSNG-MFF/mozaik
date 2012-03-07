@@ -101,6 +101,31 @@ class TuningCurve(AnalysisDataStructure):
             
             return self.d
 
+class CyclicTuningCurve(TuningCurve):
+        """
+        TuningCurve with over periodic quantity
+        
+        perdiod - the period of the parameter over which the tuning curve is measured, i.e. pi for orientation
+                  all the values have to be in the range <0,period)
+        
+        """
+        identifier = 'TuningCurve'
+        
+        def __init__(self,period,*args,**kwargs):
+            TuningCurve.__init__(self,*args,**kwargs)
+            self.period = period    
+            
+            # just double check that none of the stimuly has the corresponding parameter larger than period 
+            for s in self.stimuli_ids:
+                s = parse_stimuls_id(s)
+                v = float(s.parameters[self.parameter_index])
+                if v < 0 or v >= self.period:
+                   raise ValueError("CyclicTuningCurve with period " + str(self.period) + ": "  + str(v) + " does not belong to <0," + str(self.period) + ") range!") 
+                
+            
+            
+            
+
 class AnalogSignalList(AnalysisDataStructure):
        """
          This is a simple list of Neo AnalogSignal objects.

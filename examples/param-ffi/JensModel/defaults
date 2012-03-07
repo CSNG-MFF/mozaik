@@ -12,4 +12,6 @@
     },
     'results_dir': '/home/jan/projects/MozaikLite/examples/',
     'name' : 'Jens Model',
+    'reset' : False,
+    'null_stimulus_period' : 140.0,
 }
