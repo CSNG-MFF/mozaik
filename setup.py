@@ -18,6 +18,7 @@ setup(
     author = "The mozaik team",
     author_email = "antolikjan@gmail.com",
     description = "Python package mozaik is a integrated workflow framework for large scale neural simulations.",
+    long_description=open('README').read(),
     license = "CeCILL http://www.cecill.info",
     keywords = "computational neuroscience simulation large-scale model spiking",
     url = "",
@@ -29,6 +30,5 @@ setup(
                    'Operating System :: OS Independent',
                    'Programming Language :: Python',
                    'Topic :: Scientific/Engineering'],
-    cmdclass = {'build': build},
 )
 

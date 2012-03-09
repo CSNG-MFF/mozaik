@@ -7,7 +7,7 @@ from mozaik.models.model import JensModel
 from mozaik.framework.experiment_controller import run_experiments, setup_experiments
 from mozaik.visualization.plotting import GSynPlot,RasterPlot,VmPlot,CyclicTuningCurvePlot,OverviewPlot, ConductanceSignalListPlot, RetinalInputMovie, ActivityMovie
 from mozaik.analysis.analysis import AveragedOrientationTuning,  GSTA, Precision
-from mozaik.visualization.jens_paper_plots import Figure2
+from mozaik.visualization.Kremkow_plots import Figure2
 from mozaik.storage.datastore import Hdf5DataStore,PickledDataStore
 from NeuroTools.parameters import ParameterSet
 from mozaik.storage.queries import TagBasedQuery, select_result_sheet_query
