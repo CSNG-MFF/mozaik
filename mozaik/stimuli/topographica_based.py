@@ -1,6 +1,6 @@
 # The file contains stimuli that use topographica to generate the stimulus
 from stimulus_generator import Stimulus
-import  topo.pattern.basic
+import topo.pattern
 from topo.base.boundingregion import BoundingBox
 import pickle
 import numpy
@@ -18,7 +18,7 @@ class FullfieldDriftingSinusoidalGrating(Stimulus):
             
             self.current_phase=0
             while True:
-                yield (topo.pattern.basic.SineGrating(orientation=self.params[0],frequency=self.params[1],phase=self.current_phase,size=self.size_in_degrees[0],bounds=BoundingBox(radius=self.size_in_degrees[0]/2),scale=self.max_luminance,xdensity=self.density,ydensity=self.density)(),[self.current_phase])
+                yield (topo.pattern.SineGrating(orientation=self.params[0],frequency=self.params[1],phase=self.current_phase,size=self.size_in_degrees[0],bounds=BoundingBox(radius=self.size_in_degrees[0]/2),scale=self.max_luminance,xdensity=self.density,ydensity=self.density)(),[self.current_phase])
                 self.current_phase+= 2*numpy.pi*(self.frame_duration/1000.0)*self.params[2]
                 
 
@@ -29,7 +29,7 @@ class Null(Stimulus):
             empty stimulus
             """
             while True:
-                yield topo.pattern.basic.Null(scale=0,size=self.size_in_degrees[0])(), []
+                yield topo.pattern.Null(scale=0,size=self.size_in_degrees[0])(), []
                 
 
 class NaturalImageWithEyeMovement(Stimulus):

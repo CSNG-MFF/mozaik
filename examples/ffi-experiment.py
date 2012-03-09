@@ -11,7 +11,7 @@ from mozaik.visualization.Kremkow_plots import Figure2
 from mozaik.storage.datastore import Hdf5DataStore,PickledDataStore
 from NeuroTools.parameters import ParameterSet
 from mozaik.storage.queries import TagBasedQuery, select_result_sheet_query
-sys.path.append('/home/jan/topographica/')
+
 
 
 
