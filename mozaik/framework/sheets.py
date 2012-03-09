@@ -166,7 +166,7 @@ class Sheet(MozaikComponent):
         def compare(a, b):
             return cmp(a.annotations['source_id'], b.annotations['source_id']) 
         
-        from meliae import scanner
+
         
         s.spiketrains = sorted(s.spiketrains, compare)
         if stimulus_duration != None:
