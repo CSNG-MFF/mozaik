@@ -33,9 +33,6 @@ from mozaik.framework.interfaces import VisualStimulus
 from NeuroTools.parameters import ParameterSet, ParameterDist
 import numpy
 import sys
-sys.path.append('/home/jan/topographica/')
-
-
 
 def load_from_string(string):
     return parse_stimuls_id(string).load_stimulus()
