@@ -11,6 +11,7 @@ setup(
                 'mozaik.models',
                 'mozaik.models.retinal',
                 'mozaik.stimuli',
+                'mozaik.experiment',
                 'mozaik.storage',
                 'mozaik.tools',
                 'mozaik.visualization'
