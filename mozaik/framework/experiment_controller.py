@@ -41,6 +41,8 @@ def run_experiments(model,experiment_list):
     print 'Starting Experiemnts'
     data_store = PickledDataStore(load=False,parameters=ParameterSet({'root_directory':Global.root_directory}))
     data_store.set_neuron_positions(model.neuron_positions())
+    data_store.set_neuron_annotations(model.neuron_annotations())
+    
     for experiment in experiment_list:
         print 'Starting experiment: ', experiment.__class__.__name__
         stimuli = experiment.return_stimuli()

@@ -18,8 +18,8 @@ if False:
     
     experiment_list =   [
                            #MeasureSpontaneousActivity(jens_model,duration=147*7),
-                           MeasureOrientationTuningFullfield(jens_model,num_orientations=6,spatial_frequency=0.8,temporal_frequency=2,grating_duration=148*7,num_trials=1),
-                           #MeasureOrientationTuningFullfield(jens_model,num_orientations=1,spatial_frequency=0.8,temporal_frequency=2,grating_duration=57*7,num_trials=5),
+                           MeasureOrientationTuningFullfield(jens_model,num_orientations=4,spatial_frequency=0.8,temporal_frequency=2,grating_duration=74*7,num_trials=1),
+                           #MeasureOrientationTuningFullfield(jens_model,num_orientations=1,spatial_frequency=0.8,temporal_frequency=2,grating_duration=57*7,num_trials=3),
                            #MeasureOrientationTuningFullfield(jens_model,num_orientations=8,spatial_frequency=0.8,temporal_frequency=2,grating_duration=148*7,num_trials=3),
                         ]
 
@@ -29,6 +29,9 @@ else:
 
 import resource
 print 'Current memory usage: %iMB' % (resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/(1024*1024))
+
+import resource
+print "Current memory usage: %iMB" % (resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/(1024))
 
 AveragedOrientationTuning(data_store,ParameterSet({})).analyse()
 GSTA(data_store,ParameterSet({'neurons' : [0], 'length' : 250.0 }),tags=['GSTA1']).analyse()

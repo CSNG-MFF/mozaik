@@ -9,8 +9,6 @@ from neo_neurotools_wrapper import NeoNeurotoolsWrapper
 import pickle
 import numpy
 
-
-
 class DataStoreView(MozaikParametrizeObject):
     """
     This class represents a subset of a DataStore and defines the query interface and 
@@ -93,6 +91,9 @@ class DataStoreView(MozaikParametrizeObject):
 
     def get_neuron_postions(self):
         return self.full_datastore.block.annotations['neuron_positions'] 
+
+    def get_neuron_annotations(self):
+        return self.full_datastore.block.annotations['neuron_annotations'] 
                
     
     def get_stimuli(self):
@@ -175,6 +176,10 @@ class DataStore(DataStoreView):
     
     def set_neuron_positions(self,neuron_positions):
         self.block.annotations['neuron_positions'] = neuron_positions
+
+    def set_neuron_annotations(self,neuron_annotations):
+        self.block.annotations['neuron_annotations'] = neuron_annotations
+
        
     def identify_unpresented_stimuli(self,stimuli):
         """

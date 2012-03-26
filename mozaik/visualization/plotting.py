@@ -141,9 +141,8 @@ class CyclicTuningCurvePlot(PlotTuningCurve):
                 pylab.plot(numpy.arange(len(val)),val,label=fromat_stimulus_id(parse_stimuls_id(k)))
                 pylab.hold('on')
             pylab.ylabel(self.parameters.ylabel)
-            pylab.ylabel('Orientation')
             pylab.xticks(numpy.arange(len(val)),["%.2f"% float(a) for a in par])
-            pylab.title('Orientation tuning curve, Neuron: %d' % n)
+            pylab.title('Neuron: %d' % n)
         pylab.legend()
         
 
@@ -481,11 +480,6 @@ class PerNeuronValuePlot(LinePlot):
 	 posy = self.poss[idx][1]
 	 values = self.pnvs[idx][0].values
 	 (periodic,period) = units.periodic(self.pnvs[idx][0].value_units)
-	 
-	 print 'DSADSADAS'
-	 print self.pnvs[idx][0].value_units
-	 print periodic
-	 print period
 	 
 	 params.setdefault("x_label",'x')
 	 params.setdefault("y_label",'y')

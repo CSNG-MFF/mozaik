@@ -19,7 +19,6 @@ from neo.core.spiketrain import SpikeTrain
 from neo.core.segment import Segment
 from neo.core.analogsignalarray import AnalogSignalArray
 
-
 logger = logging.getLogger("Mozaik")
 
 class Sheet(MozaikComponent):
@@ -103,7 +102,18 @@ class Sheet(MozaikComponent):
         if not self._pop:
                print 'Population have not been yet set in sheet: ', self.name , '!'
         return self._neuron_annotations[neuron_number][key][1]
+    
+    def get_neuron_annotations(self):
+        if not self._pop:
+               print 'Population have not been yet set in sheet: ', self.name , '!'
 
+        anns = []
+        for i in xrange(0,len(self.pop)):
+            d = {}
+            for (k,v) in self._neuron_annotations[i].items():
+                d[k] = v[1]
+            anns.append(d)
+        return anns
     
     def describe(self, template='default', render=lambda t,c: Template(t).safe_substitute(c)):
         context = {
@@ -124,17 +134,13 @@ class Sheet(MozaikComponent):
                 else:
                    self.pop.record(variable)
     
-    def z(self):
-        a = numpy.zeros((100000,1000))
-        return a
-            
     def write_neo_object(self,stimulus_duration=None): 
         """
         Retrieve recorded data from pyNN. 
         In case offset is set it means we want to keep only data after time offset.
         """
 
-        try:           
+        try:
             block = self.pop.get_data(['spikes','v','gsyn_exc','gsyn_inh'],clear=True)
         except NothingToWriteError, errmsg:
             logger.debug(errmsg)
