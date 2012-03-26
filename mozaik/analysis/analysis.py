@@ -1,21 +1,20 @@
 """
 This module contains the Mozaik analysis interface and implementation of various analysis algorithms
 """
+import pylab
+import numpy 
+import quantities as qt
 
 #from mozaik.tools.misc import segments_to_dict_of_SpikeList,segments_to_dict_of_AnalogSignalList
-from mozaik.stimuli.stimulus_generator import colapse
-from mozaik.analysis.analysis_data_structures import CyclicTuningCurve,TuningCurve, NeurotoolsData, ConductanceSignalList , AnalogSignalList
+import mozaik.tools.units as munits
+from mozaik.stimuli.stimulus_generator import colapse, StimulusTaxonomy, parse_stimuls_id
+from mozaik.analysis.analysis_data_structures import CyclicTuningCurve,TuningCurve, ConductanceSignalList , AnalogSignalList, PerNeuronValue
 from mozaik.analysis.analysis_helper_functions import time_histogram_across_trials
 from mozaik.framework.interfaces import MozaikParametrizeObject
 from NeuroTools.parameters import ParameterSet
 from mozaik.storage.queries import select_stimuli_type_query,select_result_sheet_query, partition_by_stimulus_paramter_query
 from neo.core.analogsignal import AnalogSignal
 from NeuroTools import signals
-import pylab
-import quantities
-import numpy 
-
-
 
 class Analysis(MozaikParametrizeObject):
     """
@@ -69,34 +68,46 @@ class AveragedOrientationTuning(Analysis):
                 def _mean(a):
                     l = len(a)
                     return sum(a)/l
-                mean_rates = [_mean(a) for a in mean_rates]  
-                self.datastore.full_datastore.add_analysis_result(CyclicTuningCurve(numpy.pi,mean_rates,s,9,sheet,tags=self.tags),sheet_name=sheet)
+                mean_rates = [_mean(a) for a in mean_rates]
+                
+                #JAHACK make sure that mean_rates() return spikes per second
+                units = munits.spike / qt.s
+                print 'Adding CyclicTuningCurve to datastore'
+                self.datastore.full_datastore.add_analysis_result(CyclicTuningCurve(numpy.pi,mean_rates,s,9,sheet,'Response',units,tags=self.tags),sheet_name=sheet)
 
-class PeriodicTuningCurvePreference_VectorAverage(Analysis):
+class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
       """
-      This analysis takes all cyclic tuning curves
+      This analysis takes all cyclic tuning curves.
+      
+      For each parametrization of tuning_curves it creates a PerNeuronVector holding the
+      preference of the tuning curve for all neurons for which data were supplied.
       """
       def analyse(self):
             print 'Starting Orientation Preference analysis'
             for sheet in self.datastore.sheets():
                 # get all the cyclic tuning curves 
-                self.tuning_curves = self.datastore.get_analysis_result('CyclicTuningCurve',sheet_name=parameters.sheet_name)
-                for tc in self.tc:
+                self.tuning_curves = self.datastore.get_analysis_result('CyclicTuningCurve',sheet_name=sheet)
+                for tc in self.tuning_curves:
                     d = tc.to_dictonary_of_tc_parametrization()
                     result_dict = {}
                     for k in  d:
                         x = 0
                         y = 0 
-                        c = 0
-                        for v,p in zip(d[k]):   
-                            x = x + cos(p / tc.period * 2 * numpy.pi) * v   
-                            y = y + syn(p / tc.period * 2 * numpy.pi) * v   
-                            c = c + 1
-                        x = x/c
-                        y = y/c
-                        result_dict[k] = nympy.sqrt(numpy.power(x,2) + numpy.power(y,2))
-                    
-                # save as some kind of structure!
+                        n = 0
+                        g,h = d[k]
+                        for v,p in zip(g,h):
+                            xx =  numpy.cos(p / tc.period * 2 * numpy.pi) * v   
+                            yy =  numpy.sin(p / tc.period * 2 * numpy.pi) * v
+                            x  =  x + xx
+                            y  =  y + yy
+                            n = n + numpy.sqrt(numpy.power(xx,2) + numpy.power(yy,2))
+                        sel = numpy.sqrt(numpy.power(x,2) + numpy.power(y,2)) / n
+                        pref = numpy.arccos(x/(numpy.sqrt(numpy.power(x,2) + numpy.power(y,2))))
+                        print 'Adding PerNeuronValue to datastore'
+                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(pref, StimulusTaxonomy[parse_stimuls_id(k).name][tc.parameter_index] + ' preference', qt.rad, sheet, tags=self.tags),sheet_name=sheet)
+                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(sel, StimulusTaxonomy[parse_stimuls_id(k).name][tc.parameter_index] + ' selectivity', qt.dimensionless , sheet, tags=self.tags),sheet_name=sheet)
+                                
+                        
 
 
 class GSTA(Analysis):
@@ -187,8 +198,8 @@ class Precision(Analysis):
                         ac = numpy.correlate(hist[n], hist[n], mode='full')
                         if numpy.sum(numpy.power(hist[n],2)) != 0:
                             ac = ac / numpy.sum(numpy.power(hist[n],2))
-                        al.append(AnalogSignal(ac, t_start=-duration,t_stop=duration-self.parameters.bin_length*t_start.units,sampling_period=self.parameters.bin_length*quantities.ms,units=quantities.dimensionless))
+                        al.append(AnalogSignal(ac, t_start=-duration,t_stop=duration-self.parameters.bin_length*t_start.units,sampling_period=self.parameters.bin_length*qt.ms,units=qt.dimensionless))
                    
                     print 'Adding AnalogSignalList', sheet
-                    self.datastore.full_datastore.add_analysis_result(AnalogSignalList(al,sheet,self.parameters.neurons,tags=self.tags),sheet_name=sheet)    
+                    self.datastore.full_datastore.add_analysis_result(AnalogSignalList(al,sheet,self.parameters.neurons,'time','autocorrelation',qt.ms,qt.dimensionless,tags=self.tags),sheet_name=sheet)    
                         

@@ -36,7 +36,7 @@ class AnalysisDataStructure(object):
           them to later for their identification in DataStore.
           
           However, in general, we encourage users to use filter methods rather that tags to perform their
-          plotting/analysis whenever possible!!!!
+          plotting/analysis whenever possible!
       """
       identifier = None
       tags = []
@@ -60,32 +60,46 @@ class TuningCurve(AnalysisDataStructure):
                     - is a list of lists, members of the outer list correspond 
                       to the value of the tuning curve for a stimulus at the same position in the stimuli_ids
                       the inner lists contain the actual values for the measured neurons
+             
              stimuli_ids 
                     - see values description
+             
              parameter_index 
                     - the parameter position in the stimulus id against which the tuning curve was computed
+             
+             y_axis_name
+                    - name of the tuning curve y axis
+             
+             y_axis_units
+                    - quantities units of the y axis
         """
         
         identifier = 'TuningCurve'
         
-        def __init__(self,values,stimuli_ids,parameter_index,sheet_name,tags=[]):
+        def __init__(self,values,stimuli_ids,parameter_index,sheet_name,y_axis_name,y_axis_units,tags=[]):
             AnalysisDataStructure.__init__(self,tags)
             self.sheet_name = sheet_name    
             self.values = values
             self.stimuli_ids = stimuli_ids
             self.parameter_index = parameter_index
+            self.y_axis_name = y_axis_name
+            self.y_axis_units = y_axis_units
 
         def to_dictonary_of_tc_parametrization(self):
-            # creat dictionary where stimulus_id indexes all the different 
-            # values and corresponding data for the given 
-            # neurons throught the range of the paramter against which the tuning curve was computed
-            # this groups the data according to the the individual tuning curves to be plotted, each
-            # corresponding to different parametrization (ie. contrast for orientation tuning)
-
+            """
+            Returns dictionary where keys correspond to stimuli ids (essentially parametrizations of the Tuninc Curve)
+            with the dimension through which tuning curve runs replaced with x.
+            The values are tuple of lists (levels,xaxis), where levels is the value of the tuning curve on the 'yaxis' and the 'xaxis' corresponds
+            to the value of the stimulus in the dimension through which the tuning curve runs, at which the level is achieved.
+            Essentially to plot the given parametrization of tuning curve one does plot(xaxis,levels).
+            
+            Finally note each member of levels field is a array containing levels for different neurons.
+            """
+            
             self.d = {}
             for (v,s) in zip(self.values,self.stimuli_ids):
                 s = parse_stimuls_id(s)
-                val = s.parameters[self.parameter_index]
+                val = float(s.parameters[self.parameter_index])
                 s.parameters[self.parameter_index]='x'
                 
                 if self.d.has_key(str(s)):
@@ -109,7 +123,7 @@ class CyclicTuningCurve(TuningCurve):
                   all the values have to be in the range <0,period)
         
         """
-        identifier = 'TuningCurve'
+        identifier = 'CyclicTuningCurve'
         
         def __init__(self,period,*args,**kwargs):
             TuningCurve.__init__(self,*args,**kwargs)
@@ -121,17 +135,68 @@ class CyclicTuningCurve(TuningCurve):
                 v = float(s.parameters[self.parameter_index])
                 if v < 0 or v >= self.period:
                    raise ValueError("CyclicTuningCurve with period " + str(self.period) + ": "  + str(v) + " does not belong to <0," + str(self.period) + ") range!") 
-                
-            
-            
-            
 
-class AnalogSignalList(AnalysisDataStructure):
+
+class PerNeuronValue(AnalysisDataStructure):
+      """
+      Data structure holding single value per neuron.
+      
+      values
+            - the vector of values one per neuron
+      
+      value_name
+            - the name of the value
+      
+      value_units
+            - quantities unit describing the units of the value
+      
+      sheet_name
+            - the name of the sheet to which the data correspond
+      """
+      
+      identifier = 'PerNeuronValue'
+      
+      def __init__(self,values,value_name,value_units,sheet_name,tags):
+           AnalysisDataStructure.__init__(self,tags)
+           self.sheet_name = sheet_name
+           self.value_name = value_name
+           self.value_units = value_units
+           self.values = values
+
+class AnalysisDataStructure1D(AnalysisDataStructure): 
+      """
+      Data structure representing 1D data.
+      All data corresponds to the same axis name and units.
+      Explicitly specifies the axis - their name and units.
+      Note that at this stage we do not assume the structure in
+      which the data is stored.
+      Also the class can hold multiple instances of 1D data.
+      
+      It uses the quantities package to specify units.
+      If at all possible all data stored in numoy arrays shoukd
+      be quantities arrays with matching units!
+      
+      x_axis_name -
+            the name of the x axis
+      y_axis_name -
+            the name of the y axis
+      x_axis_untis -
+            the quantities units of x axis
+      y_axis_units -
+            the quantities units of y axis
+      """
+      
+      def __init__(self,x_axis_name,y_axis_name,x_axis_units,y_axis_units,tags):
+           AnalysisDataStructure.__init__(self,tags)
+           self.x_axis_name = x_axis_name
+           self.y_axis_name = y_axis_name
+           self.x_axis_units = x_axis_units
+           self.y_axis_units = y_axis_units
+        
+class AnalogSignalList(AnalysisDataStructure1D):
        """
          This is a simple list of Neo AnalogSignal objects.
 
-         sheet_name - 
-                in which sheet the data were recorded
          asl - 
                 the variable containing the list of AnalogSignal objects, in the order corresponding to the 
                 order of neurons indexes in the indexes parameter
@@ -140,19 +205,16 @@ class AnalogSignalList(AnalysisDataStructure):
        """
        identifier = 'AnalogSignalList'
         
-       def __init__(self,asl,sheet_name,indexes,tags=[]):
-           AnalysisDataStructure.__init__(self,tags)
-           self.sheet_name = sheet_name    
+       def __init__(self,asl,sheet_name,indexes,x_axis_name,y_axis_name,x_axis_units,y_axis_units,tags):
+           AnalysisDataStructure1D.__init__(self,x_axis_name,y_axis_name,x_axis_units,y_axis_units,tags)
            self.asl = asl
            self.indexes = indexes
 
-class ConductanceSignalList(AnalysisDataStructure):
+class ConductanceSignalList(AnalysisDataStructure1D):
        """
          This is a simple list of Neurotools AnalogSignal objects representing the conductances
          The object holds two lists, one for excitatory and one for inhibitory conductances
 
-         sheet_name - 
-            in which sheet the data were recorded
          e_asl - 
             the variable containing the list of AnalogSignal objects corresponding to excitatory conductances,
             in the order corresponding to the order of neurons indexes in the indexes parameter
@@ -164,26 +226,9 @@ class ConductanceSignalList(AnalysisDataStructure):
        """
        identifier = 'ConductanceSignalList'
         
-       def __init__(self,e_con,i_con,sheet_name,indexes,tags=[]):
-           AnalysisDataStructure.__init__(self,tags)
-           self.sheet_name = sheet_name    
+       def __init__(self,e_con,i_con,sheet_name,indexes,tags):
+           assert e_con[0].units == i_con[0].units
+           AnalysisDataStructure1D.__init__(self,'time','conductance',e_con[0].sampling_rate.units, e_con[0].units,tags)
            self.e_con = e_con
            self.i_con = i_con
            self.indexes = indexes
-
-      
-
-class NeurotoolsData(AnalysisDataStructure):
-      """
-      Turn the recordings into Neurotools data structures that can than be visualized 
-      via numerous Neurotools analysis tools
-      """
-      
-      identifier = 'NeurotoolsData'
-      
-      def __init__(self,spike_data_dict,vm_data_dict,g_syn_e_data_dict,g_syn_i_data_dict,tags=[]):
-          AnalysisDataStructure.__init__(self,tags)
-          self.vm_data_dict = vm_data_dict
-          self.g_syn_e_data_dict = g_syn_e_data_dict
-          self.g_syn_i_data_dict = g_syn_i_data_dict
-          self.spike_data_dict = spike_data_dict

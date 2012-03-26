@@ -114,10 +114,10 @@ class StandardStyle(SimplePlot):
               left_border         Whether to plot the left border of the axis
               bottom_border       Whether to plot the right border of the axis
               title               what is the title (None means no label will be plotted)
-              xlim                what are the xlims (None means matplotlib will infer from data)
-              ylim                what are the ylims (None means matplotlib will infer from data)
-              xticks              what are the xtikcs (note that the tick style, and x_axis can override/modify these)
-              yticks              what are the ytikcs (note that the tick style, and y_axis can override/modify these)
+              x_lim                what are the xlims (None means matplotlib will infer from data)
+              y_lim                what are the ylims (None means matplotlib will infer from data)
+              x_ticks              what are the xtikcs (note that the tick style, and x_axis can override/modify these)
+              y_ticks              what are the ytikcs (note that the tick style, and y_axis can override/modify these)
               """
               SimplePlot.__init__(self,**kwargs)
               self.parameters["fontsize"] = 7 # Font size to be used for tick labels and axis labels
@@ -125,16 +125,16 @@ class StandardStyle(SimplePlot):
               self.parameters["y_tick_style"] = 'Min' # The style of ticks to be plotted 
               self.parameters["x_axis"] = True # whether to plot the x_axis (and  the ticks)
               self.parameters["y_axis"] = True # whether to plot the y_axis (and  the ticks)
-              self.parameters["xlabel"] = None # what is the xlabel (None means no label will be plotted)
-              self.parameters["ylabel"] = None # what is the ylabel (None means no label will be plotted)
+              self.parameters["x_label"] = None # what is the xlabel (None means no label will be plotted)
+              self.parameters["y_label"] = None # what is the ylabel (None means no label will be plotted)
               self.parameters["top_right_border"] = False # Whether to plot the top and right border of the axis
               self.parameters["left_border"] = True # Whether to plot the left border of the axis
               self.parameters["bottom_border"] = True # Whether to plot the bottom border of the axis
               self.parameters["title"] = None  # what is the title (None means no label will be plotted)
-              self.parameters["xlim"] = None   # what are the xlims (None means matplotlib will infer from data)
-              self.parameters["ylim"] = None   # what are the ylims (None means matplotlib will infer from data)
-              self.parameters["xticks"] = None # what are the xtikcs (note that the tick style, and x_axis can override/modify these)
-              self.parameters["yticks"] = None # what are the ytikcs (note that the tick style, and y_axis can override/modify these)
+              self.parameters["x_lim"] = None   # what are the xlims (None means matplotlib will infer from data)
+              self.parameters["y_lim"] = None   # what are the ylims (None means matplotlib will infer from data)
+              self.parameters["x_ticks"] = None # what are the xtikcs (note that the tick style, and x_axis can override/modify these)
+              self.parameters["y_ticks"] = None # what are the ytikcs (note that the tick style, and y_axis can override/modify these)
 
        def pre_axis_plot(self):
            pylab.rc('axes', linewidth=3)
@@ -147,11 +147,11 @@ class StandardStyle(SimplePlot):
            if self.title:
               pylab.title(self.title,fontsize='x-small')
            
-           if self.xlim:
-              pylab.xlim(self.xlim)
+           if self.x_lim:
+              pylab.xlim(self.x_lim)
 
-           if self.ylim:
-              pylab.ylim(self.ylim)
+           if self.y_lim:
+              pylab.ylim(self.y_lim)
                 
            if not self.x_axis:
                disable_xticks(self.axis)
@@ -161,13 +161,13 @@ class StandardStyle(SimplePlot):
                disable_yticks(self.axis)
                remove_y_tick_labels()
 
-           self.ticks(self.x_tick_style,self.y_tick_style,self.xticks,self.yticks) 
+           self.ticks(self.x_tick_style,self.y_tick_style,self.x_ticks,self.y_ticks) 
 
-           if self.ylabel:
-              pylab.ylabel(self.ylabel)
+           if self.y_label:
+              pylab.ylabel(self.y_label)
         
-           if self.xlabel:
-              pylab.xlabel(self.xlabel)
+           if self.x_label:
+              pylab.xlabel(self.x_label)
 
            if not self.top_right_border:
               disable_top_right_axis(self.axis)
@@ -182,10 +182,10 @@ class StandardStyle(SimplePlot):
         
        
        def ticks(self,x_tick_style,y_tick_style,xticks,yticks):
-           if self.xticks != None:
+           if self.x_ticks != None:
               pylab.xticks(xticks)
 
-           if self.yticks != None:
+           if self.y_ticks != None:
               pylab.yticks(yticks)
           
            if self.x_tick_style=='Min':
@@ -237,7 +237,7 @@ class SpikeRasterPlot(StandardStyle):
          if self.parameters["neurons"] == None:
             neurons = [i for i in xrange(0,min(10,len(self.sps[0][0])))]
          else:
-           neurons = self.neurons
+            neurons = self.neurons
           
          t_stop = float(self.sps[0][0][0].t_stop)
          num_n = len(neurons) # number of neurons
@@ -252,17 +252,17 @@ class SpikeRasterPlot(StandardStyle):
              for j in xrange(0,num_n-1):   
                 self.axis.axhline(j*(num_t+1)+num_t+1,c='k')
          
-         self.ylim = (0,num_n * (num_t+1) )
+         self.y_lim = (0,num_n * (num_t+1) )
             
-         self.xticks = [0,t_stop/2,t_stop]
+         self.x_ticks = [0,t_stop/2,t_stop]
          self.x_tick_style = 'Custom'
-         self.xlim = (0,t_stop)    
-         self.xlabel = 'time (ms)'
+         self.x_lim = (0,t_stop)    
+         self.x_label = 'time (ms)'
          if num_n == 1:
-            self.ylabel = 'Trial' 
+            self.y_label = 'Trial' 
          else:
-            self.ylabel = 'Neuron/Trial'
-         self.yticks=[]
+            self.y_label = 'Neuron/Trial'
+         self.y_ticks=[]
 
          
 class SpikeHistogramPlot(SpikeRasterPlot):         
@@ -284,37 +284,30 @@ class SpikeHistogramPlot(SpikeRasterPlot):
     """
     
     def plot(self):  
-        if self.parameters["colors"] == None:
-           colors = ['#000000' for i in xrange(0,len(self.sps))]
-        else:
-           colors = self.colors
-        
-        if self.parameters["neurons"] == None:
-           neurons = [i for i in xrange(0,min(10,len(self.sps[0][0])))]
-        else:
-           neurons = self.neurons
+        self.colors = ['#000000' for i in xrange(0,len(self.sps))]
+        self.neurons = [i for i in xrange(0,min(10,len(self.sps[0][0])))]
         
         t_stop = float(self.sps[0][0][0].t_stop)
-        num_n = len(neurons) # number of neurons
+        num_n = len(self.neurons) # number of neurons
         num_t = len(self.sps[0]) # number of trials
         
         all_spikes = []
         for k, sp in enumerate(self.sps):
             tmp = []
             for i,spike_list in enumerate(sp):
-                for j in neurons:
+                for j in self.neurons:
                     spike_train = spike_list[j]
                     tmp.extend(spike_train)
             all_spikes.append(tmp)
             
         if all_spikes != []:
-           self.axis.hist(all_spikes,bins=numpy.arange(0,t_stop,1),color=colors,edgecolor='none')
+           self.axis.hist(all_spikes,bins=numpy.arange(0,t_stop,1),color=self.colors,edgecolor='none')
         
-        self.ylabel = '(spk/ms)'
+        self.y_label = '(spk/ms)'
         self.x_tick_style = 'Custom'
-        self.xticks = [0,t_stop/2,t_stop]
-        self.xlim = (0,t_stop)    
-        self.xlabel = 'time (ms)'
+        self.x_ticks = [0,t_stop/2,t_stop]
+        self.x_lim = (0,t_stop)    
+        self.x_label = 'time (ms)'
 
 animation_list = []
 
@@ -406,3 +399,54 @@ class ScatterPlotMovie(StandardStyleAnimatedPlot):
           self.scatter  = self.axis.scatter(self.x,self.y,c = self.z[0],s = self.parameters["dot_size"],marker = self.parameters["marker"],lw = 1,cmap='gray',vmin = vmin, vmax = vmax)
           pylab.axis('equal')
 
+class ScatterPlot(StandardStyle):         
+      """
+      Simple scatter plot
+      
+      The inputs is:
+      
+                z -
+                        array of the values to be plotted
+                x -
+                        array wuih the y positions of the neurons 
+                y -
+                        array wuih the y positions of the neurons
+                periodic -
+                        if the z is a periodic value
+                period -
+                        if periodic is True the z should come from (0,period)
+                colorbar -
+                        should there be a colorbar ?
+      """
+    
+
+      def __init__(self,x,y,z,periodic=False,period=None,**kwargs):
+          StandardStyle.__init__(self,**kwargs)
+          self.z = z
+          self.x = x
+          self.y = y
+          self.periodic = periodic
+          self.period = period
+          if self.periodic:
+                self.parameters["colormap"] = 'hsv'
+          else:
+                self.parameters["colormap"] = 'gray'
+                
+          self.parameters["dot_size"] = 20
+          self.parameters["marker"] = 'o'
+          self.parameters["top_right_border"]=True
+          self.parameters["colorbar"] = False
+          
+      def plot(self):
+          if not self.periodic:
+                vmax = numpy.max(self.z)
+                vmin = numpy.min(self.z)
+          else:
+                vmax = self.period
+                vmin = 0
+                
+          ax = self.axis.scatter(self.x,self.y,c = self.z, s = self.dot_size,marker = self.marker,lw = 1,cmap=self.colormap,vmin = vmin, vmax = vmax)
+          
+          if self.colorbar:
+             pylab.colorbar(ax,ticks=[vmin,vmax])   
+             

@@ -134,29 +134,8 @@ class Sheet(MozaikComponent):
         In case offset is set it means we want to keep only data after time offset.
         """
 
-        try:
-            #print self.name
-            #print 'before get_data'
-            #print 'Current memory usage: %iMB' % (config.hp.heap().stat.size/(1024*1024))
-            #print resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-            #objgraph.show_growth(limit=20)
-            
+        try:           
             block = self.pop.get_data(['spikes','v','gsyn_exc','gsyn_inh'],clear=True)
-            #self.pop.get_data(['spikes','v','gsyn_exc','gsyn_inh'],clear=True)
-            
-            #a = self.z()
-            
-            
-            #print 'after get_data'
-            #print 'Current memory usage: %iMB' % (config.hp.heap().stat.size/(1024*1024))
-            #print resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-            #objgraph.show_growth(limit=20)
-            #objgraph.get_leaking_objects()
-            
-            #objgraph.show_chain(objgraph.find_backref_chain(objgraph.by_type('SpikeTrain')[0],inspect.ismodule),filename='SpikeTrainChain.png')
-            
-            
-            #return
         except NothingToWriteError, errmsg:
             logger.debug(errmsg)
         s = block.segments[-1]   
