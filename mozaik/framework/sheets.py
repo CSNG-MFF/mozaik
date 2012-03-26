@@ -19,7 +19,6 @@ from neo.core.spiketrain import SpikeTrain
 from neo.core.segment import Segment
 from neo.core.analogsignalarray import AnalogSignalArray
 
-
 logger = logging.getLogger("Mozaik")
 
 class Sheet(MozaikComponent):
@@ -103,7 +102,18 @@ class Sheet(MozaikComponent):
         if not self._pop:
                print 'Population have not been yet set in sheet: ', self.name , '!'
         return self._neuron_annotations[neuron_number][key][1]
+    
+    def get_neuron_annotations(self):
+        if not self._pop:
+               print 'Population have not been yet set in sheet: ', self.name , '!'
 
+        anns = []
+        for i in xrange(0,len(self.pop)):
+            d = {}
+            for (k,v) in self._neuron_annotations[i].items():
+                d[k] = v[1]
+            anns.append(d)
+        return anns
     
     def describe(self, template='default', render=lambda t,c: Template(t).safe_substitute(c)):
         context = {
@@ -124,10 +134,6 @@ class Sheet(MozaikComponent):
                 else:
                    self.pop.record(variable)
     
-    def z(self):
-        a = numpy.zeros((100000,1000))
-        return a
-            
     def write_neo_object(self,stimulus_duration=None): 
         """
         Retrieve recorded data from pyNN. 
@@ -135,28 +141,7 @@ class Sheet(MozaikComponent):
         """
 
         try:
-            #print self.name
-            #print 'before get_data'
-            #print 'Current memory usage: %iMB' % (config.hp.heap().stat.size/(1024*1024))
-            #print resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-            #objgraph.show_growth(limit=20)
-            
             block = self.pop.get_data(['spikes','v','gsyn_exc','gsyn_inh'],clear=True)
-            #self.pop.get_data(['spikes','v','gsyn_exc','gsyn_inh'],clear=True)
-            
-            #a = self.z()
-            
-            
-            #print 'after get_data'
-            #print 'Current memory usage: %iMB' % (config.hp.heap().stat.size/(1024*1024))
-            #print resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-            #objgraph.show_growth(limit=20)
-            #objgraph.get_leaking_objects()
-            
-            #objgraph.show_chain(objgraph.find_backref_chain(objgraph.by_type('SpikeTrain')[0],inspect.ismodule),filename='SpikeTrainChain.png')
-            
-            
-            #return
         except NothingToWriteError, errmsg:
             logger.debug(errmsg)
         s = block.segments[-1]   

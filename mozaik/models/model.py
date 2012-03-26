@@ -105,6 +105,14 @@ class Model(MozaikComponent):
         for s in self.sheets:
             pos[s.name] = s.pop.positions
         return pos
+        
+    def neuron_annotations(self):
+        neuron_annotations = {}
+        for s in self.sheets:
+             neuron_annotations[s.name] = s.get_neuron_annotations()
+        return neuron_annotations
+        
+        
 
 class JensModel(Model):
     def __init__(self,simulator,parameters):

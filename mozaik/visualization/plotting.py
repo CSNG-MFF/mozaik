@@ -127,8 +127,9 @@ class CyclicTuningCurvePlot(PlotTuningCurve):
         ax = pylab.subplot(subplotspec)
         for tc in self.tuning_curves:
             tc = tc.to_dictonary_of_tc_parametrization()
+            print len(tc)
             for k in  tc:
-                (a,b) = tc[k]
+                (a,b) = t[k]
                 par,val = zip(*sorted(zip(b,a[:,n])))
                 # make the tuning curve to wrap around  
                 par = list(par)
@@ -138,9 +139,8 @@ class CyclicTuningCurvePlot(PlotTuningCurve):
                 pylab.plot(numpy.arange(len(val)),val,label=fromat_stimulus_id(parse_stimuls_id(k)))
                 pylab.hold('on')
             pylab.ylabel(self.parameters.ylabel)
-            pylab.ylabel('Orientation')
             pylab.xticks(numpy.arange(len(val)),["%.2f"% float(a) for a in par])
-            pylab.title('Orientation tuning curve, Neuron: %d' % n)
+            pylab.title('Neuron: %d' % n)
         pylab.legend()
         
 
