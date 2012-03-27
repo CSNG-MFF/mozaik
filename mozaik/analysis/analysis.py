@@ -4,8 +4,6 @@ This module contains the Mozaik analysis interface and implementation of various
 import pylab
 import numpy 
 import quantities as qt
-
-#from mozaik.tools.misc import segments_to_dict_of_SpikeList,segments_to_dict_of_AnalogSignalList
 import mozaik.tools.units as munits
 from mozaik.stimuli.stimulus_generator import colapse, StimulusTaxonomy, parse_stimuls_id
 from mozaik.analysis.analysis_data_structures import CyclicTuningCurve,TuningCurve, ConductanceSignalList , AnalogSignalList, PerNeuronValue

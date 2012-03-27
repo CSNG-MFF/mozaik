@@ -436,6 +436,7 @@ class ScatterPlot(StandardStyle):
           self.parameters["marker"] = 'o'
           self.parameters["top_right_border"]=True
           self.parameters["colorbar"] = False
+          self.parameters["colorbar_label"] = None
           
       def plot(self):
           if not self.periodic:
@@ -448,5 +449,7 @@ class ScatterPlot(StandardStyle):
           ax = self.axis.scatter(self.x,self.y,c = self.z, s = self.dot_size,marker = self.marker,lw = 1,cmap=self.colormap,vmin = vmin, vmax = vmax)
           
           if self.colorbar:
-             pylab.colorbar(ax,ticks=[vmin,vmax])   
+             cb = pylab.colorbar(ax,ticks=[vmin,vmax],use_gridspec=True)   
+             cb.set_label(self.colorbar_label,pad=0)
+             cb.set_ticklabels(["%.3g" % vmin,"%.3g" % vmax])
              

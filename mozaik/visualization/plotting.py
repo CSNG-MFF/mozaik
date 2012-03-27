@@ -41,10 +41,12 @@ The much more important one is subplot that accepts a SubplotSpec object (see ma
 as input which will tell it where to plot. It can in turn create another SubplotSpec within
 the given SubplotSpec and call other plot commands to plot within specific subregions
 of the SubplotSpec. This allows natural way of nesting plots.
+
 The subplot function has a second parameter which corresponds to dictionary of parameters that
 have to be passed onto the eventual call to SimplePlot class! New parameters can be added to the
-dictionary but they shouldn't be overwritten! This way higher-level Plotting classes can modify the
-behaviour of their nested classes. 
+dictionary but they should not be overwritten! This way higher-level Plotting classes can modify the
+behaviour of their nested classes. Also whenever a class is passing this dictionary to multiple subplots
+it should always pasa a _copy_ of the parameter dictionary.
 
 The plot function can either not be defined in which case it defaults to the Plotting.plot, 
 which simply creates a figure and calls subplot with SuplotSpec spanning the whole figure.
@@ -77,11 +79,11 @@ class Plotting(MozaikParametrizeObject):
         raise NotImplementedError
         pass
     
-    def plot(self):
+    def plot(self,params={}):
         self.fig = pylab.figure(facecolor='w')
         gs = gridspec.GridSpec(1, 1)
-        gs.update(left=0.1, right=0.9, top=0.9, bottom=0.1)
-        self.subplot(gs[0,0],{})
+        gs.update(left=0.05, right=0.95, top=0.9, bottom=0.1)
+        self.subplot(gs[0,0],params)
         
 
           
@@ -148,13 +150,22 @@ class CyclicTuningCurvePlot(PlotTuningCurve):
 
 class LinePlot(Plotting):          
       """
-      Many plots plot many identical plots in a row for multiple data in a list they get
-      This is a smaller helper class that mitigates some of the code repetition in such cases
+      Plot multiple plots with common x or y axis in a row or column.
+      This is a smaller helper class that mitigates some of the code repetition in such cases.
       
-      Note that the inherited class has to implement!:
-      _subplot(self,idx,ax,params) which plots the individual plot. The idx is index in whatever datastructure list we are plotting and
-      axis is the axis that has to be used for plotting.
+      Note that the inherited class has to implement:
+        _subplot(self,idx,ax,params) which plots the individual plot. 
+        The idx is index in whatever datastructure list we are plotting and
+        axis is the axis that has to be used for plotting.
       """ 
+      required_parameters = ParameterSet({
+        'tuning_curve_name' : str,  #the name of the tuning curve
+        'horizontal' : bool, # should the line of plots be horizontal or vertical
+        'shared_axis' : bool, # is shared axis, the x axis or y axis depending on the horizontal flag is considered shared
+                                # and will thus have common label
+      })
+    
+    
       def  __init__(self,datastore,parameters):
            Plotting.__init__(self,datastore,parameters)    
            self.length = None
@@ -166,10 +177,10 @@ class LinePlot(Plotting):
           
           gs = gridspec.GridSpecFromSubplotSpec(1, self.length, subplot_spec=subplotspec)  
           for idx in xrange(0,self.length):
-	    p = params.copy()
+            p = params.copy()
             if idx > 0:
-		p.setdefault("y_label",None)
-	    self._subplot(idx,gs[0,idx],p)
+                p.setdefault("y_label",None)
+            self._subplot(idx,gs[0,idx],p)
 
 
 class PerStimulusPlot(LinePlot):
@@ -195,13 +206,14 @@ class PerStimulusPlot(LinePlot):
              return
           
           gs = gridspec.GridSpecFromSubplotSpec(1, self.length, subplot_spec=subplotspec)
-	  for idx in xrange(0,self.length):
-	    p = params.copy()
-	    stimulus = self.dsvs[idx].get_stimuli()[0]
-	    p.setdefault("title",str(stimulus))
-            if idx > 0:
-		p.setdefault("y_label",None)
-	    self._subplot(idx,gs[0,idx],p)
+
+          for idx in xrange(0,self.length):
+                p = params.copy()
+                stimulus = self.dsvs[idx].get_stimuli()[0]
+                p.setdefault("title",str(stimulus))
+                    if idx > 0:
+                p.setdefault("y_label",None)
+                self._subplot(idx,gs[0,idx],p)
 
 
 
@@ -222,13 +234,13 @@ class RasterPlot(PerStimulusPlot):
          stimulus = self.dsvs[idx].get_stimuli()[0]
          
          if self.parameters.trial_averaged_histogram:
-             gs = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=gs)  
-             # first the raster
-             ax = pylab.subplot(gs[:3,0])
-	     SpikeRasterPlot(sp,neurons=self.parameters.neurons,x_axis=False,x_label=None,**params)(gs[:3,0])
-             SpikeHistogramPlot(sp,neurons=self.parameters.neurons,**params)(gs[3,0])
+            gs = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=gs)  
+            # first the raster
+            ax = pylab.subplot(gs[:3,0])
+            SpikeRasterPlot(sp,neurons=self.parameters.neurons,x_axis=False,x_label=None,**params.copy())(gs[:3,0])
+            SpikeHistogramPlot(sp,neurons=self.parameters.neurons,**params)(gs[3,0])
          else:
-	     SpikeRasterPlot(sp,neurons=self.parameters.neurons,**params)(gs)
+            SpikeRasterPlot(sp,neurons=self.parameters.neurons,**params)(gs)
 
 
 class VmPlot(PerStimulusPlot):
@@ -298,18 +310,18 @@ class GSynPlot(PerStimulusPlot):
           p1 = ax.plot(time_axis,mean_gsyn_e.tolist(),color='r',linewidth=2)            
           p2 = ax.plot(time_axis,mean_gsyn_i.tolist(),color='b',linewidth=2)              
           
+          ax.legend([p1,p2],['exc','inh'])  
           disable_top_right_axis(ax)
           
           if idx == 0:
             pylab.ylabel('G(nS)')
           else:
             pylab.ylabel('')
-          
           pylab.xlim(0,t_stop)
           pylab.xticks([0,t_stop/2,t_stop])
           three_tick_axis(ax.yaxis)
                     
-          ax.legend([p1,p2],['exc','inh'])  
+          
           pylab.rc('axes', linewidth=1)
           
 class OverviewPlot(Plotting):
@@ -327,9 +339,9 @@ class OverviewPlot(Plotting):
              offset = 1 
           else:
              gs = gridspec.GridSpecFromSubplotSpec(3, 1, subplot_spec=subplotspec)      
-          RasterPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name, 'trial_averaged_histogram' : False, 'neurons' : []})).subplot(gs[0+offset,0],params)
-          GSynPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : self.parameters.neuron})).subplot(gs[1+offset,0],params)
-          VmPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : self.parameters.neuron})).subplot(gs[2+offset,0],params)
+             RasterPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name, 'trial_averaged_histogram' : False, 'neurons' : []})).subplot(gs[0+offset,0],params.copy())
+             GSynPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : self.parameters.neuron})).subplot(gs[1+offset,0],params.copy())
+             VmPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : self.parameters.neuron})).subplot(gs[2+offset,0],params.copy())
 
           
 class AnalogSignalListPlot(LinePlot):
@@ -464,31 +476,30 @@ class PerNeuronValuePlot(LinePlot):
     
     def  __init__(self,datastore,parameters):
         Plotting.__init__(self,datastore,parameters)
-	self.poss = []
-	self.pnvs = []
-	for sheet in datastore.sheets():
-	    z = datastore.get_analysis_result('PerNeuronValue',sheet_name=sheet)
-	    if len(z) != 0:
-		self.poss.append(datastore.get_neuron_postions()[sheet])
-		self.pnvs.append(z)
-		
-	print len(self.poss)
-	self.length = len(self.poss)
+        self.poss = []
+        self.pnvs = []
+        for sheet in datastore.sheets():
+            z = datastore.get_analysis_result('PerNeuronValue',sheet_name=sheet)
+            if len(z) != 0:
+                self.poss.append(datastore.get_neuron_postions()[sheet])
+                self.pnvs.append(z)
+        self.length = len(self.poss)
 
     def _subplot(self,idx,gs,params):
-	 posx = self.poss[idx][0]
-	 posy = self.poss[idx][1]
-	 values = self.pnvs[idx][0].values
-	 (periodic,period) = units.periodic(self.pnvs[idx][0].value_units)
-	 
-	 params.setdefault("x_label",'x')
-	 params.setdefault("y_label",'y')
-	 if periodic:
-	    if idx ==self.length-1:
-		params.setdefault("colorbar",True)
-	 else:
-	    params.setdefault("colorbar",True)  
-	 ScatterPlot(posx,posy,values,periodic=periodic,period=period,**params)(gs)
+         posx = self.poss[idx][0]
+         posy = self.poss[idx][1]
+         values = self.pnvs[idx][0].values
+         (periodic,period) = units.periodic(self.pnvs[idx][0].value_units)
+         
+         params.setdefault("x_label",'x')
+         params.setdefault("y_label",'y')
+         params.setdefault("colorbar_label",self.pnvs[idx][0].value_units.dimensionality.latex)
+         if periodic:
+            if idx ==self.length-1:
+                params.setdefault("colorbar",True)
+         else:
+            params.setdefault("colorbar",True)  
+         ScatterPlot(posx,posy,values,periodic=periodic,period=period,**params)(gs)
 
 	 
 	 
