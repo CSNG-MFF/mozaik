@@ -136,6 +136,41 @@ class TagBasedQuery(Query):
 ########################################################################                      
 
 
+########################################################################          
+def identifier_based_query(dsv,identifier):  
+        new_dsv = dsv.fromDataStoreView()
+        new_dsv.block.segments = dsv.recordings_copy()
+        new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
+        new_dsv.analysis_results = _identifier_based_query(dsv.analysis_results,identifier)
+        return new_dsv
+        
+def _identifier_based_query(d,identifier):
+    nd = {}
+    for k in d.keys():
+        if k != 'data':
+           nd[k] =  _identifier_based_query(d[k],identifier)
+        else:
+           nd[k] = {}
+           
+           for key in d[k].keys():
+               nd[k][key] = []
+               for ar in d[k][key]:
+                   if ar.identifier == identifier:
+                      nd[k][key].append(ar)
+    return nd
+
+class IdentifierBasedQuery(Query):
+    
+    """
+    This query filters out all AnalysisDataStructure's corresponding to the given tags
+    """
+    required_parameters = ParameterSet({
+     'identifier' : str, # list of tags the the query will look for
+    })
+    def query(self,dsv):  
+        return identifier_based_query(dsv,**self.parameters)    
+########################################################################                      
+
 
 ########################################################################
 def partition_by_stimulus_paramter_query(dsv,stimulus_paramter_index):  
@@ -167,4 +202,43 @@ class PartitionByStimulusParamterQuery(Query):
     
     def query(self,dsv):  
         return partition_by_stimulus_paramter_query(dsv,**self.parameters)    
+########################################################################
+
+########################################################################          
+def analysis_data_structure_parameter_filter_query(dsv,identifier,**kwargs):  
+        dsv = identifier_based_query(dsv,identifier)  
+        new_dsv = dsv.fromDataStoreView()
+        new_dsv.block.segments = dsv.recordings_copy()
+        new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
+        new_dsv.analysis_results = _adspfq_recursive(dsv.analysis_results,**kwargs)
+        return new_dsv
+        
+def _adspfq_recursive(d,**kwargs):
+    nd = {}
+    for k in d.keys():
+        if k != 'data':
+           nd[k] =  _adspfq_recursive(d[k],**kwargs)
+        else:
+           nd[k] = {}
+           
+           for key in d[k].keys():
+               nd[k][key] = []
+               for ar in d[k][key]:
+                   #ar is the object we have to decide whether to keep
+                   if _adspfq_filter(ar,**kwargs):
+                      nd[k][key].append(ar) 
+    return nd
+
+def _adspfq_filter(ads_object,**kwargs):
+    print kwargs
+    print ads_object.params()
+    flag = True
+    for k in kwargs.keys():
+        if not ads_object.params().has_key(k):
+           raise ValueError("analysis_data_structure_parameter_filter_query: no Parameter %s in object" % k)
+        print ads_object.inspect_value(k) == kwargs[k]
+        if ads_object.inspect_value(k) != kwargs[k]:
+           flag=False
+           break
+    return flag
 ########################################################################

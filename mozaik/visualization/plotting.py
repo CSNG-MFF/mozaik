@@ -158,12 +158,6 @@ class LinePlot(Plotting):
         The idx is index in whatever datastructure list we are plotting and
         axis is the axis that has to be used for plotting.
       """ 
-      required_parameters = ParameterSet({
-        'tuning_curve_name' : str,  #the name of the tuning curve
-        'horizontal' : bool, # should the line of plots be horizontal or vertical
-        'shared_axis' : bool, # is shared axis, the x axis or y axis depending on the horizontal flag is considered shared
-                                # and will thus have common label
-      })
     
     
       def  __init__(self,datastore,parameters):
@@ -183,7 +177,7 @@ class LinePlot(Plotting):
             self._subplot(idx,gs[0,idx],p)
 
 
-class PerStimulusPlot(LinePlot):
+class PerStimulusPlot(Plotting):
     """
     Line plot where each plot corresponds to stimulus with the same parameter except trials.
     
@@ -211,8 +205,8 @@ class PerStimulusPlot(LinePlot):
                 p = params.copy()
                 stimulus = self.dsvs[idx].get_stimuli()[0]
                 p.setdefault("title",str(stimulus))
-                    if idx > 0:
-                p.setdefault("y_label",None)
+                if idx > 0:
+                        p.setdefault("y_label",None)
                 self._subplot(idx,gs[0,idx],p)
 
 
@@ -489,10 +483,16 @@ class PerNeuronValuePlot(LinePlot):
          posx = self.poss[idx][0]
          posy = self.poss[idx][1]
          values = self.pnvs[idx][0].values
-         (periodic,period) = units.periodic(self.pnvs[idx][0].value_units)
-         
+         if self.pnvs[idx][0].period != None:
+            periodic = True
+            period = self.pnvs[idx][0].period
+         else:
+            periodic = False
+            period = None
+                    
          params.setdefault("x_label",'x')
          params.setdefault("y_label",'y')
+         params.setdefault("title",self.pnvs[idx][0].value_name)
          params.setdefault("colorbar_label",self.pnvs[idx][0].value_units.dimensionality.latex)
          if periodic:
             if idx ==self.length-1:
