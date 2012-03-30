@@ -19,20 +19,39 @@
 # JACOMMENT: for now we support only square stimuli - (i.e. the size is the same in both axis)
 #
 
-
 #StimulusTaxonomy contains the list of known stimuli with the number of their free parameters
-base_stimulus_parameters = ['frame duration','size_in_degrees_x','size_in_degrees_y','x center coor', 'y center coor','maximum luminance','stimulus duration','density','trial']
 
-StimulusTaxonomy = {
-                        'FullfieldDriftingSinusoidalGrating' : base_stimulus_parameters + ['orientation','spatial_frequency','temporal_frequency'],
-                        'NaturalImageWithEyeMovement' : base_stimulus_parameters + ['size','eye_movement_period','idd'],
-                        'Null' : base_stimulus_parameters,
-                   }
 
 from mozaik.framework.interfaces import VisualStimulus
 from NeuroTools.parameters import ParameterSet, ParameterDist
+import quantities as qt
 import numpy
 import sys
+
+
+base_stimulus_parameters = [('frame duration',qt.ms),('size_in_degrees_x',qt.degrees),('size_in_degrees_y',qt.degrees),('x center coor',qt.degrees),('y center coor',qt.degrees),('maximum luminance',qt.dimensionless),('stimulus duration',qt.ms),('density',qt.dimensionless),('trial',qt.dimensionless)]
+
+StimulusTaxonomy = {
+                        'FullfieldDriftingSinusoidalGrating' : base_stimulus_parameters + [('orientation',qt.rad),('spatial_frequency',1/qt.degree),('temporal_frequency',qt.Hz)],
+                        'NaturalImageWithEyeMovement' : base_stimulus_parameters + [('size',qt.degrees),('eye_movement_period',qt.ms),('idd',qt.dimensionless)],
+                        'Null' : base_stimulus_parameters,
+                   }
+
+
+def get_stimulus_parameter_name(stimulus_name,parameter_index):
+    """
+    Returns the name of the prameter_index-th parameter of stimulus stimulus_name.
+    """
+    
+    return  StimulusTaxonomy[stimulus_name][parameter_index][0]
+
+def get_stimulus_parameter_units(stimulus_name,parameter_index):
+    """
+    Returns the units of the prameter_index-th parameter of stimulus stimulus_name.
+    """
+    
+    return  StimulusTaxonomy[stimulus_name][parameter_index][1]
+
 
 def load_from_string(string):
     return parse_stimuls_id(string).load_stimulus()

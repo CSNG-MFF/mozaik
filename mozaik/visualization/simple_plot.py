@@ -450,6 +450,6 @@ class ScatterPlot(StandardStyle):
           
           if self.colorbar:
              cb = pylab.colorbar(ax,ticks=[vmin,vmax],use_gridspec=True)   
-             cb.set_label(self.colorbar_label,pad=0)
+             cb.set_label(self.colorbar_label)
              cb.set_ticklabels(["%.3g" % vmin,"%.3g" % vmax])
              

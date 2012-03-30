@@ -149,6 +149,67 @@ class CyclicTuningCurvePlot(PlotTuningCurve):
         pylab.legend()
         
 
+class LinePlot(Plotting):          
+      """
+      Plot multiple plots with common x or y axis in a row or column.
+      This is a smaller helper class that mitigates some of the code repetition in such cases.
+      
+      Note that the inherited class has to implement:
+        _subplot(self,idx,ax,params) which plots the individual plot. 
+        The idx is index in whatever datastructure list we are plotting and
+        axis is the axis that has to be used for plotting.
+      """ 
+    
+    
+      def  __init__(self,datastore,parameters):
+           Plotting.__init__(self,datastore,parameters)    
+           self.length = None
+      
+      def subplot(self,subplotspec,params): 
+          if not self.length:
+             print 'Error, class that derives from LinePlot has to specify the length parameter'
+             return
+          
+          gs = gridspec.GridSpecFromSubplotSpec(1, self.length, subplot_spec=subplotspec)  
+          for idx in xrange(0,self.length):
+            p = params.copy()
+            if idx > 0:
+                p.setdefault("y_label",None)
+            self._subplot(idx,gs[0,idx],p)
+
+
+class PerStimulusPlot(Plotting):
+    """
+    Line plot where each plot corresponds to stimulus with the same parameter except trials.
+    
+    The self.dsvs will contain the datastores you want to plot in each of the subplots - i.e. all recordings
+    in the given datastore come from the same stimulus of the same parameters except for the trial parameter.
+    """
+    required_parameters = ParameterSet({
+      'sheet_name' : str,  #the name of the sheet for which to plot
+    })
+
+    def  __init__(self,datastore,parameters):
+        Plotting.__init__(self,datastore,parameters)
+        self.dsv = select_result_sheet_query(datastore,self.parameters.sheet_name)
+        self.dsvs = partition_by_stimulus_paramter_query(self.dsv,8)    
+        self.length = len(self.dsvs)
+
+    def subplot(self,subplotspec,params): 
+          if not self.length:
+             print 'Error, class that derives from LinePlot has to specify the length parameter'
+             return
+          
+          gs = gridspec.GridSpecFromSubplotSpec(1, self.length, subplot_spec=subplotspec)
+
+          for idx in xrange(0,self.length):
+                p = params.copy()
+                stimulus = self.dsvs[idx].get_stimuli()[0]
+                p.setdefault("title",str(stimulus))
+                if idx > 0:
+                        p.setdefault("y_label",None)
+                self._subplot(idx,gs[0,idx],p)
+
             
 class RasterPlot(Plotting):
       required_parameters = ParameterSet({
@@ -448,10 +509,16 @@ class PerNeuronValuePlot(Plotting):
          posx = self.poss[idx][0]
          posy = self.poss[idx][1]
          values = self.pnvs[idx][0].values
-         (periodic,period) = units.periodic(self.pnvs[idx][0].value_units)
-         
+         if self.pnvs[idx][0].period != None:
+            periodic = True
+            period = self.pnvs[idx][0].period
+         else:
+            periodic = False
+            period = None
+                    
          params.setdefault("x_label",'x')
          params.setdefault("y_label",'y')
+         params.setdefault("title",self.pnvs[idx][0].value_name)
          params.setdefault("colorbar_label",self.pnvs[idx][0].value_units.dimensionality.latex)
          if periodic:
             if idx ==self.length-1:

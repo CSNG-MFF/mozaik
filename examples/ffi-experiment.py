@@ -11,15 +11,15 @@ from mozaik.analysis.technical import NeuronAnnotationsToPerNeuronValues
 from mozaik.visualization.Kremkow_plots import Figure2
 from mozaik.storage.datastore import Hdf5DataStore,PickledDataStore
 from NeuroTools.parameters import ParameterSet
-from mozaik.storage.queries import TagBasedQuery, select_result_sheet_query
+from mozaik.storage.queries import TagBasedQuery, select_result_sheet_query, analysis_data_structure_parameter_filter_query
 
-if False:
+if True:
     params = setup_experiments('FFI',sim)
     jens_model = JensModel(sim,params)
     
     experiment_list =   [
                            #MeasureSpontaneousActivity(jens_model,duration=147*7),
-                           MeasureOrientationTuningFullfield(jens_model,num_orientations=8,spatial_frequency=0.8,temporal_frequency=2,grating_duration=148*7,num_trials=1),
+                           MeasureOrientationTuningFullfield(jens_model,num_orientations=8,spatial_frequency=0.8,temporal_frequency=2,grating_duration=148*7,num_trials=5),
                            #MeasureOrientationTuningFullfield(jens_model,num_orientations=1,spatial_frequency=0.8,temporal_frequency=2,grating_duration=57*7,num_trials=3),
                            #MeasureOrientationTuningFullfield(jens_model,num_orientations=8,spatial_frequency=0.8,temporal_frequency=2,grating_duration=148*7,num_trials=3),
                         ]
@@ -45,7 +45,11 @@ OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Inh', 'neuron' : 0, 'sh
 OverviewPlot(data_store,ParameterSet({'sheet_name' : 'X_ON', 'neuron' : 0, 'sheet_activity' : {}})).plot()
 OverviewPlot(data_store,ParameterSet({'sheet_name' : 'X_OFF', 'neuron' : 0, 'sheet_activity' : {}})).plot()
 Figure2(data_store,ParameterSet({'sheet_name' : 'V1_Exc'})).plot()
-PerNeuronValuePlot(data_store,ParameterSet({})).plot()
+
+PerNeuronValuePlot(analysis_data_structure_parameter_filter_query(data_store,'PerNeuronValue',value_name='orientation preference'),ParameterSet({})).plot()
+PerNeuronValuePlot(analysis_data_structure_parameter_filter_query(data_store,'PerNeuronValue',value_name='LGNAfferentOrientation'),ParameterSet({})).plot()
+
+
 CyclicTuningCurvePlot(data_store,ParameterSet({'tuning_curve_name' : 'CyclicTuningCurve', 'neuron': 0, 'sheet_name' : 'V1_Exc','ylabel': 'response'})).plot()
 
 #RetinalInputMovie(data_store,ParameterSet({'frame_rate': 10})).plot()
