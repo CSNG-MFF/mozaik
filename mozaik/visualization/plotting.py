@@ -66,6 +66,7 @@ from mozaik.stimuli.stimulus_generator import parse_stimuls_id,load_from_string,
 from NeuroTools.parameters import ParameterSet, ParameterDist
 from mozaik.storage.queries import *
 from simple_plot import *
+from plot_constructors import *
 from mozaik.tools import units
 
 
@@ -148,77 +149,8 @@ class CyclicTuningCurvePlot(PlotTuningCurve):
         pylab.legend()
         
 
-class LinePlot(Plotting):          
-      """
-      Plot multiple plots with common x or y axis in a row or column.
-      This is a smaller helper class that mitigates some of the code repetition in such cases.
-      
-      Note that the inherited class has to implement:
-        _subplot(self,idx,ax,params) which plots the individual plot. 
-        The idx is index in whatever datastructure list we are plotting and
-        axis is the axis that has to be used for plotting.
-      """ 
-      required_parameters = ParameterSet({
-        'tuning_curve_name' : str,  #the name of the tuning curve
-        'horizontal' : bool, # should the line of plots be horizontal or vertical
-        'shared_axis' : bool, # is shared axis, the x axis or y axis depending on the horizontal flag is considered shared
-                                # and will thus have common label
-      })
-    
-    
-      def  __init__(self,datastore,parameters):
-           Plotting.__init__(self,datastore,parameters)    
-           self.length = None
-      
-      def subplot(self,subplotspec,params): 
-          if not self.length:
-             print 'Error, class that derives from LinePlot has to specify the length parameter'
-             return
-          
-          gs = gridspec.GridSpecFromSubplotSpec(1, self.length, subplot_spec=subplotspec)  
-          for idx in xrange(0,self.length):
-            p = params.copy()
-            if idx > 0:
-                p.setdefault("y_label",None)
-            self._subplot(idx,gs[0,idx],p)
-
-
-class PerStimulusPlot(LinePlot):
-    """
-    Line plot where each plot corresponds to stimulus with the same parameter except trials.
-    
-    The self.dsvs will contain the datastores you want to plot in each of the subplots - i.e. all recordings
-    in the given datastore come from the same stimulus of the same parameters except for the trial parameter.
-    """
-    required_parameters = ParameterSet({
-      'sheet_name' : str,  #the name of the sheet for which to plot
-    })
-
-    def  __init__(self,datastore,parameters):
-        Plotting.__init__(self,datastore,parameters)
-        self.dsv = select_result_sheet_query(datastore,self.parameters.sheet_name)
-        self.dsvs = partition_by_stimulus_paramter_query(self.dsv,8)    
-        self.length = len(self.dsvs)
-
-    def subplot(self,subplotspec,params): 
-          if not self.length:
-             print 'Error, class that derives from LinePlot has to specify the length parameter'
-             return
-          
-          gs = gridspec.GridSpecFromSubplotSpec(1, self.length, subplot_spec=subplotspec)
-
-          for idx in xrange(0,self.length):
-                p = params.copy()
-                stimulus = self.dsvs[idx].get_stimuli()[0]
-                p.setdefault("title",str(stimulus))
-                    if idx > 0:
-                p.setdefault("y_label",None)
-                self._subplot(idx,gs[0,idx],p)
-
-
-
             
-class RasterPlot(PerStimulusPlot):
+class RasterPlot(Plotting):
       required_parameters = ParameterSet({
         'trial_averaged_histogram' : bool,  #should the plot show also the trial averaged histogram
         'neurons' : list,
@@ -228,30 +160,37 @@ class RasterPlot(PerStimulusPlot):
            PerStimulusPlot.__init__(self,datastore,parameters)
            if self.parameters.neurons == []:
               self.parameters.neurons = None 
-    
-      def _subplot(self,idx,gs,params):
-         sp = [[s.spiketrains for s in self.dsvs[idx].get_segments()]]
-         stimulus = self.dsvs[idx].get_stimuli()[0]
+      
+      def subplot(self,subplotspec,params):
+        PerStimulusPlot(self.datastore,function=self.ploter).make_line_plot(self,subplotspec,params)
+
+      def ploter(self,dsv,gs,params):
+         sp = [[s.spiketrains for s in self.dsv.get_segments()]]
+         stimulus = self.dsv.get_stimuli()[0]
          
          if self.parameters.trial_averaged_histogram:
             gs = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=gs)  
             # first the raster
             ax = pylab.subplot(gs[:3,0])
             SpikeRasterPlot(sp,neurons=self.parameters.neurons,x_axis=False,x_label=None,**params.copy())(gs[:3,0])
-            SpikeHistogramPlot(sp,neurons=self.parameters.neurons,**params)(gs[3,0])
+            SpikeHistogramPlot(sp,neurons=self.parameters.neurons,**params.copy())(gs[3,0])
          else:
-            SpikeRasterPlot(sp,neurons=self.parameters.neurons,**params)(gs)
+            SpikeRasterPlot(sp,neurons=self.parameters.neurons,**params.copy())(gs)
 
 
-class VmPlot(PerStimulusPlot):
+class VmPlot(Plotting):
       required_parameters = ParameterSet({
         'neuron' : int,  #we can only plot one neuron - which one ?
       })
-    
-      def _subplot(self,idx,gs,params):
+
+      def subplot(self,subplotspec,params):
+        PerStimulusPlot(self.datastore,function=self.ploter).make_line_plot(self,subplotspec,params)
+
+
+      def ploter(self,dsv,gs,params):
           pylab.rc('axes', linewidth=3)
           ax = pylab.subplot(gs)
-          vms = [s.get_vm() for s in self.dsvs[idx].get_segments()]
+          vms = [s.get_vm() for s in self.dsv.get_segments()]
           
           mean_v = numpy.zeros(numpy.shape(vms[0][:,self.parameters.neuron]))
           
@@ -278,17 +217,20 @@ class VmPlot(PerStimulusPlot):
             pylab.ylabel('')
           pylab.rc('axes', linewidth=1)            
 
-class GSynPlot(PerStimulusPlot):
+class GSynPlot(Plotting):
 
       required_parameters = ParameterSet({
         'neuron' : int  #we can only plot one neuron - which one ?
       })
 
-      def _subplot(self,idx,gs,params):
+      def subplot(self,subplotspec,params):
+        PerStimulusPlot(self.datastore,function=self.ploter).make_line_plot(self,subplotspec,params)
+
+      def ploter(self,dsv,gs,params):
           pylab.rc('axes', linewidth=3)
           ax = pylab.subplot(gs)
-          gsyn_es = [s.get_esyn() for s in self.dsvs[idx].get_segments()]
-          gsyn_is = [s.get_isyn() for s in self.dsvs[idx].get_segments()]
+          gsyn_es = [s.get_esyn() for s in self.dsv.get_segments()]
+          gsyn_is = [s.get_isyn() for s in self.dsv.get_segments()]
           mean_gsyn_e = numpy.zeros(numpy.shape(gsyn_es[0][:,self.parameters.neuron].copy()))
           mean_gsyn_i = numpy.zeros(numpy.shape(gsyn_is[0][:,self.parameters.neuron].copy()))
           sampling_period = gsyn_es[0].sampling_period
@@ -313,11 +255,7 @@ class GSynPlot(PerStimulusPlot):
           ax.legend([p1,p2],['exc','inh'])  
           disable_top_right_axis(ax)
           
-          if idx == 0:
-            pylab.ylabel('G(nS)')
-          else:
-            pylab.ylabel('')
-          pylab.xlim(0,t_stop)
+	  pylab.xlim(0,t_stop)
           pylab.xticks([0,t_stop/2,t_stop])
           three_tick_axis(ax.yaxis)
                     
@@ -344,7 +282,7 @@ class OverviewPlot(Plotting):
              VmPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : self.parameters.neuron})).subplot(gs[2+offset,0],params.copy())
 
           
-class AnalogSignalListPlot(LinePlot):
+class AnalogSignalListPlot(Plotting):
         required_parameters = ParameterSet({
             'sheet_name' : str,  #the name of the sheet for which to plot
             'ylabel' : str,  #what to put as ylabel
@@ -359,8 +297,10 @@ class AnalogSignalListPlot(LinePlot):
             self.asl = self.analog_signal_list.asl
             self.length = len(self.asl)
             
-    
-        def _subplot(self,idx,gs,params):
+	def subplot(self,subplotspec,params):
+	  LinePlot(self.datastore,function=self.ploter).make_line_plot(self,subplotspec,params)
+  
+	def ploter(self,idx,gs,params):
               pylab.rc('axes', linewidth=3)
               ax = pylab.subplot(gs)
               times = numpy.linspace(self.asl[idx].t_start.magnitude,self.asl[idx].t_stop.magnitude,len(self.asl[idx]))
@@ -374,9 +314,10 @@ class AnalogSignalListPlot(LinePlot):
               three_tick_axis(ax.xaxis)                      
               pylab.rc('axes', linewidth=1)
 
-class ConductanceSignalListPlot(LinePlot):
+class ConductanceSignalListPlot(Plotting):
         required_parameters = ParameterSet({
             'sheet_name' : str,  #the name of the sheet for which to plot
+            'normalize_individually' : bool #each trace will be normalized individually by divding it with its maximum
         })
     
         def  __init__(self,datastore,parameters):
@@ -389,23 +330,32 @@ class ConductanceSignalListPlot(LinePlot):
             self.i_con = self.conductance_signal_list.i_con
             self.length = len(self.e_con)
             
-    
-        def _subplot(self,idx,gs,params):
-              pylab.rc('axes', linewidth=3)
-              ax = pylab.subplot(gs)
-              times = numpy.linspace(self.e_con[idx].t_start.magnitude,self.e_con[idx].t_stop.magnitude,len(self.e_con[idx]))
-              pylab.plot(times,self.e_con[idx],color = 'r',label = 'exc')
-              pylab.plot(times,self.i_con[idx],color = 'b',label = 'inh')
-              if idx == 0:
-                 pylab.ylabel('G(S)')
-              
-              pylab.xlim(times[0],times[-1])  
-              disable_top_right_axis(ax)      
-              three_tick_axis(ax.yaxis)        
-              three_tick_axis(ax.xaxis)                      
-              pylab.rc('axes', linewidth=1) 
-              
-              
+        def subplot(self,subplotspec,params):
+	    LinePlot(self.datastore,function=self.ploter).make_line_plot(self,subplotspec,params)
+
+        def ploter(self,idx,gs,params):
+            pylab.rc('axes', linewidth=3)
+            pylab.rc('axes', linewidth=3)
+	    ax = pylab.subplot(gs)
+	    times = numpy.linspace(self.e_con[idx].t_start.magnitude,self.e_con[idx].t_stop.magnitude,len(self.e_con[idx]))
+	    if parameters.normalize_individually:
+	      pylab.plot(times,self.e_con[idx]/numpy.max(self.e_con[idx]),color = 'r',label = 'exc')
+	      pylab.plot(times,self.i_con[idx]/numpy.max(self.i_con[idx]),color = 'b',label = 'inh')
+	      pylab.yticks([0.0,1.0],[0,Max])
+	    else:
+	      pylab.plot(times,self.e_con[idx],color = 'r',label = 'exc')
+	      pylab.plot(times,self.i_con[idx],color = 'b',label = 'inh')
+	      
+	    if idx == 0:
+	       pylab.ylabel('G(S)')
+	    
+	    pylab.xlim(times[0],times[-1])  
+	    disable_top_right_axis(ax)      
+	    three_tick_axis(ax.yaxis)        
+	    three_tick_axis(ax.xaxis)                      
+	    pylab.rc('axes', linewidth=1)
+	    
+	    
 class RetinalInputMovie(LinePlot):
       required_parameters = ParameterSet({
             'frame_rate' : int,  #the desired frame rate (per sec), it might be less if the computer is too slow
@@ -418,10 +368,13 @@ class RetinalInputMovie(LinePlot):
            self.retinal_input = datastore.get_retinal_stimulus()
            self.length = len(self.retinal_input)
        
-      def _subplot(self,idx,gs,params):
+      def subplot(self,subplotspec,params):
+	    LinePlot(self.datastore,function=self.ploter).make_line_plot(self,subplotspec,params)
+
+      def ploter(self,idx,gs,params):
           PixelMovie(self.retinal_input[idx],1.0/self.parameters.frame_rate*1000,x_axis=False,y_axis=False)(gs)
 
-class ActivityMovie(PerStimulusPlot):
+class ActivityMovie(Plotting):
       required_parameters = ParameterSet({
             'frame_rate' : int,  #the desired frame rate (per sec), it might be less if the computer is too slow
             'bin_width' : float, # in ms the width of the bins into which to sample spikes 
@@ -433,7 +386,10 @@ class ActivityMovie(PerStimulusPlot):
       def  __init__(self,datastore,parameters):
            PerStimulusPlot.__init__(self,datastore,parameters)
     
-      def _subplot(self,idx,gs,params):
+      def subplot(self,subplotspec,params):
+        PerStimulusPlot(self.datastore,function=self.ploter).make_line_plot(self,subplotspec,params)
+
+      def ploter(self,dsv,gs,params):
          sp = [s.spiketrains for s in self.dsvs[idx].get_segments()]
          
          start = sp[0][0].t_start.magnitude
@@ -466,7 +422,7 @@ class ActivityMovie(PerStimulusPlot):
          else:
              ScatterPlotMovie(pos[0],pos[1],h.T,1.0/self.parameters.frame_rate*1000,x_axis=False,y_axis=False, dot_size = 40)(gs)
 
-class PerNeuronValuePlot(LinePlot):
+class PerNeuronValuePlot(Plotting):
     """
     Plots PerNeuronValuePlots, one for each sheet.
     
@@ -485,7 +441,10 @@ class PerNeuronValuePlot(LinePlot):
                 self.pnvs.append(z)
         self.length = len(self.poss)
 
-    def _subplot(self,idx,gs,params):
+    def subplot(self,subplotspec,params):
+	    LinePlot(self.datastore,function=self.ploter).make_line_plot(self,subplotspec,params)
+
+    def ploter(self,idx,gs,params):
          posx = self.poss[idx][0]
          posy = self.poss[idx][1]
          values = self.pnvs[idx][0].values

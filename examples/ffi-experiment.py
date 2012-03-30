@@ -1,4 +1,4 @@
-#!/usr/bin/ipython 
+#!/Library/Frameworks/Python.framework/Versions/2.7/bin/python
 import matplotlib
 from mozaik.framework.experiment import MeasureOrientationTuningFullfield, MeasureSpontaneousActivity, MeasureNaturalImagesWithEyeMovement
 from pyNN import nest as sim

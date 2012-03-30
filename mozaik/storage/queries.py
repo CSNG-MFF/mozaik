@@ -155,16 +155,72 @@ class PartitionByStimulusParamterQuery(Query):
     """
     This query will take all recordings and return list of DataStoreViews
     each holding recordings measured to the same stimulus with exception of
-    the paramter reference by stimulus_paramter_index
+    the paramter reference by stimulus_paramter_index.
+    
+    Note that in most cases one wants to do this only against datastore holding on
+    single Stimulus type!
     
     This way the datastoreview is partitioned into subsets each holding 
     recordings to the same stimulus with the same paramter values with the
     exception to the stimulus_paramter_index
     """
     required_parameters = ParameterSet({
-     'stimulus_paramter_index' : list, # list of tags the the query will look for
+     'stimulus_paramter_index' : list, # the index of the parameter against which to partition
     })
     
     def query(self,dsv):  
         return partition_by_stimulus_paramter_query(dsv,**self.parameters)    
 ########################################################################
+
+
+
+########################################################################
+def partition_recordings_by_sheet_query(dsv):  
+        dsvs = []
+        for sheet in dsv.sheets():
+            new_dsv = dsv.fromDataStoreView()
+            new_dsv.analysis_results = dsv.analysis_result_copy()
+            new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
+
+            for seg in dsv.block.segments:
+                if seg.annotations['sheet_name'] == sheet:
+                   new_dsv.block.segments.append(seg)
+    
+            dsvs.append(new_dsv)
+        return dsvs
+
+
+class PartitionRecordingsBySheetQuery(Query):
+    """
+    This query will take all recordings and return list of DataStoreViews
+    each corresponding to one of the sheets and holding recordings comming
+    from the corresponding sheet.
+    """
+    
+    def query(self,dsv):  
+        return partition_recordings_by_sheet_query(dsv)    
+########################################################################
+
+
+########################################################################
+def partition_analysis_results_by_parameter_name_query(dsv):  
+    raise NotImplementedError
+    pass
+
+
+class PartitionAnalysisResultsByParameterNameQuery(Query):
+    """
+    This query takes in a name of a _parameter_.
+    This query will take all analysis results and it will parition them into DSVs
+    each holding only analysis results that have the same value of the _parameter_.
+    Thus for each value of the _parameter_ existing in the DSV there will be new DSV
+    created.
+    
+    Note that this query will fail if it encounters any analysis results that do not
+    specify the _parameter_.
+    """
+    
+    def query(self,dsv):  
+        return partition_analysis_results_by_parameter_name_query(dsv)    
+########################################################################
+

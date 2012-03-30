@@ -10,7 +10,7 @@
         'centre': (0.0, 0.0), # degrees (x,y)
         'size': (6.8, 6.8), # degrees (width, height)
     },
-    'results_dir': '/home/jan/projects/mozaik/examples/',
+    'results_dir': '/Users/jan/projects/mozaik/examples',
     'name' : 'Jens Model',
     'reset' : False,
     'null_stimulus_period' : 140.0,
