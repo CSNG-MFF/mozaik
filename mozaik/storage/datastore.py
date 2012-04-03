@@ -112,7 +112,6 @@ class DataStoreView(MozaikParametrizeObject):
         else:
            node = self.analysis_results[sheet_name][neuron_idx]['data'] 
         
-        print node.keys()
         if node.has_key(result_id):
             return node[result_id]    
         else:

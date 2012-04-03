@@ -38,6 +38,6 @@ class Figure2(Plotting):
           VmPlot(dsv,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : 0})).subplot(gs[4:8,6:14],params)          
           GSynPlot(dsv,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : 0})).subplot(gs[8:12,6:14],params)
           
-          ConductanceSignalListPlot(queries.TagBasedQuery(ParameterSet({'tags' : ['GSTA1'] })).query(self.datastore),ParameterSet({'sheet_name' : 'V1_Exc'})).subplot(gs[7:10,15:],params)  
+          ConductanceSignalListPlot(queries.TagBasedQuery(ParameterSet({'tags' : ['GSTA1'] })).query(self.datastore),ParameterSet({'sheet_name' : 'V1_Exc','normalize_individually':True})).subplot(gs[7:10,15:],params)  
           AnalogSignalListPlot(dsv,ParameterSet({'sheet_name' : self.parameters.sheet_name,'ylabel' : 'AC (norm)'})).subplot(gs[2:5,15:],params)
           
