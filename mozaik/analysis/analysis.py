@@ -13,6 +13,9 @@ from NeuroTools.parameters import ParameterSet
 from mozaik.storage.queries import select_stimuli_type_query,select_result_sheet_query, partition_by_stimulus_paramter_query
 from neo.core.analogsignal import AnalogSignal
 from NeuroTools import signals
+import logging
+
+logger = logging.getLogger("mozaik")
 
 class Analysis(MozaikParametrizeObject):
     """

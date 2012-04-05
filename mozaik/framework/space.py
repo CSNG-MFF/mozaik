@@ -17,7 +17,7 @@ from NeuroTools.parameters import ParameterSet
 from mozaik import __version__
 
 TRANSPARENT = -1
-logger = logging.getLogger("Mozaik")
+logger = logging.getLogger("mozaik")
 
 
 def xy2ij(coordinates):
@@ -250,7 +250,6 @@ class VisualSpace(object):
             if obj.is_visible:
                 if region.overlaps(obj):
                     obj_view = obj.display(region, pixel_size)
-                    #print region.left, region.bottom, region.size, pixel_size, obj_view.shape, scene.shape, obj_view.min(), obj_view.max()
                     try:
                         scene = numpy.where(obj_view > scene, obj_view, scene) # later objects overlay earlier ones with no transparency
                     except ValueError:

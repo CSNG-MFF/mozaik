@@ -10,7 +10,7 @@ import logging
 import pyNN
 import pyNN.recording.files
 import quantities
-from NeuroTools import visual_logging
+
 from NeuroTools.parameters import ParameterSet
 from pyNN import random, space
 from pyNN.errors import NothingToWriteError
@@ -19,7 +19,7 @@ from neo.core.spiketrain import SpikeTrain
 from neo.core.segment import Segment
 from neo.core.analogsignalarray import AnalogSignalArray
 
-logger = logging.getLogger("Mozaik")
+logger = logging.getLogger("mozaik")
 
 class Sheet(MozaikComponent):
     """

@@ -6,8 +6,9 @@ import param
 from param.parameterized import Parameterized
 from mozaik.storage.queries import *
 import matplotlib.gridspec as gridspec
+import logging
 
-
+logger = logging.getLogger("mozaik")
 
 class LinePlot(Parameterized):          
         """
