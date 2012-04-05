@@ -95,9 +95,7 @@ class PlotTuningCurve(Plotting):
     """
     values - contain a list of lists of values, the outer list corresponding
     to stimuli the inner to neurons.
-    
     stimuli_ids - contain list of stimuli ids corresponding to the values
-    
     parameter_index - corresponds to the parameter that should be plotted as a tuning curve
     """
 
@@ -112,7 +110,10 @@ class PlotTuningCurve(Plotting):
         self.tuning_curves = self.datastore.get_analysis_result(parameters.tuning_curve_name,sheet_name=parameters.sheet_name)
     
     def subplot(self,subplotspec,params):
-        tc = self.tuning_curves[0]
+      LinePlot(function=self.ploter,length = len(self.tuning_curves)).make_line_plot(subplotspec,params)
+    
+    def ploter(self,idx,gs,params):
+        tc = self.tuning_curves[idx]
         tc = tc.to_dictonary_of_tc_parametrization()
         xs = []
         ys = []
@@ -125,7 +126,7 @@ class PlotTuningCurve(Plotting):
             labels.append(fromat_stimulus_id(parse_stimuls_id(k)))
         
         params.setdefault("title",('Neuron: %d' % self.parameters.neuron))
-        params.setdefault("y_label",self.tuning_curves[0].y_axis_name)
+        params.setdefault("y_label",self.tuning_curves[idx].y_axis_name)
         params.setdefault("x_lim",(xs[0],xs[-1]))
         StandardStyleLinePlot(xs,ys,labels=labels,**params)(subplotspec)
             
@@ -135,8 +136,8 @@ class CyclicTuningCurvePlot(PlotTuningCurve):
     Tuning curve over cyclic domain
     """
     
-    def subplot(self,subplotspec,params):
-        tc = self.tuning_curves[0]
+    def ploter(self,idx,gs,params):
+        tc = self.tuning_curves[idx]
         tc = tc.to_dictonary_of_tc_parametrization()
         xs = []
         ys = []
@@ -153,7 +154,7 @@ class CyclicTuningCurvePlot(PlotTuningCurve):
             labels.append(fromat_stimulus_id(parse_stimuls_id(k)))
 
         params.setdefault("title",('Neuron: %d' % self.parameters.neuron))
-        params.setdefault("y_label",self.tuning_curves[0].y_axis_name)
+        params.setdefault("y_label",self.tuning_curves[idx].y_axis_name)
         
         if self.tuning_curves[0].period == numpy.pi:
             params.setdefault("x_ticks",[0,numpy.pi/2.0,numpy.pi])
@@ -172,7 +173,7 @@ class RasterPlot(Plotting):
       required_parameters = ParameterSet({
         'trial_averaged_histogram' : bool,  #should the plot show also the trial averaged histogram
         'neurons' : list,
-    'sheet_name' : str,
+        'sheet_name' : str,
       })
 
       def  __init__(self,datastore,parameters):

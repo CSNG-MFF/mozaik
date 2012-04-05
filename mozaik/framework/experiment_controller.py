@@ -29,8 +29,8 @@ def setup_experiments(simulation_name,sim):
     logger = logging.getLogger("MozaikLite")
     
     # Set-up logging
-    init_logging(Global.root_directory + "log", file_level=logging.DEBUG, console_level=logging.DEBUG) # NeuroTools version
-    visual_logging.basicConfig(Global.root_directory + "visual_log.zip", level=logging.DEBUG)
+    init_logging(Global.root_directory + "log", file_level=logging.DEBUG, console_level=logging.INFO) # NeuroTools version
+    visual_logging.basicConfig(Global.root_directory + "visual_log.zip", level=logging.INFO)
     
     logger.info("Creating Model object using the %s simulator." % sim.__name__)
     return parameters

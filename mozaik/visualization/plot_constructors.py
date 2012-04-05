@@ -93,15 +93,40 @@ class PerStimulusPlot(PerDSVPlot):
     
     The self.dsvs will contain the datastores you want to plot in each of the subplots - i.e. all recordings
     in the given datastore come from the same stimulus of the same parameters except for the trial parameter.
+    
+    PerStimulusPlot provides several automatic titling of plots based on the stimulus name and parameters. The
+    currently supported styles are:
+    
+    
+    "None" - No title
+    
+    "Standard" - Simple style where the Stimulus name is plotted on one line and the parameter values on the second line
+    
+    "Clever" - This style is valid only for cases where only stimuli of the same type are present in the supplied DSV.
+               If the style is set to Clever but the conditions doesn't hold it falls back to Standard and emits a warning.
+               In this case the name of the stimulus and all parameters which are the same for all stimuli in DSV are
+               not displayed. The remaining parameters are shown line after line in the format 'stimulus : value'.
     """
+    title_style = param.String(default="None",instantiate=True,doc="The style of the title")
+    
     def partiotion_dsvs(self):       
         return partition_by_stimulus_paramter_query(self.datastore,8)
 
     def _single_plot(self,idx,gs,p):
-            stimulus = self.dsvs[idx].get_stimuli()[0]
-            p.setdefault("title",str(stimulus))
+            title = self.title(idx)
+            if title != None:
+                p.setdefault("title",title)
             PerDSVPlot._single_plot(self,idx,gs,p)
             
-            
+    def title(self,idx):
+        return None
+        stimulus = self.dsvs[idx].get_stimuli()[0]
+        
+        if self.title_style == "None":
+           return None 
+        
+        if self.title_style == "Standard":
+           return None
+        
             
             
