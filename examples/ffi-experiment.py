@@ -26,7 +26,7 @@ if True:
 
     data_store = run_experiments(jens_model,experiment_list)
 else:
-    data_store = PickledDataStore(load=True,parameters=ParameterSet({'root_directory':'small_OR'}))
+    data_store = PickledDataStore(load=True,parameters=ParameterSet({'root_directory':'param-ffi_S1_3s1or'}))
 
 import resource
 print "Current memory usage: %iMB" % (resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/(1024))

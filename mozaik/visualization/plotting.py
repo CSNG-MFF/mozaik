@@ -128,7 +128,7 @@ class PlotTuningCurve(Plotting):
         params.setdefault("title",('Neuron: %d' % self.parameters.neuron))
         params.setdefault("y_label",self.tuning_curves[idx].y_axis_name)
         params.setdefault("x_lim",(xs[0],xs[-1]))
-        StandardStyleLinePlot(xs,ys,labels=labels,**params)(subplotspec)
+        StandardStyleLinePlot(xs,ys,labels=labels,**params)(gs)
             
             
 class CyclicTuningCurvePlot(PlotTuningCurve):
@@ -167,7 +167,7 @@ class CyclicTuningCurvePlot(PlotTuningCurve):
             params.setdefault("x_tick_labels",["0","$\\pi$","$2\\pi$"])
             params.setdefault("x_tick_style","Custom")
 
-        StandardStyleLinePlot(xs,ys,labels=labels,**params)(subplotspec)
+        StandardStyleLinePlot(xs,ys,labels=labels,**params)(gs)
 
 class RasterPlot(Plotting):
       required_parameters = ParameterSet({
