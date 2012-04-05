@@ -4,6 +4,11 @@ from sets import Set
 import quantities as qt
 import numpy
 
+import logging
+
+logger = logging.getLogger("mozaik")
+
+
 class NeuronAnnotationsToPerNeuronValues(Analysis):
       """
       Creates a PerNeuronValues analysis data structure per each neuron annotation 
@@ -17,7 +22,7 @@ class NeuronAnnotationsToPerNeuronValues(Analysis):
       """
       
       def analyse(self):
-        print 'Starting NeuronAnnotationsToPerNeuronValues Analysis'
+        logger.info('Starting NeuronAnnotationsToPerNeuronValues Analysis')
         anns = self.datastore.get_neuron_annotations()
         
         for sheet in self.datastore.sheets():

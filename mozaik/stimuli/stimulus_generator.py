@@ -1,26 +1,26 @@
-# the stimulus taxaonomy
+"""
+The stimulus taxaonomy
 
-# will get more sofisticated but for now only a list of unique stimulus identifiers with the number of their parameters 
-# For simplicity - for now - a stimulus is uniquely identified by a string which contains its identified followed 
-# by space sepparated number of (floating) numbers that correspond to its parameters
-# eg:   'SinusoidalGrating 0.0 1.0 3.14 4.3 3'
-# each stimulus should have at least 5 parameters corresponding to those all mozaik VisualStimulus object require:
-# frame_duration
-# size_in_degrees x// note this is a bounding box of the stimulus which should correspond to the size of the visual field rather than the 'geometrical size'
-# size_in_degrees y// note this is a bounding box of the stimulus which should correspond to the size of the visual field rather than the 'geometrical size'
-# location_x
-# location_y
-# max_luminance 
-# stimulus_duration
-# density
-# trial
-# which have to be the first 7 parameters in this order
-#
-# JACOMMENT: for now we support only square stimuli - (i.e. the size is the same in both axis)
-#
+will get more sofisticated but for now only a list of unique stimulus identifiers with the number of their parameters 
+For simplicity - for now - a stimulus is uniquely identified by a string which contains its identified followed 
+by space sepparated number of (floating) numbers that correspond to its parameters
+eg:   'SinusoidalGrating 0.0 1.0 3.14 4.3 3'
+each stimulus should have at least 5 parameters corresponding to those all mozaik VisualStimulus object require:
+frame_duration
+size_in_degrees x// note this is a bounding box of the stimulus which should correspond to the size of the visual field rather than the 'geometrical size'
+size_in_degrees y// note this is a bounding box of the stimulus which should correspond to the size of the visual field rather than the 'geometrical size'
+location_x
+location_y
+max_luminance 
+stimulus_duration
+density
+trial
+which have to be the first 7 parameters in this order
 
-#StimulusTaxonomy contains the list of known stimuli with the number of their free parameters
+JACOMMENT: for now we support only square stimuli - (i.e. the size is the same in both axis)
 
+StimulusTaxonomy contains the list of known stimuli with the number of their free parameters
+"""
 
 from mozaik.framework.interfaces import VisualStimulus
 from NeuroTools.parameters import ParameterSet, ParameterDist
@@ -36,22 +36,6 @@ StimulusTaxonomy = {
                         'NaturalImageWithEyeMovement' : base_stimulus_parameters + [('size',qt.degrees),('eye_movement_period',qt.ms),('idd',qt.dimensionless)],
                         'Null' : base_stimulus_parameters,
                    }
-
-
-def get_stimulus_parameter_name(stimulus_name,parameter_index):
-    """
-    Returns the name of the prameter_index-th parameter of stimulus stimulus_name.
-    """
-    
-    return  StimulusTaxonomy[stimulus_name][parameter_index][0]
-
-def get_stimulus_parameter_units(stimulus_name,parameter_index):
-    """
-    Returns the units of the prameter_index-th parameter of stimulus stimulus_name.
-    """
-    
-    return  StimulusTaxonomy[stimulus_name][parameter_index][1]
-
 
 def load_from_string(string):
     return parse_stimuls_id(string).load_stimulus()
@@ -90,13 +74,26 @@ class StimulusID(object):
             return False
       
       def get_paramter_name(self,paramter_index):      
-          return StimulusTaxonomy[self.name][paramter_index]
+          """
+          Returns the name of the prameter_index-th parameter of stimulus stimulus_name.
+          """
+          return StimulusTaxonomy[self.name][paramter_index][0]
+
+    
+      def get_parameter_units(self,parameter_index):
+          """
+          Returns the units of the prameter_index-th parameter of stimulus stimulus_name.
+          """
+          return StimulusTaxonomy[self.name][parameter_index][1]
+
            
       def load_stimulus(self):
           for p in self.parameters:
               assert (not (isinstance(p,int) or isinstance(p,float))) , 'The parameters are not in correct format, perhaps parameter collapsing was performed' 
           cls = globals()[self.name]
           return cls([float(a) for a in self.parameters])  
+          
+          
 
 
 def _colapse(dd,axis):

@@ -7,6 +7,10 @@ from mozaik.framework.space import VisualSpace, VisualRegion
 from mozaik.framework.connectors import ExponentialProbabilisticArborization,UniformProbabilisticArborization,GaborConnector, V1PushPullProbabilisticArborization
 from mozaik.framework.sheets import Sheet
 
+import logging
+
+logger = logging.getLogger("mozaik")
+
 
 
 class Model(MozaikComponent):
@@ -78,19 +82,19 @@ class Model(MozaikComponent):
         self.simulator_time = 0
         
     def run(self, tstop):
-        print ("Simulating the network for %s ms" % tstop)
+        logger.info("Simulating the network for %s ms" % tstop)
         self.sim.run(tstop)
-        print ("Finished simulating the network for %s ms" % tstop)
+        logger.info("Finished simulating the network for %s ms" % tstop)
         self.simulator_time += tstop
         
     def reset(self):
-        print ("Resetting the network")
+        logger.info("Resetting the network")
         if self.parameters.reset:
             self.sim.reset()
             self.simulator_time=0
         else:
             self.retina.provide_null_input(self.visual_space,self.parameters.null_stimulus_period,self.simulator_time)
-            print ("Simulating the network for %s ms with blank stimulus" % self.parameters.null_stimulus_period)
+            logger.info("Simulating the network for %s ms with blank stimulus" % self.parameters.null_stimulus_period)
             self.sim.run(self.parameters.null_stimulus_period)
             self.simulator_time+=self.parameters.null_stimulus_period
     

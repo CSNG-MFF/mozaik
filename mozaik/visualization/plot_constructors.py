@@ -31,7 +31,7 @@ class LinePlot(Parameterized):
             params - are the simple plot parameters that will be modified and passed to each of the subpots
             """
             if not self.length:
-               print 'Length not specified'
+               logger.error('Length not specified')
                return
                
             l = numpy.min([self.max_length,self.length])   
@@ -107,6 +107,7 @@ class PerStimulusPlot(PerDSVPlot):
                If the style is set to Clever but the conditions doesn't hold it falls back to Standard and emits a warning.
                In this case the name of the stimulus and all parameters which are the same for all stimuli in DSV are
                not displayed. The remaining parameters are shown line after line in the format 'stimulus : value'.
+               Of course trial parameter is ignored.
     """
     title_style = param.String(default="None",instantiate=True,doc="The style of the title")
     
@@ -120,14 +121,14 @@ class PerStimulusPlot(PerDSVPlot):
             PerDSVPlot._single_plot(self,idx,gs,p)
             
     def title(self,idx):
-        return None
-        stimulus = self.dsvs[idx].get_stimuli()[0]
+        stimulus = load_from_string(self.dsvs[idx].get_stimuli()[0])
         
         if self.title_style == "None":
            return None 
         
         if self.title_style == "Standard":
-           return None
-        
+           title = ''
+           title = title + stimulus[0] + '\n' 
+          
             
             
