@@ -6,6 +6,7 @@ import param
 from param.parameterized import Parameterized
 from mozaik.storage.queries import *
 import matplotlib.gridspec as gridspec
+from mozaik.stimuli.stimulus_generator import parse_stimuls_id
 import logging
 
 logger = logging.getLogger("mozaik")
@@ -121,14 +122,16 @@ class PerStimulusPlot(PerDSVPlot):
             PerDSVPlot._single_plot(self,idx,gs,p)
             
     def title(self,idx):
-        stimulus = load_from_string(self.dsvs[idx].get_stimuli()[0])
+        stimulus = parse_stimuls_id(self.dsvs[idx].get_stimuli()[0])
         
         if self.title_style == "None":
            return None 
         
         if self.title_style == "Standard":
            title = ''
-           title = title + stimulus[0] + '\n' 
+           title = title + stimulus.name + '\n' 
+           for i in xrange(0,stimulus.num_parameters):
+               title = title + stimulus.get_parameter_name(i) + ' : ' + str(stimulus.parameters[i]) + '\n' 
           
-            
+           return title
             

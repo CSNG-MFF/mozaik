@@ -13,7 +13,7 @@ from mozaik.storage.datastore import Hdf5DataStore,PickledDataStore
 from NeuroTools.parameters import ParameterSet
 from mozaik.storage.queries import TagBasedQuery, select_result_sheet_query, analysis_data_structure_parameter_filter_query
 
-if True:
+if False:
     params = setup_experiments('FFI',sim)
     jens_model = JensModel(sim,params)
     

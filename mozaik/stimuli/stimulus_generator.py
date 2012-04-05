@@ -73,7 +73,7 @@ class StimulusID(object):
                    return True
             return False
       
-      def get_paramter_name(self,paramter_index):      
+      def get_parameter_name(self,paramter_index):      
           """
           Returns the name of the prameter_index-th parameter of stimulus stimulus_name.
           """

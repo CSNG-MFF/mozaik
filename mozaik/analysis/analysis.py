@@ -5,7 +5,7 @@ import pylab
 import numpy 
 import quantities as qt
 import mozaik.tools.units as munits
-from mozaik.stimuli.stimulus_generator import colapse, parse_stimuls_id, get_stimulus_parameter_name, get_stimulus_parameter_units
+from mozaik.stimuli.stimulus_generator import colapse, parse_stimuls_id
 from mozaik.analysis.analysis_data_structures import CyclicTuningCurve,TuningCurve, ConductanceSignalList , AnalogSignalList, PerNeuronValue
 from mozaik.analysis.analysis_helper_functions import time_histogram_across_trials
 from mozaik.framework.interfaces import MozaikParametrizeObject
@@ -109,8 +109,11 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
                         pref = numpy.arccos(x/(numpy.sqrt(numpy.power(x,2) + numpy.power(y,2))))
                         
                         logger.debug('Adding PerNeuronValue to datastore')
-                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(pref,k.get_parameter_units(tc.parameter_index),value_name=k.get_parameter_name(tc.parameter_index) + ' preference' ,  sheet_name=sheet,tags=self.tags,period=tc.period),sheet_name=sheet)
-                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(sel,k.get_parameter_units(tc.parameter_index),value_name=k.get_parameter_name(tc.parameter_index) + ' selectivity',sheet_name=sheet,tags=self.tags,period=1.0),sheet_name=sheet)
+                        
+                        st = parse_stimuls_id(k)
+                        
+                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(pref,st.get_parameter_units(tc.parameter_index),value_name=st.get_parameter_name(tc.parameter_index) + ' preference' ,  sheet_name=sheet,tags=self.tags,period=tc.period),sheet_name=sheet)
+                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(sel,st.get_parameter_units(tc.parameter_index),value_name=st.get_parameter_name(tc.parameter_index) + ' selectivity',sheet_name=sheet,tags=self.tags,period=1.0),sheet_name=sheet)
                                 
                         
 

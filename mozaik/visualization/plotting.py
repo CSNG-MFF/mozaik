@@ -131,7 +131,7 @@ class PlotTuningCurve(Plotting):
         params.setdefault("title",('Neuron: %d' % self.parameters.neuron))
         params.setdefault("y_label",self.tuning_curves[idx].y_axis_name)
         params.setdefault("x_lim",(xs[0],xs[-1]))
-        StandardStyleLinePlot(xs,ys,labels=labels,**params)(subplotspec)
+        StandardStyleLinePlot(xs,ys,labels=labels,**params)(gs)
             
             
 class CyclicTuningCurvePlot(PlotTuningCurve):
@@ -170,7 +170,7 @@ class CyclicTuningCurvePlot(PlotTuningCurve):
             params.setdefault("x_tick_labels",["0","$\\pi$","$2\\pi$"])
             params.setdefault("x_tick_style","Custom")
 
-        StandardStyleLinePlot(xs,ys,labels=labels,**params)(subplotspec)
+        StandardStyleLinePlot(xs,ys,labels=labels,**params)(gs)
 
 class RasterPlot(Plotting):
       required_parameters = ParameterSet({
@@ -186,7 +186,7 @@ class RasterPlot(Plotting):
       
       def subplot(self,subplotspec,params):
           dsv = select_result_sheet_query(self.datastore,self.parameters.sheet_name)
-          PerStimulusPlot(dsv,function=self.ploter).make_line_plot(subplotspec,params)
+          PerStimulusPlot(dsv,function=self.ploter,title_style="Standard").make_line_plot(subplotspec,params)
 
       def ploter(self,dsv,gs,params):
          sp = [[s.spiketrains for s in dsv.get_segments()]]
@@ -210,7 +210,7 @@ class VmPlot(Plotting):
 
       def subplot(self,subplotspec,params):
         dsv = select_result_sheet_query(self.datastore,self.parameters.sheet_name)
-        PerStimulusPlot(dsv,function=self.ploter).make_line_plot(subplotspec,params)
+        PerStimulusPlot(dsv,function=self.ploter,title_style="Standard").make_line_plot(subplotspec,params)
 
 
       def ploter(self,dsv,gs,params):
@@ -244,7 +244,7 @@ class GSynPlot(Plotting):
 
       def subplot(self,subplotspec,params):
         dsv = select_result_sheet_query(self.datastore,self.parameters.sheet_name)
-        PerStimulusPlot(dsv,function=self.ploter).make_line_plot(subplotspec,params)
+        PerStimulusPlot(dsv,function=self.ploter,title_style="Standard").make_line_plot(subplotspec,params)
 
       def ploter(self,dsv,gs,params):
           exc =[]
@@ -384,7 +384,7 @@ class ActivityMovie(Plotting):
            Plotting.__init__(self,datastore,parameters)
     
       def subplot(self,subplotspec,params):
-        PerStimulusPlot(self.datastore,function=self.ploter).make_line_plot(subplotspec,params)
+          PerStimulusPlot(self.datastore,function=self.ploter,title_style="Standard").make_line_plot(subplotspec,params)
 
       def ploter(self,dsv,gs,params):
          sp = [s.spiketrains for s in dsvs.get_segments()]
