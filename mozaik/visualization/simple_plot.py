@@ -1,10 +1,14 @@
-from mozaik.visualization.plotting_helper_functions import *
-import pylab
-import numpy
-
 """
 See visualization.plotting for documentation.
 """
+from mozaik.visualization.plotting_helper_functions import *
+import pylab
+import numpy
+from matplotlib import rc
+import quantities as pq
+
+rc('text', usetex=True)
+
 
 class SimplePlot(object):
         """
@@ -102,7 +106,8 @@ class StandardStyle(SimplePlot):
        def __init__(self,**kwargs):
               """
               fontsize            Font size to be used for tick labels and axis labels
-              ?_tick_style        The stile of ticks to be plotted 
+              ?_tick_style        The stile of ticks to be plotted. Note that the style interacts with the x_ticks and y_ticks commands in that it formats the ticks set by these 
+                                  variables, or by the default ticks set by matplotlib
                                   Available styles are:
                                      Min - plots three ticks, 2 on sides one in the middle (if even number of xticks supplied only the side ones will be plotted)
                                      Custom - will plot tikcs as defined by x/yticks arguments
@@ -114,10 +119,13 @@ class StandardStyle(SimplePlot):
               left_border         Whether to plot the left border of the axis
               bottom_border       Whether to plot the right border of the axis
               title               what is the title (None means no label will be plotted)
-              x_lim                what are the xlims (None means matplotlib will infer from data)
-              y_lim                what are the ylims (None means matplotlib will infer from data)
-              x_ticks              what are the xtikcs (note that the tick style, and x_axis can override/modify these)
-              y_ticks              what are the ytikcs (note that the tick style, and y_axis can override/modify these)
+              x_lim               what are the xlims (None means matplotlib will infer from data)
+              y_lim               what are the ylims (None means matplotlib will infer from data)
+              x_ticks             what are the xtikcs (note that the tick style, and x_axis can override/modify these)
+              y_ticks             what are the ytikcs (note that the tick style, and y_axis can override/modify these)
+              x_tick_labels       what are the x tick lables (note that the tick style, and x_axis can override/modify these, and x_tick_labels have to match x_ticks)
+              y_tick_labels       what are the y tick lables (note that the tick style, and y_axis can override/modify these, and y_tick_labels have to match y_ticks)
+              
               """
               SimplePlot.__init__(self,**kwargs)
               self.parameters["fontsize"] = 7 # Font size to be used for tick labels and axis labels
@@ -135,6 +143,9 @@ class StandardStyle(SimplePlot):
               self.parameters["y_lim"] = None   # what are the ylims (None means matplotlib will infer from data)
               self.parameters["x_ticks"] = None # what are the xtikcs (note that the tick style, and x_axis can override/modify these)
               self.parameters["y_ticks"] = None # what are the ytikcs (note that the tick style, and y_axis can override/modify these)
+              self.parameters["x_tick_labels"] = None # what are the x tick lables (note that the tick style, and x_axis can override/modify these, and x_tick_labels have to match x_ticks)
+              self.parameters["y_tick_labels"] = None # what are the y tick lables (note that the tick style, and y_axis can override/modify these, and y_tick_labels have to match y_ticks)
+
 
        def pre_axis_plot(self):
            pylab.rc('axes', linewidth=3)
@@ -161,7 +172,7 @@ class StandardStyle(SimplePlot):
                disable_yticks(self.axis)
                remove_y_tick_labels()
 
-           self.ticks(self.x_tick_style,self.y_tick_style,self.x_ticks,self.y_ticks) 
+           self.ticks() 
 
            if self.y_label:
               pylab.ylabel(self.y_label)
@@ -181,17 +192,25 @@ class StandardStyle(SimplePlot):
            pylab.rc('axes', linewidth=1)         
         
        
-       def ticks(self,x_tick_style,y_tick_style,xticks,yticks):
+       def ticks(self):
+           
            if self.x_ticks != None:
-              pylab.xticks(xticks)
-
+              if self.x_tick_labels != None and (len(self.x_ticks) == len(self.x_tick_labels)):
+                 pylab.xticks(self.x_ticks,self.x_tick_labels)
+              else:
+                 pylab.xticks(self.x_ticks) 
+           
            if self.y_ticks != None:
-              pylab.yticks(yticks)
-          
+              if self.y_tick_labels != None and (len(self.y_ticks) == len(self.y_tick_labels)):
+                 pylab.yticks(self.y_ticks,self.y_tick_labels)
+              else:
+                 pylab.yticks(self.y_ticks) 
+
+           
            if self.x_tick_style=='Min':
               three_tick_axis(self.axis.xaxis) 
            elif self.x_tick_style=='Custom':
-              pass
+              pass 
            else:
               raise ValueError('Unknow x tick style %s', self.x_tick_style)
 
@@ -200,7 +219,7 @@ class StandardStyle(SimplePlot):
            elif self.y_tick_style=='Custom':
               pass
            else:
-              raise ValueError('Unknow y tick style %s', self.x_tick_style)
+              raise ValueError('Unknow y tick style %s', self.y_tick_style)
 
 class SpikeRasterPlot(StandardStyle):         
       """
@@ -446,10 +465,122 @@ class ScatterPlot(StandardStyle):
                 vmax = self.period
                 vmin = 0
                 
-          ax = self.axis.scatter(self.x,self.y,c = self.z, s = self.dot_size,marker = self.marker,lw = 1,cmap=self.colormap,vmin = vmin, vmax = vmax)
+          ax = self.axis.scatter(self.x,self.y,c = self.z, s = self.dot_size,marker = self.marker,lw = 0,cmap=self.colormap,vmin = vmin, vmax = vmax)
           
           if self.colorbar:
              cb = pylab.colorbar(ax,ticks=[vmin,vmax],use_gridspec=True)   
              cb.set_label(self.colorbar_label)
              cb.set_ticklabels(["%.3g" % vmin,"%.3g" % vmax])
              
+
+class StandardStyleLinePlot(StandardStyle):
+      """
+      This function plots vector data in simple line plots.
+      
+      The x, y are lists each containing corresponding vectors of x and y axis values to be plotted.
+      labels can contain the labels to be given to the individual line plots.
+      
+      colors - parameter will determine the colors of the plots. If it is one collor all plots will have that same color.
+      If it is a list it's length should correspond to length of x and y and the corresponding colors will be assigned
+      to the individual graphs.
+      
+      mean - if the mean of the vectors should be plotted as well.
+      """
+      
+      def __init__(self,x,y,labels=None,**kwargs):
+          StandardStyle.__init__(self,**kwargs)
+          self.x = x
+          self.y = y 
+          self.labels = labels
+          self.parameters["colors"] = None
+          self.parameters["mean"] = False
+          
+          if self.mean:
+             for i in xrange(0,len(x)):
+                 if not numpy.all(x[i] == x[0]):
+                    raise ValueError("Mean cannot be calculated from data not containing identical x axis values")
+
+      def plot(self):  
+          tmin = 10**10
+          tmax = -10**10
+          for i in xrange(0,len(self.x)):
+              
+              if self.mean:
+                  if i == 0:
+                     m = self.y[i] 
+                  else:
+                     m = m + self.y[i]
+                 
+              if self.colors == None:
+                 color = 'k' 
+              elif type(self.colors) == list:
+                 color = self.colors[i] 
+              else:
+                 color = self.colors 
+                 
+              if self.labels!=None:
+                self.axis.plot(self.x[i],self.y[i],label=self.labels[i],color=color)
+              else:
+                self.axis.plot(self.x[i],self.y[i],color=color)  
+              pylab.hold('on')
+              
+              tmin = min(tmin,self.x[i][0])
+              tmax = min(tmax,self.x[i][-1])
+                
+          if self.mean:
+              m = m / len(self.x)
+              self.axis.plot(self.x[0],m,color='k',linewidth=2)              
+                
+          if self.labels!=None:                    
+             self.axis.legend()    
+           
+          self.xlim = (tmin,tmax)
+        
+              
+class ConductancesPlot(StandardStyle):
+      """
+      Plots conductances.
+      
+      The legend=(True/False) parameter says whether legend should be displayed.
+      """
+      
+      def __init__(self,exc,inh,**kwargs):
+          """
+          exc - list of excitatory conductances (AnalogSignal type)
+          inh - list of inhibitory conductances (AnalogSignal type)
+          """
+          StandardStyle.__init__(self,**kwargs)
+          self.gsyn_es = exc
+          self.gsyn_is = inh
+          self.parameters["legend"] = False
+
+      def plot(self):  
+          mean_gsyn_e = numpy.zeros(numpy.shape(self.gsyn_es[0]))
+          mean_gsyn_i = numpy.zeros(numpy.shape(self.gsyn_is[0]))
+          sampling_period = self.gsyn_es[0].sampling_period
+          time_axis = numpy.arange(0,len(self.gsyn_es[0]),1) /  float(len(self.gsyn_es[0])) * float(self.gsyn_es[0].t_stop) + float(self.gsyn_es[0].t_start)
+          t_stop = float(self.gsyn_es[0].t_stop - sampling_period)
+          
+          
+          
+          for e,i in zip(self.gsyn_es,self.gsyn_is):
+            e = e * 1000
+            i = i * 1000
+            self.axis.plot(time_axis,e.tolist(),color='#F5A9A9')            
+            self.axis.plot(time_axis,i.tolist(),color='#A9BCF5')              
+            mean_gsyn_e = mean_gsyn_e + numpy.array(e.tolist())
+            mean_gsyn_i = mean_gsyn_i + numpy.array(i.tolist())
+         
+          mean_gsyn_i = mean_gsyn_i / len(self.gsyn_is) 
+          mean_gsyn_e = mean_gsyn_e / len(self.gsyn_es) 
+            
+          p1, = self.axis.plot(time_axis,mean_gsyn_e.tolist(),color='r',linewidth=2)            
+          p2, = self.axis.plot(time_axis,mean_gsyn_i.tolist(),color='b',linewidth=2)              
+
+          if self.legend:
+            self.axis.legend([p1,p2],['exc','inh'])  
+          
+          self.x_lim = (0,t_stop)
+          self.x_ticks = [0,t_stop/2,t_stop]
+          self.x_label = 'time(' + self.gsyn_es[0].t_start.dimensionality.latex + ')'
+          self.y_label = 'g(1000' + self.gsyn_es[0].dimensionality.latex + ')'

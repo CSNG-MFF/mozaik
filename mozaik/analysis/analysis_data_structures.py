@@ -51,9 +51,9 @@ class AnalysisDataStructure(Parameterized):
           plotting/analysis whenever possible!
       """
       
-      identifier = param.String(doc=""" The identifier of the analysis data structure""")
-      analysis_algorithm = param.String(doc=""" The identifier of the analysis data structure""")
-      tags = param.List(default=[],doc="""The list of tags to attach""")
+      identifier = param.String(instantiate=True,doc=""" The identifier of the analysis data structure""")
+      analysis_algorithm = param.String(instantiate=True,doc=""" The identifier of the analysis data structure""")
+      tags = param.List(default=[],instantiate=True,doc="""The list of tags to attach""")
       
       def __init__(self,**params):
           Parameterized.__init__(self,**params)
@@ -88,7 +88,7 @@ class TuningCurve(AnalysisDataStructure):
                     - quantities units of the y axis
         """
         
-        sheet_name = param.String(doc=""" The identifier of the analysis data structure""")
+        sheet_name = param.String(instantiate=True,doc=""" The identifier of the analysis data structure""")
         
         def __init__(self,values,stimuli_ids,parameter_index,y_axis_name,y_axis_units,**params):
             AnalysisDataStructure.__init__(self,identifier = 'TuningCurve',**params)
@@ -167,8 +167,8 @@ class PerNeuronValue(AnalysisDataStructure):
             - The period of the value. If value is not periodic period=None
       """
       
-      value_name = param.String(doc="""The name of the value.""")
-      sheet_name = param.String(doc="""The name of the sheet to which the data correspond.""")
+      value_name = param.String(instantiate=True,doc="""The name of the value.""")
+      sheet_name = param.String(instantiate=True,doc="""The name of the sheet to which the data correspond.""")
       
       def __init__(self,values,value_units,tags,period=None,**params):
            AnalysisDataStructure.__init__(self,identifier = 'PerNeuronValue',**params)
@@ -199,8 +199,8 @@ class AnalysisDataStructure1D(AnalysisDataStructure):
             the quantities units of y axis
       """
       
-      x_axis_name = param.String(doc="""the name of the x axis.""")
-      y_axis_name = param.String(doc="""the name of the y axis.""")
+      x_axis_name = param.String(instantiate=True,doc="""the name of the x axis.""")
+      y_axis_name = param.String(instantiate=True,doc="""the name of the y axis.""")
         
       
       def __init__(self,x_axis_units,y_axis_units,**params):
@@ -222,7 +222,7 @@ class AnalogSignalList(AnalysisDataStructure1D):
                 The sheet from which the data were collected
        """
        
-       sheet_name = param.String(doc="""The sheet from which the data were collected.""")
+       sheet_name = param.String(instantiate=True,doc="""The sheet from which the data were collected.""")
        
        def __init__(self,asl,indexes,x_axis_units,y_axis_units,**params):
            AnalysisDataStructure1D.__init__(self,x_axis_units,y_axis_units,identifier = 'AnalogSignalList',**params)
@@ -246,7 +246,7 @@ class ConductanceSignalList(AnalysisDataStructure1D):
                 The sheet from which the data were collected
        """
        
-       sheet_name = param.String(doc="""The sheet from which the data were collected.""")
+       sheet_name = param.String(instantiate=True,doc="""The sheet from which the data were collected.""")
         
        def __init__(self,e_con,i_con,indexes,**params):
            assert e_con[0].units == i_con[0].units

@@ -15,9 +15,10 @@ class LinePlot(Parameterized):
         """ 
         horizontal = param.Boolean(default=True,instantiate=True,doc="Should the line of plots be horizontal or vertical")
         shared_axis = param.Boolean(default=True,instantiate=True,doc="should the x axis or y axis (depending on the horizontal flag) considered shared") 
+        shared_lim = param.Boolean(default=False,instantiate=True,doc="should the limits of the x axis or y axis (depending on the horizontal flag) be considered shared") 
         length = param.Integer(default=0,instantiate=True,doc="how many plots will there be")
         function = param.Callable(doc="The function that should be called to plot individual plots. It should accept three parameters: self,index in the line, gridspec object into which to plot the plot, the simple_plot parameters")
-        
+        max_length = param.Integer(default=4,instantiate=True,doc="The maximum # plots actually displayed")
         
         def make_line_plot(self,subplotspec,params):
             """
@@ -31,18 +32,25 @@ class LinePlot(Parameterized):
             if not self.length:
                print 'Length not specified'
                return
+               
+            l = numpy.min([self.max_length,self.length])   
             
             if self.horizontal:
-                gs = gridspec.GridSpecFromSubplotSpec(1, self.length, subplot_spec=subplotspec)
+                gs = gridspec.GridSpecFromSubplotSpec(1,l, subplot_spec=subplotspec)
             else:
-                gs = gridspec.GridSpecFromSubplotSpec(self.length ,1 , subplot_spec=subplotspec)
+                gs = gridspec.GridSpecFromSubplotSpec(l,1, subplot_spec=subplotspec)
             
-            for idx in xrange(0,self.length):
+            for idx in xrange(0,l):
               p = params.copy()
               if idx > 0 and self.shared_axis and self.horizontal:
                   p.setdefault("y_label",None)
-              if (idx < self.length-1) and self.shared_axis and not self.horizontal:
+                  if self.shared_lim:
+                     p.setdefault("y_axis",False)  
+                  
+              if (idx < l-1) and self.shared_axis and not self.horizontal:
                   p.setdefault("x_label",None)
+                  if self.shared_lim:
+                     p.setdefault("x_axis",False)  
                           
               if self.horizontal:
                   self._single_plot(idx,gs[0,idx],p)

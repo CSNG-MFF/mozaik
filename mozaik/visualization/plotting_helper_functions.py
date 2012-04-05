@@ -26,7 +26,7 @@ def disable_left_axis(ax):
 
 def three_tick_axis(axis):
     nticks = len([t for t in axis.get_major_ticks()])
-    if (nticks % 2) != 0:
+    if (nticks % 2) != 0 and nticks > 2:
        middle_tick = int(nticks) / 2  
     else:
        middle_tick = 0

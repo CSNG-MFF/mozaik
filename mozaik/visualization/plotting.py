@@ -80,7 +80,9 @@ class Plotting(MozaikParametrizeObject):
         raise NotImplementedError
         pass
     
-    def plot(self,params={}):
+    def plot(self,params=None):
+        if params == None:
+           params = {}
         self.fig = pylab.figure(facecolor='w')
         gs = gridspec.GridSpec(1, 1)
         gs.update(left=0.05, right=0.95, top=0.9, bottom=0.1)
@@ -96,15 +98,13 @@ class PlotTuningCurve(Plotting):
     
     stimuli_ids - contain list of stimuli ids corresponding to the values
     
-    parameter_index - corresponds to the parameter that should be plotted as 
-                    - a tuning curve
+    parameter_index - corresponds to the parameter that should be plotted as a tuning curve
     """
 
     required_parameters = ParameterSet({
       'tuning_curve_name' : str,  #the name of the tuning curve
       'neuron': int, # which neuron to plot
       'sheet_name' : str, # from which layer to plot the tuning curve
-      'ylabel': str, # ylabel to write on the graph
     })
 
     def  __init__(self,datastore,parameters):
@@ -112,17 +112,23 @@ class PlotTuningCurve(Plotting):
         self.tuning_curves = self.datastore.get_analysis_result(parameters.tuning_curve_name,sheet_name=parameters.sheet_name)
     
     def subplot(self,subplotspec,params):
-        ax = pylab.subplot(subplotspec)
-        for tc in self.tuning_curves:
-            tc = tc.to_dictonary_of_tc_parametrization()
-            n = self.parameters.neuron
-            for k in  tc:
-                (a,b) = tc[k]
-                par,val = zip(*sorted(zip(b,a[:,n])))
-                pylab.plot(par,val,label=fromat_stimulus_id(parse_stimuls_id(k)))
-            pylab.title('Orientation tuning curve, Neuron: %d' % n)
-            pylab.ylabel(self.parameters.ylabel)
-            pylab.legend()
+        tc = self.tuning_curves[0]
+        tc = tc.to_dictonary_of_tc_parametrization()
+        xs = []
+        ys = []
+        labels = []
+        for k in  tc:
+            (a,b) = tc[k]
+            par,val = zip(*sorted(zip(b,a[:,self.parameters.neuron])))
+            xs.append(par)
+            ys.append(val)
+            labels.append(fromat_stimulus_id(parse_stimuls_id(k)))
+        
+        params.setdefault("title",('Neuron: %d' % self.parameters.neuron))
+        params.setdefault("y_label",self.tuning_curves[0].y_axis_name)
+        params.setdefault("x_lim",(xs[0],xs[-1]))
+        StandardStyleLinePlot(xs,ys,labels=labels,**params)(subplotspec)
+            
             
 class CyclicTuningCurvePlot(PlotTuningCurve):
     """
@@ -130,30 +136,43 @@ class CyclicTuningCurvePlot(PlotTuningCurve):
     """
     
     def subplot(self,subplotspec,params):
-        n = self.parameters.neuron
-        ax = pylab.subplot(subplotspec)
-        for tc in self.tuning_curves:
-            tc = tc.to_dictonary_of_tc_parametrization()
-            for k in  tc:
-                (a,b) = tc[k]
-                par,val = zip(*sorted(zip(b,a[:,n])))
-                # make the tuning curve to wrap around  
-                par = list(par)
-                val = list(val)
-                par.append(par[0])
-                val.append(val[0])
-                pylab.plot(numpy.arange(len(val)),val,label=fromat_stimulus_id(parse_stimuls_id(k)))
-                pylab.hold('on')
-            pylab.ylabel(self.parameters.ylabel)
-            pylab.xticks(numpy.arange(len(val)),["%.2f"% float(a) for a in par])
-            pylab.title('Neuron: %d' % n)
-        pylab.legend()
-            
+        tc = self.tuning_curves[0]
+        tc = tc.to_dictonary_of_tc_parametrization()
+        xs = []
+        ys = []
+        labels = []
+        for k in  tc:
+            (a,b) = tc[k]
+            par,val = zip(*sorted(zip(b,a[:,self.parameters.neuron])))
+            par = list(par)
+            val = list(val)
+            par.append(par[0]+self.tuning_curves[0].period)
+            val.append(val[0])
+            xs.append(numpy.array(par))
+            ys.append(numpy.array(val))
+            labels.append(fromat_stimulus_id(parse_stimuls_id(k)))
+
+        params.setdefault("title",('Neuron: %d' % self.parameters.neuron))
+        params.setdefault("y_label",self.tuning_curves[0].y_axis_name)
+        
+        if self.tuning_curves[0].period == numpy.pi:
+            params.setdefault("x_ticks",[0,numpy.pi/2.0,numpy.pi])
+            params.setdefault("x_lim",(0,numpy.pi))
+            params.setdefault("x_tick_style","Custom")
+            params.setdefault("x_tick_labels",["0","$\\frac{\\pi}{2}$","$\\pi$"])
+        if self.tuning_curves[0].period == 2*numpy.pi:
+            params.setdefault("x_ticks",[0,numpy.pi,2*numpy.pi])
+            params.setdefault("x_lim",(0,2*numpy.pi))
+            params.setdefault("x_tick_labels",["0","$\\pi$","$2\\pi$"])
+            params.setdefault("x_tick_style","Custom")
+
+        StandardStyleLinePlot(xs,ys,labels=labels,**params)(subplotspec)
+
 class RasterPlot(Plotting):
       required_parameters = ParameterSet({
         'trial_averaged_histogram' : bool,  #should the plot show also the trial averaged histogram
         'neurons' : list,
-	'sheet_name' : str,
+    'sheet_name' : str,
       })
 
       def  __init__(self,datastore,parameters):
@@ -162,7 +181,7 @@ class RasterPlot(Plotting):
               self.parameters.neurons = None 
       
       def subplot(self,subplotspec,params):
-	  dsv = select_result_sheet_query(self.datastore,self.parameters.sheet_name)
+          dsv = select_result_sheet_query(self.datastore,self.parameters.sheet_name)
           PerStimulusPlot(dsv,function=self.ploter).make_line_plot(subplotspec,params)
 
       def ploter(self,dsv,gs,params):
@@ -172,7 +191,6 @@ class RasterPlot(Plotting):
          if self.parameters.trial_averaged_histogram:
             gs = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=gs)  
             # first the raster
-            ax = pylab.subplot(gs[:3,0])
             SpikeRasterPlot(sp,neurons=self.parameters.neurons,x_axis=False,x_label=None,**params.copy())(gs[:3,0])
             SpikeHistogramPlot(sp,neurons=self.parameters.neurons,**params.copy())(gs[3,0])
          else:
@@ -180,92 +198,62 @@ class RasterPlot(Plotting):
 
 
 class VmPlot(Plotting):
+      
       required_parameters = ParameterSet({
         'neuron' : int,  #we can only plot one neuron - which one ?
-	'sheet_name' : str,
+        'sheet_name' : str,
       })
 
       def subplot(self,subplotspec,params):
-	dsv = select_result_sheet_query(self.datastore,self.parameters.sheet_name)
+        dsv = select_result_sheet_query(self.datastore,self.parameters.sheet_name)
         PerStimulusPlot(dsv,function=self.ploter).make_line_plot(subplotspec,params)
 
 
       def ploter(self,dsv,gs,params):
-          pylab.rc('axes', linewidth=3)
-          ax = pylab.subplot(gs)
-          vms = [s.get_vm() for s in dsv.get_segments()]
-          
-          mean_v = numpy.zeros(numpy.shape(vms[0][:,self.parameters.neuron]))
-          
+          vms = [s.get_vm() for s in dsv.get_segments()]         
           sampling_period = vms[0].sampling_period
           time_axis = numpy.arange(0,len(vms[0]),1) /  float(len(vms[0])) * float(vms[0].t_stop) + float(vms[0].t_start)
           t_stop =  float(vms[0].t_stop - sampling_period)
-          
+            
+          xs = []
+          ys = []
+          colors = []
           for vm in vms:
-            ax.plot(time_axis,vm[:,self.parameters.neuron].tolist(),color="#848484")                
-            mean_v = mean_v + numpy.array(vm[:,self.parameters.neuron])
-          
-         
-          mean_v = mean_v / len(vms)
-          ax.plot(time_axis,mean_v.tolist(),color='k',linewidth=2)              
-          disable_top_right_axis(ax)            
-          
-          pylab.xlim(0,t_stop)
-          pylab.xticks([0,t_stop/2,t_stop])
-          three_tick_axis(ax.yaxis)
-          
-          #if idx == 0:
-          #  pylab.ylabel('Vm(mV)')
-          #else:
-          #  pylab.ylabel('')
-          pylab.rc('axes', linewidth=1)            
+               xs.append(time_axis)
+               ys.append(numpy.array(vm[:,self.parameters.neuron].tolist()))
+               colors.append("#848484")
+            
+          params.setdefault("x_lim",(0,t_stop))
+          params.setdefault("x_ticks",[0,t_stop/2,t_stop])
+          params.setdefault("x_label",'time(' + vms[0].t_stop.dimensionality.latex  + ')')
+          params.setdefault("y_label",'Vm(' + vms[0].dimensionality.latex +  ')')
+          StandardStyleLinePlot(xs,ys,colors=colors,mean=True,**params)(gs)
+        
+        
 
 class GSynPlot(Plotting):
 
       required_parameters = ParameterSet({
         'neuron' : int,  #we can only plot one neuron - which one ?
-	'sheet_name' : str,
+        'sheet_name' : str,
       })
 
       def subplot(self,subplotspec,params):
-	dsv = select_result_sheet_query(self.datastore,self.parameters.sheet_name)
-	PerStimulusPlot(dsv,function=self.ploter).make_line_plot(subplotspec,params)
+        dsv = select_result_sheet_query(self.datastore,self.parameters.sheet_name)
+        PerStimulusPlot(dsv,function=self.ploter).make_line_plot(subplotspec,params)
 
       def ploter(self,dsv,gs,params):
-          pylab.rc('axes', linewidth=3)
-          ax = pylab.subplot(gs)
+          exc =[]
+          inh =[]
           gsyn_es = [s.get_esyn() for s in dsv.get_segments()]
           gsyn_is = [s.get_isyn() for s in dsv.get_segments()]
-          mean_gsyn_e = numpy.zeros(numpy.shape(gsyn_es[0][:,self.parameters.neuron].copy()))
-          mean_gsyn_i = numpy.zeros(numpy.shape(gsyn_is[0][:,self.parameters.neuron].copy()))
-          sampling_period = gsyn_es[0].sampling_period
-          time_axis = numpy.arange(0,len(gsyn_es[0]),1) /  float(len(gsyn_es[0])) * float(gsyn_es[0].t_stop) + float(gsyn_es[0].t_start)
-          
-          t_stop = float(gsyn_es[0].t_stop - sampling_period)
+
           for e,i in zip(gsyn_es,gsyn_is):
-            e = e[:,self.parameters.neuron]*10**3 
-            i = i[:,self.parameters.neuron]*10**3
-            
-            p1 = ax.plot(time_axis,e.tolist(),color='#F5A9A9')            
-            p2 = ax.plot(time_axis,i.tolist(),color='#A9BCF5')              
-            mean_gsyn_e = mean_gsyn_e + numpy.array(e.tolist())
-            mean_gsyn_i = mean_gsyn_i + numpy.array(i.tolist())
-         
-          mean_gsyn_i = mean_gsyn_i / len(gsyn_is) 
-          mean_gsyn_e = mean_gsyn_e / len(gsyn_es) 
-            
-          p1 = ax.plot(time_axis,mean_gsyn_e.tolist(),color='r',linewidth=2)            
-          p2 = ax.plot(time_axis,mean_gsyn_i.tolist(),color='b',linewidth=2)              
+              exc.append(e[:,self.parameters.neuron])
+              inh.append(i[:,self.parameters.neuron])
+          ConductancesPlot(exc,inh,**params)(gs)
+
           
-          ax.legend([p1,p2],['exc','inh'])  
-          disable_top_right_axis(ax)
-          
-	  pylab.xlim(0,t_stop)
-          pylab.xticks([0,t_stop/2,t_stop])
-          three_tick_axis(ax.yaxis)
-                    
-          
-          pylab.rc('axes', linewidth=1)
           
 class OverviewPlot(Plotting):
       required_parameters = ParameterSet({
@@ -275,16 +263,29 @@ class OverviewPlot(Plotting):
       })
       
       def subplot(self,subplotspec,params):
-          offset = 0 
-          if len(self.parameters.sheet_activity.keys()) != 0:
-             gs = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=subplotspec)      
-             ActivityMovie(self.datastore,self.parameters.sheet_activity).subplot(gs[0,0],parmas)
-             offset = 1 
-          else:
-             gs = gridspec.GridSpecFromSubplotSpec(3, 1, subplot_spec=subplotspec)      
-             RasterPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name, 'trial_averaged_histogram' : False, 'neurons' : []})).subplot(gs[0+offset,0],params.copy())
-             GSynPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : self.parameters.neuron})).subplot(gs[1+offset,0],params.copy())
-             VmPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : self.parameters.neuron})).subplot(gs[2+offset,0],params.copy())
+            offset = 0 
+            if len(self.parameters.sheet_activity.keys()) != 0:
+                gs = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=subplotspec)      
+                ActivityMovie(self.datastore,self.parameters.sheet_activity).subplot(gs[0,0],parmas)
+                offset = 1 
+                  
+            gs = gridspec.GridSpecFromSubplotSpec(3, 1, subplot_spec=subplotspec)      
+            p = params.copy()
+            if offset == 1:
+               p.setdefault('title',None)
+            p.setdefault('x_axis',False)
+            p.setdefault('x_label',False)
+            RasterPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name, 'trial_averaged_histogram' : False, 'neurons' : []})).subplot(gs[0+offset,0],p)
+            
+            p = params.copy()
+            p.setdefault('x_axis',False)
+            p.setdefault('x_label',False)
+            p.setdefault('title',None)
+            GSynPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : self.parameters.neuron})).subplot(gs[1+offset,0],p)
+            
+            p = params.copy()
+            p.setdefault('title',None)
+            VmPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : self.parameters.neuron})).subplot(gs[2+offset,0],p)
 
           
 class AnalogSignalListPlot(Plotting):
@@ -300,24 +301,27 @@ class AnalogSignalListPlot(Plotting):
               print 'ERROR: Warning currently only the first AnalogSignalList will be plotted'
             self.analog_signal_list = self.analog_signal_list[0]
             self.asl = self.analog_signal_list.asl
-	    
-	def subplot(self,subplotspec,params):
-	  LinePlot(function=self.ploter,length = len(self.asl)).make_line_plot(subplotspec,params)
-  
-	def ploter(self,idx,gs,params):
-              pylab.rc('axes', linewidth=3)
-              ax = pylab.subplot(gs)
-              times = numpy.linspace(self.asl[idx].t_start.magnitude,self.asl[idx].t_stop.magnitude,len(self.asl[idx]))
-              pylab.plot(times,self.asl[idx],color = 'b')
-              if idx == 0:
-                 pylab.ylabel(self.parameters.ylabel)
-              
-              disable_top_right_axis(ax)  
-              pylab.xlim(times[0],times[-1])
-              three_tick_axis(ax.yaxis)            
-              three_tick_axis(ax.xaxis)                      
-              pylab.rc('axes', linewidth=1)
+        
+        
+        def subplot(self,subplotspec,params):
+              xs = []
+              ys = []
+              colors = []
+              for a in self.asl:
+                   times = numpy.linspace(a.t_start.magnitude,a.t_stop.magnitude,len(a))
+                   xs.append(times)
+                   ys.append(a)
+                   colors.append("#848484")
+                
+              params.setdefault("x_lim",(a.t_start.magnitude,a.t_stop.magnitude))
+              params.setdefault("x_label",self.analog_signal_list.x_axis_name)
+              params.setdefault("y_label",self.analog_signal_list.y_axis_name)
+              params.setdefault("x_ticks",[a.t_start.magnitude,a.t_stop.magnitude])
+              params.setdefault("mean",True)
+              StandardStyleLinePlot(xs,ys,colors=colors,**params)(subplotspec)
 
+
+ 
 class ConductanceSignalListPlot(Plotting):
         required_parameters = ParameterSet({
             'sheet_name' : str,  #the name of the sheet for which to plot
@@ -334,31 +338,18 @@ class ConductanceSignalListPlot(Plotting):
             self.i_con = self.conductance_signal_list.i_con
             
         def subplot(self,subplotspec,params):
-	    LinePlot(function=self.ploter,length = len(self.e_con)).make_line_plot(subplotspec,params)
-
-        def ploter(self,idx,gs,params):
-            pylab.rc('axes', linewidth=3)
-            pylab.rc('axes', linewidth=3)
-	    ax = pylab.subplot(gs)
-	    times = numpy.linspace(self.e_con[idx].t_start.magnitude,self.e_con[idx].t_stop.magnitude,len(self.e_con[idx]))
-	    if self.parameters.normalize_individually:
-	      pylab.plot(times,self.e_con[idx]/numpy.max(self.e_con[idx]),color = 'r',label = 'exc')
-	      pylab.plot(times,self.i_con[idx]/numpy.max(self.i_con[idx]),color = 'b',label = 'inh')
-	      pylab.yticks([0.0,1.0],[0,'Max'])
-	    else:
-	      pylab.plot(times,self.e_con[idx],color = 'r',label = 'exc')
-	      pylab.plot(times,self.i_con[idx],color = 'b',label = 'inh')
-	      
-	    if idx == 0:
-	       pylab.ylabel('G(S)')
-	    
-	    pylab.xlim(times[0],times[-1])  
-	    disable_top_right_axis(ax)      
-	    three_tick_axis(ax.yaxis)        
-	    three_tick_axis(ax.xaxis)                      
-	    pylab.rc('axes', linewidth=1)
-	    
-	    
+            exc =[]
+            inh =[]
+            print 'DASDASDA'
+            print len(self.e_con)
+            print len(self.i_con)
+            
+            for e,i in zip(self.e_con,self.i_con):
+              exc.append(e)
+              inh.append(i)
+            ConductancesPlot(exc,inh,**params)(subplotspec)
+        
+        
 class RetinalInputMovie(Plotting):
       required_parameters = ParameterSet({
             'frame_rate' : int,  #the desired frame rate (per sec), it might be less if the computer is too slow
@@ -441,11 +432,10 @@ class PerNeuronValuePlot(Plotting):
             if len(z) != 0:
                 self.poss.append(datastore.get_neuron_postions()[sheet])
                 self.pnvs.append(z)
-	self.length=len(self.poss)
+        self.length=len(self.poss)
  
     def subplot(self,subplotspec,params):
-	    print len(self.poss)
-	    LinePlot(function=self.ploter,length=self.length).make_line_plot(subplotspec,params)
+        LinePlot(function=self.ploter,length=self.length).make_line_plot(subplotspec,params)
 
     def ploter(self,idx,gs,params):
          posx = self.poss[idx][0]
@@ -469,6 +459,6 @@ class PerNeuronValuePlot(Plotting):
             params.setdefault("colorbar",True)  
          ScatterPlot(posx,posy,values,periodic=periodic,period=period,**params)(gs)
 
-	 
-	 
-	 	
+     
+     
+        

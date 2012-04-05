@@ -31,11 +31,14 @@ class Analysis(MozaikParametrizeObject):
     
     """
     
-    def __init__(self,datastore,parameters,tags=[]):
+    def __init__(self,datastore,parameters,tags=None):
         MozaikParametrizeObject.__init__(self,parameters)
         self.datastore = datastore
-        self.tags = tags
-
+        if tags == None:
+            self.tags = []
+        else:
+            self.tags = tags
+            
     def analyse(self):
         """
         """

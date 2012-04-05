@@ -1,4 +1,4 @@
-#!/Library/Frameworks/Python.framework/Versions/2.7/bin/python
+#!/usr/bin/ipython
 import matplotlib
 from mozaik.framework.experiment import MeasureOrientationTuningFullfield, MeasureSpontaneousActivity, MeasureNaturalImagesWithEyeMovement
 from pyNN import nest as sim
@@ -13,13 +13,13 @@ from mozaik.storage.datastore import Hdf5DataStore,PickledDataStore
 from NeuroTools.parameters import ParameterSet
 from mozaik.storage.queries import TagBasedQuery, select_result_sheet_query, analysis_data_structure_parameter_filter_query
 
-if False:
+if True:
     params = setup_experiments('FFI',sim)
     jens_model = JensModel(sim,params)
     
     experiment_list =   [
                            #MeasureSpontaneousActivity(jens_model,duration=147*7),
-                           MeasureOrientationTuningFullfield(jens_model,num_orientations=4,spatial_frequency=0.8,temporal_frequency=2,grating_duration=148*7,num_trials=1),
+                           MeasureOrientationTuningFullfield(jens_model,num_orientations=1,spatial_frequency=0.8,temporal_frequency=2,grating_duration=6*148*7,num_trials=10),
                            #MeasureOrientationTuningFullfield(jens_model,num_orientations=1,spatial_frequency=0.8,temporal_frequency=2,grating_duration=57*7,num_trials=3),
                            #MeasureOrientationTuningFullfield(jens_model,num_orientations=8,spatial_frequency=0.8,temporal_frequency=2,grating_duration=148*7,num_trials=3),
                         ]
@@ -27,9 +27,6 @@ if False:
     data_store = run_experiments(jens_model,experiment_list)
 else:
     data_store = PickledDataStore(load=True,parameters=ParameterSet({'root_directory':'small_OR'}))
-
-import resource
-print 'Current memory usage: %iMB' % (resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/(1024*1024))
 
 import resource
 print "Current memory usage: %iMB" % (resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/(1024))
@@ -50,7 +47,7 @@ PerNeuronValuePlot(analysis_data_structure_parameter_filter_query(data_store,'Pe
 PerNeuronValuePlot(analysis_data_structure_parameter_filter_query(data_store,'PerNeuronValue',value_name='LGNAfferentOrientation'),ParameterSet({})).plot()
 
 
-CyclicTuningCurvePlot(data_store,ParameterSet({'tuning_curve_name' : 'CyclicTuningCurve', 'neuron': 0, 'sheet_name' : 'V1_Exc','ylabel': 'response'})).plot()
+CyclicTuningCurvePlot(data_store,ParameterSet({'tuning_curve_name' : 'CyclicTuningCurve', 'neuron': 0, 'sheet_name' : 'V1_Exc'})).plot()
 
 #RetinalInputMovie(data_store,ParameterSet({'frame_rate': 10})).plot()
 

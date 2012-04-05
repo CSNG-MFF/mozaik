@@ -284,13 +284,10 @@ def _adspfq_recursive(d,**kwargs):
     return nd
 
 def _adspfq_filter(ads_object,**kwargs):
-    print kwargs
-    print ads_object.params()
     flag = True
     for k in kwargs.keys():
         if not ads_object.params().has_key(k):
            raise ValueError("analysis_data_structure_parameter_filter_query: no Parameter %s in object" % k)
-        print ads_object.inspect_value(k) == kwargs[k]
         if ads_object.inspect_value(k) != kwargs[k]:
            flag=False
            break

@@ -20,9 +20,6 @@ class Figure2(Plotting):
           
           lgn_on_dsv = queries.select_result_sheet_query(dsv,'X_ON')
           lgn_off_dsv = queries.select_result_sheet_query(dsv,'X_OFF')
-          
-          print len(lgn_on_dsv.get_segments())
-          
           lgn_spikes = [[s.spiketrains for s in lgn_on_dsv.get_segments()],[s.spiketrains for s in lgn_off_dsv.get_segments()]]
           
           
@@ -35,9 +32,18 @@ class Figure2(Plotting):
           SpikeRasterPlot([[s.spiketrains for s in dsv1.get_segments()]],neurons=[0],x_axis=False,x_label=None)(gs[:3,6:14])
           SpikeHistogramPlot([[s.spiketrains for s in dsv1.get_segments()]],neurons=[0], x_axis=False,x_label=None)(gs[3:4,6:14])
           
-          VmPlot(dsv,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : 0})).subplot(gs[4:8,6:14],params)          
-          GSynPlot(dsv,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : 0})).subplot(gs[8:12,6:14],params)
+          p = params.copy()
+          p.setdefault('title',None)
+          p.setdefault('x_axis',None)
+          p.setdefault('x_label',None)
+          VmPlot(dsv,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : 0})).subplot(gs[4:8,6:14],p)          
+          p = params.copy()
+          p.setdefault('title',None)
+          GSynPlot(dsv,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : 0})).subplot(gs[8:12,6:14],p)
           
-          ConductanceSignalListPlot(queries.TagBasedQuery(ParameterSet({'tags' : ['GSTA1'] })).query(self.datastore),ParameterSet({'sheet_name' : 'V1_Exc','normalize_individually':True})).subplot(gs[7:10,15:],params)  
-          AnalogSignalListPlot(dsv,ParameterSet({'sheet_name' : self.parameters.sheet_name,'ylabel' : 'AC (norm)'})).subplot(gs[2:5,15:],params)
+          ConductanceSignalListPlot(queries.TagBasedQuery(ParameterSet({'tags' : ['GSTA1'] })).query(self.datastore),ParameterSet({'sheet_name' : 'V1_Exc','normalize_individually':True})).subplot(gs[7:10,15:],params.copy())  
+          
+          p = params.copy()
+          p.setdefault('mean',False)
+          AnalogSignalListPlot(dsv,ParameterSet({'sheet_name' : self.parameters.sheet_name,'ylabel' : 'AC (norm)'})).subplot(gs[2:5,15:],p)
           
