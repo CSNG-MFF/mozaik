@@ -102,8 +102,21 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
                             x  =  x + xx
                             y  =  y + yy
                             n = n + numpy.sqrt(numpy.power(xx,2) + numpy.power(yy,2))
+                        
+                        
+                        po = numpy.sqrt(numpy.power(x,2) + numpy.power(y,2))
+                        
+                        # handle zero magnitudes
+                        z = numpy.where(n == 0)
+                        n[z] = 1
+                        po[z] = 1
+
                         sel = numpy.sqrt(numpy.power(x,2) + numpy.power(y,2)) / n
-                        pref = numpy.arccos(x/(numpy.sqrt(numpy.power(x,2) + numpy.power(y,2))))
+                        pref = numpy.arccos(x/po)
+                        
+                        # handle zero magnitudes
+                        sel[z] = 0
+                        pref[z] = 0
                         
                         print 'Adding PerNeuronValue to datastore'
                         self.datastore.full_datastore.add_analysis_result(PerNeuronValue(pref, get_stimulus_parameter_units(parse_stimuls_id(k).name,tc.parameter_index) ,value_name = get_stimulus_parameter_name(parse_stimuls_id(k).name,tc.parameter_index) + ' preference' ,  sheet_name=sheet,tags=self.tags,period=tc.period),sheet_name=sheet)
