@@ -7,7 +7,7 @@ import numpy
 from matplotlib import rc
 import quantities as pq
 
-rc('text', usetex=True)
+#rc('text', usetex=True)
 
 
 class SimplePlot(object):

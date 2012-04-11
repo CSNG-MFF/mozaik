@@ -104,23 +104,15 @@ def tag_based_query(dsv,tags=[]):
         return new_dsv
         
 def _tag_based_query(d,tags):
-    nd = {}
-    for k in d.keys():
-        if k != 'data':
-           nd[k] =  _tag_based_query(d[k],tags)
-        else:
-           nd[k] = {}
-           
-           for key in d[k].keys():
-               nd[k][key] = []
-               for ar in d[k][key]:
-                   flag=True 
-                   for t in tags:
-                       if not (t in ar.tags): 
-                          flag = False 
-
-                   if flag:
-                      nd[k][key].append(ar)
+    nd = []
+    for a in d:
+        flag = True
+        for t in tags:
+            if not (t in a.tags): 
+               flag = False 
+    
+        if flag:
+           nd.append(a)
     return nd
 
 class TagBasedQuery(Query):
@@ -145,18 +137,10 @@ def identifier_based_query(dsv,identifier):
         return new_dsv
         
 def _identifier_based_query(d,identifier):
-    nd = {}
-    for k in d.keys():
-        if k != 'data':
-           nd[k] =  _identifier_based_query(d[k],identifier)
-        else:
-           nd[k] = {}
-           
-           for key in d[k].keys():
-               nd[k][key] = []
-               for ar in d[k][key]:
-                   if ar.identifier == identifier:
-                      nd[k][key].append(ar)
+    nd = []
+    for a in d:
+        if a.identifier == identifier:
+           nd.append(a)
     return nd
 
 class IdentifierBasedQuery(Query):
@@ -237,10 +221,24 @@ class PartitionRecordingsBySheetQuery(Query):
 
 
 ########################################################################
-def partition_analysis_results_by_parameter_name_query(dsv):  
-    raise NotImplementedError
-    pass
-
+def partition_analysis_results_by_parameter_name_query(dsv,ads_identifier='',parameter_name=''):
+    dsv = identifier_based_query(dsv,identifier)
+    
+    partiotioned_dsvs = {}
+    
+    for ads_object in dsv.analysis_results:
+        partiotioned_dsvs.set_default(ads_object.inspect_value(parameter_name),[]).append(ads_object)
+    
+    dsvs = []
+    
+    for k in partiotioned_dsvs.keys():
+        new_dsv = dsv.fromDataStoreView()
+        new_dsv.block.segments = dsv.recordings_copy()
+        new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
+        new_dsv.analysis_results = partiotioned_dsvs[k]
+        dsvs.append(new_dsvs)    
+    
+    return dsvs
 
 class PartitionAnalysisResultsByParameterNameQuery(Query):
     """
@@ -254,12 +252,20 @@ class PartitionAnalysisResultsByParameterNameQuery(Query):
     specify the _parameter_.
     """
     
+    required_parameters = ParameterSet({
+     'ads_identifier' : str, # the ADS identifier for which to the the partition
+     'parameter_name' : str, # the index of the parameter against which to partition
+    })
+    
     def query(self,dsv):  
-        return partition_analysis_results_by_parameter_name_query(dsv)    
+        return partition_analysis_results_by_parameter_name_query(dsv,**self.parameters)    
 ########################################################################
 
 ########################################################################          
-def analysis_data_structure_parameter_filter_query(dsv,identifier,**kwargs):  
+def analysis_data_structure_parameter_filter_query(dsv,identifier,**kwargs):
+        """
+        The 
+        """
         dsv = identifier_based_query(dsv,identifier)  
         new_dsv = dsv.fromDataStoreView()
         new_dsv.block.segments = dsv.recordings_copy()
@@ -268,28 +274,17 @@ def analysis_data_structure_parameter_filter_query(dsv,identifier,**kwargs):
         return new_dsv
         
 def _adspfq_recursive(d,**kwargs):
-    nd = {}
-    for k in d.keys():
-        if k != 'data':
-           nd[k] =  _adspfq_recursive(d[k],**kwargs)
-        else:
-           nd[k] = {}
-           
-           for key in d[k].keys():
-               nd[k][key] = []
-               for ar in d[k][key]:
-                   #ar is the object we have to decide whether to keep
-                   if _adspfq_filter(ar,**kwargs):
-                      nd[k][key].append(ar) 
-    return nd
-
-def _adspfq_filter(ads_object,**kwargs):
-    flag = True
-    for k in kwargs.keys():
-        if not ads_object.params().has_key(k):
-           raise ValueError("analysis_data_structure_parameter_filter_query: no Parameter %s in object" % k)
-        if ads_object.inspect_value(k) != kwargs[k]:
-           flag=False
-           break
-    return flag
+    new_ads = []
+    for ads_object in d:
+        flag=True
+        for k in kwargs.keys():
+            
+            if not ads_object.params().has_key(k):
+               raise ValueError("analysis_data_structure_parameter_filter_query: no Parameter %s in object" % k)
+            if ads_object.inspect_value(k) != kwargs[k]:
+               flag=False
+               break
+        if flag:
+           new_ads.append(ads_object)
+    return new_ads
 ########################################################################

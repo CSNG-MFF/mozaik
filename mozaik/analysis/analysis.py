@@ -74,7 +74,7 @@ class AveragedOrientationTuning(Analysis):
                 #JAHACK make sure that mean_rates() return spikes per second
                 units = munits.spike / qt.s
                 print 'Adding CyclicTuningCurve to datastore'
-                self.datastore.full_datastore.add_analysis_result(CyclicTuningCurve(numpy.pi,mean_rates,s,9,'Response',units,sheet_name=sheet,tags=self.tags),sheet_name=sheet)
+                self.datastore.full_datastore.add_analysis_result(CyclicTuningCurve(numpy.pi,mean_rates,s,9,'Response',units,sheet_name=sheet,tags=self.tags))
 
 class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
       """
@@ -87,7 +87,7 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
             print 'Starting Orientation Preference analysis'
             for sheet in self.datastore.sheets():
                 # get all the cyclic tuning curves 
-                self.tuning_curves = self.datastore.get_analysis_result('CyclicTuningCurve',sheet_name=sheet)
+                self.tuning_curves = self.datastore.get_analysis_result(identifier='CyclicTuningCurve',sheet_name=sheet)
                 for tc in self.tuning_curves:
                     d = tc.to_dictonary_of_tc_parametrization()
                     result_dict = {}
@@ -119,8 +119,8 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
                         pref[z] = 0
                         
                         print 'Adding PerNeuronValue to datastore'
-                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(pref, get_stimulus_parameter_units(parse_stimuls_id(k).name,tc.parameter_index) ,value_name = get_stimulus_parameter_name(parse_stimuls_id(k).name,tc.parameter_index) + ' preference' ,  sheet_name=sheet,tags=self.tags,period=tc.period),sheet_name=sheet)
-                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(sel, get_stimulus_parameter_units(parse_stimuls_id(k).name,tc.parameter_index),value_name= get_stimulus_parameter_name(parse_stimuls_id(k).name,tc.parameter_index) + ' selectivity',sheet_name=sheet,tags=self.tags,period=1.0),sheet_name=sheet)
+                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(pref, get_stimulus_parameter_units(parse_stimuls_id(k).name,tc.parameter_index) ,value_name = get_stimulus_parameter_name(parse_stimuls_id(k).name,tc.parameter_index) + ' preference' ,  sheet_name=sheet,tags=self.tags,period=tc.period))
+                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(sel, get_stimulus_parameter_units(parse_stimuls_id(k).name,tc.parameter_index),value_name= get_stimulus_parameter_name(parse_stimuls_id(k).name,tc.parameter_index) + ' selectivity',sheet_name=sheet,tags=self.tags,period=1.0))
                                 
                         
 
@@ -159,7 +159,7 @@ class GSTA(Analysis):
                 for n in self.parameters.neurons:
                     asl_e.append(self.do_gsta(g_e,sp,n))
                     asl_i.append(self.do_gsta(g_i,sp,n))
-                self.datastore.full_datastore.add_analysis_result(ConductanceSignalList(asl_e,asl_i,self.parameters.neurons,sheet_name=sheet,tags=self.tags),sheet_name=sheet)
+                self.datastore.full_datastore.add_analysis_result(ConductanceSignalList(asl_e,asl_i,self.parameters.neurons,sheet_name=sheet,tags=self.tags))
                 
                 
       def do_gsta(self,analog_signal,sp,n):
@@ -216,5 +216,5 @@ class Precision(Analysis):
                         al.append(AnalogSignal(ac, t_start=-duration,t_stop=duration-self.parameters.bin_length*t_start.units,sampling_period=self.parameters.bin_length*qt.ms,units=qt.dimensionless))
                    
                     print 'Adding AnalogSignalList', sheet
-                    self.datastore.full_datastore.add_analysis_result(AnalogSignalList(al,self.parameters.neurons,qt.ms,qt.dimensionless,x_axis_name='time',y_axis_name='autocorrelation',sheet_name=sheet,tags=self.tags),sheet_name=sheet)    
+                    self.datastore.full_datastore.add_analysis_result(AnalogSignalList(al,self.parameters.neurons,qt.ms,qt.dimensionless,x_axis_name='time',y_axis_name='autocorrelation',sheet_name=sheet,tags=self.tags))    
                         
