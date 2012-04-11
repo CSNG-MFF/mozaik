@@ -13,7 +13,7 @@ from mozaik.storage.datastore import Hdf5DataStore,PickledDataStore
 from NeuroTools.parameters import ParameterSet
 from mozaik.storage.queries import TagBasedQuery, select_result_sheet_query, analysis_data_structure_parameter_filter_query
 
-if False:
+if True:
     params = setup_experiments('FFI',sim)
     jens_model = JensModel(sim,params)
     
@@ -26,7 +26,7 @@ if False:
 
     data_store = run_experiments(jens_model,experiment_list)
 else:
-    data_store = PickledDataStore(load=True,parameters=ParameterSet({'root_directory':'param-ffi_S1_3s1or'}))
+    data_store = PickledDataStore(load=True,parameters=ParameterSet({'root_directory':'res_S1_3s1or'}))
 
 import resource
 print "Current memory usage: %iMB" % (resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/(1024))
