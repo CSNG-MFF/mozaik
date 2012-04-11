@@ -68,6 +68,9 @@ from mozaik.storage.queries import *
 from simple_plot import *
 from plot_constructors import *
 from mozaik.tools import units
+import logging
+
+logger = logging.getLogger("mozaik")
 
 
 class Plotting(MozaikParametrizeObject):
@@ -207,7 +210,7 @@ class VmPlot(Plotting):
 
       def subplot(self,subplotspec,params):
         dsv = select_result_sheet_query(self.datastore,self.parameters.sheet_name)
-        PerStimulusPlot(dsv,function=self.ploter).make_line_plot(subplotspec,params)
+        PerStimulusPlot(dsv,function=self.ploter,title_style="Standard").make_line_plot(subplotspec,params)
 
 
       def ploter(self,dsv,gs,params):
@@ -241,7 +244,7 @@ class GSynPlot(Plotting):
 
       def subplot(self,subplotspec,params):
         dsv = select_result_sheet_query(self.datastore,self.parameters.sheet_name)
-        PerStimulusPlot(dsv,function=self.ploter).make_line_plot(subplotspec,params)
+        PerStimulusPlot(dsv,function=self.ploter,title_style="Standard").make_line_plot(subplotspec,params)
 
       def ploter(self,dsv,gs,params):
           exc =[]
@@ -299,7 +302,7 @@ class AnalogSignalListPlot(Plotting):
             Plotting.__init__(self,datastore,parameters)
             self.analog_signal_list = self.datastore.get_analysis_result('AnalogSignalList',sheet_name = parameters.sheet_name)    
             if len(self.analog_signal_list) > 1:
-              print 'ERROR: Warning currently only the first AnalogSignalList will be plotted'
+              logger.error('Warning currently only the first AnalogSignalList will be plotted')
             self.analog_signal_list = self.analog_signal_list[0]
             self.asl = self.analog_signal_list.asl
         
@@ -333,7 +336,7 @@ class ConductanceSignalListPlot(Plotting):
             Plotting.__init__(self,datastore,parameters)
             self.conductance_signal_list = self.datastore.get_analysis_result('ConductanceSignalList',sheet_name = parameters.sheet_name)    
             if len(self.conductance_signal_list) > 1:
-              print 'ERROR: Warning currently only the first ConductanceSignalList will be plotted'
+              logging.error('Warning currently only the first ConductanceSignalList will be plotted')
             self.conductance_signal_list = self.conductance_signal_list[0]
             self.e_con = self.conductance_signal_list.e_con
             self.i_con = self.conductance_signal_list.i_con
@@ -381,7 +384,7 @@ class ActivityMovie(Plotting):
            Plotting.__init__(self,datastore,parameters)
     
       def subplot(self,subplotspec,params):
-        PerStimulusPlot(self.datastore,function=self.ploter).make_line_plot(subplotspec,params)
+          PerStimulusPlot(self.datastore,function=self.ploter,title_style="Standard").make_line_plot(subplotspec,params)
 
       def ploter(self,dsv,gs,params):
          sp = [s.spiketrains for s in dsvs.get_segments()]

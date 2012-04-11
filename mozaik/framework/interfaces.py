@@ -13,7 +13,7 @@ import os
 from string import Template
 import numpy
 
-logger = logging.getLogger("MozaikLite")
+logger = logging.getLogger("mozaik")
 
 class VisualStimulus(VisualObject):
     """Abstract base class for visual stimuli."""

@@ -5,7 +5,7 @@ import pylab
 import numpy 
 import quantities as qt
 import mozaik.tools.units as munits
-from mozaik.stimuli.stimulus_generator import colapse, parse_stimuls_id, get_stimulus_parameter_name, get_stimulus_parameter_units
+from mozaik.stimuli.stimulus_generator import colapse, parse_stimuls_id
 from mozaik.analysis.analysis_data_structures import CyclicTuningCurve,TuningCurve, ConductanceSignalList , AnalogSignalList, PerNeuronValue
 from mozaik.analysis.analysis_helper_functions import time_histogram_across_trials
 from mozaik.framework.interfaces import MozaikParametrizeObject
@@ -13,6 +13,9 @@ from NeuroTools.parameters import ParameterSet
 from mozaik.storage.queries import select_stimuli_type_query,select_result_sheet_query, partition_by_stimulus_paramter_query
 from neo.core.analogsignal import AnalogSignal
 from NeuroTools import signals
+import logging
+
+logger = logging.getLogger("mozaik")
 
 class Analysis(MozaikParametrizeObject):
     """
@@ -54,7 +57,7 @@ class AveragedOrientationTuning(Analysis):
       a tuning curve is created. 
       """
       def analyse(self):
-            print 'Starting OrientationTuning analysis'
+            logger.info('Starting OrientationTuning analysis')
             dsv = select_stimuli_type_query(self.datastore,'FullfieldDriftingSinusoidalGrating')
 
             for sheet in dsv.sheets():
@@ -73,7 +76,7 @@ class AveragedOrientationTuning(Analysis):
                 
                 #JAHACK make sure that mean_rates() return spikes per second
                 units = munits.spike / qt.s
-                print 'Adding CyclicTuningCurve to datastore'
+                logger.debug('Adding CyclicTuningCurve to datastore')
                 self.datastore.full_datastore.add_analysis_result(CyclicTuningCurve(numpy.pi,mean_rates,s,9,'Response',units,sheet_name=sheet,tags=self.tags),sheet_name=sheet)
 
 class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
@@ -84,7 +87,7 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
       preference of the tuning curve for all neurons for which data were supplied.
       """
       def analyse(self):
-            print 'Starting Orientation Preference analysis'
+            logger.info('Starting Orientation Preference analysis')
             for sheet in self.datastore.sheets():
                 # get all the cyclic tuning curves 
                 self.tuning_curves = self.datastore.get_analysis_result('CyclicTuningCurve',sheet_name=sheet)
@@ -118,9 +121,12 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
                         sel[z] = 0
                         pref[z] = 0
                         
-                        print 'Adding PerNeuronValue to datastore'
-                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(pref, get_stimulus_parameter_units(parse_stimuls_id(k).name,tc.parameter_index) ,value_name = get_stimulus_parameter_name(parse_stimuls_id(k).name,tc.parameter_index) + ' preference' ,  sheet_name=sheet,tags=self.tags,period=tc.period),sheet_name=sheet)
-                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(sel, get_stimulus_parameter_units(parse_stimuls_id(k).name,tc.parameter_index),value_name= get_stimulus_parameter_name(parse_stimuls_id(k).name,tc.parameter_index) + ' selectivity',sheet_name=sheet,tags=self.tags,period=1.0),sheet_name=sheet)
+                        logger.debug('Adding PerNeuronValue to datastore')
+                        
+                        st = parse_stimuls_id(k)
+                        
+                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(pref,st.get_parameter_units(tc.parameter_index),value_name=st.get_parameter_name(tc.parameter_index) + ' preference' ,  sheet_name=sheet,tags=self.tags,period=tc.period),sheet_name=sheet)
+                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(sel,st.get_parameter_units(tc.parameter_index),value_name=st.get_parameter_name(tc.parameter_index) + ' selectivity',sheet_name=sheet,tags=self.tags,period=1.0),sheet_name=sheet)
                                 
                         
 
@@ -142,7 +148,7 @@ class GSTA(Analysis):
 
       
       def analyse(self):
-            print 'Starting Spike Triggered Analysis of Conductances'
+            logger.info('Starting Spike Triggered Analysis of Conductances')
             
             dsv = self.datastore
             for sheet in dsv.sheets():
@@ -195,7 +201,7 @@ class Precision(Analysis):
       })
       
       def analyse(self):
-            print 'Starting Precision Analysis'
+            logger.info('Starting Precision Analysis')
             dsv = self.datastore
             for sheet in dsv.sheets():
                 dsv1 = select_result_sheet_query(dsv,sheet)
@@ -215,6 +221,6 @@ class Precision(Analysis):
                             ac = ac / numpy.sum(numpy.power(hist[n],2))
                         al.append(AnalogSignal(ac, t_start=-duration,t_stop=duration-self.parameters.bin_length*t_start.units,sampling_period=self.parameters.bin_length*qt.ms,units=qt.dimensionless))
                    
-                    print 'Adding AnalogSignalList', sheet
+                    logger.debug('Adding AnalogSignalList:' + str(sheet))
                     self.datastore.full_datastore.add_analysis_result(AnalogSignalList(al,self.parameters.neurons,qt.ms,qt.dimensionless,x_axis_name='time',y_axis_name='autocorrelation',sheet_name=sheet,tags=self.tags),sheet_name=sheet)    
                         

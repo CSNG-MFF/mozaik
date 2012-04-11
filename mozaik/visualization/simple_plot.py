@@ -7,9 +7,6 @@ import numpy
 from matplotlib import rc
 import quantities as pq
 
-rc('text', usetex=True)
-
-
 class SimplePlot(object):
         """
         One general policy is that any overwriting of the standard style default values

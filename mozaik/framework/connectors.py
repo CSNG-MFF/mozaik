@@ -5,8 +5,6 @@ from pylab import griddata
 from interfaces import MozaikComponent
 from sheets import SheetWithMagnificationFactor
 from interfaces import VisualSystemConnector
-import logging
-from NeuroTools import visual_logging
 from NeuroTools.parameters import ParameterSet, ParameterDist
 from pyNN import random, space
 from mozaik.tools.misc import sample_from_bin_distribution
