@@ -186,7 +186,7 @@ class RasterPlot(Plotting):
       
       def subplot(self,subplotspec,params):
           dsv = select_result_sheet_query(self.datastore,self.parameters.sheet_name)
-          PerStimulusPlot(dsv,function=self.ploter,title_style="Standard").make_line_plot(subplotspec,params)
+          PerStimulusPlot(dsv,function=self.ploter).make_line_plot(subplotspec,params)
 
       def ploter(self,dsv,gs,params):
          sp = [[s.spiketrains for s in dsv.get_segments()]]

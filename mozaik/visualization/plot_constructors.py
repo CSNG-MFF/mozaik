@@ -22,6 +22,9 @@ class LinePlot(Parameterized):
         function = param.Callable(doc="The function that should be called to plot individual plots. It should accept three parameters: self,index in the line, gridspec object into which to plot the plot, the simple_plot parameters")
         max_length = param.Integer(default=4,instantiate=True,doc="The maximum # plots actually displayed")
         
+        extra_space_top = param.Number(default=0.0,instantiate=True,doc="Space to be reserved on top of the subplot, defined as fraction of the subplot.")
+        extra_space_right = param.Number(default=0.0,instantiate=True,doc="Space to be reserved on the right side of the subplot, defined as fraction of the subplot.")
+        
         def make_line_plot(self,subplotspec,params):
             """
             Call to execute the line plot.
@@ -36,6 +39,7 @@ class LinePlot(Parameterized):
                return
                
             l = numpy.min([self.max_length,self.length])   
+            subplotspec = gridspec.GridSpecFromSubplotSpec(100,100, subplot_spec=subplotspec)[int(100*self.extra_space_top):100,0:int(100*(1-self.extra_space_right))] 
             
             if self.horizontal:
                 gs = gridspec.GridSpecFromSubplotSpec(1,l, subplot_spec=subplotspec)
@@ -110,7 +114,37 @@ class PerStimulusPlot(PerDSVPlot):
                not displayed. The remaining parameters are shown line after line in the format 'stimulus : value'.
                Of course trial parameter is ignored.
     """
-    title_style = param.String(default="None",instantiate=True,doc="The style of the title")
+    title_style = param.String(default="Clever",instantiate=True,doc="The style of the title")
+    
+    def  __init__(self,datastore,**params):
+           PerDSVPlot.__init__(self,datastore,**params)
+           if self.title_style == "Clever":
+              ss = datastore.get_stimuli()
+              stimulus = parse_stimuls_id(ss[0])
+              for s in ss:
+                  s = parse_stimuls_id(s)
+                  if s.name != stimulus.name:
+                     print 'Datastore does not contain same type of stimuli: changing title_style from Clever to Standard' 
+                     logger.warning('Datastore does not contain same type of stimuli: changing title_style from Clever to Standard') 
+                     self.title_style = "Standard"
+                     break   
+              
+           # lets find parameter indexes that vary if we need 'Clever' title style
+           if self.title_style == "Clever":  
+              stimulus = parse_stimuls_id(self.datastore.get_stimuli()[0])
+              self.varied = []
+              for i in xrange(0,stimulus.num_parameters):
+                  if i != 8:
+                      for s in self.datastore.get_stimuli():
+                          s = parse_stimuls_id(s)
+                          if s.parameters[i] != stimulus.parameters[i]:
+                             self.varied.append(i) 
+                             break
+                
+           if self.title_style == "Standard":
+              self.extra_space_top=0.05
+           if self.title_style == "Clever":
+                 self.extra_space_top=0.05      
     
     def partiotion_dsvs(self):       
         return partition_by_stimulus_paramter_query(self.datastore,8)
@@ -122,12 +156,11 @@ class PerStimulusPlot(PerDSVPlot):
             PerDSVPlot._single_plot(self,idx,gs,p)
             
     def title(self,idx):
-        stimulus = parse_stimuls_id(self.dsvs[idx].get_stimuli()[0])
-        
         if self.title_style == "None":
            return None 
         
         if self.title_style == "Standard":
+           stimulus = parse_stimuls_id(self.dsvs[idx].get_stimuli()[0])
            title = ''
            title = title + stimulus.name + '\n' 
            for i in xrange(0,stimulus.num_parameters):
@@ -135,3 +168,12 @@ class PerStimulusPlot(PerDSVPlot):
           
            return title
             
+        if self.title_style == "Clever":
+           stimulus = parse_stimuls_id(self.dsvs[idx].get_stimuli()[0])
+           title = ''
+           for i in self.varied:
+               title = title + stimulus.get_parameter_name(i) + ' : ' + str(stimulus.parameters[i]) + '\n' 
+          
+           return title
+           
+           
