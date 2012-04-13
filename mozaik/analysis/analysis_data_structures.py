@@ -23,19 +23,25 @@ class AnalysisDataStructure(Parameterized):
       constructor of the AnalysisDataStructure can accept inputs, which are standard variables 
       that should correspond to the data that is actually stored in the ADS.
       
-      The three parameters that each ADS has are:
+      The five parameters that each ADS has are:
       
       identifier - 
           An important parameter of each AnalysisDataStructure is identifier which is used to 
           identify data structures of common type in storage facilities.
           Currently different datastructures with common interface should share the identifiers
-          but it is not clear this is needed. If it turns out such sharing is not neccessary it 
+          but it is not clear yet this is needed. If it turns out such sharing is not neccessary it 
           might be abolished and there will be one-to-one mapping between AnalysisDataStructure classes
           and identifiers.
       
       analysis_algorithm - 
           The identity (name) of the analysis class that produced this analysis data structure
+          
+      sheet_name -
+          The sheet for which this results were computed for. None if they do not belong to specific sheet.
       
+      neuron -
+          Neuron id to which the datastructure belongs. None if it is not neuron specific
+       
       tags - 
           In complicated workflows it might become difficult to design a filter to extract the right 
           set of recordings or analysis data structures for a given analysis or visualization. 
@@ -51,10 +57,12 @@ class AnalysisDataStructure(Parameterized):
           plotting/analysis whenever possible!
       """
       
-      identifier = param.String(instantiate=True,doc=""" The identifier of the analysis data structure""")
-      analysis_algorithm = param.String(instantiate=True,doc=""" The identifier of the analysis data structure""")
+      identifier = param.String(instantiate=True,doc="""The identifier of the analysis data structure""")
+      analysis_algorithm = param.String(instantiate=True,doc="""The identifier of the analysis data structure""")
       tags = param.List(default=[],instantiate=True,doc="""The list of tags to attach""")
-      
+      neuron = param.Integer(allow_None=True,default=None,instantiate=True,doc="""Neuron id to which the datastructure belongs. None if it is not neuron specific""")
+      sheet_name = param.String(default=None,instantiate=True,doc="""The sheet for which this results were computed for. None if they do not belong to specific sheet""")
+
       def __init__(self,**params):
           Parameterized.__init__(self,**params)
 
@@ -168,8 +176,6 @@ class PerNeuronValue(AnalysisDataStructure):
       """
       
       value_name = param.String(instantiate=True,doc="""The name of the value.""")
-      sheet_name = param.String(instantiate=True,doc="""The name of the sheet to which the data correspond.""")
-      
       def __init__(self,values,value_units,tags,period=None,**params):
            AnalysisDataStructure.__init__(self,identifier = 'PerNeuronValue',**params)
            self.value_units = value_units
@@ -226,9 +232,6 @@ class AnalogSignalList(AnalysisDataStructure1D):
          sheet_name -
                 The sheet from which the data were collected
        """
-       
-       sheet_name = param.String(instantiate=True,doc="""The sheet from which the data were collected.""")
-       
        def __init__(self,asl,indexes,x_axis_units,y_axis_units,**params):
            AnalysisDataStructure1D.__init__(self,x_axis_units,y_axis_units,identifier = 'AnalogSignalList',**params)
            self.asl = asl
@@ -249,10 +252,7 @@ class ConductanceSignalList(AnalysisDataStructure1D):
             list of indexes of neurons in the original Mozaik sheet to which the AnalogSignals correspond
          sheet_name -
                 The sheet from which the data were collected
-       """
-       
-       sheet_name = param.String(instantiate=True,doc="""The sheet from which the data were collected.""")
-        
+       """        
        def __init__(self,e_con,i_con,indexes,**params):
            assert e_con[0].units == i_con[0].units
            AnalysisDataStructure1D.__init__(self,e_con[0].sampling_rate.units,e_con[0].units,x_axis_name='time',y_axis_name='conductance',identifier = 'ConductanceSignalList',**params)

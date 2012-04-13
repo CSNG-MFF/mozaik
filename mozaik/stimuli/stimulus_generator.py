@@ -34,6 +34,7 @@ base_stimulus_parameters = [('frame duration',qt.ms),('size_in_degrees_x',qt.deg
 StimulusTaxonomy = {
                         'FullfieldDriftingSinusoidalGrating' : base_stimulus_parameters + [('orientation',qt.rad),('spatial_frequency',1/qt.degree),('temporal_frequency',qt.Hz)],
                         'NaturalImageWithEyeMovement' : base_stimulus_parameters + [('size',qt.degrees),('eye_movement_period',qt.ms),('idd',qt.dimensionless)],
+                        'DriftingGratingWithEyeMovement' : base_stimulus_parameters + [('orientation',qt.rad),('spatial_frequency',1/qt.degree),('temporal_frequency',qt.Hz),('size',qt.degrees),('eye_movement_period',qt.ms),('idd',qt.dimensionless)],
                         'Null' : base_stimulus_parameters,
                    }
 

@@ -29,7 +29,7 @@ def plot_layer_activity(sheet,value_to_plot,cortical_coordinates=False,labels=Tr
         pylab.scatter(sheet.pop.positions[0]*sheet.magnification_factor,sheet.pop.positions[1]*sheet.magnification_factor,c=value_to_plot, faceted = False,edgecolors='none') 
         if labels:
                 pylab.xlabel(u'x (μm)')
-            pylab.ylabel(u'y (μm)')
+                pylab.ylabel(u'y (μm)')
        
     else:
        pylab.scatter(sheet.pop.positions[0],sheet.pop.positions[1],c=value_to_plot, faceted = False,edgecolors='none') 

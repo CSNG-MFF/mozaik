@@ -8,6 +8,11 @@ from neo_neurotools_wrapper import NeoNeurotoolsWrapper
 
 import pickle
 import numpy
+import logging
+
+
+logger = logging.getLogger("mozaik")
+
 
 class DataStoreView(MozaikParametrizeObject):
     """
@@ -72,9 +77,8 @@ class DataStoreView(MozaikParametrizeObject):
         MozaikParametrizeObject.__init__(self,parameters)
         # we will hold the recordings as one neo Block
         self.block = Block()
-        self.analysis_results = {}
+        self.analysis_results = []
         self.retinal_stimulus = {}
-        self.analysis_results['data'] = {}
         self.full_datastore = full_datastore # should be self if actually the instance is actually DataStore
         
     def get_segments(self):
@@ -104,35 +108,28 @@ class DataStoreView(MozaikParametrizeObject):
         return [s.annotations['stimulus'] for s in self.block.segments]
         
    
-    def get_analysis_result(self,result_id,sheet_name=None,neuron_idx=None):
-        if not sheet_name:
-           node = self.analysis_results['data'] 
-        elif not neuron_idx:
-           node = self.analysis_results[sheet_name]['data'] 
-        else:
-           node = self.analysis_results[sheet_name][neuron_idx]['data'] 
+    def get_analysis_result(self,**kwargs):
+        ars = []
         
-        if node.has_key(result_id):
-            return node[result_id]    
-        else:
-            return []
+        for ads in self.analysis_results:
+            flag = True
+            for k in kwargs.keys():
+                if not ads.params().has_key(k):
+                   flasg=False
+                   break
+                if ads.inspect_value(k) != kwargs[k]:
+                   flag=False
+                   break
+            if flag:
+               ars.append(ads)
+        return ars
     
-
     def get_retinal_stimulus(self,stimuli=None):
         if stimuli == None:
            return self.retinal_stimulus.values()
         else:
            return [self.retinal_stimulus[s] for s in stimuli]
    
-    def _analysis_result_copy(self,d):
-        nd = {}
-        for k in d.keys():
-            if k != 'data':
-               nd[k] =  self._analysis_result_copy(d[k])
-            else:
-               nd[k] = d[k].copy() 
-        return nd    
-
     def retinal_stimulus_copy(self):
         new_dict = {}
         for k in self.retinal_stimulus.keys():
@@ -140,7 +137,7 @@ class DataStoreView(MozaikParametrizeObject):
         return new_dict
 
     def analysis_result_copy(self):
-        return self._analysis_result_copy(self.analysis_results)
+        return self.analysis_results[:]
                 
     def recordings_copy(self):
         return self.block.segments[:]
@@ -265,27 +262,23 @@ class Hdf5DataStore(DataStore):
     def add_retinal_stimulus(self,data,stimulus):
         self.retinal_stimulus[str(stimulus)] = data
         
-    def add_analysis_result(self,result,sheet_name=None,neuron_idx=None):
-        if not sheet_name:
-            node = self.analysis_results['data']
-        else:
-            if not self.analysis_results.has_key(sheet_name):
-               self.analysis_results[sheet_name]={}
-               self.analysis_results[sheet_name]['data']={}
-            
-            if not neuron_idx:
-               node = self.analysis_results[sheet_name]['data']
-            else:
-               if not self.analysis_results[sheet_name].has_key(neuron_idx): 
-                    self.analysis_results[sheet_name][neuron_idx]={}
-                    self.analysis_results[sheet_name][neuron_idx]['data']={}
-               node = self.analysis_results[sheet_name][neuron_idx]['data']             
+    def add_analysis_result(self,result):
+        for ads in self.analysis_results:
+            for k in result.params().keys():
+                if not ads.params().has_key(k):
+                   self.analysis_results.append(result)
+                   return
+                if ads.inspect_value(k) != result.inspect_value(k):
+                   self.analysis_results.append(result)
+                   return
         
-        if node.has_key(result.identifier):
-            node[result.identifier].append(result)
-        else:
-            node[result.identifier] = [result]
+        if len(self.analysis_results) == 0:
+           self.analysis_results.append(result)
+           return
         
+                
+        logger.error("Analysis Data Structure with the same parametrization already added in the datastore. Currently uniquenes is required. The ADS was not added. User should modify analasys specification to avoid this!")
+    
 class PickledDataStore(Hdf5DataStore):
     """
     An DataStore that saves all it's data as a simple pickled files 

@@ -52,4 +52,4 @@ class NeuronAnnotationsToPerNeuronValues(Analysis):
                    if k == 'LGNAfferentPhase':
                       period = 2*numpy.pi  
                    
-                   self.datastore.full_datastore.add_analysis_result(PerNeuronValue(values,qt.dimensionless,period=period,value_name=k,sheet_name=sheet,tags=self.tags),sheet_name=sheet) 
+                   self.datastore.full_datastore.add_analysis_result(PerNeuronValue(values,qt.dimensionless,period=period,value_name=k,sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__)) 

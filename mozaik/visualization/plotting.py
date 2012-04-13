@@ -110,7 +110,7 @@ class PlotTuningCurve(Plotting):
 
     def  __init__(self,datastore,parameters):
         Plotting.__init__(self,datastore,parameters)
-        self.tuning_curves = self.datastore.get_analysis_result(parameters.tuning_curve_name,sheet_name=parameters.sheet_name)
+        self.tuning_curves = self.datastore.get_analysis_result(identifier=parameters.tuning_curve_name,sheet_name=parameters.sheet_name)
     
     def subplot(self,subplotspec,params):
         LinePlot(function=self.ploter,length = len(self.tuning_curves)).make_line_plot(subplotspec,params)
@@ -300,7 +300,7 @@ class AnalogSignalListPlot(Plotting):
     
         def  __init__(self,datastore,parameters):
             Plotting.__init__(self,datastore,parameters)
-            self.analog_signal_list = self.datastore.get_analysis_result('AnalogSignalList',sheet_name = parameters.sheet_name)    
+            self.analog_signal_list = self.datastore.get_analysis_result(identifier='AnalogSignalList',sheet_name = parameters.sheet_name)    
             if len(self.analog_signal_list) > 1:
               logger.error('Warning currently only the first AnalogSignalList will be plotted')
             self.analog_signal_list = self.analog_signal_list[0]
@@ -334,7 +334,7 @@ class ConductanceSignalListPlot(Plotting):
     
         def  __init__(self,datastore,parameters):
             Plotting.__init__(self,datastore,parameters)
-            self.conductance_signal_list = self.datastore.get_analysis_result('ConductanceSignalList',sheet_name = parameters.sheet_name)    
+            self.conductance_signal_list = self.datastore.get_analysis_result(identifier='ConductanceSignalList',sheet_name = parameters.sheet_name)    
             if len(self.conductance_signal_list) > 1:
               logging.error('Warning currently only the first ConductanceSignalList will be plotted')
             self.conductance_signal_list = self.conductance_signal_list[0]
@@ -429,7 +429,7 @@ class PerNeuronValuePlot(Plotting):
         self.poss = []
         self.pnvs = []
         for sheet in datastore.sheets():
-            z = datastore.get_analysis_result('PerNeuronValue',sheet_name=sheet)
+            z = datastore.get_analysis_result(identifier='PerNeuronValue',sheet_name=sheet)
             if len(z) != 0:
                 self.poss.append(datastore.get_neuron_postions()[sheet])
                 self.pnvs.append(z)

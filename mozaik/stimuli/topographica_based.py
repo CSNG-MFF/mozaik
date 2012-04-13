@@ -47,7 +47,7 @@ class NaturalImageWithEyeMovement(Stimulus):
             f = open(eye_path_location,'r')
             self.eye_path = pickle.load(f)
             self.image_location = image_location
-
+            self.idd = 'NaturalImageWithEyeMovement' + str(self.eye_path) + str(self.image_location)
             Stimulus.__init__(self,parameters) 
 
     def frames(self):
@@ -74,3 +74,47 @@ class NaturalImageWithEyeMovement(Stimulus):
                 yield (image,[self.time])
                 self.time = self.time + 1
 
+class DriftingGratingWithEyeMovement(Stimulus):
+    """
+    A visual stimulus that simulates an eye movement over a drifting  gratings
+    Parameter order:
+    'orientation'        - orientation of the grating
+    'spatial_frequency'  - spatial_frequency of the grating
+    'temporal_frequency (Hz)' - temporal_frequency of the grating
+    `size`              -    the size of the grating
+    `eye_movement_period` -  # (ms) the time between two consequitve eye movements recorded in the eye_path file
+    `idd`                 -  JAHACK: this is probably just a hack for now how to 
+                             make two stimuli with different external(hidden) parameters  
+                             to have unique parameter combinations
+    """    
+    def __init__(self, parameters,eye_path_location,image_location):
+            f = open(eye_path_location,'r')
+            self.eye_path = pickle.load(f)
+            self.idd = 'NaturalImageWithEyeMovement' + str(self.eye_path)
+            Stimulus.__init__(self,parameters) 
+
+    def frames(self):
+            self.time=0
+            self.current_phase=0
+            from topo.transferfn.basic import DivisiveNormalizeLinf
+            import topo.pattern.image 
+            pattern_sampler = topo.pattern.image.PatternSampler(size_normalization='fit_longest',whole_pattern_output_fns=[DivisiveNormalizeLinf()])
+            
+            while True:
+                location = self.eye_path[int(numpy.floor(self.frame_duration*self.time/self.params[4]))]
+                
+                image = topo.pattern.SineGrating(orientation=self.params[0],
+                                                 x=location[0],
+                                                 y=location[1],
+                                                 frequency=self.params[1],
+                                                 phase=self.current_phase,
+                                                 size=self.params[3],
+                                                 bounds=BoundingBox(points=((-self.size_in_degrees[0]/2,-self.size_in_degrees[1]/2),(self.size_in_degrees[0]/2,self.size_in_degrees[1]/2))),
+                                                 scale=self.max_luminance,
+                                                 xdensity=self.density,
+                                                 ydensity=self.density)()
+                self.time = self.time + 1
+                self.current_phase+= 2*numpy.pi*(self.frame_duration/1000.0)*self.params[2]
+                yield (image,[self.time])
+  
+  
