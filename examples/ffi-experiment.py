@@ -19,23 +19,26 @@ if False:
     
     experiment_list =   [
                            #MeasureSpontaneousActivity(jens_model,duration=147*7),
-                           MeasureOrientationTuningFullfield(jens_model,num_orientations=3,spatial_frequency=0.8,temporal_frequency=2,grating_duration=57*7,num_trials=2),
-                           #MeasureOrientationTuningFullfield(jens_model,num_orientations=1,spatial_frequency=0.8,temporal_frequency=2,grating_duration=57*7,num_trials=3),
+                           #MeasureOrientationTuningFullfield(jens_model,num_orientations=6,spatial_frequency=0.8,temporal_frequency=2,grating_duration=148*7,num_trials=10),
+                           MeasureOrientationTuningFullfield(jens_model,num_orientations=1,spatial_frequency=0.8,temporal_frequency=2,grating_duration=3*148*7,num_trials=1),
                            #MeasureOrientationTuningFullfield(jens_model,num_orientations=8,spatial_frequency=0.8,temporal_frequency=2,grating_duration=148*7,num_trials=3),
                         ]
 
     data_store = run_experiments(jens_model,experiment_list)
 else:
-    data_store = PickledDataStore(load=True,parameters=ParameterSet({'root_directory':'res_S1_3s1or'}))
+    data_store = PickledDataStore(load=True,parameters=ParameterSet({'root_directory':'res_S2_1s_tr10_or6'}))
+    print 'Loaded data store'
 
 import resource
 print "Current memory usage: %iMB" % (resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/(1024))
 
+
 AveragedOrientationTuning(data_store,ParameterSet({})).analyse()
-GSTA(data_store,ParameterSet({'neurons' : [0], 'length' : 250.0 }),tags=['GSTA1']).analyse()
-Precision(select_result_sheet_query(data_store,"V1_Exc"),ParameterSet({'neurons' : [0], 'bin_length' : 10.0 })).analyse()
+GSTA(data_store,ParameterSet({'neurons' : [0], 'length' : 50.0 }),tags=['GSTA1']).analyse()
+#Precision(select_result_sheet_query(data_store,"V1_Exc"),ParameterSet({'neurons' : [0], 'bin_length' : 10.0 })).analyse()
 PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(data_store,ParameterSet({})).analyse()
 NeuronAnnotationsToPerNeuronValues(data_store,ParameterSet({})).analyse()
+
 
 OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Exc', 'neuron' : 0, 'sheet_activity' : {}})).plot()
 OverviewPlot(data_store,ParameterSet({'sheet_name' : 'V1_Inh', 'neuron' : 0, 'sheet_activity' : {}})).plot()

@@ -113,7 +113,7 @@ class PlotTuningCurve(Plotting):
         self.tuning_curves = self.datastore.get_analysis_result(parameters.tuning_curve_name,sheet_name=parameters.sheet_name)
     
     def subplot(self,subplotspec,params):
-      LinePlot(function=self.ploter,length = len(self.tuning_curves)).make_line_plot(subplotspec,params)
+        LinePlot(function=self.ploter,length = len(self.tuning_curves)).make_line_plot(subplotspec,params)
     
     def ploter(self,idx,gs,params):
         tc = self.tuning_curves[idx]
@@ -344,9 +344,6 @@ class ConductanceSignalListPlot(Plotting):
         def subplot(self,subplotspec,params):
             exc =[]
             inh =[]
-            print 'DASDASDA'
-            print len(self.e_con)
-            print len(self.i_con)
             
             for e,i in zip(self.e_con,self.i_con):
               exc.append(e)

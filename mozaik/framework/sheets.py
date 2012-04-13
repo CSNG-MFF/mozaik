@@ -250,6 +250,7 @@ class CorticalUniformSheet(SheetWithMagnificationFactor):
         """
         SheetWithMagnificationFactor.__init__(self, model, parameters)
         dx,dy = self.cs_2_vf(parameters.sx,parameters.sy)
+        
         rs = space.RandomStructure(boundary=space.Cuboid(dx,dy,0),origin=(0.0, 0.0, 0.0))
         self.pop = self.sim.Population(int(parameters.sx*parameters.sy/10000*parameters.density), getattr(self.model.sim, self.parameters.cell.model), self.parameters.cell.params,rs,self.name)
         

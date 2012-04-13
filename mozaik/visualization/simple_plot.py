@@ -298,6 +298,9 @@ class SpikeHistogramPlot(SpikeRasterPlot):
     grouped by the neurons. Only neurons in the neurons parameter will be plotted.
     If neurons are None, the first neuron will be plotted. 
     """
+    def __init__(self,spike_lists,**kwargs):
+          SpikeRasterPlot.__init__(self,spike_lists,**kwargs)
+          self.parameters["bin_width"] = 5.0
     
     def plot(self):  
         self.colors = ['#000000' for i in xrange(0,len(self.sps))]
@@ -313,11 +316,13 @@ class SpikeHistogramPlot(SpikeRasterPlot):
             for i,spike_list in enumerate(sp):
                 for j in self.neurons:
                     spike_train = spike_list[j]
-                    tmp.extend(spike_train)
+                    tmp.extend(spike_train.magnitude)
             all_spikes.append(tmp)
+        
+
             
         if all_spikes != []:
-           self.axis.hist(all_spikes,bins=numpy.arange(0,t_stop,1),color=self.colors,edgecolor='none')
+           self.axis.hist(all_spikes,bins=numpy.arange(0,t_stop,self.bin_width),color=self.colors,edgecolor='none')
         
         self.y_label = '(spk/ms)'
         self.x_tick_style = 'Custom'
@@ -464,6 +469,12 @@ class ScatterPlot(StandardStyle):
                 
           ax = self.axis.scatter(self.x,self.y,c = self.z, s = self.dot_size,marker = self.marker,lw = 0,cmap=self.colormap,vmin = vmin, vmax = vmax)
           
+          self.x_lim = (1.1*numpy.min(self.x),1.1*numpy.max(self.x))
+          self.y_lim = (1.1*numpy.min(self.y),1.1*numpy.max(self.y))
+          
+          self.x_ticks = [1.1*numpy.min(self.x),1.1*numpy.max(self.x)]
+          self.y_ticks = [1.1*numpy.min(self.y),1.1*numpy.max(self.y)]
+          
           if self.colorbar:
              cb = pylab.colorbar(ax,ticks=[vmin,vmax],use_gridspec=True)   
              cb.set_label(self.colorbar_label)
@@ -555,29 +566,28 @@ class ConductancesPlot(StandardStyle):
           mean_gsyn_e = numpy.zeros(numpy.shape(self.gsyn_es[0]))
           mean_gsyn_i = numpy.zeros(numpy.shape(self.gsyn_is[0]))
           sampling_period = self.gsyn_es[0].sampling_period
-          time_axis = numpy.arange(0,len(self.gsyn_es[0]),1) /  float(len(self.gsyn_es[0])) * float(self.gsyn_es[0].t_stop) + float(self.gsyn_es[0].t_start)
           t_stop = float(self.gsyn_es[0].t_stop - sampling_period)
-          
-          
+          t_start = float(self.gsyn_es[0].t_start)
+          time_axis = numpy.arange(0,len(self.gsyn_es[0]),1) /  float(len(self.gsyn_es[0])) * abs(t_start-t_stop) + t_start
           
           for e,i in zip(self.gsyn_es,self.gsyn_is):
-            e = e * 1000
-            i = i * 1000
-            self.axis.plot(time_axis,e.tolist(),color='#F5A9A9')            
-            self.axis.plot(time_axis,i.tolist(),color='#A9BCF5')              
-            mean_gsyn_e = mean_gsyn_e + numpy.array(e.tolist())
-            mean_gsyn_i = mean_gsyn_i + numpy.array(i.tolist())
+                e = e * 1000
+                i = i * 1000
+                self.axis.plot(time_axis,e.tolist(),color='#F5A9A9')            
+                self.axis.plot(time_axis,i.tolist(),color='#A9BCF5')              
+                mean_gsyn_e = mean_gsyn_e + numpy.array(e.tolist())
+                mean_gsyn_i = mean_gsyn_i + numpy.array(i.tolist())
          
           mean_gsyn_i = mean_gsyn_i / len(self.gsyn_is) 
           mean_gsyn_e = mean_gsyn_e / len(self.gsyn_es) 
-            
+                      
           p1, = self.axis.plot(time_axis,mean_gsyn_e.tolist(),color='r',linewidth=2)            
           p2, = self.axis.plot(time_axis,mean_gsyn_i.tolist(),color='b',linewidth=2)              
 
           if self.legend:
             self.axis.legend([p1,p2],['exc','inh'])  
           
-          self.x_lim = (0,t_stop)
-          self.x_ticks = [0,t_stop/2,t_stop]
+          self.x_lim = (t_start,t_stop)
+          self.x_ticks = [t_start,(t_stop-t_start)/2,t_stop]
           self.x_label = 'time(' + self.gsyn_es[0].t_start.dimensionality.latex + ')'
           self.y_label = 'g(1000' + self.gsyn_es[0].dimensionality.latex + ')'
