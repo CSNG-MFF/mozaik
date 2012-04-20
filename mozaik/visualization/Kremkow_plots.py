@@ -43,7 +43,7 @@ class Figure2(Plotting):
           
           ConductanceSignalListPlot(queries.TagBasedQuery(ParameterSet({'tags' : ['GSTA1'] })).query(self.datastore),ParameterSet({'sheet_name' : 'V1_Exc','normalize_individually':True})).subplot(gs[7:10,15:],params.copy())  
           
-          #p = params.copy()
-          #p.setdefault('mean',False)
-          #AnalogSignalListPlot(dsv,ParameterSet({'sheet_name' : self.parameters.sheet_name,'ylabel' : 'AC (norm)'})).subplot(gs[2:5,15:],p)
+          p = params.copy()
+          p.setdefault('mean',False)
+          AnalogSignalListPlot(dsv,ParameterSet({'sheet_name' : self.parameters.sheet_name,'ylabel' : 'AC (norm)'})).subplot(gs[2:5,15:],p)
           

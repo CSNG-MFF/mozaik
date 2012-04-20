@@ -25,20 +25,23 @@ class MozaikSegment(Segment):
             self.spiketrains = segment.spiketrains
             self.annotations = segment.annotations
         
-        def get_vm(self):
+        def get_vm(self,neuron):
             for a in self.analogsignalarrays:
                 if a.name == 'v':
-                   return a
+                   idd = self.spiketrains[neuron].annotations['source_id']
+                   return a[:,numpy.where(a.annotations['source_ids']==idd)[0]]
                 
-        def get_esyn(self):
+        def get_esyn(self,neuron):
             for a in self.analogsignalarrays:
                 if a.name == 'gsyn_exc':
-                   return a
+                   idd = self.spiketrains[neuron].annotations['source_id']
+                   return a[:,numpy.where(a.annotations['source_ids']==idd)[0]]
                 
-        def get_isyn(self):
+        def get_isyn(self,neuron):
             for a in self.analogsignalarrays:
                 if a.name == 'gsyn_inh':
-                   return a
+                   idd = self.spiketrains[neuron].annotations['source_id']
+                   return a[:,numpy.where(a.annotations['source_ids']==idd)[0]]
         
         def neuron_num(self):
             return len(self.spiketrains[0])

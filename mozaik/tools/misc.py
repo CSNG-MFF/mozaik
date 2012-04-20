@@ -11,7 +11,8 @@ def sample_from_bin_distribution(bins, number_of_samples):
     # the returned samples correspond to the bins 
     # bins - the numpy array defining the bin distribution
     # number_of_samples - number of samples to generate 
-    
+    if len(bins) == 0: return []
+   
     bins = numpy.array(bins) / numpy.sum(bins)
 
     # create the cumulative sum

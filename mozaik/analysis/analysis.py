@@ -3,6 +3,7 @@ This module contains the Mozaik analysis interface and implementation of various
 """
 import pylab
 import numpy 
+import time
 import quantities as qt
 import mozaik.tools.units as munits
 from mozaik.stimuli.stimulus_generator import colapse, parse_stimuls_id
@@ -20,7 +21,7 @@ logger = logging.getLogger("mozaik")
 class Analysis(MozaikParametrizeObject):
     """
     Analysis encapsulates analysis algorithms. 
-    The interface is extremely simple: it only requires the definition of analysis function
+    The interface is extremely simple: it only requires the implementation of perform_analysis function
     which when called performs the actually analysis
     
     It is assumed that this function retrieves its own data from DataStore that is supplied in the self.datastore
@@ -41,9 +42,16 @@ class Analysis(MozaikParametrizeObject):
             self.tags = []
         else:
             self.tags = tags
-            
+    
     def analyse(self):
+        t1 = time.time()
+        self.perform_analysis()
+        t2 = time.time()
+        logger.warning(self.__class__.__name__ + ' analysis took: ' + str(t2-t1) + 'seconds')
+
+    def perform_analysis(self):
         """
+        The function that implements the analysis
         """
         raise NotImplementedError
         pass
@@ -56,7 +64,7 @@ class AveragedOrientationTuning(Analysis):
       orientation parameter. Thus for each combination of the other stimulus parameters
       a tuning curve is created. 
       """
-      def analyse(self):
+      def perform_analysis(self):
             logger.info('Starting OrientationTuning analysis')
             dsv = select_stimuli_type_query(self.datastore,'FullfieldDriftingSinusoidalGrating')
 
@@ -86,7 +94,7 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
       For each parametrization of tuning_curves it creates a PerNeuronVector holding the
       preference of the tuning curve for all neurons for which data were supplied.
       """
-      def analyse(self):
+      def perform_analysis(self):
             logger.info('Starting Orientation Preference analysis')
             for sheet in self.datastore.sheets():
                 # get all the cyclic tuning curves 
@@ -100,8 +108,8 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
                         n = 0
                         g,h = d[k]
                         for v,p in zip(g,h):
-                            xx =  numpy.cos(p / tc.period * 2 * numpy.pi) * v   
-                            yy =  numpy.sin(p / tc.period * 2 * numpy.pi) * v
+                            xx =  numpy.cos((p / tc.period) * 2 * numpy.pi) * v
+                            yy =  numpy.sin((p / tc.period) * 2 * numpy.pi) * v   
                             x  =  x + xx
                             y  =  y + yy
                             n = n + numpy.sqrt(numpy.power(xx,2) + numpy.power(yy,2))
@@ -115,7 +123,8 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
                         po[z] = 1
 
                         sel = numpy.sqrt(numpy.power(x,2) + numpy.power(y,2)) / n
-                        pref = numpy.arccos(x/po)
+                        act = numpy.arctan2(y,x) 
+                        pref = (act + (act < 0) * 2 * numpy.pi) / (2 * numpy.pi) * tc.period
                         
                         # handle zero magnitudes
                         sel[z] = 0
@@ -144,7 +153,7 @@ class GSTA(Analysis):
       })
 
       
-      def analyse(self):
+      def perform_analysis(self):
             logger.info('Starting Spike Triggered Analysis of Conductances')
             
             dsv = self.datastore
@@ -152,30 +161,30 @@ class GSTA(Analysis):
                 dsv1 = select_result_sheet_query(dsv,sheet)
                 st = dsv1.get_stimuli()
                 segs = dsv1.get_segments()
-                
-                sp = [s.spiketrains for s in segs]
-                g_e = [s.get_esyn() for s in segs]
-                g_i = [s.get_isyn() for s in segs]
 
                 asl_e = []
                 asl_i = []
                 for n in self.parameters.neurons:
-                    asl_e.append(self.do_gsta(g_e,sp,n))
-                    asl_i.append(self.do_gsta(g_i,sp,n))
+                    sp = [s.spiketrains[n] for s in segs]
+                    g_e = [s.get_esyn(n) for s in segs]
+                    g_i = [s.get_isyn(n) for s in segs]
+                    asl_e.append(self.do_gsta(g_e,sp))
+                    asl_i.append(self.do_gsta(g_i,sp))
+
                 self.datastore.full_datastore.add_analysis_result(ConductanceSignalList(asl_e,asl_i,self.parameters.neurons,sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__))
                 
                 
-      def do_gsta(self,analog_signal,sp,n):
+      def do_gsta(self,analog_signal,sp):
           dt = analog_signal[0].sampling_period
           gstal = int(self.parameters.length/dt)
           gsta = numpy.zeros(2*gstal+1,) 
           count = 0
           for (ans,spike) in zip(analog_signal,sp):
-              for time in spike[n]:
+              for time in spike:
                   if time > ans.t_start  and time < ans.t_stop:
                      idx = int((time - ans.t_start)/dt)
-                     if idx - gstal > 0 and (idx + gstal+1) <= len(ans[:,n]):
-                        gsta = gsta +  ans[idx-gstal:idx+gstal+1,n].flatten().magnitude
+                     if idx - gstal > 0 and (idx + gstal+1) <= len(ans):
+                        gsta = gsta +  ans[idx-gstal:idx+gstal+1].flatten().magnitude
                         count +=1
           if count == 0:
              count = 1
@@ -197,7 +206,7 @@ class Precision(Analysis):
         'bin_length' : float, #(ms) the size of bin to construct the PSTH from
       })
       
-      def analyse(self):
+      def perform_analysis(self):
             logger.info('Starting Precision Analysis')
             dsv = self.datastore
             for sheet in dsv.sheets():

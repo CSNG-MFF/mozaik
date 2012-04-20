@@ -11,6 +11,13 @@ class Global:
     """global variable container"""
     root_directory = './'
 
+def setup_logging():
+    # Set-up logging    
+    logger = logging.getLogger("mozaik")
+    init_logging(Global.root_directory + "log", file_level=logging.DEBUG, console_level=logging.INFO) # NeuroTools version
+    visual_logging.basicConfig(Global.root_directory + "visual_log.zip", level=logging.INFO)
+
+
 def setup_experiments(simulation_name,sim):
     # Read parameters
     if len(sys.argv) > 1:
@@ -26,15 +33,9 @@ def setup_experiments(simulation_name,sim):
     os.mkdir(Global.root_directory)
     parameters.save(Global.root_directory + "parameters", expand_urls=True)
     
-    logger = logging.getLogger("mozaik")
-    
-    # Set-up logging
-    init_logging(Global.root_directory + "log", file_level=logging.DEBUG, console_level=logging.INFO) # NeuroTools version
-    visual_logging.basicConfig(Global.root_directory + "visual_log.zip", level=logging.INFO)
-    
-    logger.info("Creating Model object using the %s simulator." % sim.__name__)
+    setup_logging()
     return parameters
- 
+
 
 def run_experiments(model,experiment_list):
     # first lets run all the measurements required by the experiments

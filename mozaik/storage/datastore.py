@@ -115,7 +115,7 @@ class DataStoreView(MozaikParametrizeObject):
             flag = True
             for k in kwargs.keys():
                 if not ads.params().has_key(k):
-                   flasg=False
+                   flag=False
                    break
                 if ads.inspect_value(k) != kwargs[k]:
                    flag=False

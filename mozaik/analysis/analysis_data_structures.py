@@ -181,11 +181,6 @@ class PerNeuronValue(AnalysisDataStructure):
            self.value_units = value_units
            self.period = period
            self.values = values
-           print 'PerNeuronValue'
-           print self.value_name
-           print values[:10]
-           print self.sheet_name
-           print '---------------'
 
 class AnalysisDataStructure1D(AnalysisDataStructure): 
       """

@@ -152,7 +152,7 @@ class StandardStyle(SimplePlot):
             
        def post_plot(self):
            
-           if self.title:
+           if self.title != None:
               pylab.title(self.title,fontsize='x-small')
            
            if self.x_lim:
@@ -469,11 +469,11 @@ class ScatterPlot(StandardStyle):
                 
           ax = self.axis.scatter(self.x,self.y,c = self.z, s = self.dot_size,marker = self.marker,lw = 0,cmap=self.colormap,vmin = vmin, vmax = vmax)
           
-          self.x_lim = (1.1*numpy.min(self.x),1.1*numpy.max(self.x))
-          self.y_lim = (1.1*numpy.min(self.y),1.1*numpy.max(self.y))
+          #self.x_lim = (1.1*numpy.min(self.x),1.1*numpy.max(self.x))
+          #self.y_lim = (1.1*numpy.min(self.y),1.1*numpy.max(self.y))
           
-          self.x_ticks = [1.1*numpy.min(self.x),1.1*numpy.max(self.x)]
-          self.y_ticks = [1.1*numpy.min(self.y),1.1*numpy.max(self.y)]
+          #self.x_ticks = [1.1*numpy.min(self.x),1.1*numpy.max(self.x)]
+          #self.y_ticks = [1.1*numpy.min(self.y),1.1*numpy.max(self.y)]
           
           if self.colorbar:
              cb = pylab.colorbar(ax,ticks=[vmin,vmax],use_gridspec=True)   
@@ -525,7 +525,7 @@ class StandardStyleLinePlot(StandardStyle):
                  color = self.colors[i] 
               else:
                  color = self.colors 
-                 
+              print numpy.shape(self.x[i])   
               if self.labels!=None:
                 self.axis.plot(self.x[i],self.y[i],label=self.labels[i],color=color)
               else:
@@ -570,7 +570,11 @@ class ConductancesPlot(StandardStyle):
           t_start = float(self.gsyn_es[0].t_start)
           time_axis = numpy.arange(0,len(self.gsyn_es[0]),1) /  float(len(self.gsyn_es[0])) * abs(t_start-t_stop) + t_start
           
+          
+          
           for e,i in zip(self.gsyn_es,self.gsyn_is):
+              
+                print numpy.shape(e)
                 e = e * 1000
                 i = i * 1000
                 self.axis.plot(time_axis,e.tolist(),color='#F5A9A9')            

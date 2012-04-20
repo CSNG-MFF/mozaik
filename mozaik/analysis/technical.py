@@ -21,7 +21,7 @@ class NeuronAnnotationsToPerNeuronValues(Analysis):
       extension of this class.
       """
       
-      def analyse(self):
+      def perform_analysis(self):
         logger.info('Starting NeuronAnnotationsToPerNeuronValues Analysis')
         anns = self.datastore.get_neuron_annotations()
         

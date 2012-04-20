@@ -11,6 +11,7 @@ figures (mainly related to axis, lables, titles etc.), and should assume data gi
 format that is easy to use by the given plot. In order to unify the look of figures
 it defines four functions pre_axis_plot,pre_plot, plot, and post_plot. The actual plotting that 
 user defines is typically defined in 
+user defines is typically defined in 
 the plot function while the pre_axis_plot, pre_plot and post_plot functions handle the pre and post plotting 
 adjustments to the plot (i.e. the typical post_plot function for example adjusts the ticks of 
 the axis to a common format other such axis related properties). When defining a new SimplePlot 
@@ -57,6 +58,7 @@ prevent flexible use in nesting via the subplot.
 
 import pylab
 import numpy
+import time
 import quantities as pq
 import matplotlib.gridspec as gridspec
 from scipy.interpolate import griddata
@@ -84,12 +86,15 @@ class Plotting(MozaikParametrizeObject):
         pass
     
     def plot(self,params=None):
+        t1 = time.time()        
         if params == None:
            params = {}
         self.fig = pylab.figure(facecolor='w')
         gs = gridspec.GridSpec(1, 1)
         gs.update(left=0.05, right=0.95, top=0.9, bottom=0.1)
         self.subplot(gs[0,0],params)
+        t2 = time.time()
+        logger.warning(self.__class__.__name__ + ' plotting took: ' + str(t2-t1) + 'seconds')
         
 
           
@@ -169,7 +174,9 @@ class CyclicTuningCurvePlot(PlotTuningCurve):
             params.setdefault("x_lim",(0,2*numpy.pi))
             params.setdefault("x_tick_labels",["0","$\\pi$","$2\\pi$"])
             params.setdefault("x_tick_style","Custom")
-
+        
+        #JAHACK
+        labels=None
         StandardStyleLinePlot(xs,ys,labels=labels,**params)(gs)
 
 class RasterPlot(Plotting):
@@ -214,7 +221,7 @@ class VmPlot(Plotting):
 
 
       def ploter(self,dsv,gs,params):
-          vms = [s.get_vm() for s in dsv.get_segments()]         
+          vms = [s.get_vm(self.parameters.neuron) for s in dsv.get_segments()]         
           sampling_period = vms[0].sampling_period
           time_axis = numpy.arange(0,len(vms[0]),1) /  float(len(vms[0])) * float(vms[0].t_stop) + float(vms[0].t_start)
           t_stop =  float(vms[0].t_stop - sampling_period)
@@ -224,7 +231,7 @@ class VmPlot(Plotting):
           colors = []
           for vm in vms:
                xs.append(time_axis)
-               ys.append(numpy.array(vm[:,self.parameters.neuron].tolist()))
+               ys.append(numpy.array(vm.tolist()))
                colors.append("#848484")
             
           params.setdefault("x_lim",(0,t_stop))
@@ -247,15 +254,13 @@ class GSynPlot(Plotting):
         PerStimulusPlot(dsv,function=self.ploter,title_style="Standard").make_line_plot(subplotspec,params)
 
       def ploter(self,dsv,gs,params):
-          exc =[]
-          inh =[]
-          gsyn_es = [s.get_esyn() for s in dsv.get_segments()]
-          gsyn_is = [s.get_isyn() for s in dsv.get_segments()]
-
-          for e,i in zip(gsyn_es,gsyn_is):
-              exc.append(e[:,self.parameters.neuron])
-              inh.append(i[:,self.parameters.neuron])
-          ConductancesPlot(exc,inh,**params)(gs)
+          gsyn_es = [s.get_esyn(self.parameters.neuron) for s in dsv.get_segments()]
+          gsyn_is = [s.get_isyn(self.parameters.neuron) for s in dsv.get_segments()]
+          
+          print numpy.shape(gsyn_is)
+          print numpy.shape(gsyn_is[0])
+          
+          ConductancesPlot(gsyn_es,gsyn_is,**params)(gs)
 
           
           
@@ -344,10 +349,9 @@ class ConductanceSignalListPlot(Plotting):
         def subplot(self,subplotspec,params):
             exc =[]
             inh =[]
-            
             for e,i in zip(self.e_con,self.i_con):
-              exc.append(e)
-              inh.append(i)
+                exc.append(e)
+                inh.append(i)
             ConductancesPlot(exc,inh,**params)(subplotspec)
         
         
