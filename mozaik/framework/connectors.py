@@ -383,5 +383,5 @@ class GaborConnector(MozaikComponent):
              on_proj.connect()
              off_proj.connect()
                  
-             on_proj.connection_field_plot_scatter(0)   
-             off_proj.connection_field_plot_scatter(0)   
+             #on_proj.connection_field_plot_scatter(0)   
+             #off_proj.connection_field_plot_scatter(0)   
