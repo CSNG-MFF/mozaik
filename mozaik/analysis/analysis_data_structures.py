@@ -254,3 +254,28 @@ class ConductanceSignalList(AnalysisDataStructure1D):
            self.e_con = e_con
            self.i_con = i_con
            self.indexes = indexes
+
+class Connections(AnalysisDataStructure1D):
+      """
+      Data structure holding connections. 
+      
+      name - 
+              projection name
+      
+      source_name - 
+              the name of the source sheet
+              
+      target_name -         
+              the name of the target sheet
+      
+      weights - 
+              matrix of weights from neurons in source sheet (first dimension) to neurons in target sheet (second dimension)
+      """  
+      
+      name = param.String(instantiate=True,doc="""Projection name.""")
+      source_name = param.String(instantiate=True,doc="""The name of the source sheet.""")
+      target_name = param.String(instantiate=True,doc="""The name of the target sheet.""")
+
+      def __init__(self,weights,period=None,**params):
+          AnalysisDataStructure.__init__(self,identifier = 'Connections',**params)
+          self.weights = weights

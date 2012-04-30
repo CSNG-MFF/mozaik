@@ -24,4 +24,8 @@ def sample_from_bin_distribution(bins, number_of_samples):
     
     return si
 
-
+def normal_function(x,mean=0,sigma=1.0):
+    """
+    Returns the value of normal distribution N(mean,sigma) at point x 
+    """
+    return numpy.exp(-numpy.power((x-mean)/sigma,2)/2) / (sigma * numpy.sqrt(2*numpy.pi))

@@ -14,6 +14,7 @@ from NeuroTools.parameters import ParameterSet
 from mozaik.storage.queries import select_stimuli_type_query,select_result_sheet_query, partition_by_stimulus_paramter_query
 from neo.core.analogsignal import AnalogSignal
 from NeuroTools import signals
+from mozaik.tools.circ_stat import circ_mean
 import logging
 
 logger = logging.getLogger("mozaik")
@@ -103,32 +104,14 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
                     d = tc.to_dictonary_of_tc_parametrization()
                     result_dict = {}
                     for k in  d:
-                        x = 0
-                        y = 0 
-                        n = 0
                         g,h = d[k]
+                        values = []
+                        period = []
                         for v,p in zip(g,h):
-                            xx =  numpy.cos((p / tc.period) * 2 * numpy.pi) * v
-                            yy =  numpy.sin((p / tc.period) * 2 * numpy.pi) * v   
-                            x  =  x + xx
-                            y  =  y + yy
-                            n = n + numpy.sqrt(numpy.power(xx,2) + numpy.power(yy,2))
+                            values.append(v)
+                            period.append(numpy.zeros(numpy.shape(v))+p)
                         
-                        
-                        po = numpy.sqrt(numpy.power(x,2) + numpy.power(y,2))
-                        
-                        # handle zero magnitudes
-                        z = numpy.where(n == 0)
-                        n[z] = 1
-                        po[z] = 1
-
-                        sel = numpy.sqrt(numpy.power(x,2) + numpy.power(y,2)) / n
-                        act = numpy.arctan2(y,x) 
-                        pref = (act + (act < 0) * 2 * numpy.pi) / (2 * numpy.pi) * tc.period
-                        
-                        # handle zero magnitudes
-                        sel[z] = 0
-                        pref[z] = 0
+                        pref,sel = circ_mean(numpy.array(period),weights=numpy.array(values),axis=0,low=0,high=tc.period,normalize=True)
                         
                         logger.debug('Adding PerNeuronValue to datastore')
                         

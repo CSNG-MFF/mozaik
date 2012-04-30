@@ -7,7 +7,8 @@ from sheets import SheetWithMagnificationFactor
 from interfaces import VisualSystemConnector
 from NeuroTools.parameters import ParameterSet, ParameterDist
 from pyNN import random, space
-from mozaik.tools.misc import sample_from_bin_distribution
+from mozaik.tools.misc import sample_from_bin_distribution, normal_function
+from mozaik.tools.circ_stat import circular_dist,circ_mean
 from scipy.interpolate import RectBivariateSpline
 import logging
 
@@ -28,8 +29,8 @@ class mozaikVisualSystemConnector(VisualSystemConnector):
 
       })
       
-      def __init__(self, network, source, target, parameters):
-          VisualSystemConnector.__init__(self, network, source,target,parameters)
+      def __init__(self, network, name,source, target, parameters):
+          VisualSystemConnector.__init__(self, network, name, source,target,parameters)
           
           if not self.parameters.short_term_plasticity:
             self.short_term_plasticity = None
@@ -69,33 +70,10 @@ class mozaikVisualSystemConnector(VisualSystemConnector):
           pylab.colorbar()
           
 
-      def connection_field_plot_scatter(self,index,afferent=True,density=30):
-          
-          weights =  self.proj.getWeights(format='array')
-          x = []
-          y = []
-          w = []
-          if afferent:
-                 weights = weights[:,index].ravel()
-                 p = self.proj.pre
-          else:
-                 weights = weights[index,:].ravel()
-                 p = self.proj.post
-          
-          for (ww,i) in zip(weights,numpy.arange(0,len(weights),1)):
-                    x.append(p.positions[0][i])
-                    y.append(p.positions[1][i])
-                    w.append(ww)
-          
-          pylab.figure()
-          pylab.scatter(x,y,c=w,s=20)
-          pylab.xlim(min(p.positions[0]),max(p.positions[0]))
-          pylab.ylim(min(p.positions[1]),max(p.positions[1]))
-          pylab.colorbar()
-          pylab.title('Connection field from %s to %s of neuron %d' % (self.source.name,self.target.name,index))
-          #pylab.show()
-          
-
+      def store_connections(self,datastore):
+          from mozaik.analysis.analysis_data_structures import Connections
+          weights =  numpy.nan_to_num(self.proj.getWeights(format='array'))
+          datastore.add_analysis_result(Connections(weights,name=self.name,source_name=self.source.name,target_name=self.target.name,analysis_algorithm=self.__class__.__name__))
 
 class ExponentialProbabilisticArborization(mozaikVisualSystemConnector):
     required_parameters = ParameterSet({
@@ -107,9 +85,7 @@ class ExponentialProbabilisticArborization(mozaikVisualSystemConnector):
 
 
     def __init__(self, network, source, target, parameters,name):
-        mozaikVisualSystemConnector.__init__(self, network, source,target,parameters)
-        
-        self.name = name
+        mozaikVisualSystemConnector.__init__(self, network, name,source,target,parameters)
         
         if isinstance(target, SheetWithMagnificationFactor):
             self.dist = "self.target.dvf_2_dcs(d)"
@@ -133,9 +109,8 @@ class UniformProbabilisticArborization(mozaikVisualSystemConnector):
 
 
         def __init__(self, network, source, target, parameters,name):
-            mozaikVisualSystemConnector.__init__(self, network, source,target,parameters)
-            self.name = name
-		
+            mozaikVisualSystemConnector.__init__(self, network, name,source,target,parameters)
+	
         def connect(self):
             method = self.sim.FixedProbabilityConnector(self.parameters.connection_probability,allow_self_connections=False, weights=self.parameters.weights, delays=self.parameters.delay, space=space.Space(axes='xy'), safe=True)
             self.proj = self.sim.Projection(self.source.pop, self.target.pop, method, synapse_dynamics=self.short_term_plasticity, label=self.name, rng=None, target=self.parameters.target_synapses)
@@ -153,8 +128,7 @@ class SpecificArborization(mozaikVisualSystemConnector):
         })
             
         def __init__(self, network, source, target, connection_list,parameters,name):
-            mozaikVisualSystemConnector.__init__(self, network, source,target,parameters)
-            self.name = name
+            mozaikVisualSystemConnector.__init__(self, network, name,source,target,parameters)
             self.connection_list = connection_list    
 
         def connect(self):	        
@@ -176,9 +150,7 @@ class SpecificProbabilisticArborization(mozaikVisualSystemConnector):
         })
         
         def __init__(self, network, source, target, connection_list,parameters,name):
-            mozaikVisualSystemConnector.__init__(self, network, source,target,parameters)
-            self.name = name
-            
+            mozaikVisualSystemConnector.__init__(self, network, name,source,target,parameters)
             self.connection_list = connection_list    
                 
         def connect(self):
@@ -229,23 +201,51 @@ class V1PushPullProbabilisticArborization(MozaikComponent):
             for (i,neuron1) in enumerate(self.target.pop.all()):
                 for (j,neuron2) in enumerate(self.source.pop.all()):
             
-                    or_dist = (abs(self.target.get_neuron_annotation(i,'LGNAfferentOrientation') - self.source.get_neuron_annotation(j,'LGNAfferentOrientation')) % (numpy.pi/2)) / (numpy.pi/2)
+                    or_dist = circular_dist(self.target.get_neuron_annotation(i,'LGNAfferentOrientation'),self.source.get_neuron_annotation(j,'LGNAfferentOrientation'),numpy.pi) / (numpy.pi/2)
                     
                     if self.parameters.specific_arborization.target_synapses == 'excitatory':
-                            phase_dist = (abs(self.target.get_neuron_annotation(i,'LGNAfferentPhase') - self.source.get_neuron_annotation(j,'LGNAfferentPhase')) % numpy.pi) / numpy.pi
+                            phase_dist = circular_dist(self.target.get_neuron_annotation(i,'LGNAfferentPhase'),self.source.get_neuron_annotation(j,'LGNAfferentPhase'),2*numpy.pi) / numpy.pi
                     elif self.parameters.specific_arborization.target_synapses == 'inhibitory':
-                            phase_dist = (numpy.pi - (abs(self.target.get_neuron_annotation(i,'LGNAfferentPhase') - self.source.get_neuron_annotation(j,'LGNAfferentPhase')) % numpy.pi)) / numpy.pi
+                            phase_dist = (numpy.pi - circular_dist(self.target.get_neuron_annotation(i,'LGNAfferentPhase'),self.source.get_neuron_annotation(j,'LGNAfferentPhase'),2*numpy.pi)) / numpy.pi
                     else:
                         logger.error('Unknown type of synapse!')
                         return	
             
-                    or_gauss = numpy.exp(-or_dist*or_dist/(2*self.parameters.or_sigma))/numpy.sqrt(2*numpy.pi*self.parameters.or_sigma*self.parameters.or_sigma)
-                    phase_gauss = numpy.exp(-phase_dist*phase_dist/(2*self.parameters.phase_sigma))/numpy.sqrt(2*numpy.pi*self.parameters.phase_sigma*self.parameters.phase_sigma)
-                    
+                    or_gauss = normal_function(or_dist,mean=0,sigma=self.parameters.or_sigma)
+                    phase_gauss = normal_function(phase_dist,mean=0,sigma=self.parameters.or_sigma)
                     w = phase_gauss*or_gauss*or_gauss
                     
                     weights.append((j,i,w,self.parameters.propagation_constant))
-                    
+            
+            we = numpy.zeros((len(self.source.pop),len(self.target.pop)))
+            
+            
+            pnv_source = []
+            pnv_target = []
+            for (i,neuron1) in enumerate(self.target.pop.all()):
+                pnv_target.append(self.target.get_neuron_annotation(i,'LGNAfferentOrientation'))
+            
+            for (i,neuron1) in enumerate(self.source.pop.all()):
+                pnv_source.append(self.source.get_neuron_annotation(i,'LGNAfferentOrientation'))
+            
+            
+            for (j,i,w,xsj) in weights:
+                we[j,i] = w
+            
+            (angle,mag) = circ_mean(numpy.array([numpy.array(pnv_target).T for i in xrange(0,numpy.shape(we)[0])]),weights=numpy.array(we),low=0,high=numpy.pi,axis=1)            
+            
+            
+            import pylab
+            pylab.figure()
+            pylab.subplot(3,1,1)
+            pylab.plot(angle,pnv_source,'ro')
+            pylab.title(self.name)
+            pylab.subplot(3,1,2)
+            pylab.hist(angle)
+            pylab.subplot(3,1,3)
+            pylab.hist(pnv_source)
+            
+                                    
             if self.parameters.probabilistic:
                 SpecificProbabilisticArborization(network, self.source, self.target, weights,self.parameters.specific_arborization,self.name).connect()
             else:
@@ -352,7 +352,7 @@ class GaborConnector(MozaikComponent):
                    if target.name=='V1_Exc':
                       phase = 0
                    elif target.name=='V1_Inh':
-                      phase = numpy.pi
+                      phase = 0
                 
                 aspect_ratio = parameters.aspect_ratio.next()[0]
                 frequency = parameters.frequency.next()[0]
@@ -383,5 +383,6 @@ class GaborConnector(MozaikComponent):
              on_proj.connect()
              off_proj.connect()
                  
-             #on_proj.connection_field_plot_scatter(0)   
-             #off_proj.connection_field_plot_scatter(0)   
+             #on_proj.connection_field_plot_continuous(0)   
+             #off_proj.connection_field_plot_continuous(0)   
+

@@ -155,17 +155,19 @@ class VisualSystemConnector(MozaikComponent):
     """Base class for objects that connect visual system components."""
     version = __version__
     
-    def __init__(self, model, source, target, parameters):
+    def __init__(self, model, name,source, target, parameters):
         logger.info("Creating %s between %s and %s" % (self.__class__.__name__,
                                                        source.__class__.__name__,
                                                        target.__class__.__name__))
-        MozaikComponent.__init__(self, model, parameters)
+        MozaikComponent.__init__(self, model,parameters)
+        self.name = name
         self.model.register_connector(self)
         self.sim = self.model.sim
         self.source = source
         self.target = target
         self.input = source
         self.target.input = self
+        
         
     def describe(self, template='default', render=lambda t,c: Template(t).safe_substitute(c)):
         context = {

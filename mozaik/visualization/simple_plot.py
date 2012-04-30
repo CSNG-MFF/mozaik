@@ -429,9 +429,9 @@ class ScatterPlot(StandardStyle):
                 z -
                         array of the values to be plotted
                 x -
-                        array wuih the y positions of the neurons 
+                        array with the y positions of the neurons 
                 y -
-                        array wuih the y positions of the neurons
+                        array with the y positions of the neurons
                 periodic -
                         if the z is a periodic value
                 period -
@@ -548,15 +548,14 @@ class StandardStyleLinePlot(StandardStyle):
 class ConductancesPlot(StandardStyle):
       """
       Plots conductances.
+
+      exc - list of excitatory conductances (AnalogSignal type)
+      inh - list of inhibitory conductances (AnalogSignal type)
       
       The legend=(True/False) parameter says whether legend should be displayed.
       """
       
       def __init__(self,exc,inh,**kwargs):
-          """
-          exc - list of excitatory conductances (AnalogSignal type)
-          inh - list of inhibitory conductances (AnalogSignal type)
-          """
           StandardStyle.__init__(self,**kwargs)
           self.gsyn_es = exc
           self.gsyn_is = inh
@@ -595,3 +594,81 @@ class ConductancesPlot(StandardStyle):
           self.x_ticks = [t_start,(t_stop-t_start)/2,t_stop]
           self.x_label = 'time(' + self.gsyn_es[0].t_start.dimensionality.latex + ')'
           self.y_label = 'g(1000' + self.gsyn_es[0].dimensionality.latex + ')'
+
+
+
+
+class ConnectionPlot(StandardStyle):         
+      """
+      Simple scatter plot
+      
+      The inputs is:
+      
+                pos_x -
+                        array with x position of the target neurons
+                pos_y -
+                        array with y position of the target neurons
+                
+                source_x -
+                        x position of the source neuron
+                        
+                source_y -
+                        y position of the source neuron
+                        
+                weights -
+                        array of weights from source neuron to target neurons
+                
+                line - True means the existing connections will be displayed as lines, with their thickness indicating the strength.
+                       False means the strength of connection will be indicated by the size of the circle representing the corresponding target neuron.
+
+
+                colors - the extra information per neuron that will be displayed as colors. None if no info
+
+                period -
+                        if period is not None the colors should come from (0,period)
+                colorbar -
+                        should there be a colorbar ?
+                       
+      """
+    
+
+      def __init__(self,pos_x,pos_y,source_x,source_y,weights,colors=None,period=None,**kwargs):
+          StandardStyle.__init__(self,**kwargs)
+          self.pos_x = pos_x 
+          self.pos_y = pos_y
+          self.source_x = source_x
+          self.source_y = source_y
+          self.weights = weights
+          self.colors = colors
+          self.period = period
+
+          if self.period:
+                self.parameters["colormap"] = 'hsv'
+          else:
+                self.parameters["colormap"] = 'gray'
+          
+          self.parameters["top_right_border"]=True
+          self.parameters["colorbar"] = False
+          self.parameters["colorbar_label"] = None
+          self.parameters["line"] = False
+          
+      def plot(self):
+          if self.colors == None:
+              ax = self.axis.scatter(self.pos_x,self.pos_y,c = 'black',s = self.weights/numpy.max(self.weights)*200,lw = 0)
+          else:
+              if self.period == None:
+                    vmax = numpy.max(self.colors)
+                    vmin = numpy.min(self.colors)
+              else:
+                    vmax = self.period
+                    vmin = 0
+              ax = self.axis.scatter(self.pos_x,self.pos_y,c = self.colors,s =  self.weights/numpy.max(self.weights)*200,lw = 0,cmap=self.colormap,vmin = vmin, vmax = vmax) 
+              
+              if self.colorbar:
+                 cb = pylab.colorbar(ax,ticks=[vmin,vmax],use_gridspec=True)   
+                 cb.set_label(self.colorbar_label)
+                 cb.set_ticklabels(["%.3g" % vmin,"%.3g" % vmax])
+          
+          self.x_label = 'x'
+          self.y_label = 'y'
+            

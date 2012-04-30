@@ -7,19 +7,22 @@ from mozaik.framework.experiment import MeasureOrientationTuningFullfield, Measu
 from pyNN import nest as sim
 from mozaik.models.model import JensModel
 from mozaik.framework.experiment_controller import run_experiments, setup_experiments, setup_logging
-from mozaik.visualization.plotting import GSynPlot,RasterPlot,VmPlot,CyclicTuningCurvePlot,OverviewPlot, ConductanceSignalListPlot, RetinalInputMovie, ActivityMovie, PerNeuronValuePlot
-from mozaik.analysis.analysis import AveragedOrientationTuning,  GSTA, Precision, PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage
+from mozaik.visualization.plotting import *
+from mozaik.analysis.analysis import *
 from mozaik.analysis.technical import NeuronAnnotationsToPerNeuronValues
 from mozaik.visualization.Kremkow_plots import Figure2
+from mozaik.visualization.custom import *
+
 from mozaik.storage.datastore import Hdf5DataStore,PickledDataStore
 from NeuroTools.parameters import ParameterSet
 from mozaik.storage.queries import *
 
+import numpy.random
+numpy.random.seed(2456136)
 
 t0 = time.time()
 
-
-if False:
+if True:
     params = setup_experiments('FFI',sim)    
     jens_model = JensModel(sim,params)
     
@@ -41,9 +44,18 @@ if False:
                         ]
 
     data_store = run_experiments(jens_model,experiment_list)
+    
+    #lets store some connections as well
+    jens_model.connectors["V1ExcExcConnection"].store_connections(data_store)
+    jens_model.connectors["V1ExcInhConnection"].store_connections(data_store)
+    jens_model.connectors["V1InhExcConnection"].store_connections(data_store)
+    jens_model.connectors["V1InhInhConnection"].store_connections(data_store)
+    
+    print 'Saving Datastore'
+    data_store.save()
 else:
     setup_logging()
-    data_store = PickledDataStore(load=True,parameters=ParameterSet({'root_directory':'A'}))
+    data_store = PickledDataStore(load=True,parameters=ParameterSet({'root_directory':'ffi_S3_smallOR'}))
     print 'Loaded data store'
 
 import resource
@@ -51,11 +63,17 @@ print "Current memory usage: %iMB" % (resource.getrusage(resource.RUSAGE_SELF).r
 
 t1 = time.time()
 print 'Loading lasted:' , t1-t0
+NeuronAnnotationsToPerNeuronValues(data_store,ParameterSet({})).analyse()
+ConnectivityPlot(data_store,ParameterSet({'neuron' : 0, 'reversed' : False}),pnv_dsv=analysis_data_structure_parameter_filter_query(data_store,'PerNeuronValue',value_name='LGNAfferentPhase')).plot()
+ConnectivityPlot(data_store,ParameterSet({'neuron' : 0, 'reversed' : False}),pnv_dsv=analysis_data_structure_parameter_filter_query(data_store,'PerNeuronValue',value_name='LGNAfferentOrientation')).plot()
+PlotConnectivityAndFunctionalPropertiesRelationships(data_store,ParameterSet({'functional_property' : 'LGNAfferentOrientation', 'reversed' : False})).plot()
+PlotConnectivityAndFunctionalPropertiesRelationships(data_store,ParameterSet({'functional_property' : 'LGNAfferentPhase', 'reversed' : False})).plot()
+#pylab.show()
+#0/0
 
 AveragedOrientationTuning(data_store,ParameterSet({})).analyse()
 GSTA(data_store,ParameterSet({'neurons' : [0], 'length' : 50.0 }),tags=['GSTA1']).analyse()
 Precision(select_result_sheet_query(data_store,"V1_Exc"),ParameterSet({'neurons' : [0], 'bin_length' : 10.0 })).analyse()
-
 PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(data_store,ParameterSet({})).analyse()
 NeuronAnnotationsToPerNeuronValues(data_store,ParameterSet({})).analyse()
 
@@ -65,11 +83,15 @@ OverviewPlot(data_store,ParameterSet({'sheet_name' : 'X_ON', 'neuron' : 0, 'shee
 OverviewPlot(data_store,ParameterSet({'sheet_name' : 'X_OFF', 'neuron' : 0, 'sheet_activity' : {}})).plot()
 Figure2(data_store,ParameterSet({'sheet_name' : 'V1_Exc'})).plot()
 
-PerNeuronValuePlot(analysis_data_structure_parameter_filter_query(data_store,'PerNeuronValue',value_name='phase preference'),ParameterSet({})).plot()
-PerNeuronValuePlot(analysis_data_structure_parameter_filter_query(data_store,'PerNeuronValue',value_name='LGNAfferentPhase'),ParameterSet({})).plot()
+a = data_store.get_analysis_result(identifier='PerNeuronValue',sheet_name="V1_Exc",value_name='orientation preference')[0].values
+b = data_store.get_analysis_result(identifier='PerNeuronValue',sheet_name="V1_Exc",value_name='LGNAfferentOrientation')[0].values
 
-#PerNeuronValuePlot(analysis_data_structure_parameter_filter_query(data_store,'PerNeuronValue',value_name='orientation preference'),ParameterSet({})).plot()
-#PerNeuronValuePlot(analysis_data_structure_parameter_filter_query(data_store,'PerNeuronValue',value_name='LGNAfferentOrientation'),ParameterSet({})).plot()
+pylab.figure()
+pylab.plot(a,b,'ro')
+
+PerNeuronValuePlot(analysis_data_structure_parameter_filter_query(data_store,'PerNeuronValue',value_name='orientation preference'),ParameterSet({})).plot()
+PerNeuronValuePlot(analysis_data_structure_parameter_filter_query(data_store,'PerNeuronValue',value_name='LGNAfferentOrientation'),ParameterSet({})).plot()
+
 CyclicTuningCurvePlot(data_store,ParameterSet({'tuning_curve_name' : 'CyclicTuningCurve', 'neuron': 0, 'sheet_name' : 'V1_Exc'})).plot()
 
 #RetinalInputMovie(data_store,ParameterSet({'frame_rate': 10})).plot()

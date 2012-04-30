@@ -91,7 +91,7 @@ class Plotting(MozaikParametrizeObject):
            params = {}
         self.fig = pylab.figure(facecolor='w')
         gs = gridspec.GridSpec(1, 1)
-        gs.update(left=0.05, right=0.95, top=0.9, bottom=0.1)
+        gs.update(left=0.1, right=0.9, top=0.9, bottom=0.1)
         self.subplot(gs[0,0],params)
         t2 = time.time()
         logger.warning(self.__class__.__name__ + ' plotting took: ' + str(t2-t1) + 'seconds')
@@ -464,6 +464,94 @@ class PerNeuronValuePlot(Plotting):
             params.setdefault("colorbar",True)  
          ScatterPlot(posx,posy,values,periodic=periodic,period=period,**params)(gs)
 
-     
-     
+
+class ConnectivityPlot(Plotting):
+    
+    required_parameters = ParameterSet({
+        'neuron' : int,  #the target neuron whose connections are to be displayed
+        'reversed' : bool, # if true the plotting is reversed, showing the connection from source neuron to all neurons it sends connections to within the given projection
+    })
+
+    """
+    Plots Connectivity, one for each such data structure present in DSV (this should correspond one per projection stored).
+    
+    This plot can acept second DSV that contains the PerNeuronValues corresponding to the target sheets to be displayed that will be plotted as well.
+    Note one PerNeuronValue can be present per target sheet!
+    
+    """
+    def  __init__(self,datastore,parameters,pnv_dsv=None):
+        Plotting.__init__(self,datastore,parameters)
+        self.source_poss = []
+        self.target_poss = []
+        self.connections = datastore.get_analysis_result(identifier='Connections')
         
+        self.pnvs = None
+        if pnv_dsv != None:
+           self.pnvs = []
+           z = partition_analysis_results_by_parameter_name_query(pnv_dsv,ads_identifier='PerNeuronValue',parameter_name='sheet_name')
+           for dsv in z:
+               a = dsv.get_analysis_result(identifier='PerNeuronValue')
+               if len(a) > 1:
+                  logging.error('ERROR: Only one PerNeuronValue value per sheet is allowed in ConnectivityPlot. Ignoring') 
+                  self.pnvs = None
+                  break  
+               self.pnvs.append(a[0]) 
+           
+        
+        for conn in self.connections:
+                self.source_poss.append(datastore.get_neuron_postions()[conn.source_name])
+                self.target_poss.append(datastore.get_neuron_postions()[conn.target_name])
+        self.length=len(self.connections)
+ 
+    def subplot(self,subplotspec,params):
+        LinePlot(function=self.ploter,length=self.length,shared_axis=True).make_line_plot(subplotspec,params)
+        
+    
+    def ploter(self,idx,gs,params):
+        
+        if not self.parameters.reversed:
+            sx = self.target_poss[idx][0]
+            sy = self.target_poss[idx][1]
+            tx = self.source_poss[idx][0][self.parameters.neuron]
+            ty = self.source_poss[idx][1][self.parameters.neuron]
+            w  = self.connections[idx].weights[self.parameters.neuron,:]
+ 
+        else:
+            sx = self.source_poss[idx][0]
+            sy = self.source_poss[idx][1]
+            tx = self.target_poss[idx][0][self.parameters.neuron]
+            ty = self.target_poss[idx][1][self.parameters.neuron]
+            w  = self.connections[idx].weights[:,self.parameters.neuron]
+        
+        
+        # pick the right PerNeuronValue to show
+        pnv = None
+        if self.pnvs!=None:
+           for p in self.pnvs:
+               if self.parameters.reversed and p.sheet_name == self.connections[idx].source_name:
+                  pnv = p 
+               if not self.parameters.reversed and p.sheet_name == self.connections[idx].target_name:
+                  pnv = p 
+        
+           if len(pnv.values) != len(w):
+              print pnv.sheet_name
+              print self.connections[idx].target_name
+              logging.error('ERROR: length of colors does not match length of weights \[%d \!\= %d\]. Ignoring colors!' % (len(pnv.values),len(w))) 
+              pnv=None
+        
+        if pnv != None: 
+            from mozaik.tools.circ_stat import circ_mean
+            (angle,mag) = circ_mean(numpy.array(pnv.values),weights=w)
+            params.setdefault("title",str(self.connections[idx].name) + "| Weighted mean: " + str(angle))
+            params.setdefault("colorbar_label",pnv.value_name)
+            params.setdefault("colorbar",True)
+            if self.connections[idx].source_name == self.connections[idx].target_name:
+               ConnectionPlot(sx,sy,tx,ty,w,colors=pnv.values,line=False,period=pnv.period,**params)(gs) 
+            else:
+               ConnectionPlot(sx,sy,numpy.min(sx)*1.2,numpy.min(sy)*1.2,w,colors=pnv.values,period=pnv.period,line=False,**params)(gs) 
+        else:
+            params.setdefault("title",self.connections[idx].name)
+            if self.connections[idx].source_name == self.connections[idx].target_name:
+               ConnectionPlot(sx,sy,tx,ty,w,line=False,**params)(gs) 
+            else:
+               ConnectionPlot(sx,sy,numpy.min(sx)*1.2,numpy.min(sy)*1.2,w,line=False,**params)(gs) 

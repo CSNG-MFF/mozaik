@@ -46,7 +46,7 @@ class Model(MozaikComponent):
         
         # create empty arrays in annotations to store the sheet identity of stored data
         sh = []
-        for sheet in self.sheets:   
+        for sheet in self.sheets.values():   
             if self.first_time:
                 sheet.record()
             sh.append(sheet) 
@@ -54,7 +54,7 @@ class Model(MozaikComponent):
         self.run(stimulus.duration)
                 
         segments = []
-        for sheet in self.sheets:    
+        for sheet in self.sheets.values():    
             if sheet.to_record != None:
                 if self.parameters.reset:
                     s = sheet.write_neo_object()
@@ -74,8 +74,8 @@ class Model(MozaikComponent):
         self.first_time=True
         self.sim = sim
         self.node = self.sim.setup() # should have some parameters here
-        self.sheets = []
-        self.connectors = []
+        self.sheets = {}
+        self.connectors = {}
 
         # Set-up visual stimulus
         self.visual_space = VisualSpace(self.parameters.screen.update_interval,self.parameters.screen.background_luminance)
@@ -99,24 +99,26 @@ class Model(MozaikComponent):
             self.simulator_time+=self.parameters.null_stimulus_period
     
     def register_sheet(self, sheet):
-        self.sheets.append(sheet)
+        if self.sheets.has_key(sheet.name):
+           raise ValueError("ERROR: Sheet %s already registerd" % sheet.name) 
+        self.sheets[sheet.name] = sheet
         
     def register_connector(self, connector):
-        self.connectors.append(connector)
+        if self.connectors.has_key(connector.name):
+           raise ValueError("ERROR: Connector %s already registerd" % connector.name) 
+        self.connectors[connector.name] = connector
 
     def neuron_positions(self):
         pos = {}
-        for s in self.sheets:
+        for s in self.sheets.values():
             pos[s.name] = s.pop.positions
         return pos
         
     def neuron_annotations(self):
         neuron_annotations = {}
-        for s in self.sheets:
+        for s in self.sheets.values():
              neuron_annotations[s.name] = s.get_neuron_annotations()
         return neuron_annotations
-        
-        
 
 class JensModel(Model):
     def __init__(self,simulator,parameters):
@@ -155,9 +157,9 @@ class JensModel(Model):
         GaborConnector(self,self.retina.sheets['X_ON'],self.retina.sheets['X_OFF'],cortex_exc,self.parameters.cortex_exc.AfferentConnection,'V1AffConnection')
         GaborConnector(self,self.retina.sheets['X_ON'],self.retina.sheets['X_OFF'],cortex_inh,self.parameters.cortex_inh.AfferentConnection,'V1AffInhConnection')
         
-        #V1PushPullProbabilisticArborization(self,cortex_exc,cortex_exc,self.parameters.cortex_exc.ExcExcConnection,'V1ExcExcConnection')
-        #V1PushPullProbabilisticArborization(self,cortex_exc,cortex_inh,self.parameters.cortex_exc.ExcInhConnection,'V1ExcInhConnection')
-        
-        #V1PushPullProbabilisticArborization(self,cortex_inh,cortex_exc,self.parameters.cortex_inh.InhExcConnection,'V1InhExcConnection')
-        #V1PushPullProbabilisticArborization(self,cortex_inh,cortex_inh,self.parameters.cortex_inh.InhInhConnection,'V1InhInhConnection')
+        V1PushPullProbabilisticArborization(self,cortex_exc,cortex_exc,self.parameters.cortex_exc.ExcExcConnection,'V1ExcExcConnection')
+        V1PushPullProbabilisticArborization(self,cortex_exc,cortex_inh,self.parameters.cortex_exc.ExcInhConnection,'V1ExcInhConnection')
+        V1PushPullProbabilisticArborization(self,cortex_inh,cortex_exc,self.parameters.cortex_inh.InhExcConnection,'V1InhExcConnection')
+        V1PushPullProbabilisticArborization(self,cortex_inh,cortex_inh,self.parameters.cortex_inh.InhInhConnection,'V1InhInhConnection')
+
         

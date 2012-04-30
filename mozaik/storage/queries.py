@@ -222,12 +222,12 @@ class PartitionRecordingsBySheetQuery(Query):
 
 ########################################################################
 def partition_analysis_results_by_parameter_name_query(dsv,ads_identifier='',parameter_name=''):
-    dsv = identifier_based_query(dsv,identifier)
+    dsv = identifier_based_query(dsv,ads_identifier)
     
     partiotioned_dsvs = {}
     
     for ads_object in dsv.analysis_results:
-        partiotioned_dsvs.set_default(ads_object.inspect_value(parameter_name),[]).append(ads_object)
+        partiotioned_dsvs.setdefault(ads_object.inspect_value(parameter_name),[]).append(ads_object)
     
     dsvs = []
     
@@ -236,7 +236,7 @@ def partition_analysis_results_by_parameter_name_query(dsv,ads_identifier='',par
         new_dsv.block.segments = dsv.recordings_copy()
         new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
         new_dsv.analysis_results = partiotioned_dsvs[k]
-        dsvs.append(new_dsvs)    
+        dsvs.append(new_dsv)    
     
     return dsvs
 
