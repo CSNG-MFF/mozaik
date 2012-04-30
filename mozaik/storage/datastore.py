@@ -1,6 +1,6 @@
 from NeuroTools.parameters import ParameterSet
 from neo.core.block import Block
-from neo.io.hdf5io import NeoHdf5IO
+#from neo.io.hdf5io import NeoHdf5IO
 from mozaik.stimuli.stimulus_generator import load_from_string, parse_stimuls_id
 from mozaik.framework.interfaces import MozaikParametrizeObject
 from NeuroTools.parameters import ParameterSet
