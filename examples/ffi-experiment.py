@@ -1,4 +1,6 @@
-#!/usr/local/bin/ipython --pdb
+#!/home/jan/virt_env/virt_env/hdf5/bin/python
+import sys
+sys.path.append('/home/jan/projects/mozaik-random_data_access/')
 import matplotlib
 import time
 from mozaik.framework.experiment import MeasureOrientationTuningFullfield, MeasureSpontaneousActivity, MeasureNaturalImagesWithEyeMovement
@@ -8,9 +10,7 @@ from mozaik.framework.experiment_controller import run_experiments, setup_experi
 from mozaik.visualization.plotting import GSynPlot,RasterPlot,VmPlot,CyclicTuningCurvePlot,OverviewPlot, ConductanceSignalListPlot, RetinalInputMovie, ActivityMovie, PerNeuronValuePlot
 from mozaik.analysis.analysis import AveragedOrientationTuning,  GSTA, Precision, PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage
 from mozaik.analysis.technical import NeuronAnnotationsToPerNeuronValues
-
 from mozaik.visualization.Kremkow_plots import Figure2
-from mozaik.visualization.custom import PlotAveragedOrientationTuningCurve
 from mozaik.storage.datastore import Hdf5DataStore,PickledDataStore
 from NeuroTools.parameters import ParameterSet
 from mozaik.storage.queries import *
@@ -19,7 +19,7 @@ from mozaik.storage.queries import *
 t0 = time.time()
 
 
-if True:
+if False:
     params = setup_experiments('FFI',sim)    
     jens_model = JensModel(sim,params)
     
@@ -33,8 +33,11 @@ if True:
                            # MEDIUM ORIENTATION TUNING
                            #MeasureOrientationTuningFullfield(jens_model,num_orientations=12,spatial_frequency=0.8,temporal_frequency=2,grating_duration=148*7,num_trials=4),
                            
+                           # SHORT ORIENTATION TUNING
+                           #MeasureOrientationTuningFullfield(jens_model,num_orientations=6,spatial_frequency=0.8,temporal_frequency=2,grating_duration=148*7,num_trials=1),
+                           
                            #SINGLE STIMULUS
-                           MeasureOrientationTuningFullfield(jens_model,num_orientations=1,spatial_frequency=0.8,temporal_frequency=2,grating_duration=3*148*7,num_trials=1),
+                           MeasureOrientationTuningFullfield(jens_model,num_orientations=1,spatial_frequency=0.8,temporal_frequency=2,grating_duration=148*7,num_trials=2),
                         ]
 
     data_store = run_experiments(jens_model,experiment_list)
@@ -68,7 +71,6 @@ PerNeuronValuePlot(analysis_data_structure_parameter_filter_query(data_store,'Pe
 #PerNeuronValuePlot(analysis_data_structure_parameter_filter_query(data_store,'PerNeuronValue',value_name='orientation preference'),ParameterSet({})).plot()
 #PerNeuronValuePlot(analysis_data_structure_parameter_filter_query(data_store,'PerNeuronValue',value_name='LGNAfferentOrientation'),ParameterSet({})).plot()
 CyclicTuningCurvePlot(data_store,ParameterSet({'tuning_curve_name' : 'CyclicTuningCurve', 'neuron': 0, 'sheet_name' : 'V1_Exc'})).plot()
-PlotAveragedOrientationTuningCurve(data_store,ParameterSet({'sheet_name' : 'V1_Exc'})).plot()
 
 #RetinalInputMovie(data_store,ParameterSet({'frame_rate': 10})).plot()
 import pylab
