@@ -51,8 +51,5 @@ def run_experiments(model,experiment_list):
         print 'Running model'
         
         experiment.run(data_store,unpresented_stimuli)
-    
-    print 'Saving Datastore'
-    data_store.save()
     return data_store
 
