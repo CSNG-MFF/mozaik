@@ -257,9 +257,6 @@ class GSynPlot(Plotting):
           gsyn_es = [s.get_esyn(self.parameters.neuron) for s in dsv.get_segments()]
           gsyn_is = [s.get_isyn(self.parameters.neuron) for s in dsv.get_segments()]
           
-          print numpy.shape(gsyn_is)
-          print numpy.shape(gsyn_is[0])
-          
           ConductancesPlot(gsyn_es,gsyn_is,**params)(gs)
 
           
@@ -534,8 +531,6 @@ class ConnectivityPlot(Plotting):
                   pnv = p 
         
            if len(pnv.values) != len(w):
-              print pnv.sheet_name
-              print self.connections[idx].target_name
               logging.error('ERROR: length of colors does not match length of weights \[%d \!\= %d\]. Ignoring colors!' % (len(pnv.values),len(w))) 
               pnv=None
         

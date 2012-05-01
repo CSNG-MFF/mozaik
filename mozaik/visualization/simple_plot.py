@@ -525,7 +525,6 @@ class StandardStyleLinePlot(StandardStyle):
                  color = self.colors[i] 
               else:
                  color = self.colors 
-              print numpy.shape(self.x[i])   
               if self.labels!=None:
                 self.axis.plot(self.x[i],self.y[i],label=self.labels[i],color=color)
               else:
@@ -572,8 +571,6 @@ class ConductancesPlot(StandardStyle):
           
           
           for e,i in zip(self.gsyn_es,self.gsyn_is):
-              
-                print numpy.shape(e)
                 e = e * 1000
                 i = i * 1000
                 self.axis.plot(time_axis,e.tolist(),color='#F5A9A9')            

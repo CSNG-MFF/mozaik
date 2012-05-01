@@ -214,3 +214,39 @@ class Precision(Analysis):
                     self.datastore.full_datastore.add_analysis_result(AnalogSignalList(al,self.parameters.neurons,qt.ms,qt.dimensionless,x_axis_name='time',y_axis_name='autocorrelation',sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__))    
 
                         
+class ModulationRatio(Analysis):
+      """
+      This analysis calculates the modulation ration (as the F1/F0) for all neurons in the data
+      using all available recorded to the FullfieldDriftingSinusoidalGrating stimuli. This method 
+      also requires that AveragedOrientationTuning has already been calculated.
+      """
+      def perform_analysis(self):
+            logger.info('Modulation ratio analysis')
+            dsv = select_stimuli_type_query(self.datastore,'FullfieldDriftingSinusoidalGrating')
+            for sheet in dsv.sheets():
+                dsv1 = select_result_sheet_query(dsv,sheet)
+                self.pnvs = self.datastore.get_analysis_result(identifier='PerNeuronValue',sheet_name=sheet,value_name='orientation preference')
+                
+                if len(self.tuning_curves) != 1:
+                   logger.error('Expected only one PerNeuronValue per sheet with value_name \'orientation preference\' in datastore, got: ' + str(len(self.tuning_curves)))
+                   return None
+                
+                segs = dsv1.get_segments()
+                st = dsv1.get_stimuli()
+                
+                
+                
+                # transform spike trains due to stimuly to mean_rates
+                mean_rates = [numpy.array(s.mean_rates())  for s in segs]
+                # collapse against all parameters other then orientation
+                (mean_rates,s) = colapse(mean_rates,st,parameter_indexes=[8])
+                # take a sum of each 
+                def _mean(a):
+                    l = len(a)
+                    return sum(a)/l
+                mean_rates = [_mean(a) for a in mean_rates]
+                
+                #JAHACK make sure that mean_rates() return spikes per second
+                units = munits.spike / qt.s
+                logger.debug('Adding CyclicTuningCurve to datastore')
+                self.datastore.full_datastore.add_analysis_result(CyclicTuningCurve(numpy.pi,mean_rates,s,9,'Response',units,sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__))

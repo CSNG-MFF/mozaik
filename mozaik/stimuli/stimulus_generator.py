@@ -123,6 +123,15 @@ def colapse(value_list,stimuli_list,parameter_indexes=[]):
     
     return ([d[k] for k in d.keys()] ,d.keys())
 
+
+def find_stimulus(stimulus_list,**kwargs):
+    """
+    Find all stimuli in stimulus_list which match of the kwargs pairs parameter_name=value.
+    """
+    #for s in stimuli
+    a  = 2
+    
+
       
 class Stimulus(VisualStimulus):
         def __str__(self):
