@@ -4,9 +4,9 @@ from neo.core.block import Block
 from mozaik.stimuli.stimulus_generator import load_from_string, parse_stimuls_id
 from mozaik.framework.interfaces import MozaikParametrizeObject
 from NeuroTools.parameters import ParameterSet
-from neo_neurotools_wrapper import NeoNeurotoolsWrapper
+from neo_neurotools_wrapper import NeoNeurotoolsWrapper, PickledDataStoreNeoWrapper
 
-import pickle
+import cPickle
 import numpy
 import logging
 
@@ -230,7 +230,7 @@ class Hdf5DataStore(DataStore):
              self.stimulus_dict[s.stimulus]=True
              
         f = open(self.parameters.root_directory+'/datastore.analysis.pickle','rb')
-        self.analysis_results = pickle.load(f)
+        self.analysis_results = cPickle.load(f)
              
             
     def save(self):
@@ -248,7 +248,7 @@ class Hdf5DataStore(DataStore):
         self.block.segments = old
         
         f = open(self.parameters.root_directory+'/datastore.analysis.pickle','wb')
-        pickle.dump(self.analysis_results,f)
+        cPickle.dump(self.analysis_results,f)
         f.close()
 
     
@@ -286,12 +286,13 @@ class PickledDataStore(Hdf5DataStore):
     
     def load(self):
         f = open(self.parameters.root_directory+'/datastore.recordings.pickle','rb')
-        self.block = pickle.load(f)
+        self.block = cPickle.load(f)
         for s in self.block.segments:
             self.stimulus_dict[s.annotations['stimulus']]=True
+            s.datastore_path = self.parameters.root_directory
         
         f = open(self.parameters.root_directory+'/datastore.analysis.pickle','rb')
-        self.analysis_results = pickle.load(f)
+        self.analysis_results = cPickle.load(f)
         
         #f = open(self.parameters.root_directory+'/datastore.retinal.stimulus.pickle','rb')
         #self.retinal_stimulus = pickle.load(f)
@@ -299,11 +300,11 @@ class PickledDataStore(Hdf5DataStore):
             
     def save(self):
         f = open(self.parameters.root_directory+'/datastore.recordings.pickle','wb')
-        pickle.dump(self.block,f)
+        cPickle.dump(self.block,f)
         f.close()
        
         f = open(self.parameters.root_directory+'/datastore.analysis.pickle','wb')
-        pickle.dump(self.analysis_results,f)
+        cPickle.dump(self.analysis_results,f)
         f.close()
 
         #f = open(self.parameters.root_directory+'/datastore.retinal.stimulus.pickle','wb')
@@ -311,3 +312,14 @@ class PickledDataStore(Hdf5DataStore):
         #f.close()                
         
 
+    def add_recording(self,segments,stimulus):
+        # we get recordings as seg
+        for s in segments:
+            s.annotations['stimulus'] = str(stimulus)
+            self.block.segments.append(PickledDataStoreNeoWrapper(s,'Segment' + str(len(self.block.segments)),self.parameters.root_directory))
+            f = open(self.parameters.root_directory+ '/' + 'Segment' + str(len(self.block.segments)-1)+".pickle",'wb')
+            cPickle.dump(s,f)
+        
+        self.stimulus_dict[str(stimulus)]=True
+        
+    

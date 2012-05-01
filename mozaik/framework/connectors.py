@@ -385,3 +385,4 @@ class GaborConnector(MozaikComponent):
                  
              #on_proj.connection_field_plot_continuous(0)   
              #off_proj.connection_field_plot_continuous(0)   
+
