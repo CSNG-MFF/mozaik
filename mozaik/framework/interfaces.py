@@ -12,6 +12,8 @@ import logging
 import os
 from string import Template
 import numpy
+from mozaik.tools.mozaik_parametrized import SNumber
+from mozaik.tools.units import lux
 
 logger = logging.getLogger("mozaik")
 
@@ -22,14 +24,11 @@ class VisualStimulus(VisualObject):
                           # would be more efficient to take the revision for the
                           # last time this particular file was changed.
     
-    def __init__(self, frame_duration, size_in_degrees, location, max_luminance):
-        VisualObject.__init__(self, location, size_in_degrees) # for now, we always put the stimulus in the centre of the visual field
-        self.frame_duration = frame_duration
-        self.max_luminance = max_luminance
-        self.frame_duration = frame_duration
-        self.size_in_degrees = size_in_degrees
-        self.max_luminance = max_luminance
-        self.location = location
+    frame_duration = param.SNumber(units=qt.ms,instantiate=True,doc="""The duration of single frame""")
+    max_luminance = param.SNumber(units=lux,instantiate=True,doc="""Maximum luminance""")
+    
+    def __init__(self,**params):
+        VisualObject.__init__(self,**params) # for now, we always put the stimulus in the centre of the visual field
         self.input = None
         self._frames = self.frames()
         self.update()

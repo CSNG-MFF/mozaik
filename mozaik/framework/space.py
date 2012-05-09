@@ -13,7 +13,8 @@ import numpy
 import logging
 from scipy.ndimage import interpolation
 from PIL import Image
-from NeuroTools.parameters import ParameterSet
+from mozaik.tools.mozaik_parametrized import SNumber
+import quantities as qt
 from mozaik import __version__
 
 TRANSPARENT = -1
@@ -24,31 +25,28 @@ def xy2ij(coordinates):
     assert len(coordinates) == 2
     return numpy.array([coordinates[1], coordinates[0]], float)
 
-class VisualRegion(object):
+class VisualRegion(Parametrized):
     """A rectangular region of visual space."""
+    location_x = SNumber(units=qt.degrees,instantiate=True,doc="""x location of the center of  visual region.""")
+    location_y = SNumber(units=qt.degrees,instantiate=True,doc="""y location of the center of  visual region.""")
+    size_x = SNumber(units=qt.degrees,instantiate=True,doc="""The size of the region in degrees (asimuth).""")
+    size_y = SNumber(units=qt.degrees,instantiate=True,doc="""The size of the region in degrees (elevation).""")
     
-    def __init__(self, location, size):
-        """
-        `location` should be a tuple giving the coordinates of the _centre_
-        of the region.
-        `size` should be a tuple giving the size in degrees in the x (azimuthal)
-        and y (elevation) directions.
-        """
-        self.location = location
-        self.size = size
-        assert size[0] > 0 and size[1] > 0
+    def __init__(self,**params):
+        Parameterized.__init__(self,**params)
+        assert size_x > 0 and size_y > 0
         
-        half_width = size[0]/2.0
-        half_height = size[1]/2.0
-        self.left = location[0] - half_width
-        self.right = location[0] + half_width
-        self.top = location[1] + half_height
-        self.bottom = location[1] - half_height
+        half_width = size_x/2.0
+        half_height = size_y/2.0
+        self.left = location_x - half_width
+        self.right = location_x + half_width
+        self.top = location_y + half_height
+        self.bottom = location_y - half_height
         self.width = self.right - self.left
         self.height = self.top - self.bottom
     
     def __eq__(self, other):
-        return (self.location == other.location) and (self.size == other.size)
+        return self.get_param_values() == other.get_param_values()
     
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -72,15 +70,15 @@ class VisualRegion(object):
         return VisualRegion(centre, size)
     
     def describe(self):
-        s = """Region of visual space centred at %(location)s of size %(size)s.
+        s = """Region of visual space centred at (%(location_x),%(location_y)) s of size (%(size_x),%(size_y))s.
                Edges: left=%(left)g, right=%(right)g, top=%(top)g, bottom=%(bottom)g""" % self.__dict__
         return s
 
 class VisualObject(VisualRegion):
     """Abstract base class."""
     
-    def __init__(self, location, size):
-        VisualRegion.__init__(self, location, size)
+    def __init__(self,**params):
+        VisualRegion.__init__(self,**params)
         self._zoom_cache = {}
         self.is_visible = True
         
