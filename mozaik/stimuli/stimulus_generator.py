@@ -78,6 +78,7 @@ class StimulusID():
           else:
               raise ValueError("obj is not of recognized type (recognized: str,dict or Stimulus)")
               
+
 class Stimulus(VisualStimulus):
         duration = param.SNumber(units=qt.ms,instantiate=True,doc="""The duration of stimulus""")
         density = param.SNumber(units=1/(qt.degree),instantiate=True,doc="""The density of stimulus - units per degree""")
@@ -90,7 +91,6 @@ class Stimulus(VisualStimulus):
             return self.equalParams(other) and (self.__class__ == other.__class__)
 
         def __init__(self, **params):
-            self.vparams = parameters
             VisualStimulus.__init__(self,**params)
             self.n_frames = numpy.inf # possibly very dangerous. Don't do 'for i in range(stim.n_frames)'!
 
