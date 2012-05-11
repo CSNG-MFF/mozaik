@@ -129,7 +129,7 @@ class JensModel(Model):
         RetinaLGN = load_component(self.parameters.retina_lgn.component)
       
         # Build and instrument the network
-        self.visual_field = VisualRegion(self.parameters.visual_field.centre, self.parameters.visual_field.size)
+        self.visual_field = VisualRegion(location_x=self.parameters.visual_field.centre[0],location_y=self.parameters.visual_field.centre[1],size_x=self.parameters.visual_field.size[0],size_y=self.parameters.visual_field.size[1])
         self.retina = RetinaLGN(self, self.parameters.retina_lgn.params)
         
         cortex_exc = CortexExc(self, self.parameters.cortex_exc.params)

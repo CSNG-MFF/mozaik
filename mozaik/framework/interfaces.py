@@ -14,6 +14,7 @@ from string import Template
 import numpy
 from mozaik.tools.mozaik_parametrized import SNumber
 from mozaik.tools.units import lux
+import quantities as qt
 
 logger = logging.getLogger("mozaik")
 
@@ -24,8 +25,8 @@ class VisualStimulus(VisualObject):
                           # would be more efficient to take the revision for the
                           # last time this particular file was changed.
     
-    frame_duration = param.SNumber(units=qt.ms,instantiate=True,doc="""The duration of single frame""")
-    max_luminance = param.SNumber(units=lux,instantiate=True,doc="""Maximum luminance""")
+    frame_duration = SNumber(qt.ms,doc="""The duration of single frame""")
+    max_luminance = SNumber(lux,doc="""Maximum luminance""")
     
     def __init__(self,**params):
         VisualObject.__init__(self,**params) # for now, we always put the stimulus in the centre of the visual field

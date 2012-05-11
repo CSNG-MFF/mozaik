@@ -64,7 +64,7 @@ import matplotlib.gridspec as gridspec
 from scipy.interpolate import griddata
 
 from mozaik.framework.interfaces import MozaikParametrizeObject
-from mozaik.stimuli.stimulus_generator import parse_stimuls_id,load_from_string, fromat_stimulus_id
+from mozaik.stimuli.stimulus_generator import StimulusID
 from NeuroTools.parameters import ParameterSet, ParameterDist
 from mozaik.storage.queries import *
 from simple_plot import *
@@ -131,7 +131,7 @@ class PlotTuningCurve(Plotting):
             par,val = zip(*sorted(zip(b,a[:,self.parameters.neuron])))
             xs.append(par)
             ys.append(val)
-            labels.append(fromat_stimulus_id(parse_stimuls_id(k)))
+            labels.append(str(StimulusID(k)))
         
         params.setdefault("title",('Neuron: %d' % self.parameters.neuron))
         params.setdefault("y_label",self.tuning_curves[idx].y_axis_name)
@@ -159,7 +159,7 @@ class CyclicTuningCurvePlot(PlotTuningCurve):
             val.append(val[0])
             xs.append(numpy.array(par))
             ys.append(numpy.array(val))
-            labels.append(fromat_stimulus_id(parse_stimuls_id(k)))
+            labels.append(str(StimulusID(k)))
 
         params.setdefault("title",('Neuron: %d' % self.parameters.neuron))
         params.setdefault("y_label",self.tuning_curves[idx].y_axis_name)

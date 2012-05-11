@@ -35,20 +35,20 @@ class MeasureOrientationTuningFullfield(Experiment):
         for j in [0.3]:
             for i in xrange(0,num_orientations):
                 for k in xrange(0,num_trials):
-                    self.stimuli.append(FullfieldDriftingSinusoidalGrating([
-                                    7, # frame duration (roughly like a movie) - is this fast enough?
-                                    model.visual_field.size[0],
-                                    model.visual_field.size[0],
-                                    0.0,
-                                    0.0,
-                                    j*90.0, #max_luminance
-                                    grating_duration, # stimulus duration
-                                    40, #density
-                                    k, # trial number
-                                    numpy.pi/num_orientations*i, #orientation
-                                    spatial_frequency,
-                                    temporal_frequency, #stimulus duration - we want to get one full sweep of phases
-                                ]))    
+                    self.stimuli.append(FullfieldDriftingSinusoidalGrating(
+                                    frame_duration=7, 
+                                    size_x=model.visual_field.size_x,
+                                    size_y=model.visual_field.size_y,
+                                    location_x=0.0,
+                                    location_y=0.0,
+                                    max_luminance=j*90.0,
+                                    duration=grating_duration,
+                                    density=40,
+                                    trial=k,
+                                    orientation=numpy.pi/num_orientations*i, 
+                                    spatial_frequency=spatial_frequency,
+                                    temporal_frequency=temporal_frequency 
+                                ))    
 
     def do_analysis(self,data_store):
         pass
@@ -58,20 +58,21 @@ class MeasureNaturalImagesWithEyeMovement(Experiment):
     def __init__(self,model,stimulus_duration,num_trials):
         self.model = model
         for k in xrange(0,num_trials):
-            self.stimuli.append(NaturalImageWithEyeMovement([   
-                            7, # frame duration (roughly like a movie) - is this fast enough?
-                            model.visual_field.size[0], 
-                            model.visual_field.size[0], 
-                            0.0,
-                            0.0,
-                            90.0, #max_luminance 
-                            stimulus_duration, # stimulus duration
-                            40, #density
-                            k, # trial number
-                            40, # x size of image
-                            6.66, # eye movement period
-                            1 # idd
-                        ],'eye_path.pickle','image_naturelle_HIGH.bmp'))    
+            self.stimuli.append(NaturalImageWithEyeMovement(   
+                            frame_duration=7, 
+                            size_x=model.visual_field.size_x,
+                            size_y=model.visual_field.size_y,
+                            location_x=0.0,
+                            location_y=0.0,
+                            max_luminance=90.0,
+                            duration=stimulus_duration,
+                            density=40,
+                            trial=k,
+                            size=40, # x size of image
+                            eye_movement_period=6.66, # eye movement period
+                            eye_path_location='eye_path.pickle',
+                            image_location='image_naturelle_HIGH.bmp'
+                            ))    
 
 
     def do_analysis(self,data_store):
@@ -81,17 +82,17 @@ class MeasureSpontaneousActivity(Experiment):
     
     def __init__(self,model,duration):
             self.model = model
-            self.stimuli.append(Null([   
-                            7, # frame duration (roughly like a movie) - is this fast enough?
-                            model.visual_field.size[0], 
-                            model.visual_field.size[0], 
-                            0.0,
-                            0.0,
-                            90.0, #max_luminance 
-                            duration, # stimulus duration
-                            40, #density
-                            0 # trial number
-                        ]))    
+            self.stimuli.append(Null(   
+                            frame_duration=7, 
+                            size_x=model.visual_field.size_x,
+                            size_y=model.visual_field.size_y,
+                            location_x=0.0,
+                            location_y=0.0,
+                            max_luminance=90.0,
+                            duration=duration,
+                            density=40,
+                            trial=k,
+            ))    
 
     def do_analysis(self,data_store):
         pass

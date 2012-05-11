@@ -6,7 +6,7 @@ import param
 from param.parameterized import Parameterized
 from mozaik.storage.queries import *
 import matplotlib.gridspec as gridspec
-from mozaik.stimuli.stimulus_generator import parse_stimuls_id
+from mozaik.stimuli.stimulus_generator import StimulusID
 import logging
 
 logger = logging.getLogger("mozaik")
@@ -120,7 +120,7 @@ class PerStimulusPlot(PerDSVPlot):
            PerDSVPlot.__init__(self,datastore,**params)
            if self.title_style == "Clever":
               ss = datastore.get_stimuli()
-              stimulus = parse_stimuls_id(ss[0])
+              stimulus = StimulusID(ss[0])
               for s in ss:
                   s = parse_stimuls_id(s)
                   if s.name != stimulus.name:
@@ -131,14 +131,14 @@ class PerStimulusPlot(PerDSVPlot):
               
            # lets find parameter indexes that vary if we need 'Clever' title style
            if self.title_style == "Clever":  
-              stimulus = parse_stimuls_id(self.datastore.get_stimuli()[0])
+              stimulus = StimulusID(self.datastore.get_stimuli()[0])
               self.varied = []
-              for i in xrange(0,stimulus.num_parameters):
-                  if i != 8:
+              for pn,pv in stimulus.get_param_values():
+                  if pn != 'trial':
                       for s in self.datastore.get_stimuli():
-                          s = parse_stimuls_id(s)
-                          if s.parameters[i] != stimulus.parameters[i]:
-                             self.varied.append(i) 
+                          s = StimulusID(s)
+                          if getattr(s, pn) != pv:
+                             self.varied.append(pn) 
                              break
                 
            if self.title_style == "Standard":
@@ -160,20 +160,18 @@ class PerStimulusPlot(PerDSVPlot):
            return None 
         
         if self.title_style == "Standard":
-           stimulus = parse_stimuls_id(self.dsvs[idx].get_stimuli()[0])
+           stimulus = StimulusID(self.dsvs[idx].get_stimuli()[0])
            title = ''
            title = title + stimulus.name + '\n' 
-           for i in xrange(0,stimulus.num_parameters):
-               title = title + stimulus.get_parameter_name(i) + ' : ' + str(stimulus.parameters[i]) + '\n' 
-          
+           for pn,pv in stimulus.get_param_values():
+               title = title + pn + ' : ' + str(pv) + '\n' 
            return title
             
         if self.title_style == "Clever":
-           stimulus = parse_stimuls_id(self.dsvs[idx].get_stimuli()[0])
+           stimulus = StimulusID(self.dsvs[idx].get_stimuli()[0])
            title = ''
-           for i in self.varied:
-               title = title + stimulus.get_parameter_name(i) + ' : ' + str(stimulus.parameters[i]) + '\n' 
-          
+           for pn in self.varied:
+               title = title + str(pn) + ' : ' + str(getattr(stimulus,pn)) + '\n' 
            return title
            
            

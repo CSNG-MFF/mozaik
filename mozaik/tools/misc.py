@@ -1,8 +1,4 @@
-from NeuroTools import signals
-from mozaik.stimuli.stimulus_generator import parse_stimuls_id,load_from_string
-from neo.core.segment import Segment
 import numpy
-
 
 def sample_from_bin_distribution(bins, number_of_samples):
     # samples from a distribution defined by a vector

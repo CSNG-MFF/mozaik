@@ -5,13 +5,16 @@ This package defines the API for:
     - function helpers for common manipulation with collections of stimuli (or rather their IDs)
 
 Each stimulus is expected to have a dictionary of parameters which have to uniquely identify the stimulus.
-
 We implement this by using the Parametrized package that allows to specify parameters with the all above requirements.
+For Stimuli objects we will allow only SNumber, SInteger and SString parameters. These extend the
+corresponding parametrized parameters to allow specification of units (see tools/mozaik_parametrized.py).
+
 Note that *all* such parameters defined in the class (and its ancestors) will be considered as parameters of the Stimulus.
 """
 from mozaik.framework.interfaces import VisualStimulus
 import quantities as qt
 import numpy
+from mozaik.tools.mozaik_parametrized import *
 
 class StimulusID():
       """
@@ -20,19 +23,20 @@ class StimulusID():
       
       The main purpose for StimulusID is to stand for Stimulus whenever the stimulus identitity is required
       without the need to move around the heavy Stimulus objects.
+      
+      Unlike Stimulus, StimulusID allows any parameter to be also assigned None. This is often 
+      used in data analysis to mark parameters that has been 'computed out' by the analysis (such as averaged out).
       """  
 
       def __str__(self):
             """
-            Provide a nearly valid Python representation that could be used to recreate
-            the item with its parameters, if executed in the appropriate environment.
-            
-            Returns 'classname(parameter1=x,parameter2=y,...)', listing
-            all the parameters of this object.
+            Saves the parameter names and values as a dict
             """
             settings = ['%s:%s' % (name,repr(val))
                     for name,val in self.get_param_values()]
-            return "{name:" + self.name  + ", ".join(settings) + "}"
+            r= "{name:" + self.name  + ", ".join(settings) + "}"                    
+            print r
+            return r
 
       def __eq__(self, other):
             return (self.name == other.name) and (self.get_param_values() == other.get_param_values())
@@ -40,52 +44,65 @@ class StimulusID():
       def get_param_values(self):
           return self.params.items().sort(key=itemgetter(0))
           
+      def number_of_parameters(self):
+          return len(self.params.keys())
+          
       def load_stimulus(self):
           cls = globals()[self.name]
           return cls(**self.params)  
         
       class sid_param():
             """Just a hack to allow parameters in StimulusID have units"""
-            def __init__(value,units):
+            def __init__(self,name,value,units):
                 self.units = units
                 self.value = value
+                self.name = name
 
-            def __get__(self, instance, owner):
+            def __get__(self, instance,owner):
                 return self.value
-    
-      def __init__(obj):
+                
+            def __set__(self, instance,val):
+                self.value = val
+                instance.params[self.name]=val
+                
+            def get_units():
+                return self.units
+        
+      def __init__(self,obj):
           self.params = {}          
           
           if isinstance(obj,Stimulus):
               self.name = obj.__class__
               par = obj.params()
+              print obj.params()
               for n,v in obj.get_param_values():
-                  setattr(self, n, sid_param(v,par[n].units))
-                  params[n] = v
+                  setattr(self, n, StimulusID.sid_param(n,v,par[n].units))
+                  self.params[n] = v
           elif isinstance(obj,dict):
               self.name = obj.pop(name)
               par = globals()[self.name].params()
               for n,v in obj.items():
-                  setattr(self, n, sid_param(v,par[n].units))
-                  params[n] = v
+                  setattr(self, n, StimulusID.sid_param(n,v,par[n].units))
+                  self.params[n] = v
           elif isinstance(obj,str):
                d = eval(str)
                self.name = d.pop(name)
                par = globals()[self.name].params()
                for n,v in d.items():
-                  setattr(self, n, sid_param(v,par[n].units))
-                  params[n] = v
+                  setattr(self, n, StimulusID.sid_param(n,v,par[n].units))
+                  self.params[n] = v
           else:
               raise ValueError("obj is not of recognized type (recognized: str,dict or Stimulus)")
               
 
 class Stimulus(VisualStimulus):
-        duration = param.SNumber(units=qt.ms,instantiate=True,doc="""The duration of stimulus""")
-        density = param.SNumber(units=1/(qt.degree),instantiate=True,doc="""The density of stimulus - units per degree""")
-        trial = param.Integer(instantiate=True,doc="""The duration of stimulus""")
+        duration = SNumber(qt.ms,doc="""The duration of stimulus""")
+        density = SNumber(1/(qt.degree),doc="""The density of stimulus - units per degree""")
+        trial = SInteger(doc="""The duration of stimulus""")
 
         def __str__(self):
-            self.script_repr()
+            print str(StimulusID(self))
+            return str(StimulusID(self))
             
         def __eq__(self, other):
             return self.equalParams(other) and (self.__class__ == other.__class__)
@@ -94,14 +111,11 @@ class Stimulus(VisualStimulus):
             VisualStimulus.__init__(self,**params)
             self.n_frames = numpy.inf # possibly very dangerous. Don't do 'for i in range(stim.n_frames)'!
 
-
-
-
 def _colapse(dd,param):
     d = {}
     for s in dd:
         s1 = StimulusID(s)
-        s1.parameters[axis]='*'
+        setattr(s1, param,None)
         s1 = str(s1)
         if d.has_key(s1):
            d[s1].extend(dd[s])

@@ -13,7 +13,10 @@ import numpy
 import logging
 from scipy.ndimage import interpolation
 from PIL import Image
-from mozaik.tools.mozaik_parametrized import SNumber
+from mozaik.tools.mozaik_parametrized import SNumber, MozaikParametrized
+import quantities as qt
+from NeuroTools.parameters import ParameterSet
+
 import quantities as qt
 from mozaik import __version__
 
@@ -25,23 +28,23 @@ def xy2ij(coordinates):
     assert len(coordinates) == 2
     return numpy.array([coordinates[1], coordinates[0]], float)
 
-class VisualRegion(Parametrized):
+class VisualRegion(MozaikParametrized):
     """A rectangular region of visual space."""
-    location_x = SNumber(units=qt.degrees,instantiate=True,doc="""x location of the center of  visual region.""")
-    location_y = SNumber(units=qt.degrees,instantiate=True,doc="""y location of the center of  visual region.""")
-    size_x = SNumber(units=qt.degrees,instantiate=True,doc="""The size of the region in degrees (asimuth).""")
-    size_y = SNumber(units=qt.degrees,instantiate=True,doc="""The size of the region in degrees (elevation).""")
+    location_x = SNumber(qt.degrees,doc="""x location of the center of  visual region.""")
+    location_y = SNumber(qt.degrees,doc="""y location of the center of  visual region.""")
+    size_x = SNumber(qt.degrees,doc="""The size of the region in degrees (asimuth).""")
+    size_y = SNumber(qt.degrees,doc="""The size of the region in degrees (elevation).""")
     
     def __init__(self,**params):
-        Parameterized.__init__(self,**params)
-        assert size_x > 0 and size_y > 0
+        MozaikParametrized.__init__(self,**params)
+        assert self.size_x > 0 and self.size_y > 0
         
-        half_width = size_x/2.0
-        half_height = size_y/2.0
-        self.left = location_x - half_width
-        self.right = location_x + half_width
-        self.top = location_y + half_height
-        self.bottom = location_y - half_height
+        half_width = self.size_x/2.0
+        half_height = self.size_y/2.0
+        self.left = self.location_x - half_width
+        self.right = self.location_x + half_width
+        self.top = self.location_y + half_height
+        self.bottom = self.location_y - half_height
         self.width = self.right - self.left
         self.height = self.top - self.bottom
     
