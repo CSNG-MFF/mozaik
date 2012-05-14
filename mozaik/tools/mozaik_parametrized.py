@@ -23,7 +23,7 @@ class MozaikParametrized(Parameterized):
           which is undocumented! 
           """
           return self.get_param_values() == other.get_param_values()
-          
+         
 
 """
 For Stimuli objects we will allow only SNumber, SInteger and SString parameters.

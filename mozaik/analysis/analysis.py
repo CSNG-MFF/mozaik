@@ -115,8 +115,8 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
                         
                         logger.debug('Adding PerNeuronValue to datastore')
                         st = StimulusID(k)
-                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(pref,getattr(st,tc.parameter_name).units,value_name = getattr(st,tc.parameter_name) + ' preference',sheet_name=sheet,tags=self.tags,period=tc.period,analysis_algorithm=self.__class__.__name__))
-                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(sel,getattr(st,tc.parameter_name).units,value_name = getattr(st,tc.parameter_name) + ' selectivity',sheet_name=sheet,tags=self.tags,period=1.0,analysis_algorithm=self.__class__.__name__))
+                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(pref,st.units[tc.parameter_name],st.params[tc.parameter_name] + ' preference',sheet_name=sheet,tags=self.tags,period=tc.period,analysis_algorithm=self.__class__.__name__))
+                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(sel,st.units[tc.parameter_name],st.params[tc.parameter_name] + ' selectivity',sheet_name=sheet,tags=self.tags,period=1.0,analysis_algorithm=self.__class__.__name__))
 
 class GSTA(Analysis):
       """
