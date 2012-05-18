@@ -120,8 +120,8 @@ class TuningCurve(AnalysisDataStructure):
             self.d = {}
             for (v,s) in zip(self.values,self.stimuli_ids):
                 s = StimulusID(s)
-                val = float(getattr(s,self.parameter_name))
-                setattr(s,self.parameter_name,None)
+                val = s.params[self.parameter_name]
+                s.params[self.parameter_name] = None
                 if self.d.has_key(str(s)):
                    (a,b) = self.d[str(s)] 
                    a.append(v)
@@ -139,7 +139,7 @@ class CyclicTuningCurve(TuningCurve):
         """
         TuningCurve with over periodic quantity
         
-        perdiod - the period of the parameter over which the tuning curve is measured, i.e. pi for orientation
+        period - the period of the parameter over which the tuning curve is measured, i.e. pi for orientation
                   all the values have to be in the range <0,period)
         """
         def __init__(self,period,*args,**params):
@@ -149,7 +149,7 @@ class CyclicTuningCurve(TuningCurve):
             # just double check that none of the stimuly has the corresponding parameter larger than period 
             for s in self.stimuli_ids:
                 s = StimulusID(s)
-                v = float(getattr(s,self.parameter_name))
+                v = s.params[self.parameter_name]
                 if v < 0 or v >= self.period:
                    raise ValueError("CyclicTuningCurve with period " + str(self.period) + ": "  + str(v) + " does not belong to <0," + str(self.period) + ") range!") 
 
@@ -167,18 +167,16 @@ class PerNeuronValue(AnalysisDataStructure):
       value_units
             - quantities unit describing the units of the value
       
-      sheet_name
-            - The name of the sheet to which the data correspond
-      
       period
             - The period of the value. If value is not periodic period=None
       """
       
       value_name = param.String(instantiate=True,doc="""The name of the value.""")
-      def __init__(self,values,value_units,tags,period=None,**params):
+      period = param.Number(default=None,instantiate=True,doc="""The name of the value.""")
+      
+      def __init__(self,values,value_units,**params):
            AnalysisDataStructure.__init__(self,identifier = 'PerNeuronValue',**params)
            self.value_units = value_units
-           self.period = period
            self.values = values
 
 class AnalysisDataStructure1D(AnalysisDataStructure): 
@@ -222,9 +220,6 @@ class AnalogSignalList(AnalysisDataStructure1D):
                 order of neurons indexes in the indexes parameter
          indexes - 
                 list of indexes of neurons in the original Mozaik sheet to which the AnalogSignals correspond
-                
-         sheet_name -
-                The sheet from which the data were collected
        """
        def __init__(self,asl,indexes,x_axis_units,y_axis_units,**params):
            AnalysisDataStructure1D.__init__(self,x_axis_units,y_axis_units,identifier = 'AnalogSignalList',**params)
@@ -244,8 +239,6 @@ class ConductanceSignalList(AnalysisDataStructure1D):
             in the order corresponding to the order of neurons indexes in the indexes parameter
          indexes - 
             list of indexes of neurons in the original Mozaik sheet to which the AnalogSignals correspond
-         sheet_name -
-                The sheet from which the data were collected
        """        
        def __init__(self,e_con,i_con,indexes,**params):
            assert e_con[0].units == i_con[0].units
@@ -275,6 +268,6 @@ class Connections(AnalysisDataStructure1D):
       source_name = param.String(instantiate=True,doc="""The name of the source sheet.""")
       target_name = param.String(instantiate=True,doc="""The name of the target sheet.""")
 
-      def __init__(self,weights,period=None,**params):
+      def __init__(self,weights,**params):
           AnalysisDataStructure.__init__(self,identifier = 'Connections',**params)
           self.weights = weights

@@ -122,7 +122,7 @@ class PerStimulusPlot(PerDSVPlot):
               ss = datastore.get_stimuli()
               stimulus = StimulusID(ss[0])
               for s in ss:
-                  s = parse_stimuls_id(s)
+                  s = StimulusID(s)
                   if s.name != stimulus.name:
                      print 'Datastore does not contain same type of stimuli: changing title_style from Clever to Standard' 
                      logger.warning('Datastore does not contain same type of stimuli: changing title_style from Clever to Standard') 
@@ -137,7 +137,7 @@ class PerStimulusPlot(PerDSVPlot):
                   if pn != 'trial':
                       for s in self.datastore.get_stimuli():
                           s = StimulusID(s)
-                          if getattr(s, pn) != pv:
+                          if s.params[pn] != pv:
                              self.varied.append(pn) 
                              break
                 
@@ -171,7 +171,7 @@ class PerStimulusPlot(PerDSVPlot):
            stimulus = StimulusID(self.dsvs[idx].get_stimuli()[0])
            title = ''
            for pn in self.varied:
-               title = title + str(pn) + ' : ' + str(getattr(stimulus,pn)) + '\n' 
+               title = title + str(pn) + ' : ' + str(stimulus.params[pn]) + '\n' 
            return title
            
            

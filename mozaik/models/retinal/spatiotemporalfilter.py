@@ -159,7 +159,7 @@ class CellWithReceptiveField(object):
          to avoid loading the entire image sequence into memory, we build up
          the response array one frame at a time.
         """
-        visual_region = VisualRegion((self.x, self.y), (self.receptive_field.width, self.receptive_field.height))
+        visual_region = VisualRegion(location_x=self.x, location_y=self.y, size_x=self.receptive_field.width,size_y=self.receptive_field.height)
         view_array = visual_space.view(visual_region, pixel_size=self.receptive_field.spatial_resolution)
         #logger.debug("view_array.shape = %s" % str(view_array.shape))
         #logger.debug("receptive_field.kernel.shape = %s" % str(self.receptive_field.kernel.shape))
@@ -353,7 +353,7 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
                     cell.view(visual_space)
             t = visual_space.update()
             
-            visual_region = VisualRegion((0,0), (P_rf.width, P_rf.height))
+            visual_region = VisualRegion(location_x=0,location_y=0, size_x=P_rf.width,size_y=P_rf.height)
             im = visual_space.view(visual_region, pixel_size=rf_ON.spatial_resolution)
             retinal_input.append(im)
             progress_bar(t/duration)

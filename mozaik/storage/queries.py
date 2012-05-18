@@ -41,12 +41,12 @@ def select_stimuli_type_query(dsv,stimulus_name,params=None):
 
    
     for seg in dsv.block.segments:
-        sid = StumulusID(seg.annotations['stimulus'])
+        sid = StimulusID(seg.annotations['stimulus'])
         if sid.name == stimulus_name:
            if params: 
                 flag=True    
                 for n,f in params.items():
-                    if f != None and float(f) != float(sid.params[n]):
+                    if float(f) != float(sid.params[n]):
                        flag=False;
                        break;
                 if flag:
@@ -157,9 +157,9 @@ class IdentifierBasedQuery(Query):
 
 
 ########################################################################
-def partition_by_stimulus_paramter_query(dsv,stimulus_paramter_index):  
+def partition_by_stimulus_paramter_query(dsv,stimulus_name):  
         st = dsv.get_stimuli()
-        values,st = colapse(numpy.arange(0,len(st),1),st,parameter_indexes=[stimulus_paramter_index])
+        values,st = colapse(numpy.arange(0,len(st),1),st,parameter_list=[stimulus_name])
         dsvs = []
         for vals in values:
             new_dsv = dsv.fromDataStoreView()

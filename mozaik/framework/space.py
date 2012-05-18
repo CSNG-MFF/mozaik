@@ -49,7 +49,7 @@ class VisualRegion(MozaikParametrized):
         self.height = self.top - self.bottom
     
     def __eq__(self, other):
-        return self.get_param_values() == other.get_param_values()
+        return (self.location_x == other.location_x) and (self.location_y == other.location_y) and (self.size_x == other.size_x) and (self.size_y == other.size_y)
     
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -68,9 +68,7 @@ class VisualRegion(MozaikParametrized):
         bottom = max(self.bottom, another_region.bottom)
         top = min(self.top, another_region.top)
         assert bottom <= top
-        centre = ((left + right)/2.0, (top + bottom)/2.0)
-        size = (right-left, top-bottom)
-        return VisualRegion(centre, size)
+        return VisualRegion(location_x=(left + right)/2.0,location_y=(top + bottom)/2.0,size_x=right-left,size_y=top-bottom)
     
     def describe(self):
         s = """Region of visual space centred at (%(location_x),%(location_y)) s of size (%(size_x),%(size_y))s.
@@ -102,7 +100,7 @@ class VisualObject(VisualRegion):
 
     def display(self, region, pixel_size):
         assert isinstance(region, VisualRegion), "region must be a VisualRegion-descended object. Actually a %s" % type(region)
-        size_in_pixels = numpy.ceil(xy2ij(region.size)/float(pixel_size)).astype(int)
+        size_in_pixels = numpy.ceil(xy2ij((region.size_x,region.size_y))/float(pixel_size)).astype(int)
         view = TRANSPARENT*numpy.ones(size_in_pixels)
         if region.overlaps(self):
             intersection = region.intersection(self)
@@ -124,7 +122,7 @@ class VisualObject(VisualRegion):
             view_relative_bottom = (intersection.bottom - region.bottom)/region.height
             view_relative_height = intersection.height/region.height
             
-            img_pixel_size = xy2ij(self.size)/self.img.shape # is self.size a tuple or an array?
+            img_pixel_size = xy2ij((self.size_x,self.size_y))/self.img.shape # is self.size a tuple or an array?
             #logger.debug("img_pixel_size = %s" % str(img_pixel_size))
             #logger.debug("img relative_left, _right, _top, _bottom = %g,%g,%g,%g" % (img_relative_left, img_relative_right, img_relative_top, img_relative_bottom))
             #logger.debug("view relative_left, _right, _top, _bottom = %g,%g,%g,%g" % (view_relative_left, view_relative_right, view_relative_top, view_relative_bottom))
@@ -244,7 +242,7 @@ class VisualSpace(object):
         
         Returns a numpy array containing luminance values.
         """
-        size_in_pixels = numpy.ceil(xy2ij(region.size)/float(pixel_size)).astype(int)
+        size_in_pixels = numpy.ceil(xy2ij((region.size_x,region.size_y))/float(pixel_size)).astype(int)
         scene = TRANSPARENT*numpy.ones(size_in_pixels)
 
         for obj in self.content.values():

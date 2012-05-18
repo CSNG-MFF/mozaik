@@ -18,6 +18,7 @@ import quantities as qt
 import numpy
 from operator import *
 from mozaik.tools.mozaik_parametrized import *
+import inspect
 
 
 class StimulusID():
@@ -36,11 +37,10 @@ class StimulusID():
             """
             Saves the parameter names and values as a dict
             """
-            print self.name
-            settings = ['%s:%s' % (name,repr(val))
+            settings = ['\"%s\":%s' % (name,repr(val))
                     for name,val in self.get_param_values()]
-            r= "{name:" + self.name  + ", ".join(settings) + "}"                    
-            print r
+            
+            r= "{ \"name\" :" + "\"" + self.name + "\""+ "," + "\"module_path\" :" + "\"" + self.module_path + "\"" +',' + ", ".join(settings) + "}"
             return r
 
       def __eq__(self, other):
@@ -55,30 +55,38 @@ class StimulusID():
           return len(self.params.keys())
           
       def load_stimulus(self):
-          cls = globals()[self.name]
+          cls = self.getStimulusClass()
           return cls(**self.params)  
-        
+      
+      def getStimulusClass(self):
+          z = __import__(self.module_path,globals(),locals(),self.name)
+
+          return  getattr(z,self.name)
+          
       def __init__(self,obj):
           self.units = {}
           self.params = {}          
           
           if isinstance(obj,Stimulus):
-              self.name = str(obj.__class__)
+              self.name = obj.__class__.__name__
+              self.module_path = inspect.getmodule(obj).__name__
               par = obj.params()
               for n,v in obj.get_param_values():
                   if n != 'name' and n != 'print_level':
                       self.params[n] = v
                       self.units[n] = par[n].units
           elif isinstance(obj,dict):
-              self.name = obj.pop(name)
-              par = globals()[self.name].params()
+              self.name = obj.pop("name")
+              self.module_path = obj.pop("module_path")
+              par = self.getStimulusClass().params()
               for n,v in obj.items():
                   self.params[n] = v
                   self.units[n] = par[n].units
           elif isinstance(obj,str):
-               d = eval(str)
-               self.name = d.pop(name)
-               par = globals()[self.name].params()
+               d = eval(obj)
+               self.name = d.pop("name")
+               self.module_path = d.pop("module_path")
+               par = self.getStimulusClass().params()
                for n,v in d.items():
                   self.params[n] = v
                   self.units[n] = par[n].units
@@ -92,7 +100,6 @@ class Stimulus(VisualStimulus):
         trial = SInteger(doc="""The duration of stimulus""")
 
         def __str__(self):
-            print str(StimulusID(self))
             return str(StimulusID(self))
             
         def __eq__(self, other):
