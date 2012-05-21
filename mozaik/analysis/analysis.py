@@ -1,6 +1,7 @@
 """
 This module contains the Mozaik analysis interface and implementation of various analysis algorithms
 """
+
 import pylab
 import numpy 
 import time
@@ -217,7 +218,7 @@ class Precision(Analysis):
 class ModulationRatio(Analysis):
       """
       This analysis calculates the modulation ration (as the F1/F0) for all neurons in the data
-      using all available recorded to the FullfieldDriftingSinusoidalGrating stimuli. This method 
+      using all available responses recorded to the FullfieldDriftingSinusoidalGrating stimuli. This method 
       also requires that AveragedOrientationTuning has already been calculated.
       """
       def perform_analysis(self):
@@ -227,15 +228,14 @@ class ModulationRatio(Analysis):
                 dsv1 = select_result_sheet_query(dsv,sheet)
                 self.pnvs = self.datastore.get_analysis_result(identifier='PerNeuronValue',sheet_name=sheet,value_name='orientation preference')
                 
-                if len(self.tuning_curves) != 1:
-                   logger.error('Expected only one PerNeuronValue per sheet with value_name \'orientation preference\' in datastore, got: ' + str(len(self.tuning_curves)))
+                if len(self.pnvs) != 1:
+                   logger.error('Expected only one PerNeuronValue per sheet with value_name \'orientation preference\' in datastore, got: ' + str(len(pnvs)))
                    return None
+                else:
+                    pnv = pnvs[0]
                 
                 segs = dsv1.get_segments()
                 st = dsv1.get_stimuli()
-                
-                
-                
                 # transform spike trains due to stimuly to mean_rates
                 mean_rates = [numpy.array(s.mean_rates())  for s in segs]
                 # collapse against all parameters other then orientation

@@ -18,7 +18,7 @@ from mozaik.storage.queries import *
 
 t0 = time.time()
 
-if False:
+if True:
     params = setup_experiments('FFI',sim)    
     jens_model = JensModel(sim,params)
     
@@ -30,10 +30,10 @@ if False:
                            #MeasureOrientationTuningFullfield(jens_model,num_orientations=12,spatial_frequency=0.8,temporal_frequency=2,grating_duration=2*148*7,num_trials=10),
                            
                            # MEDIUM ORIENTATION TUNING
-                           #MeasureOrientationTuningFullfield(jens_model,num_orientations=12,spatial_frequency=0.8,temporal_frequency=2,grating_duration=148*7,num_trials=4),
+                           MeasureOrientationTuningFullfield(jens_model,num_orientations=8,spatial_frequency=0.8,temporal_frequency=2,grating_duration=148*7,num_trials=10),
                            
                            #SHORT ORIENTATION TUNING
-                           MeasureOrientationTuningFullfield(jens_model,num_orientations=6,spatial_frequency=0.8,temporal_frequency=2,grating_duration=148*7,num_trials=1),
+                           #MeasureOrientationTuningFullfield(jens_model,num_orientations=6,spatial_frequency=0.8,temporal_frequency=2,grating_duration=148*7,num_trials=1),
                            
                            #SINGLE STIMULUS
                            #MeasureOrientationTuningFullfield(jens_model,num_orientations=1,spatial_frequency=0.8,temporal_frequency=2,grating_duration=3*148*7,num_trials=1),
@@ -43,15 +43,15 @@ if False:
     
     #lets store some connections as well
     jens_model.connectors["V1ExcExcConnection"].store_connections(data_store)
-    jens_model.connectors["V1ExcInhConnection"].store_connections(data_store)
-    jens_model.connectors["V1InhExcConnection"].store_connections(data_store)
-    jens_model.connectors["V1InhInhConnection"].store_connections(data_store)
+    #jens_model.connectors["V1ExcInhConnection"].store_connections(data_store)
+    #jens_model.connectors["V1InhExcConnection"].store_connections(data_store)
+    #jens_model.connectors["V1InhInhConnection"].store_connections(data_store)
     
     print 'Saving Datastore'
     data_store.save()
 else:
     setup_logging()
-    data_store = PickledDataStore(load=True,parameters=ParameterSet({'root_directory':'C'}))
+    data_store = PickledDataStore(load=True,parameters=ParameterSet({'root_directory':'res-ffi_S1_MEDIUMOR'}))
     print 'Loaded data store'
 
 import resource
@@ -83,5 +83,9 @@ PerNeuronValuePlot(analysis_data_structure_parameter_filter_query(data_store,'Pe
 CyclicTuningCurvePlot(data_store,ParameterSet({'tuning_curve_name' : 'CyclicTuningCurve', 'neuron': 0, 'sheet_name' : 'V1_Exc'})).plot()
 
 #RetinalInputMovie(data_store,ParameterSet({'frame_rate': 10})).plot()
+
+import resource
+print "Current memory usage: %iMB" % (resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/(1024))
+
 import pylab
 pylab.show()
