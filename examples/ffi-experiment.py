@@ -33,7 +33,7 @@ if True:
                            #MeasureOrientationTuningFullfield(jens_model,num_orientations=12,spatial_frequency=0.8,temporal_frequency=2,grating_duration=148*7,num_trials=4),
                            
                            #SHORT ORIENTATION TUNING
-                           MeasureOrientationTuningFullfield(jens_model,num_orientations=6,spatial_frequency=0.8,temporal_frequency=2,grating_duration=148*7,num_trials=1),
+                           MeasureOrientationTuningFullfield(jens_model,num_orientations=4,spatial_frequency=0.8,temporal_frequency=2,grating_duration=50*7,num_trials=2),
                            
                            #SINGLE STIMULUS
                            #MeasureOrientationTuningFullfield(jens_model,num_orientations=1,spatial_frequency=0.8,temporal_frequency=2,grating_duration=50*7,num_trials=1),

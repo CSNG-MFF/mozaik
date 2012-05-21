@@ -14,7 +14,7 @@ class Global:
 def setup_logging():
     # Set-up logging    
     logger = logging.getLogger("mozaik")
-    init_logging(Global.root_directory + "log", file_level=logging.DEBUG, console_level=logging.INFO) # NeuroTools version
+    init_logging(Global.root_directory + "log", file_level=logging.DEBUG, console_level=logging.DEBUG) # NeuroTools version
     visual_logging.basicConfig(Global.root_directory + "visual_log.zip", level=logging.INFO)
 
 

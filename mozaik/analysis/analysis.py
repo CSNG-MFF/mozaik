@@ -115,9 +115,6 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
                         
                         logger.debug('Adding PerNeuronValue to datastore')
                         st = StimulusID(k)
-                        print st
-                        print st.params[tc.parameter_name]
-                        print st.units[tc.parameter_name]
                         self.datastore.full_datastore.add_analysis_result(PerNeuronValue(pref,st.units[tc.parameter_name],value_name = tc.parameter_name + ' preference',sheet_name=sheet,tags=self.tags,period=tc.period,analysis_algorithm=self.__class__.__name__))
                         self.datastore.full_datastore.add_analysis_result(PerNeuronValue(sel,st.units[tc.parameter_name],value_name = tc.parameter_name + ' selectivity',sheet_name=sheet,tags=self.tags,period=1.0,analysis_algorithm=self.__class__.__name__))
 

@@ -127,10 +127,10 @@ class MozaikComponent(MozaikParametrizeObject):
 
 class MozaikRetina(MozaikComponent):
       
-      def process_visual_input(self, visual_space, duration=None, offset=0):  
+      def process_visual_input(self, visual_space, stimulus_id,duration=None, offset=0):  
           """
-          This method is responsible for presenting the stimulus to the visual_space
-          and in turn to the retina, and all the mechanisms that are responsible to
+          This method is responsible for presenting the content of visual_space
+          the retina it represents, and all the mechanisms that are responsible to
           passing the output of the retina (in whatever form desired) to the Sheet objects
           that are connected to it and thus represent the interface between the 
           retina and the rest of the model.
@@ -140,6 +140,7 @@ class MozaikRetina(MozaikComponent):
           """
           raise NotImplementedError
           pass
+        
       def provide_null_input(self, visual_space, duration=None, offset=0):  
           """
           This method is responsible generating retinal input in the case of no visual stimulus.

@@ -147,7 +147,7 @@ class PerStimulusPlot(PerDSVPlot):
                  self.extra_space_top=0.05      
     
     def partiotion_dsvs(self):       
-        return partition_by_stimulus_paramter_query(self.datastore,8)
+        return partition_by_stimulus_paramter_query(self.datastore,'trial')
 
     def _single_plot(self,idx,gs,p):
             title = self.title(idx)
