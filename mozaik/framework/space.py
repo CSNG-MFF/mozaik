@@ -13,7 +13,11 @@ import numpy
 import logging
 from scipy.ndimage import interpolation
 from PIL import Image
+from mozaik.tools.mozaik_parametrized import SNumber, MozaikParametrized
+import quantities as qt
 from NeuroTools.parameters import ParameterSet
+
+import quantities as qt
 from mozaik import __version__
 
 TRANSPARENT = -1
@@ -24,31 +28,28 @@ def xy2ij(coordinates):
     assert len(coordinates) == 2
     return numpy.array([coordinates[1], coordinates[0]], float)
 
-class VisualRegion(object):
+class VisualRegion(MozaikParametrized):
     """A rectangular region of visual space."""
+    location_x = SNumber(qt.degrees,doc="""x location of the center of  visual region.""")
+    location_y = SNumber(qt.degrees,doc="""y location of the center of  visual region.""")
+    size_x = SNumber(qt.degrees,doc="""The size of the region in degrees (asimuth).""")
+    size_y = SNumber(qt.degrees,doc="""The size of the region in degrees (elevation).""")
     
-    def __init__(self, location, size):
-        """
-        `location` should be a tuple giving the coordinates of the _centre_
-        of the region.
-        `size` should be a tuple giving the size in degrees in the x (azimuthal)
-        and y (elevation) directions.
-        """
-        self.location = location
-        self.size = size
-        assert size[0] > 0 and size[1] > 0
+    def __init__(self,**params):
+        MozaikParametrized.__init__(self,**params)
+        assert self.size_x > 0 and self.size_y > 0
         
-        half_width = size[0]/2.0
-        half_height = size[1]/2.0
-        self.left = location[0] - half_width
-        self.right = location[0] + half_width
-        self.top = location[1] + half_height
-        self.bottom = location[1] - half_height
+        half_width = self.size_x/2.0
+        half_height = self.size_y/2.0
+        self.left = self.location_x - half_width
+        self.right = self.location_x + half_width
+        self.top = self.location_y + half_height
+        self.bottom = self.location_y - half_height
         self.width = self.right - self.left
         self.height = self.top - self.bottom
     
     def __eq__(self, other):
-        return (self.location == other.location) and (self.size == other.size)
+        return (self.location_x == other.location_x) and (self.location_y == other.location_y) and (self.size_x == other.size_x) and (self.size_y == other.size_y)
     
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -67,20 +68,18 @@ class VisualRegion(object):
         bottom = max(self.bottom, another_region.bottom)
         top = min(self.top, another_region.top)
         assert bottom <= top
-        centre = ((left + right)/2.0, (top + bottom)/2.0)
-        size = (right-left, top-bottom)
-        return VisualRegion(centre, size)
+        return VisualRegion(location_x=(left + right)/2.0,location_y=(top + bottom)/2.0,size_x=right-left,size_y=top-bottom)
     
     def describe(self):
-        s = """Region of visual space centred at %(location)s of size %(size)s.
+        s = """Region of visual space centred at (%(location_x),%(location_y)) s of size (%(size_x),%(size_y))s.
                Edges: left=%(left)g, right=%(right)g, top=%(top)g, bottom=%(bottom)g""" % self.__dict__
         return s
 
 class VisualObject(VisualRegion):
     """Abstract base class."""
     
-    def __init__(self, location, size):
-        VisualRegion.__init__(self, location, size)
+    def __init__(self,**params):
+        VisualRegion.__init__(self,**params)
         self._zoom_cache = {}
         self.is_visible = True
         
@@ -101,7 +100,7 @@ class VisualObject(VisualRegion):
 
     def display(self, region, pixel_size):
         assert isinstance(region, VisualRegion), "region must be a VisualRegion-descended object. Actually a %s" % type(region)
-        size_in_pixels = numpy.ceil(xy2ij(region.size)/float(pixel_size)).astype(int)
+        size_in_pixels = numpy.ceil(xy2ij((region.size_x,region.size_y))/float(pixel_size)).astype(int)
         view = TRANSPARENT*numpy.ones(size_in_pixels)
         if region.overlaps(self):
             intersection = region.intersection(self)
@@ -123,7 +122,7 @@ class VisualObject(VisualRegion):
             view_relative_bottom = (intersection.bottom - region.bottom)/region.height
             view_relative_height = intersection.height/region.height
             
-            img_pixel_size = xy2ij(self.size)/self.img.shape # is self.size a tuple or an array?
+            img_pixel_size = xy2ij((self.size_x,self.size_y))/self.img.shape # is self.size a tuple or an array?
             #logger.debug("img_pixel_size = %s" % str(img_pixel_size))
             #logger.debug("img relative_left, _right, _top, _bottom = %g,%g,%g,%g" % (img_relative_left, img_relative_right, img_relative_top, img_relative_bottom))
             #logger.debug("view relative_left, _right, _top, _bottom = %g,%g,%g,%g" % (view_relative_left, view_relative_right, view_relative_top, view_relative_bottom))
@@ -243,7 +242,7 @@ class VisualSpace(object):
         
         Returns a numpy array containing luminance values.
         """
-        size_in_pixels = numpy.ceil(xy2ij(region.size)/float(pixel_size)).astype(int)
+        size_in_pixels = numpy.ceil(xy2ij((region.size_x,region.size_y))/float(pixel_size)).astype(int)
         scene = TRANSPARENT*numpy.ones(size_in_pixels)
 
         for obj in self.content.values():

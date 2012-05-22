@@ -1,6 +1,6 @@
 from mozaik.framework.interfaces import MozaikParametrizeObject
 from mozaik.storage.datastore import Hdf5DataStore
-from mozaik.stimuli.stimulus_generator import load_from_string, parse_stimuls_id
+from mozaik.stimuli.stimulus_generator import StimulusID
 from NeuroTools.parameters import ParameterSet
 from mozaik.stimuli.stimulus_generator import colapse
 import numpy
@@ -41,12 +41,12 @@ def select_stimuli_type_query(dsv,stimulus_name,params=None):
 
    
     for seg in dsv.block.segments:
-        sid = parse_stimuls_id(seg.annotations['stimulus'])
+        sid = StimulusID(seg.annotations['stimulus'])
         if sid.name == stimulus_name:
            if params: 
                 flag=True    
-                for (i,f) in enumerate(params):
-                    if f != '*' and float(f) != float(sid.parameters[i]):
+                for n,f in params.items():
+                    if float(f) != float(sid.params[n]):
                        flag=False;
                        break;
                 if flag:
@@ -61,8 +61,8 @@ class SelectStimuliTypeQuery(Query):
     Additionally one can filter out parameters:
     params is a list that should have the same number of elements as the 
     number of free parameters of the given stimulus. Each parameter can be
-    set either to '*' indicating pick any stimulus with respect to this parameter
-    or to a number which indicates pick only stimuli that have this value of the 
+    set either to None indicating pick any stimulus with respect to this parameter
+    or to a value (number or string) which indicates pick only stimuli that have this value of the 
     parameter.
     """
     required_parameters = ParameterSet({
@@ -157,9 +157,9 @@ class IdentifierBasedQuery(Query):
 
 
 ########################################################################
-def partition_by_stimulus_paramter_query(dsv,stimulus_paramter_index):  
+def partition_by_stimulus_paramter_query(dsv,stimulus_name):  
         st = dsv.get_stimuli()
-        values,st = colapse(numpy.arange(0,len(st),1),st,parameter_indexes=[stimulus_paramter_index])
+        values,st = colapse(numpy.arange(0,len(st),1),st,parameter_list=[stimulus_name])
         dsvs = []
         for vals in values:
             new_dsv = dsv.fromDataStoreView()

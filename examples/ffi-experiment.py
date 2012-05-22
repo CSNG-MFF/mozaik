@@ -1,6 +1,6 @@
-#!/usr/local/bin/ipython --pdb
+#!/Library/Frameworks/Python.framework/Versions/2.7/bin/python
 import sys
-sys.path.append('/home/jan/projects/mozaik/')
+sys.path.append('/Users/jan/projects/mozaik/')
 import matplotlib
 import time
 from mozaik.framework.experiment import MeasureOrientationTuningFullfield, MeasureSpontaneousActivity, MeasureNaturalImagesWithEyeMovement
@@ -24,7 +24,7 @@ if True:
     
     experiment_list =   [
                            #Spontaneous Activity 
-                           MeasureSpontaneousActivity(jens_model,duration=70*7),
+                           #MeasureSpontaneousActivity(jens_model,duration=70*7),
                            
                            # LONG
                            #MeasureOrientationTuningFullfield(jens_model,num_orientations=12,spatial_frequency=0.8,temporal_frequency=2,grating_duration=2*148*7,num_trials=10),
@@ -33,10 +33,11 @@ if True:
                            MeasureOrientationTuningFullfield(jens_model,num_orientations=8,spatial_frequency=0.8,temporal_frequency=2,grating_duration=148*7,num_trials=10),
                            
                            #SHORT ORIENTATION TUNING
-                           #MeasureOrientationTuningFullfield(jens_model,num_orientations=6,spatial_frequency=0.8,temporal_frequency=2,grating_duration=148*7,num_trials=1),
+                           #MeasureOrientationTuningFullfield(jens_model,num_orientations=4,spatial_frequency=0.8,temporal_frequency=2,grating_duration=50*7,num_trials=2),
+
                            
                            #SINGLE STIMULUS
-                           #MeasureOrientationTuningFullfield(jens_model,num_orientations=1,spatial_frequency=0.8,temporal_frequency=2,grating_duration=3*148*7,num_trials=1),
+                           #MeasureOrientationTuningFullfield(jens_model,num_orientations=1,spatial_frequency=0.8,temporal_frequency=2,grating_duration=50*7,num_trials=1),
                         ]
 
     data_store = run_experiments(jens_model,experiment_list)

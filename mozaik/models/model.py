@@ -1,6 +1,6 @@
 from NeuroTools.parameters import ParameterSet
 from NeuroTools import  visualization, visual_logging, datastore
-
+from mozaik.stimuli.stimulus_generator import StimulusID
 from mozaik.framework import load_component
 from mozaik.framework.interfaces import MozaikComponent
 from mozaik.framework.space import VisualSpace, VisualRegion
@@ -50,7 +50,7 @@ class Model(MozaikComponent):
             if self.first_time:
                 sheet.record()
             sh.append(sheet) 
-        retinal_input = self.retina.process_visual_input(self.visual_space,stimulus.duration,self.simulator_time)        
+        retinal_input = self.retina.process_visual_input(self.visual_space,StimulusID(stimulus),stimulus.duration,self.simulator_time)        
         self.run(stimulus.duration)
                 
         segments = []
@@ -129,7 +129,7 @@ class JensModel(Model):
         RetinaLGN = load_component(self.parameters.retina_lgn.component)
       
         # Build and instrument the network
-        self.visual_field = VisualRegion(self.parameters.visual_field.centre, self.parameters.visual_field.size)
+        self.visual_field = VisualRegion(location_x=self.parameters.visual_field.centre[0],location_y=self.parameters.visual_field.centre[1],size_x=self.parameters.visual_field.size[0],size_y=self.parameters.visual_field.size[1])
         self.retina = RetinaLGN(self, self.parameters.retina_lgn.params)
         
         cortex_exc = CortexExc(self, self.parameters.cortex_exc.params)

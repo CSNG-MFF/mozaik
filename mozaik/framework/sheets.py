@@ -9,7 +9,6 @@ from mozaik.framework.interfaces import MozaikComponent
 import logging
 import pyNN
 import pyNN.recording.files
-import quantities
 
 from NeuroTools.parameters import ParameterSet
 from pyNN import random, space

@@ -4,22 +4,27 @@ import topo.pattern
 from topo.base.boundingregion import BoundingBox
 import pickle
 import numpy
+from mozaik.tools.mozaik_parametrized import *
+from mozaik.tools.units import cpd
+import quantities as qt
+
 
 class FullfieldDriftingSinusoidalGrating(Stimulus):
+
+    """
+    max_luminance is interpreted as scale
+    and size_in_degrees as the bounding box size
+    """
+    
+    orientation = SNumber(qt.rad,doc="""Grating orientation""")
+    spatial_frequency = SNumber(cpd,doc="""Spatial frequency of grating""")
+    temporal_frequency = SNumber(qt.Hz,doc="""Temporal frequency of grating""")
+
     def frames(self):
-            """
-            max_luminance is interpreted as scale
-            and size_in_degrees as the bounding box size
-            parameters are in this order (after the 7 default ones)
-            orientation
-            spatial_frequency
-            temporal_frequency (Hz)
-            """
-            
-            self.current_phase=0
-            while True:
-                yield (topo.pattern.SineGrating(orientation=self.params[0],frequency=self.params[1],phase=self.current_phase,size=self.size_in_degrees[0],bounds=BoundingBox(radius=self.size_in_degrees[0]/2),scale=self.max_luminance,xdensity=self.density,ydensity=self.density)(),[self.current_phase])
-                self.current_phase+= 2*numpy.pi*(self.frame_duration/1000.0)*self.params[2]
+        self.current_phase=0
+        while True:
+                yield (topo.pattern.SineGrating(orientation=self.orientation,frequency=self.spatial_frequency,phase=self.current_phase,size=self.size_x,bounds=BoundingBox(radius=self.size_x/2),scale=self.max_luminance,xdensity=self.density,ydensity=self.density)(),[self.current_phase])
+                self.current_phase+= 2*numpy.pi*(self.frame_duration/1000.0)*self.temporal_frequency
                 
 
 
@@ -35,28 +40,22 @@ class Null(Stimulus):
 class NaturalImageWithEyeMovement(Stimulus):
     """
     A visual stimulus that simulates an eye movement over a static image
-    
-    Parameter order:
-    `size`              -    the length of the longer axis of the image in visual degrees
-    `eye_movement_period` -  # (ms) the time between two consequitve eye movements recorded in the eye_path file
-    `idd`                 -  JAHACK: this is probably just a hack for now how to 
-                             make two stimuli with different external(hidden) parameters  
-                             to have unique parameter combinations
     """    
-    def __init__(self, parameters,eye_path_location,image_location):
-            f = open(eye_path_location,'r')
+    size = SNumber(qt.degrees,doc="""The length of the longer axis of the image in visual degrees""")
+    eye_movement_period = SNumber(qt.ms,doc="""The time between two consequitve eye movements recorded in the eye_path file""")
+    image_location = SString(doc="""Location of the image""")
+    eye_path_location = SString(doc="""Location of file containing the eye path (two columns of numbers)""")
+    
+    def __init__(self, **params):
+            Stimulus.__init__(self,params) 
+            f = open(self.eye_path_location,'r')
             self.eye_path = pickle.load(f)
-            self.image_location = image_location
-            self.idd = 'NaturalImageWithEyeMovement' + str(self.eye_path) + str(self.image_location)
-            Stimulus.__init__(self,parameters) 
+            self.pattern_sampler = topo.pattern.image.PatternSampler(size_normalization='fit_longest',whole_pattern_output_fns=[DivisiveNormalizeLinf()])
 
     def frames(self):
             self.time=0
             from topo.transferfn.basic import DivisiveNormalizeLinf
             import topo.pattern.image 
-            
-            
-            pattern_sampler = topo.pattern.image.PatternSampler(size_normalization='fit_longest',whole_pattern_output_fns=[DivisiveNormalizeLinf()])
             
             while True:
                 location = self.eye_path[int(numpy.floor(self.frame_duration*self.time/self.params[1]))]
@@ -69,7 +68,7 @@ class NaturalImageWithEyeMovement(Stimulus):
                                              size=self.params[0],
                                              bounds=BoundingBox(points=((-self.size_in_degrees[0]/2,-self.size_in_degrees[1]/2),(self.size_in_degrees[0]/2,self.size_in_degrees[1]/2))),
                                              scale=self.max_luminance,
-                                             pattern_sampler = pattern_sampler
+                                             pattern_sampler = self.pattern_sampler
                                              )()
                 yield (image,[self.time])
                 self.time = self.time + 1
@@ -77,44 +76,41 @@ class NaturalImageWithEyeMovement(Stimulus):
 class DriftingGratingWithEyeMovement(Stimulus):
     """
     A visual stimulus that simulates an eye movement over a drifting  gratings
-    Parameter order:
-    'orientation'        - orientation of the grating
-    'spatial_frequency'  - spatial_frequency of the grating
-    'temporal_frequency (Hz)' - temporal_frequency of the grating
-    `size`              -    the size of the grating
-    `eye_movement_period` -  # (ms) the time between two consequitve eye movements recorded in the eye_path file
-    `idd`                 -  JAHACK: this is probably just a hack for now how to 
-                             make two stimuli with different external(hidden) parameters  
-                             to have unique parameter combinations
-    """    
-    def __init__(self, parameters,eye_path_location,image_location):
-            f = open(eye_path_location,'r')
+    """
+    
+    orientation = SNumber(qt.rad,doc="""Grating orientation""")
+    spatial_frequency = SNumber(cpd,doc="""Spatial frequency of grating""")
+    temporal_frequency = SNumber(qt.Hz,doc="""Temporal frequency of grating""")
+    eye_movement_period = SNumber(qt.ms,doc="""The time between two consequitve eye movements recorded in the eye_path file""")
+    eye_path_location = SString(doc="""Location of file containing the eye path (two columns of numbers)""")
+
+    def __init__(self, **params):
+            Stimulus.__init__(self,params) 
+            f = open(self.eye_path_location,'r')
             self.eye_path = pickle.load(f)
-            self.idd = 'NaturalImageWithEyeMovement' + str(self.eye_path)
-            Stimulus.__init__(self,parameters) 
+            self.pattern_sampler = topo.pattern.image.PatternSampler(size_normalization='fit_longest',whole_pattern_output_fns=[DivisiveNormalizeLinf()])
 
     def frames(self):
             self.time=0
             self.current_phase=0
             from topo.transferfn.basic import DivisiveNormalizeLinf
             import topo.pattern.image 
-            pattern_sampler = topo.pattern.image.PatternSampler(size_normalization='fit_longest',whole_pattern_output_fns=[DivisiveNormalizeLinf()])
             
             while True:
-                location = self.eye_path[int(numpy.floor(self.frame_duration*self.time/self.params[4]))]
+                location = self.eye_path[int(numpy.floor(self.frame_duration*self.time/self.eye_movement_period))]
                 
-                image = topo.pattern.SineGrating(orientation=self.params[0],
+                image = topo.pattern.SineGrating(orientation=self.orientation,
                                                  x=location[0],
                                                  y=location[1],
-                                                 frequency=self.params[1],
+                                                 frequency=self.spatial_frequency,
                                                  phase=self.current_phase,
-                                                 size=self.params[3],
-                                                 bounds=BoundingBox(points=((-self.size_in_degrees[0]/2,-self.size_in_degrees[1]/2),(self.size_in_degrees[0]/2,self.size_in_degrees[1]/2))),
+                                                 size=self.size_x,
+                                                 bounds=BoundingBox(points=((-self.size_x/2,-self.size_x/2),(-self.size_y/2,-self.size_y/2))),
                                                  scale=self.max_luminance,
                                                  xdensity=self.density,
                                                  ydensity=self.density)()
                 self.time = self.time + 1
-                self.current_phase+= 2*numpy.pi*(self.frame_duration/1000.0)*self.params[2]
+                self.current_phase+= 2*numpy.pi*(self.frame_duration/1000.0)*self.temporal_frequency
                 yield (image,[self.time])
   
   

@@ -7,7 +7,7 @@ import numpy
 import time
 import quantities as qt
 import mozaik.tools.units as munits
-from mozaik.stimuli.stimulus_generator import colapse, parse_stimuls_id
+from mozaik.stimuli.stimulus_generator import colapse, StimulusID
 from mozaik.analysis.analysis_data_structures import CyclicTuningCurve,TuningCurve, ConductanceSignalList , AnalogSignalList, PerNeuronValue
 from mozaik.analysis.analysis_helper_functions import time_histogram_across_trials
 from mozaik.framework.interfaces import MozaikParametrizeObject
@@ -77,7 +77,7 @@ class AveragedOrientationTuning(Analysis):
                 # transform spike trains due to stimuly to mean_rates
                 mean_rates = [numpy.array(s.mean_rates())  for s in segs]
                 # collapse against all parameters other then orientation
-                (mean_rates,s) = colapse(mean_rates,st,parameter_indexes=[8])
+                (mean_rates,s) = colapse(mean_rates,st,parameter_list=['trial'])
                 # take a sum of each 
                 def _mean(a):
                     l = len(a)
@@ -87,7 +87,7 @@ class AveragedOrientationTuning(Analysis):
                 #JAHACK make sure that mean_rates() return spikes per second
                 units = munits.spike / qt.s
                 logger.debug('Adding CyclicTuningCurve to datastore')
-                self.datastore.full_datastore.add_analysis_result(CyclicTuningCurve(numpy.pi,mean_rates,s,9,'Response',units,sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__))
+                self.datastore.full_datastore.add_analysis_result(CyclicTuningCurve(numpy.pi,mean_rates,s,"orientation",'Response',units,sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__))
 
 class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
       """
@@ -115,11 +115,9 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
                         pref,sel = circ_mean(numpy.array(period),weights=numpy.array(values),axis=0,low=0,high=tc.period,normalize=True)
                         
                         logger.debug('Adding PerNeuronValue to datastore')
-                        
-                        st = parse_stimuls_id(k)
-                        
-                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(pref,st.get_parameter_units(tc.parameter_index),value_name = st.get_parameter_name(tc.parameter_index) + ' preference',sheet_name=sheet,tags=self.tags,period=tc.period,analysis_algorithm=self.__class__.__name__))
-                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(sel,st.get_parameter_units(tc.parameter_index),value_name= st.get_parameter_name(tc.parameter_index) + ' selectivity',sheet_name=sheet,tags=self.tags,period=1.0,analysis_algorithm=self.__class__.__name__))
+                        st = StimulusID(k)
+                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(pref,st.units[tc.parameter_name],value_name = tc.parameter_name + ' preference',sheet_name=sheet,tags=self.tags,period=tc.period,analysis_algorithm=self.__class__.__name__))
+                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(sel,st.units[tc.parameter_name],value_name = tc.parameter_name + ' selectivity',sheet_name=sheet,tags=self.tags,period=1.0,analysis_algorithm=self.__class__.__name__))
 
 class GSTA(Analysis):
       """
@@ -195,7 +193,7 @@ class Precision(Analysis):
             dsv = self.datastore
             for sheet in dsv.sheets():
                 dsv1 = select_result_sheet_query(dsv,sheet)
-                dsvs = partition_by_stimulus_paramter_query(dsv1,7)
+                dsvs = partition_by_stimulus_paramter_query(dsv1,'trial')
                 
                 for dsv in dsvs:
                     sl = [s.spiketrains for s in dsv.get_segments()]

@@ -2,8 +2,8 @@
 Units used in mozaik project and not specified in quantities.
 """
 import quantities as qt
-from quantities.unitquantity import UnitQuantity, UnitInformation, dimensionless
-from quantities import s
+from quantities.unitquantity import UnitQuantity, UnitInformation, dimensionless, CompoundUnit
+import quantities as qt
 import numpy
 
 sp = spike = UnitInformation(
@@ -14,8 +14,26 @@ sp = spike = UnitInformation(
 
 spike_per_sec = UnitQuantity(
     'spike_per_sec',
-    spike/s,
+    spike/qt.s,
     symbol='sp/s',
+)
+
+#defines cycles per radian of visual field angle
+cpr = UnitQuantity(
+    'cycles_per_radian',
+    qt.cycle/qt.rad
+)
+  
+#defines cycles per degree of visual field 
+cpd = UnitQuantity(
+    'cycles_per_degree',
+    qt.cycle/qt.degree
+)
+
+lux = lx = UnitQuantity(
+    'luxes',
+    symbol='lx',
+    aliases = ['lux', 'lx']
 )
 
 

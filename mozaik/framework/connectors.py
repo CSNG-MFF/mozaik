@@ -77,7 +77,7 @@ class mozaikVisualSystemConnector(VisualSystemConnector):
 
 class ExponentialProbabilisticArborization(mozaikVisualSystemConnector):
     required_parameters = ParameterSet({
-        'weights': float,                #nA, the cell type of the sheet 
+        'weights': float,                #nA, the synapse strength 
         'propagaion_constant': float,    #ms/μm the constant that will determinine the distance dependent delays on the connections
         'arborization_constant': float,  # μm distance constant of the exponential decay of the probability of the connection with respect
                                          # to the distance from the invervation point.
@@ -103,7 +103,7 @@ class UniformProbabilisticArborization(mozaikVisualSystemConnector):
 
         required_parameters = ParameterSet({
             'connection_probability': float, #probability of connection between two neurons from the two populations
-            'weights': float,                #nA, the cell type of the sheet 
+            'weights': float,                #nA, the synapse strength 
             'delay': float,    #ms delay of the connections
         })
 
