@@ -6,12 +6,18 @@ from mozaik.framework.interfaces import MozaikComponent
 from mozaik.framework.space import VisualSpace, VisualRegion
 from mozaik.framework.connectors import ExponentialProbabilisticArborization,UniformProbabilisticArborization,GaborConnector, V1PushPullProbabilisticArborization
 from mozaik.framework.sheets import Sheet
-
 import logging
 
+try:
+    from mpi4py import MPI
+except ImportError:
+    MPI = None
+if MPI:
+    mpi_comm = MPI.COMM_WORLD
+MPI_ROOT = 0
+    
+
 logger = logging.getLogger("mozaik")
-
-
 
 class Model(MozaikComponent):
     
@@ -22,9 +28,6 @@ class Model(MozaikComponent):
                                     'background_luminance':float,
                                }),
         'results_dir' : str, 
-        'cortex_inh' : ParameterSet, 
-        'cortex_exc' : ParameterSet, 
-        'retina_lgn' : ParameterSet,   
         'reset'      : bool,
         'null_stimulus_period' : float,
         'visual_field' : ParameterSet({
@@ -54,14 +57,15 @@ class Model(MozaikComponent):
         self.run(stimulus.duration)
                 
         segments = []
-        for sheet in self.sheets.values():    
-            if sheet.to_record != None:
-                if self.parameters.reset:
-                    s = sheet.write_neo_object()
-                    segments.append(s)
-                else:
-                    s = sheet.write_neo_object(stimulus.duration)
-                    segments.append(s)
+        if (not MPI) or (mpi_comm == MPI_ROOT):
+            for sheet in self.sheets.values():    
+                if sheet.to_record != None:
+                    if self.parameters.reset:
+                        s = sheet.write_neo_object()
+                        segments.append(s)
+                    else:
+                        s = sheet.write_neo_object(stimulus.duration)
+                        segments.append(s)
                     
         self.visual_space.clear()
         self.reset()
@@ -121,6 +125,13 @@ class Model(MozaikComponent):
         return neuron_annotations
 
 class JensModel(Model):
+    
+    required_parameters = ParameterSet({
+        'cortex_inh' : ParameterSet, 
+        'cortex_exc' : ParameterSet, 
+        'retina_lgn' : ParameterSet   
+    })
+    
     def __init__(self,simulator,parameters):
         Model.__init__(self,simulator,parameters)        
         # Load components
@@ -131,7 +142,6 @@ class JensModel(Model):
         # Build and instrument the network
         self.visual_field = VisualRegion(location_x=self.parameters.visual_field.centre[0],location_y=self.parameters.visual_field.centre[1],size_x=self.parameters.visual_field.size[0],size_y=self.parameters.visual_field.size[1])
         self.retina = RetinaLGN(self, self.parameters.retina_lgn.params)
-        
         cortex_exc = CortexExc(self, self.parameters.cortex_exc.params)
         cortex_inh = CortexInh(self, self.parameters.cortex_inh.params)
         
@@ -149,10 +159,6 @@ class JensModel(Model):
         self.retina.sheets['X_OFF'].to_record = tr #'all'
 
         # initialize projections
-        #UniformProbabilisticArborization(self,cortex_exc,cortex_exc,self.parameters.cortex_exc.ExcExcConnection,'V1ExcExcConnection').connect()
-        #UniformProbabilisticArborization(self,cortex_exc,cortex_inh,self.parameters.cortex_exc.ExcInhConnection,'V1ExcInhConnection').connect()
-        #UniformProbabilisticArborization(self,cortex_inh,cortex_exc,self.parameters.cortex_inh.InhExcConnection,'V1InhExcConnection').connect()
-        #UniformProbabilisticArborization(self,cortex_inh,cortex_inh,self.parameters.cortex_inh.InhInhConnection,'V1InhInhConnection').connect()
         
         GaborConnector(self,self.retina.sheets['X_ON'],self.retina.sheets['X_OFF'],cortex_exc,self.parameters.cortex_exc.AfferentConnection,'V1AffConnection')
         GaborConnector(self,self.retina.sheets['X_ON'],self.retina.sheets['X_OFF'],cortex_inh,self.parameters.cortex_inh.AfferentConnection,'V1AffInhConnection')

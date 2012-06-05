@@ -76,11 +76,22 @@ logger = logging.getLogger("mozaik")
 
 
 class Plotting(MozaikParametrizeObject):
+    """
+    The high level Plotting API. 
     
-    def  __init__(self,datastore,parameters):
+    datastore - the DataStore from which to plot the data
+    parameters - no comment
+    plot_file_name - either None, in which case the plot is not saved onto 
+                     HD, or path to a file into which to save the file (formats accepted by matplotlib)
+    fig_params - the parameters that are passed to the matplotlib figure command. (but note facecolor='w' is already supplied)
+    """
+
+    def  __init__(self,datastore,parameters,plot_file_name=None,fig_param=None):
          MozaikParametrizeObject.__init__(self,parameters)
          self.datastore = datastore
-    
+         self.plot_file_name = plot_file_name
+         self.fig_param = fig_param if fig_param != None else {}
+         
     def subplot(self,subplotspec,params):
         raise NotImplementedError
         pass
@@ -89,12 +100,15 @@ class Plotting(MozaikParametrizeObject):
         t1 = time.time()        
         if params == None:
            params = {}
-        self.fig = pylab.figure(facecolor='w')
+        self.fig = pylab.figure(facecolor='w',**self.fig_param)
         gs = gridspec.GridSpec(1, 1)
         gs.update(left=0.1, right=0.9, top=0.9, bottom=0.1)
         self.subplot(gs[0,0],params)
+        if self.plot_file_name:
+           pylab.savefig(self.plot_file_name)
         t2 = time.time()
         logger.warning(self.__class__.__name__ + ' plotting took: ' + str(t2-t1) + 'seconds')
+        
         
 
           

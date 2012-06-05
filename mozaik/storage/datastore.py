@@ -29,16 +29,8 @@ class DataStoreView(MozaikParametrizeObject):
 
     Experiments results storage:
 
-    These are stored a a simple list in the self.block.segments variable. Each segment corresponds to recordings
-    from a single sheet to a single stimulus. The information about the sheet stimulus are stored in the segments
-    but are not exposed to the user. Instead there is a set of function that the user can use to access the results:
-    
-    sheets(self):
-    get_stimuli(self):
-    get_spike_lists(self):
-    get_vm_lists(self):
-    get_gsyn_e_lists(self):
-    get_gsyn_i_lists(self):
+    These are stored as a simple list in the self.block.segments variable. Each segment corresponds to recordings
+    from a single sheet to a single stimulus. 
 
     Analysis results storage:
 
@@ -101,7 +93,7 @@ class DataStoreView(MozaikParametrizeObject):
     
     def get_stimuli(self):
         """
-        Returns a list of stimuli ids. The order of the stimuli ids corresponds to the order of
+        Returns a list of stimuli ids (as strings). The order of the stimuli ids corresponds to the order of
         segments returned by the get_segments() call.
         """
         return [s.annotations['stimulus'] for s in self.block.segments]

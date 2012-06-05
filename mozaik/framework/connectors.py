@@ -80,7 +80,7 @@ class ExponentialProbabilisticArborization(mozaikVisualSystemConnector):
         'weights': float,                #nA, the synapse strength 
         'propagaion_constant': float,    #ms/μm the constant that will determinine the distance dependent delays on the connections
         'arborization_constant': float,  # μm distance constant of the exponential decay of the probability of the connection with respect
-                                         # to the distance from the invervation point.
+                                         # to the distance from the innervation point.
     })
 
 
@@ -234,17 +234,7 @@ class V1PushPullProbabilisticArborization(MozaikComponent):
             
             (angle,mag) = circ_mean(numpy.array([numpy.array(pnv_target).T for i in xrange(0,numpy.shape(we)[0])]),weights=numpy.array(we),low=0,high=numpy.pi,axis=1)            
             
-            
-            import pylab
-            pylab.figure()
-            pylab.subplot(3,1,1)
-            pylab.plot(angle,pnv_source,'ro')
-            pylab.title(self.name)
-            pylab.subplot(3,1,2)
-            pylab.hist(angle)
-            pylab.subplot(3,1,3)
-            pylab.hist(pnv_source)
-            
+           
                                     
             if self.parameters.probabilistic:
                 SpecificProbabilisticArborization(network, self.source, self.target, weights,self.parameters.specific_arborization,self.name).connect()

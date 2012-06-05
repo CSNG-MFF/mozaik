@@ -180,7 +180,8 @@ class GSTA(Analysis):
           
 class Precision(Analysis):
       """
-      Computes the precision as the autocorrelation between the PSTH of different trials
+      Computes the precision as the autocorrelation between the PSTH of different trials.
+      Takes all the responses in the datastore.
       """
       
       required_parameters = ParameterSet({
@@ -219,11 +220,18 @@ class ModulationRatio(Analysis):
       using all available responses recorded to the FullfieldDriftingSinusoidalGrating stimuli. This method 
       also requires that AveragedOrientationTuning has already been calculated.
       """
+
+      required_parameters = ParameterSet({
+        'bin_length' : float, #(ms) the size of bin to construct the PSTH from
+      })
+
+      
       def perform_analysis(self):
             logger.info('Modulation ratio analysis')
             dsv = select_stimuli_type_query(self.datastore,'FullfieldDriftingSinusoidalGrating')
             for sheet in dsv.sheets():
                 dsv1 = select_result_sheet_query(dsv,sheet)
+                pert_trials_dsvs = partition_by_stimulus_paramter_query(dsv1,'trial')
                 self.pnvs = self.datastore.get_analysis_result(identifier='PerNeuronValue',sheet_name=sheet,value_name='orientation preference')
                 
                 if len(self.pnvs) != 1:
@@ -232,19 +240,42 @@ class ModulationRatio(Analysis):
                 else:
                     pnv = pnvs[0]
                 
-                segs = dsv1.get_segments()
-                st = dsv1.get_stimuli()
-                # transform spike trains due to stimuly to mean_rates
-                mean_rates = [numpy.array(s.mean_rates())  for s in segs]
-                # collapse against all parameters other then orientation
-                (mean_rates,s) = colapse(mean_rates,st,parameter_indexes=[8])
-                # take a sum of each 
-                def _mean(a):
-                    l = len(a)
-                    return sum(a)/l
-                mean_rates = [_mean(a) for a in mean_rates]
+                # find closest orientation of grating to a given orientation preference of a neuron
                 
-                #JAHACK make sure that mean_rates() return spikes per second
-                units = munits.spike / qt.s
-                logger.debug('Adding CyclicTuningCurve to datastore')
-                self.datastore.full_datastore.add_analysis_result(CyclicTuningCurve(numpy.pi,mean_rates,s,9,'Response',units,sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__))
+                # first find all the different presented stimuli:
+                ps = {}
+                for s in pert_trials_dsvs.get_stimuli():
+                    ps[StimulusID(s).params['orientation']] = True
+                ps = ps.keys()
+                
+                
+                # now find the closest presented orientations
+                closest_presented_orientation = []
+                for i in xrange(0,len(pnv.values)):
+                    circ_d = 100
+                    idx = 0
+                    for j in xrange(0,len(ps)):
+                        if circ_d > circular_dist(pnv.values[i],ps[j],numpy.pi):
+                           circ_d = circular_dist(pnv.values[i],ps[j],numpy.pi)
+                           idx = j
+                    closest_presented_orientation.append(idx)    
+                
+                modulation_ratio = numpy.array((1,len(pert_trials_dsvs[0].get_segments().spiketrains)))
+                
+                period = temporal_frequency
+                
+                for i,dsv in enumerate(pert_trials_dsvs):
+                    sl = [s.spiketrains for s in dsv.get_segments()]
+                    t_start = sl[0][0].t_start
+                    t_stop =  sl[0][0].t_stop
+                    duration = t_stop-t_start
+                    
+                    hist = time_histogram_across_trials(sl,self.parameters.bin_length)
+                    for j in numpy.nonzero(i == numpy.array(closest_presented_orientation)):
+                        modulation_ratio[j] = self.calculate_MR(hist[j])
+                    
+                    
+                    
+                    
+      #def calculate_MR(self,signal,period):
+          

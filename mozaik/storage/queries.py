@@ -157,9 +157,9 @@ class IdentifierBasedQuery(Query):
 
 
 ########################################################################
-def partition_by_stimulus_paramter_query(dsv,stimulus_name):  
+def partition_by_stimulus_paramter_query(dsv,parameter_name):  
         st = dsv.get_stimuli()
-        values,st = colapse(numpy.arange(0,len(st),1),st,parameter_list=[stimulus_name])
+        values,st = colapse(numpy.arange(0,len(st),1),st,parameter_list=[parameter_name])
         dsvs = []
         for vals in values:
             new_dsv = dsv.fromDataStoreView()
@@ -174,17 +174,16 @@ class PartitionByStimulusParamterQuery(Query):
     """
     This query will take all recordings and return list of DataStoreViews
     each holding recordings measured to the same stimulus with exception of
-    the paramter reference by stimulus_paramter_index.
+    the paramter reference by parameter_name.
     
-    Note that in most cases one wants to do this only against datastore holding on
-    single Stimulus type!
-    
-    This way the datastoreview is partitioned into subsets each holding 
-    recordings to the same stimulus with the same paramter values with the
-    exception to the stimulus_paramter_index
+    Note that in most cases one wants to do this only against datastore holding only
+    single Stimulus type! In that case the datastore is partitioned into subsets each holding 
+    recordings to the same stimulus with the same paramter values, with the
+    exception to the parameter_name
     """
+    
     required_parameters = ParameterSet({
-     'stimulus_paramter_index' : list, # the index of the parameter against which to partition
+     'parameter_name' : list, # the index of the parameter against which to partition
     })
     
     def query(self,dsv):  
