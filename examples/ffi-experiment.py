@@ -1,4 +1,3 @@
-#!/usr/local/bin/ipython
 import sys
 sys.path.append('/home/jan/projects/mozaik/')
 import matplotlib
@@ -49,12 +48,6 @@ if True:
 
     data_store = run_experiments(jens_model,experiment_list)
     
-    #lets store some connections as well
-    #jens_model.connectors["V1ExcExcConnection"].store_connections(data_store)
-    #jens_model.connectors["V1ExcInhConnection"].store_connections(data_store)
-    #jens_model.connectors["V1InhExcConnection"].store_connections(data_store)
-    #jens_model.connectors["V1InhInhConnection"].store_connections(data_store)
-    
     print 'Saving Datastore'
     if (not MPI) or (mpi_comm == MPI_ROOT):
         data_store.save()
@@ -73,8 +66,6 @@ if (not MPI) or (mpi_comm == MPI_ROOT):
     NeuronAnnotationsToPerNeuronValues(data_store,ParameterSet({})).analyse()
     ConnectivityPlot(data_store,ParameterSet({'neuron' : 0, 'reversed' : False}),pnv_dsv=analysis_data_structure_parameter_filter_query(data_store,'PerNeuronValue',value_name='LGNAfferentPhase')).plot()
     ConnectivityPlot(data_store,ParameterSet({'neuron' : 0, 'reversed' : False}),pnv_dsv=analysis_data_structure_parameter_filter_query(data_store,'PerNeuronValue',value_name='LGNAfferentOrientation')).plot()
-    #pylab.show()
-    #0/0
 
     AveragedOrientationTuning(data_store,ParameterSet({})).analyse()
     GSTA(data_store,ParameterSet({'neurons' : [0], 'length' : 50.0 }),tags=['GSTA1']).analyse()
@@ -97,6 +88,3 @@ if (not MPI) or (mpi_comm == MPI_ROOT):
 
     import resource
     print "Current memory usage: %iMB" % (resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/(1024))
-
-    import pylab
-    pylab.show()
