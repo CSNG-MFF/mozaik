@@ -6,6 +6,8 @@ logger = logging.getLogger("mozaik")
 
 class MozaikParametrized(Parameterized):
       
+      name = String(default=None,constant=True,precedence=-1,doc="""String identifier for this object.""")
+      
       def __init__(self,**params):
           Parameterized.__init__(self,**params)
           
@@ -13,6 +15,8 @@ class MozaikParametrized(Parameterized):
               if value == None:
                  logger.error("The parameter %s was not initialized" % name) 
                  raise ValueError("The parameter %s was not initialized" % name) 
+          
+                 
             
       def equalParams(self,other):
           """
@@ -24,26 +28,39 @@ class MozaikParametrized(Parameterized):
           """
           return self.get_param_values() == other.get_param_values()
          
-
+      @classmethod
+      def params(cls,parameter_name=None):
+          """
+          In MozaikParametrized we hide parameters with precedence below 0 from users.
+          """
+          d = super(MozaikParametrized, cls).params(parameter_name).copy()
+          for k in d.keys():
+              if d[k].precedence < 0 and d[k].precedence != None:
+                 del d[k] 
+          
+          return d  
 """
 For Stimuli objects we will allow only SNumber, SInteger and SString parameters.
 These are extension of corresponding parametrized parameters that automaticall allow None
 value, are instatiated and allow for definition of units.
 """
 class SNumber(Number):
-      __slots__ = ['units']
-      def __init__(self,units,**params):
+      __slots__ = ['units','period']
+      def __init__(self,units,period=None,**params):
             super(SNumber,self).__init__(default=None,allow_None=True,instantiate=True,**params)
             self.units = units
+            self.period = period
 
 class SInteger(Integer):
-      __slots__ = ['units']    
-      def __init__(self,**params):
+      __slots__ = ['units','period']    
+      def __init__(self,period=None,**params):
             super(SInteger,self).__init__(default=None,allow_None=True,instantiate=True,**params)
             self.units = None        
+            self.period = period
 
 class SString(String):
-       __slots__ = ['units']
+       __slots__ = ['units','period']
        def __init__(self,**params):
             super(SString,self).__init__(default=None,allow_None=True,instantiate=True,**params)
             self.units = None
+            self.period = None

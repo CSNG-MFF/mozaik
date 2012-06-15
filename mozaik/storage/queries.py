@@ -87,6 +87,9 @@ def select_result_sheet_query(dsv,sheet_name):
 
 
 class SelectResultSheetQuery(Query):
+    """
+    Constraints datastore to results recorded in sheet sheet_name
+    """
     
     required_parameters = ParameterSet({
      'sheet_name' : str
@@ -174,7 +177,7 @@ class PartitionByStimulusParamterQuery(Query):
     """
     This query will take all recordings and return list of DataStoreViews
     each holding recordings measured to the same stimulus with exception of
-    the paramter reference by parameter_name.
+    the parameter reference by parameter_name.
     
     Note that in most cases one wants to do this only against datastore holding only
     single Stimulus type! In that case the datastore is partitioned into subsets each holding 
@@ -263,7 +266,8 @@ class PartitionAnalysisResultsByParameterNameQuery(Query):
 ########################################################################          
 def analysis_data_structure_parameter_filter_query(dsv,identifier,**kwargs):
         """
-        The 
+        Returns DSV containing ADSs with matching identifier and matching parameter values
+        defined in **kwargs.
         """
         dsv = identifier_based_query(dsv,identifier)  
         new_dsv = dsv.fromDataStoreView()
@@ -287,3 +291,35 @@ def _adspfq_recursive(d,**kwargs):
            new_ads.append(ads_object)
     return new_ads
 ########################################################################
+
+########################################################################          
+def analysis_data_structure_stimulus_filter_query(dsv,stimulus_name,**kwargs):
+        """
+        Returns DSV containing ADSs with matching stimulus and matching parameter values
+        defined in **kwargs.
+        """
+        new_dsv = dsv.fromDataStoreView()
+        new_dsv.block.segments = dsv.recordings_copy()
+        new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
+        
+        for asd in dsv.analysis_results:
+            if asd.stimulus_id != None:
+                sid = StimulusID(asd.stimulus_id)
+                if sid.name == stimulus_name:
+                        flag=True    
+                        for n,f in kwargs.items():
+                            if float(f) != float(sid.params[n]):
+                               flag=False;
+                               break;
+                        if flag:
+                            new_dsv.analysis_results.append(asd) 
+            
+        return new_dsv
+########################################################################             
+
+
+
+
+
+
+

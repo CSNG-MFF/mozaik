@@ -1,5 +1,4 @@
 from mozaik.stimuli.topographica_based import FullfieldDriftingSinusoidalGrating, Null, NaturalImageWithEyeMovement
-from mozaik.visualization.plotting import GSynPlot,RasterPlot,VmPlot,CyclicTuningCurvePlot,OverviewPlot, ConductanceSignalListPlot, RetinalInputMovie
 from NeuroTools.parameters import ParameterSet, ParameterDist
 
 import numpy
@@ -30,9 +29,9 @@ class Experiment(object):
 
 class MeasureOrientationTuningFullfield(Experiment):
     
-    def __init__(self,model,num_orientations,spatial_frequency,temporal_frequency,grating_duration,num_trials):
+    def __init__(self,model,num_orientations,spatial_frequency,temporal_frequency,grating_duration,contrasts,num_trials):
         self.model = model
-        for j in [0.3]:
+        for j in contrasts:
             for i in xrange(0,num_orientations):
                 for k in xrange(0,num_trials):
                     self.stimuli.append(FullfieldDriftingSinusoidalGrating(

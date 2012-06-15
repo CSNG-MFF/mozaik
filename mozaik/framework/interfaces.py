@@ -89,13 +89,13 @@ class MozaikParametrizeObject(object):
     def check_parameters(self, parameters):
             def walk(tP, P, section=None):
                 if set(tP.keys()) != set(P.keys()):
-                    raise KeyError("Invalid parameters for %s.%s Required: %s. Supplied: %s" % (self.__class__.__name__, section or '', tP.keys(), P.keys()))
+                    raise KeyError("Invalid parameters for %s.%s Required: %s. Supplied: %s. Difference: %s" % (self.__class__.__name__, section or '', tP.keys(), P.keys(), set(tP.keys()) ^ set(P.keys())))
                 for k,v in tP.items():
                     if isinstance(v, ParameterSet):
-                        assert isinstance(P[k], ParameterSet), "Type mismatch: %s !=  ParameterSet, for %s " % (type(P[k]),P[k]) 
+                        assert isinstance(P[k], ParameterSet), "Type mismatch for parameter %s: %s !=  ParameterSet, for %s " % (k,type(P[k]),P[k]) 
                         walk(v, P[k],section=k)
                     else:
-                        assert isinstance(P[k], v), "Type mismatch: %s !=  %s, for %s" % (v,type(P[k]),P[k])
+                        assert isinstance(P[k], v), "Type mismatch for parameter %s: %s !=  ParameterSet, for %s " % (k,type(P[k]),P[k]) 
             try:
                 # we first need to collect the required parameters from all the classes along the parent path
                 new_param_dict={}

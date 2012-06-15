@@ -254,21 +254,18 @@ class Hdf5DataStore(DataStore):
         self.retinal_stimulus[str(stimulus)] = data
         
     def add_analysis_result(self,result):
+        flag = True
         for ads in self.analysis_results:
-            for k in result.params().keys():
-                if not ads.params().has_key(k):
-                   self.analysis_results.append(result)
-                   return
-                if ads.inspect_value(k) != result.inspect_value(k):
-                   self.analysis_results.append(result)
-                   return
+            if result.equalParams(ads):
+               flag = False
+               break
         
-        if len(self.analysis_results) == 0:
+        if flag:
            self.analysis_results.append(result)
            return
         
-                
-        logger.error("Analysis Data Structure with the same parametrization already added in the datastore. Currently uniquenes is required. The ADS was not added. User should modify analasys specification to avoid this!")
+        logger.error("Analysis Data Structure with the same parametrization already added in the datastore. Currently uniqueness is required. The ADS was not added. User should modify analysis specification to avoid this!: %s" % (str(result)))
+        raise ValueError("Analysis Data Structure with the same parametrization already added in the datastore. Currently uniqueness is required. The ADS was not added. User should modify analysis specification to avoid this!: %s" % (str(result)))
     
 class PickledDataStore(Hdf5DataStore):
     """

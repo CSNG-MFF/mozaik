@@ -16,7 +16,7 @@ class FullfieldDriftingSinusoidalGrating(Stimulus):
     and size_in_degrees as the bounding box size
     """
     
-    orientation = SNumber(qt.rad,doc="""Grating orientation""")
+    orientation = SNumber(qt.rad,period=numpy.pi,doc="""Grating orientation""")
     spatial_frequency = SNumber(cpd,doc="""Spatial frequency of grating""")
     temporal_frequency = SNumber(qt.Hz,doc="""Temporal frequency of grating""")
 
@@ -78,7 +78,7 @@ class DriftingGratingWithEyeMovement(Stimulus):
     A visual stimulus that simulates an eye movement over a drifting  gratings
     """
     
-    orientation = SNumber(qt.rad,doc="""Grating orientation""")
+    orientation = SNumber(qt.rad,period=numpy.pi,doc="""Grating orientation""")
     spatial_frequency = SNumber(cpd,doc="""Spatial frequency of grating""")
     temporal_frequency = SNumber(qt.Hz,doc="""Temporal frequency of grating""")
     eye_movement_period = SNumber(qt.ms,doc="""The time between two consequitve eye movements recorded in the eye_path file""")

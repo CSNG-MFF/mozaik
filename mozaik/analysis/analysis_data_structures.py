@@ -3,11 +3,12 @@ This module contains the definition of the AnalysisDataStructure API and impleme
 some basic analysis data structures.
 """
 import numpy
-from mozaik.stimuli.stimulus_generator import StimulusID
 import param
-from param.parameterized import Parameterized
+from mozaik.stimuli.stimulus_generator import StimulusID, identical_stimulus_type, colapse, colapse_to_dictionary
+from mozaik.tools.mozaik_parametrized import *
 
-class AnalysisDataStructure(Parameterized):
+
+class AnalysisDataStructure(MozaikParametrized):
       """
       AnalysisDataStructure encupsulates data that a certain Analysis class generates.
       An analysis class can generate several AnalysisDataStructure's (ADSs) and one ADS
@@ -40,8 +41,11 @@ class AnalysisDataStructure(Parameterized):
           The sheet for which this results were computed for. None if they do not belong to specific sheet.
       
       neuron -
-          Neuron id to which the datastructure belongs. None if it is not neuron specific
-       
+          Neuron id to which the data structure belongs. None if it is not neuron specific
+          
+      stimulus_id - 
+          Stimulus id (as string) to which the data structure belongs. None if it is not stimulus specific
+          
       tags - 
           In complicated workflows it might become difficult to design a filter to extract the right 
           set of recordings or analysis data structures for a given analysis or visualization. 
@@ -56,103 +60,169 @@ class AnalysisDataStructure(Parameterized):
           However, in general, we encourage users to use filter methods rather that tags to perform their
           plotting/analysis whenever possible!
       """
-      
       identifier = param.String(instantiate=True,doc="""The identifier of the analysis data structure""")
       analysis_algorithm = param.String(instantiate=True,doc="""The identifier of the analysis data structure""")
-      tags = param.List(default=[],instantiate=True,doc="""The list of tags to attach""")
       neuron = param.Integer(allow_None=True,default=None,instantiate=True,doc="""Neuron id to which the datastructure belongs. None if it is not neuron specific""")
-      sheet_name = param.String(default=None,instantiate=True,doc="""The sheet for which this results were computed for. None if they do not belong to specific sheet""")
-
+      sheet_name = param.String(allow_None=True,default=None,instantiate=True,doc="""The sheet for which this results were computed for. None if they do not belong to specific sheet""")
+      stimulus_id = param.String(allow_None=True,default=None,instantiate=True,doc="""The stimulus for which the results were computed. None if they are not related to specific stimulus""")
+      
+      tags = param.List(default=[],instantiate=True,doc="""The list of tags to attach""")
+      
       def __init__(self,**params):
           Parameterized.__init__(self,**params)
 
-          
-class TuningCurve(AnalysisDataStructure):
+      def __str__(self):
+            """
+            Returns the description of the ASD - its class name and the list of its parameters and their values.
+            """
+            return self.__class__.__name__ + "\n" + "\n".join(['   \"%s\":%s' % (name,repr(val)) for name,val in self.get_param_values()])
+
+class StimulusDependentData(AnalysisDataStructure):
         """
-             Tuning curve holds data of a tuning curves with respect to a certain paramter of a stimulus.
+             This data structure holds data that depend on stimuli. The data should be all
+             of the same type D. For each stimulus it assumes to hold a list of data structures
+             D where each member of the list corresponds to a neuron - ordered in the same order as
+             neurons in corresponding sheet to which the StimulusDependentData belong.
              
-             It is assumed that all other paramters are either: 
-              * collpased (i.e. they have been averaged out such as phase or trials in case of orientation tuning)
-              * those that are unclopased should be tread as the paramters of 
-                the tuning curve (i.e. orientation tuning curves taken at different contrasts)
+             The raw format of StimulusDependentData is a pair of lists. The first list contains list
+             of stimuli ids. The second list contains in corresponding order and array of data 
+             structures D where each member of the list corresponds to a neuron.
+             
+             It is assumed:
+                all data correspond to the same neurons
             
-             sheet_name 
-                    - in which sheet the data were recorded
              values     
                     - is a list of lists, members of the outer list correspond 
+                      to data linked to different stimuli (in the same order as stimuli_ids (see below)) and
+                      the inter lists contain a data structure D one per each neuron in the given sheet
+             
+             stimuli_ids 
+                    - the list of stimuli (the associated data structures are in values)
+        """
+        def __init__(self,values,stimuli_ids,**params):
+            AnalysisDataStructure.__init__(self,**params)
+            # lets make sure all data structure are the same
+            dst = type(values[0][0])
+            for st_d in values:
+                for ds in st_d:
+                    if type(ds) != dst:
+                       raise ValueError("All datastructures stored in StimulusDependentData have to be identical: %s != %s" % (str(type(ds)),str(dst))) 
+            
+            self.values = values
+            self.stimuli_ids = stimuli_ids
+            
+        def colapse_along_parameter(self,param_name,func=None,allow_non_identical_stimuli=False):
+            """
+            Step 1
+            This functions takes all data structures corresponding to the same stimulus with the exception of
+            the parameter referenced by parameter_name, and puts them into a list. 
+            Note that in most cases one wants to do this only if only
+            single Stimulus type is present in StimulusDependentData! 
+            In that case the StimulusDependentData is partitioned into subsets each holding 
+            recordings to the same stimulus with the same paramter values, with the
+            exception to parameter_name.
+
+            Step 2
+            Next the function func is applied onto each list. 
+
+            Step 3
+            A new stimulus list is created by shrinking the self.stimulus_id list 
+            to the colapsed set of stimuli with the parameter param_name replaced with None.
+            The values are set to the corresponding results of the func function in step 2.
+            
+            param_name - the parameter name against which to colapse the data structure
+            func -       the func to be aplied to the lists formed by data associated with the 
+                         same stimuli parametrizations with exception of the parameter parameter_name
+            allow_non_identical_stimuli - (defaul=False) unless set to True, it will not allow runing this operation on
+                                          StimulusDependentData that does not contain only stimuli of the same type
+            """
+            if (not allow_non_identical_stimuli) and (not identical_stimulus_type(self.stimuli_ids)):
+               raise ValueError("StimulusDependentData analysis data structure accepts only stimuli lists of the same type")  
+            
+            values,st = colapse(self.values,self.stimuli_ids,parameter_list=[param_name])
+            
+            if func != None:
+                return ([func(v) for v in values],st)
+            else:
+                return (values,st)
+          
+class TuningCurve(StimulusDependentData):
+        """
+             Tuning curve holds data of a tuning curves with respect to a certain type of stimulus.
+             
+             Note that there can be many dimensions to which the stimulus has been varied, and each 
+             can correspond to tuning curves through that dimensions. This datastructure abstracts 
+             from this and allows you to pick for which specific dimension you want extract the tuning curve.
+             
+             The raw format of the tuning curves is a pair of lists. The first list contains list
+             of stimuli of the same type with varying parameters. The second list contains in corresponding
+             order and array of 'y' values of the tuning curves (i.e. firing rate), where the array corresponds to the 
+             neurons in the population.
+             
+            
+             values     
+                    - is a list of arrays, members of the outer list correspond 
                       to the value of the tuning curve for a stimulus at the same position in the stimuli_ids
-                      the inner lists contain the actual values for the measured neurons
+                      the inner array contains the actual values for the measured neurons
              
              stimuli_ids 
                     - see values description
-             
-             parameter_name 
-                    - the parameter name against which the tuning curve was computed
-             
-             y_axis_name
-                    - name of the tuning curve y axis
-             
+        
              y_axis_units
                     - quantities units of the y axis
         """
         
-        sheet_name = param.String(instantiate=True,doc=""" The identifier of the analysis data structure""")
+        y_axis_name = param.String(instantiate=True,doc="""name of the tuning curve y axis""")
+        stimulus_type = param.String(instantiate=True,doc="""the type of stimulus to which this TuningCurve ASD corresponds""")
         
-        def __init__(self,values,stimuli_ids,parameter_name,y_axis_name,y_axis_units,**params):
-            AnalysisDataStructure.__init__(self,identifier = 'TuningCurve',**params)
-            self.values = values
-            self.stimuli_ids = stimuli_ids
-            self.parameter_name = parameter_name
-            self.y_axis_name = y_axis_name
+        def __init__(self,values,stimuli_ids,y_axis_units,**params):
+            StimulusDependentData.__init__(self,values,stimuli_ids,**params)
+            self.identifier = 'TuningCurve'
+            
+            # first if stimulus_ids are strings turn them into StimulusID 
+            stimuli_ids = [StimulusID(s) for s in stimuli_ids]
+            
+            self.stimulus_type = stimuli_ids[0].name
+            if not identical_stimulus_type(stimuli_ids):
+                raise ValueError("TuningCurve analysis data structure accepts only stimuli lists of the same type")  
+            # lets now find the varying parameters
+            p = stimuli_ids[0].params.copy()
+            self.varying_params = {}
+            for n in p.keys():
+                for sid in stimuli_ids:
+                    if sid.params[n] != p[n]:
+                        self.varying_params[n] = True
+                        break;
+            self.varying_params = self.varying_params.keys()        
             self.y_axis_units = y_axis_units
 
-        def to_dictonary_of_tc_parametrization(self):
+        def to_dictonary_of_tc_parametrization(self,parameter_name):
             """
-            Returns dictionary where keys correspond to stimuli ids (essentially parametrizations of the Tuninc Curve)
+            Returns dictionary D where D.keys() correspond to stimuli ids (essentially parametrizations of the Tuninc Curve)
             with the dimension through which tuning curve runs replaced with x.
-            The values are tuple of lists (levels,xaxis), where levels is the value of the tuning curve on the 'yaxis' and the 'xaxis' corresponds
+            The D.values() are tuple of lists (xaxis,levels), where levels is the value of the tuning curve on the 'yaxis' and the 'xaxis' corresponds
             to the value of the stimulus in the dimension through which the tuning curve runs, at which the level is achieved.
             Essentially to plot the given parametrization of tuning curve one does plot(xaxis,levels).
             
             Finally note each member of levels field is a array containing levels for different neurons.
             """
-            
-            self.d = {}
-            for (v,s) in zip(self.values,self.stimuli_ids):
-                s = StimulusID(s)
-                val = s.params[self.parameter_name]
-                s.params[self.parameter_name] = None
-                if self.d.has_key(str(s)):
-                   (a,b) = self.d[str(s)] 
-                   a.append(v)
-                   b.append(val)
-                else:
-                   self.d[str(s)]  = ([v],[val]) 
-            
-            for k in self.d:
-                (a,b) = self.d[k]
-                self.d[k] = (numpy.array(a),b)
-            
-            return self.d
-
-class CyclicTuningCurve(TuningCurve):
-        """
-        TuningCurve with over periodic quantity
+            return colapse_to_dictionary(self.values,self.stimuli_ids,parameter_name)
         
-        period - the period of the parameter over which the tuning curve is measured, i.e. pi for orientation
-                  all the values have to be in the range <0,period)
-        """
-        def __init__(self,period,*args,**params):
-            TuningCurve.__init__(self,*args,**params)
-            self.identifier = 'CyclicTuningCurve'
-            self.period = period    
-            # just double check that none of the stimuly has the corresponding parameter larger than period 
-            for s in self.stimuli_ids:
-                s = StimulusID(s)
-                v = s.params[self.parameter_name]
-                if v < 0 or v >= self.period:
-                   raise ValueError("CyclicTuningCurve with period " + str(self.period) + ": "  + str(v) + " does not belong to <0," + str(self.period) + ") range!") 
+        def get_param_units(self,parameter_name):
+            """
+            Helper function that returns the units of a parameter parameter_name for the stimulus type stored in
+            TuningCurve.
+            """
+            return self.stimuli_ids[0].units[parameter_name]
+            
 
+        def get_param_period(self,parameter_name):
+            """
+            Helper function that returns the period of a parameter parameter_name for the stimulus type stored in
+            TuningCurve.
+            """
+            return self.stimuli_ids[0].periods[parameter_name]
+            
 
 class PerNeuronValue(AnalysisDataStructure):
       """
@@ -213,18 +283,21 @@ class AnalysisDataStructure1D(AnalysisDataStructure):
         
 class AnalogSignalList(AnalysisDataStructure1D):
        """
-         This is a simple list of Neo AnalogSignal objects.
+       This is a simple list of Neo AnalogSignal objects.
 
-         asl - 
-                the variable containing the list of AnalogSignal objects, in the order corresponding to the 
-                order of neurons indexes in the indexes parameter
-         indexes - 
-                list of indexes of neurons in the original Mozaik sheet to which the AnalogSignals correspond
+       asl - 
+            the variable containing the list of AnalogSignal objects, in the order corresponding to the 
+            order of neurons indexes in the indexes parameter
+       indexes - 
+            list of indexes of neurons in the original Mozaik sheet to which the AnalogSignals correspond
        """
+       
        def __init__(self,asl,indexes,x_axis_units,y_axis_units,**params):
            AnalysisDataStructure1D.__init__(self,x_axis_units,y_axis_units,identifier = 'AnalogSignalList',**params)
            self.asl = asl
            self.indexes = indexes
+           
+           
 
 class ConductanceSignalList(AnalysisDataStructure1D):
        """

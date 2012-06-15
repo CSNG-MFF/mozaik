@@ -1,11 +1,7 @@
 from NeuroTools.parameters import ParameterSet
-from NeuroTools import  visualization, visual_logging, datastore
 from mozaik.stimuli.stimulus_generator import StimulusID
-from mozaik.framework import load_component
 from mozaik.framework.interfaces import MozaikComponent
-from mozaik.framework.space import VisualSpace, VisualRegion
-from mozaik.framework.connectors import ExponentialProbabilisticArborization,UniformProbabilisticArborization,GaborConnector, V1PushPullProbabilisticArborization
-from mozaik.framework.sheets import Sheet
+from mozaik.framework.space import VisualSpace
 import logging
 
 try:
@@ -57,7 +53,7 @@ class Model(MozaikComponent):
         self.run(stimulus.duration)
                 
         segments = []
-        if (not MPI) or (mpi_comm == MPI_ROOT):
+        if (not MPI) or (mpi_comm.rank == MPI_ROOT):
             for sheet in self.sheets.values():    
                 if sheet.to_record != None:
                     if self.parameters.reset:
@@ -124,48 +120,3 @@ class Model(MozaikComponent):
              neuron_annotations[s.name] = s.get_neuron_annotations()
         return neuron_annotations
 
-class JensModel(Model):
-    
-    required_parameters = ParameterSet({
-        'cortex_inh' : ParameterSet, 
-        'cortex_exc' : ParameterSet, 
-        'retina_lgn' : ParameterSet   
-    })
-    
-    def __init__(self,simulator,parameters):
-        Model.__init__(self,simulator,parameters)        
-        # Load components
-        CortexExc = load_component(self.parameters.cortex_exc.component)
-        CortexInh = load_component(self.parameters.cortex_inh.component)
-        RetinaLGN = load_component(self.parameters.retina_lgn.component)
-      
-        # Build and instrument the network
-        self.visual_field = VisualRegion(location_x=self.parameters.visual_field.centre[0],location_y=self.parameters.visual_field.centre[1],size_x=self.parameters.visual_field.size[0],size_y=self.parameters.visual_field.size[1])
-        self.retina = RetinaLGN(self, self.parameters.retina_lgn.params)
-        cortex_exc = CortexExc(self, self.parameters.cortex_exc.params)
-        cortex_inh = CortexInh(self, self.parameters.cortex_inh.params)
-        
-        # which neurons to record
-        
-        tr = {'spikes' : 'all', 
-              'v' : [0,1,2,3,4,5,6,7,8,9,10],
-              'gsyn_exc' :[0,1,2,3,4,5,6,7,8,9,10],
-              'gsyn_inh' : [0,1,2,3,4,5,6,7,8,9,10],
-        }
-        
-        cortex_exc.to_record = tr #'all'
-        cortex_inh.to_record = tr #'all'
-        self.retina.sheets['X_ON'].to_record = tr #'all'
-        self.retina.sheets['X_OFF'].to_record = tr #'all'
-
-        # initialize projections
-        
-        GaborConnector(self,self.retina.sheets['X_ON'],self.retina.sheets['X_OFF'],cortex_exc,self.parameters.cortex_exc.AfferentConnection,'V1AffConnection')
-        GaborConnector(self,self.retina.sheets['X_ON'],self.retina.sheets['X_OFF'],cortex_inh,self.parameters.cortex_inh.AfferentConnection,'V1AffInhConnection')
-        
-        V1PushPullProbabilisticArborization(self,cortex_exc,cortex_exc,self.parameters.cortex_exc.ExcExcConnection,'V1ExcExcConnection')
-        V1PushPullProbabilisticArborization(self,cortex_exc,cortex_inh,self.parameters.cortex_exc.ExcInhConnection,'V1ExcInhConnection')
-        V1PushPullProbabilisticArborization(self,cortex_inh,cortex_exc,self.parameters.cortex_inh.InhExcConnection,'V1InhExcConnection')
-        V1PushPullProbabilisticArborization(self,cortex_inh,cortex_inh,self.parameters.cortex_inh.InhInhConnection,'V1InhInhConnection')
-
-        

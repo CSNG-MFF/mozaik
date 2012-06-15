@@ -109,9 +109,6 @@ class Plotting(MozaikParametrizeObject):
         t2 = time.time()
         logger.warning(self.__class__.__name__ + ' plotting took: ' + str(t2-t1) + 'seconds')
         
-        
-
-          
               
 class PlotTuningCurve(Plotting):
     """
@@ -122,76 +119,55 @@ class PlotTuningCurve(Plotting):
     """
 
     required_parameters = ParameterSet({
-      'tuning_curve_name' : str,  #the name of the tuning curve
       'neuron': int, # which neuron to plot
       'sheet_name' : str, # from which layer to plot the tuning curve
+      'parameter_name' : str # the parameter_name through which to plot the tuning curve
     })
 
-    def  __init__(self,datastore,parameters):
+    def __init__(self,datastore,parameters):
         Plotting.__init__(self,datastore,parameters)
-        self.tuning_curves = self.datastore.get_analysis_result(identifier=parameters.tuning_curve_name,sheet_name=parameters.sheet_name)
+        self.tuning_curves = self.datastore.get_analysis_result(identifier='TuningCurve',sheet_name=parameters.sheet_name)
     
     def subplot(self,subplotspec,params):
         LinePlot(function=self.ploter,length = len(self.tuning_curves)).make_line_plot(subplotspec,params)
     
     def ploter(self,idx,gs,params):
         tc = self.tuning_curves[idx]
-        tc = tc.to_dictonary_of_tc_parametrization()
+        period = tc.get_param_period(self.parameters.parameter_name)
+        tc = tc.to_dictonary_of_tc_parametrization(self.parameters.parameter_name)
         xs = []
         ys = []
         labels = []
         for k in  tc:
-            (a,b) = tc[k]
+            (b,a) = tc[k]
             par,val = zip(*sorted(zip(b,a[:,self.parameters.neuron])))
-            xs.append(par)
-            ys.append(val)
-            labels.append(str(StimulusID(k)))
-        
-        params.setdefault("title",('Neuron: %d' % self.parameters.neuron))
-        params.setdefault("y_label",self.tuning_curves[idx].y_axis_name)
-        params.setdefault("x_lim",(xs[0],xs[-1]))
-        StandardStyleLinePlot(xs,ys,labels=labels,**params)(gs)
             
+            if period!=None:
+                par = list(par)
+                val = list(val)
+                par.append(par[0]+period)
+                val.append(val[0])
             
-class CyclicTuningCurvePlot(PlotTuningCurve):
-    """
-    Tuning curve over cyclic domain
-    """
-    
-    def ploter(self,idx,gs,params):
-        tc = self.tuning_curves[idx]
-        tc = tc.to_dictonary_of_tc_parametrization()
-        xs = []
-        ys = []
-        labels = []
-        for k in  tc:
-            (a,b) = tc[k]
-            par,val = zip(*sorted(zip(b,a[:,self.parameters.neuron])))
-            par = list(par)
-            val = list(val)
-            par.append(par[0]+self.tuning_curves[0].period)
-            val.append(val[0])
             xs.append(numpy.array(par))
             ys.append(numpy.array(val))
             labels.append(str(StimulusID(k)))
-
+        
         params.setdefault("title",('Neuron: %d' % self.parameters.neuron))
         params.setdefault("y_label",self.tuning_curves[idx].y_axis_name)
-        
-        if self.tuning_curves[0].period == numpy.pi:
+
+        if period == numpy.pi:
             params.setdefault("x_ticks",[0,numpy.pi/2.0,numpy.pi])
             params.setdefault("x_lim",(0,numpy.pi))
             params.setdefault("x_tick_style","Custom")
             params.setdefault("x_tick_labels",["0","$\\frac{\\pi}{2}$","$\\pi$"])
-        if self.tuning_curves[0].period == 2*numpy.pi:
+        if period == 2*numpy.pi:
             params.setdefault("x_ticks",[0,numpy.pi,2*numpy.pi])
             params.setdefault("x_lim",(0,2*numpy.pi))
             params.setdefault("x_tick_labels",["0","$\\pi$","$2\\pi$"])
             params.setdefault("x_tick_style","Custom")
-        
-        #JAHACK
         labels=None
         StandardStyleLinePlot(xs,ys,labels=labels,**params)(gs)
+            
 
 class RasterPlot(Plotting):
       required_parameters = ParameterSet({
