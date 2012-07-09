@@ -5,6 +5,7 @@ the added spatial structure.
 """
 import os
 import numpy
+import mozaik
 from mozaik.framework.interfaces import MozaikComponent
 import logging
 import pyNN
@@ -190,7 +191,7 @@ class RetinalUniformSheet(Sheet):
         """
         logger.info("Creating %s with %d neurons." % (self.__class__.__name__,int(parameters.sx*parameters.sy*parameters.density)))
         Sheet.__init__(self, model, parameters)
-        rs = space.RandomStructure(boundary=space.Cuboid(parameters.sx,parameters.sy,0),origin=(0.0, 0.0, 0.0))
+        rs = space.RandomStructure(boundary=space.Cuboid(parameters.sx,parameters.sy,0),origin=(0.0, 0.0, 0.0),rng=mozaik.rng)
         self.pop = self.sim.Population(int(parameters.sx*parameters.sy*parameters.density), getattr(self.model.sim, self.parameters.cell.model), self.parameters.cell.params,rs,label=self.name)
         for var, val in self.parameters.cell.initial_values.items():
             self.pop.initialize(var, val)
@@ -250,7 +251,7 @@ class CorticalUniformSheet(SheetWithMagnificationFactor):
         SheetWithMagnificationFactor.__init__(self, model, parameters)
         dx,dy = self.cs_2_vf(parameters.sx,parameters.sy)
         
-        rs = space.RandomStructure(boundary=space.Cuboid(dx,dy,0),origin=(0.0, 0.0, 0.0))
+        rs = space.RandomStructure(boundary=space.Cuboid(dx,dy,0),origin=(0.0, 0.0, 0.0),rng=mozaik.rng)
         self.pop = self.sim.Population(int(parameters.sx*parameters.sy/10000*parameters.density), getattr(self.model.sim, self.parameters.cell.model), self.parameters.cell.params,rs,label=self.name)
         
         for var, val in self.parameters.cell.initial_values.items():

@@ -9,7 +9,7 @@ from NeuroTools.parameters import ParameterSet, ParameterDist
 from pyNN import random, space
 from mozaik.tools.misc import sample_from_bin_distribution, normal_function
 from mozaik.tools.circ_stat import circular_dist,circ_mean
-from scipy.interpolate import RectBivariateSpline
+from scipy.interpolate import NearestNDInterpolator
 import logging
 
 
@@ -300,6 +300,7 @@ class GaborConnector(MozaikComponent):
 
       def __init__(self, network, lgn_on, lgn_off, target, parameters,name):
     	     MozaikComponent.__init__(self, network,parameters)
+             import pickle
              self.name = name
              on = lgn_on.pop
              off = lgn_off.pop
@@ -307,15 +308,15 @@ class GaborConnector(MozaikComponent):
              on_weights=[] 
              off_weights=[]
              
-             import pickle
              t_size = target.size_in_degrees()
              or_map = None
              if self.parameters.or_map:
                 f = open(self.parameters.or_map_location,'r')
                 or_map = pickle.load(f)*numpy.pi
                 coords_x = numpy.linspace(-t_size[0]/2.0,t_size[0]/2.0,numpy.shape(or_map)[0])    
-                coords_y = numpy.linspace(-t_size[1]/2.0,t_size[1]/2.0,numpy.shape(or_map)[1])    
-                or_map = RectBivariateSpline(coords_x, coords_y, or_map)
+                coords_y = numpy.linspace(-t_size[1]/2.0,t_size[1]/2.0,numpy.shape(or_map)[1])
+                X,Y =  numpy.meshgrid(coords_x, coords_y)    
+                or_map = NearestNDInterpolator(zip(X.flatten(),Y.flatten()), or_map.flatten())
                 
              phase_map = None
              if self.parameters.phase_map:
@@ -323,31 +324,37 @@ class GaborConnector(MozaikComponent):
                 phase_map = pickle.load(f)   
                 coords_x = numpy.linspace(-t_size[0]/2.0,t_size[0]/2.0,numpy.shape(phase_map)[0])    
                 coords_y = numpy.linspace(-t_size[1]/2.0,t_size[1]/2.0,numpy.shape(phase_map)[1])    
-                phase_map = RectBivariateSpline(coords_x, coords_y, phase_map)
+                X,Y =  numpy.meshgrid(coords_x, coords_y)    
+                phase_map = NearestNDInterpolator(zip(X.flatten(),Y.flatten()), phase_map.flatten())
+             
              
              for (j,neuron2) in enumerate(target.pop.all()):
+                 
                 if or_map:
-                   orientation = or_map(target.pop.positions[0][j],target.pop.positions[1][j])[0] 
+                   orientation = or_map(target.pop.positions[0][j],target.pop.positions[1][j])
                 else: 
                    orientation = parameters.orientation_preference.next()[0]
 
                 if phase_map:
-                   phase = phase_map(target.pop.positions[0][j],target.pop.positions[1][j])[0]
+                   phase = phase_map(target.pop.positions[0][j],target.pop.positions[1][j])
                 else: 
                    phase = parameters.phase.next()[0] 
-                
+
                 # HACK!!!
-                if j == 0: 
-                   orientation = 0
-                   if target.name=='V1_Exc':
-                      phase = 0
-                   elif target.name=='V1_Inh':
-                      phase = 0
+                #if j == 0: 
+                #   orientation = 0
+                #   if target.name=='V1_Exc':
+                #      phase = 0
+                #   elif target.name=='V1_Inh':
+                #      phase = 0
                 
                 aspect_ratio = parameters.aspect_ratio.next()[0]
                 frequency = parameters.frequency.next()[0]
                 size = parameters.size.next()[0]
 				
+                if orientation > numpy.pi:
+                   print orientation
+                
                 target.add_neuron_annotation(j,'LGNAfferentOrientation',orientation,protected=True)
                 target.add_neuron_annotation(j,'LGNAfferentAspectRatio',aspect_ratio,protected=True)
                 target.add_neuron_annotation(j,'LGNAfferentFrequency',frequency,protected=True)

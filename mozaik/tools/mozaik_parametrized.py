@@ -39,6 +39,8 @@ class MozaikParametrized(Parameterized):
                  del d[k] 
           
           return d  
+          
+          
 """
 For Stimuli objects we will allow only SNumber, SInteger and SString parameters.
 These are extension of corresponding parametrized parameters that automaticall allow None

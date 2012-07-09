@@ -140,6 +140,7 @@ class PlotTuningCurve(Plotting):
         labels = []
         for k in  tc:
             (b,a) = tc[k]
+            a = numpy.array(a)
             par,val = zip(*sorted(zip(b,a[:,self.parameters.neuron])))
             
             if period!=None:
@@ -255,23 +256,26 @@ class OverviewPlot(Plotting):
       required_parameters = ParameterSet({
             'sheet_name' : str,  #the name of the sheet for which to plot
             'neuron' : int,
-            'sheet_activity' : ParameterSet, #if not empty the ParameterSet is passed to ActivityMovie which is displayed in to top row
+            'sheet_activity' : ParameterSet, #if not empty the ParameterSet is passed to ActivityMovie which is displayed in to top row, note that the sheet_name will be set by OverviewPlot
       })
       
       def subplot(self,subplotspec,params):
             offset = 0 
+            p = params.copy()
+            
             if len(self.parameters.sheet_activity.keys()) != 0:
                 gs = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=subplotspec)      
-                ActivityMovie(self.datastore,self.parameters.sheet_activity).subplot(gs[0,0],parmas)
+                self.parameters.sheet_activity['sheet_name'] = self.parameters.sheet_name
+                ActivityMovie(self.datastore,self.parameters.sheet_activity).subplot(gs[0,0],p)
                 offset = 1 
-                  
-            gs = gridspec.GridSpecFromSubplotSpec(3, 1, subplot_spec=subplotspec)      
-            p = params.copy()
+            else:
+                gs = gridspec.GridSpecFromSubplotSpec(3, 1, subplot_spec=subplotspec)      
+
             if offset == 1:
                p.setdefault('title',None)
             p.setdefault('x_axis',False)
             p.setdefault('x_label',False)
-            RasterPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name, 'trial_averaged_histogram' : False, 'neurons' : []})).subplot(gs[0+offset,0],p)
+            RasterPlot(self.datastore,ParameterSet({'sheet_name' : self.parameters.sheet_name, 'trial_averaged_histogram' : False, 'neurons' : [self.parameters.neuron]})).subplot(gs[0+offset,0],p)
             
             p = params.copy()
             p.setdefault('x_axis',False)
@@ -364,18 +368,20 @@ class ActivityMovie(Plotting):
             'frame_rate' : int,  #the desired frame rate (per sec), it might be less if the computer is too slow
             'bin_width' : float, # in ms the width of the bins into which to sample spikes 
             'scatter' :  bool,  # whether to plot neurons activity into a scatter plot (if True) or as an interpolated pixel image
-            'resolution' : int, # the number of pixels into which the activity will be interpolated in case scatter = True
+            'resolution' : int, # the number of pixels into which the activity will be interpolated in case scatter = False
+            'sheet_name' : str, # the sheet for which to display the actvity movie
       })
       
 
       def  __init__(self,datastore,parameters):
            Plotting.__init__(self,datastore,parameters)
-    
+
       def subplot(self,subplotspec,params):
-          PerStimulusPlot(self.datastore,function=self.ploter,title_style="Standard").make_line_plot(subplotspec,params)
+          dsv = select_result_sheet_query(self.datastore,self.parameters.sheet_name)
+          PerStimulusPlot(dsv,function=self.ploter,title_style="Standard").make_line_plot(subplotspec,params)
 
       def ploter(self,dsv,gs,params):
-         sp = [s.spiketrains for s in dsvs.get_segments()]
+         sp = [s.spiketrains for s in dsv.get_segments()]
          
          start = sp[0][0].t_start.magnitude
          stop = sp[0][0].t_stop.magnitude
@@ -393,7 +399,7 @@ class ActivityMovie(Plotting):
              h.append(numpy.array(hh))
          h = numpy.sum(h,axis=0)
 
-         pos = dsvs[0].get_neuron_postions()[self.parameters.sheet_name]
+         pos = dsv.get_neuron_postions()[self.parameters.sheet_name]
          
          if not self.parameters.scatter:
              xi = numpy.linspace(numpy.min(pos[0])*1.1,numpy.max(pos[0])*1.1,self.parameters.resolution)
@@ -419,11 +425,17 @@ class PerNeuronValuePlot(Plotting):
         Plotting.__init__(self,datastore,parameters)
         self.poss = []
         self.pnvs = []
+        self.sheets = []
         for sheet in datastore.sheets():
             z = datastore.get_analysis_result(identifier='PerNeuronValue',sheet_name=sheet)
             if len(z) != 0:
+                if len(z) > 1:
+                    logging.error('Warning currently only one PerNeuronValue per sheet will be plotted!!!')
+               
                 self.poss.append(datastore.get_neuron_postions()[sheet])
                 self.pnvs.append(z)
+                self.sheets.append(sheet)
+
         self.length=len(self.poss)
  
     def subplot(self,subplotspec,params):
@@ -442,8 +454,11 @@ class PerNeuronValuePlot(Plotting):
                     
          params.setdefault("x_label",'x')
          params.setdefault("y_label",'y')
-         params.setdefault("title",self.pnvs[idx][0].value_name)
+         params.setdefault("title", self.sheets[idx] + '\n' + self.pnvs[idx][0].value_name)
          params.setdefault("colorbar_label",self.pnvs[idx][0].value_units.dimensionality.latex)
+         
+         
+         
          if periodic:
             if idx ==self.length-1:
                 params.setdefault("colorbar",True)
@@ -456,21 +471,23 @@ class ConnectivityPlot(Plotting):
     
     required_parameters = ParameterSet({
         'neuron' : int,  #the target neuron whose connections are to be displayed
-        'reversed' : bool, # if true the plotting is reversed, showing the connection from source neuron to all neurons it sends connections to within the given projection
+        'reversed' : bool, # if false the outgoing connections from the given neuron are shown. if true the incomming connections are shown
+        'sheet_name' : str, # for neuron in which sheet to display connectivity
     })
 
     """
-    Plots Connectivity, one for each such data structure present in DSV (this should correspond one per projection stored).
+    Plots Connectivity, one for each projection originating or targeting (depending on parameter reversed) sheet_name for a single neuron in the sheet sheet_name.
     
-    This plot can acept second DSV that contains the PerNeuronValues corresponding to the target sheets to be displayed that will be plotted as well.
+    This plot can accept second DSV that contains the PerNeuronValues corresponding to the target sheets to be displayed that will be plotted as well.
     Note one PerNeuronValue can be present per target sheet!
-    
     """
     def  __init__(self,datastore,parameters,pnv_dsv=None):
         Plotting.__init__(self,datastore,parameters)
-        self.source_poss = []
-        self.target_poss = []
-        self.connections = datastore.get_analysis_result(identifier='Connections')
+        self.connecting_neurons_positions = []
+        self.connected_neuron_position = []
+        self.connections = []
+        
+        _connections = datastore.get_analysis_result(identifier='Connections')
         
         self.pnvs = None
         if pnv_dsv != None:
@@ -483,11 +500,21 @@ class ConnectivityPlot(Plotting):
                   self.pnvs = None
                   break  
                self.pnvs.append(a[0]) 
-           
-        
-        for conn in self.connections:
-                self.source_poss.append(datastore.get_neuron_postions()[conn.source_name])
-                self.target_poss.append(datastore.get_neuron_postions()[conn.target_name])
+
+        for conn in _connections:
+            if not self.parameters.reversed and conn.source_name == self.parameters.sheet_name:    
+               # add outgoing projections from sheet_name
+               self.connecting_neurons_positions.append(datastore.get_neuron_postions()[conn.target_name])
+               z = datastore.get_neuron_postions()[conn.source_name]
+               self.connected_neuron_position.append((z[0][self.parameters.neuron],z[1][self.parameters.neuron]))
+               self.connections.append(conn)
+            elif self.parameters.reversed and conn.target_name == self.parameters.sheet_name:
+               # add incomming projections from sheet_name
+               self.connecting_neurons_positions.append(datastore.get_neuron_postions()[conn.source_name])
+               z = datastore.get_neuron_postions()[conn.target_name]
+               self.connected_neuron_position.append((z[0][self.parameters.neuron],z[1][self.parameters.neuron]))
+               self.connections.append(conn)
+                
         self.length=len(self.connections)
  
     def subplot(self,subplotspec,params):
@@ -495,41 +522,41 @@ class ConnectivityPlot(Plotting):
         
     
     def ploter(self,idx,gs,params):
-        
+        sx = self.connecting_neurons_positions[idx][0]
+        sy = self.connecting_neurons_positions[idx][1]
+        tx = self.connected_neuron_position[idx][0]
+        ty = self.connected_neuron_position[idx][1]
         if not self.parameters.reversed:
-            sx = self.target_poss[idx][0]
-            sy = self.target_poss[idx][1]
-            tx = self.source_poss[idx][0][self.parameters.neuron]
-            ty = self.source_poss[idx][1][self.parameters.neuron]
             w  = self.connections[idx].weights[self.parameters.neuron,:]
- 
         else:
-            sx = self.source_poss[idx][0]
-            sy = self.source_poss[idx][1]
-            tx = self.target_poss[idx][0][self.parameters.neuron]
-            ty = self.target_poss[idx][1][self.parameters.neuron]
             w  = self.connections[idx].weights[:,self.parameters.neuron]
         
         
         # pick the right PerNeuronValue to show
-        pnv = None
+        pnv = []
         if self.pnvs!=None:
            for p in self.pnvs:
-               if self.parameters.reversed and p.sheet_name == self.connections[idx].source_name:
-                  pnv = p 
                if not self.parameters.reversed and p.sheet_name == self.connections[idx].target_name:
-                  pnv = p 
-        
+                  pnv.append(p)
+               if self.parameters.reversed and p.sheet_name == self.connections[idx].source_name:
+                  pnv.append(p)
+           
+           if len(pnv) > 1:
+              raise ValueError('ERROR: too many matching PerNeuronValue ADSs')  
+           else:
+              pnv = pnv[0] 
+               
            if len(pnv.values) != len(w):
-              logging.error('ERROR: length of colors does not match length of weights \[%d \!\= %d\]. Ignoring colors!' % (len(pnv.values),len(w))) 
-              pnv=None
+              raise ValueError('ERROR: length of colors does not match length of weights \[%d \!\= %d\]. Ignoring colors!' % (len(pnv.values),len(w))) 
+              
         
         if pnv != None: 
             from mozaik.tools.circ_stat import circ_mean
-            (angle,mag) = circ_mean(numpy.array(pnv.values),weights=w)
+            (angle,mag) = circ_mean(numpy.array(pnv.values),weights=w,high=pnv.period)
             params.setdefault("title",str(self.connections[idx].name) + "| Weighted mean: " + str(angle))
             params.setdefault("colorbar_label",pnv.value_name)
             params.setdefault("colorbar",True)
+            
             if self.connections[idx].source_name == self.connections[idx].target_name:
                ConnectionPlot(sx,sy,tx,ty,w,colors=pnv.values,line=False,period=pnv.period,**params)(gs) 
             else:

@@ -408,7 +408,7 @@ class ScatterPlotMovie(StandardStyleAnimatedPlot):
           
           
       def plot_next_frame(self):
-          self.scatter.set_array(self.z[self.i])
+          self.scatter.set_array(self.z[self.i,:].flatten())
           self.i=self.i+1
           if self.i == self.l:
              self.i = 0
@@ -417,7 +417,7 @@ class ScatterPlotMovie(StandardStyleAnimatedPlot):
       def plot(self):  
           vmin = 0
           vmax = numpy.max(self.z)
-          self.scatter  = self.axis.scatter(self.x,self.y,c = self.z[0],s = self.parameters["dot_size"],marker = self.parameters["marker"],lw = 1,cmap='gray',vmin = vmin, vmax = vmax)
+          self.scatter  = self.axis.scatter(self.x.flatten(),self.y.flatten(),c = self.z[0,:].flatten(),s = self.parameters["dot_size"],marker = self.parameters["marker"],lw = 1,cmap='gray',vmin = vmin, vmax = vmax)
           pylab.axis('equal')
 
 class ScatterPlot(StandardStyle):         

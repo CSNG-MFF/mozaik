@@ -90,7 +90,7 @@ class MeasureSpontaneousActivity(Experiment):
                             max_luminance=90.0,
                             duration=duration,
                             density=40,
-                            trial=k,
+                            trial=0,
             ))    
 
     def do_analysis(self,data_store):

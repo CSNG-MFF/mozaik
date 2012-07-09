@@ -34,7 +34,7 @@ class Null(Stimulus):
             empty stimulus
             """
             while True:
-                yield topo.pattern.Null(scale=0,size=self.size_in_degrees[0])(), []
+                yield topo.pattern.Null(scale=0,size=self.size_x)(), []
                 
 
 class NaturalImageWithEyeMovement(Stimulus):

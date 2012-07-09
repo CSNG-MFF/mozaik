@@ -5,6 +5,7 @@ Retina/LGN model based on that developed by Jens Kremkow (CNRS-INCM/ALUF)
 
 import numpy
 import os.path, pickle        
+import mozaik
 from mozaik.framework.space import VisualSpace, VisualRegion
 from mozaik.framework.interfaces import MozaikRetina
 from mozaik.framework.sheets import Sheet,RetinalUniformSheet
@@ -254,7 +255,7 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
                     
                     ncs = sim.NoisyCurrentSource({'mean':self.parameters.noise.mean,
                                                             'stdev': self.parameters.noise.stdev})
-                                                            #,'rng' : random.NativeRNG()})
+                                                            #'rng' : mozaik.rng})
                     self.scs[rf_type].append(scs)
                     self.ncs[rf_type].append(ncs)
                     lgn_cell.inject(scs)

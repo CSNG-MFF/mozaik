@@ -26,9 +26,9 @@ def angle_two_pi(array):
     return (numpy.angle(array)+ 4*numpy.pi) % (numpy.pi*2)
     
 
-def circ_mean(array,weights=None,axis=None,low=0,high=numpy.pi*2,normalize=False):
+def circ_mean(matrix,weights=None,axis=None,low=0,high=numpy.pi*2,normalize=False):
     """
-    Circular mean of array. Weighted if weights are not none.
+    Circular mean of matrix. Weighted if weights are not none.
     
     matrix   - matrix of data. Mean will be computed for each column.
     weights  - if not none, a vector of the same length as number of matrix rows.
@@ -40,7 +40,7 @@ def circ_mean(array,weights=None,axis=None,low=0,high=numpy.pi*2,normalize=False
     """
     
     # check whether array and weights are ndarrays
-    if not isinstance(array,numpy.ndarray):
+    if not isinstance(matrix,numpy.ndarray):
        logger.error("circ_mean: array not type ndarray ") 
        raise TypeError("circ_mean: array not type ndarray ") 
 
@@ -49,7 +49,7 @@ def circ_mean(array,weights=None,axis=None,low=0,high=numpy.pi*2,normalize=False
        raise TypeError("circ_mean: weights not type ndarray ") 
     
     # convert the periodic matrix to corresponding complex numbers
-    m = rad_to_complex((array - low)/(high-low) * numpy.pi*2)
+    m = rad_to_complex((matrix - low)/(high-low) * numpy.pi*2)
     
     # normalize weights
     if normalize:
@@ -57,11 +57,12 @@ def circ_mean(array,weights=None,axis=None,low=0,high=numpy.pi*2,normalize=False
        row_sums[numpy.where(row_sums == 0)] = 1.0
        weights = weights / row_sums[:, numpy.newaxis]
        
-       
+           
     if weights == None:
        m  = numpy.mean(m,axis=axis) 
     else:
-       m = numpy.mean(m*weights,axis=axis) 
+       z = m*weights
+       m = numpy.mean(z,axis=axis) 
         
     return ((angle_two_pi(m) / (numpy.pi*2))*(high-low) + low, abs(m))
     
