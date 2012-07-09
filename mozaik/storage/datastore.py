@@ -69,7 +69,7 @@ class DataStoreView(MozaikParametrizeObject):
         # we will hold the recordings as one neo Block
         self.block = Block()
         self.analysis_results = []
-        self.retinal_stimulus = {}
+        self.stimulus = {}
         self.full_datastore = full_datastore # should be self if actually the instance is actually DataStore
         
     def get_segments(self):
@@ -115,16 +115,16 @@ class DataStoreView(MozaikParametrizeObject):
                ars.append(ads)
         return ars
     
-    def get_retinal_stimulus(self,stimuli=None):
+    def get_stimulus(self,stimuli=None): #previously get_retinal_stimulus(self,stimuli=None):
         if stimuli == None:
-           return self.retinal_stimulus.values()
+           return self.stimulus.values()
         else:
-           return [self.retinal_stimulus[s] for s in stimuli]
+           return [self.stimulus[s] for s in stimuli]
    
-    def retinal_stimulus_copy(self):
+    def stimulus_copy(self): # previously    retinal_stimulus_copy(self):
         new_dict = {}
-        for k in self.retinal_stimulus.keys():
-            new_dict[k] = self.retinal_stimulus[k]
+        for k in self.stimulus.keys():
+            new_dict[k] = self.stimulus[k]
         return new_dict
 
     def analysis_result_copy(self):
@@ -195,7 +195,7 @@ class DataStore(DataStoreView):
         raise NotImplementedError
         pass        
 
-    def add_retinal_stimulus(self,data,stimulus):
+    def add_stimulus(self,data,stimulus):
         raise NotImplementedError
         pass        
 
@@ -250,22 +250,25 @@ class Hdf5DataStore(DataStore):
             self.block.segments.append(NeoNeurotoolsWrapper(s))
         self.stimulus_dict[str(stimulus)]=True
 
-    def add_retinal_stimulus(self,data,stimulus):
-        self.retinal_stimulus[str(stimulus)] = data
+    def add_stimulus(self,data,stimulus): # previously add_retinal_stimulus(self,data,stimulus):
+        self.stimulus[str(stimulus)] = data
         
     def add_analysis_result(self,result):
-        flag = True
         for ads in self.analysis_results:
-            if result.equalParams(ads):
-               flag = False
-               break
+            for k in result.params().keys():
+                if not ads.params().has_key(k):
+                   self.analysis_results.append(result)
+                   return
+                if ads.inspect_value(k) != result.inspect_value(k):
+                   self.analysis_results.append(result)
+                   return
         
-        if flag:
+        if len(self.analysis_results) == 0:
            self.analysis_results.append(result)
            return
         
-        logger.error("Analysis Data Structure with the same parametrization already added in the datastore. Currently uniqueness is required. The ADS was not added. User should modify analysis specification to avoid this!: %s" % (str(result)))
-        raise ValueError("Analysis Data Structure with the same parametrization already added in the datastore. Currently uniqueness is required. The ADS was not added. User should modify analysis specification to avoid this!: %s" % (str(result)))
+                
+        logger.error("Analysis Data Structure with the same parametrization already added in the datastore. Currently uniquenes is required. The ADS was not added. User should modify analasys specification to avoid this!")
     
 class PickledDataStore(Hdf5DataStore):
     """
@@ -283,7 +286,7 @@ class PickledDataStore(Hdf5DataStore):
         self.analysis_results = cPickle.load(f)
         
         #f = open(self.parameters.root_directory+'/datastore.retinal.stimulus.pickle','rb')
-        #self.retinal_stimulus = pickle.load(f)
+        #self.stimulus = pickle.load(f)
         
             
     def save(self):
@@ -296,7 +299,7 @@ class PickledDataStore(Hdf5DataStore):
         f.close()
 
         #f = open(self.parameters.root_directory+'/datastore.retinal.stimulus.pickle','wb')
-        #pickle.dump(self.retinal_stimulus,f)
+        #pickle.dump(self.stimulus,f)
         #f.close()                
         
 

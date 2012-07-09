@@ -5,7 +5,8 @@ Retina/LGN model based on that developed by Jens Kremkow (CNRS-INCM/ALUF)
 
 import numpy
 import os.path, pickle        
-from mozaik.framework.space import VisualSpace, VisualRegion
+from mozaik.framework.space import VisualSpace
+from mozaik.stimuli.visual_stimuli import VisualRegion
 from mozaik.framework.interfaces import MozaikRetina
 from mozaik.framework.sheets import Sheet,RetinalUniformSheet
 import cai97
@@ -160,7 +161,8 @@ class CellWithReceptiveField(object):
          to avoid loading the entire image sequence into memory, we build up
          the response array one frame at a time.
         """
-        visual_region = VisualRegion(location_x=self.x, location_y=self.y, size_x=self.receptive_field.width,size_y=self.receptive_field.height)
+        visual_region = VisualRegion(location_x=self.x, location_y=self.y, size_x=self.receptive_field.width,size_y=self.receptive_field.height, \
+                duration=-1., frame_duration=1., trial=0) # to match the requirements of the Stimulus class
         view_array = visual_space.view(visual_region, pixel_size=self.receptive_field.spatial_resolution)
         #logger.debug("view_array.shape = %s" % str(view_array.shape))
         #logger.debug("receptive_field.kernel.shape = %s" % str(self.receptive_field.kernel.shape))
@@ -200,8 +202,9 @@ class CellWithReceptiveField(object):
 
 
 class SpatioTemporalFilterRetinaLGN(MozaikRetina):
+    # TODO derive from MozaikInputLayer
     """Retina/LGN model with spatiotemporal receptive field."""
-    
+
     required_parameters = ParameterSet({
         'density': float, # neurons per degree squared
         'size' : tuple, # degrees of visual field
@@ -228,30 +231,29 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
             'stdev': float, # nA
         }),
     })
-    
+
     def __init__(self, model, parameters):
-        MozaikRetina.__init__(self, model, parameters)       
+        MozaikRetina.__init__(self, model, parameters)
+        # TODO: MozaikInputLayer.__init__(self, model, parameters)
         self.shape = (int(self.parameters.size[0] * numpy.sqrt(self.parameters.density)),int(self.parameters.size[1] * numpy.sqrt(self.parameters.density)))
         self.sheets = {}
         self._built = False
         self.rf_types = ('X_ON', 'X_OFF')
-        sim = self.model.sim                
+        sim = self.model.sim
         self.pops={}
         self.scs={}
         self.ncs={}
         for rf_type in self.rf_types:
-            
             bn = ParameterSet({'exc_firing_rate' : 0.0,  'exc_weight' : 0.0, 'inh_firing_rate' : 0.0,'inh_weight' : 0.0 })
             p = RetinalUniformSheet(model,ParameterSet({'sx': self.parameters.size[0], 'sy': self.parameters.size[1], 'density': self.parameters.density, 'cell': self.parameters.cell, 'name' : rf_type , 'background_noise' : bn}))
+            # TODO: InputUniformSheet
             self.sheets[rf_type] = p
 
-        for rf_type in self.rf_types:            
+        for rf_type in self.rf_types:
                 self.scs[rf_type] = []
                 self.ncs[rf_type] = []
-                
                 for lgn_cell in self.sheets[rf_type].pop:
                     scs = sim.StepCurrentSource({'times' : [0.0], 'amplitudes' : [0.0]})
-                    
                     ncs = sim.NoisyCurrentSource({'mean':self.parameters.noise.mean,
                                                             'stdev': self.parameters.noise.stdev})
                                                             #,'rng' : random.NativeRNG()})
@@ -259,8 +261,7 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
                     self.ncs[rf_type].append(ncs)
                     lgn_cell.inject(scs)
                     lgn_cell.inject(ncs)
-    
-    
+
     def get_cache(self,stimulus_id):
         if self.parameters.cached==False:
             return None
@@ -291,27 +292,27 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
             
             logger.debug("Stored spikes to cache...")
                 
-            f1 = open(self.parameters.cache_path + '/' +  'stimuli.st','w')
-            f = open(self.parameters.cache_path + '/' + str(counter) + '.st','wb')
+            f1 = open(os.path.abspath(self.parameters.cache_path) + '/' +  'stimuli.st','w')
+            f = open(os.path.abspath(self.parameters.cache_path) + '/' + str(counter) + '.st','wb')
             pickle.dump(self.cached_stimuli,f1)
             pickle.dump((input_currents,retinal_input),f)
             f.close()
             f1.close()
         
-    def process_visual_input(self, visual_space, stimulus_id,duration=None, offset=0):
+    def process_input(self, visual_space, stimulus_id,duration=None, offset=0):
         """
         Present a visual stimulus to the model, and create the LGN output (relay)
         neurons.
         """
         logger.info("Presenting visual stimulus from visual space %s" % visual_space)
-        visual_space.set_duration(duration) 
-        self.input = visual_space 
+        visual_space.set_duration(duration)
+        self.input = visual_space
         sim = self.model.sim
-        
+
         stimulus_id.params['trial']=None # to avoid recalculating RFs response to multiple trials of the same stimulus
-        
+
         cached = self.get_cache(stimulus_id)
-        
+
         if cached == None:
             logger.debug("Generating output spikes...")
             (input_currents,retinal_input) = self._calculate_input_currents(visual_space, duration)
@@ -402,7 +403,8 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
                     cell.view(visual_space)
             t = visual_space.update()
             
-            visual_region = VisualRegion(location_x=0,location_y=0, size_x=P_rf.width,size_y=P_rf.height)
+            visual_region = VisualRegion(location_x=0,location_y=0, size_x=P_rf.width,size_y=P_rf.height, \
+                duration=-1., frame_duration=1., trial=0) # to match the requirements of the Stimulus class
             im = visual_space.view(visual_region, pixel_size=rf_ON.spatial_resolution)
             retinal_input.append(im)
             progress_bar(t/duration)

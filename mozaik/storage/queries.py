@@ -1,8 +1,7 @@
 from mozaik.framework.interfaces import MozaikParametrizeObject
 from mozaik.storage.datastore import Hdf5DataStore
-from mozaik.stimuli.stimulus_generator import StimulusID
+from mozaik.stimuli.stimulus import StimulusID, colapse
 from NeuroTools.parameters import ParameterSet
-from mozaik.stimuli.stimulus_generator import colapse
 import numpy
 
 
@@ -37,7 +36,7 @@ class Query(MozaikParametrizeObject):
 def select_stimuli_type_query(dsv,stimulus_name,params=None): 
     new_dsv = dsv.fromDataStoreView()
     new_dsv.analysis_results = dsv.analysis_result_copy()
-    new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
+    new_dsv.retinal_stimulus = dsv.stimulus_copy()
 
    
     for seg in dsv.block.segments:
@@ -78,7 +77,7 @@ class SelectStimuliTypeQuery(Query):
 def select_result_sheet_query(dsv,sheet_name):  
     new_dsv = dsv.fromDataStoreView()
     new_dsv.analysis_results = dsv.analysis_result_copy()
-    new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
+    new_dsv.retinal_stimulus = dsv.stimulus_copy()
     
     for seg in dsv.block.segments:
         if seg.annotations['sheet_name'] == sheet_name:
@@ -87,9 +86,6 @@ def select_result_sheet_query(dsv,sheet_name):
 
 
 class SelectResultSheetQuery(Query):
-    """
-    Constraints datastore to results recorded in sheet sheet_name
-    """
     
     required_parameters = ParameterSet({
      'sheet_name' : str
@@ -102,7 +98,7 @@ class SelectResultSheetQuery(Query):
 def tag_based_query(dsv,tags=[]):  
         new_dsv = dsv.fromDataStoreView()
         new_dsv.block.segments = dsv.recordings_copy()
-        new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
+        new_dsv.retinal_stimulus = dsv.stimulus_copy()
         new_dsv.analysis_results = _tag_based_query(dsv.analysis_results,tags)
         return new_dsv
         
@@ -135,7 +131,7 @@ class TagBasedQuery(Query):
 def identifier_based_query(dsv,identifier):  
         new_dsv = dsv.fromDataStoreView()
         new_dsv.block.segments = dsv.recordings_copy()
-        new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
+        new_dsv.retinal_stimulus = dsv.stimulus_copy()
         new_dsv.analysis_results = _identifier_based_query(dsv.analysis_results,identifier)
         return new_dsv
         
@@ -177,7 +173,7 @@ class PartitionByStimulusParamterQuery(Query):
     """
     This query will take all recordings and return list of DataStoreViews
     each holding recordings measured to the same stimulus with exception of
-    the parameter reference by parameter_name.
+    the paramter reference by parameter_name.
     
     Note that in most cases one wants to do this only against datastore holding only
     single Stimulus type! In that case the datastore is partitioned into subsets each holding 
@@ -200,7 +196,7 @@ def partition_recordings_by_sheet_query(dsv):
         for sheet in dsv.sheets():
             new_dsv = dsv.fromDataStoreView()
             new_dsv.analysis_results = dsv.analysis_result_copy()
-            new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
+            new_dsv.retinal_stimulus = dsv.stimulus_copy()
 
             for seg in dsv.block.segments:
                 if seg.annotations['sheet_name'] == sheet:
@@ -236,7 +232,7 @@ def partition_analysis_results_by_parameter_name_query(dsv,ads_identifier='',par
     for k in partiotioned_dsvs.keys():
         new_dsv = dsv.fromDataStoreView()
         new_dsv.block.segments = dsv.recordings_copy()
-        new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
+        new_dsv.retinal_stimulus = dsv.stimulus_copy()
         new_dsv.analysis_results = partiotioned_dsvs[k]
         dsvs.append(new_dsv)    
     
@@ -266,13 +262,12 @@ class PartitionAnalysisResultsByParameterNameQuery(Query):
 ########################################################################          
 def analysis_data_structure_parameter_filter_query(dsv,identifier,**kwargs):
         """
-        Returns DSV containing ADSs with matching identifier and matching parameter values
-        defined in **kwargs.
+        The 
         """
         dsv = identifier_based_query(dsv,identifier)  
         new_dsv = dsv.fromDataStoreView()
         new_dsv.block.segments = dsv.recordings_copy()
-        new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
+        new_dsv.retinal_stimulus = dsv.stimulus_copy()
         new_dsv.analysis_results = _adspfq_recursive(dsv.analysis_results,**kwargs)
         return new_dsv
         
@@ -291,35 +286,3 @@ def _adspfq_recursive(d,**kwargs):
            new_ads.append(ads_object)
     return new_ads
 ########################################################################
-
-########################################################################          
-def analysis_data_structure_stimulus_filter_query(dsv,stimulus_name,**kwargs):
-        """
-        Returns DSV containing ADSs with matching stimulus and matching parameter values
-        defined in **kwargs.
-        """
-        new_dsv = dsv.fromDataStoreView()
-        new_dsv.block.segments = dsv.recordings_copy()
-        new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
-        
-        for asd in dsv.analysis_results:
-            if asd.stimulus_id != None:
-                sid = StimulusID(asd.stimulus_id)
-                if sid.name == stimulus_name:
-                        flag=True    
-                        for n,f in kwargs.items():
-                            if float(f) != float(sid.params[n]):
-                               flag=False;
-                               break;
-                        if flag:
-                            new_dsv.analysis_results.append(asd) 
-            
-        return new_dsv
-########################################################################             
-
-
-
-
-
-
-

@@ -24,15 +24,15 @@ def setup_experiments(simulation_name,sim):
         parameters_url = sys.argv[1]
     else:
         raise ValueError , "No parameter file supplied"
-    
-    parameters = ParameterSet(parameters_url) 
-    
+
+    parameters = ParameterSet(parameters_url)
+
     # Create results directory
     timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
     Global.root_directory =  parameters.results_dir + simulation_name + '_' + timestamp + '/'
     os.mkdir(Global.root_directory)
     parameters.save(Global.root_directory + "parameters", expand_urls=True)
-    
+
     setup_logging()
     return parameters
 
@@ -41,7 +41,10 @@ def run_experiments(model,experiment_list):
     # first lets run all the measurements required by the experiments
     print 'Starting Experiemnts'
     data_store = PickledDataStore(load=False,parameters=ParameterSet({'root_directory':Global.root_directory}))
-    data_store.set_neuron_positions(model.neuron_positions())
+    try: # should not be essential
+        data_store.set_neuron_positions(model.neuron_positions())
+    except:
+        pass
     data_store.set_neuron_annotations(model.neuron_annotations())
     
     for experiment in experiment_list:

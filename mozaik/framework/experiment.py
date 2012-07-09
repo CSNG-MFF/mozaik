@@ -1,5 +1,7 @@
 from mozaik.stimuli.topographica_based import FullfieldDriftingSinusoidalGrating, Null, NaturalImageWithEyeMovement
+from mozaik.visualization.plotting import GSynPlot,RasterPlot,VmPlot,CyclicTuningCurvePlot,OverviewPlot, ConductanceSignalListPlot, RetinalInputMovie
 from NeuroTools.parameters import ParameterSet, ParameterDist
+from mozaik.stimuli.stimulus import Stimulus
 
 import numpy
 
@@ -19,9 +21,9 @@ class Experiment(object):
     def run(self,data_store,stimuli):
         for s in stimuli:
             print 'Presenting stimulus: ',str(s) , '\n'
-            (segments,retinal_input) = self.model.present_stimulus_and_record(s)
+            (segments, input_stimulus) = self.model.present_stimulus_and_record(s)
             data_store.add_recording(segments,s)
-            data_store.add_retinal_stimulus(retinal_input,s)
+            data_store.add_stimulus(input_stimulus,s)
     
     def do_analysis(self):
         raise NotImplementedError
@@ -29,9 +31,9 @@ class Experiment(object):
 
 class MeasureOrientationTuningFullfield(Experiment):
     
-    def __init__(self,model,num_orientations,spatial_frequency,temporal_frequency,grating_duration,contrasts,num_trials):
+    def __init__(self,model,num_orientations,spatial_frequency,temporal_frequency,grating_duration,num_trials):
         self.model = model
-        for j in contrasts:
+        for j in [0.3]:
             for i in xrange(0,num_orientations):
                 for k in xrange(0,num_trials):
                     self.stimuli.append(FullfieldDriftingSinusoidalGrating(
@@ -95,3 +97,4 @@ class MeasureSpontaneousActivity(Experiment):
 
     def do_analysis(self,data_store):
         pass
+

@@ -6,7 +6,7 @@ import param
 from param.parameterized import Parameterized
 from mozaik.storage.queries import *
 import matplotlib.gridspec as gridspec
-from mozaik.stimuli.stimulus_generator import StimulusID
+from mozaik.stimuli.stimulus import StimulusID
 import logging
 
 logger = logging.getLogger("mozaik")
@@ -120,6 +120,7 @@ class PerStimulusPlot(PerDSVPlot):
            PerDSVPlot.__init__(self,datastore,**params)
            if self.title_style == "Clever":
               ss = datastore.get_stimuli()
+              print 'DEBUG, len(ss)', len(ss)
               stimulus = StimulusID(ss[0])
               for s in ss:
                   s = StimulusID(s)

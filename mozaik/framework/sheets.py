@@ -178,6 +178,8 @@ class Sheet(MozaikComponent):
 
         
 class RetinalUniformSheet(Sheet):
+    # TODO
+#class InputUniformSheet(Sheet):
 
     required_parameters = ParameterSet({
         'sx': float, #degrees, x size of the region
@@ -252,6 +254,26 @@ class CorticalUniformSheet(SheetWithMagnificationFactor):
         
         rs = space.RandomStructure(boundary=space.Cuboid(dx,dy,0),origin=(0.0, 0.0, 0.0))
         self.pop = self.sim.Population(int(parameters.sx*parameters.sy/10000*parameters.density), getattr(self.model.sim, self.parameters.cell.model), self.parameters.cell.params,rs,label=self.name)
+        
+        for var, val in self.parameters.cell.initial_values.items():
+            self.pop.initialize(var, val)
+
+
+class MozaikPopulation(Sheet):
+
+    required_parameters = ParameterSet({
+        'n_neurons' : int
+        })
+    def __init__(self, model, parameters):
+        """
+        This is just a wrapper for the pyNN population, which takes care of the initialization of state variables.
+        """
+        Sheet.__init__(self, model, parameters)
+        
+        self.pop = self.sim.Population(parameters.n_neurons, \
+                getattr(self.model.sim, self.parameters.cell.model), \
+                self.parameters.cell.params,\
+                label=self.name)
         
         for var, val in self.parameters.cell.initial_values.items():
             self.pop.initialize(var, val)

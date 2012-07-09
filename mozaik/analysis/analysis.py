@@ -1,21 +1,21 @@
 """
 This module contains the Mozaik analysis interface and implementation of various analysis algorithms
 """
+
 import pylab
 import numpy 
 import time
 import quantities as qt
 import mozaik.tools.units as munits
-from mozaik.stimuli.stimulus_generator import colapse, StimulusID, colapse_to_dictionary
-from mozaik.analysis.analysis_data_structures import TuningCurve, ConductanceSignalList , AnalogSignalList, PerNeuronValue, StimulusDependentData
-from mozaik.analysis.analysis_helper_functions import psth_across_trials, psth, spikes_to_StimulusDependentData
+from mozaik.stimuli.stimulus import colapse, StimulusID
+from mozaik.analysis.analysis_data_structures import CyclicTuningCurve,TuningCurve, ConductanceSignalList , AnalogSignalList, PerNeuronValue
+from mozaik.analysis.analysis_helper_functions import time_histogram_across_trials
 from mozaik.framework.interfaces import MozaikParametrizeObject
 from NeuroTools.parameters import ParameterSet
-from mozaik.storage.queries import *
+from mozaik.storage.queries import select_stimuli_type_query,select_result_sheet_query, partition_by_stimulus_paramter_query
 from neo.core.analogsignal import AnalogSignal
 from NeuroTools import signals
-from mozaik.tools.circ_stat import circ_mean, circular_dist
-from mozaik.tools.neo_object_operations import *
+from mozaik.tools.circ_stat import circ_mean
 import logging
 
 logger = logging.getLogger("mozaik")
@@ -59,72 +59,65 @@ class Analysis(MozaikParametrizeObject):
         pass
         
 
-class FiringRateTrialAveragedTuning(Analysis):
+class AveragedOrientationTuning(Analysis):
       """
       This analysis takes all recordings with FullfieldDriftingSinusoidalGrating 
       stimulus. It averages the trials and creates tuning curves with respect to the 
       orientation parameter. Thus for each combination of the other stimulus parameters
       a tuning curve is created. 
       """
-      required_parameters = ParameterSet({
-        'stimulus_type': str,  # The stimulus type for which to compute AveragedTuning
-      })
-      
       def perform_analysis(self):
             logger.info('Starting OrientationTuning analysis')
-            dsv = select_stimuli_type_query(self.datastore,self.parameters.stimulus_type)
+            dsv = select_stimuli_type_query(self.datastore,'FullfieldDriftingSinusoidalGrating')
 
             for sheet in dsv.sheets():
                 dsv1 = select_result_sheet_query(dsv,sheet)
                 segs = dsv1.get_segments()
-                st = [StimulusID(s) for s in dsv1.get_stimuli()]
+                st = dsv1.get_stimuli()
                 # transform spike trains due to stimuly to mean_rates
                 mean_rates = [numpy.array(s.mean_rates())  for s in segs]
-                # collapse against all parameters other then trial
+                # collapse against all parameters other then orientation
                 (mean_rates,s) = colapse(mean_rates,st,parameter_list=['trial'])
                 # take a sum of each 
-                mean_rates = [sum(a)/len(a) for a in mean_rates]
+                def _mean(a):
+                    l = len(a)
+                    return sum(a)/l
+                mean_rates = [_mean(a) for a in mean_rates]
                 
                 #JAHACK make sure that mean_rates() return spikes per second
                 units = munits.spike / qt.s
-                logger.debug('Adding TuningCurve to datastore')
-                self.datastore.full_datastore.add_analysis_result(TuningCurve(mean_rates,s,units,y_axis_name='Firing rate',sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__))
+                logger.debug('Adding CyclicTuningCurve to datastore')
+                self.datastore.full_datastore.add_analysis_result(CyclicTuningCurve(numpy.pi,mean_rates,s,"orientation",'Response',units,sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__))
 
 class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
       """
-      This analysis takes a list of TuningCurves and a periodic parameter parameter_name.
+      This analysis takes all cyclic tuning curves.
       
-      For each TuningCurve ASD and parametrization of tuning_curves in it, it creates a PerNeuronVector holding the
+      For each parametrization of tuning_curves it creates a PerNeuronVector holding the
       preference of the tuning curve for all neurons for which data were supplied.
       """
-      
-      required_parameters = ParameterSet({
-        'parameter_name': str,  # The stimulus name for which to compute selectivity and preference
-      })
-
-      
       def perform_analysis(self):
-            logger.info('Starting PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage analysis')
+            logger.info('Starting Orientation Preference analysis')
             for sheet in self.datastore.sheets():
                 # get all the cyclic tuning curves 
-                self.tuning_curves = self.datastore.get_analysis_result(identifier='TuningCurve',sheet_name=sheet)
+                self.tuning_curves = self.datastore.get_analysis_result(identifier='CyclicTuningCurve',sheet_name=sheet)
                 for tc in self.tuning_curves:
-                    d = tc.to_dictonary_of_tc_parametrization(self.parameters.parameter_name)
+                    d = tc.to_dictonary_of_tc_parametrization()
                     result_dict = {}
                     for k in  d:
-                        h,g = d[k]
+                        g,h = d[k]
                         values = []
                         period = []
                         for v,p in zip(g,h):
                             values.append(v)
                             period.append(numpy.zeros(numpy.shape(v))+p)
                         
-                        pref,sel = circ_mean(numpy.array(period),weights=numpy.array(values),axis=0,low=0,high=tc.get_param_period(self.parameters.parameter_name),normalize=True)
+                        pref,sel = circ_mean(numpy.array(period),weights=numpy.array(values),axis=0,low=0,high=tc.period,normalize=True)
                         
                         logger.debug('Adding PerNeuronValue to datastore')
                         st = StimulusID(k)
-                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(pref,tc.get_param_units(self.parameters.parameter_name),value_name = self.parameters.parameter_name + ' preference',sheet_name=sheet,tags=self.tags,period=tc.get_param_period(self.parameters.parameter_name),analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
-                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(sel,tc.get_param_units(self.parameters.parameter_name),value_name = self.parameters.parameter_name + ' selectivity',sheet_name=sheet,tags=self.tags,period=1.0,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
+                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(pref,st.units[tc.parameter_name],value_name = tc.parameter_name + ' preference',sheet_name=sheet,tags=self.tags,period=tc.period,analysis_algorithm=self.__class__.__name__))
+                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(sel,st.units[tc.parameter_name],value_name = tc.parameter_name + ' selectivity',sheet_name=sheet,tags=self.tags,period=1.0,analysis_algorithm=self.__class__.__name__))
 
 class GSTA(Analysis):
       """
@@ -159,6 +152,7 @@ class GSTA(Analysis):
                     g_i = [s.get_isyn(n) for s in segs]
                     asl_e.append(self.do_gsta(g_e,sp))
                     asl_i.append(self.do_gsta(g_i,sp))
+
                 self.datastore.full_datastore.add_analysis_result(ConductanceSignalList(asl_e,asl_i,self.parameters.neurons,sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__))
                 
                 
@@ -181,6 +175,8 @@ class GSTA(Analysis):
           
           return AnalogSignal(gsta, t_start=-gstal*dt,sampling_period=dt,units=analog_signal[0].units)
           
+           
+          
           
 class Precision(Analysis):
       """
@@ -194,29 +190,29 @@ class Precision(Analysis):
       })
       
       def perform_analysis(self):
-        logger.info('Starting Precision Analysis')
-        for sheet in self.datastore.sheets():
-            # Load up spike trains into StimulusDependentData 
-            sdd = spikes_to_StimulusDependentData(self.datastore,sheet)
-
-            # Compute psth of each of them
-            sdd.values = [psth(v,self.parameters.bin_length) for v in sdd.values]
-            # average across trials
-            psths,stids =  sdd.colapse_along_parameter('trial',func=neo_mean,allow_non_identical_stimuli=True)
-            
-            for ppsth,stid in zip(psths,stids):
-                t_start = ppsth[0].t_start
-                duration = ppsth[0].t_stop-ppsth[0].t_start
-                al = []    
-                for n in self.parameters.neurons:
-                    ac = numpy.correlate(numpy.array(ppsth[:,n]), numpy.array(ppsth[:,n]), mode='full')
-                    div = numpy.sum(numpy.power(numpy.array(ppsth[:,n]),2))
-                    if div != 0:
-                       ac = ac / div
-                    al.append(AnalogSignal(ac, t_start=-duration,t_stop=duration-self.parameters.bin_length*t_start.units,sampling_period=self.parameters.bin_length*qt.ms,units=qt.dimensionless))
+            logger.info('Starting Precision Analysis')
+            dsv = self.datastore
+            for sheet in dsv.sheets():
+                dsv1 = select_result_sheet_query(dsv,sheet)
+                dsvs = partition_by_stimulus_paramter_query(dsv1,'trial')
+                
+                for dsv in dsvs:
+                    sl = [s.spiketrains for s in dsv.get_segments()]
+                    t_start = sl[0][0].t_start
+                    t_stop =  sl[0][0].t_stop
+                    duration = t_stop-t_start
+                    
+                    hist = time_histogram_across_trials(sl,self.parameters.bin_length)
+                    al = []
+                    for n in self.parameters.neurons:
+                        ac = numpy.correlate(hist[n], hist[n], mode='full')
+                        if numpy.sum(numpy.power(hist[n],2)) != 0:
+                            ac = ac / numpy.sum(numpy.power(hist[n],2))
+                        al.append(AnalogSignal(ac, t_start=-duration,t_stop=duration-self.parameters.bin_length*t_start.units,sampling_period=self.parameters.bin_length*qt.ms,units=qt.dimensionless))
                    
-                logger.debug('Adding AnalogSignalList:' + str(sheet))
-                self.datastore.full_datastore.add_analysis_result(AnalogSignalList(al,self.parameters.neurons,qt.ms,qt.dimensionless,x_axis_name='time',y_axis_name='autocorrelation',sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(stid)))    
+                    logger.debug('Adding AnalogSignalList:' + str(sheet))
+                    self.datastore.full_datastore.add_analysis_result(AnalogSignalList(al,self.parameters.neurons,qt.ms,qt.dimensionless,x_axis_name='time',y_axis_name='autocorrelation',sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__))    
+
                         
 class ModulationRatio(Analysis):
       """
@@ -234,79 +230,52 @@ class ModulationRatio(Analysis):
             logger.info('Modulation ratio analysis')
             dsv = select_stimuli_type_query(self.datastore,'FullfieldDriftingSinusoidalGrating')
             for sheet in dsv.sheets():
-                # Load up spike trains into StimulusDependentData 
-                sdd = spikes_to_StimulusDependentData(dsv,sheet)
-
-                # Compute psth of each of them
-                sdd.values = [psth(v,self.parameters.bin_length) for v in sdd.values]
-               
-                # average across trials
-                psths,stids =  sdd.colapse_along_parameter('trial',func=neo_mean,allow_non_identical_stimuli=True)
-            
-                # retrieve the computed orientation preferences 
-                pnvs = self.datastore.get_analysis_result(identifier='PerNeuronValue',sheet_name=sheet,value_name='orientation preference')
-                if len(pnvs) != 1:
+                dsv1 = select_result_sheet_query(dsv,sheet)
+                pert_trials_dsvs = partition_by_stimulus_paramter_query(dsv1,'trial')
+                self.pnvs = self.datastore.get_analysis_result(identifier='PerNeuronValue',sheet_name=sheet,value_name='orientation preference')
+                
+                if len(self.pnvs) != 1:
                    logger.error('Expected only one PerNeuronValue per sheet with value_name \'orientation preference\' in datastore, got: ' + str(len(pnvs)))
                    return None
                 else:
-                   or_pref = pnvs[0]
+                    pnv = pnvs[0]
                 
                 # find closest orientation of grating to a given orientation preference of a neuron
+                
                 # first find all the different presented stimuli:
                 ps = {}
-                for s in sdd.stimuli_ids:
+                for s in pert_trials_dsvs.get_stimuli():
                     ps[StimulusID(s).params['orientation']] = True
                 ps = ps.keys()
                 
+                
                 # now find the closest presented orientations
                 closest_presented_orientation = []
-                for i in xrange(0,len(or_pref.values)):
-                    circ_d = 100000
+                for i in xrange(0,len(pnv.values)):
+                    circ_d = 100
                     idx = 0
                     for j in xrange(0,len(ps)):
-                        if circ_d > circular_dist(or_pref.values[i],ps[j],numpy.pi):
-                           circ_d = circular_dist(or_pref.values[i],ps[j],numpy.pi)
+                        if circ_d > circular_dist(pnv.values[i],ps[j],numpy.pi):
+                           circ_d = circular_dist(pnv.values[i],ps[j],numpy.pi)
                            idx = j
-                    closest_presented_orientation.append(ps[idx])    
+                    closest_presented_orientation.append(idx)    
                 
-                closest_presented_orientation = numpy.array(closest_presented_orientation)
+                modulation_ratio = numpy.array((1,len(pert_trials_dsvs[0].get_segments().spiketrains)))
                 
-                mrs = []
-                # colapse along orientation - we will calculate MR for each parameter combination other than orientation
-                d = colapse_to_dictionary(psths,stids,"orientation")
-                for (st,vl) in d.items():
-                    # here we will store the modulation ratios, one per each neuron
-                    modulation_ratio = numpy.zeros((numpy.shape(psths[0])[1],))
-                    frequency = StimulusID(st).params['temporal_frequency'] * StimulusID(st).units['temporal_frequency']
-                    for (orr,ppsth) in zip(vl[0],vl[1]):
-                        for j in numpy.nonzero(orr == closest_presented_orientation)[0]:
-                            modulation_ratio[j] = self.calculate_MR(ppsth[:,j],frequency)
-                    mrs.append(modulation_ratio)
-                import pylab
-                pylab.figure()
-                pylab.hist(modulation_ratio)
-                self.datastore.full_datastore.add_analysis_result(TuningCurve(mrs,d.keys(),qt.dimensionless,y_axis_name='Modulation ratio',sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__))    
+                period = temporal_frequency
+                
+                for i,dsv in enumerate(pert_trials_dsvs):
+                    sl = [s.spiketrains for s in dsv.get_segments()]
+                    t_start = sl[0][0].t_start
+                    t_stop =  sl[0][0].t_stop
+                    duration = t_stop-t_start
+                    
+                    hist = time_histogram_across_trials(sl,self.parameters.bin_length)
+                    for j in numpy.nonzero(i == numpy.array(closest_presented_orientation)):
+                        modulation_ratio[j] = self.calculate_MR(hist[j])
                     
                     
-      def calculate_MR(self,signal,frequency):
-            """
-            Calculates MR at frequency 1/period for each of the signals in the signal_list
-            
-            Returns an array of MRs on per each signal in signal_list
-            """
-            duration = signal.t_stop - signal.t_start
-            period = 1/frequency
-            period = period.rescale(signal.t_start.units)
-            cycles = duration / period
-            first_har = round(cycles)
-            
-            fft = numpy.fft.fft(signal)
-            
-            if abs(fft[0]) != 0:
-                return 2 *abs(fft[first_har]) /abs(fft[0])
-            else:
-                return 0
-          
-          
-          
+                    
+                    
+      #def calculate_MR(self,signal,period):
           

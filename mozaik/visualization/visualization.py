@@ -8,7 +8,7 @@ or is generic visualization tools that can in turn be used by plotting algorithm
 
 import pylab
 import numpy
-from mozaik.stimuli.stimulus_generator import parse_stimuls_id,load_from_string
+from mozaik.stimuli.stimulus import parse_stimuls_id,load_from_string
 
 def plot_layer_activity(sheet,value_to_plot,cortical_coordinates=False,labels=True):
     """

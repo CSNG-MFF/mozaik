@@ -41,7 +41,7 @@ class Figure2(Plotting):
           p.setdefault('title',None)
           GSynPlot(dsv,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : 0})).subplot(gs[8:12,6:14],p)
           
-          ConductanceSignalListPlot(queries.TagBasedQuery(ParameterSet({'tags' : ['GSTA1'] })).query(self.datastore),ParameterSet({'sheet_name' : self.parameters.sheet_name,'normalize_individually':True})).subplot(gs[7:10,15:],params.copy())  
+          ConductanceSignalListPlot(queries.TagBasedQuery(ParameterSet({'tags' : ['GSTA1'] })).query(self.datastore),ParameterSet({'sheet_name' : 'V1_Exc','normalize_individually':True})).subplot(gs[7:10,15:],params.copy())  
           
           p = params.copy()
           p.setdefault('mean',False)
