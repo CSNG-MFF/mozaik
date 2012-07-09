@@ -2,7 +2,6 @@ import numpy
 import quantities as qt
 import mozaik.tools.units as munits
 from mozaik.storage.queries import *
-from mozaik.analysis.analysis_data_structures import StimulusDependentData
 from neo.core.analogsignal import AnalogSignal
 from neo.core.analogsignalarray import  AnalogSignalArray
 
@@ -38,17 +37,3 @@ def psth_across_trials(spike_trials,bin_length):
     """
     return sum([psth(st,bin_length) for st in spike_trials])/len(spike_trials)
 
-
-def spikes_to_StimulusDependentData(datastore,sheet_name,stimulus_type=None):
-    """
-    Creates StimulusDependentData data structure and loads it with spike_trains from 
-    datastore that have been measured in sheet sheet_name and (optionally) to 
-    stimulus type stimulus_type.
-    """
-    dsv = select_result_sheet_query(datastore,sheet_name)
-    if stimulus_type != None:
-       dsv = select_stimuli_type_query(dsv,stimulus_type)
-
-    spikes = [seg.spiketrains for seg in dsv.get_segments()]
-    st = [StimulusID(s) for s in dsv.get_stimuli()]
-    return StimulusDependentData(spikes,st,sheet_name=sheet_name,analysis_algorithm="RawSpikeTrains")

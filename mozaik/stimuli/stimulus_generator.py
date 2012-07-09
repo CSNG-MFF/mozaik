@@ -124,6 +124,11 @@ class Stimulus(VisualStimulus):
             VisualStimulus.__init__(self,**params)
             self.n_frames = numpy.inf # possibly very dangerous. Don't do 'for i in range(stim.n_frames)'!
 
+
+"""
+Various common operations over StimulusID lists (and associated lists of data) follow.
+"""
+
 def _colapse(dd,param):
     d = {}
     for s in dd:
@@ -140,26 +145,67 @@ def _colapse(dd,param):
            d[s1] = dd[s]
     return d
     
-def colapse(value_list,stimuli_list,parameter_list=[]):
+def colapse(data_list,stimuli_list,func=None,parameter_list=[],allow_non_identical_stimuli=False):
     """
-    It colapses the value_list acording to stimuli with the same value 
-    of parameters whose indexes are listed in the <parameter_indexes> and 
-    replaces the collapsed parameters in the stimuli_list with None.
+    It colapses the stimuli_list and associated data_list acording to stimuli 
+    against parameters in parameter_list. This means that the new list of parameters (and associated datalist)
+    will contain one stimulus for each combination of parameter values not among the paramters against
+    which to collapse. Each such stimulus will be associated with a list of data that corresponded to 
+    stimuli with the same parameter values, but any values for the paramters against which one is collapsing.
+    The collapsed parameters in the stimuli_list will be replaced with None.
     
-    It returns a tuple of lists (v,stimuli_id), where stimuli_id is
+    The function returns a tuple of lists (v,stimuli_id), where stimuli_id is
     the new list of stimuli where the stimuli in parameter_list were 'colapsed out'
-    and replaced with None. v is a list of lists. The outer list corresponding in order to the stimuli_id list.
-    the inner list corresponds to the list of values from value_list that mapped on the given
-    stimuli_id.
+    and replaced with None. v is a list of lists. The outer list corresponding 
+    in order to the stimuli_id list. The inner list corresponds to the list of data from data_list 
+    that mapped on the given stimuli_id. 
+    
+    If func != None, func is applied to each member of v.
+    
+    data_list - the list of data corresponding to stimuli in stimuli_list
+    stimuli_list - the list of stimuli corresponding to data in data_list
+    parameter_list - the list of parameter names against which to colapse the data
+    func -       the func to be aplied to the lists formed by data associated with the 
+                 same stimuli parametrizations with exception of the parameters in parameter_list
+    allow_non_identical_stimuli - (defaul=False) unless set to True, it will not allow runing this operation on
+                                  StimulusDependentData that does not contain only stimuli of the same type
     """
+    assert(len(data_list) == len(stimuli_list))
+    if (not allow_non_identical_stimuli) and (not identical_stimulus_type(stimuli_list)):
+       raise ValueError("StimulusDependentData analysis data structure accepts only stimuli lists of the same type")  
+
+    
     d = {}
-    for v,s in zip(value_list,stimuli_list):
+    for v,s in zip(data_list,stimuli_list):
         d[str(s)]=[v]
 
     for param in parameter_list:
         d = _colapse(d,param)
     
-    return ([d[k] for k in d.keys()] ,[StimulusID(idd) for idd in d.keys()])
+    values = [d[k] for k in d.keys()] 
+    st = [StimulusID(idd) for idd in d.keys()]
+    
+    if func != None:
+       return ([func(v) for v in values],st)
+    else:
+       return (values,st)
+
+def varying_parameters(stimulus_ids):
+    """
+    Find the varying list of params. Can be only applied 
+    on a stimulus list containing identical type of stimuli.
+    """ 
+    if not identical_stimulus_type(stimuli_ids):
+       raise ValueError("varying_parameters: accepts only stimuli lists of the same type")  
+    
+    p = stimuli_ids[0].params.copy()
+    varying_params = {}
+    for n in p.keys():
+        for sid in stimuli_ids:
+            if sid.params[n] != p[n]:
+               varying_params[n] = True
+               break;
+    return varying_params
 
 
 def colapse_to_dictionary(value_list,stimuli_list,parameter_name):
@@ -171,7 +217,12 @@ def colapse_to_dictionary(value_list,stimuli_list,parameter_name):
     values that the parameter_name had in the stimuli_list, and the values are the 
     values from value_list that correspond to the keys.
     """
+    assert(len(value_list) == len(stimuli_list))
     d = {}
+
+    for s in stimuli_list:
+        print str(s)
+    
     for (v,s) in zip(value_list,stimuli_list):
         s=s.copy()
         val = s.params[parameter_name]
@@ -192,10 +243,48 @@ def identical_stimulus_type(stimuli_list):
     """
     Returns true if all stimuli in stimulus_list are of the same type, else returns False.
     """
-    stimulus_type = stimuli_list[0].name
-    for sid in stimuli_list:
-        if sid.name != stimulus_type:
+    stimulus_type = StimulusID(stimuli_list[0]).name
+    for st in stimuli_list:
+        if StimulusID(st).name != stimulus_type:
             return False
     return True
-           
+
+def find_stimuli(stimulus_name,stimuli_list,data_list=None,**kwargs):
+    """
+    Returns list of stimuli (and associated data if data_list!=None) of stimulus_name type and 
+    for which the parameters in kwargs match. 
+    
+    stimulus_name - the name of the stimulus to filter out
+    data_list - the list of values corresponding to stimuli in stimuli_list
+    stimuli_list - the list of stimuli corresponding to values in value_list
+    **kwargs - the parameter names and values that have to match
+    
+    
+    """
+    new_st = []
+    new_d = []
+    
+    no_data = False
+    if data_list == None:
+       data_list = [[] for z in xrange(0,len(stimuli_list))] 
+       no_data = True
+    else:
+       assert(len(data_list) == len(stimuli_list))        
+    for sid,data in (stimuli_list, data_list):
+        sid = StimulusID(sid)
+        if sid.name == stimulus_name:
+                    flag=True    
+                    for n,f in kwargs.items():
+                        if (not sid.params.has_key(n)) or f != sid.params[n]:
+                           flag=False;
+                           break;
+                    if flag:
+                        new_st.append(sid) 
+                        new_d.append(data) 
+
+    if no_data:
+        return new_st
+    else:
+        return (new_st,new_d)
                   
+

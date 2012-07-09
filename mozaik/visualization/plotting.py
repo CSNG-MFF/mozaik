@@ -63,15 +63,18 @@ import quantities as pq
 import matplotlib.gridspec as gridspec
 from scipy.interpolate import griddata
 
-from mozaik.framework.interfaces import MozaikParametrizeObject
-from mozaik.stimuli.stimulus_generator import StimulusID
 from NeuroTools.parameters import ParameterSet, ParameterDist
+
+from mozaik.framework.interfaces import MozaikParametrizeObject
 from mozaik.storage.queries import *
+from mozaik.storage.ads_queries import *
+from mozaik.stimuli.stimulus_generator import *
+from mozaik.tools import units
+
 from simple_plot import *
 from plot_constructors import *
-from mozaik.tools import units
-import logging
 
+import logging
 logger = logging.getLogger("mozaik")
 
 
@@ -126,22 +129,27 @@ class PlotTuningCurve(Plotting):
 
     def __init__(self,datastore,parameters):
         Plotting.__init__(self,datastore,parameters)
-        self.tuning_curves = self.datastore.get_analysis_result(identifier='TuningCurve',sheet_name=parameters.sheet_name)
-    
+        dsv = analysis_data_structure_parameter_filter_query(self.datastore,identifier='PerNeuronValue')
+        dsv = select_result_sheet_query(self.datastore,self.parameters.sheet_name)
+        assert equal_ads_except(dsv,['stimulus_id'])
+        assert ads_with_equal_stimulus_type(dsv)
+        self.pnvs = dsv.get_analysis_result(identifier='PerNeuronValue',sheet_name=parameters.sheet_name)
+        # get stimuli
+        self.st = [StimulusID(s.stimulus_id) for s in self.pnvs]
+        # transform the pnvs into a dictionary of tuning curves according along the parameter_name
+        self.tc_dict = colapse_to_dictionary([z.values for z in self.pnvs],self.st,self.parameters.parameter_name)
+                    
     def subplot(self,subplotspec,params):
-        LinePlot(function=self.ploter,length = len(self.tuning_curves)).make_line_plot(subplotspec,params)
+        LinePlot(function=self.ploter,length = 1).make_line_plot(subplotspec,params)
     
     def ploter(self,idx,gs,params):
-        tc = self.tuning_curves[idx]
-        period = tc.get_param_period(self.parameters.parameter_name)
-        tc = tc.to_dictonary_of_tc_parametrization(self.parameters.parameter_name)
+        period = self.st[0].periods[self.parameters.parameter_name]
         xs = []
         ys = []
         labels = []
-        for k in  tc:
-            (b,a) = tc[k]
-            a = numpy.array(a)
-            par,val = zip(*sorted(zip(b,a[:,self.parameters.neuron])))
+        for k in  self.tc_dict:
+            (b,a) = self.tc_dict[k]
+            par,val = zip(*sorted(zip(b,numpy.array(a)[:,self.parameters.neuron])))
             
             if period!=None:
                 par = list(par)
@@ -154,7 +162,7 @@ class PlotTuningCurve(Plotting):
             labels.append(str(StimulusID(k)))
         
         params.setdefault("title",('Neuron: %d' % self.parameters.neuron))
-        params.setdefault("y_label",self.tuning_curves[idx].y_axis_name)
+        params.setdefault("y_label",self.pnvs[0].value_name)
 
         if period == numpy.pi:
             params.setdefault("x_ticks",[0,numpy.pi/2.0,numpy.pi])
@@ -470,6 +478,7 @@ class PerNeuronValuePlot(Plotting):
 class ConnectivityPlot(Plotting):
     
     required_parameters = ParameterSet({
+        'sheet_name' : str,
         'neuron' : int,  #the target neuron whose connections are to be displayed
         'reversed' : bool, # if false the outgoing connections from the given neuron are shown. if true the incomming connections are shown
         'sheet_name' : str, # for neuron in which sheet to display connectivity

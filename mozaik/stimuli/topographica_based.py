@@ -31,7 +31,7 @@ class FullfieldDriftingSinusoidalGrating(Stimulus):
 class Null(Stimulus):
     def frames(self):
             """
-            empty stimulus
+            Empty stimulus
             """
             while True:
                 yield topo.pattern.Null(scale=0,size=self.size_x)(), []

@@ -27,6 +27,27 @@ class MozaikParametrized(Parameterized):
           which is undocumented! 
           """
           return self.get_param_values() == other.get_param_values()
+      
+      def equalParamsExcept(self,other,exceptt):
+          """
+          Returns True if self and other have the same parameters and all their values match with
+          the exception of the parameter in exceptt.
+          False otherwise.
+          """
+          a = self.get_param_values()
+          b = self.get_param_values()
+          for k in exceptt:
+              for i,(key,value) in enumerate(a):
+                  if key == k:
+                     break
+              a.pop(i)
+ 
+              for i,(key,value) in enumerate(b):
+                  if key == k:
+                     break
+              b.pop(i)
+          
+          return a == b
          
       @classmethod
       def params(cls,parameter_name=None):
