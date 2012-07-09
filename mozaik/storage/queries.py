@@ -1,11 +1,8 @@
 from mozaik.framework.interfaces import MozaikParametrizeObject
-from mozaik.storage.datastore import Hdf5DataStore
 from mozaik.stimuli.stimulus_generator import StimulusID
 from NeuroTools.parameters import ParameterSet
 from mozaik.stimuli.stimulus_generator import colapse
 import numpy
-
-
 
 ########################################################################
 class Query(MozaikParametrizeObject):
@@ -220,106 +217,3 @@ class PartitionRecordingsBySheetQuery(Query):
     def query(self,dsv):  
         return partition_recordings_by_sheet_query(dsv)    
 ########################################################################
-
-
-########################################################################
-def partition_analysis_results_by_parameter_name_query(dsv,ads_identifier='',parameter_name=''):
-    dsv = identifier_based_query(dsv,ads_identifier)
-    
-    partiotioned_dsvs = {}
-    
-    for ads_object in dsv.analysis_results:
-        partiotioned_dsvs.setdefault(ads_object.inspect_value(parameter_name),[]).append(ads_object)
-    
-    dsvs = []
-    
-    for k in partiotioned_dsvs.keys():
-        new_dsv = dsv.fromDataStoreView()
-        new_dsv.block.segments = dsv.recordings_copy()
-        new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
-        new_dsv.analysis_results = partiotioned_dsvs[k]
-        dsvs.append(new_dsv)    
-    
-    return dsvs
-
-class PartitionAnalysisResultsByParameterNameQuery(Query):
-    """
-    This query takes in a name of a _parameter_.
-    This query will take all analysis results and it will parition them into DSVs
-    each holding only analysis results that have the same value of the _parameter_.
-    Thus for each value of the _parameter_ existing in the DSV there will be new DSV
-    created.
-    
-    Note that this query will fail if it encounters any analysis results that do not
-    specify the _parameter_.
-    """
-    
-    required_parameters = ParameterSet({
-     'ads_identifier' : str, # the ADS identifier for which to the the partition
-     'parameter_name' : str, # the index of the parameter against which to partition
-    })
-    
-    def query(self,dsv):  
-        return partition_analysis_results_by_parameter_name_query(dsv,**self.parameters)    
-########################################################################
-
-########################################################################          
-def analysis_data_structure_parameter_filter_query(dsv,identifier,**kwargs):
-        """
-        Returns DSV containing ADSs with matching identifier and matching parameter values
-        defined in **kwargs.
-        """
-        dsv = identifier_based_query(dsv,identifier)  
-        new_dsv = dsv.fromDataStoreView()
-        new_dsv.block.segments = dsv.recordings_copy()
-        new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
-        new_dsv.analysis_results = _adspfq_recursive(dsv.analysis_results,**kwargs)
-        return new_dsv
-        
-def _adspfq_recursive(d,**kwargs):
-    new_ads = []
-    for ads_object in d:
-        flag=True
-        for k in kwargs.keys():
-            
-            if not ads_object.params().has_key(k):
-               raise ValueError("analysis_data_structure_parameter_filter_query: no Parameter %s in object" % k)
-            if ads_object.inspect_value(k) != kwargs[k]:
-               flag=False
-               break
-        if flag:
-           new_ads.append(ads_object)
-    return new_ads
-########################################################################
-
-########################################################################          
-def analysis_data_structure_stimulus_filter_query(dsv,stimulus_name,**kwargs):
-        """
-        Returns DSV containing ADSs with matching stimulus and matching parameter values
-        defined in **kwargs.
-        """
-        new_dsv = dsv.fromDataStoreView()
-        new_dsv.block.segments = dsv.recordings_copy()
-        new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
-        
-        for asd in dsv.analysis_results:
-            if asd.stimulus_id != None:
-                sid = StimulusID(asd.stimulus_id)
-                if sid.name == stimulus_name:
-                        flag=True    
-                        for n,f in kwargs.items():
-                            if float(f) != float(sid.params[n]):
-                               flag=False;
-                               break;
-                        if flag:
-                            new_dsv.analysis_results.append(asd) 
-            
-        return new_dsv
-########################################################################             
-
-
-
-
-
-
-
