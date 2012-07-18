@@ -299,8 +299,6 @@ class ModulationRatio(Analysis):
                 import pylab
                 pylab.figure()
                 pylab.hist(modulation_ratio)
-                
-                    
                     
       def calculate_MR(self,signal,frequency):
             """

@@ -17,11 +17,12 @@ class Experiment(object):
         return self.stimuli
         
     def run(self,data_store,stimuli):
-        for s in stimuli:
+        for i,s in enumerate(stimuli):
             print 'Presenting stimulus: ',str(s) , '\n'
             (segments,retinal_input) = self.model.present_stimulus_and_record(s)
             data_store.add_recording(segments,s)
             data_store.add_retinal_stimulus(retinal_input,s)
+            print 'Stimulus %d/%d finished' % (i,len(stimuli))
     
     def do_analysis(self):
         raise NotImplementedError
