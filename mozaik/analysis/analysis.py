@@ -285,6 +285,7 @@ class ModulationRatio(Analysis):
                 import pylab
                 pylab.figure()
                 pylab.hist(modulation_ratio)
+                pylab.title(sheet)
                 self.datastore.full_datastore.add_analysis_result(TuningCurve(mrs,d.keys(),qt.dimensionless,y_axis_name='Modulation ratio',sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__))    
                     
                     
