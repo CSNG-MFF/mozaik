@@ -48,6 +48,7 @@ class Analysis(MozaikParametrizeObject):
     
     def analyse(self):
         t1 = time.time()
+        logger.info('Starting ' + self.__class__.__name__ + ' analysis')
         self.perform_analysis()
         t2 = time.time()
         logger.warning(self.__class__.__name__ + ' analysis took: ' + str(t2-t1) + 'seconds')
@@ -72,7 +73,6 @@ class TrialAveragedFiringRate(Analysis):
       })
       
       def perform_analysis(self):
-            logger.info('Starting OrientationTuning analysis')
             dsv = select_stimuli_type_query(self.datastore,self.parameters.stimulus_type)
 
             for sheet in dsv.sheets():
@@ -88,7 +88,7 @@ class TrialAveragedFiringRate(Analysis):
                 
                 #JAHACK make sure that mean_rates() return spikes per second
                 units = munits.spike / qt.s
-                logger.debug('Adding TuningCurve to datastore')
+                logger.debug('Adding PerNeuronValue containing trial averaged firing rates to datastore')
                 for mr,st in zip(mean_rates,s):
                           self.datastore.full_datastore.add_analysis_result(PerNeuronValue(mr,units,stimulus_id=str(st),value_name='Firing rate',sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,period=None))
 
@@ -108,17 +108,21 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
       })
       
       def perform_analysis(self):
-            logger.info('Starting PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage analysis')
+            self.datastore.print_content()
+            dsv = analysis_data_structure_parameter_filter_query(self.datastore,identifier='PerNeuronValue')
             for sheet in self.datastore.sheets():
                 # Get PerNeuronValue ASD and make sure they are all associated with the same stimulus are 
                 # do not differ in any ASD parameters except the stimulus
-                dsv = analysis_data_structure_parameter_filter_query(self.datastore,identifier='PerNeuronValue')
                 dsv = select_result_sheet_query(dsv,sheet)
+                if ads_is_empty(dsv): break
+                
                 assert equal_ads_except(dsv,['stimulus_id'])
-                assert ads_with_equal_stimulus_type(dsv)
+                assert ads_with_equal_stimulus_type(dsv,not_None=True)
+ 
                 self.pnvs = dsv.get_analysis_result(sheet_name=sheet)
                 # get stimuli
                 st = [StimulusID(s.stimulus_id) for s in self.pnvs]
+                
                 d = colapse_to_dictionary([z.values for z in self.pnvs],st,self.parameters.parameter_name)
                 result_dict = {}
                 for k in  d.keys():
@@ -154,8 +158,6 @@ class GSTA(Analysis):
 
       
       def perform_analysis(self):
-            logger.info('Starting Spike Triggered Analysis of Conductances')
-            
             dsv = self.datastore
             for sheet in dsv.sheets():
                 dsv1 = select_result_sheet_query(dsv,sheet)
@@ -205,7 +207,6 @@ class Precision(Analysis):
       })
       
       def perform_analysis(self):
-        logger.info('Starting Precision Analysis')
         for sheet in self.datastore.sheets():
             # Load up spike trains for the right sheet and the corresponding stimuli, and
             # transform spike trains into psth
@@ -243,7 +244,6 @@ class ModulationRatio(Analysis):
 
       
       def perform_analysis(self):
-            logger.info('Modulation ratio analysis')
             for sheet in self.datastore.sheets():
                 # Load up spike trains for the right sheet and the corresponding stimuli, and
                 # transform spike trains into psth

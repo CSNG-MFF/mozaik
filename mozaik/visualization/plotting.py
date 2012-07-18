@@ -130,7 +130,7 @@ class PlotTuningCurve(Plotting):
     def __init__(self,datastore,parameters):
         Plotting.__init__(self,datastore,parameters)
         dsv = analysis_data_structure_parameter_filter_query(self.datastore,identifier='PerNeuronValue')
-        dsv = select_result_sheet_query(self.datastore,self.parameters.sheet_name)
+        dsv = select_result_sheet_query(dsv,self.parameters.sheet_name)
         assert equal_ads_except(dsv,['stimulus_id'])
         assert ads_with_equal_stimulus_type(dsv)
         self.pnvs = dsv.get_analysis_result(identifier='PerNeuronValue',sheet_name=parameters.sheet_name)
@@ -150,7 +150,6 @@ class PlotTuningCurve(Plotting):
         for k in  self.tc_dict:
             (b,a) = self.tc_dict[k]
             par,val = zip(*sorted(zip(b,numpy.array(a)[:,self.parameters.neuron])))
-            
             if period!=None:
                 par = list(par)
                 val = list(val)

@@ -172,7 +172,7 @@ def colapse(data_list,stimuli_list,func=None,parameter_list=[],allow_non_identic
     """
     assert(len(data_list) == len(stimuli_list))
     if (not allow_non_identical_stimuli) and (not identical_stimulus_type(stimuli_list)):
-       raise ValueError("StimulusDependentData analysis data structure accepts only stimuli lists of the same type")  
+       raise ValueError("colapse accepts only stimuli lists of the same type")  
 
     
     d = {}
@@ -219,9 +219,6 @@ def colapse_to_dictionary(value_list,stimuli_list,parameter_name):
     """
     assert(len(value_list) == len(stimuli_list))
     d = {}
-
-    for s in stimuli_list:
-        print str(s)
     
     for (v,s) in zip(value_list,stimuli_list):
         s=s.copy()

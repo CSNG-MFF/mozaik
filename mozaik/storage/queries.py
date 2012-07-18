@@ -128,38 +128,10 @@ class TagBasedQuery(Query):
 ########################################################################                      
 
 
-########################################################################          
-def identifier_based_query(dsv,identifier):  
-        new_dsv = dsv.fromDataStoreView()
-        new_dsv.block.segments = dsv.recordings_copy()
-        new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
-        new_dsv.analysis_results = _identifier_based_query(dsv.analysis_results,identifier)
-        return new_dsv
-        
-def _identifier_based_query(d,identifier):
-    nd = []
-    for a in d:
-        if a.identifier == identifier:
-           nd.append(a)
-    return nd
-
-class IdentifierBasedQuery(Query):
-    
-    """
-    This query filters out all AnalysisDataStructure's corresponding to the given tags
-    """
-    required_parameters = ParameterSet({
-     'identifier' : str, # list of tags the the query will look for
-    })
-    def query(self,dsv):  
-        return identifier_based_query(dsv,**self.parameters)    
-########################################################################                      
-
-
 ########################################################################
 def partition_by_stimulus_paramter_query(dsv,parameter_name):  
         st = dsv.get_stimuli()
-        values,st = colapse(numpy.arange(0,len(st),1),st,parameter_list=[parameter_name])
+        values,st = colapse(numpy.arange(0,len(st),1),st,parameter_list=[parameter_name],allow_non_identical_stimuli=True)
         dsvs = []
         for vals in values:
             new_dsv = dsv.fromDataStoreView()

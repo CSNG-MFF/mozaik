@@ -4,6 +4,7 @@ from neo.core.block import Block
 from mozaik.framework.interfaces import MozaikParametrizeObject
 from NeuroTools.parameters import ParameterSet
 from neo_neurotools_wrapper import NeoNeurotoolsWrapper, PickledDataStoreNeoWrapper
+from mozaik.stimuli.stimulus_generator import StimulusID
 
 import cPickle
 import numpy
@@ -135,6 +136,40 @@ class DataStoreView(MozaikParametrizeObject):
 
     def fromDataStoreView(self):
         return DataStoreView(ParameterSet({}),self.full_datastore)
+        
+    def print_content(self,full_recordings=False,full_ADS=False):
+        """
+        Info for debugging purposes
+        """
+        print "DSV info:"
+        print "   Number of recordings: " + str(len(self.block.segments))
+        d = {}
+        for st in [s.annotations['stimulus'] for s in self.block.segments]:
+            d[StimulusID(st).name] = d.get(StimulusID(st).name,0) + 1 
+        
+        for k in d.keys():
+            print "     " + str(k) + " : " + str(d[k])
+        
+
+        print "   Number of ADS: " + str(len(self.analysis_results))
+        d = {}
+        for ads in self.analysis_results:
+            d[ads.identifier] = d.get(ads.identifier,0) + 1 
+        
+        for k in d.keys():
+            print "     " + str(k) + " : " + str(d[k])
+
+        
+        if full_recordings:
+            print 'RECORDING RESULTS'
+            for s in [s.annotations['stimulus'] for s in self.block.segments]:
+                print str(s)
+        
+        if full_ADS:
+            print 'ANALYSIS RESULTS'
+            for a in self.analysis_results:
+                print str(a)
+        
 
 class DataStore(DataStoreView):
     """
