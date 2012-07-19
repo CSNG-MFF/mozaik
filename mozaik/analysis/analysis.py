@@ -250,6 +250,8 @@ class ModulationRatio(Analysis):
                 dsv = select_result_sheet_query(self.datastore,sheet)
                 assert equal_ads_except(dsv,['stimulus_id'])
                 assert ads_with_equal_stimulus_type(dsv)
+                assert equal_stimulus_type(dsv)
+
                 psths = [psth(seg.spiketrains,self.parameters.bin_length) for seg in dsv.get_segments()]
                 st = [StimulusID(s) for s in dsv.get_stimuli()]
                 
@@ -259,7 +261,7 @@ class ModulationRatio(Analysis):
                 # retrieve the computed orientation preferences 
                 pnvs = self.datastore.get_analysis_result(identifier='PerNeuronValue',sheet_name=sheet,value_name='orientation preference')
                 if len(pnvs) != 1:
-                   logger.error('Expected only one PerNeuronValue per sheet with value_name \'orientation preference\' in datastore, got: ' + str(len(pnvs)))
+                   logger.error('ERROR: Expected only one PerNeuronValue per sheet with value_name \'orientation preference\' in datastore, got: ' + str(len(pnvs)))
                    return None
                 else:
                    or_pref = pnvs[0]
@@ -267,7 +269,7 @@ class ModulationRatio(Analysis):
                 # find closest orientation of grating to a given orientation preference of a neuron
                 # first find all the different presented stimuli:
                 ps = {}
-                for s in st.stimuli_ids:
+                for s in st:
                     ps[StimulusID(s).params['orientation']] = True
                 ps = ps.keys()
                 

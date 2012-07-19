@@ -189,3 +189,22 @@ class PartitionRecordingsBySheetQuery(Query):
     def query(self,dsv):  
         return partition_recordings_by_sheet_query(dsv)    
 ########################################################################
+
+########################################################################
+def equal_stimulus_type(dsv):
+    """
+    This functions tests whether DSV contains only recordings associated
+    with the same stimulus type.
+    """
+    st = dsv.get_stimuli()
+    if len(st) == 0: 
+       return True
+    
+    first = StimulusID(st[0]).name
+    
+    for s in st:
+        if StimulusID(s).name != first:
+            return False
+        
+    return True
+########################################################################
