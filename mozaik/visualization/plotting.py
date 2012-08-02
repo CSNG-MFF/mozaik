@@ -542,7 +542,13 @@ class ConnectivityPlot(Plotting):
         
         # pick the right PerNeuronValue to show
         pnv = []
+       
         if self.pnvs!=None:
+           print [p.sheet_name for p in self.pnvs]
+           print self.parameters.reversed
+           print self.connections[idx].target_name
+           print self.connections[idx].source_name
+
            for p in self.pnvs:
                if not self.parameters.reversed and p.sheet_name == self.connections[idx].target_name:
                   pnv.append(p)
@@ -558,7 +564,7 @@ class ConnectivityPlot(Plotting):
               raise ValueError('ERROR: length of colors does not match length of weights \[%d \!\= %d\]. Ignoring colors!' % (len(pnv.values),len(w))) 
               
         
-        if pnv != None: 
+        if pnv != []: 
             from mozaik.tools.circ_stat import circ_mean
             (angle,mag) = circ_mean(numpy.array(pnv.values),weights=w,high=pnv.period)
             params.setdefault("title",str(self.connections[idx].name) + "| Weighted mean: " + str(angle))
@@ -568,10 +574,10 @@ class ConnectivityPlot(Plotting):
             if self.connections[idx].source_name == self.connections[idx].target_name:
                ConnectionPlot(sx,sy,tx,ty,w,colors=pnv.values,line=False,period=pnv.period,**params)(gs) 
             else:
-               ConnectionPlot(sx,sy,numpy.min(sx)*1.2,numpy.min(sy)*1.2,w,colors=pnv.values,period=pnv.period,line=False,**params)(gs) 
+               ConnectionPlot(sx,sy,numpy.min(sx)*1.2,numpy.min(sy)*1.2,w,colors=pnv.values,period=pnv.period,line=True,**params)(gs) 
         else:
             params.setdefault("title",self.connections[idx].name)
             if self.connections[idx].source_name == self.connections[idx].target_name:
                ConnectionPlot(sx,sy,tx,ty,w,line=False,**params)(gs) 
             else:
-               ConnectionPlot(sx,sy,numpy.min(sx)*1.2,numpy.min(sy)*1.2,w,line=False,**params)(gs) 
+               ConnectionPlot(sx,sy,numpy.min(sx)*1.2,numpy.min(sy)*1.2,w,line=True,**params)(gs) 

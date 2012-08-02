@@ -623,6 +623,7 @@ class ConnectionPlot(StandardStyle):
 
                 period -
                         if period is not None the colors should come from (0,period)
+                
                 colorbar -
                         should there be a colorbar ?
                        
@@ -651,7 +652,10 @@ class ConnectionPlot(StandardStyle):
           
       def plot(self):
           if self.colors == None:
-              ax = self.axis.scatter(self.pos_x,self.pos_y,c = 'black',s = self.weights/numpy.max(self.weights)*200,lw = 0)
+              if numpy.max(self.weights) > 0:
+                ax = self.axis.scatter(self.pos_x,self.pos_y,c = 'black',s = self.weights/numpy.max(self.weights)*200,lw = 0)
+              else:
+                ax = self.axis.scatter(self.pos_x,self.pos_y,s=0,c = 'black',lw = 0)
           else:
               if self.period == None:
                     vmax = numpy.max(self.colors)
@@ -659,7 +663,7 @@ class ConnectionPlot(StandardStyle):
               else:
                     vmax = self.period
                     vmin = 0
-              ax = self.axis.scatter(self.pos_x,self.pos_y,c = self.colors,s =  self.weights/numpy.max(self.weights)*200,lw = 0,cmap=self.colormap,vmin = vmin, vmax = vmax) 
+              ax = self.axis.scatter(self.pos_x,self.pos_y,c = self.colors,s =  self.weights/numpy.max(self.weights)*30,lw = 0,cmap=self.colormap,vmin = vmin, vmax = vmax) 
               
               if self.colorbar:
                  cb = pylab.colorbar(ax,ticks=[vmin,vmax],use_gridspec=True)   

@@ -11,6 +11,7 @@ import pylab
 class Figure2(Plotting):
       required_parameters = ParameterSet({
             'sheet_name' : str,  #the name of the sheet for which to plot
+            'neuron' : int, # which neuron to show
       })
       
       def subplot(self,subplotspec,params):
@@ -31,17 +32,17 @@ class Figure2(Plotting):
           SpikeHistogramPlot(lgn_spikes,neurons=[5], colors = ['#FACC2E','#0080FF'])(gs[10:11,0:5])
           
           dsv1 = queries.select_result_sheet_query(dsv,self.parameters.sheet_name)
-          SpikeRasterPlot([[s.spiketrains for s in dsv1.get_segments()]],neurons=[0],x_axis=False,x_label=None)(gs[:3,6:14])
-          SpikeHistogramPlot([[s.spiketrains for s in dsv1.get_segments()]],neurons=[0], x_axis=False,x_label=None)(gs[3:4,6:14])
+          SpikeRasterPlot([[s.spiketrains for s in dsv1.get_segments()]],neurons=[self.parameters.neuron],x_axis=False,x_label=None)(gs[:3,6:14])
+          SpikeHistogramPlot([[s.spiketrains for s in dsv1.get_segments()]],neurons=[self.parameters.neuron], x_axis=False,x_label=None)(gs[3:4,6:14])
           
           p = params.copy()
           p.setdefault('title',None)
           p.setdefault('x_axis',None)
           p.setdefault('x_label',None)
-          VmPlot(dsv,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : 0})).subplot(gs[4:8,6:14],p)          
+          VmPlot(dsv,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : self.parameters.neuron})).subplot(gs[4:8,6:14],p)          
           p = params.copy()
           p.setdefault('title',None)
-          GSynPlot(dsv,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : 0})).subplot(gs[8:12,6:14],p)
+          GSynPlot(dsv,ParameterSet({'sheet_name' : self.parameters.sheet_name,'neuron' : self.parameters.neuron})).subplot(gs[8:12,6:14],p)
           
           ConductanceSignalListPlot(queries.TagBasedQuery(ParameterSet({'tags' : ['GSTA1'] })).query(self.datastore),ParameterSet({'sheet_name' : self.parameters.sheet_name,'normalize_individually':True})).subplot(gs[7:10,15:],params.copy())  
           
