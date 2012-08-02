@@ -6,7 +6,7 @@ import numpy
 import time
 import quantities as qt
 import mozaik.tools.units as munits
-from mozaik.stimuli.stimulus_generator import colapse, StimulusID, colapse_to_dictionary
+from mozaik.stimuli.stimulus import colapse, StimulusID, colapse_to_dictionary
 from mozaik.analysis.analysis_data_structures import *
 from mozaik.analysis.analysis_helper_functions import psth_across_trials, psth
 from mozaik.framework.interfaces import MozaikParametrizeObject

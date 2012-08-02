@@ -3,11 +3,9 @@
 Definition of the component interfaces. These interfaces are not currently
 checked or enforced.
 """
-
+from mozaik import __version__
 from NeuroTools.parameters import ParameterSet
 from NeuroTools.signals.spikes import SpikeList
-from space import VisualObject, TRANSPARENT
-from mozaik import __version__
 import logging
 import os
 from string import Template
@@ -18,68 +16,7 @@ import quantities as qt
 
 logger = logging.getLogger("mozaik")
 
-class VisualStimulus(VisualObject):
-    """Abstract base class for visual stimuli."""
-    
-    version = __version__ # for simplicity, we take the global version, but it
-                          # would be more efficient to take the revision for the
-                          # last time this particular file was changed.
-    
-    frame_duration = SNumber(qt.ms,doc="""The duration of single frame""")
-    max_luminance = SNumber(lux,doc="""Maximum luminance""")
-    
-    def __init__(self,**params):
-        VisualObject.__init__(self,**params) # for now, we always put the stimulus in the centre of the visual field
-        self.input = None
-        self._frames = self.frames()
-        self.update()
-    
-    def frames(self):
-        """
-        Return a generator which yields the frames of the stimulus in sequence.
-        Each frame is returned as a tuple `(img, variables)` where
-        `img` is a numpy array containing the image and `variables` is a list of
-        variable values (e.g., orientation) associated with that frame.
-        """
-        raise NotImplementedError("Must be implemented by child class.")
-
-    def update(self):
-        """
-        Sets the current frame to the next frame in the sequence.
-        """
-        try:
-            self.img, self.variables = self._frames.next()
-            
-        except StopIteration:
-            self.visible = False
-        else:
-            assert self.img.min() >= 0 or self.img.min() == TRANSPARENT, "frame minimum is less than zero: %g" % self.img.min()
-            assert self.img.max() <= self.max_luminance, "frame maximum (%g) is greater than the maximum luminance (%g)" % (self.img.max(), self.max_luminance)
-        self._zoom_cache = {}
-    
-    def reset(self):
-        """
-        Reset to the first frame in the sequence.
-        """
-        self.visible = True
-        self._frames = self.frames()
-        self.update()
-
-    def export(self, path=None):
-        """
-        Save the frames to disk. Returns a list of paths to the individual
-        frames.
-        
-        path - the directory in which the individual frames will be saved. If
-               path is None, then a temporary directory is created.
-        """
-        raise NotImplementedError
-    
-    def next_frame(self):
-        """For creating movies with NeuroTools.visualization."""
-        self.update()
-        return [self.img]
-  
+ 
 class MozaikParametrizeObject(object):
     """Base class for for all MozailLite objects using the dynamic parametrization framwork."""
     
@@ -152,8 +89,8 @@ class MozaikRetina(MozaikComponent):
           raise NotImplementedError
           pass
 
-class VisualSystemConnector(MozaikComponent):
-    """Base class for objects that connect visual system components."""
+class Connector(MozaikComponent):
+    """Base class for objects that connect mozaik sheets."""
     version = __version__
     
     def __init__(self, model, name,source, target, parameters):

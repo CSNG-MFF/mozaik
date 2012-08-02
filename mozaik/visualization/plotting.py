@@ -68,7 +68,7 @@ from NeuroTools.parameters import ParameterSet, ParameterDist
 from mozaik.framework.interfaces import MozaikParametrizeObject
 from mozaik.storage.queries import *
 from mozaik.storage.ads_queries import *
-from mozaik.stimuli.stimulus_generator import *
+from mozaik.stimuli.stimulus import *
 from mozaik.tools import units
 
 from simple_plot import *

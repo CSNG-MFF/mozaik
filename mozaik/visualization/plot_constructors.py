@@ -6,7 +6,7 @@ import param
 from param.parameterized import Parameterized
 from mozaik.storage.queries import *
 import matplotlib.gridspec as gridspec
-from mozaik.stimuli.stimulus_generator import StimulusID
+from mozaik.stimuli.stimulus import StimulusID
 import logging
 
 logger = logging.getLogger("mozaik")

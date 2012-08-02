@@ -16,7 +16,7 @@ class Figure2(Plotting):
       def subplot(self,subplotspec,params):
           gs = gridspec.GridSpecFromSubplotSpec(12, 18, subplot_spec=subplotspec,hspace=1.0,wspace=1.0)  
           
-          dsv = queries.select_stimuli_type_query(self.datastore,'FullfieldDriftingSinusoidalGrating',{'orientation':0.0, 'max_luminance':45.0})
+          dsv = queries.select_stimuli_type_query(self.datastore,'FullfieldDriftingSinusoidalGrating',{'orientation':0.0, 'max_luminance':90.0})
           
           print len(dsv.get_segments())
           

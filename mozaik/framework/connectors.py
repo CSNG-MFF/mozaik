@@ -4,7 +4,7 @@ import pylab
 from pylab import griddata
 from interfaces import MozaikComponent
 from sheets import SheetWithMagnificationFactor
-from interfaces import VisualSystemConnector
+from interfaces import Connector
 from NeuroTools.parameters import ParameterSet, ParameterDist
 from pyNN import random, space
 from mozaik.tools.misc import sample_from_bin_distribution, normal_function
@@ -17,7 +17,7 @@ logger = logging.getLogger("mozaik")
 
 
 
-class mozaikVisualSystemConnector(VisualSystemConnector):
+class mozaikVisualSystemConnector(Connector):
       required_parameters = ParameterSet({
                 'target_synapses' : str,
                 'short_term_plasticity' : bool,
@@ -30,7 +30,7 @@ class mozaikVisualSystemConnector(VisualSystemConnector):
       })
       
       def __init__(self, network, name,source, target, parameters):
-          VisualSystemConnector.__init__(self, network, name, source,target,parameters)
+          Connector.__init__(self, network, name, source,target,parameters)
           
           if not self.parameters.short_term_plasticity:
             self.short_term_plasticity = None
