@@ -77,27 +77,27 @@ class mozaikVisualSystemConnector(VisualSystemConnector):
 
 class ExponentialProbabilisticArborization(mozaikVisualSystemConnector):
     required_parameters = ParameterSet({
-        'weights': float,                #nA, the synapse strength 
-        'propagation_constant': float,    #ms/μm the constant that will determinine the distance dependent delays on the connections
-        'arborization_constant': float,  # μm distance constant of the exponential decay of the probability of the connection with respect
+        'weights': float,                # nA, the synapse strength 
+        'propagation_constant': float,   # ms/μm the constant that will determinine the distance dependent delays on the connections
+        'arborization_constant': float,  # μm distance constant of the exponential decay of the probability of the connection with respect (in cortical distance)
                                          # to the distance from the innervation point.
+        'arborization_scaler': float,    # the scaler of the exponential decay
     })
 
 
     def __init__(self, network, source, target, parameters,name):
         mozaikVisualSystemConnector.__init__(self, network, name,source,target,parameters)
-        
-        if isinstance(target, SheetWithMagnificationFactor):
-            self.dist = "self.target.dvf_2_dcs(d)"
-        else:
-            self.dist = "d"
 	
-	def connect(self):
-		self.arborization_expression = "exp(-abs((" + self.dist + ")/" + str(self.parameters.arborization_spread) + "))"
-		self.delay_expression = self.dist + "*" + self.parameters.propagation_constant 
-		
-		method = self.sim.DistanceDependentProbabilityConnector(self.arborization_expression,allow_self_connections=False, weights=self.parameters.weights, delays=self.delay_expression, space=space.Space(axes='xy'), safe=True, verbose=False, n_connections=None)
-		self.proj = self.sim.Projection(self.source.pop, self.target.pop, method, synapse_dynamics=self.short_term_plasticity, label=self.name, rng=None, target=self.parameters.target_synapses)
+    def connect(self):
+        # JAHACK, 0.1 as minimal delay should be replaced with the simulations time_step
+        if isinstance(self.target, SheetWithMagnificationFactor):
+            self.arborization_expression = lambda d: self.parameters.arborization_scaler*numpy.exp(-0.5*(self.target.dvf_2_dcs(d)/self.parameters.arborization_constant)**2)/(self.parameters.arborization_constant*numpy.sqrt(2*numpy.pi))
+            self.delay_expression = lambda d:  numpy.maximum(self.target.dvf_2_dcs(d) * self.parameters.propagation_constant,0.1)
+        else:
+            self.arborization_expression = lambda d: self.parameters.arborization_scaler*numpy.exp(-0.5*(d/self.parameters.arborization_constant)**2)/(self.parameters.arborization_constant*numpy.sqrt(2*numpy.pi))
+            self.delay_expression = lambda d:  numpy.maximum(d * self.parameters.propagation_constant,0.1)
+        method = self.sim.DistanceDependentProbabilityConnector(self.arborization_expression,allow_self_connections=False, weights=self.parameters.weights, delays=self.delay_expression, space=space.Space(axes='xy'), safe=True, verbose=False, n_connections=None)
+        self.proj = self.sim.Projection(self.source.pop, self.target.pop, method, synapse_dynamics=self.short_term_plasticity, label=self.name, rng=None, target=self.parameters.target_synapses)
         
 class UniformProbabilisticArborization(mozaikVisualSystemConnector):
 
@@ -212,8 +212,8 @@ class V1PushPullProbabilisticArborization(MozaikComponent):
                         return	
             
                     or_gauss = normal_function(or_dist,mean=0,sigma=self.parameters.or_sigma)
-                    phase_gauss = normal_function(phase_dist,mean=0,sigma=self.parameters.or_sigma)
-                    w = phase_gauss*or_gauss*or_gauss
+                    phase_gauss = normal_function(phase_dist,mean=0,sigma=self.parameters.phase_sigma)
+                    w = phase_gauss*or_gauss
                     
                     weights.append((j,i,w,self.parameters.propagation_constant))
             

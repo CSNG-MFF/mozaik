@@ -30,16 +30,16 @@ def circ_mean(matrix,weights=None,axis=None,low=0,high=numpy.pi*2,normalize=Fals
     """
     Circular mean of matrix. Weighted if weights are not none.
     
-    matrix   - matrix of data. Mean will be computed for each column.
+    matrix   - 2d ndarray of data. Mean will be computed for each column.
     weights  - if not none, a vector of the same length as number of matrix rows.
     low,high - the min and max values that will be mapped onto the periodic interval of (0,2pi)
-    axis     - the same as in in numpy.mean
+    axis     - axis along which to compute the circular mean. default = 1
     normalize - if True weights will be normalized along axis. If any weights that are to be jointly normalized are all zero they will be kept zero!
     
     return (angle,length)  - where angle is the circular mean, and len is the length of the resulting mean vector
     """
     
-    # check whether array and weights are ndarrays
+    # check whether matrix and weights are ndarrays
     if not isinstance(matrix,numpy.ndarray):
        logger.error("circ_mean: array not type ndarray ") 
        raise TypeError("circ_mean: array not type ndarray ") 
@@ -47,7 +47,10 @@ def circ_mean(matrix,weights=None,axis=None,low=0,high=numpy.pi*2,normalize=Fals
     if weights!= None and not isinstance(weights,numpy.ndarray):
        logger.error("circ_mean: weights not type ndarray ") 
        raise TypeError("circ_mean: weights not type ndarray ") 
-    
+
+    if axis == None:
+       axis == 1
+
     # convert the periodic matrix to corresponding complex numbers
     m = rad_to_complex((matrix - low)/(high-low) * numpy.pi*2)
     
