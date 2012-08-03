@@ -6,7 +6,8 @@ Retina/LGN model based on that developed by Jens Kremkow (CNRS-INCM/ALUF)
 import numpy
 import os.path, pickle        
 import mozaik
-from mozaik.framework.space import VisualSpace, VisualRegion
+from mozaik.framework.space import VisualSpace
+from mozaik.framework.space import VisualRegion
 from mozaik.framework.interfaces import MozaikRetina
 from mozaik.framework.sheets import Sheet,RetinalUniformSheet
 import cai97
@@ -299,7 +300,7 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
             f.close()
             f1.close()
         
-    def process_visual_input(self, visual_space, stimulus_id,duration=None, offset=0):
+    def process_input(self, visual_space, stimulus_id,duration=None, offset=0):
         """
         Present a visual stimulus to the model, and create the LGN output (relay)
         neurons.

@@ -4,7 +4,7 @@ some basic analysis data structures.
 """
 import numpy
 import param
-from mozaik.stimuli.stimulus_generator import StimulusID, identical_stimulus_type, colapse, colapse_to_dictionary
+from mozaik.stimuli.stimulus import StimulusID, identical_stimulus_type, colapse, colapse_to_dictionary
 from mozaik.tools.mozaik_parametrized import *
 
 class AnalysisDataStructure(MozaikParametrized):

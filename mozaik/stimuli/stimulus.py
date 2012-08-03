@@ -2,7 +2,7 @@
 This package defines the API for:
     - implementation of stimuli as input to models (see class Stimulus)
     - identification of stimulus identity (without the actual 'data' of the stimulus) throughout *mozaik* (see class StimulusID)
-      (NOTE: throughout most mozaik (particularly all post processing i.e. analysis and plotting) user will interact with StimulusIDs rather then Stimulus instances!!)
+      (NOTE: throughout most mozaik (particularly all post processing i.e. analysis and plotting) user will interact with StimulusIDs rather than Stimulus instances!!)
     - function helpers for common manipulation with collections of stimuli (or rather their IDs)
 
 Each stimulus is expected to have a dictionary of parameters which have to uniquely identify the stimulus.
@@ -13,13 +13,68 @@ corresponding parametrized parameters to allow specification of units (see tools
 Note that *all* such parameters defined in the class (and its ancestors) will be considered as parameters of the Stimulus.
 """
 
-from mozaik.framework.interfaces import VisualStimulus
 import quantities as qt
-import numpy
-from operator import *
-from mozaik.tools.mozaik_parametrized import *
+import numpy 
+from operator import * # don't do import *
+from mozaik.tools.mozaik_parametrized import * # don't do import *
+from mozaik.framework.interfaces import MozaikParametrizeObject
 import inspect
+from NeuroTools.parameters import ParameterSet
 
+class Stimulus(MozaikParametrized):
+    """
+    Abstract class.
+    """
+    frame_duration = SNumber(qt.ms,doc="""The duration of single frame""")
+    duration = SNumber(qt.ms,doc="""The duration of stimulus""")
+    trial = SInteger(doc="""The trial of the stimulus""")
+
+    def __init__(self, **params):
+        MozaikParametrized.__init__(self,**params)
+        self.input = None
+        self._frames = self.frames()
+        self.n_frames = numpy.inf # possibly very dangerous. Don't do 'for i in range(stim.n_frames)'!
+        self.update()
+
+    def __str__(self):
+        return str(StimulusID(self))
+
+    def __eq__(self, other):
+        return self.equalParams(other) and (self.__class__ == other.__class__)
+
+    def frames(self):
+        """
+        Return a generator which yields the frames of the stimulus in sequence.
+        Each frame is returned as a tuple `(frame, variables)` where
+        `frame` is a numpy array containing the stimulus at the given time and `variables` is a list of
+        variable values (e.g., orientation) associated with that frame.
+
+        See topographica_based for examples.
+        """
+        raise NotImplementedError("Must be implemented by child class.")
+
+    def update(self):
+        """
+        Sets the current frame to the next frame in the sequence.
+        """
+        raise NotImplementedError("Must be implemented by child class.")
+
+    def reset(self):
+        """
+        Reset to the first frame in the sequence.
+        """
+        raise NotImplementedError("Must be implemented by child class.")
+
+    def export(self, path=None):
+        """
+        Save the frames to disk. Returns a list of paths to the individual
+        frames.
+        
+        path - the directory in which the individual frames will be saved. If
+               path is None, then a temporary directory is created.
+        """
+        raise NotImplementedError("Must be implemented by child class.")
+        
 
 class StimulusID():
       """
@@ -108,21 +163,6 @@ class StimulusID():
           else:
               raise ValueError("obj is not of recognized type (recognized: str,dict, StimulusID or Stimulus)")
               
-
-class Stimulus(VisualStimulus):
-        duration = SNumber(qt.ms,doc="""The duration of stimulus""")
-        density = SNumber(1/(qt.degree),doc="""The density of stimulus - units per degree""")
-        trial = SInteger(doc="""The duration of stimulus""")
-
-        def __str__(self):
-            return str(StimulusID(self))
-            
-        def __eq__(self, other):
-            return self.equalParams(other) and (self.__class__ == other.__class__)
-
-        def __init__(self, **params):
-            VisualStimulus.__init__(self,**params)
-            self.n_frames = numpy.inf # possibly very dangerous. Don't do 'for i in range(stim.n_frames)'!
 
 
 """

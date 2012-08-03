@@ -1,7 +1,6 @@
 from mozaik.framework.interfaces import MozaikParametrizeObject
-from mozaik.stimuli.stimulus_generator import StimulusID
 from NeuroTools.parameters import ParameterSet
-from mozaik.stimuli.stimulus_generator import colapse
+from mozaik.stimuli.stimulus import colapse, StimulusID
 import numpy
 from queries import *
 

@@ -1,5 +1,5 @@
 # The file contains stimuli that use topographica to generate the stimulus
-from stimulus_generator import Stimulus
+from visual_stimulus import VisualStimulus
 import topo.pattern
 from topo.base.boundingregion import BoundingBox
 import pickle
@@ -9,7 +9,7 @@ from mozaik.tools.units import cpd
 import quantities as qt
 
 
-class FullfieldDriftingSinusoidalGrating(Stimulus):
+class FullfieldDriftingSinusoidalGrating(VisualStimulus):
 
     """
     max_luminance is interpreted as scale
@@ -28,7 +28,7 @@ class FullfieldDriftingSinusoidalGrating(Stimulus):
                 
 
 
-class Null(Stimulus):
+class Null(VisualStimulus):
     def frames(self):
             """
             Empty stimulus
@@ -37,7 +37,7 @@ class Null(Stimulus):
                 yield topo.pattern.Null(scale=0,size=self.size_x)(), []
                 
 
-class NaturalImageWithEyeMovement(Stimulus):
+class NaturalImageWithEyeMovement(VisualStimulus):
     """
     A visual stimulus that simulates an eye movement over a static image
     """    
@@ -47,7 +47,7 @@ class NaturalImageWithEyeMovement(Stimulus):
     eye_path_location = SString(doc="""Location of file containing the eye path (two columns of numbers)""")
     
     def __init__(self, **params):
-            Stimulus.__init__(self,params) 
+            VisualStimulus.__init__(self,params) 
             f = open(self.eye_path_location,'r')
             self.eye_path = pickle.load(f)
             self.pattern_sampler = topo.pattern.image.PatternSampler(size_normalization='fit_longest',whole_pattern_output_fns=[DivisiveNormalizeLinf()])
@@ -73,7 +73,7 @@ class NaturalImageWithEyeMovement(Stimulus):
                 yield (image,[self.time])
                 self.time = self.time + 1
 
-class DriftingGratingWithEyeMovement(Stimulus):
+class DriftingGratingWithEyeMovement(VisualStimulus):
     """
     A visual stimulus that simulates an eye movement over a drifting  gratings
     """
@@ -85,7 +85,7 @@ class DriftingGratingWithEyeMovement(Stimulus):
     eye_path_location = SString(doc="""Location of file containing the eye path (two columns of numbers)""")
 
     def __init__(self, **params):
-            Stimulus.__init__(self,params) 
+            VisualStimulus.__init__(self,params) 
             f = open(self.eye_path_location,'r')
             self.eye_path = pickle.load(f)
             self.pattern_sampler = topo.pattern.image.PatternSampler(size_normalization='fit_longest',whole_pattern_output_fns=[DivisiveNormalizeLinf()])

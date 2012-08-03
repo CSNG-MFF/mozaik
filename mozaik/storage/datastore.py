@@ -4,7 +4,7 @@ from neo.core.block import Block
 from mozaik.framework.interfaces import MozaikParametrizeObject
 from NeuroTools.parameters import ParameterSet
 from neo_neurotools_wrapper import NeoNeurotoolsWrapper, PickledDataStoreNeoWrapper
-from mozaik.stimuli.stimulus_generator import StimulusID
+from mozaik.stimuli.stimulus import StimulusID
 
 import cPickle
 import numpy
@@ -230,7 +230,7 @@ class DataStore(DataStoreView):
         raise NotImplementedError
         pass        
 
-    def add_retinal_stimulus(self,data,stimulus):
+    def add_stimulus(self,data,stimulus):
         raise NotImplementedError
         pass        
 
@@ -285,7 +285,7 @@ class Hdf5DataStore(DataStore):
             self.block.segments.append(NeoNeurotoolsWrapper(s))
         self.stimulus_dict[str(stimulus)]=True
 
-    def add_retinal_stimulus(self,data,stimulus):
+    def add_stimulus(self,data,stimulus):
         self.retinal_stimulus[str(stimulus)] = data
         
     def add_analysis_result(self,result):
