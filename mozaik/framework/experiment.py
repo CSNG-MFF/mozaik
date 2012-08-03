@@ -52,6 +52,35 @@ class MeasureOrientationTuningFullfield(Experiment):
 
     def do_analysis(self,data_store):
         pass
+
+class MeasureSizeTuning(Experiment):
+    
+    def __init__(self,model,num_sizes,max_size,orientation,spatial_frequency,temporal_frequency,grating_duration,contrasts,num_trials):
+        self.model = model
+        for j in contrasts:
+            for i in xrange(0,num_sizes):
+                for k in xrange(0,num_trials):
+                    self.stimuli.append(DriftingSinusoidalGratingDisk(
+                                    frame_duration=7, 
+                                    size_x=model.visual_field.size_x,
+                                    size_y=model.visual_field.size_y,
+                                    location_x=0.0,
+                                    location_y=0.0,
+                                    max_luminance=j*90.0,
+                                    duration=grating_duration,
+                                    density=40,
+                                    trial=k,
+                                    orientation=orientation, 
+                                    size=max_size/num_sizes*i, 
+                                    spatial_frequency=spatial_frequency,
+                                    temporal_frequency=temporal_frequency 
+                                ))    
+
+    def do_analysis(self,data_store):
+        pass
+
+
+
         
 class MeasureNaturalImagesWithEyeMovement(Experiment):
     

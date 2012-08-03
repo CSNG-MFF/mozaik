@@ -13,7 +13,7 @@ class FullfieldDriftingSinusoidalGrating(Stimulus):
 
     """
     max_luminance is interpreted as scale
-    and size_in_degrees as the bounding box size
+    and size_x/2 as the bounding box radius
     """
     
     orientation = SNumber(qt.rad,period=numpy.pi,doc="""Grating orientation""")
@@ -114,3 +114,19 @@ class DriftingGratingWithEyeMovement(Stimulus):
                 yield (image,[self.time])
   
   
+class DriftingSinusoidalGratingDisk(Stimulus):
+    """
+    max_luminance is interpreted as scale
+    and size_x/2 as the bounding box radius
+    """
+    
+    orientation = SNumber(qt.rad,period=numpy.pi,doc="""Grating orientation""")
+    spatial_frequency = SNumber(cpd,doc="""Spatial frequency of the grating""")
+    temporal_frequency = SNumber(qt.Hz,doc="""Temporal frequency of the grating""")
+    radius = SNumber(qt.degrees,doc="""The radius of the grating disk""")
+
+    def frames(self):
+        self.current_phase=0
+        while True:
+                yield (topo.pattern.SineGrating(mask_shape=Disk(smoothing=0.0,size=self.radius*2),orientation=self.orientation,frequency=self.spatial_frequency,phase=self.current_phase,size=self.size_x,bounds=BoundingBox(radius=self.size_x/2),scale=self.max_luminance,xdensity=self.density,ydensity=self.density)(),[self.current_phase])
+                self.current_phase+= 2*numpy.pi*(self.frame_duration/1000.0)*self.temporal_frequency
