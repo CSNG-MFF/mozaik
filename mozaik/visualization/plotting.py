@@ -127,8 +127,8 @@ class PlotTuningCurve(Plotting):
       'parameter_name' : str # the parameter_name through which to plot the tuning curve
     })
 
-    def __init__(self,datastore,parameters):
-        Plotting.__init__(self,datastore,parameters)
+    def __init__(self,datastore,parameters,plot_file_name=None,fig_param=None):
+        Plotting.__init__(self,datastore,parameters,plot_file_name,fig_param)
         dsv = analysis_data_structure_parameter_filter_query(self.datastore,identifier='PerNeuronValue')
         dsv = select_result_sheet_query(dsv,self.parameters.sheet_name)
         assert equal_ads_except(dsv,['stimulus_id'])
@@ -184,8 +184,8 @@ class RasterPlot(Plotting):
         'sheet_name' : str,
       })
 
-      def  __init__(self,datastore,parameters):
-           Plotting.__init__(self,datastore,parameters)
+      def __init__(self,datastore,parameters,plot_file_name=None,fig_param=None):
+           Plotting.__init__(self,datastore,parameters,plot_file_name,fig_param)
            if self.parameters.neurons == []:
               self.parameters.neurons = None 
       
@@ -301,8 +301,8 @@ class AnalogSignalListPlot(Plotting):
             'ylabel' : str,  #what to put as ylabel
         })
     
-        def  __init__(self,datastore,parameters):
-            Plotting.__init__(self,datastore,parameters)
+        def __init__(self,datastore,parameters,plot_file_name=None,fig_param=None):
+            Plotting.__init__(self,datastore,parameters,plot_file_name,fig_param)
             self.analog_signal_list = self.datastore.get_analysis_result(identifier='AnalogSignalList',sheet_name = parameters.sheet_name)    
             if len(self.analog_signal_list) > 1:
               logger.error('Warning currently only the first AnalogSignalList will be plotted')
@@ -335,8 +335,8 @@ class ConductanceSignalListPlot(Plotting):
             'normalize_individually' : bool #each trace will be normalized individually by divding it with its maximum
         })
     
-        def  __init__(self,datastore,parameters):
-            Plotting.__init__(self,datastore,parameters)
+        def __init__(self,datastore,parameters,plot_file_name=None,fig_param=None):
+            Plotting.__init__(self,datastore,parameters,plot_file_name,fig_param)
             self.conductance_signal_list = self.datastore.get_analysis_result(identifier='ConductanceSignalList',sheet_name = parameters.sheet_name)    
             if len(self.conductance_signal_list) > 1:
               logging.error('Warning currently only the first ConductanceSignalList will be plotted')
@@ -359,8 +359,8 @@ class RetinalInputMovie(Plotting):
       })
       
     
-      def  __init__(self,datastore,parameters):
-           Plotting.__init__(self,datastore,parameters)    
+      def __init__(self,datastore,parameters,plot_file_name=None,fig_param=None):
+           Plotting.__init__(self,datastore,parameters,plot_file_name,fig_param)
            self.length = None
            self.retinal_input = datastore.get_retinal_stimulus()
            
@@ -379,10 +379,6 @@ class ActivityMovie(Plotting):
             'sheet_name' : str, # the sheet for which to display the actvity movie
       })
       
-
-      def  __init__(self,datastore,parameters):
-           Plotting.__init__(self,datastore,parameters)
-
       def subplot(self,subplotspec,params):
           dsv = select_result_sheet_query(self.datastore,self.parameters.sheet_name)
           PerStimulusPlot(dsv,function=self.ploter,title_style="Standard").make_line_plot(subplotspec,params)
@@ -428,8 +424,8 @@ class PerNeuronValuePlot(Plotting):
     supplied datastore.
     """
     
-    def  __init__(self,datastore,parameters):
-        Plotting.__init__(self,datastore,parameters)
+    def __init__(self,datastore,parameters,plot_file_name=None,fig_param=None):
+        Plotting.__init__(self,datastore,parameters,plot_file_name,fig_param)
         self.poss = []
         self.pnvs = []
         self.sheets = []
@@ -489,8 +485,8 @@ class ConnectivityPlot(Plotting):
     This plot can accept second DSV that contains the PerNeuronValues corresponding to the target sheets to be displayed that will be plotted as well.
     Note one PerNeuronValue can be present per target sheet!
     """
-    def  __init__(self,datastore,parameters,pnv_dsv=None):
-        Plotting.__init__(self,datastore,parameters)
+    def __init__(self,datastore,parameters,pnv_dsv=None,plot_file_name=None,fig_param=None):
+        Plotting.__init__(self,datastore,parameters,plot_file_name,fig_param)
         self.connecting_neurons_positions = []
         self.connected_neuron_position = []
         self.connections = []

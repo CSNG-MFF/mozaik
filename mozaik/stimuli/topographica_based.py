@@ -114,7 +114,7 @@ class DriftingGratingWithEyeMovement(VisualStimulus):
                 yield (image,[self.time])
   
   
-class DriftingSinusoidalGratingDisk(Stimulus):
+class DriftingSinusoidalGratingDisk(VisualStimulus):
     """
     max_luminance is interpreted as scale
     and size_x/2 as the bounding box radius
