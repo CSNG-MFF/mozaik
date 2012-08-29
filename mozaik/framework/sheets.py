@@ -164,7 +164,7 @@ class Sheet(MozaikComponent):
            for i in xrange(0,len(s.analogsignalarrays)):
                s.analogsignalarrays[i] = s.analogsignalarrays[i].time_slice(start,end).copy()
                s.analogsignalarrays[i].t_start = 0 * start.units
-        
+               print s.analogsignalarrays[i].sampling_rate
         return s
     
     def setup_background_noise(self):

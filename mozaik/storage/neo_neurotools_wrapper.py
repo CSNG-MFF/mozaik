@@ -50,7 +50,6 @@ class MozaikSegment(Segment):
         def get_esyn(self,neuron):
             if not self.full:
                    self.load_full()
-            
             for a in self.analogsignalarrays:
                 if a.name == 'gsyn_exc':
                    idd = self.spiketrains[neuron].annotations['source_id']
@@ -59,7 +58,6 @@ class MozaikSegment(Segment):
         def get_isyn(self,neuron):
             if not self.full:
                    self.load_full()
-            
             for a in self.analogsignalarrays:
                 if a.name == 'gsyn_inh':
                    idd = self.spiketrains[neuron].annotations['source_id']

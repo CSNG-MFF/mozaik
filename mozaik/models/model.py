@@ -62,8 +62,8 @@ class Model(MozaikComponent):
         self.run(stimulus.duration)
 
         segments = []
-        if (not MPI) or (mpi_comm.rank == MPI_ROOT):
-            for sheet in self.sheets.values():    
+        #if (not MPI) or (mpi_comm.rank == MPI_ROOT):
+        for sheet in self.sheets.values():    
                 if sheet.to_record != None:
                     if self.parameters.reset:
                         s = sheet.write_neo_object()

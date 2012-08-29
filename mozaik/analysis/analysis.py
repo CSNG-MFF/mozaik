@@ -212,11 +212,12 @@ class Precision(Analysis):
             # transform spike trains into psth
             dsv = select_result_sheet_query(self.datastore,sheet)
             psths = [psth(seg.spiketrains,self.parameters.bin_length) for seg in dsv.get_segments()]
+            
             st = [StimulusID(s) for s in dsv.get_stimuli()]
     
             # average across trials
             psths,stids = colapse(psths,st,parameter_list=['trial'],func=neo_mean,allow_non_identical_stimuli=True)
-            
+
             for ppsth,stid in zip(psths,stids):
                 t_start = ppsth[0].t_start
                 duration = ppsth[0].t_stop-ppsth[0].t_start

@@ -7,6 +7,14 @@ from NeuroTools import logging
 from NeuroTools import init_logging
 from NeuroTools import visual_logging
 
+try:
+    from mpi4py import MPI
+except ImportError:
+    MPI = None
+if MPI:
+    mpi_comm = MPI.COMM_WORLD
+
+
 class Global:
     """global variable container"""
     root_directory = './'
@@ -29,7 +37,7 @@ def setup_experiments(simulation_name,sim):
     
     # Create results directory
     timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
-    Global.root_directory =  parameters.results_dir + simulation_name + '_' + timestamp + '/'
+    Global.root_directory =  parameters.results_dir + simulation_name + '_' + timestamp + 'rank' + str(mpi_comm.rank) +  '/'
     os.mkdir(Global.root_directory)
     parameters.save(Global.root_directory + "parameters", expand_urls=True)
     

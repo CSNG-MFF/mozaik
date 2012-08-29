@@ -214,19 +214,19 @@ def colapse(data_list,stimuli_list,func=None,parameter_list=[],allow_non_identic
     if (not allow_non_identical_stimuli) and (not identical_stimulus_type(stimuli_list)):
        raise ValueError("colapse accepts only stimuli lists of the same type")  
 
-    
     d = {}
     for v,s in zip(data_list,stimuli_list):
         d[str(s)]=[v]
 
     for param in parameter_list:
         d = _colapse(d,param)
-    
+
     values = [d[k] for k in d.keys()] 
     st = [StimulusID(idd) for idd in d.keys()]
-    
+
     if func != None:
-       return ([func(v) for v in values],st)
+     return ([func(v) for v in values],st)
+  
     else:
        return (values,st)
 
