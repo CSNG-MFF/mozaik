@@ -1,9 +1,12 @@
 import numpy
 import quantities as qt
+import mozaik
 import mozaik.tools.units as munits
 from mozaik.storage.queries import *
 from neo.core.analogsignal import AnalogSignal
 from neo.core.analogsignalarray import  AnalogSignalArray
+
+logger = mozaik.getMozaikLogger("Mozaik")
 
 def psth(spike_list,bin_length):
     """

@@ -7,7 +7,6 @@ import os
 import numpy
 import mozaik
 from mozaik.framework.interfaces import MozaikComponent
-import logging
 import pyNN
 import pyNN.recording.files
 
@@ -19,7 +18,7 @@ from neo.core.spiketrain import SpikeTrain
 from neo.core.segment import Segment
 from neo.core.analogsignalarray import AnalogSignalArray
 
-logger = logging.getLogger("mozaik")
+logger = mozaik.getMozaikLogger("Mozaik")
 
 class Sheet(MozaikComponent):
     """
@@ -42,6 +41,7 @@ class Sheet(MozaikComponent):
             'inh_firing_rate' : float,
             'inh_weight' : float,
         }),
+        'mpi_safe' : bool,
         'name':str,
     })
 
@@ -152,7 +152,6 @@ class Sheet(MozaikComponent):
             return cmp(a.annotations['source_id'], b.annotations['source_id']) 
         
 
-        
         s.spiketrains = sorted(s.spiketrains, compare)
         if stimulus_duration != None:
            end = s.spiketrains[0].t_stop
@@ -167,15 +166,30 @@ class Sheet(MozaikComponent):
                print s.analogsignalarrays[i].sampling_rate
         return s
     
+    def prepare_input(self,duration):
+        if self.parameters.mpi_safe:
+            from NeuroTools import stgen
+            if (self.parameters.background_noise.exc_firing_rate != 0) or (self.parameters.background_noise.exc_weight != 0):
+                for i in numpy.nonzero(self.pop._mask_local)[0]:
+                    ssa = self.sim.create(self.model.sim.SpikeSourceArray, cellparams={'spike_times': numpy.array(stgen.StGen(seed=i).poisson_generator(rate = self.parameters.background_noise.exc_firing_rate, t_start = self.model.simulator_time, t_stop = self.model.simulator_time+duration).spike_times)})
+                    self.sim.connect(ssa, self.pop[i],weight=self.parameters.background_noise.exc_weight)
+            
+            if (self.parameters.background_noise.inh_firing_rate != 0) or (self.parameters.background_noise.inh_weight != 0):        
+                for i in numpy.nonzero(self.pop._mask_local)[0]:
+                    ssa = self.sim.create(self.model.sim.SpikeSourceArray, cellparams={'spike_times': numpy.array(stgen.StGen(seed=i).poisson_generator(rate = self.parameters.background_noise.inh_firing_rate, t_start = self.model.simulator_time, t_stop = self.model.simulator_time+duration).spike_times)})
+                    self.sim.connect(ssa, self.pop[i],weight=self.parameters.background_noise.inh_weight,synapse_type='inhibitory')
+                
+        
     def setup_background_noise(self):
         from pyNN.nest import native_cell_type
-        if (self.parameters.background_noise.exc_firing_rate != 0) or (self.parameters.background_noise.exc_firing_rate != 0):
-            np_exc = self.sim.Population(1, native_cell_type("poisson_generator"), {'rate' : self.parameters.background_noise.exc_firing_rate})
-            prj = self.sim.Projection(np_exc, self.pop, self.sim.AllToAllConnector(weights=self.parameters.background_noise.exc_weight),target='excitatory')
-
-        if (self.parameters.background_noise.inh_firing_rate != 0) or (self.parameters.background_noise.inh_firing_rate != 0):
-            np_inh = self.sim.Population(1, native_cell_type("poisson_generator"), {'rate' : self.parameters.background_noise.inh_firing_rate})
-            prj = self.sim.Projection(np_inh, self.pop, self.sim.AllToAllConnector(weights=self.parameters.background_noise.inh_weight),target='inhibitory')
+        if not self.parameters.mpi_safe:
+            if (self.parameters.background_noise.exc_firing_rate != 0) or (self.parameters.background_noise.exc_weight != 0):
+                np_exc = self.sim.Population(1, native_cell_type("poisson_generator"), {'rate' : self.parameters.background_noise.exc_firing_rate})
+                prj = self.sim.Projection(np_exc, self.pop, self.sim.AllToAllConnector(weights=self.parameters.background_noise.exc_weight),target='excitatory')
+                    
+            if (self.parameters.background_noise.inh_firing_rate != 0) or (self.parameters.background_noise.inh_weight != 0):
+                np_inh = self.sim.Population(1, native_cell_type("poisson_generator"), {'rate' : self.parameters.background_noise.inh_firing_rate})
+                prj = self.sim.Projection(np_inh, self.pop, self.sim.AllToAllConnector(weights=self.parameters.background_noise.inh_weight),target='inhibitory')
 
         
 class RetinalUniformSheet(Sheet):
@@ -256,4 +270,3 @@ class CorticalUniformSheet(SheetWithMagnificationFactor):
         
         for var, val in self.parameters.cell.initial_values.items():
             self.pop.initialize(var, val)
-

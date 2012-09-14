@@ -10,7 +10,7 @@ Could consider using matplotlib.transforms for some of this.
 
 import os.path
 import numpy
-import logging
+import mozaik
 from scipy.ndimage import interpolation
 from PIL import Image
 from mozaik.tools.mozaik_parametrized import SNumber, MozaikParametrized
@@ -22,7 +22,7 @@ import quantities as qt
 from mozaik import __version__
 
 TRANSPARENT = -1
-logger = logging.getLogger("mozaik")
+logger = mozaik.getMozaikLogger("Mozaik")
 
 
 def xy2ij(coordinates):

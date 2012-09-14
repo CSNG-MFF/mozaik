@@ -19,7 +19,7 @@ from mozaik.tools.circ_stat import circ_mean, circular_dist
 from mozaik.tools.neo_object_operations import *
 import logging
 
-logger = logging.getLogger("mozaik")
+logger = mozaik.getMozaikLogger("Mozaik")
 
 class Analysis(MozaikParametrizeObject):
     """

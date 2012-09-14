@@ -2,10 +2,13 @@ from mozaik.storage.datastore import Hdf5DataStore,PickledDataStore
 from NeuroTools.parameters import ParameterSet
 import sys 
 import os 
+import mozaik
 from datetime import datetime
 from NeuroTools import logging
 from NeuroTools import init_logging
 from NeuroTools import visual_logging
+
+logger = mozaik.getMozaikLogger("Mozaik")
 
 try:
     from mpi4py import MPI
@@ -21,8 +24,10 @@ class Global:
 
 def setup_logging():
     # Set-up logging    
-    logger = logging.getLogger("mozaik")
-    init_logging(Global.root_directory + "log", file_level=logging.DEBUG, console_level=logging.DEBUG) # NeuroTools version
+    if MPI:
+        init_logging(Global.root_directory + "log", file_level=logging.DEBUG, console_level=logging.DEBUG,mpi_rank=mpi_comm.rank) # NeuroTools version
+    else:
+        init_logging(Global.root_directory + "log", file_level=logging.DEBUG, console_level=logging.DEBUG) # NeuroTools version        
     visual_logging.basicConfig(Global.root_directory + "visual_log.zip", level=logging.INFO)
 
 
@@ -58,7 +63,7 @@ def run_experiments(model,experiment_list):
         unpresented_stimuli = data_store.identify_unpresented_stimuli(stimuli)
         print 'Running model'
         experiment.run(data_store,unpresented_stimuli)
-        print 'Experiment %d/%d finished' % (i,len(experiment_list))
+        print 'Experiment %d/%d finished' % (i+1,len(experiment_list))
         
     return data_store
 

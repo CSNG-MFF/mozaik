@@ -5,7 +5,6 @@ mozaik.visualization.plotting module.
 Most of this code is likely being  used as a debugging visualization tools 
 or is generic visualization tools that can in turn be used by plotting algorithms
 """
-
 import pylab
 import numpy
 from mozaik.stimuli.stimulus import parse_stimuls_id,load_from_string

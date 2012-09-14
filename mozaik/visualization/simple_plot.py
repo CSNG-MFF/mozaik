@@ -4,8 +4,11 @@ See visualization.plotting for documentation.
 from mozaik.visualization.plotting_helper_functions import *
 import pylab
 import numpy
+import mozaik
 from matplotlib import rc
 import quantities as pq
+
+logger = mozaik.getMozaikLogger("Mozaik")
 
 class SimplePlot(object):
         """
@@ -485,23 +488,25 @@ class StandardStyleLinePlot(StandardStyle):
       """
       This function plots vector data in simple line plots.
       
-      The x, y are lists each containing corresponding vectors of x and y axis values to be plotted.
-      labels can contain the labels to be given to the individual line plots.
+      x, y - lists each containing corresponding vectors of x and y axis values to be plotted.
+      labels - can contain the labels to be given to the individual line plots.
       
       colors - parameter will determine the colors of the plots. If it is one collor all plots will have that same color.
       If it is a list it's length should correspond to length of x and y and the corresponding colors will be assigned
       to the individual graphs.
       
       mean - if the mean of the vectors should be plotted as well.
+      
       """
       
       def __init__(self,x,y,labels=None,**kwargs):
           StandardStyle.__init__(self,**kwargs)
           self.x = x
           self.y = y 
-          self.labels = labels
+          self.parameters["labels"] = labels
           self.parameters["colors"] = None
           self.parameters["mean"] = False
+          self.parameters["linewidth"] = 1
           
           if self.mean:
              for i in xrange(0,len(x)):
@@ -525,10 +530,11 @@ class StandardStyleLinePlot(StandardStyle):
                  color = self.colors[i] 
               else:
                  color = self.colors 
+                 
               if self.labels!=None:
-                self.axis.plot(self.x[i],self.y[i],label=self.labels[i],color=color)
+                self.axis.plot(self.x[i],self.y[i],linewidth=self.linewidth,label=self.labels[i],color=color)
               else:
-                self.axis.plot(self.x[i],self.y[i],color=color)  
+                self.axis.plot(self.x[i],self.y[i],linewidth=self.linewidth,color=color)  
               pylab.hold('on')
               
               tmin = min(tmin,self.x[i][0])
@@ -536,7 +542,7 @@ class StandardStyleLinePlot(StandardStyle):
                 
           if self.mean:
               m = m / len(self.x)
-              self.axis.plot(self.x[0],m,color='k',linewidth=2)              
+              self.axis.plot(self.x[0],m,color='k',linewidth=2*self.linewidth)              
                 
           if self.labels!=None:                    
              self.axis.legend()    

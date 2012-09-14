@@ -1,4 +1,5 @@
 import numpy
+import mozaik
 from operator import *
 import quantities as qt
 from mozaik.stimuli.stimulus import Stimulus
@@ -9,6 +10,8 @@ from mozaik.tools.units import lux
 from mozaik.framework.space import VisualRegion
 from mozaik.framework.interfaces import MozaikParametrizeObject
 from scipy.ndimage import interpolation
+
+logger = mozaik.getMozaikLogger("Mozaik")
 
 class VisualStimulus(Stimulus):
     """Abstract base class for visual stimuli."""

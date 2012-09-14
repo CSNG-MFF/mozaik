@@ -23,7 +23,7 @@ class FullfieldDriftingSinusoidalGrating(VisualStimulus):
     def frames(self):
         self.current_phase=0
         while True:
-                yield (topo.pattern.SineGrating(orientation=self.orientation,frequency=self.spatial_frequency,phase=self.current_phase,size=self.size_x,bounds=BoundingBox(radius=self.size_x/2),scale=self.max_luminance,xdensity=self.density,ydensity=self.density)(),[self.current_phase])
+                yield (topo.pattern.SineGrating(orientation=self.orientation,frequency=self.spatial_frequency,phase=self.current_phase,bounds=BoundingBox(radius=self.size_x/2),scale=self.max_luminance,xdensity=self.density,ydensity=self.density)(),[self.current_phase])
                 self.current_phase+= 2*numpy.pi*(self.frame_duration/1000.0)*self.temporal_frequency
                 
 
@@ -34,7 +34,7 @@ class Null(VisualStimulus):
             Empty stimulus
             """
             while True:
-                yield topo.pattern.Null(scale=0,size=self.size_x)(), []
+                yield topo.pattern.Null(scale=0,bounds=BoundingBox(radius=self.size_x/2))(), []
                 
 
 class NaturalImageWithEyeMovement(VisualStimulus):
@@ -104,7 +104,6 @@ class DriftingGratingWithEyeMovement(VisualStimulus):
                                                  y=location[1],
                                                  frequency=self.spatial_frequency,
                                                  phase=self.current_phase,
-                                                 size=self.size_x,
                                                  bounds=BoundingBox(points=((-self.size_x/2,-self.size_x/2),(-self.size_y/2,-self.size_y/2))),
                                                  scale=self.max_luminance,
                                                  xdensity=self.density,
@@ -123,10 +122,38 @@ class DriftingSinusoidalGratingDisk(VisualStimulus):
     orientation = SNumber(qt.rad,period=numpy.pi,doc="""Grating orientation""")
     spatial_frequency = SNumber(cpd,doc="""Spatial frequency of the grating""")
     temporal_frequency = SNumber(qt.Hz,doc="""Temporal frequency of the grating""")
-    radius = SNumber(qt.degrees,doc="""The radius of the grating disk""")
+    radius = SNumber(qt.degrees,doc="""The radius of the grating disk - in degrees of visual field""")
 
     def frames(self):
         self.current_phase=0
         while True:
-                yield (topo.pattern.SineGrating(mask_shape=Disk(smoothing=0.0,size=self.radius*2),orientation=self.orientation,frequency=self.spatial_frequency,phase=self.current_phase,size=self.size_x,bounds=BoundingBox(radius=self.size_x/2),scale=self.max_luminance,xdensity=self.density,ydensity=self.density)(),[self.current_phase])
+                yield (topo.pattern.SineGrating(mask_shape=topo.pattern.Disk(smoothing=0.0,size=self.radius*2),orientation=self.orientation,frequency=self.spatial_frequency,phase=self.current_phase,bounds=BoundingBox(radius=self.size_x/2),scale=self.max_luminance,xdensity=self.density,ydensity=self.density)(),[self.current_phase])
+                self.current_phase+= 2*numpy.pi*(self.frame_duration/1000.0)*self.temporal_frequency
+
+
+class DriftingSinusoidalGratingCenterSurroundStimulus(VisualStimulus):
+    """
+    A standard stimulus to probe orientation specific surround modulation:
+    A drifting grating in center surrounded by a drifting grating in the surround.
+    Orientations of both center and surround gratings can be varied independently.
+    
+    max_luminance is interpreted as scale and size_x/2 as the bounding box radius.
+    """
+    
+    center_orientation = SNumber(qt.rad,period=numpy.pi,doc="""Center grating orientation""")
+    surr_orientation = SNumber(qt.rad,period=numpy.pi,doc="""Surround grating orientation""")
+    spatial_frequency = SNumber(cpd,doc="""Spatial frequency of the grating (same for center and surround)""")
+    temporal_frequency = SNumber(qt.Hz,doc="""Temporal frequency of the grating (same for center and surround)""")
+    gap = SNumber(qt.degrees,doc="""The gap between center and surround grating - in degrees of visual field""")
+    center_radius = SNumber(qt.degrees,doc="""The (outside) radius of the center grating disk - in degrees of visual field""")
+    surround_radius = SNumber(qt.degrees,doc="""The (outside) radius of the surround grating disk - in degrees of visual field""")
+
+    def frames(self):
+        self.current_phase=0
+        while True:
+                center = topo.pattern.SineGrating(mask_shape=topo.pattern.Disk(smoothing=0.0,size=self.center_radius*2),orientation=self.center_orientation,frequency=self.spatial_frequency,phase=self.current_phase,bounds=BoundingBox(radius=self.size_x/2),scale=self.max_luminance,xdensity=self.density,ydensity=self.density)()
+                r = (self.center_radius + self.surround_radius + self.gap)/2
+                t = (self.surround_radius - self.surround_radius - self.gap)/2
+                surround = topo.pattern.SineGrating(mask_shape=topo.pattern.Ring(thickness=t,smoothing=0,size=r*2),orientation=self.surround_orientation,frequency=self.spatial_frequency,phase=self.current_phase,bounds=BoundingBox(radius=self.size_x/2),scale=self.max_luminance,xdensity=self.density,ydensity=self.density)()
+                yield (numpy.add.reduce([center,surround]),[self.current_phase])
                 self.current_phase+= 2*numpy.pi*(self.frame_duration/1000.0)*self.temporal_frequency

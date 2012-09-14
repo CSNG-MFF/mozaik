@@ -74,8 +74,8 @@ from mozaik.tools import units
 from simple_plot import *
 from plot_constructors import *
 
-import logging
-logger = logging.getLogger("mozaik")
+import mozaik
+logger = mozaik.getMozaikLogger("Mozaik")
 
 
 class Plotting(MozaikParametrizeObject):
@@ -363,11 +363,13 @@ class RetinalInputMovie(Plotting):
            Plotting.__init__(self,datastore,parameters,plot_file_name,fig_param)
            self.length = None
            self.retinal_input = datastore.get_retinal_stimulus()
+           self.st = datastore.retinal_stimulus.keys()
            
       def subplot(self,subplotspec,params):
           LinePlot(function=self.ploter,length = len(self.retinal_input)).make_line_plot(subplotspec,params)
 
       def ploter(self,idx,gs,params):
+          params.setdefault("title",str(self.st[idx]))
           PixelMovie(self.retinal_input[idx],1.0/self.parameters.frame_rate*1000,x_axis=False,y_axis=False)(gs)
 
 class ActivityMovie(Plotting):

@@ -11,7 +11,7 @@ from mozaik.framework.space import VisualRegion
 from mozaik.framework.interfaces import MozaikRetina
 from mozaik.framework.sheets import Sheet,RetinalUniformSheet
 import cai97
-import logging
+
 from NeuroTools import visual_logging
 from NeuroTools.plotting import progress_bar
 from NeuroTools.signals.spikes import SpikeList
@@ -19,7 +19,8 @@ from NeuroTools.parameters import ParameterSet
 from pyNN import random
 from pyNN.space import Grid2D
 
-logger = logging.getLogger("Mozaik")
+
+logger = mozaik.getMozaikLogger("Mozaik")
 
 def meshgrid3D(x, y, z):
     """A slimmed-down version of http://www.scipy.org/scipy/numpy/attachment/ticket/966/meshgrid.py"""
@@ -210,6 +211,7 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
         'linear_scaler': float, # linear scaler that the RF output is multiplied with
         'cached' : bool,
         'cache_path' : str,
+        'mpi_reproducible_noise' : bool, # if true noise is precomputed and StepCurrentSource is used which makes it slower
         'receptive_field': ParameterSet({
             'func': str,
             'func_params':ParameterSet,
@@ -241,28 +243,33 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
         self.pops={}
         self.scs={}
         self.ncs={}
+        self.ncs_rng={}
         for rf_type in self.rf_types:
             
             bn = ParameterSet({'exc_firing_rate' : 0.0,  'exc_weight' : 0.0, 'inh_firing_rate' : 0.0,'inh_weight' : 0.0 })
-            p = RetinalUniformSheet(model,ParameterSet({'sx': self.parameters.size[0], 'sy': self.parameters.size[1], 'density': self.parameters.density, 'cell': self.parameters.cell, 'name' : rf_type , 'background_noise' : bn}))
+            p = RetinalUniformSheet(model,ParameterSet({'sx': self.parameters.size[0], 'sy': self.parameters.size[1], 'density': self.parameters.density, 'cell': self.parameters.cell, 'name' : rf_type , 'background_noise' : bn,'mpi_safe' : False}))
             self.sheets[rf_type] = p
 
         for rf_type in self.rf_types:            
                 self.scs[rf_type] = []
                 self.ncs[rf_type] = []
-                
-                for lgn_cell in self.sheets[rf_type].pop:
+                self.ncs_rng[rf_type] = []
+                for i,lgn_cell in enumerate(self.sheets[rf_type].pop):
                     scs = sim.StepCurrentSource({'times' : [0.0], 'amplitudes' : [0.0]})
                     
-                    ncs = sim.NoisyCurrentSource({'mean':self.parameters.noise.mean,
-                                                            'stdev': self.parameters.noise.stdev})
-                                                            #'rng' : mozaik.rng})
+                    if not self.parameters.mpi_reproducible_noise:
+                        ncs = sim.NoisyCurrentSource({'mean':self.parameters.noise.mean,
+                                                      'stdev': self.parameters.noise.stdev})
+                    else:
+                        ncs = sim.StepCurrentSource({'times' : [0.0], 'amplitudes' : [0.0]})
+                        index = numpy.nonzero(self.sheets[rf_type].pop._mask_local)[0][i]
+                        self.ncs_rng[rf_type].append(numpy.random.RandomState(seed=index+(rf_type=='X_ON')*len(self.sheets[rf_type].pop)))
+                    
                     self.scs[rf_type].append(scs)
                     self.ncs[rf_type].append(ncs)
                     lgn_cell.inject(scs)
                     lgn_cell.inject(ncs)
-    
-    
+                
     def get_cache(self,stimulus_id):
         if self.parameters.cached==False:
             return None
@@ -320,27 +327,29 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
         else:
             logger.debug("Retrieved spikes from cache...")
             (input_currents,retinal_input) = cached
-            
         for rf_type in self.rf_types:            
                 assert isinstance(input_currents[rf_type], list)        
-                
-                for lgn_cell, input_current,scs,ncs in zip(self.sheets[rf_type].pop, input_currents[rf_type],self.scs[rf_type],self.ncs[rf_type]):
+                for i,(lgn_cell, input_current,scs,ncs) in enumerate(zip(self.sheets[rf_type].pop, input_currents[rf_type],self.scs[rf_type],self.ncs[rf_type])):
                     assert isinstance(input_current, dict)
                     t = input_current['times']+offset
                     a = self.parameters.linear_scaler*input_current['amplitudes']
                     scs.set_parameters(times =  t, amplitudes =a)
-                    
-        # for debugging/testing
-        input_current_array = numpy.zeros((self.shape[1], self.shape[0], len(visual_space.time_points(duration))))
-        update_factor = int(visual_space.update_interval/self.parameters.receptive_field.temporal_resolution)
+                    if self.parameters.mpi_reproducible_noise:
+                       t = numpy.arange(0,duration,self.model.sim.get_time_step())+offset
+                       logger.debug('A')
+                       ncs.set_parameters(times =  t, amplitudes = self.parameters.noise.mean+self.parameters.noise.stdev*self.ncs_rng[rf_type][i].randn(len(t))) 
+                       logger.debug('B')
+        # for debugging/testing, doesn't work with MPI !!!!!!!!!!!!
+        #input_current_array = numpy.zeros((self.shape[1], self.shape[0], len(visual_space.time_points(duration))))
+        #update_factor = int(visual_space.update_interval/self.parameters.receptive_field.temporal_resolution)
         #logger.debug("input_current_array.shape = %s, update_factor = %d, p.dim = %s" % (input_current_array.shape, update_factor, self.shape))
-        k = 0
-        for i in range(self.shape[1]): # self.sahpe gives (x,y), so self.shape[1] is the height
-            for j in range(self.shape[0]):
+        #k = 0
+        #for i in range(self.shape[1]): # self.sahpe gives (x,y), so self.shape[1] is the height
+        #    for j in range(self.shape[0]):
                 # where the kernel temporal resolution is finer than the frame update interval,
                 # we only keep the current values at the start of each frame
-                input_current_array[i,j, :] = input_currents['X_ON'][k]['amplitudes'][::update_factor]
-                k += 1 
+        #        input_current_array[i,j, :] = input_currents['X_ON'][k]['amplitudes'][::update_factor]
+        #        k += 1 
 
         # if record() has already been called, setup the recording now
         self._built = True
@@ -353,10 +362,13 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
         input_current['amplitudes'] = numpy.zeros((len(input_current['times']),))
         
         for rf_type in self.rf_types:            
-                for lgn_cell,scs,ncs in zip(self.sheets[rf_type].pop, self.scs[rf_type],self.ncs[rf_type]):
+                for i,(lgn_cell,scs,ncs) in enumerate(zip(self.sheets[rf_type].pop, self.scs[rf_type],self.ncs[rf_type])):
                     scs.set_parameters(times =  input_current['times'], amplitudes = input_current['amplitudes'])
-    
-    
+                    if self.parameters.mpi_reproducible_noise:
+                       t = numpy.arange(0,duration,self.model.sim.get_time_step())+ offset
+                       ncs.set_parameters(times =  t, amplitudes = self.parameters.noise.mean+self.parameters.noise.stdev*self.ncs_rng[rf_type][i].randn(len(t))) 
+                       
+                       
     def _calculate_input_currents(self, visual_space, duration):
         """
         Calculate the input currents for all cells.
@@ -389,7 +401,8 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
         #y_values = numpy.linspace(-effective_visual_field_height/2.0, effective_visual_field_height/2.0, self.shape[1])
         for rf_type in self.rf_types:
             input_cells[rf_type] = []
-            for i in xrange(0,len(self.sheets[rf_type].pop.positions[0])):
+            for i in numpy.nonzero(self.sheets[rf_type].pop._mask_local)[0]:
+            #for i in xrange(0,len(self.sheets[rf_type].pop.positions[0])):
                         cell = CellWithReceptiveField(self.sheets[rf_type].pop.positions[0][i], self.sheets[rf_type].pop.positions[1][i], rf[rf_type], self.parameters.gain)
                         cell.initialize(visual_space.background_luminance, duration)
                         input_cells[rf_type].append(cell)
@@ -398,13 +411,13 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
         
         t = 0
         retinal_input = []
+        
         while t < duration:
             for rf_type in self.rf_types:
                 for cell in input_cells[rf_type]:
                     cell.view(visual_space)
             t = visual_space.update()
-            
-            visual_region = VisualRegion(location_x=0,location_y=0, size_x=P_rf.width,size_y=P_rf.height)
+            visual_region = VisualRegion(location_x=0,location_y=0, size_x=self.parameters.size[0],size_y=self.parameters.size[1])
             im = visual_space.view(visual_region, pixel_size=rf_ON.spatial_resolution)
             retinal_input.append(im)
             progress_bar(t/duration)
@@ -421,7 +434,5 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
 
             for i in xrange(0,1):
                 a = [cell.response_current()['amplitudes'][i] for cell in input_cells[rf_type]]
-            
-            
         return (input_currents,retinal_input)
     

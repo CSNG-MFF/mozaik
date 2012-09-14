@@ -1,6 +1,7 @@
 from NeuroTools.parameters import ParameterSet
 from neo.core.block import Block
 #from neo.io.hdf5io import NeoHdf5IO
+import mozaik
 from mozaik.framework.interfaces import MozaikParametrizeObject
 from NeuroTools.parameters import ParameterSet
 from neo_neurotools_wrapper import NeoNeurotoolsWrapper, PickledDataStoreNeoWrapper
@@ -8,10 +9,10 @@ from mozaik.stimuli.stimulus import StimulusID
 
 import cPickle
 import numpy
-import logging
 
 
-logger = logging.getLogger("mozaik")
+
+logger = mozaik.getMozaikLogger("Mozaik")
 
 
 class DataStoreView(MozaikParametrizeObject):
@@ -318,7 +319,7 @@ class PickledDataStore(Hdf5DataStore):
         self.analysis_results = cPickle.load(f)
         
         #f = open(self.parameters.root_directory+'/datastore.retinal.stimulus.pickle','rb')
-        #self.retinal_stimulus = pickle.load(f)
+        #self.retinal_stimulus = cPickle.load(f)
         
             
     def save(self):
@@ -331,7 +332,7 @@ class PickledDataStore(Hdf5DataStore):
         f.close()
 
         #f = open(self.parameters.root_directory+'/datastore.retinal.stimulus.pickle','wb')
-        #pickle.dump(self.retinal_stimulus,f)
+        #cPickle.dump(self.retinal_stimulus,f)
         #f.close()                
         
 

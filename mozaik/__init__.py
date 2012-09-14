@@ -5,3 +5,15 @@ __version__ = None
 # that requires rng
 from pyNN.random import NumpyRNG
 rng = NumpyRNG(seed=1023)
+
+try:
+    from mpi4py import MPI
+except ImportError:
+    MPI = None
+if MPI:
+    mpi_comm = MPI.COMM_WORLD
+
+def getMozaikLogger(name):
+    import logging
+    logger = logging.getLogger(name)
+    return logger

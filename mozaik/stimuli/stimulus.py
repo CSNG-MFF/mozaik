@@ -15,11 +15,15 @@ Note that *all* such parameters defined in the class (and its ancestors) will be
 
 import quantities as qt
 import numpy 
+import mozaik
 from operator import * # don't do import *
 from mozaik.tools.mozaik_parametrized import * # don't do import *
 from mozaik.framework.interfaces import MozaikParametrizeObject
 import inspect
 from NeuroTools.parameters import ParameterSet
+
+
+logger = mozaik.getMozaikLogger("Mozaik")
 
 class Stimulus(MozaikParametrized):
     """

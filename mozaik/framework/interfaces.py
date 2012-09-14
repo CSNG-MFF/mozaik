@@ -6,7 +6,7 @@ checked or enforced.
 from mozaik import __version__
 from NeuroTools.parameters import ParameterSet
 from NeuroTools.signals.spikes import SpikeList
-import logging
+import mozaik
 import os
 from string import Template
 import numpy
@@ -14,7 +14,7 @@ from mozaik.tools.mozaik_parametrized import SNumber
 from mozaik.tools.units import lux
 import quantities as qt
 
-logger = logging.getLogger("mozaik")
+logger = mozaik.getMozaikLogger("Mozaik")
 
  
 class MozaikParametrizeObject(object):

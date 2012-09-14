@@ -1,6 +1,8 @@
 # encoding: utf-8
+from collections import Counter
 import numpy
 import pylab
+import mozaik
 from pylab import griddata
 from interfaces import MozaikComponent
 from sheets import SheetWithMagnificationFactor
@@ -10,12 +12,8 @@ from pyNN import random, space
 from mozaik.tools.misc import sample_from_bin_distribution, normal_function
 from mozaik.tools.circ_stat import circular_dist,circ_mean
 from scipy.interpolate import NearestNDInterpolator
-import logging
 
-
-logger = logging.getLogger("mozaik")
-
-
+logger = mozaik.getMozaikLogger("Mozaik")
 
 class mozaikVisualSystemConnector(Connector):
       required_parameters = ParameterSet({
@@ -141,6 +139,13 @@ class SpecificProbabilisticArborization(mozaikVisualSystemConnector):
         Generic connector which gets directly list of connections as the list of quadruplets as accepted by the
         pyNN FromListConnector.
         
+        It interprets the weights as proportianal probabilities of connectivity, and for each neuron
+        out connections it samples num_samples of connections that actually get realized according to 
+        these weights. Each such sample connections will have weight equal to weight_factor/num_samples
+        but note that there can be multiple connections between a pair of neurons in this sample 
+        (in which case the weights is set to the multiple of the base weights times the number of
+        occurances in the sample).
+        
         This connector cannot be parametrized directly via the parameter file because that does not suport list of tuples.
         """
         
@@ -165,10 +170,11 @@ class SpecificProbabilisticArborization(mozaikVisualSystemConnector):
             
             for k in d.keys():
                 w = [self.connection_list[i][2] for i in d[k]]
-                
                 samples = sample_from_bin_distribution(w,self.parameters.num_samples)
-                a = [self.connection_list[d[k][s]] for s in samples]
-                cl.extend([(a,b,self.parameters.weight_factor/len(samples),de) for (a,b,c,de) in a])
+                a = numpy.array([self.connection_list[d[k][s]] for s in samples])[:,[0,1,3]]
+                z = Counter([tuple(z) for z in a.tolist()])
+                
+                cl.extend([(a,b,self.parameters.weight_factor/len(samples)*z[(a,b,de)],de) for (a,b,de) in z.keys()])
             
             method  =  self.sim.FromListConnector(cl)  
             self.proj = self.sim.Projection(self.source.pop, self.target.pop, method, synapse_dynamics=self.short_term_plasticity, label=self.name, rng=None, target=self.parameters.target_synapses)
@@ -217,7 +223,7 @@ class V1PushPullProbabilisticArborization(MozaikComponent):
                     
                     weights.append((j,i,w,self.parameters.propagation_constant))
             
-            we = numpy.zeros((len(self.source.pop),len(self.target.pop)))
+            #we = numpy.zeros((len(self.source.pop),len(self.target.pop)))
             
             
             pnv_source = []
@@ -229,13 +235,6 @@ class V1PushPullProbabilisticArborization(MozaikComponent):
                 pnv_source.append(self.source.get_neuron_annotation(i,'LGNAfferentOrientation'))
             
             
-            for (j,i,w,xsj) in weights:
-                we[j,i] = w
-            
-            (angle,mag) = circ_mean(numpy.array([numpy.array(pnv_target).T for i in xrange(0,numpy.shape(we)[0])]),weights=numpy.array(we),low=0,high=numpy.pi,axis=1)            
-            
-           
-                                    
             if self.parameters.probabilistic:
                 SpecificProbabilisticArborization(network, self.source, self.target, weights,self.parameters.specific_arborization,self.name).connect()
             else:
@@ -379,7 +378,6 @@ class GaborConnector(MozaikComponent):
              
              on_proj.connect()
              off_proj.connect()
-                 
              #on_proj.connection_field_plot_continuous(0)   
              #off_proj.connection_field_plot_continuous(0)   
 

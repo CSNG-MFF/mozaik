@@ -3,10 +3,9 @@ from mozaik.analysis.analysis import Analysis
 from sets import Set
 import quantities as qt
 import numpy
+import mozaik
 
-import logging
-
-logger = logging.getLogger("mozaik")
+logger = mozaik.getMozaikLogger("Mozaik")
 
 
 class NeuronAnnotationsToPerNeuronValues(Analysis):

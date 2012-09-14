@@ -2,7 +2,7 @@ from NeuroTools.parameters import ParameterSet
 from mozaik.stimuli.stimulus import StimulusID
 from mozaik.framework.interfaces import MozaikComponent
 from mozaik.framework import load_component
-import logging
+import mozaik
 
 try:
     from mpi4py import MPI
@@ -13,7 +13,7 @@ if MPI:
 MPI_ROOT = 0
     
 
-logger = logging.getLogger("mozaik")
+logger = mozaik.getMozaikLogger("Mozaik")
 
 class Model(MozaikComponent):
     
@@ -58,6 +58,7 @@ class Model(MozaikComponent):
         for sheet in self.sheets.values():
             if self.first_time:
                 sheet.record()
+                sheet.prepare_input(stimulus.duration)
         sensory_input = self.input_layer.process_input(self.input_space, StimulusID(stimulus), stimulus.duration, self.simulator_time)
         self.run(stimulus.duration)
 
