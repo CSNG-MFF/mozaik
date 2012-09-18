@@ -166,17 +166,17 @@ class Sheet(MozaikComponent):
                print s.analogsignalarrays[i].sampling_rate
         return s
     
-    def prepare_input(self,duration):
+    def prepare_input(self,duration,offset):
         if self.parameters.mpi_safe:
             from NeuroTools import stgen
             if (self.parameters.background_noise.exc_firing_rate != 0) or (self.parameters.background_noise.exc_weight != 0):
                 for i in numpy.nonzero(self.pop._mask_local)[0]:
-                    ssa = self.sim.create(self.model.sim.SpikeSourceArray, cellparams={'spike_times': numpy.array(stgen.StGen(seed=i).poisson_generator(rate = self.parameters.background_noise.exc_firing_rate, t_start = self.model.simulator_time, t_stop = self.model.simulator_time+duration).spike_times)})
+                    ssa = self.sim.create(self.model.sim.SpikeSourceArray, cellparams={'spike_times': offset+numpy.array(stgen.StGen(seed=i).poisson_generator(rate = self.parameters.background_noise.exc_firing_rate, t_start = self.model.simulator_time, t_stop = self.model.simulator_time+duration).spike_times)})
                     self.sim.connect(ssa, self.pop[i],weight=self.parameters.background_noise.exc_weight)
             
             if (self.parameters.background_noise.inh_firing_rate != 0) or (self.parameters.background_noise.inh_weight != 0):        
                 for i in numpy.nonzero(self.pop._mask_local)[0]:
-                    ssa = self.sim.create(self.model.sim.SpikeSourceArray, cellparams={'spike_times': numpy.array(stgen.StGen(seed=i).poisson_generator(rate = self.parameters.background_noise.inh_firing_rate, t_start = self.model.simulator_time, t_stop = self.model.simulator_time+duration).spike_times)})
+                    ssa = self.sim.create(self.model.sim.SpikeSourceArray, cellparams={'spike_times': offset+numpy.array(stgen.StGen(seed=i).poisson_generator(rate = self.parameters.background_noise.inh_firing_rate, t_start = self.model.simulator_time, t_stop = self.model.simulator_time+duration).spike_times)})
                     self.sim.connect(ssa, self.pop[i],weight=self.parameters.background_noise.inh_weight,synapse_type='inhibitory')
                 
         

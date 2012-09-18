@@ -58,7 +58,7 @@ class Model(MozaikComponent):
         for sheet in self.sheets.values():
             if self.first_time:
                 sheet.record()
-                sheet.prepare_input(stimulus.duration)
+                sheet.prepare_input(stimulus.duration,self.simulator_time)
         sensory_input = self.input_layer.process_input(self.input_space, StimulusID(stimulus), stimulus.duration, self.simulator_time)
         self.run(stimulus.duration)
 

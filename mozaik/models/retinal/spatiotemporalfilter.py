@@ -327,18 +327,25 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
         else:
             logger.debug("Retrieved spikes from cache...")
             (input_currents,retinal_input) = cached
+            
+        ts = self.model.sim.get_time_step()    
         for rf_type in self.rf_types:            
                 assert isinstance(input_currents[rf_type], list)        
                 for i,(lgn_cell, input_current,scs,ncs) in enumerate(zip(self.sheets[rf_type].pop, input_currents[rf_type],self.scs[rf_type],self.ncs[rf_type])):
                     assert isinstance(input_current, dict)
                     t = input_current['times']+offset
                     a = self.parameters.linear_scaler*input_current['amplitudes']
+                    #logger.debug('A')
                     scs.set_parameters(times =  t, amplitudes =a)
+                    #logger.debug('B')
                     if self.parameters.mpi_reproducible_noise:
-                       t = numpy.arange(0,duration,self.model.sim.get_time_step())+offset
-                       logger.debug('A')
+                       #logger.debug('C')
+                       t = numpy.arange(0,duration,ts)+offset
+                       #logger.debug('E')
                        ncs.set_parameters(times =  t, amplitudes = self.parameters.noise.mean+self.parameters.noise.stdev*self.ncs_rng[rf_type][i].randn(len(t))) 
-                       logger.debug('B')
+                       #logger.debug('F')
+        #logger.debug('G')
+        
         # for debugging/testing, doesn't work with MPI !!!!!!!!!!!!
         #input_current_array = numpy.zeros((self.shape[1], self.shape[0], len(visual_space.time_points(duration))))
         #update_factor = int(visual_space.update_interval/self.parameters.receptive_field.temporal_resolution)

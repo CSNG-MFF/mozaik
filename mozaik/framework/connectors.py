@@ -20,9 +20,10 @@ class mozaikVisualSystemConnector(Connector):
                 'target_synapses' : str,
                 'short_term_plasticity' : bool,
                 'short_term_plasticity_params': ParameterSet({
-                        'U': float, 
+                        'u': float, 
                         'tau_rec': float, 
-                        'tau_facil': float
+                        'tau_fac': float,
+                        'tau_psc': float
                 }),
 
       })
@@ -33,8 +34,8 @@ class mozaikVisualSystemConnector(Connector):
           if not self.parameters.short_term_plasticity:
             self.short_term_plasticity = None
           else:
-            self.short_term_plasticity = self.sim.SynapseDynamics(fast=self.sim.TsodyksMarkramMechanism(**self.parameters.short_term_plasticity_params))                    
-    
+            #self.short_term_plasticity = self.sim.SynapseDynamics(fast=self.sim.TsodyksMarkramMechanism(**self.parameters.short_term_plasticity_params))                    
+            self.short_term_plasticity = self.sim.NativeSynapseDynamics("tsodyks_synapse", self.parameters.short_term_plasticity_params)
       def connect(self):
         raise NotImplementedError
         pass
