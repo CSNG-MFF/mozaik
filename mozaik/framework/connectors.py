@@ -226,7 +226,6 @@ class V1PushPullProbabilisticArborization(MozaikComponent):
             
             #we = numpy.zeros((len(self.source.pop),len(self.target.pop)))
             
-            
             pnv_source = []
             pnv_target = []
             for (i,neuron1) in enumerate(self.target.pop.all()):

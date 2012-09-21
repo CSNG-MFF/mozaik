@@ -125,10 +125,11 @@ class StandardStyle(SimplePlot):
               y_ticks             what are the ytikcs (note that the tick style, and y_axis can override/modify these)
               x_tick_labels       what are the x tick lables (note that the tick style, and x_axis can override/modify these, and x_tick_labels have to match x_ticks)
               y_tick_labels       what are the y tick lables (note that the tick style, and y_axis can override/modify these, and y_tick_labels have to match y_ticks)
-              
+              x_tick_pad          what are the x tick padding of lables for axis
+              y_tick_pad          what are the y tick padding of lables for axis
               """
               SimplePlot.__init__(self,**kwargs)
-              self.parameters["fontsize"] = 7 # Font size to be used for tick labels and axis labels
+              self.parameters["fontsize"] = 12 # Font size to be used for tick labels and axis labels
               self.parameters["x_tick_style"] = 'Min' # The style of ticks to be plotted 
               self.parameters["y_tick_style"] = 'Min' # The style of ticks to be plotted 
               self.parameters["x_axis"] = True # whether to plot the x_axis (and  the ticks)
@@ -145,11 +146,17 @@ class StandardStyle(SimplePlot):
               self.parameters["y_ticks"] = None # what are the ytikcs (note that the tick style, and y_axis can override/modify these)
               self.parameters["x_tick_labels"] = None # what are the x tick lables (note that the tick style, and x_axis can override/modify these, and x_tick_labels have to match x_ticks)
               self.parameters["y_tick_labels"] = None # what are the y tick lables (note that the tick style, and y_axis can override/modify these, and y_tick_labels have to match y_ticks)
+              self.parameters["x_tick_pad"] = self.parameters["fontsize"]-5 # what are the x tick padding of lables for axis
+              self.parameters["y_tick_pad"] = self.parameters["fontsize"]-5 # what are the y tick padding of lables for axis
 
 
        def pre_axis_plot(self):
            pylab.rc('axes', linewidth=3)
-
+           self.xtick_pad_backup = pylab.rcParams['xtick.major.pad']
+           pylab.rcParams['xtick.major.pad']=self.x_tick_pad
+           self.ytick_pad_backup = pylab.rcParams['ytick.major.pad']
+           pylab.rcParams['ytick.major.pad']=self.y_tick_pad
+            
        def pre_plot(self):
            pass
             
@@ -190,7 +197,9 @@ class StandardStyle(SimplePlot):
               disable_bottom_axis(self.axis)
 
            pylab.rc('axes', linewidth=1)         
-        
+           pylab.rcParams['xtick.major.pad'] = self.xtick_pad_backup
+           pylab.rcParams['ytick.major.pad'] = self.ytick_pad_backup
+ 
        
        def ticks(self):
            
@@ -220,6 +229,11 @@ class StandardStyle(SimplePlot):
               pass
            else:
               raise ValueError('Unknow y tick style %s', self.y_tick_style)
+              
+           for label in self.axis.get_xticklabels() + self.axis.get_yticklabels(): 
+               label.set_fontsize(self.fontsize) 
+   
+              
 
 class SpikeRasterPlot(StandardStyle):         
       """
@@ -471,7 +485,7 @@ class ScatterPlot(StandardStyle):
                 vmin = 0
                 
           ax = self.axis.scatter(self.x,self.y,c = self.z, s = self.dot_size,marker = self.marker,lw = 0,cmap=self.colormap,vmin = vmin, vmax = vmax)
-          
+          self.axis.set_aspect(aspect=1.0, adjustable='box')
           #self.x_lim = (1.1*numpy.min(self.x),1.1*numpy.max(self.x))
           #self.y_lim = (1.1*numpy.min(self.y),1.1*numpy.max(self.y))
           

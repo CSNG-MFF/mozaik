@@ -315,13 +315,13 @@ class AnalogSignalListPlot(Plotting):
               ys = []
               colors = []
               for a in self.asl:
-                   times = numpy.linspace(a.t_start.magnitude,a.t_stop.magnitude,len(a))
+                   times = numpy.linspace(a.t_start,a.t_stop,len(a))
                    xs.append(times)
                    ys.append(a)
                    colors.append("#848484")
                 
               params.setdefault("x_lim",(a.t_start.magnitude,a.t_stop.magnitude))
-              params.setdefault("x_label",self.analog_signal_list.x_axis_name)
+              params.setdefault("x_label",self.analog_signal_list.x_axis_name+ '(' + self.asl[0].t_start.dimensionality.latex + ')')
               params.setdefault("y_label",self.analog_signal_list.y_axis_name)
               params.setdefault("x_ticks",[a.t_start.magnitude,a.t_stop.magnitude])
               params.setdefault("mean",True)

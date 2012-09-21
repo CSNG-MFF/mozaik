@@ -163,7 +163,6 @@ class Sheet(MozaikComponent):
            for i in xrange(0,len(s.analogsignalarrays)):
                s.analogsignalarrays[i] = s.analogsignalarrays[i].time_slice(start,end).copy()
                s.analogsignalarrays[i].t_start = 0 * start.units
-               print s.analogsignalarrays[i].sampling_rate
         return s
     
     def prepare_input(self,duration,offset):
@@ -171,14 +170,11 @@ class Sheet(MozaikComponent):
             from NeuroTools import stgen
             if (self.parameters.background_noise.exc_firing_rate != 0) or (self.parameters.background_noise.exc_weight != 0):
                 for i in numpy.nonzero(self.pop._mask_local)[0]:
-                    ssa = self.sim.create(self.model.sim.SpikeSourceArray, cellparams={'spike_times': offset+numpy.array(stgen.StGen(seed=i).poisson_generator(rate = self.parameters.background_noise.exc_firing_rate, t_start = self.model.simulator_time, t_stop = self.model.simulator_time+duration).spike_times)})
-                    self.sim.connect(ssa, self.pop[i],weight=self.parameters.background_noise.exc_weight)
+                    self.ssae[i].set_parameters(spike_times =  offset+numpy.array(stgen.StGen(seed=i).poisson_generator(rate = self.parameters.background_noise.exc_firing_rate, t_start = self.model.simulator_time, t_stop = self.model.simulator_time+duration).spike_times))
             
             if (self.parameters.background_noise.inh_firing_rate != 0) or (self.parameters.background_noise.inh_weight != 0):        
                 for i in numpy.nonzero(self.pop._mask_local)[0]:
-                    ssa = self.sim.create(self.model.sim.SpikeSourceArray, cellparams={'spike_times': offset+numpy.array(stgen.StGen(seed=i).poisson_generator(rate = self.parameters.background_noise.inh_firing_rate, t_start = self.model.simulator_time, t_stop = self.model.simulator_time+duration).spike_times)})
-                    self.sim.connect(ssa, self.pop[i],weight=self.parameters.background_noise.inh_weight,synapse_type='inhibitory')
-                
+                    self.ssai[i].set_parameters(spike_times =  offset+numpy.array(stgen.StGen(seed=2*i).poisson_generator(rate = self.parameters.background_noise.inh_firing_rate, t_start = self.model.simulator_time, t_stop = self.model.simulator_time+duration).spike_times))
         
     def setup_background_noise(self):
         from pyNN.nest import native_cell_type
@@ -190,8 +186,16 @@ class Sheet(MozaikComponent):
             if (self.parameters.background_noise.inh_firing_rate != 0) or (self.parameters.background_noise.inh_weight != 0):
                 np_inh = self.sim.Population(1, native_cell_type("poisson_generator"), {'rate' : self.parameters.background_noise.inh_firing_rate})
                 prj = self.sim.Projection(np_inh, self.pop, self.sim.AllToAllConnector(weights=self.parameters.background_noise.inh_weight),target='inhibitory')
-
-        
+        else:
+            if (self.parameters.background_noise.exc_firing_rate != 0) or (self.parameters.background_noise.exc_weight != 0):
+                self.ssae=self.sim.Population(self.pop.size,self.model.sim.SpikeSourceArray,{'spike_times': []})
+                self.sim.Projection(self.ssae,self.pop,self.sim.OneToOneConnector(weights=self.parameters.background_noise.exc_weight),target='excitatory')
+                
+            if (self.parameters.background_noise.inh_firing_rate != 0) or (self.parameters.background_noise.inh_weight != 0):                
+                self.ssai=self.sim.Population(self.pop.size,self.model.sim.SpikeSourceArray,{'spike_times': []})
+                self.sim.Projection(self.ssai,self.pop,self.sim.OneToOneConnector(weights=self.parameters.background_noise.inh_weight),target='inhibitory')
+                
+                
 class RetinalUniformSheet(Sheet):
 
     required_parameters = ParameterSet({

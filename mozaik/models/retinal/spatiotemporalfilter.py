@@ -327,7 +327,7 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
         else:
             logger.debug("Retrieved spikes from cache...")
             (input_currents,retinal_input) = cached
-            
+        
         ts = self.model.sim.get_time_step()    
         for rf_type in self.rf_types:            
                 assert isinstance(input_currents[rf_type], list)        

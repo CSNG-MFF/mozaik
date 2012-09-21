@@ -129,8 +129,8 @@ class MeasureNaturalImagesWithEyeMovement(Experiment):
                             trial=k,
                             size=40, # x size of image
                             eye_movement_period=6.66, # eye movement period
-                            eye_path_location='eye_path.pickle',
-                            image_location='image_naturelle_HIGH.bmp'
+                            eye_path_location='./eye_path.pickle',
+                            image_location='./image_naturelle_HIGH.bmp'
                             ))    
 
 

@@ -227,7 +227,7 @@ class Precision(Analysis):
                     div = numpy.sum(numpy.power(numpy.array(ppsth[:,n]),2))
                     if div != 0:
                        ac = ac / div
-                    al.append(AnalogSignal(ac, t_start=-duration,t_stop=duration-self.parameters.bin_length*t_start.units,sampling_period=self.parameters.bin_length*qt.ms,units=qt.dimensionless))
+                    al.append(AnalogSignal(ac,t_start=-duration+self.parameters.bin_length*t_start.units/2,sampling_period=self.parameters.bin_length*qt.ms,units=qt.dimensionless))
                    
                 logger.debug('Adding AnalogSignalList:' + str(sheet))
                 self.datastore.full_datastore.add_analysis_result(AnalogSignalList(al,self.parameters.neurons,qt.ms,qt.dimensionless,x_axis_name='time',y_axis_name='autocorrelation',sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(stid)))    

@@ -45,28 +45,26 @@ class NaturalImageWithEyeMovement(VisualStimulus):
     eye_movement_period = SNumber(qt.ms,doc="""The time between two consequitve eye movements recorded in the eye_path file""")
     image_location = SString(doc="""Location of the image""")
     eye_path_location = SString(doc="""Location of file containing the eye path (two columns of numbers)""")
-    
-    def __init__(self, **params):
-            VisualStimulus.__init__(self,params) 
-            f = open(self.eye_path_location,'r')
-            self.eye_path = pickle.load(f)
-            self.pattern_sampler = topo.pattern.image.PatternSampler(size_normalization='fit_longest',whole_pattern_output_fns=[DivisiveNormalizeLinf()])
 
     def frames(self):
             self.time=0
-            from topo.transferfn.basic import DivisiveNormalizeLinf
+            from topo.transferfn import DivisiveNormalizeLinf
             import topo.pattern.image 
             
+            f = open(self.eye_path_location,'r')
+            self.eye_path = pickle.load(f)
+            self.pattern_sampler = topo.pattern.image.PatternSampler(size_normalization='fit_longest',whole_pattern_output_fns=[DivisiveNormalizeLinf()])
+            
             while True:
-                location = self.eye_path[int(numpy.floor(self.frame_duration*self.time/self.params[1]))]
+                location = self.eye_path[int(numpy.floor(self.frame_duration*self.time/self.eye_movement_period))]
                 image = topo.pattern.image.FileImage(filename=self.image_location,
                                              x=location[0],
                                              y=location[1],
                                              orientation=0,
                                              xdensity=self.density,
                                              ydensity=self.density,
-                                             size=self.params[0],
-                                             bounds=BoundingBox(points=((-self.size_in_degrees[0]/2,-self.size_in_degrees[1]/2),(self.size_in_degrees[0]/2,self.size_in_degrees[1]/2))),
+                                             size=self.size,
+                                             bounds=BoundingBox(points=((-self.size_x/2,-self.size_y/2),(self.size_x/2,self.size_y/2))),
                                              scale=self.max_luminance,
                                              pattern_sampler = self.pattern_sampler
                                              )()
@@ -84,13 +82,12 @@ class DriftingGratingWithEyeMovement(VisualStimulus):
     eye_movement_period = SNumber(qt.ms,doc="""The time between two consequitve eye movements recorded in the eye_path file""")
     eye_path_location = SString(doc="""Location of file containing the eye path (two columns of numbers)""")
 
-    def __init__(self, **params):
-            VisualStimulus.__init__(self,params) 
+
+    def frames(self):
             f = open(self.eye_path_location,'r')
             self.eye_path = pickle.load(f)
             self.pattern_sampler = topo.pattern.image.PatternSampler(size_normalization='fit_longest',whole_pattern_output_fns=[DivisiveNormalizeLinf()])
-
-    def frames(self):
+        
             self.time=0
             self.current_phase=0
             from topo.transferfn.basic import DivisiveNormalizeLinf
