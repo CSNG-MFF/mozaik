@@ -1,7 +1,0 @@
-Installation instructions
-*************************
-
-python setup.py install
-
-:copyright: Copyright 2011-2012 by the mozaik team, see AUTHORS.
-:license: CeCILL, see LICENSE for details.
