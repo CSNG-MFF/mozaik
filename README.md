@@ -8,6 +8,14 @@
 * quantities 
 * neo
 
+### Installation
+git clone https://github.com/antolikjan/mozaik.git
+
+cd mozaik
+
+python setup.py install
+
+
 ## Detailed instructions
 
 Mozaik requires currently some "non-standard" branches of software like the
@@ -17,9 +25,8 @@ instructions follow.
 ### Virtual env
 
 We recommended to install mozaik using the virtualenv python environment manager, 
-[http://pypi.python.org/pypi/virtualenv/ virtual environment], to prevent potential
-conflicts with standard versions of required libraries. Users can follow for example
-[http://simononsoftware.com/virtualenv-tutorial/short tutorial] or just do the following steps:
+http://pypi.python.org/pypi/virtualenv/ virtual environment, to prevent potential
+conflicts with standard versions of required libraries. Users can follow for example http://simononsoftware.com/virtualenv-tutorial/short tutorial or just do the following steps:
  
  * Install virtualenv
  * Create e.g. in your home directory a directory where all virtual
