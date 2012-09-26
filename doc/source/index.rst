@@ -1,10 +1,10 @@
-Welcome to MozaikLite's documentation!
-======================================
+Mozaik
+======
 
-This is a early pre-alpha release of *mozaik* package.
-*mozaik* is a integrated workflow framework for large scale neural simulations.
+This is an unreleased early version of the *Mozaik* package.
+*Mozaik* is an integrated workflow framework for large scale neural simulations.
 Note that currently it is under intense development, and anything can change
-on daily basis. Alpha release of the package will follow soon.
+on a daily basis. An alpha release of the package will follow soon.
 
 Contents:
 

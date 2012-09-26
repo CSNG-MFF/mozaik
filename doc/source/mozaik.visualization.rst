@@ -4,7 +4,7 @@ visualization Package
 :mod:`jens_paper_plots` Module
 ------------------------------
 
-.. automodule:: MozaikLite.visualization.jens_paper_plots
+.. automodule:: mozaik.visualization.jens_paper_plots
     :members:
     :undoc-members:
     :show-inheritance:
@@ -12,7 +12,7 @@ visualization Package
 :mod:`plotting` Module
 ----------------------
 
-.. automodule:: MozaikLite.visualization.plotting
+.. automodule:: mozaik.visualization.plotting
     :members:
     :undoc-members:
     :show-inheritance:
@@ -20,7 +20,7 @@ visualization Package
 :mod:`plotting_helper_functions` Module
 ---------------------------------------
 
-.. automodule:: MozaikLite.visualization.plotting_helper_functions
+.. automodule:: mozaik.visualization.plotting_helper_functions
     :members:
     :undoc-members:
     :show-inheritance:
@@ -28,7 +28,7 @@ visualization Package
 :mod:`simple_plot` Module
 -------------------------
 
-.. automodule:: MozaikLite.visualization.simple_plot
+.. automodule:: mozaik.visualization.simple_plot
     :members:
     :undoc-members:
     :show-inheritance:
@@ -36,7 +36,7 @@ visualization Package
 :mod:`visualization` Module
 ---------------------------
 
-.. automodule:: MozaikLite.visualization.visualization
+.. automodule:: mozaik.visualization.visualization
     :members:
     :undoc-members:
     :show-inheritance:

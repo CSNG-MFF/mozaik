@@ -4,7 +4,7 @@ retinal Package
 :mod:`cai97` Module
 -------------------
 
-.. automodule:: MozaikLite.models.retinal.cai97
+.. automodule:: mozaik.models.retinal.cai97
     :members:
     :undoc-members:
     :show-inheritance:
@@ -12,7 +12,7 @@ retinal Package
 :mod:`spatiotemporalfilter` Module
 ----------------------------------
 
-.. automodule:: MozaikLite.models.retinal.spatiotemporalfilter
+.. automodule:: mozaik.models.retinal.spatiotemporalfilter
     :members:
     :undoc-members:
     :show-inheritance:

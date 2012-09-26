@@ -4,7 +4,7 @@ storage Package
 :mod:`datastore` Module
 -----------------------
 
-.. automodule:: MozaikLite.storage.datastore
+.. automodule:: mozaik.storage.datastore
     :members:
     :undoc-members:
     :show-inheritance:
@@ -12,7 +12,7 @@ storage Package
 :mod:`queries` Module
 ---------------------
 
-.. automodule:: MozaikLite.storage.queries
+.. automodule:: mozaik.storage.queries
     :members:
     :undoc-members:
     :show-inheritance:
