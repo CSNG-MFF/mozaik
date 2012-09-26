@@ -4,7 +4,7 @@ stimuli Package
 :mod:`stimulus_generator` Module
 --------------------------------
 
-.. automodule:: MozaikLite.stimuli.stimulus_generator
+.. automodule:: mozaik.stimuli.stimulus_generator
     :members:
     :undoc-members:
     :show-inheritance:
@@ -12,7 +12,7 @@ stimuli Package
 :mod:`topographica_based` Module
 --------------------------------
 
-.. automodule:: MozaikLite.stimuli.topographica_based
+.. automodule:: mozaik.stimuli.topographica_based
     :members:
     :undoc-members:
     :show-inheritance:

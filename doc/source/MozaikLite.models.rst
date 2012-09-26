@@ -4,7 +4,7 @@ models Package
 :mod:`model` Module
 -------------------
 
-.. automodule:: MozaikLite.models.model
+.. automodule:: mozaik.models.model
     :members:
     :undoc-members:
     :show-inheritance:
@@ -14,5 +14,5 @@ Subpackages
 
 .. toctree::
 
-    MozaikLite.models.retinal
+    mozaik.models.retinal
 

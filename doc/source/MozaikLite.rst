@@ -1,10 +1,10 @@
-MozaikLite Package
-==================
+mozaik Package
+==============
 
-:mod:`MozaikLite` Package
--------------------------
+:mod:`mozaik` Package
+---------------------
 
-.. automodule:: MozaikLite.__init__
+.. automodule:: mozaik.__init__
     :members:
     :undoc-members:
     :show-inheritance:
