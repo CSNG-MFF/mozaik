@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# MozaikLite documentation build configuration file, created by
+# Mozaik documentation build configuration file, created by
 # sphinx-quickstart on Fri Dec  9 15:56:30 2011.
 #
 # This file is execfile()d with the current directory set to its containing dir.

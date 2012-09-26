@@ -15,11 +15,11 @@ Subpackages
 .. toctree::
     :maxdepth: 1
    
-    MozaikLite.analysis
-    MozaikLite.framework
-    MozaikLite.models
-    MozaikLite.stimuli
-    MozaikLite.storage
-    MozaikLite.tools
-    MozaikLite.visualization
+    mozaik.analysis
+    mozaik.framework
+    mozaik.models
+    mozaik.stimuli
+    mozaik.storage
+    mozaik.tools
+    mozaik.visualization
 

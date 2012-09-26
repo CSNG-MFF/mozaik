@@ -32,7 +32,7 @@ Tasks that we would like to cover in *Mozaik* in future (any contributors welcom
 
 *Mozaik* is currently subdivided into 7 sub-packages:
     
-    * :doc:`MozaikLite.framework` - contains the core of the *mozaik* package:
+    * :doc:`mozaik.framework` - contains the core of the *mozaik* package:
 	
         * sheets - Code defining 2D sheets of neurons, one of the basic building blocks of *Mozaik* networks
         * connectors - Defines various connections between sheets
@@ -41,12 +41,12 @@ Tasks that we would like to cover in *Mozaik* in future (any contributors welcom
         * interfaces - collection of various basic *Mozaik* interfaces
         * space - visual space handling
 
-    * :doc:`MozaikLite.models` - code encapsulating a *Mozaik* network consisting of sheets and connectors and providing
+    * :doc:`mozaik.models` - code encapsulating a *Mozaik* network consisting of sheets and connectors and providing
                                  an 'I/O' interface to it. Currently it also contains retinal models (these might be reorganized in future).
-    * :doc:`MozaikLite.stimuli` - definition of stimulus interfaces
-    * :doc:`MozaikLite.storage` - data storage and data querying code
-    * :doc:`MozaikLite.analysis` - analysis code
-    * :doc:`MozaikLite.visualization` - plotting code
+    * :doc:`mozaik.stimuli` - definition of stimulus interfaces
+    * :doc:`mozaik.storage` - data storage and data querying code
+    * :doc:`mozaik.analysis` - analysis code
+    * :doc:`mozaik.visualization` - plotting code
     
 
 This might change as *Mozaik* grows, and especially code in the framework 
