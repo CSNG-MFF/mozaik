@@ -39,24 +39,25 @@ Your shell should look now something like:
  * numpy
  * matplotlib 1.1
  * quantities
- * pyNN:
+ * PyNN:
      * PyNN requires currently the neo-output branch, NOT the standard one.
      So, you need to do the following:
-     svn co https://neuralensemble.org/~/neo_output/
-     Then, do in your virtual environment:
+     svn co https://neuralensemble.org/svn/PyNN/branches/neo_output/
+     Then, in your virtual environment:
      python setup.py install
- * NEO:
-    * For neo , you need to clone with the help of git:
-      git clone https://github.com/~/python-neo.git
+ * Neo:
+    * For Neo, you need to clone with the help of git:
+      git clone https://github.com/apdavison/python-neo
       cd python-neo
       python setup.py install
- * topographica:
+ * Topographica:
    * svn co https://topographica.svn.sourceforge.net/svnroot/topographica topographica
    * Just download it and add the topographica folder to your PYTHONPATH, e.g.
      export PYTHONPATH=$PYTHONPATH:/home/Username/Downloads/topographica
- * Neuro Tools
-   * svn co https://neuralensemble.org/~/trunk NeuroTools
+ * NeuroTools
+   * svn co https://neuralensemble.org/svn/NeuroTools/trunk NeuroTools
    * In virt_env_mozaik: python setup.py install
+ * param
 
 
 For Mozaik itself, you need to clone with the help of git:

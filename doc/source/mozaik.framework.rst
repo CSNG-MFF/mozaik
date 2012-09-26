@@ -4,7 +4,7 @@ framework Package
 :mod:`framework` Package
 ------------------------
 
-.. automodule:: MozaikLite.framework
+.. automodule:: mozaik.framework
     :members:
     :undoc-members:
     :show-inheritance:
@@ -12,7 +12,7 @@ framework Package
 :mod:`connectors` Module
 ------------------------
 
-.. automodule:: MozaikLite.framework.connectors
+.. automodule:: mozaik.framework.connectors
     :members:
     :undoc-members:
     :show-inheritance:
@@ -20,7 +20,7 @@ framework Package
 :mod:`decorators` Module
 ------------------------
 
-.. automodule:: MozaikLite.framework.decorators
+.. automodule:: mozaik.framework.decorators
     :members:
     :undoc-members:
     :show-inheritance:
@@ -28,7 +28,7 @@ framework Package
 :mod:`experiment` Module
 ------------------------
 
-.. automodule:: MozaikLite.framework.experiment
+.. automodule:: mozaik.framework.experiment
     :members:
     :undoc-members:
     :show-inheritance:
@@ -36,7 +36,7 @@ framework Package
 :mod:`experiment_controller` Module
 -----------------------------------
 
-.. automodule:: MozaikLite.framework.experiment_controller
+.. automodule:: mozaik.framework.experiment_controller
     :members:
     :undoc-members:
     :show-inheritance:
@@ -44,7 +44,7 @@ framework Package
 :mod:`interfaces` Module
 ------------------------
 
-.. automodule:: MozaikLite.framework.interfaces
+.. automodule:: mozaik.framework.interfaces
     :members:
     :undoc-members:
     :show-inheritance:
@@ -52,7 +52,7 @@ framework Package
 :mod:`sheets` Module
 --------------------
 
-.. automodule:: MozaikLite.framework.sheets
+.. automodule:: mozaik.framework.sheets
     :members:
     :undoc-members:
     :show-inheritance:
@@ -60,7 +60,7 @@ framework Package
 :mod:`space` Module
 -------------------
 
-.. automodule:: MozaikLite.framework.space
+.. automodule:: mozaik.framework.space
     :members:
     :undoc-members:
     :show-inheritance:
