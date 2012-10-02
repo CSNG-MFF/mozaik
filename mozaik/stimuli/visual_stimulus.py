@@ -5,7 +5,7 @@ Docstring goes here
 import numpy
 import mozaik
 from operator import *
-from quantities import degreess
+from quantities import degrees
 from mozaik.stimuli.stimulus import Stimulus
 from mozaik.framework.space import TRANSPARENT, xy2ij
 from mozaik.tools.mozaik_parametrized import SNumber, SInteger, SString

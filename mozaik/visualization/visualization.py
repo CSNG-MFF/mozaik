@@ -1,3 +1,4 @@
+# encoding: utf-8
 """
 This module contains visualization code not conforming the Plotting framework
 defined in the mozaik.visualization.plotting module.
