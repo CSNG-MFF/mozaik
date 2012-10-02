@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from distutils.core import setup
-      
+
 setup(
     name = "mozaik",
     version = "0.1dev",
@@ -31,4 +31,3 @@ setup(
                    'Programming Language :: Python',
                    'Topic :: Scientific/Engineering'],
 )
-
