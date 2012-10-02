@@ -1,6 +1,11 @@
+"""
+docstring goes here
+"""
+
 import logging
 
 logger = logging.getLogger("mozaik")
+
 
 def load_component(path):
     path_parts = path.split('.')
