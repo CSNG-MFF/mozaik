@@ -4,15 +4,12 @@ Docstring goes here
 
 import numpy
 import mozaik
-from operator import *
 from quantities import degrees
 from mozaik.stimuli.stimulus import Stimulus
 from mozaik.framework.space import TRANSPARENT, xy2ij
-from mozaik.tools.mozaik_parametrized import SNumber, SInteger, SString
-from mozaik import __version__
+from mozaik.tools.mozaik_parametrized import SNumber
 from mozaik.tools.units import lux
 from mozaik.framework.space import VisualRegion
-from mozaik.framework.interfaces import MozaikParametrizeObject
 from scipy.ndimage import interpolation
 
 logger = mozaik.getMozaikLogger("Mozaik")
@@ -33,9 +30,6 @@ class VisualStimulus(Stimulus):
         self.is_visible = True
         self.region = VisualRegion(self.location_x, self.location_y,
                                    self.size_x, self.size_y)
-
-    def update(self):
-        raise NotImplementedException("Must be implemented by child class")
 
     def _calculate_zoom(self, actual_pixel_size, desired_pixel_size):
         """
@@ -60,12 +54,12 @@ class VisualStimulus(Stimulus):
             img_relative_left = (intersection.left - self.region.left) / self.region.width
             img_relative_width = intersection.width/self.region.width
             img_relative_top = (intersection.top - self.region.bottom) / self.region.height
-            img_relative_bottom = (intersection.bottom - self.region.bottom) / self.region.height
+            #img_relative_bottom = (intersection.bottom - self.region.bottom) / self.region.height
             img_relative_height = intersection.height / self.region.height
             view_relative_left = (intersection.left - region.left) / region.width
             view_relative_width = intersection.width / region.width
             view_relative_top = (intersection.top - region.bottom) / region.height
-            view_relative_bottom = (intersection.bottom - region.bottom) / region.height
+            #view_relative_bottom = (intersection.bottom - region.bottom) / region.height
             view_relative_height = intersection.height / region.height
 
             img_pixel_size = xy2ij((self.region.size_x, self.region.size_y)) / self.img.shape  # is self.size a tuple or an array?
@@ -107,7 +101,7 @@ class VisualStimulus(Stimulus):
 
             try:
                 view[k_start:k_start+delta_k, l_start:l_start+delta_l] = img[i_start:i_start+delta_i, j_start:j_start+delta_j]
-            except ValueError, errmsg:
+            except ValueError:
                 logger.error("i_start = %d, i_stop = %d, j_start = %d, j_stop = %d" % (i_start, i_stop, j_start, j_stop))
                 logger.error("k_start = %d, k_stop = %d, l_start = %d, l_stop = %d" % (k_start, k_stop, l_start, l_stop))
                 logger.error("img.shape = %s, view.shape = %s" % (img.shape, view.shape))

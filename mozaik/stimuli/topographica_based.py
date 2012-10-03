@@ -6,9 +6,10 @@ The file contains stimuli that use topographica to generate the stimulus
 from visual_stimulus import VisualStimulus
 import topo.pattern
 from topo.base.boundingregion import BoundingBox
+from topo.transferfn import DivisiveNormalizeLinf
 import pickle
 import numpy
-from mozaik.tools.mozaik_parametrized import *
+from mozaik.tools.mozaik_parametrized import SNumber, SString
 from mozaik.tools.units import cpd
 from numpy import pi
 from quantities import Hz, rad, degrees, ms
@@ -58,7 +59,6 @@ class NaturalImageWithEyeMovement(VisualStimulus):
 
     def frames(self):
         self.time = 0
-        from topo.transferfn import DivisiveNormalizeLinf
         import topo.pattern.image
 
         f = open(self.eye_path_location, 'r')
@@ -105,7 +105,6 @@ class DriftingGratingWithEyeMovement(VisualStimulus):
                                         whole_pattern_output_fns=[DivisiveNormalizeLinf()])
         self.time = 0
         self.current_phase = 0
-        from topo.transferfn.basic import DivisiveNormalizeLinf
         import topo.pattern.image
 
         while True:

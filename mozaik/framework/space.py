@@ -11,14 +11,10 @@ Could consider using matplotlib.transforms for some of this.
 import os.path
 import numpy
 import mozaik
-from scipy.ndimage import interpolation
 from PIL import Image
-from mozaik.tools.mozaik_parametrized import SNumber, MozaikParametrized
-import quantities as qt
 from NeuroTools.parameters import ParameterSet
 from mozaik.framework.interfaces import MozaikParametrizeObject
 
-import quantities as qt
 from mozaik import __version__
 
 TRANSPARENT = -1

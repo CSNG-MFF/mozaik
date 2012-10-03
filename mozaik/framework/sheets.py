@@ -4,20 +4,15 @@ Sheet is an abstraction of a 2D continuous sheet of neurons, roughly
 corresponding to the PyNN Population class with the added spatial structure.
 """
 
-import os
 import numpy
 import mozaik
 from mozaik.framework.interfaces import MozaikComponent
-import pyNN
-import pyNN.recording.files
 
 from NeuroTools.parameters import ParameterSet
-from pyNN import random, space
+from pyNN import space
 from pyNN.errors import NothingToWriteError
-
+from string import Template
 from neo.core.spiketrain import SpikeTrain
-from neo.core.segment import Segment
-from neo.core.analogsignalarray import AnalogSignalArray
 
 logger = mozaik.getMozaikLogger("Mozaik")
 
@@ -99,7 +94,7 @@ class Sheet(MozaikComponent):
         if (protected
               and key in self._neuron_annotations[neuron_number]
               and self._neuron_annotations[neuron_number][key][0]):
-            print 'The annotation<', key, '> for neuron ', str(i), ' is protected. Annotation not updated'
+            print 'The annotation<', key, '> for neuron ', str(neuron_number), ' is protected. Annotation not updated'
         else:
             self._neuron_annotations[neuron_number][key] = (protected, value)
 
@@ -210,7 +205,7 @@ class Sheet(MozaikComponent):
                 np_exc = self.sim.Population(
                                 1, native_cell_type("poisson_generator"),
                                 {'rate': self.parameters.background_noise.exc_firing_rate})
-                prj = self.sim.Projection(
+                self.sim.Projection(
                                 np_exc, self.pop,
                                 self.sim.AllToAllConnector(weights=self.parameters.background_noise.exc_weight),
                                 target='excitatory')
@@ -220,7 +215,7 @@ class Sheet(MozaikComponent):
                 np_inh = self.sim.Population(
                                 1, native_cell_type("poisson_generator"),
                                 {'rate': self.parameters.background_noise.inh_firing_rate})
-                prj = self.sim.Projection(
+                self.sim.Projection(
                                 np_inh, self.pop,
                                 self.sim.AllToAllConnector(weights=self.parameters.background_noise.inh_weight),
                                 target='inhibitory')

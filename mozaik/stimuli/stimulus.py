@@ -24,12 +24,9 @@ be considered as parameters of the Stimulus.
 import quantities as qt
 import numpy
 import mozaik
-from operator import *  # don't do import *
-from mozaik.tools.mozaik_parametrized import *  # don't do import *
-from mozaik.framework.interfaces import MozaikParametrizeObject
+from operator import itemgetter
+from mozaik.tools.mozaik_parametrized import MozaikParametrized, SNumber, SInteger
 import inspect
-from NeuroTools.parameters import ParameterSet
-
 
 logger = mozaik.getMozaikLogger("Mozaik")
 
@@ -259,13 +256,13 @@ def varying_parameters(stimulus_ids):
     Find the varying list of params. Can be only applied
     on a stimulus list containing identical type of stimuli.
     """
-    if not identical_stimulus_type(stimuli_ids):
-        raise ValueError("varying_parameters: accepts only stimuli lists of the same type")
+    if not identical_stimulus_type(stimulus_ids):
+        raise ValueError("varying_parameters: accepts only stimulus lists of the same type")
 
-    p = stimuli_ids[0].params.copy()
+    p = stimulus_ids[0].params.copy()
     varying_params = {}
     for n in p.keys():
-        for sid in stimuli_ids:
+        for sid in stimulus_ids:
             if sid.params[n] != p[n]:
                 varying_params[n] = True
                 break

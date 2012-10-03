@@ -5,7 +5,6 @@ docstring goes here
 
 import numpy
 from numpy import exp
-from NeuroTools.parameters import ParameterSet
 from mozaik.framework.decorators import timeit
 
 
