@@ -10,15 +10,11 @@ import mozaik
 from mozaik.framework.space import VisualSpace
 from mozaik.framework.space import VisualRegion
 from mozaik.framework.interfaces import MozaikRetina
-from mozaik.framework.sheets import Sheet, RetinalUniformSheet
-import cai97
+from mozaik.framework.sheets import RetinalUniformSheet
 
-from NeuroTools import visual_logging
+#from NeuroTools import visual_logging
 from NeuroTools.plotting import progress_bar
-from NeuroTools.signals.spikes import SpikeList
 from NeuroTools.parameters import ParameterSet
-from pyNN import random
-from pyNN.space import Grid2D
 
 logger = mozaik.getMozaikLogger("Mozaik")
 
@@ -333,7 +329,6 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
         logger.info("Presenting visual stimulus from visual space %s" % visual_space)
         visual_space.set_duration(duration)
         self.input = visual_space
-        sim = self.model.sim
 
         stimulus_id.params['trial'] = None  # to avoid recalculating RFs response to multiple trials of the same stimulus
 
@@ -473,12 +468,12 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
         for rf_type in self.rf_types:
             input_currents[rf_type] = [cell.response_current()
                                        for cell in input_cells[rf_type]]
-            cell0_currents = input_currents[rf_type][0]
+            #cell0_currents = input_currents[rf_type][0]
             #logger.debug("Input current values for %s cell #0: %s" % (rf_type, cell0_currents['amplitudes']))
             #visual_logging.debug(cell0_currents['amplitudes'], cell0_currents['times'],
             #                     "Time (ms)", "Current (nA)", "Input current values for %s cell #0" % rf_type)
 
-            for i in xrange(0, 1):
-                a = [cell.response_current()['amplitudes'][i]
-                     for cell in input_cells[rf_type]]
+            #for i in xrange(0, 1):
+            #    a = [cell.response_current()['amplitudes'][i]
+            #         for cell in input_cells[rf_type]]
         return (input_currents, retinal_input)

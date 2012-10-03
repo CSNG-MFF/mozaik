@@ -2,12 +2,10 @@
 See visualization.plotting for documentation.
 """
 
-from mozaik.visualization.plotting_helper_functions import *
+import mozaik.visualization.plotting_helper_functions as phf
 import pylab
 import numpy
 import mozaik
-from matplotlib import rc
-import quantities as pq
 
 logger = mozaik.getMozaikLogger("Mozaik")
 
@@ -173,11 +171,11 @@ class StandardStyle(SimplePlot):
         if self.y_lim:
             pylab.ylim(self.y_lim)
         if not self.x_axis:
-            disable_xticks(self.axis)
-            remove_x_tick_labels()
+            phf.disable_xticks(self.axis)
+            phf.remove_x_tick_labels()
         if not self.y_axis:
-            disable_yticks(self.axis)
-            remove_y_tick_labels()
+            phf.disable_yticks(self.axis)
+            phf.remove_y_tick_labels()
 
         self.ticks()
 
@@ -186,11 +184,11 @@ class StandardStyle(SimplePlot):
         if self.x_label:
             pylab.xlabel(self.x_label)
         if not self.top_right_border:
-            disable_top_right_axis(self.axis)
+            phf.disable_top_right_axis(self.axis)
         if not self.left_border:
-            disable_left_axis(self.axis)
+            phf.disable_left_axis(self.axis)
         if not self.bottom_border:
-            disable_bottom_axis(self.axis)
+            phf.disable_bottom_axis(self.axis)
 
         pylab.rc('axes', linewidth=1)
         pylab.rcParams['xtick.major.pad'] = self.xtick_pad_backup
@@ -211,14 +209,14 @@ class StandardStyle(SimplePlot):
                 pylab.yticks(self.y_ticks)
 
         if self.x_tick_style == 'Min':
-            three_tick_axis(self.axis.xaxis)
+            phf.three_tick_axis(self.axis.xaxis)
         elif self.x_tick_style == 'Custom':
             pass
         else:
             raise ValueError('Unknown x tick style %s', self.x_tick_style)
 
         if self.y_tick_style == 'Min':
-            three_tick_axis(self.axis.yaxis)
+            phf.three_tick_axis(self.axis.yaxis)
         elif self.y_tick_style == 'Custom':
             pass
         else:
@@ -320,8 +318,6 @@ class SpikeHistogramPlot(SpikeRasterPlot):
         self.neurons = [i for i in xrange(0, min(10, len(self.sps[0][0])))]
 
         t_stop = float(self.sps[0][0][0].t_stop)
-        num_n = len(self.neurons)  # number of neurons
-        num_t = len(self.sps[0])  # number of trials
 
         all_spikes = []
         for k, sp in enumerate(self.sps):

@@ -3,8 +3,7 @@ Units used in mozaik project and not specified in quantities.
 """
 
 import quantities as qt
-from quantities.unitquantity import UnitQuantity, UnitInformation, dimensionless, CompoundUnit
-import quantities as qt
+from quantities.unitquantity import UnitQuantity, UnitInformation
 import numpy
 
 sp = spike = UnitInformation(
@@ -32,7 +31,7 @@ cpd = UnitQuantity(
 )
 
 lux = lx = UnitQuantity(
-    'luxes',
+    'lux',  # I've seen both luxes and luces given as plurals, but I think in the SI unit sense, "lux" is both singular and plural - see Oxford English Dictionary
     symbol='lx',
     aliases=['lux', 'lx']
 )

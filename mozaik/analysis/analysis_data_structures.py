@@ -3,11 +3,9 @@ This module contains the definition of the AnalysisDataStructure API and
 implementation of some basic analysis data structures.
 """
 
-import numpy
 import param
 import mozaik
-from mozaik.stimuli.stimulus import StimulusID, identical_stimulus_type, colapse, colapse_to_dictionary
-from mozaik.tools.mozaik_parametrized import *
+from mozaik.tools.mozaik_parametrized import MozaikParametrized
 
 logger = mozaik.getMozaikLogger("Mozaik")
 
@@ -97,7 +95,7 @@ class AnalysisDataStructure(MozaikParametrized):
                       doc="The list of tags to attach")
 
     def __init__(self, **params):
-        Parameterized.__init__(self, **params)
+        MozaikParametrized.__init__(self, **params)
 
     def __str__(self):
         """

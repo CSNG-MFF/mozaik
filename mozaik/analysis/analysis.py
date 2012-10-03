@@ -3,23 +3,21 @@ This module contains the Mozaik analysis interface and implementation of
 various analysis algorithms
 """
 
-import pylab
 import numpy
 import time
 import quantities as qt
 import mozaik.tools.units as munits
 from mozaik.stimuli.stimulus import colapse, StimulusID, colapse_to_dictionary
-from mozaik.analysis.analysis_data_structures import *
-from mozaik.analysis.analysis_helper_functions import psth_across_trials, psth
+from mozaik.analysis.analysis_data_structures import PerNeuronValue, \
+                                        ConductanceSignalList, AnalogSignalList
+from mozaik.analysis.analysis_helper_functions import psth
 from mozaik.framework.interfaces import MozaikParametrizeObject
 from NeuroTools.parameters import ParameterSet
-from mozaik.storage.queries import *
-from mozaik.storage.ads_queries import *
+from mozaik.storage import queries, ads_queries
 from neo.core.analogsignal import AnalogSignal
-from NeuroTools import signals
 from mozaik.tools.circ_stat import circ_mean, circular_dist
-from mozaik.tools.neo_object_operations import *
-import logging
+from mozaik.tools.neo_object_operations import neo_mean
+import mozaik
 
 logger = mozaik.getMozaikLogger("Mozaik")
 
@@ -80,15 +78,15 @@ class TrialAveragedFiringRate(Analysis):
     })
 
     def perform_analysis(self):
-        dsv = select_stimuli_type_query(self.datastore,
-                                        self.parameters.stimulus_type)
+        dsv = queries.select_stimuli_type_query(self.datastore,
+                                                self.parameters.stimulus_type)
 
         for sheet in dsv.sheets():
-            dsv1 = select_result_sheet_query(dsv, sheet)
+            dsv1 = queries.select_result_sheet_query(dsv, sheet)
             segs = dsv1.get_segments()
             st = [StimulusID(s) for s in dsv1.get_stimuli()]
             # transform spike trains due to stimuly to mean_rates
-            mean_rates = [numpy.array(s.mean_rates())  for s in segs]
+            mean_rates = [numpy.array(s.mean_rates()) for s in segs]
             # collapse against all parameters other then trial
             (mean_rates, s) = colapse(mean_rates, st, parameter_list=['trial'])
             # take a sum of each
@@ -129,17 +127,18 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
 
     def perform_analysis(self):
         self.datastore.print_content()
-        dsv = analysis_data_structure_parameter_filter_query(self.datastore,
-                                                             identifier='PerNeuronValue')
+        dsv = queries.analysis_data_structure_parameter_filter_query(
+                                                self.datastore,
+                                                identifier='PerNeuronValue')
         for sheet in self.datastore.sheets():
             # Get PerNeuronValue ASD and make sure they are all associated
             # with the same stimulus and do not differ in any
             # ASD parameters except the stimulus
-            dsv = select_result_sheet_query(dsv, sheet)
-            if ads_is_empty(dsv):
+            dsv = queries.select_result_sheet_query(dsv, sheet)
+            if ads_queries.ads_is_empty(dsv):
                 break
-            assert equal_ads_except(dsv, ['stimulus_id'])
-            assert ads_with_equal_stimulus_type(dsv, not_None=True)
+            assert ads_queries.equal_ads_except(dsv, ['stimulus_id'])
+            assert ads_queries.ads_with_equal_stimulus_type(dsv, not_None=True)
 
             self.pnvs = dsv.get_analysis_result(sheet_name=sheet)
             # get stimuli
@@ -148,7 +147,6 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
             d = colapse_to_dictionary([z.values for z in self.pnvs],
                                       st,
                                       self.parameters.parameter_name)
-            result_dict = {}
             for k in d.keys():
                 keys, values = d[k]
                 y = []
@@ -205,7 +203,7 @@ class GSTA(Analysis):
     def perform_analysis(self):
         dsv = self.datastore
         for sheet in dsv.sheets():
-            dsv1 = select_result_sheet_query(dsv, sheet)
+            dsv1 = queries.select_result_sheet_query(dsv, sheet)
             st = dsv1.get_stimuli()
             segs = dsv1.get_segments()
 
@@ -265,7 +263,7 @@ class Precision(Analysis):
         for sheet in self.datastore.sheets():
             # Load up spike trains for the right sheet and the corresponding
             # stimuli, and transform spike trains into psth
-            dsv = select_result_sheet_query(self.datastore, sheet)
+            dsv = queries.select_result_sheet_query(self.datastore, sheet)
             psths = [psth(seg.spiketrains, self.parameters.bin_length)
                      for seg in dsv.get_segments()]
 
@@ -325,10 +323,10 @@ class ModulationRatio(Analysis):
         for sheet in self.datastore.sheets():
             # Load up spike trains for the right sheet and the corresponding
             # stimuli, and transform spike trains into psth
-            dsv = select_result_sheet_query(self.datastore, sheet)
-            assert equal_ads_except(dsv, ['stimulus_id'])
-            assert ads_with_equal_stimulus_type(dsv)
-            assert equal_stimulus_type(dsv)
+            dsv = queries.select_result_sheet_query(self.datastore, sheet)
+            assert ads_queries.equal_ads_except(dsv, ['stimulus_id'])
+            assert ads_queries.ads_with_equal_stimulus_type(dsv)
+            assert queries.equal_stimulus_type(dsv)
 
             psths = [psth(seg.spiketrains, self.parameters.bin_length)
                      for seg in dsv.get_segments()]

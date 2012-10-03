@@ -71,17 +71,17 @@ import quantities as pq
 import matplotlib.gridspec as gridspec
 from scipy.interpolate import griddata
 
-from NeuroTools.parameters import ParameterSet, ParameterDist
+from NeuroTools.parameters import ParameterSet
 
 from mozaik.framework.interfaces import MozaikParametrizeObject
-from mozaik.storage.queries import *
-from mozaik.storage.ads_queries import *
-from mozaik.stimuli.stimulus import *
-from mozaik.tools import units
+from mozaik.storage import queries, ads_queries
+from mozaik.stimuli.stimulus import StimulusID, colapse_to_dictionary
 from numpy import pi
 
-from simple_plot import *
-from plot_constructors import *
+from simple_plot import StandardStyleLinePlot, SpikeRasterPlot, \
+                        SpikeHistogramPlot, ConductancesPlot, PixelMovie, \
+                        ScatterPlotMovie, ScatterPlot, ConnectionPlot
+from plot_constructors import LinePlot, PerStimulusPlot
 
 import mozaik
 logger = mozaik.getMozaikLogger("Mozaik")
@@ -142,11 +142,12 @@ class PlotTuningCurve(Plotting):
     def __init__(self, datastore, parameters, plot_file_name=None,
                  fig_param=None):
         Plotting.__init__(self, datastore, parameters, plot_file_name, fig_param)
-        dsv = analysis_data_structure_parameter_filter_query(self.datastore,
-                                                             identifier='PerNeuronValue')
-        dsv = select_result_sheet_query(dsv, self.parameters.sheet_name)
-        assert equal_ads_except(dsv, ['stimulus_id'])
-        assert ads_with_equal_stimulus_type(dsv)
+        dsv = queries.analysis_data_structure_parameter_filter_query(
+                                                self.datastore,
+                                                identifier='PerNeuronValue')
+        dsv = queries.select_result_sheet_query(dsv, self.parameters.sheet_name)
+        assert ads_queries.equal_ads_except(dsv, ['stimulus_id'])
+        assert ads_queries.ads_with_equal_stimulus_type(dsv)
         self.pnvs = dsv.get_analysis_result(identifier='PerNeuronValue',
                                             sheet_name=parameters.sheet_name)
         # get stimuli
@@ -211,12 +212,12 @@ class RasterPlot(Plotting):
             self.parameters.neurons = None
 
     def subplot(self, subplotspec, params):
-        dsv = select_result_sheet_query(self.datastore, self.parameters.sheet_name)
+        dsv = queries.select_result_sheet_query(self.datastore,
+                                                self.parameters.sheet_name)
         PerStimulusPlot(dsv, function=self.ploter).make_line_plot(subplotspec, params)
 
     def ploter(self, dsv, gs, params):
         sp = [[s.spiketrains for s in dsv.get_segments()]]
-        stimulus = dsv.get_stimuli()[0]
 
         if self.parameters.trial_averaged_histogram:
             gs = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=gs)
@@ -238,8 +239,8 @@ class VmPlot(Plotting):
     })
 
     def subplot(self, subplotspec, params):
-        dsv = select_result_sheet_query(self.datastore,
-                                        self.parameters.sheet_name)
+        dsv = queries.select_result_sheet_query(self.datastore,
+                                                self.parameters.sheet_name)
         PerStimulusPlot(dsv, function=self.ploter, title_style="Standard"
                                          ).make_line_plot(subplotspec, params)
 
@@ -272,8 +273,8 @@ class GSynPlot(Plotting):
     })
 
     def subplot(self, subplotspec, params):
-        dsv = select_result_sheet_query(self.datastore,
-                                        self.parameters.sheet_name)
+        dsv = queries.select_result_sheet_query(self.datastore,
+                                                self.parameters.sheet_name)
         PerStimulusPlot(dsv, function=self.ploter, title_style="Standard"
                                         ).make_line_plot(subplotspec, params)
 
@@ -378,7 +379,7 @@ class ConductanceSignalListPlot(Plotting):
                                             identifier='ConductanceSignalList',
                                             sheet_name=parameters.sheet_name)
         if len(self.conductance_signal_list) > 1:
-            logging.error('Warning currently only the first ConductanceSignalList will be plotted')
+            logger.error('Warning currently only the first ConductanceSignalList will be plotted')
         self.conductance_signal_list = self.conductance_signal_list[0]
         self.e_con = self.conductance_signal_list.e_con
         self.i_con = self.conductance_signal_list.i_con
@@ -426,8 +427,8 @@ class ActivityMovie(Plotting):
     })
 
     def subplot(self, subplotspec, params):
-        dsv = select_result_sheet_query(self.datastore,
-                                        self.parameters.sheet_name)
+        dsv = queries.select_result_sheet_query(self.datastore,
+                                                self.parameters.sheet_name)
         PerStimulusPlot(dsv, function=self.ploter, title_style="Standard"
                         ).make_line_plot(subplotspec, params)
 
@@ -494,7 +495,7 @@ class PerNeuronValuePlot(Plotting):
                                               sheet_name=sheet)
             if len(z) != 0:
                 if len(z) > 1:
-                    logging.error('Warning currently only one PerNeuronValue per sheet will be plotted!!!')
+                    logger.error('Warning currently only one PerNeuronValue per sheet will be plotted!!!')
 
                 self.poss.append(datastore.get_neuron_postions()[sheet])
                 self.pnvs.append(z)
@@ -565,14 +566,14 @@ class ConnectivityPlot(Plotting):
         self.pnvs = None
         if pnv_dsv != None:
             self.pnvs = []
-            z = partition_analysis_results_by_parameter_name_query(
+            z = ads_queries.partition_analysis_results_by_parameter_name_query(
                                                 pnv_dsv,
                                                 ads_identifier='PerNeuronValue',
                                                 parameter_name='sheet_name')
             for dsv in z:
                 a = dsv.get_analysis_result(identifier='PerNeuronValue')
                 if len(a) > 1:
-                    logging.error('ERROR: Only one PerNeuronValue value per sheet is allowed in ConnectivityPlot. Ignoring')
+                    logger.error('ERROR: Only one PerNeuronValue value per sheet is allowed in ConnectivityPlot. Ignoring')
                     self.pnvs = None
                     break
                 self.pnvs.append(a[0])

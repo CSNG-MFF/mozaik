@@ -8,10 +8,11 @@ common y axis.
 
 import param
 from param.parameterized import Parameterized
-from mozaik.storage.queries import *
+from mozaik.storage.queries import partition_by_stimulus_paramter_query
 import matplotlib.gridspec as gridspec
 from mozaik.stimuli.stimulus import StimulusID
 import mozaik
+import numpy
 
 logger = mozaik.getMozaikLogger("Mozaik")
 
@@ -108,7 +109,6 @@ class PerDSVPlot(LinePlot):
         raise NotImplementedError
 
     def _single_plot(self, idx, gs, p):
-        f = self.function
         self.function(self.dsvs[idx], gs, p)
 
 

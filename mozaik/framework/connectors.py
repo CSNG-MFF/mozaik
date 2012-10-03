@@ -16,7 +16,7 @@ from interfaces import Connector
 from NeuroTools.parameters import ParameterSet, ParameterDist
 from pyNN import random, space
 from mozaik.tools.misc import sample_from_bin_distribution, normal_function
-from mozaik.tools.circ_stat import circular_dist, circ_mean
+from mozaik.tools.circ_stat import circular_dist
 from scipy.interpolate import NearestNDInterpolator
 
 logger = mozaik.getMozaikLogger("Mozaik")
@@ -66,8 +66,8 @@ class mozaikVisualSystemConnector(Connector):
             y.append(p.positions[1][i])
             w.append(ww)
 
-        bx = min([min(p.positions[0]), min(p.positions[0])])
-        by = max([max(p.positions[1]), max(p.positions[1])])
+        #bx = min([min(p.positions[0]), min(p.positions[0])])
+        #by = max([max(p.positions[1]), max(p.positions[1])])
         xi = numpy.linspace(min(p.positions[0]), max(p.positions[0]), 100)
         yi = numpy.linspace(min(p.positions[1]), max(p.positions[1]), 100)
         zi = griddata(x, y, w, xi, yi)
