@@ -5,8 +5,7 @@ docstring goes here
 
 
 import mozaik
-from mozaik.stimuli.topographica_based import *
-from NeuroTools.parameters import ParameterSet, ParameterDist
+import mozaik.stimuli.topographica_based as topo
 import numpy
 
 logger = mozaik.getMozaikLogger("Mozaik")
@@ -49,7 +48,7 @@ class MeasureOrientationTuningFullfield(Experiment):
         for j in contrasts:
             for i in xrange(0, num_orientations):
                 for k in xrange(0, num_trials):
-                    self.stimuli.append(FullfieldDriftingSinusoidalGrating(
+                    self.stimuli.append(topo.FullfieldDriftingSinusoidalGrating(
                                     frame_duration=7,
                                     size_x=model.visual_field.size_x,
                                     size_y=model.visual_field.size_y,
@@ -77,7 +76,7 @@ class MeasureSizeTuning(Experiment):
         for j in contrasts:
             for i in xrange(0, num_sizes):
                 for k in xrange(0, num_trials):
-                    self.stimuli.append(DriftingSinusoidalGratingDisk(
+                    self.stimuli.append(topo.DriftingSinusoidalGratingDisk(
                                     frame_duration=7,
                                     size_x=model.visual_field.size_x,
                                     size_y=model.visual_field.size_y,
@@ -99,14 +98,15 @@ class MeasureSizeTuning(Experiment):
 
 class MeasureOrientationContrastTuning(Experiment):
 
-    def __init__(self, model, num_orientation, orientation, center_radius,
-                 surround_rspatial_frequency, temporal_frequency,
+    def __init__(self, model, num_orientations, orientation, center_radius,
+                 surround_radius, spatial_frequency, temporal_frequency,
                  grating_duration, contrasts, num_trials):
         self.model = model
         for j in contrasts:
             for i in xrange(0, num_sizes):
                 for k in xrange(0, num_trials):
-                    self.stimuli.append(DriftingSinusoidalGratingCenterSurroundStimulus(
+                    self.stimuli.append(
+                        topo.DriftingSinusoidalGratingCenterSurroundStimulus(
                                     frame_duration=7,
                                     size_x=model.visual_field.size_x,
                                     size_y=model.visual_field.size_y,
@@ -134,7 +134,8 @@ class MeasureNaturalImagesWithEyeMovement(Experiment):
     def __init__(self, model, stimulus_duration, num_trials):
         self.model = model
         for k in xrange(0, num_trials):
-            self.stimuli.append(NaturalImageWithEyeMovement(
+            self.stimuli.append(
+                topo.NaturalImageWithEyeMovement(
                             frame_duration=7,
                             size_x=model.visual_field.size_x,
                             size_y=model.visual_field.size_y,
@@ -158,7 +159,8 @@ class MeasureSpontaneousActivity(Experiment):
 
     def __init__(self, model, duration):
             self.model = model
-            self.stimuli.append(Null(
+            self.stimuli.append(
+                        topo.Null(
                             frame_duration=7,
                             size_x=model.visual_field.size_x,
                             size_y=model.visual_field.size_y,

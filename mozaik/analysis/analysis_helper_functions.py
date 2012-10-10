@@ -6,9 +6,7 @@ import numpy
 import quantities as qt
 import mozaik
 import mozaik.tools.units as munits
-from mozaik.storage.queries import *
-from neo.core.analogsignal import AnalogSignal
-from neo.core.analogsignalarray import  AnalogSignalArray
+from neo.core.analogsignalarray import AnalogSignalArray
 
 logger = mozaik.getMozaikLogger("Mozaik")
 
@@ -25,7 +23,6 @@ def psth(spike_list, bin_length):
     """
     t_start = spike_list[0].t_start
     t_stop = spike_list[0].t_stop
-    sampling_period = spike_list[0].sampling_period
     num_neurons = len(spike_list)
     num_bins = float((t_stop-t_start)/bin_length)
 

@@ -3,19 +3,12 @@ docstring goes here
 """
 
 import mozaik.storage.queries as queries
-from mozaik.visualization.plotting import (Plotting, RasterPlot, GSynPlot,
+from mozaik.visualization.plotting import (Plotting, GSynPlot,
                                            VmPlot, ConductanceSignalListPlot,
-                                           AnalogSignalListPlot,
-                                           RetinalInputMovie)
-from NeuroTools.parameters import ParameterSet, ParameterDist
+                                           AnalogSignalListPlot)
+from NeuroTools.parameters import ParameterSet
 import matplotlib.gridspec as gridspec
-from mozaik.storage.queries import (select_stimuli_type_query,
-                                    select_result_sheet_query,
-                                    partition_by_stimulus_paramter_query)
-
 from simple_plot import SpikeRasterPlot, SpikeHistogramPlot
-
-import pylab
 
 
 class Figure2Gratings(Plotting):

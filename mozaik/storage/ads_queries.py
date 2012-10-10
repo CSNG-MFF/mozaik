@@ -2,11 +2,9 @@
 docstring goes here
 """
 
-from mozaik.framework.interfaces import MozaikParametrizeObject
 from NeuroTools.parameters import ParameterSet
-from mozaik.stimuli.stimulus import colapse, StimulusID
-import numpy
-from queries import *
+from mozaik.stimuli.stimulus import StimulusID
+from queries import Query
 
 
 def partition_analysis_results_by_parameter_name_query(dsv, ads_identifier='',
