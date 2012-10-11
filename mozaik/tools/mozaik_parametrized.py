@@ -19,8 +19,8 @@ class MozaikParametrized(Parameterized):
         Parameterized.__init__(self, **params)
 
         for (name, value) in self.get_param_values():
-            if value == None:
-                logger.error("The parameter %s was not initialized" % name)
+	    if value == None and self.params()[name].allow_None==False:                
+		logger.error("The parameter %s was not initialized" % name)
                 raise ValueError("The parameter %s was not initialized" % name)
 
     def equalParams(self, other):

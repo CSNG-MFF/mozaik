@@ -7,6 +7,7 @@ import numpy
 import os.path
 import pickle
 import mozaik
+import cai97
 from mozaik.framework.space import VisualSpace
 from mozaik.framework.space import VisualRegion
 from mozaik.framework.interfaces import MozaikRetina

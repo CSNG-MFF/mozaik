@@ -4,7 +4,7 @@ docstring goes here
 
 from NeuroTools.parameters import ParameterSet
 from neo.core.block import Block
-from neo.io.hdf5io import NeoHdf5IO
+#from neo.io.hdf5io import NeoHdf5IO
 import mozaik
 from mozaik.framework.interfaces import MozaikParametrizeObject
 from neo_neurotools_wrapper import NeoNeurotoolsWrapper, PickledDataStoreNeoWrapper

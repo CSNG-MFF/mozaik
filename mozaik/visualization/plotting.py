@@ -142,7 +142,7 @@ class PlotTuningCurve(Plotting):
     def __init__(self, datastore, parameters, plot_file_name=None,
                  fig_param=None):
         Plotting.__init__(self, datastore, parameters, plot_file_name, fig_param)
-        dsv = queries.analysis_data_structure_parameter_filter_query(
+        dsv = ads_queries.analysis_data_structure_parameter_filter_query(
                                                 self.datastore,
                                                 identifier='PerNeuronValue')
         dsv = queries.select_result_sheet_query(dsv, self.parameters.sheet_name)

@@ -127,7 +127,7 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
 
     def perform_analysis(self):
         self.datastore.print_content()
-        dsv = queries.analysis_data_structure_parameter_filter_query(
+        dsv = ads_queries.analysis_data_structure_parameter_filter_query(
                                                 self.datastore,
                                                 identifier='PerNeuronValue')
         for sheet in self.datastore.sheets():
