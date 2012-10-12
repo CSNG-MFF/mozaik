@@ -10,7 +10,7 @@ import param
 from param.parameterized import Parameterized
 from mozaik.storage.queries import partition_by_stimulus_paramter_query
 import matplotlib.gridspec as gridspec
-from mozaik.stimuli.stimulus import StimulusID
+from mozaik.stimuli.stimulus import Stimulus
 import mozaik
 import numpy
 
@@ -146,24 +146,23 @@ class PerStimulusPlot(PerDSVPlot):
         PerDSVPlot.__init__(self, datastore, **params)
         if self.title_style == "Clever":
             ss = datastore.get_stimuli()
-            stimulus = StimulusID(ss[0])
+            stimulus = Stimulus(ss[0])
             for s in ss:
-                s = StimulusID(s)
+                s = Stimulus(s)
                 if s.name != stimulus.name:
-                    print 'Datastore does not contain same type of stimuli: changing title_style from Clever to Standard'
                     logger.warning('Datastore does not contain same type of stimuli: changing title_style from Clever to Standard')
                     self.title_style = "Standard"
                     break
 
         # lets find parameter indexes that vary if we need 'Clever' title style
         if self.title_style == "Clever":
-            stimulus = StimulusID(self.datastore.get_stimuli()[0])
+            stimulus = Stimulus(self.datastore.get_stimuli()[0])
             self.varied = []
             for pn, pv in stimulus.get_param_values():
                 if pn != 'trial':
                     for s in self.datastore.get_stimuli():
-                        s = StimulusID(s)
-                        if s.params[pn] != pv:
+                        s = Stimulus(s)
+                        if s.params()[pn] != pv:
                             self.varied.append(pn)
                             break
 
@@ -186,7 +185,7 @@ class PerStimulusPlot(PerDSVPlot):
             return None
 
         if self.title_style == "Standard":
-            stimulus = StimulusID(self.dsvs[idx].get_stimuli()[0])
+            stimulus = Stimulus(self.dsvs[idx].get_stimuli()[0])
             title = ''
             title = title + stimulus.name + '\n'
             for pn, pv in stimulus.get_param_values():
@@ -194,7 +193,7 @@ class PerStimulusPlot(PerDSVPlot):
             return title
 
         if self.title_style == "Clever":
-            stimulus = StimulusID(self.dsvs[idx].get_stimuli()[0])
+            stimulus = Stimulus(self.dsvs[idx].get_stimuli()[0])
             title = ''
             for pn in self.varied:
                 title = title + str(pn) + ' : ' + str(stimulus.params[pn]) + '\n'

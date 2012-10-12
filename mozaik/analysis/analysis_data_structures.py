@@ -2,10 +2,8 @@
 This module contains the definition of the AnalysisDataStructure API and
 implementation of some basic analysis data structures.
 """
-
-import param
 import mozaik
-from mozaik.tools.mozaik_parametrized import MozaikParametrized
+from mozaik.tools.mozaik_parametrized import MozaikParametrized, SNumber, SInteger, SString
 
 logger = mozaik.getMozaikLogger("Mozaik")
 
@@ -74,28 +72,19 @@ class AnalysisDataStructure(MozaikParametrized):
             possible!
     """
 
-    identifier = param.String(instantiate=True,
-                              doc="The identifier of the analysis data structure")
-    analysis_algorithm = param.String(instantiate=True,
-                                      doc="The identifier of the analysis data structure")
-    neuron = param.Integer(allow_None=True,
-                           default=None,
-                           instantiate=True,
+    identifier = SString(doc="The identifier of the analysis data structure")
+    analysis_algorithm = SString(doc="The identifier of the analysis data structure")
+    
+    neuron = SInteger(default=None,
                            doc="Neuron id to which the datastructure belongs. None if it is not neuron specific")
-    sheet_name = param.String(allow_None=True,
-                              default=None,
-                              instantiate=True,
+    sheet_name = SString(default=None,
                               doc="The sheet for which this results were computed. None if they do not belong to specific sheet")
-    stimulus_id = param.String(allow_None=True,
-                               default=None,
-                               instantiate=True,
+    stimulus_id = SString(default=None,
                                doc="The stimulus for which the results were computed. None if they are not related to specific stimulus")
-    tags = param.List(default=[],
-                      instantiate=True,
-                      doc="The list of tags to attach")
 
-    def __init__(self, **params):
+    def __init__(self,tags=[], **params):
         MozaikParametrized.__init__(self, **params)
+        self.tags = tags
 
     def __str__(self):
         """
@@ -123,11 +112,8 @@ class PerNeuronValue(AnalysisDataStructure):
     period
           - The period of the value. If value is not periodic period=None
     """
-    value_name = param.String(instantiate=True,
-                              doc="The name of the value.")
-    period = param.Number(default=None,
-                          instantiate=True,
-                          doc="The name of the value.")
+    value_name = SString(doc="The name of the value.")
+    period = SNumber(units=None,default=None,doc="The name of the value.")
 
     def __init__(self, values, value_units, **params):
         AnalysisDataStructure.__init__(self, identifier='PerNeuronValue', **params)
@@ -158,8 +144,8 @@ class AnalysisDataStructure1D(AnalysisDataStructure):
           the quantities units of y axis
     """
 
-    x_axis_name = param.String(instantiate=True, doc="the name of the x axis.")
-    y_axis_name = param.String(instantiate=True, doc="the name of the y axis.")
+    x_axis_name = SString(doc="the name of the x axis.")
+    y_axis_name = SString(doc="the name of the y axis.")
 
     def __init__(self, x_axis_units, y_axis_units, **params):
         AnalysisDataStructure.__init__(self, **params)
@@ -240,9 +226,9 @@ class Connections(AnalysisDataStructure1D):
             neurons in target sheet (second dimension)
     """
 
-    name = param.String(instantiate=True, doc="Projection name.")
-    source_name = param.String(instantiate=True, doc="The name of the source sheet.")
-    target_name = param.String(instantiate=True, doc="The name of the target sheet.")
+    name = SString(doc="Projection name.")
+    source_name = SString(doc="The name of the source sheet.")
+    target_name = SString(doc="The name of the target sheet.")
 
     def __init__(self, weights, **params):
         AnalysisDataStructure.__init__(self, identifier='Connections', **params)

@@ -17,5 +17,5 @@ class timeit(object):
         start_time = time.time()
         result = self.f(*args, **kwargs)
         #logging.debug("Execution time for %s: %g s" % (self.f.__name__, time.time()-start_time))
-        print "Execution time for %s: %g s" % (self.f.__name__, time.time() - start_time)
+        logger.info("Execution time for %s: %g s" % (self.f.__name__, time.time() - start_time))
         return result

@@ -69,11 +69,11 @@ def run_experiments(model, experiment_list):
     data_store.set_neuron_annotations(model.neuron_annotations())
 
     for i, experiment in enumerate(experiment_list):
-        print 'Starting experiment: ', experiment.__class__.__name__
+        logger.info('Starting experiment: ' + experiment.__class__.__name__)
         stimuli = experiment.return_stimuli()
         unpresented_stimuli = data_store.identify_unpresented_stimuli(stimuli)
-        print 'Running model'
+        logger.info('Running model')
         experiment.run(data_store, unpresented_stimuli)
-        print 'Experiment %d/%d finished' % (i + 1, len(experiment_list))
+        logger.info('Experiment %d/%d finished' % (i + 1, len(experiment_list)))
 
     return data_store

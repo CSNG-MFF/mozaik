@@ -49,7 +49,7 @@ class InputSpace(MozaikParametrizeObject):
 
     def reset(self):
         """
-        Reset each VisualObject in the scene to its initial state.
+        Reset each Object in the scene to its initial state.
         """
         self.frame_number = 0
         for obj in self.content.values():
@@ -57,7 +57,7 @@ class InputSpace(MozaikParametrizeObject):
 
     def clear(self):
         """
-        Reset the visual space and clear stimuli in it
+        Reset the input space and clear stimuli in it
         """
         self.content = {}
         self.input = None
@@ -65,7 +65,7 @@ class InputSpace(MozaikParametrizeObject):
 
     def update(self):
         """
-        Tell each VisualObject in the scene to update itself.
+        Tell each Object in the scene to update itself.
         Returns the current time within the scene.
         """
         for obj in self.content.values():

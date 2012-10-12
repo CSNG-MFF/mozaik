@@ -29,11 +29,11 @@ class Experiment(object):
 
     def run(self, data_store, stimuli):
         for i, s in enumerate(stimuli):
-            print 'Presenting stimulus: ', str(s), '\n'
+            logger.info('Presenting stimulus: ', str(s), '\n')
             (segments, input_stimulus) = self.model.present_stimulus_and_record(s)
             data_store.add_recording(segments, s)
             data_store.add_stimulus(input_stimulus, s)
-            print 'Stimulus %d/%d finished' % (i + 1, len(stimuli))
+            logger.info('Stimulus %d/%d finished' % (i + 1, len(stimuli)))
 
     def do_analysis(self):
         raise NotImplementedError

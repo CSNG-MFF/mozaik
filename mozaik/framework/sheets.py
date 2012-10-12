@@ -75,7 +75,7 @@ class Sheet(MozaikComponent):
 
         def fget(self):
             if not self._pop:
-                print 'Population have not been yet set in sheet: ', self.name, '!'
+                logger.error('Population have not been yet set in sheet: ' +  self.name + '!')
             return self._pop
 
         def fset(self, value):
@@ -90,22 +90,22 @@ class Sheet(MozaikComponent):
 
     def add_neuron_annotation(self, neuron_number, key, value, protected=True):
         if not self._pop:
-            print 'Population has not been yet set in sheet: ', self.name, '!'
+            logger.error('Population has not been yet set in sheet: ' + self.name + '!')
         if (protected
               and key in self._neuron_annotations[neuron_number]
               and self._neuron_annotations[neuron_number][key][0]):
-            print 'The annotation<', key, '> for neuron ', str(neuron_number), ' is protected. Annotation not updated'
+            logger.warning('The annotation<' + '> for neuron ' + str(neuron_number) + ' is protected. Annotation not updated')
         else:
             self._neuron_annotations[neuron_number][key] = (protected, value)
 
     def get_neuron_annotation(self, neuron_number, key):
         if not self._pop:
-            print 'Population has not been yet set in sheet: ', self.name, '!'
+            logger.error('Population has not been yet set in sheet: ' + self.name + '!')
         return self._neuron_annotations[neuron_number][key][1]
 
     def get_neuron_annotations(self):
         if not self._pop:
-            print 'Population has not been yet set in sheet: ', self.name, '!'
+            logger.error('Population has not been yet set in sheet: ' +  self.name + '!')
 
         anns = []
         for i in xrange(0, len(self.pop)):

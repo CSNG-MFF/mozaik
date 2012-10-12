@@ -3,7 +3,7 @@ docstring goes here
 """
 
 from NeuroTools.parameters import ParameterSet
-from mozaik.stimuli.stimulus import StimulusID
+from mozaik.stimuli.stimulus import Stimulus
 from queries import Query
 
 
@@ -121,11 +121,11 @@ def analysis_data_structure_stimulus_filter_query(dsv, stimulus_name, **kwargs):
 
         for asd in dsv.analysis_results:
             if asd.stimulus_id != None:
-                sid = StimulusID(asd.stimulus_id)
+                sid = Stimulus(asd.stimulus_id)
                 if sid.name == stimulus_name:
                         flag = True
                         for n, f in kwargs.items():
-                            if float(f) != float(sid.params[n]):
+                            if float(f) != float(getattr(sid,n)):
                                 flag = False
                                 break
                         if flag:
@@ -160,7 +160,7 @@ def ads_with_equal_stimulus_type(dsv, not_None=False):
     if ads_is_empty(dsv):
         return True
     if dsv.analysis_results[0].stimulus_id != None:
-        first = StimulusID(dsv.analysis_results[0].stimulus_id).name
+        first = Stimulus(dsv.analysis_results[0].stimulus_id).name
     else:
         if not_None:
             return False
@@ -168,7 +168,7 @@ def ads_with_equal_stimulus_type(dsv, not_None=False):
 
     for ads_object in dsv.analysis_results:
         if ads_object.stimulus_id != None:
-            comp = StimulusID(ads_object.stimulus_id).name
+            comp = Stimulus(ads_object.stimulus_id).name
         else:
             comp = None
 

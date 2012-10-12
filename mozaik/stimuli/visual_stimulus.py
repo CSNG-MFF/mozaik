@@ -5,7 +5,7 @@ Docstring goes here
 import numpy
 import mozaik
 from quantities import degrees
-from mozaik.stimuli.stimulus import Stimulus
+from mozaik.stimuli.stimulus import BaseStimulus
 from mozaik.framework.space import TRANSPARENT, xy2ij
 from mozaik.tools.mozaik_parametrized import SNumber
 from mozaik.tools.units import lux
@@ -15,7 +15,7 @@ from scipy.ndimage import interpolation
 logger = mozaik.getMozaikLogger("Mozaik")
 
 
-class VisualStimulus(Stimulus):
+class VisualStimulus(BaseStimulus):
     """Abstract base class for visual stimuli."""
     max_luminance = SNumber(lux, doc="Maximum luminance")
     density = SNumber(1/(degrees), doc="The density of stimulus - units per degree")
@@ -25,7 +25,7 @@ class VisualStimulus(Stimulus):
     size_y = SNumber(degrees, doc="The size of the region in degrees (elevation).")
 
     def __init__(self, **params):
-        Stimulus.__init__(self, **params)
+        BaseStimulus.__init__(self, **params)
         self._zoom_cache = {}
         self.is_visible = True
         self.region = VisualRegion(self.location_x, self.location_y,

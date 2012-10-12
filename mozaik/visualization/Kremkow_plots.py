@@ -26,8 +26,6 @@ class Figure2Gratings(Plotting):
                                                 {'orientation': 0.0,
                                                  'max_luminance': 90.0})
 
-        print len(dsv.get_segments())
-
         lgn_on_dsv = queries.select_result_sheet_query(dsv, 'X_ON')
         lgn_off_dsv = queries.select_result_sheet_query(dsv, 'X_OFF')
         lgn_spikes = [[s.spiketrains for s in lgn_on_dsv.get_segments()],
@@ -89,8 +87,6 @@ class Figure2NaturalImagesWithEyeMovement(Plotting):
         dsv = queries.select_stimuli_type_query(self.datastore,
                                                 'NaturalImageWithEyeMovement',
                                                 {})
-
-        print len(dsv.get_segments())
 
         lgn_on_dsv = queries.select_result_sheet_query(dsv, 'X_ON')
         lgn_off_dsv = queries.select_result_sheet_query(dsv, 'X_OFF')

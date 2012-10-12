@@ -2,9 +2,7 @@
 docstring goes here
 
 """
-
 from NeuroTools.parameters import ParameterSet
-from mozaik.stimuli.stimulus import StimulusID
 from mozaik.framework.interfaces import MozaikComponent
 from mozaik.framework import load_component
 import mozaik
@@ -64,11 +62,12 @@ class Model(MozaikComponent):
                 sheet.record()
                 sheet.prepare_input(stimulus.duration, self.simulator_time)
         sensory_input = self.input_layer.process_input(self.input_space,
-                                                       StimulusID(stimulus),
+                                                       stimulus,
                                                        stimulus.duration,
                                                        self.simulator_time)
+                    
         self.run(stimulus.duration)
-
+        
         segments = []
         #if (not MPI) or (mpi_comm.rank == MPI_ROOT):
         for sheet in self.sheets.values():

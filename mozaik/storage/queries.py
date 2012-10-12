@@ -4,7 +4,7 @@ docstring goes here
 
 from mozaik.framework.interfaces import MozaikParametrizeObject
 from NeuroTools.parameters import ParameterSet
-from mozaik.stimuli.stimulus import colapse, StimulusID
+from mozaik.stimuli.stimulus import colapse, Stimulus
 import numpy
 
 
@@ -31,19 +31,19 @@ class Query(MozaikParametrizeObject):
     def query(self, dsv):
         raise NotImplementedError
 
-
+########################################################################
 def select_stimuli_type_query(dsv, stimulus_name, params=None):
     new_dsv = dsv.fromDataStoreView()
     new_dsv.analysis_results = dsv.analysis_result_copy()
     new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
 
     for seg in dsv.block.segments:
-        sid = StimulusID(seg.annotations['stimulus'])
+        sid = Stimulus(seg.annotations['stimulus'])
         if sid.name == stimulus_name:
             if params:
                 flag = True
-                for n, f in params.items():
-                    if float(f) != float(sid.params[n]):
+                for n,f in params.items():
+                    if float(f) != float(getattr(sid,n)):
                         flag = False
                         break
                 if flag:
@@ -71,6 +71,7 @@ class SelectStimuliTypeQuery(Query):
     def query(self, dsv):
         return select_stimuli_type_query(dsv, **self.paramters)
 
+########################################################################
 
 def select_result_sheet_query(dsv, sheet_name):
     new_dsv = dsv.fromDataStoreView()
@@ -96,6 +97,7 @@ class SelectResultSheetQuery(Query):
         return select_result_sheet_query(dsv, **self.paramters)
 
 
+########################################################################
 def tag_based_query(dsv, tags=[]):
         new_dsv = dsv.fromDataStoreView()
         new_dsv.block.segments = dsv.recordings_copy()
@@ -128,7 +130,7 @@ class TagBasedQuery(Query):
 
     def query(self, dsv):
         return tag_based_query(dsv, **self.parameters)
-
+########################################################################
 
 def partition_by_stimulus_paramter_query(dsv, parameter_name):
         st = dsv.get_stimuli()
@@ -165,6 +167,7 @@ class PartitionByStimulusParamterQuery(Query):
     def query(self, dsv):
         return partition_by_stimulus_paramter_query(dsv, **self.parameters)
 
+########################################################################
 
 def partition_recordings_by_sheet_query(dsv):
         dsvs = []
@@ -191,6 +194,7 @@ class PartitionRecordingsBySheetQuery(Query):
     def query(self, dsv):
         return partition_recordings_by_sheet_query(dsv)
 
+########################################################################
 
 def equal_stimulus_type(dsv):
     """
@@ -201,10 +205,10 @@ def equal_stimulus_type(dsv):
     if len(st) == 0:
         return True
 
-    first = StimulusID(st[0]).name
+    first = Stimulus(st[0]).name
 
     for s in st:
-        if StimulusID(s).name != first:
+        if Stimulus(s).name != first:
             return False
 
     return True

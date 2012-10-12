@@ -8,7 +8,7 @@ from neo.core.block import Block
 import mozaik
 from mozaik.framework.interfaces import MozaikParametrizeObject
 from neo_neurotools_wrapper import NeoNeurotoolsWrapper, PickledDataStoreNeoWrapper
-from mozaik.stimuli.stimulus import StimulusID
+from mozaik.stimuli.stimulus import Stimulus
 import cPickle
 
 logger = mozaik.getMozaikLogger("Mozaik")
@@ -100,8 +100,8 @@ class DataStoreView(MozaikParametrizeObject):
 
     def get_stimuli(self):
         """
-        Returns a list of stimuli ids (as strings). The order of the stimuli
-        ids corresponds to the order of segments returned by the get_segments()
+        Returns a list of stimuli (as strings). The order of the stimuli
+        corresponds to the order of segments returned by the get_segments()
         call.
         """
         return [s.annotations['stimulus'] for s in self.block.segments]
@@ -151,7 +151,7 @@ class DataStoreView(MozaikParametrizeObject):
         print "   Number of recordings: " + str(len(self.block.segments))
         d = {}
         for st in [s.annotations['stimulus'] for s in self.block.segments]:
-            d[StimulusID(st).name] = d.get(StimulusID(st).name, 0) + 1
+            d[Stimulus(st).name] = d.get(Stimulus(st).name, 0) + 1
 
         for k in d.keys():
             print "     " + str(k) + " : " + str(d[k])

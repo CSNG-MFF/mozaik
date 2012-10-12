@@ -451,8 +451,7 @@ class GaborConnector(MozaikComponent):
             frequency = parameters.frequency.next()[0]
             size = parameters.size.next()[0]
 
-            if orientation > pi:
-                print orientation
+            assert orientation < pi
 
             target.add_neuron_annotation(j, 'LGNAfferentOrientation', orientation, protected=True)
             target.add_neuron_annotation(j, 'LGNAfferentAspectRatio', aspect_ratio, protected=True)

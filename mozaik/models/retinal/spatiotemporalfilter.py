@@ -322,7 +322,7 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
             f.close()
             f1.close()
 
-    def process_input(self, visual_space, stimulus_id, duration=None, offset=0):
+    def process_input(self, visual_space, stimulus, duration=None, offset=0):
         """
         Present a visual stimulus to the model, and create the LGN output
         (relay) neurons.
@@ -330,10 +330,10 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
         logger.info("Presenting visual stimulus from visual space %s" % visual_space)
         visual_space.set_duration(duration)
         self.input = visual_space
+        stimulus = stimulus.copy()
+        stimulus.trial = None  # to avoid recalculating RFs response to multiple trials of the same stimulus
 
-        stimulus_id.params['trial'] = None  # to avoid recalculating RFs response to multiple trials of the same stimulus
-
-        cached = self.get_cache(stimulus_id)
+        cached = self.get_cache(stimulus)
 
         if cached == None:
             logger.debug("Generating output spikes...")
@@ -382,7 +382,7 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
 
         # if record() has already been called, setup the recording now
         self._built = True
-        self.write_cache(stimulus_id, input_currents, retinal_input)
+        self.write_cache(stimulus, input_currents, retinal_input)
         return retinal_input
 
     def provide_null_input(self, visual_space, duration=None, offset=0):
@@ -453,10 +453,10 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
         retinal_input = []
 
         while t < duration:
+            t = visual_space.update()
             for rf_type in self.rf_types:
                 for cell in input_cells[rf_type]:
                     cell.view(visual_space)
-            t = visual_space.update()
             visual_region = VisualRegion(location_x=0, location_y=0,
                                          size_x=self.parameters.size[0],
                                          size_y=self.parameters.size[1])

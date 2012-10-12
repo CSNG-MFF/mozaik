@@ -7,7 +7,7 @@ import numpy
 import time
 import quantities as qt
 import mozaik.tools.units as munits
-from mozaik.stimuli.stimulus import colapse, StimulusID, colapse_to_dictionary
+from mozaik.stimuli.stimulus import colapse, colapse_to_dictionary, Stimulus
 from mozaik.analysis.analysis_data_structures import PerNeuronValue, \
                                         ConductanceSignalList, AnalogSignalList
 from mozaik.analysis.analysis_helper_functions import psth
@@ -84,7 +84,7 @@ class TrialAveragedFiringRate(Analysis):
         for sheet in dsv.sheets():
             dsv1 = queries.select_result_sheet_query(dsv, sheet)
             segs = dsv1.get_segments()
-            st = [StimulusID(s) for s in dsv1.get_stimuli()]
+            st = [Stimulus(s) for s in dsv1.get_stimuli()]
             # transform spike trains due to stimuly to mean_rates
             mean_rates = [numpy.array(s.mean_rates()) for s in segs]
             # collapse against all parameters other then trial
@@ -142,7 +142,7 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
 
             self.pnvs = dsv.get_analysis_result(sheet_name=sheet)
             # get stimuli
-            st = [StimulusID(s.stimulus_id) for s in self.pnvs]
+            st = [Stimulus(s.stimulus_id) for s in self.pnvs]
 
             d = colapse_to_dictionary([z.values for z in self.pnvs],
                                       st,
@@ -159,23 +159,23 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
                                       weights=numpy.array(y),
                                       axis=0,
                                       low=0,
-                                      high=st[0].periods[self.parameters.parameter_name],
+                                      high=st[0].params()[self.parameters.parameter_name].period,
                                       normalize=True)
 
                 logger.debug('Adding PerNeuronValue to datastore')
 
                 self.datastore.full_datastore.add_analysis_result(
                     PerNeuronValue(pref,
-                                   st[0].units[self.parameters.parameter_name],
+                                   st[0].params()[self.parameters.parameter_name].units,
                                    value_name=self.parameters.parameter_name + ' preference',
                                    sheet_name=sheet,
                                    tags=self.tags,
-                                   period=st[0].periods[self.parameters.parameter_name],
+                                   period=st[0].params()[self.parameters.parameter_name].period,
                                    analysis_algorithm=self.__class__.__name__,
                                    stimulus_id=str(k)))
                 self.datastore.full_datastore.add_analysis_result(
                     PerNeuronValue(sel,
-                                   st[0].units[self.parameters.parameter_name],
+                                   st[0].params()[self.parameters.parameter_name].units,
                                    value_name=self.parameters.parameter_name + ' selectivity',
                                    sheet_name=sheet,
                                    tags=self.tags,
@@ -267,7 +267,7 @@ class Precision(Analysis):
             psths = [psth(seg.spiketrains, self.parameters.bin_length)
                      for seg in dsv.get_segments()]
 
-            st = [StimulusID(s) for s in dsv.get_stimuli()]
+            st = [Stimulus(s) for s in dsv.get_stimuli()]
 
             # average across trials
             psths, stids = colapse(psths,
@@ -330,7 +330,7 @@ class ModulationRatio(Analysis):
 
             psths = [psth(seg.spiketrains, self.parameters.bin_length)
                      for seg in dsv.get_segments()]
-            st = [StimulusID(s) for s in dsv.get_stimuli()]
+            st = [Stimulus(s) for s in dsv.get_stimuli()]
 
             # average across trials
             psths, stids = colapse(psths,
@@ -356,7 +356,7 @@ class ModulationRatio(Analysis):
             # first find all the different presented stimuli:
             ps = {}
             for s in st:
-                ps[StimulusID(s).params['orientation']] = True
+                ps[Stimulus(s).orientation] = True
             ps = ps.keys()
 
             # now find the closest presented orientations
@@ -378,7 +378,7 @@ class ModulationRatio(Analysis):
             for (st, vl) in d.items():
                 # here we will store the modulation ratios, one per each neuron
                 modulation_ratio = numpy.zeros((numpy.shape(psths[0])[1],))
-                frequency = StimulusID(st).params['temporal_frequency'] * StimulusID(st).units['temporal_frequency']
+                frequency = Stimulus(st).temporal_frequency * Stimulus(st).temporal_frequency.units
                 for (orr, ppsth) in zip(vl[0], vl[1]):
                     for j in numpy.nonzero(orr == closest_presented_orientation)[0]:
                         modulation_ratio[j] = self.calculate_MR(ppsth[:, j],

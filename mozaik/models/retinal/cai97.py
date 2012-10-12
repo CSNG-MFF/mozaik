@@ -56,7 +56,7 @@ def stRF_2d(x, y, t, p):
     ##rf = (fcm*tmc - fsm*tms)/(fcm - fsm).max()
     rf = fcm*tmc - fsm*tms
     if p.subtract_mean:
-        # lets normalize each time slace sepparately
+        # lets normalize each time slice sepparately
         for i in xrange(0, numpy.shape(rf)[2]):
             rf[:, :, i] = rf[:, :, i] - rf[:, :, i].mean()
     return rf

@@ -49,7 +49,6 @@ class NeuronAnnotationsToPerNeuronValues(Analysis):
                     values = []
                     for n in xrange(0, len(anns[sheet])):
                         values.append(anns[sheet][n][k])
-                    print 'Adding PerNeuronValue: ', k
 
                     period = None
                     if k == 'LGNAfferentOrientation':

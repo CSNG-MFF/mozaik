@@ -75,7 +75,7 @@ from NeuroTools.parameters import ParameterSet
 
 from mozaik.framework.interfaces import MozaikParametrizeObject
 from mozaik.storage import queries, ads_queries
-from mozaik.stimuli.stimulus import StimulusID, colapse_to_dictionary
+from mozaik.stimuli.stimulus import  colapse_to_dictionary, Stimulus
 from numpy import pi
 
 from simple_plot import StandardStyleLinePlot, SpikeRasterPlot, \
@@ -151,7 +151,7 @@ class PlotTuningCurve(Plotting):
         self.pnvs = dsv.get_analysis_result(identifier='PerNeuronValue',
                                             sheet_name=parameters.sheet_name)
         # get stimuli
-        self.st = [StimulusID(s.stimulus_id) for s in self.pnvs]
+        self.st = [Stimulus(s.stimulus_id) for s in self.pnvs]
         # transform the pnvs into a dictionary of tuning curves according along the parameter_name
         self.tc_dict = colapse_to_dictionary([z.values for z in self.pnvs],
                                              self.st,
@@ -162,7 +162,7 @@ class PlotTuningCurve(Plotting):
                                                                   params)
 
     def ploter(self, idx, gs, params):
-        period = self.st[0].periods[self.parameters.parameter_name]
+        period = self.st[0].params()[self.parameters.parameter_name].period
         xs = []
         ys = []
         labels = []
@@ -180,7 +180,7 @@ class PlotTuningCurve(Plotting):
 
             xs.append(numpy.array(par))
             ys.append(numpy.array(val))
-            labels.append(str(StimulusID(k)))
+            labels.append(str(k))
 
         params.setdefault("title", 'Neuron: %d' % self.parameters.neuron)
         params.setdefault("y_label", self.pnvs[0].value_name)
@@ -619,11 +619,6 @@ class ConnectivityPlot(Plotting):
         pnv = []
 
         if self.pnvs != None:
-            print [p.sheet_name for p in self.pnvs]
-            print self.parameters.reversed
-            print self.connections[idx].target_name
-            print self.connections[idx].source_name
-
             for p in self.pnvs:
                 if not self.parameters.reversed and p.sheet_name == self.connections[idx].target_name:
                     pnv.append(p)
