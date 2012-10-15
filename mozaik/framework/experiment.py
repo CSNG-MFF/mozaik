@@ -1,20 +1,29 @@
+"""
+docstring goes here
+
+"""
+
+
 import mozaik
-from mozaik.stimuli.topographica_based import *
-from NeuroTools.parameters import ParameterSet, ParameterDist
+import mozaik.stimuli.topographica_based as topo
 import numpy
 
 logger = mozaik.getMozaikLogger("Mozaik")
 
+
 class Experiment(object):
     """
-    The experiment defines the list of stimuli that it needs to present to the brain.
-    These stimuli presentations have to be independent - e.g. should not temporarily 
-    depend on others. It should also specify the analysis of the recorded results 
-    that it performs. This can be left empty if analysis will be done later.
+    The experiment defines the list of stimuli that it needs to present to the
+    brain.
+
+    These stimulus presentations have to be independent - e.g. should not
+    temporarily depend on others. It should also specify the analysis of the
+    recorded results that it performs. This can be left empty if analysis will
+    be done later.
     """
-    
+
     stimuli = []
-    
+
     def return_stimuli(self):
         return self.stimuli
         
@@ -33,15 +42,17 @@ class Experiment(object):
         raise NotImplementedError
         pass
 
+
 class MeasureOrientationTuningFullfield(Experiment):
-    
-    def __init__(self,model,num_orientations,spatial_frequency,temporal_frequency,grating_duration,contrasts,num_trials):
+
+    def __init__(self, model, num_orientations, spatial_frequency,
+                 temporal_frequency, grating_duration, contrasts, num_trials):
         self.model = model
         for j in contrasts:
-            for i in xrange(0,num_orientations):
-                for k in xrange(0,num_trials):
-                    self.stimuli.append(FullfieldDriftingSinusoidalGrating(
-                                    frame_duration=7, 
+            for i in xrange(0, num_orientations):
+                for k in xrange(0, num_trials):
+                    self.stimuli.append(topo.FullfieldDriftingSinusoidalGrating(
+                                    frame_duration=7,
                                     size_x=model.visual_field.size_x,
                                     size_y=model.visual_field.size_y,
                                     location_x=0.0,
@@ -50,23 +61,26 @@ class MeasureOrientationTuningFullfield(Experiment):
                                     duration=grating_duration,
                                     density=40,
                                     trial=k,
-                                    orientation=numpy.pi/num_orientations*i, 
+                                    orientation=numpy.pi/num_orientations*i,
                                     spatial_frequency=spatial_frequency,
-                                    temporal_frequency=temporal_frequency 
-                                ))    
+                                    temporal_frequency=temporal_frequency
+                                ))
 
-    def do_analysis(self,data_store):
+    def do_analysis(self, data_store):
         pass
+
 
 class MeasureSizeTuning(Experiment):
-    
-    def __init__(self,model,num_sizes,max_size,orientation,spatial_frequency,temporal_frequency,grating_duration,contrasts,num_trials):
+
+    def __init__(self, model, num_sizes, max_size, orientation,
+                 spatial_frequency, temporal_frequency, grating_duration,
+                 contrasts, num_trials):
         self.model = model
         for j in contrasts:
-            for i in xrange(0,num_sizes):
-                for k in xrange(0,num_trials):
-                    self.stimuli.append(DriftingSinusoidalGratingDisk(
-                                    frame_duration=7, 
+            for i in xrange(0, num_sizes):
+                for k in xrange(0, num_trials):
+                    self.stimuli.append(topo.DriftingSinusoidalGratingDisk(
+                                    frame_duration=7,
                                     size_x=model.visual_field.size_x,
                                     size_y=model.visual_field.size_y,
                                     location_x=0.0,
@@ -75,24 +89,28 @@ class MeasureSizeTuning(Experiment):
                                     duration=grating_duration,
                                     density=40,
                                     trial=k,
-                                    orientation=orientation, 
-                                    radius=max_size/num_sizes*i, 
+                                    orientation=orientation,
+                                    radius=max_size/num_sizes*i,
                                     spatial_frequency=spatial_frequency,
-                                    temporal_frequency=temporal_frequency 
-                                ))    
+                                    temporal_frequency=temporal_frequency
+                                ))
 
-    def do_analysis(self,data_store):
+    def do_analysis(self, data_store):
         pass
+
 
 class MeasureOrientationContrastTuning(Experiment):
-    
-    def __init__(self,model,num_orientation,orientation,center_radius,surround_rspatial_frequency,temporal_frequency,grating_duration,contrasts,num_trials):
+
+    def __init__(self, model, num_orientations, orientation, center_radius,
+                 surround_radius, spatial_frequency, temporal_frequency,
+                 grating_duration, contrasts, num_trials):
         self.model = model
         for j in contrasts:
-            for i in xrange(0,num_sizes):
-                for k in xrange(0,num_trials):
-                    self.stimuli.append(DriftingSinusoidalGratingCenterSurroundStimulus(
-                                    frame_duration=7, 
+            for i in xrange(0, num_sizes):
+                for k in xrange(0, num_trials):
+                    self.stimuli.append(
+                        topo.DriftingSinusoidalGratingCenterSurroundStimulus(
+                                    frame_duration=7,
                                     size_x=model.visual_field.size_x,
                                     size_y=model.visual_field.size_y,
                                     location_x=0.0,
@@ -101,27 +119,27 @@ class MeasureOrientationContrastTuning(Experiment):
                                     duration=grating_duration,
                                     density=40,
                                     trial=k,
-                                    center_orientation=orientation, 
-                                    surround_orientation=numpy.pi/num_orientations*i, 
+                                    center_orientation=orientation,
+                                    surround_orientation=numpy.pi/num_orientations*i,
                                     gap=0,
-                                    center_radius=center_radius, 
-                                    surround_radius=surround_radius, 
+                                    center_radius=center_radius,
+                                    surround_radius=surround_radius,
                                     spatial_frequency=spatial_frequency,
-                                    temporal_frequency=temporal_frequency 
-                                ))    
+                                    temporal_frequency=temporal_frequency
+                                ))
 
-    def do_analysis(self,data_store):
+    def do_analysis(self, data_store):
         pass
 
 
-        
 class MeasureNaturalImagesWithEyeMovement(Experiment):
-    
-    def __init__(self,model,stimulus_duration,num_trials):
+
+    def __init__(self, model, stimulus_duration, num_trials):
         self.model = model
-        for k in xrange(0,num_trials):
-            self.stimuli.append(NaturalImageWithEyeMovement(   
-                            frame_duration=7, 
+        for k in xrange(0, num_trials):
+            self.stimuli.append(
+                topo.NaturalImageWithEyeMovement(
+                            frame_duration=7,
                             size_x=model.visual_field.size_x,
                             size_y=model.visual_field.size_y,
                             location_x=0.0,
@@ -130,22 +148,22 @@ class MeasureNaturalImagesWithEyeMovement(Experiment):
                             duration=stimulus_duration,
                             density=40,
                             trial=k,
-                            size=40, # x size of image
-                            eye_movement_period=6.66, # eye movement period
+                            size=40,  # x size of image
+                            eye_movement_period=6.66,  # eye movement period
                             eye_path_location='./eye_path.pickle',
                             image_location='./image_naturelle_HIGH.bmp'
-                            ))    
+                            ))
 
-
-    def do_analysis(self,data_store):
+    def do_analysis(self, data_store):
         pass
-        
+
+
 class MeasureSpontaneousActivity(Experiment):
-    
     def __init__(self,model,duration,num_trials):
             self.model = model
             for k in xrange(0,num_trials):
-                self.stimuli.append(Null(   
+                self.stimuli.append(
+                            topo.Null(   
                                 frame_duration=7, 
                                 size_x=model.visual_field.size_x,
                                 size_y=model.visual_field.size_y,
@@ -156,6 +174,5 @@ class MeasureSpontaneousActivity(Experiment):
                                 density=40,
                                 trial=k
                 ))    
-
-    def do_analysis(self,data_store):
+    def do_analysis(self, data_store):
         pass

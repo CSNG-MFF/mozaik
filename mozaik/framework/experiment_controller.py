@@ -1,7 +1,12 @@
-from mozaik.storage.datastore import Hdf5DataStore,PickledDataStore
+"""
+docstring goes here
+
+"""
+
+from mozaik.storage.datastore import Hdf5DataStore, PickledDataStore
 from NeuroTools.parameters import ParameterSet
-import sys 
-import os 
+import sys
+import os
 import mozaik
 import time
 from datetime import datetime
@@ -23,30 +28,35 @@ class Global:
     """global variable container"""
     root_directory = './'
 
+
 def setup_logging():
-    # Set-up logging    
+    # Set-up logging
     if MPI:
-        init_logging(Global.root_directory + "log", file_level=logging.DEBUG, console_level=logging.DEBUG,mpi_rank=mpi_comm.rank) # NeuroTools version
+        init_logging(Global.root_directory + "log", file_level=logging.DEBUG,
+                     console_level=logging.DEBUG, mpi_rank=mpi_comm.rank)  # NeuroTools version
     else:
-        init_logging(Global.root_directory + "log", file_level=logging.DEBUG, console_level=logging.DEBUG) # NeuroTools version        
-    visual_logging.basicConfig(Global.root_directory + "visual_log.zip", level=logging.INFO)
+        init_logging(Global.root_directory + "log", file_level=logging.DEBUG,
+                     console_level=logging.DEBUG)  # NeuroTools version
+    visual_logging.basicConfig(Global.root_directory + "visual_log.zip",
+                               level=logging.INFO)
 
 
-def setup_experiments(simulation_name,sim):
+def setup_experiments(simulation_name, sim):
     # Read parameters
     if len(sys.argv) > 1:
         parameters_url = sys.argv[1]
     else:
-        raise ValueError , "No parameter file supplied"
-    
-    parameters = ParameterSet(parameters_url) 
-    
+        raise ValueError("No parameter file supplied")
+
+    parameters = ParameterSet(parameters_url)
+
     # Create results directory
     timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
-    Global.root_directory =  parameters.results_dir + simulation_name + '_' + timestamp + 'rank' + str(mpi_comm.rank) +  '/'
+    Global.root_directory = parameters.results_dir + simulation_name + '_' + \
+                              timestamp + 'rank' + str(mpi_comm.rank) + '/'
     os.mkdir(Global.root_directory)
     parameters.save(Global.root_directory + "parameters", expand_urls=True)
-    
+
     setup_logging()
     return parameters
 
@@ -55,9 +65,11 @@ def run_experiments(model,experiment_list,load_from=None):
     # first lets run all the measurements required by the experiments
     logger.info('Starting Experiemnts')
     if load_from == None:
-        data_store = PickledDataStore(load=False,parameters=ParameterSet({'root_directory': Global.root_directory}))
+        data_store = PickledDataStore(load=False,
+                                      parameters=ParameterSet({'root_directory': Global.root_directory}))
     else:
-        data_store = PickledDataStore(load=True,parameters=ParameterSet({'root_directory': load_from}))
+        data_store = PickledDataStore(load=True,
+                                      parameters=ParameterSet({'root_directory': load_from}))
     
     data_store.set_neuron_positions(model.neuron_positions())
     data_store.set_neuron_annotations(model.neuron_annotations())
@@ -81,4 +93,3 @@ def run_experiments(model,experiment_list,load_from=None):
     logger.info('Mozaik run time: %.0fs (%d%%)' % (mozaik_run_time, int(mozaik_run_time /total_run_time * 100)))
     
     return data_store
-
