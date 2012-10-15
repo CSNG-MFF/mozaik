@@ -617,7 +617,6 @@ class ConnectivityPlot(Plotting):
 
         # pick the right PerNeuronValue to show
         pnv = []
-
         if self.pnvs != None:
             for p in self.pnvs:
                 if not self.parameters.reversed and p.sheet_name == self.connections[idx].target_name:
@@ -635,6 +634,7 @@ class ConnectivityPlot(Plotting):
                 raise ValueError('ERROR: length of colors does not match length of weights \[%d \!\= %d\]. Ignoring colors!' % (len(pnv.values), len(w)))
 
         if pnv != []:
+
             from mozaik.tools.circ_stat import circ_mean
             (angle, mag) = circ_mean(numpy.array(pnv.values),
                                      weights=w,

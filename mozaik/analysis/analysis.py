@@ -349,10 +349,11 @@ class ModulationRatio(Analysis):
                              + str(len(pnvs)))
                 return None
             else:
-                or_pref = pnvs[0]
+                return 0
+        
+            or_pref = pnvs[0]
 
-            # find closest orientation of grating to a given orientation
-            # preference of a neuron
+            # find closest orientation of grating to a given orientation preference of a neuron
             # first find all the different presented stimuli:
             ps = {}
             for s in st:
@@ -416,3 +417,25 @@ class ModulationRatio(Analysis):
             return 2 *abs(fft[first_har]) /abs(fft[0])
         else:
             return 0
+          
+          
+class CV_ISI(Analysis):
+      """
+      A wrapper over NeuroTools's cv_isi. 
+      
+      The datastore should contain 
+      """
+
+      def perform_analysis(self):
+            for sheet in self.datastore.sheets():
+                # Load up spike trains for the right sheet and the corresponding stimuli, and
+                # transform spike trains into psth
+                dsv = select_result_sheet_query(self.datastore,sheet)
+                assert equal_ads_except(dsv,['stimulus_id'])
+                
+                segs = dsv.get_segments()
+                sts = dsv.get_stimuli()
+                
+                for seg,st in zip(segs,sts):
+                    isi = seg.cv_isi()
+                    self.datastore.full_datastore.add_analysis_result(PerNeuronValue(isi,qt.dimensionless,value_name = 'CV of ISI',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        

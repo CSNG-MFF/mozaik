@@ -27,8 +27,9 @@ class MozaikParametrizeObject(object):
                 raise KeyError("Invalid parameters for %s.%s Required: %s. Supplied: %s. Difference: %s" % (self.__class__.__name__, section or '', tP.keys(), P.keys(), set(tP.keys()) ^ set(P.keys())))
             for k, v in tP.items():
                 if isinstance(v, ParameterSet):
-                    assert isinstance(P[k], ParameterSet), "Type mismatch for parameter %s: %s !=  ParameterSet, for %s " % (k, type(P[k]), P[k])
-                    walk(v, P[k], section=k)
+                    if P[k] != None:
+                        assert isinstance(P[k], ParameterSet), "Type mismatch for parameter %s: %s !=  ParameterSet, for %s " % (k, type(P[k]), P[k])
+                        walk(v, P[k], section=k)
                 else:
                     assert isinstance(P[k], v), "Type mismatch for parameter %s: %s !=  ParameterSet, for %s " % (k, type(P[k]), P[k])
         try:
@@ -43,6 +44,7 @@ class MozaikParametrizeObject(object):
         except AssertionError as err:
             raise Exception("%s\nInvalid parameters.\nNeed %s\nSupplied %s" % (
                                 err, ParameterSet(new_param_dict), parameters))
+
 
     def __init__(self, parameters):
             self.check_parameters(parameters)

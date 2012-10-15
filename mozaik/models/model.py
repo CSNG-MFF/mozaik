@@ -6,6 +6,7 @@ from NeuroTools.parameters import ParameterSet
 from mozaik.framework.interfaces import MozaikComponent
 from mozaik.framework import load_component
 import mozaik
+import time
 
 try:
     from mpi4py import MPI
@@ -60,38 +61,37 @@ class Model(MozaikComponent):
         for sheet in self.sheets.values():
             if self.first_time:
                 sheet.record()
-                sheet.prepare_input(stimulus.duration, self.simulator_time)
-        sensory_input = self.input_layer.process_input(self.input_space,
-                                                       stimulus,
-                                                       stimulus.duration,
-                                                       self.simulator_time)
-                    
-        self.run(stimulus.duration)
-        
+                sheet.prepare_input(stimulus.duration,self.simulator_time)
+        sensory_input = self.input_layer.process_input(self.input_space, stimulus, stimulus.duration, self.simulator_time)
+        sim_run_time = self.run(stimulus.duration)
+
         segments = []
         #if (not MPI) or (mpi_comm.rank == MPI_ROOT):
-        for sheet in self.sheets.values():
-            if sheet.to_record != None:
-                if self.parameters.reset:
-                    s = sheet.write_neo_object()
-                    segments.append(s)
-                else:
-                    s = sheet.write_neo_object(stimulus.duration)
-                    segments.append(s)
+        for sheet in self.sheets.values():    
+                if sheet.to_record != None:
+                    if self.parameters.reset:
+                        s = sheet.write_neo_object()
+                        segments.append(s)
+                    else:
+                        s = sheet.write_neo_object(stimulus.duration)
+                        segments.append(s)
 
         self.input_space.clear()
-        self.reset()
+        sim_run_time += self.reset()
         self.first_time = False
-        return (segments, sensory_input)
-
+        return (segments, sensory_input,sim_run_time)
+        
     def run(self, tstop):
+        t0 = time.time()
         logger.info("Simulating the network for %s ms" % tstop)
         self.sim.run(tstop)
         logger.info("Finished simulating the network for %s ms" % tstop)
         self.simulator_time += tstop
+        return time.time()-t0
 
     def reset(self):
         logger.info("Resetting the network")
+        t0 = time.time()
         if self.parameters.reset:
             self.sim.reset()
             self.simulator_time = 0
@@ -101,7 +101,9 @@ class Model(MozaikComponent):
                                                 self.simulator_time)
             logger.info("Simulating the network for %s ms with blank stimulus" % self.parameters.null_stimulus_period)
             self.sim.run(self.parameters.null_stimulus_period)
-            self.simulator_time += self.parameters.null_stimulus_period
+            self.simulator_time+=self.parameters.null_stimulus_period
+        return time.time()-t0    
+    
 
     def register_sheet(self, sheet):
         if sheet.name in self.sheets:

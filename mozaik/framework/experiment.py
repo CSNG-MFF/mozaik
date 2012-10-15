@@ -26,15 +26,18 @@ class Experiment(object):
 
     def return_stimuli(self):
         return self.stimuli
-
-    def run(self, data_store, stimuli):
-        for i, s in enumerate(stimuli):
-            logger.info('Presenting stimulus: ', str(s), '\n')
-            (segments, input_stimulus) = self.model.present_stimulus_and_record(s)
-            data_store.add_recording(segments, s)
-            data_store.add_stimulus(input_stimulus, s)
-            logger.info('Stimulus %d/%d finished' % (i + 1, len(stimuli)))
-
+        
+    def run(self,data_store,stimuli):
+        srtsum = 0
+        for i,s in enumerate(stimuli):
+            logger.info('Presenting stimulus: ' + str(s) + '\n')
+            (segments,input_stimulus,simulator_run_time) = self.model.present_stimulus_and_record(s)
+            srtsum += simulator_run_time
+            data_store.add_recording(segments,s)
+            #data_store.add_stimulus(input_stimulus,s)
+            logger.info('Stimulus %d/%d finished' % (i+1,len(stimuli)))
+        return srtsum
+        
     def do_analysis(self):
         raise NotImplementedError
         pass
@@ -156,21 +159,20 @@ class MeasureNaturalImagesWithEyeMovement(Experiment):
 
 
 class MeasureSpontaneousActivity(Experiment):
-
-    def __init__(self, model, duration):
+    def __init__(self,model,duration,num_trials):
             self.model = model
-            self.stimuli.append(
-                        topo.Null(
-                            frame_duration=7,
-                            size_x=model.visual_field.size_x,
-                            size_y=model.visual_field.size_y,
-                            location_x=0.0,
-                            location_y=0.0,
-                            max_luminance=90.0,
-                            duration=duration,
-                            density=40,
-                            trial=0,
-            ))
-
+            for k in xrange(0,num_trials):
+                self.stimuli.append(
+                            topo.Null(   
+                                frame_duration=7, 
+                                size_x=model.visual_field.size_x,
+                                size_y=model.visual_field.size_y,
+                                location_x=0.0,
+                                location_y=0.0,
+                                max_luminance=90.0,
+                                duration=duration,
+                                density=40,
+                                trial=k
+                ))    
     def do_analysis(self, data_store):
         pass

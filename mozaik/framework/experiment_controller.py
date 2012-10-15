@@ -8,6 +8,7 @@ from NeuroTools.parameters import ParameterSet
 import sys
 import os
 import mozaik
+import time
 from datetime import datetime
 from NeuroTools import logging
 from NeuroTools import init_logging
@@ -60,20 +61,35 @@ def setup_experiments(simulation_name, sim):
     return parameters
 
 
-def run_experiments(model, experiment_list):
+def run_experiments(model,experiment_list,load_from=None):
     # first lets run all the measurements required by the experiments
-    print 'Starting Experiemnts'
-    data_store = PickledDataStore(load=False,
-                                  parameters=ParameterSet({'root_directory': Global.root_directory}))
+    logger.info('Starting Experiemnts')
+    if load_from == None:
+        data_store = PickledDataStore(load=False,
+                                      parameters=ParameterSet({'root_directory': Global.root_directory}))
+    else:
+        data_store = PickledDataStore(load=True,
+                                      parameters=ParameterSet({'root_directory': load_from}))
+    
     data_store.set_neuron_positions(model.neuron_positions())
     data_store.set_neuron_annotations(model.neuron_annotations())
-
-    for i, experiment in enumerate(experiment_list):
+    
+    
+    t0 = time.time()
+    simulation_run_time=0
+    for i,experiment in enumerate(experiment_list):
         logger.info('Starting experiment: ' + experiment.__class__.__name__)
         stimuli = experiment.return_stimuli()
         unpresented_stimuli = data_store.identify_unpresented_stimuli(stimuli)
         logger.info('Running model')
-        experiment.run(data_store, unpresented_stimuli)
-        logger.info('Experiment %d/%d finished' % (i + 1, len(experiment_list)))
-
+        simulation_run_time += experiment.run(data_store,unpresented_stimuli)
+        logger.info('Experiment %d/%d finished' % (i+1,len(experiment_list)))
+    
+    total_run_time = time.time() - t0
+    mozaik_run_time = total_run_time - simulation_run_time
+    
+    logger.info('Total simulation run time: %.0fs' % total_run_time)
+    logger.info('Simulator run time: %.0fs (%d%%)' % (simulation_run_time, int(simulation_run_time /total_run_time * 100)))
+    logger.info('Mozaik run time: %.0fs (%d%%)' % (mozaik_run_time, int(mozaik_run_time /total_run_time * 100)))
+    
     return data_store

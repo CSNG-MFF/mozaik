@@ -134,8 +134,12 @@ class NeoNeurotoolsWrapper(MozaikSegment):
             if not self.full:
                 self.load_full()
             return self.nt_spikes.mean_rates()
-
-
+    
+        def cv_isI(self):
+            if not self.full:
+                   self.load_full()
+            return self.nt_spikes.cv_isi()
+    
 class PickledDataStoreNeoWrapper(NeoNeurotoolsWrapper):
         def __init__(self, segment, identifier, datastore_path):
             MozaikSegment.__init__(self, segment, identifier)

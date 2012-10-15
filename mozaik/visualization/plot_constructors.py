@@ -193,8 +193,18 @@ class PerStimulusPlot(PerDSVPlot):
             return title
 
         if self.title_style == "Clever":
-            stimulus = Stimulus(self.dsvs[idx].get_stimuli()[0])
-            title = ''
-            for pn in self.varied:
-                title = title + str(pn) + ' : ' + str(stimulus.params[pn]) + '\n'
-            return title
+           stimulus = Stimulus(self.dsvs[idx].get_stimuli()[0])
+           title = ''
+           for pn in self.varied:
+               title = title + str(pn) + ' : ' + str(getattr(stimulus,pn)) + '\n' 
+           return title
+           
+
+class GridPlot(Parameterized):
+    """
+    Set of plots that are placed on a grid, that vary in two parameters and can have shared x or y axis (only at the level of labels for now).
+    """
+    x_axis_parameter = param.String(default=None,instantiate=True,doc="The parameter whose values should be iterated along x-axis")
+    y_axis_parameter = param.String(default=None,instantiate=True,doc="The parameter whose values should be iterated along y-axis")
+    
+    
