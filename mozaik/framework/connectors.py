@@ -43,6 +43,7 @@ class mozaikVisualSystemConnector(Connector):
       else:
         #self.short_term_plasticity = self.sim.SynapseDynamics(fast=self.sim.TsodyksMarkramMechanism(**self.parameters.short_term_plasticity_params))                    
         self.short_term_plasticity = self.sim.NativeSynapseDynamics("tsodyks_synapse", self.parameters.short_term_plasticity)
+        
     def connect(self):
       raise NotImplementedError
 

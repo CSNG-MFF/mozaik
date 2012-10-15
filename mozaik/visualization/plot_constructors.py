@@ -193,10 +193,10 @@ class PerStimulusPlot(PerDSVPlot):
             return title
 
         if self.title_style == "Clever":
-           stimulus = StimulusID(self.dsvs[idx].get_stimuli()[0])
+           stimulus = Stimulus(self.dsvs[idx].get_stimuli()[0])
            title = ''
            for pn in self.varied:
-               title = title + str(pn) + ' : ' + str(stimulus.params[pn]) + '\n' 
+               title = title + str(pn) + ' : ' + str(getattr(stimulus,pn)) + '\n' 
            return title
            
 
