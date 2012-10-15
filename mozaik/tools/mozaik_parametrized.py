@@ -117,9 +117,17 @@ class MozaikParametrized(Parameterized):
 
         return d
 
-"""
+
+
+
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 Helper functions that allow querying lists of MozaikParametrized objects.
-"""
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+
+
 def filter_query(object_list, extra_data_list=None,allow_non_existent_parameters=False,**kwargs):
     """
     Returns list of MozaikParametrized (and associated data if data_list!=None) of
@@ -158,3 +166,73 @@ def filter_query(object_list, extra_data_list=None,allow_non_existent_parameters
        return res[0]
     else:
        return res 
+
+
+
+
+def _colapse(dd, param):
+    d = {}
+    for s in dd:
+        s1 = Stimulus(s)
+
+        if param not in s1.params().keys():
+            raise KeyError('colaps: only stimuli containing parameter [%s] can be collapsed again parameter [%s]' % (param, param))
+
+        setattr(s1,param,None)
+        s1 = str(s1)
+        if s1 in d:
+           d[s1].extend(dd[s])
+        else:
+           d[s1] = dd[s]
+            
+    return d
+
+
+def colapse_query(data_list, object_list, func=None, parameter_list=[],
+            allow_non_identical_objects=False):
+    """
+    It collapses the data_list against parameters of objects in object_list that are in parameter_list. 
+    This means that the new list of parameters (and associated datalist) will contain one stimulus for each
+    combination of parameter values not among the paramters against which to
+    collapse. Each such stimulus will be associated with a list of data that
+    corresponded to stimuli with the same parameter values, but any values for
+    the parameters against which one is collapsing.
+    The collapsed parameters in the stimuli_list will be replaced with None.
+
+    The function returns a tuple of lists (v,stimuli_id), where stimuli_id is
+    the new list of stimuli where the stimuli in parameter_list were
+    'collapsed out' and replaced with None. v is a list of lists. The outer list
+    corresponding in order to the stimuli_id list. The inner list corresponds
+    to the list of data from data_list that mapped on the given stimuli_id.
+
+    If func != None, func is applied to each member of v.
+
+    data_list - the list of data corresponding to stimuli in stimuli_list
+    stimuli_list - the list of stimuli corresponding to data in data_list
+    parameter_list - the list of parameter names against which to collapse the data
+    func - the func to be applied to the lists formed by data associated with the
+           same stimuli parametrizations with exception of the parameters in parameter_list
+    allow_non_identical_stimuli - (default=False) unless set to True, it will
+                                  not allow running this operation on
+                                  StimulusDependentData that does not contain
+                                  only stimuli of the same type
+    """
+    assert(len(data_list) == len(stimuli_list))
+    if (not allow_non_identical_stimuli and not identical_stimulus_type(stimuli_list)):
+        raise ValueError("colapse accepts only stimuli lists of the same type")
+
+    d = {}
+    for v, s in zip(data_list, stimuli_list):
+        d[str(s)]=[v]
+
+    for param in parameter_list:
+        d = _colapse(d, param)
+
+    values = d.values()
+    st = [Stimulus(idd) for idd in d.keys()]
+    
+    
+    if func != None:
+        return ([func(v) for v in values], st)
+    else:
+        return (values, st)
