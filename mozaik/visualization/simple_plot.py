@@ -601,8 +601,8 @@ class ConductancesPlot(StandardStyle):
           mean_gsyn_i = mean_gsyn_i / len(self.gsyn_is) 
           mean_gsyn_e = mean_gsyn_e / len(self.gsyn_es) 
                       
-          p1, = self.axis.plot(time_axis,mean_gsyn_e.tolist(),color='r',linewidth=2)            
-          p2, = self.axis.plot(time_axis,mean_gsyn_i.tolist(),color='b',linewidth=2)              
+          p1, = self.axis.plot(time_axis,mean_gsyn_e.tolist(),color='r',linewidth=1)            
+          p2, = self.axis.plot(time_axis,mean_gsyn_i.tolist(),color='b',linewidth=1)              
 
           if self.legend:
             self.axis.legend([p1,p2],['exc','inh'])  

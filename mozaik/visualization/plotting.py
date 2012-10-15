@@ -542,11 +542,6 @@ class ConnectivityPlot(Plotting):
         pnv = []
        
         if self.pnvs!=None:
-           print [p.sheet_name for p in self.pnvs]
-           print self.parameters.reversed
-           print self.connections[idx].target_name
-           print self.connections[idx].source_name
-
            for p in self.pnvs:
                if not self.parameters.reversed and p.sheet_name == self.connections[idx].target_name:
                   pnv.append(p)

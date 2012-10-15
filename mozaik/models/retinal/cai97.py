@@ -46,8 +46,9 @@ def stRF_2d(x, y, t, p):
     rf = fcm*tmc - fsm*tms
     if p.subtract_mean:
         # lets normalize each time slace sepparately 
-        for i in xrange(0,numpy.shape(rf)[2]):
-            rf[:,:,i] = rf[:,:,i] - rf[:,:,i].mean()
+        #for i in xrange(0,numpy.shape(rf)[2]):
+        #    rf[:,:,i] = rf[:,:,i] - rf[:,:,i].mean()
+        rf = rf - rf.mean()
     return rf
 
 def G(t, K1, K2, c1, c2, t1, t2, n1, n2):

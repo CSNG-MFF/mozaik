@@ -18,8 +18,7 @@ logger = mozaik.getMozaikLogger("Mozaik")
 class mozaikVisualSystemConnector(Connector):
       required_parameters = ParameterSet({
                 'target_synapses' : str,
-                'short_term_plasticity' : bool,
-                'short_term_plasticity_params': ParameterSet({
+                'short_term_plasticity': ParameterSet({
                         'u': float, 
                         'tau_rec': float, 
                         'tau_fac': float,
@@ -31,11 +30,11 @@ class mozaikVisualSystemConnector(Connector):
       def __init__(self, network, name,source, target, parameters):
           Connector.__init__(self, network, name, source,target,parameters)
           
-          if not self.parameters.short_term_plasticity:
+          if not self.parameters.short_term_plasticity != None:
             self.short_term_plasticity = None
           else:
             #self.short_term_plasticity = self.sim.SynapseDynamics(fast=self.sim.TsodyksMarkramMechanism(**self.parameters.short_term_plasticity_params))                    
-            self.short_term_plasticity = self.sim.NativeSynapseDynamics("tsodyks_synapse", self.parameters.short_term_plasticity_params)
+            self.short_term_plasticity = self.sim.NativeSynapseDynamics("tsodyks_synapse", self.parameters.short_term_plasticity)
       def connect(self):
         raise NotImplementedError
         pass
@@ -74,30 +73,81 @@ class mozaikVisualSystemConnector(Connector):
           weights =  numpy.nan_to_num(self.proj.getWeights(format='array'))
           datastore.add_analysis_result(Connections(weights,name=self.name,source_name=self.source.name,target_name=self.target.name,analysis_algorithm=self.__class__.__name__))
 
-class ExponentialProbabilisticArborization(mozaikVisualSystemConnector):
+class DistanceDependentProbabilisticArborization(mozaikVisualSystemConnector):
+    """
+    A abstract connector that implements distance dependent connection.
+    Each implementation just needs to implement the arborization_function and delay function.
+    The distance input the them is in the 'native' metric of the sheets, i.e. degrees of visual field 
+    in RetinalSheet or micrometers in CorticalSheet.
+    """
     required_parameters = ParameterSet({
-        'weights': float,                # nA, the synapse strength 
+        'weights': float,   # nA, the synapse strength 
+        'map_location' : str, # location of the map. It has to be a file containing a single pickled 2d numpy array with values between 0 and 1.0. 
+    })
+    
+    def arborization_function(distance):
+        raise NotImplementedError
+        pass
+    
+    def delay_function(distance):
+        raise NotImplementedError
+        pass
+        
+    def connect(self):
+        # JAHACK, 0.1 as minimal delay should be replaced with the simulations time_step        
+        if isinstance(self.target, SheetWithMagnificationFactor):
+            self.arborization_expression = lambda d: self.arborization_function(self.target.dvf_2_dcs(d))
+            self.delay_expression = lambda d: self.delay_function(self.target.dvf_2_dcs(d))
+        else:
+            self.arborization_expression = lambda d: self.arborization_function(d)
+            self.delay_expression = lambda d: self.delay_function(d)
+        
+        method = self.sim.DistanceDependentProbabilityConnector(self.arborization_expression,allow_self_connections=False, weights=self.parameters.weights, delays=self.delay_expression, space=space.Space(axes='xy'), safe=True, verbose=False, n_connections=None)
+        self.proj = self.sim.Projection(self.source.pop, self.target.pop, method, synapse_dynamics=self.short_term_plasticity, label=self.name, rng=None, target=self.parameters.target_synapses)
+    
+
+
+class ExponentialProbabilisticArborization(DistanceDependentProbabilisticArborization):
+    """
+    Distance dependent arborization with exponential fall-off of the probability, and linear spike propagation.
+    """
+    required_parameters = ParameterSet({
         'propagation_constant': float,   # ms/μm the constant that will determinine the distance dependent delays on the connections
         'arborization_constant': float,  # μm distance constant of the exponential decay of the probability of the connection with respect (in cortical distance)
                                          # to the distance from the innervation point.
         'arborization_scaler': float,    # the scaler of the exponential decay
     })
 
+    def arborization_function(distance):
+        return self.parameters.arborization_scaler*numpy.exp(-0.5*(distance/self.parameters.arborization_constant)**2)/(self.parameters.arborization_constant*numpy.sqrt(2*numpy.pi))
+    
+    def delay_function(distance):
+        # JAHACK, 0.1 as minimal delay should be replaced with the simulations time_step        
+        return numpy.maximum(distance * self.parameters.propagation_constant,0.1)
 
-    def __init__(self, network, source, target, parameters,name):
-        mozaikVisualSystemConnector.__init__(self, network, name,source,target,parameters)
-	
-    def connect(self):
-        # JAHACK, 0.1 as minimal delay should be replaced with the simulations time_step
-        if isinstance(self.target, SheetWithMagnificationFactor):
-            self.arborization_expression = lambda d: self.parameters.arborization_scaler*numpy.exp(-0.5*(self.target.dvf_2_dcs(d)/self.parameters.arborization_constant)**2)/(self.parameters.arborization_constant*numpy.sqrt(2*numpy.pi))
-            self.delay_expression = lambda d:  numpy.maximum(self.target.dvf_2_dcs(d) * self.parameters.propagation_constant,0.1)
-        else:
-            self.arborization_expression = lambda d: self.parameters.arborization_scaler*numpy.exp(-0.5*(d/self.parameters.arborization_constant)**2)/(self.parameters.arborization_constant*numpy.sqrt(2*numpy.pi))
-            self.delay_expression = lambda d:  numpy.maximum(d * self.parameters.propagation_constant,0.1)
-        method = self.sim.DistanceDependentProbabilityConnector(self.arborization_expression,allow_self_connections=False, weights=self.parameters.weights, delays=self.delay_expression, space=space.Space(axes='xy'), safe=True, verbose=False, n_connections=None)
-        self.proj = self.sim.Projection(self.source.pop, self.target.pop, method, synapse_dynamics=self.short_term_plasticity, label=self.name, rng=None, target=self.parameters.target_synapses)
-        
+
+
+class FunctionalMapSpecificDistanceDependentArborization(object):
+      """
+      This class can be mixed in with classes derived from DistanceDependentProbabilisticArborization
+      to add dependence on functional map. Typical usage is for example to introduce orientation specificity into
+      lateral connections.
+      """
+      required_parameters = ParameterSet({
+          'map_location' : str, # location of the map. It has to be a file containing a single pickled 2d numpy array with values between 0 and 1.0. 
+      })            
+      
+      
+      
+      def map_function(distance):
+          f = open(self.parameters.or_map_location,'r')
+          or_map = pickle.load(f)*numpy.pi
+          coords_x = numpy.linspace(-t_size[0]/2.0,t_size[0]/2.0,numpy.shape(or_map)[0])    
+          coords_y = numpy.linspace(-t_size[1]/2.0,t_size[1]/2.0,numpy.shape(or_map)[1])
+          X,Y =  numpy.meshgrid(coords_x, coords_y)    
+          or_map = NearestNDInterpolator(zip(X.flatten(),Y.flatten()), or_map.flatten())
+
+                  
 class UniformProbabilisticArborization(mozaikVisualSystemConnector):
 
         required_parameters = ParameterSet({
@@ -193,6 +243,7 @@ class V1PushPullProbabilisticArborization(MozaikComponent):
             'probabilistic': bool, # should the weights be probabilistic or directly proportianal to the gabor profile		
             'or_sigma' : float, # how sharply does the probability of connection fall of with orientation difference
             'propagation_constant': float,    #ms/μm the constant that will determinine the distance dependent delays on the connections
+            'arborization_constant' : float, #μm the space constant of the expontatial falloff of connection probability with respect to distance
             'phase_sigma' : float, # how sharply does the probability of connection fall of with phase difference
             'specific_arborization' : ParameterSet,
         })
@@ -220,7 +271,12 @@ class V1PushPullProbabilisticArborization(MozaikComponent):
             
                     or_gauss = normal_function(or_dist,mean=0,sigma=self.parameters.or_sigma)
                     phase_gauss = normal_function(phase_dist,mean=0,sigma=self.parameters.phase_sigma)
-                    w = phase_gauss*or_gauss
+                    if self.parameters.arborization_constant != 0.0:
+                        dist_weight = numpy.exp(-0.5*(self.target.dvf_2_dcs(d)/self.parameters.arborization_constant)**2)/(self.parameters.arborization_constant*numpy.sqrt(2*numpy.pi))
+                    else:
+                        dist_weight=1.0
+                    
+                    w = phase_gauss*or_gauss*dist_weight
                     
                     weights.append((j,i,w,self.parameters.propagation_constant))
             
@@ -339,14 +395,6 @@ class GaborConnector(MozaikComponent):
                 else: 
                    phase = parameters.phase.next()[0] 
 
-                # HACK!!!
-                #if j == 0: 
-                #   orientation = 0
-                #   if target.name=='V1_Exc':
-                #      phase = 0
-                #   elif target.name=='V1_Inh':
-                #      phase = 0
-                
                 aspect_ratio = parameters.aspect_ratio.next()[0]
                 frequency = parameters.frequency.next()[0]
                 size = parameters.size.next()[0]

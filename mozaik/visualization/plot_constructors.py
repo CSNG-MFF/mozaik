@@ -103,16 +103,17 @@ class PerStimulusPlot(PerDSVPlot):
     PerStimulusPlot provides several automatic titling of plots based on the stimulus name and parameters. The
     currently supported styles are:
     
+    title_stile:
     
-    "None" - No title
-    
-    "Standard" - Simple style where the Stimulus name is plotted on one line and the parameter values on the second line
-    
-    "Clever" - This style is valid only for cases where only stimuli of the same type are present in the supplied DSV.
-               If the style is set to Clever but the conditions doesn't hold it falls back to Standard and emits a warning.
-               In this case the name of the stimulus and all parameters which are the same for all stimuli in DSV are
-               not displayed. The remaining parameters are shown line after line in the format 'stimulus : value'.
-               Of course trial parameter is ignored.
+        "None" - No title
+        
+        "Standard" - Simple style where the Stimulus name is plotted on one line and the parameter values on the second line
+        
+        "Clever" - This style is valid only for cases where only stimuli of the same type are present in the supplied DSV.
+                   If the style is set to Clever but the conditions doesn't hold it falls back to Standard and emits a warning.
+                   In this case the name of the stimulus and all parameters which are the same for all stimuli in DSV are
+                   not displayed. The remaining parameters are shown line after line in the format 'stimulus : value'.
+                   Of course trial parameter is ignored.
     """
     title_style = param.String(default="Clever",instantiate=True,doc="The style of the title")
     
@@ -174,4 +175,12 @@ class PerStimulusPlot(PerDSVPlot):
                title = title + str(pn) + ' : ' + str(stimulus.params[pn]) + '\n' 
            return title
            
-           
+
+class GridPlot(Parameterized):
+    """
+    Set of plots that are placed on a grid, that vary in two parameters and can have shared x or y axis (only at the level of labels for now).
+    """
+    x_axis_parameter = param.String(default=None,instantiate=True,doc="The parameter whose values should be iterated along x-axis")
+    y_axis_parameter = param.String(default=None,instantiate=True,doc="The parameter whose values should be iterated along y-axis")
+    
+    

@@ -12,7 +12,7 @@ class MozaikParametrized(Parameterized):
           Parameterized.__init__(self,**params)
           
           for (name,value) in self.get_param_values():
-              if value == None:
+              if value == None and self.params()[name].allow_None==False:
                  logger.error("The parameter %s was not initialized" % name) 
                  raise ValueError("The parameter %s was not initialized" % name) 
           
@@ -64,7 +64,7 @@ class MozaikParametrized(Parameterized):
           
 """
 For Stimuli objects we will allow only SNumber, SInteger and SString parameters.
-These are extension of corresponding parametrized parameters that automaticall allow None
+These are extension of corresponding parametrized parameters that automatically allow None
 value, are instatiated and allow for definition of units.
 """
 class SNumber(Number):
