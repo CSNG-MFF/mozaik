@@ -681,12 +681,15 @@ class ConnectionPlot(StandardStyle):
             self.parameters["colormap"] = 'hsv'
         else:
             self.parameters["colormap"] = 'gray'
+            
         self.parameters["top_right_border"] = True
         self.parameters["colorbar"] = False
         self.parameters["colorbar_label"] = None
         self.parameters["line"] = False
 
     def plot(self):
+        # the non-existing weights are nan's, let's change them to 0
+        #self.weights[numpy.nonzero(numpy.isnan(self.weights))] = 0
         if self.colors == None:
             if numpy.max(self.weights) > 0:
                 s = self.weights / numpy.max(self.weights) * 200
