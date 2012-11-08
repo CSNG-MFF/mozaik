@@ -6,6 +6,7 @@ docstring goes here
 
 from collections import Counter
 import numpy
+import math
 from numpy import exp, pi, sqrt, cos, sin
 import pylab
 import mozaik
@@ -52,7 +53,7 @@ class mozaikVisualSystemConnector(Connector):
         x = []
         y = []
         w = []
-
+        
         if afferent:
             weights = weights[:, index].ravel()
             p = self.proj.pre
@@ -61,9 +62,10 @@ class mozaikVisualSystemConnector(Connector):
             p = self.proj.post
 
         for (ww, i) in zip(weights, numpy.arange(0, len(weights), 1)):
-            x.append(p.positions[0][i])
-            y.append(p.positions[1][i])
-            w.append(ww)
+            if math.isnan(ww):
+                x.append(p.positions[0][i])
+                y.append(p.positions[1][i])
+                w.append(ww)
 
         #bx = min([min(p.positions[0]), min(p.positions[0])])
         #by = max([max(p.positions[1]), max(p.positions[1])])
@@ -288,7 +290,6 @@ class SpecificProbabilisticArborization(mozaikVisualSystemConnector):
                         self.parameters.weight_factor/len(samples) * z[(a, b, de)],
                         de)
                       for (a, b, de) in z.keys()])
-
         method = self.sim.FromListConnector(cl)
         self.proj = self.sim.Projection(
                                 self.source.pop,
