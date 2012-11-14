@@ -56,27 +56,32 @@ class ModularConnector(MozaikConnector):
       for k in self.parameters.delay_functions.keys():
           self.delay_functions[k] = load_component(self.parameters.delay_functions[k].component)(self.source,self.target,self.parameters.delay_functions[k].params)
     
-    def _obtain_weights(self):
+    def _obtain_weights(self,i):
         """
         This function calculates the combined weights from the ModularConnectorFunction in weight_functions
         """
         evaled = {}
         for k in self.weight_functions.keys():
-            evaled[k] = self.weight_functions[k].evaluate()
-        return numpy.zeros((self.source.pop.size,self.target.pop.size)) + eval(self.parameters.weight_expression,globals(),evaled)
+            evaled[k] = self.weight_functions[k].evaluate(i)
+        return numpy.zeros((self.source.pop.size,)) + eval(self.parameters.weight_expression,globals(),evaled)
         
-    def _obtain_delays(self):
+    def _obtain_delays(self,i):
         """
         This function calculates the combined weights from the ModularConnectorFunction in weight_functions
         """
         evaled = {}
         for k in self.delay_functions.keys():
-            evaled[k] = self.delay_functions[k].evaluate()
-        return numpy.zeros((self.source.pop.size,self.target.pop.size)) + eval(self.parameters.delay_expression,globals(),evaled)
+            evaled[k] = self.delay_functions[k].evaluate(i)
+        delays = numpy.zeros((self.source.pop.size,)) + eval(self.parameters.delay_expression,globals(),evaled)
+        #round to simulation step            
+        delays = numpy.rint(delays / self.sim.get_time_step()) * self.sim.get_time_step()
+        return delays
         
-    def connect(self):
-        X,Y = numpy.meshgrid(numpy.arange(0,self.source.pop.size,1),numpy.arange(0,self.target.pop.size,1))
-        connection_list = zip(X.flatten(),Y.flatten(),self._obtain_weights().flatten(),self._obtain_delays().flatten())
+    def _connect(self):
+        connection_list = []
+        z = numpy.zeros((self.target.pop.size,))
+        for i in xrange(0,self.target.pop.size):
+            connection_list.extend(zip(numpy.arange(0,self.source.pop.size,1),z+i,self._obtain_weights(i).flatten(),self._obtain_delays(i).flatten()))
         
         self.method = self.sim.FromListConnector(connection_list)
         self.proj = self.sim.Projection(
@@ -105,17 +110,14 @@ class ModularProbabilisticConnector(ModularConnector):
         'base_weight' : float
     })
 
-    def connect(self):
-        X,Y = numpy.meshgrid(numpy.arange(0,self.source.pop.size,1),numpy.arange(0,self.target.pop.size,1))
-        weights = self._obtain_weights()
-        delays = self._obtain_delays()
+    def _connect(self):
         
         cl = []
-        
-        
         for i in xrange(0,self.target.pop.size):
-            co = Counter(sample_from_bin_distribution(weights[:,i].flatten(), self.parameters.num_samples))
-            cl.extend([(k,i,self.parameters.base_weight*co[k]/self.parameters.num_samples,delays[k][i]) for k in co.keys()])
+            weights = self._obtain_weights(i)
+            delays = self._obtain_delays(i)
+            co = Counter(sample_from_bin_distribution(weights, self.parameters.num_samples))
+            cl.extend([(k,i,self.parameters.base_weight*co[k]/self.parameters.num_samples,delays[k]) for k in co.keys()])
         
         method = self.sim.FromListConnector(cl)
         self.proj = self.sim.Projection(

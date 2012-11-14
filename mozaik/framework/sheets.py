@@ -276,7 +276,7 @@ class SheetWithMagnificationFactor(Sheet):
     def __init__(self, model, parameters):
         """
         """
-        logger.info("Creating %s with %d neurons." % (self.__class__.__name__, int(parameters.sx*parameters.sy/10000*parameters.density)))
+        logger.info("Creating %s with %d neurons." % (self.__class__.__name__, int(parameters.sx*parameters.sy/1000000*parameters.density)))
         Sheet.__init__(self, model, parameters)
         self.magnification_factor = parameters.magnification_factor
 
@@ -311,7 +311,7 @@ class SheetWithMagnificationFactor(Sheet):
 class CorticalUniformSheet(SheetWithMagnificationFactor):
 
     required_parameters = ParameterSet({
-        'density': float,  # neurons/(100 μm^2)
+        'density': float,  # neurons/(mm^2)
     })
 
     def __init__(self, model, parameters):
@@ -321,7 +321,8 @@ class CorticalUniformSheet(SheetWithMagnificationFactor):
         rs = space.RandomStructure(boundary=space.Cuboid(dx, dy, 0),
                                    origin=(0.0, 0.0, 0.0),
                                    rng=mozaik.rng)
-        self.pop = self.sim.Population(int(parameters.sx*parameters.sy/10000*parameters.density),
+
+        self.pop = self.sim.Population(int(parameters.sx*parameters.sy/1000000*parameters.density),
                                        getattr(self.model.sim, self.parameters.cell.model),
                                        self.parameters.cell.params,
                                        rs,

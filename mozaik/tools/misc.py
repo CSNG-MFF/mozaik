@@ -1,10 +1,8 @@
 """
 docstring goes here
 """
-
-import numpy
+import numpy                                                                             
 from numpy import pi, sqrt, exp, power
-
 
 def sample_from_bin_distribution(bins, number_of_samples):
     """
@@ -18,8 +16,8 @@ def sample_from_bin_distribution(bins, number_of_samples):
     if len(bins) == 0:
         return []
 
-    bins = numpy.array(bins) / numpy.sum(bins)
-
+    bins = bins / numpy.sum(bins)
+    
     # create the cumulative sum
     cs = numpy.cumsum(bins)
     samples = numpy.random.rand(number_of_samples)
@@ -29,9 +27,11 @@ def sample_from_bin_distribution(bins, number_of_samples):
 
     return si
 
+                                                                                         
 
+_normal_function_sqertofpi = sqrt(2*pi)
 def normal_function(x, mean=0, sigma=1.0):
     """
     Returns the value of normal distribution N(mean,sigma) at point x
     """
-    return exp(-power((x - mean)/sigma, 2)/2) / (sigma * sqrt(2*pi))
+    return numpy.exp(-numpy.power((x - mean)/sigma, 2)/2) / (sigma * _normal_function_sqertofpi)

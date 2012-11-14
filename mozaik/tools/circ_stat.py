@@ -13,7 +13,7 @@ def circular_dist(a, b, period):
     The distance between a and b (scalars) in the periodic.
     a, b have to be in (0, period)
     """
-    return  min(abs(a - b), period - abs(a - b))
+    return  numpy.minimum(numpy.abs(a - b), period - numpy.abs(a - b))
 
 
 def rad_to_complex(vector):

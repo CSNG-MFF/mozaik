@@ -45,7 +45,7 @@ class Model(MozaikComponent):
         MozaikComponent.__init__(self, self, parameters)
         self.first_time = True
         self.sim = sim
-        self.node = self.sim.setup()  # should have some parameters here
+        self.node = sim.setup(timestep=0.1, min_delay=0.1, max_delay=100.0)  # should have some parameters here
         self.sheets = {}
         self.connectors = {}
 
