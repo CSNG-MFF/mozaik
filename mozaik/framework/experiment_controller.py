@@ -2,7 +2,6 @@
 docstring goes here
 
 """
-
 from mozaik.storage.datastore import Hdf5DataStore, PickledDataStore
 from NeuroTools.parameters import ParameterSet
 import sys
@@ -49,7 +48,7 @@ def setup_experiments(simulation_name, sim):
         raise ValueError("No parameter file supplied")
 
     parameters = ParameterSet(parameters_url)
-
+    
     # Create results directory
     timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
     Global.root_directory = parameters.results_dir + simulation_name + '_' + \
