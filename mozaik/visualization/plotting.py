@@ -541,7 +541,7 @@ class ConnectivityPlot(Plotting):
     sheet sheet_name.
 
     This plot can accept second DSV that contains the PerNeuronValues
-    corresponding to the target sheets to be displayed that will be plotted as
+    corresponding to the target sheets (or source sheet if reversed is True) to be displayed that will be plotted as
     well.
 
     Note one PerNeuronValue can be present per target sheet!
@@ -573,10 +573,11 @@ class ConnectivityPlot(Plotting):
             for dsv in z:
                 a = dsv.get_analysis_result(identifier='PerNeuronValue')
                 if len(a) > 1:
-                    logger.error('ERROR: Only one PerNeuronValue value per sheet is allowed in ConnectivityPlot. Ignoring')
+                    logger.error('ERROR: Only one PerNeuronValue value per sheet is allowed in ConnectivityPlot. Ignoring PNVs')
                     self.pnvs = None
                     break
-                self.pnvs.append(a[0])
+                elif len(a) != 0:
+                    self.pnvs.append(a[0])
 
         for conn in _connections:
             if not self.parameters.reversed and conn.source_name == self.parameters.sheet_name:
@@ -612,34 +613,41 @@ class ConnectivityPlot(Plotting):
         ty = self.connected_neuron_position[idx][1]
         if not self.parameters.reversed:
             w = self.connections[idx].weights[self.parameters.neuron, :]
+            d = self.connections[idx].delays[self.parameters.neuron, :]
         else:
             w = self.connections[idx].weights[:, self.parameters.neuron]
+            d = self.connections[idx].delays[:, self.parameters.neuron]
 
+        assert numpy.shape(w) == numpy.shape(d)
+        
         # pick the right PerNeuronValue to show
         pnv = []
         if self.pnvs != None:
             for p in self.pnvs:
                 if not self.parameters.reversed and p.sheet_name == self.connections[idx].target_name:
                     pnv.append(p)
-                if (self.parameters.reversed
-                    and p.sheet_name == self.connections[idx].source_name):
+                if self.parameters.reversed and p.sheet_name == self.connections[idx].source_name:
                     pnv.append(p)
-
+            
             if len(pnv) > 1:
                 raise ValueError('ERROR: too many matching PerNeuronValue ADSs')
-            else:
+            elif len(pnv) != 0:
                 pnv = pnv[0]
 
-            if len(pnv.values) != len(w):
-                raise ValueError('ERROR: length of colors does not match length of weights \[%d \!\= %d\]. Ignoring colors!' % (len(pnv.values), len(w)))
+                if len(pnv.values) != len(w):
+                    raise ValueError('ERROR: length of colors does not match length of weights \[%d \!\= %d\]. Ignoring colors!' % (len(pnv.values), len(w)))
 
+        gss = gridspec.GridSpecFromSubplotSpec(2, 1, subplot_spec=gs)
+        
+        # Plot the weights
+        gs = gss[0,0]
+        params = params.copy()
         if pnv != []:
-
             from mozaik.tools.circ_stat import circ_mean
             (angle, mag) = circ_mean(numpy.array(pnv.values),
                                      weights=w,
                                      high=pnv.period)
-            params.setdefault("title", str(self.connections[idx].name) + "| Weighted mean: " + str(angle))
+            params.setdefault("title", 'Weights: '+ str(self.connections[idx].proj_name) + "| Weighted mean: " + str(angle))
             params.setdefault("colorbar_label", pnv.value_name)
             params.setdefault("colorbar", True)
 
@@ -651,9 +659,22 @@ class ConnectivityPlot(Plotting):
                                colors=pnv.values, period=pnv.period, line=True,
                                **params)(gs)
         else:
-            params.setdefault("title", self.connections[idx].name)
+            params.setdefault("title", 'Weights: '+ self.connections[idx].proj_name)
             if self.connections[idx].source_name == self.connections[idx].target_name:
                 ConnectionPlot(sx, sy, tx, ty, w, line=False, **params)(gs)
             else:
                 ConnectionPlot(sx, sy, numpy.min(sx)*1.2, numpy.min(sy)*1.2,
                                w, line=True, **params)(gs)
+
+        # Plot the delays
+        gs = gss[1,0]
+        params = params.copy()
+        params.setdefault("title", 'Delays: '+ self.connections[idx].proj_name)
+        if self.connections[idx].source_name == self.connections[idx].target_name:
+            ConnectionPlot(sx, sy, tx, ty, (numpy.zeros(w.shape)+0.3)*(w!=0), colors=d, line=False, **params)(gs)
+        else:
+            ConnectionPlot(sx, sy, numpy.min(sx)*1.2, numpy.min(sy)*1.2,
+                           (numpy.zeros(w.shape)+0.3)*(w!=0), colors=d, line=True, **params)(gs)
+        
+        
+

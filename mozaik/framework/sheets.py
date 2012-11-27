@@ -160,7 +160,7 @@ class Sheet(MozaikComponent):
             start = s.spiketrains[0].t_stop - stimulus_duration * s.spiketrains[0].t_stop.units
             for i in xrange(0, len(s.spiketrains)):
                 sp = s.spiketrains[i].time_slice(start, end).copy() - start
-                s.spiketrains[i] = SpikeTrain(
+                s.spiketrains[i] =  SpikeTrain(
                                      sp.magnitude * start.units,
                                      t_start=0 * start.units,
                                      t_stop=stimulus_duration * start.units,

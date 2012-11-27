@@ -24,7 +24,7 @@ class Figure2Gratings(Plotting):
         dsv = queries.select_stimuli_type_query(self.datastore,
                                                 'FullfieldDriftingSinusoidalGrating',
                                                 {'orientation': 0.0,
-                                                 'max_luminance': 90.0})
+                                                 'contrast': 100.0})
 
         lgn_on_dsv = queries.select_result_sheet_query(dsv, 'X_ON')
         lgn_off_dsv = queries.select_result_sheet_query(dsv, 'X_OFF')

@@ -143,14 +143,16 @@ class CellWithReceptiveField(object):
         # R0 = K_0.I_0 + Sum[j=1,L-1] K_j.B
         # R1 = K_0.I_1 + K_1.I_0 + Sum[j=2,L-1] K_j.B
         # the image-dependent components will be added in view(), so we need to
+        
         # initialize with the Sum[] k_j.B components
         self.response = numpy.zeros((self.response_length,))
         L = self.receptive_field.kernel_duration
         assert L <= self.response_length
+        
         for i in range(L):
             self.response[i] += background_luminance * self.receptive_field.kernel[:, :, i+1:L].sum()
         self.i = 0
-
+        
     def view(self, visual_space):
         """
         Look at the visual space and update t
@@ -354,19 +356,13 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
                 assert isinstance(input_current, dict)
                 t = input_current['times'] + offset
                 a = self.parameters.linear_scaler * input_current['amplitudes']
-                #logger.debug('A')
                 scs.set_parameters(times=t, amplitudes=a)
-                #logger.debug('B')
                 if self.parameters.mpi_reproducible_noise:
-                    #logger.debug('C')
                     t = numpy.arange(0, duration, ts) + offset
-                    #logger.debug('E')
                     amplitudes = (self.parameters.noise.mean
                                    + self.parameters.noise.stdev
                                        * self.ncs_rng[rf_type][i].randn(len(t)))
                     ncs.set_parameters(times=t, amplitudes=amplitudes)
-                    #logger.debug('F')
-        #logger.debug('G')
 
         # for debugging/testing, doesn't work with MPI !!!!!!!!!!!!
         #input_current_array = numpy.zeros((self.shape[1], self.shape[0], len(visual_space.time_points(duration))))

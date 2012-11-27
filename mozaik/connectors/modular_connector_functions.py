@@ -4,6 +4,7 @@ from mozaik.framework.interfaces import MozaikParametrizeObject
 from NeuroTools.parameters import ParameterSet, ParameterDist
 from mozaik.tools.circ_stat import *
 from mozaik.tools.misc import *
+from scipy.interpolate import NearestNDInterpolator
 
 class ModularConnectorFunction(MozaikParametrizeObject):
     """
@@ -83,6 +84,8 @@ class LinearModularConnectorFunction(DistanceDependentModularConnectorFunction):
     def distance_dependent_function(self,distance):
         return self.parameters.linear_scaler*distance + self.parameters.constant_scaler
 
+
+
 class MapDependentModularConnectorFunction(ModularConnectorFunction):
     """
     Corresponds to: distance*linear_scaler + constant_scaler
@@ -93,10 +96,11 @@ class MapDependentModularConnectorFunction(ModularConnectorFunction):
         'periodic' : bool, # if true, the values in or_map will be treated as periodic (and consequently the distance between two values will be computed as circular distance).
     })
     
-    def evaluate(self):
-        weights = numpy.zeros((self.source.pop.size,self.target.pop.size))    
+    def __init__(self, source,target, parameters):
+        import pickle
+        ModularConnectorFunction.__init__(self, source,target, parameters)
         t_size = target.size_in_degrees()
-        f = open(self.parameters.or_map_location, 'r')
+        f = open(self.parameters.map_location, 'r')
         mmap = pickle.load(f)
         coords_x = numpy.linspace(-t_size[0]/2.0,
                                   t_size[0]/2.0,
@@ -105,20 +109,18 @@ class MapDependentModularConnectorFunction(ModularConnectorFunction):
                                   t_size[1]/2.0,
                                   numpy.shape(mmap)[1])
         X, Y = numpy.meshgrid(coords_x, coords_y)
-        mmap = NearestNDInterpolator(zip(X.flatten(), Y.flatten()),
+        self.mmap = NearestNDInterpolator(zip(X.flatten(), Y.flatten()),
                                        mmap.flatten())    
-
-        for i in xrange(0,self.target.pop.size):
-            for j in xrange(0,self.source.pop.size):
-                sourcev = mmap(self.source.pop.positions[0][j],self.source.pop.positions[1][j])
-                targetv = mmap(self.target.pop.positions[0][i],self.target.pop.positions[1][i])
-                if self.parameters.period:
-                    distance = circular_dist(sourcev,targetv,1.0)
-                else:
-                    distance = abs(sourcev-targetv)
-                weights[j,i] = numpy.exp(-0.5*(distance/self.parameters.sigma)**2)/(self.parameters.sigma*numpy.sqrt(2*numpy.pi))
-                
-        return weights
+        
+    def evaluate(self,index):
+            val_source=self.mmap(numpy.transpose(numpy.array([self.source.pop.positions[0],self.source.pop.positions[1]])))
+            val_target=self.mmap(self.target.pop.positions[0][index],self.target.pop.positions[1][index])
+            self.target.add_neuron_annotation(index, 'LGNAfferentOrientation', val_target*numpy.pi, protected=True) 
+            if self.parameters.periodic:
+                distance = circular_dist(val_source,val_target,1.0)
+            else:
+                distance = numpy.abs(sourcev-targetv)
+            return numpy.exp(-0.5*(distance/self.parameters.sigma)**2)/(self.parameters.sigma*numpy.sqrt(2*numpy.pi))
     
 
 class V1PushPullArborization(ModularConnectorFunction):
@@ -144,12 +146,19 @@ class V1PushPullArborization(ModularConnectorFunction):
     def evaluate(self,index):
         target_or = self.target.get_neuron_annotation(index, 'LGNAfferentOrientation')
         target_phase = self.target.get_neuron_annotation(index, 'LGNAfferentPhase')
+        assert numpy.all(self.source_or >= 0) and numpy.all(self.source_or <= pi)
+        assert numpy.all(target_or >= 0) and numpy.all(target_or <= pi)
+        assert numpy.all(self.source_phase >= 0) and numpy.all(self.source_phase <= 2*pi)
+        assert numpy.all(target_phase >= 0) and numpy.all(target_phase <= 2*pi)
         
-        or_dist = circular_dist(self.source_or,target_or,pi) / (pi/2)
+        or_dist = circular_dist(self.source_or,target_or,pi) 
         if self.parameters.target_synapses == 'excitatory':
-            phase_dist = circular_dist(self.source_phase,target_phase,2*pi) / pi
+            phase_dist = circular_dist(self.source_phase,target_phase,2*pi) 
         else:
-            phase_dist = (pi - circular_dist(self.source_phase,target_phase,2*pi)) / pi
+            phase_dist = (pi - circular_dist(self.source_phase,target_phase,2*pi)) 
+            
+        assert numpy.all(or_dist >= 0) and numpy.all(or_dist <= pi/2)
+        assert numpy.all(phase_dist >= 0) and numpy.all(phase_dist <= pi)
         
         or_gauss = normal_function(or_dist, mean=0, sigma=self.parameters.or_sigma)
         phase_gauss = normal_function(phase_dist, mean=0, sigma=self.parameters.phase_sigma)

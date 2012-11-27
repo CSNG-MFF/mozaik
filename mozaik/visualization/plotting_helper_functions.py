@@ -32,19 +32,10 @@ def disable_left_axis(ax):
 
 
 def three_tick_axis(axis):
-    nticks = len([t for t in axis.get_major_ticks()])
-    if (nticks % 2) != 0 and nticks > 2:
-        middle_tick = int(nticks) / 2
-    else:
-        middle_tick = 0
-
-    for i, tick in enumerate(axis.get_major_ticks()):
-        if i != 0 and i != (nticks - 1) and i != middle_tick:
-            tick.tick2On = False
-            tick.tick1On = False
-            tick.label2On = False
-            tick.label1On = False
-
+    import matplotlib.ticker as mticker
+    axis.set_major_locator(mticker.LinearLocator(3))
+    axis.set_major_formatter(mticker.FormatStrFormatter('%.04f'))
+    
 
 def disable_xticks(ax):
     for t in ax.xaxis.get_ticklines():
