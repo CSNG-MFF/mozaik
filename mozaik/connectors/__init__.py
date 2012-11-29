@@ -87,9 +87,10 @@ class MozaikConnector(Connector):
     def store_connections(self, datastore):
         from mozaik.analysis.analysis_data_structures import Connections
         weights = numpy.nan_to_num(self.proj.getWeights(format='array'))
+        delays = numpy.nan_to_num(self.proj.getDelays(format='array'))
         datastore.add_analysis_result(
-            Connections(weights,
-                        name=self.name,
+            Connections(weights,delays,
+                        proj_name=self.name,
                         source_name=self.source.name,
                         target_name=self.target.name,
                         analysis_algorithm=self.__class__.__name__))

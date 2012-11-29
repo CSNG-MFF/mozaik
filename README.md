@@ -58,15 +58,13 @@ Your shell should look now something like:
       cd python-neo
       python setup.py install
  * Topographica:
-   * svn co https://topographica.svn.sourceforge.net/svnroot/topographica topographica
+   * git clone https://github.com/ioam/topographica topographica
    * Just download it and add the topographica folder to your PYTHONPATH, e.g.
-     export PYTHONPATH=$PYTHONPATH:/home/Username/Downloads/topographica
+     export PYTHONPATH=$PYTHONPATH:path_to_where_you_cloned_topographica
  * NeuroTools
    * svn co https://neuralensemble.org/svn/NeuroTools/trunk NeuroTools
    * In virt_env_mozaik: python setup.py install
- * param
-
-
+ 
 For Mozaik itself, you need to clone with the help of git:
 git clone https://github.com/antolikjan/mozaik.git
 

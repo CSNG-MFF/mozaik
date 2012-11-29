@@ -406,9 +406,7 @@ class PixelMovie(StandardStyleAnimatedPlot):
         return self.im
 
     def plot(self):
-        self.im = self.axis.imshow(self.movie[0],
-                                   interpolation='nearest',
-                                   cmap='gray')
+        self.im = self.axis.imshow(self.movie[0],interpolation='nearest',vmin=0,vmax=100,cmap='gray')
 
 
 class ScatterPlotMovie(StandardStyleAnimatedPlot):
@@ -610,8 +608,8 @@ class ConductancesPlot(StandardStyle):
         time_axis = numpy.arange(0, len(self.gsyn_es[0]), 1) / float(len(self.gsyn_es[0])) * abs(t_start-t_stop) + t_start
 
         for e, i in zip(self.gsyn_es, self.gsyn_is):
-            e = e * 1000
-            i = i * 1000
+            e = e 
+            i = i 
             self.axis.plot(time_axis, e.tolist(), color='#F5A9A9')
             self.axis.plot(time_axis, i.tolist(), color='#A9BCF5')
             mean_gsyn_e = mean_gsyn_e + numpy.array(e.tolist())
@@ -629,7 +627,7 @@ class ConductancesPlot(StandardStyle):
         self.x_lim = (t_start, t_stop)
         self.x_ticks = [t_start, (t_stop - t_start)/2, t_stop]
         self.x_label = 'time(' + self.gsyn_es[0].t_start.dimensionality.latex + ')'
-        self.y_label = 'g(1000' + self.gsyn_es[0].dimensionality.latex + ')'
+        self.y_label = 'g(' + self.gsyn_es[0].dimensionality.latex + ')'
 
 
 class ConnectionPlot(StandardStyle):
@@ -652,8 +650,8 @@ class ConnectionPlot(StandardStyle):
         weights -
                 array of weights from source neuron to target neurons
 
-        line - True means the existing connections will be displayed as lines, with their thickness indicating the strength.
-               False means the strength of connection will be indicated by the size of the circle representing the corresponding target neuron.
+        line - (TODO) True means the existing connections will be displayed as lines, with their thickness indicating the strength.
+               False means the strength of connection will be indicated by the size of the circle representing the corresponding target neuron. 
 
 
         colors - the extra information per neuron that will be displayed as colors. None if no info
@@ -688,8 +686,19 @@ class ConnectionPlot(StandardStyle):
         self.parameters["line"] = False
 
     def plot(self):
-        # the non-existing weights are nan's, let's change them to 0
-        #self.weights[numpy.nonzero(numpy.isnan(self.weights))] = 0
+        self.x_lim = [numpy.min(self.pos_x),numpy.max(self.pos_x)]
+        self.y_lim = [numpy.min(self.pos_y),numpy.max(self.pos_y)]
+        if len(numpy.nonzero(self.weights)[0]) == 0:
+            return 
+        
+        
+        self.pos_x = self.pos_x[numpy.nonzero(self.weights)[0]]
+        self.pos_y = self.pos_y[numpy.nonzero(self.weights)[0]]
+        
+        if self.colors != None:
+            self.colors = numpy.array(self.colors)[numpy.nonzero(self.weights)[0]] 
+        self.weights = self.weights[numpy.nonzero(self.weights)[0]]
+
         if self.colors == None:
             if numpy.max(self.weights) > 0:
                 s = self.weights / numpy.max(self.weights) * 200
@@ -703,8 +712,9 @@ class ConnectionPlot(StandardStyle):
             else:
                 vmax = self.period
                 vmin = 0
+            
             ax = self.axis.scatter(self.pos_x, self.pos_y, c=self.colors,
-                                   s=self.weights/numpy.max(self.weights)*30,
+                                   s=self.weights/numpy.max(self.weights)*200,
                                    lw=0, cmap=self.colormap,
                                    vmin=vmin, vmax=vmax)
             if self.colorbar:
@@ -714,4 +724,3 @@ class ConnectionPlot(StandardStyle):
 
         self.x_label = 'x'
         self.y_label = 'y'
-

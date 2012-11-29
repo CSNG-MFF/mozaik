@@ -19,7 +19,7 @@ class Figure2Gratings(Plotting):
     def subplot(self, subplotspec, params):
         gs = gridspec.GridSpecFromSubplotSpec(12, 18, subplot_spec=subplotspec,
                                               hspace=1.0, wspace=1.0)
-        dsv = queries.param_filter_query(self.datastore,st_name = 'FullfieldDriftingSinusoidalGrating',st_orientation = 0.0,st_max_luminance = 90.0)
+        dsv = queries.param_filter_query(self.datastore,st_name = 'FullfieldDriftingSinusoidalGrating',st_orientation = 0.0,st_contrast = 100.0)
         
         lgn_on_dsv = queries.param_filter_query(dsv, sheet_name='X_ON')
         lgn_off_dsv = queries.param_filter_query(dsv, sheet_name='X_OFF')

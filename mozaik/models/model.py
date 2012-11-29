@@ -55,15 +55,20 @@ class Model(MozaikComponent):
         self.simulator_time = 0
 
     def present_stimulus_and_record(self, stimulus):
-        self.input_space.add_object(str(stimulus), stimulus)
 
         # create empty arrays in annotations to store the sheet identity of stored data
         for sheet in self.sheets.values():
+            sheet.prepare_input(stimulus.duration,self.simulator_time)
             if self.first_time:
                 sheet.record()
-                sheet.prepare_input(stimulus.duration,self.simulator_time)
+
+        self.input_space.clear()
+        sim_run_time = self.reset()
+        self.input_space.add_object(str(stimulus), stimulus)
+
+                
         sensory_input = self.input_layer.process_input(self.input_space, stimulus, stimulus.duration, self.simulator_time)
-        sim_run_time = self.run(stimulus.duration)
+        sim_run_time += self.run(stimulus.duration)
 
         segments = []
         #if (not MPI) or (mpi_comm.rank == MPI_ROOT):
@@ -76,8 +81,6 @@ class Model(MozaikComponent):
                         s = sheet.write_neo_object(stimulus.duration)
                         segments.append(s)
 
-        self.input_space.clear()
-        sim_run_time += self.reset()
         self.first_time = False
         return (segments, sensory_input,sim_run_time)
         

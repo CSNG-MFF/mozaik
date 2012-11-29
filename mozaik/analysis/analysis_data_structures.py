@@ -208,11 +208,11 @@ class ConductanceSignalList(AnalysisDataStructure1D):
         self.indexes = indexes
 
 
-class Connections(AnalysisDataStructure1D):
+class Connections(AnalysisDataStructure):
     """
     Data structure holding connections.
 
-    name -
+    proj_name -
             projection name
 
     source_name -
@@ -224,12 +224,18 @@ class Connections(AnalysisDataStructure1D):
     weights -
             matrix of weights from neurons in source sheet (first dimension) to
             neurons in target sheet (second dimension)
+    
+    delays -
+            matrix of delays from neurons in source sheet (first dimension) to
+            neurons in target sheet (second dimension)
+    
     """
 
-    name = SString(doc="Projection name.")
+    proj_name = SString(doc="Projection name.")
     source_name = SString(doc="The name of the source sheet.")
     target_name = SString(doc="The name of the target sheet.")
 
-    def __init__(self, weights, **params):
+    def __init__(self, weights, delays, **params):
         AnalysisDataStructure.__init__(self, identifier='Connections', **params)
         self.weights = weights
+        self.delays =  delays

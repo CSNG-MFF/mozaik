@@ -2,8 +2,6 @@
 docstring goes here
 
 """
-
-
 import mozaik
 import mozaik.stimuli.topographica_based as topo
 import numpy
@@ -13,8 +11,8 @@ logger = mozaik.getMozaikLogger("Mozaik")
 
 class Experiment(object):
     """
-    The experiment defines the list of stimuli that it needs to present to the
-    brain.
+    The abastract class for an experiment. The experiment defines the list of 
+    stimuli that it needs to present to the brain.
 
     These stimulus presentations have to be independent - e.g. should not
     temporarily depend on others. It should also specify the analysis of the
@@ -28,27 +26,41 @@ class Experiment(object):
         return self.stimuli
         
     def run(self,data_store,stimuli):
-        srtsum = 0
-        for i,s in enumerate(stimuli):
-            logger.info('Presenting stimulus: ' + str(s) + '\n')
-            (segments,input_stimulus,simulator_run_time) = self.model.present_stimulus_and_record(s)
-            srtsum += simulator_run_time
-            data_store.add_recording(segments,s)
-            #data_store.add_stimulus(input_stimulus,s)
-            logger.info('Stimulus %d/%d finished' % (i+1,len(stimuli)))
-        return srtsum
+        raise NotImplementedError
+        pass
         
     def do_analysis(self):
         raise NotImplementedError
         pass
 
 
-class MeasureOrientationTuningFullfield(Experiment):
+class VisualExperiment(Experiment):
+    """
+    Visual experiment. On top of Experiment class it 
+    """
+    
+    def __init__(self, model):
+        self.background_luminance = model.input_space.background_luminance 
+        self.model = model
+
+    def run(self,data_store,stimuli):
+        srtsum = 0
+        for i,s in enumerate(stimuli):
+            logger.info('Presenting stimulus: ' + str(s) + '\n')
+            (segments,input_stimulus,simulator_run_time) = self.model.present_stimulus_and_record(s)
+            srtsum += simulator_run_time
+            data_store.add_recording(segments,s)
+            data_store.add_stimulus(input_stimulus,s)
+            logger.info('Stimulus %d/%d finished' % (i+1,len(stimuli)))
+        return srtsum
+    
+
+class MeasureOrientationTuningFullfield(VisualExperiment):
 
     def __init__(self, model, num_orientations, spatial_frequency,
                  temporal_frequency, grating_duration, contrasts, num_trials):
-        self.model = model
-        for j in contrasts:
+        VisualExperiment.__init__(self, model)
+        for c in contrasts:
             for i in xrange(0, num_orientations):
                 for k in xrange(0, num_trials):
                     self.stimuli.append(topo.FullfieldDriftingSinusoidalGrating(
@@ -57,7 +69,8 @@ class MeasureOrientationTuningFullfield(Experiment):
                                     size_y=model.visual_field.size_y,
                                     location_x=0.0,
                                     location_y=0.0,
-                                    max_luminance=j*90.0,
+                                    background_luminance=self.background_luminance,
+                                    contrast = c,
                                     duration=grating_duration,
                                     density=40,
                                     trial=k,
@@ -70,13 +83,13 @@ class MeasureOrientationTuningFullfield(Experiment):
         pass
 
 
-class MeasureSizeTuning(Experiment):
+class MeasureSizeTuning(VisualExperiment):
 
     def __init__(self, model, num_sizes, max_size, orientation,
                  spatial_frequency, temporal_frequency, grating_duration,
                  contrasts, num_trials):
-        self.model = model
-        for j in contrasts:
+        VisualExperiment.__init__(self, model)                                          
+        for c in contrasts:
             for i in xrange(0, num_sizes):
                 for k in xrange(0, num_trials):
                     self.stimuli.append(topo.DriftingSinusoidalGratingDisk(
@@ -85,7 +98,8 @@ class MeasureSizeTuning(Experiment):
                                     size_y=model.visual_field.size_y,
                                     location_x=0.0,
                                     location_y=0.0,
-                                    max_luminance=j*90.0,
+                                    background_luminance=self.background_luminance,
+                                    contrast = c,
                                     duration=grating_duration,
                                     density=40,
                                     trial=k,
@@ -99,13 +113,13 @@ class MeasureSizeTuning(Experiment):
         pass
 
 
-class MeasureOrientationContrastTuning(Experiment):
+class MeasureOrientationContrastTuning(VisualExperiment):
 
     def __init__(self, model, num_orientations, orientation, center_radius,
                  surround_radius, spatial_frequency, temporal_frequency,
                  grating_duration, contrasts, num_trials):
-        self.model = model
-        for j in contrasts:
+        VisualExperiment.__init__(self, model)
+        for c in contrasts:
             for i in xrange(0, num_sizes):
                 for k in xrange(0, num_trials):
                     self.stimuli.append(
@@ -115,7 +129,8 @@ class MeasureOrientationContrastTuning(Experiment):
                                     size_y=model.visual_field.size_y,
                                     location_x=0.0,
                                     location_y=0.0,
-                                    max_luminance=j*90.0,
+                                    background_luminance=self.background_luminance,
+                                    contrast = c,
                                     duration=grating_duration,
                                     density=40,
                                     trial=k,
@@ -132,10 +147,10 @@ class MeasureOrientationContrastTuning(Experiment):
         pass
 
 
-class MeasureNaturalImagesWithEyeMovement(Experiment):
+class MeasureNaturalImagesWithEyeMovement(VisualExperiment):
 
     def __init__(self, model, stimulus_duration, num_trials):
-        self.model = model
+        VisualExperiment.__init__(self, model)
         for k in xrange(0, num_trials):
             self.stimuli.append(
                 topo.NaturalImageWithEyeMovement(
@@ -144,7 +159,7 @@ class MeasureNaturalImagesWithEyeMovement(Experiment):
                             size_y=model.visual_field.size_y,
                             location_x=0.0,
                             location_y=0.0,
-                            max_luminance=90.0,
+                            background_luminance=self.background_luminance,
                             duration=stimulus_duration,
                             density=40,
                             trial=k,
@@ -158,9 +173,9 @@ class MeasureNaturalImagesWithEyeMovement(Experiment):
         pass
 
 
-class MeasureSpontaneousActivity(Experiment):
+class MeasureSpontaneousActivity(VisualExperiment):
     def __init__(self,model,duration,num_trials):
-            self.model = model
+            VisualExperiment.__init__(self, model)
             for k in xrange(0,num_trials):
                 self.stimuli.append(
                             topo.Null(   
@@ -169,7 +184,7 @@ class MeasureSpontaneousActivity(Experiment):
                                 size_y=model.visual_field.size_y,
                                 location_x=0.0,
                                 location_y=0.0,
-                                max_luminance=90.0,
+                                background_luminance=self.background_luminance,
                                 duration=duration,
                                 density=40,
                                 trial=k

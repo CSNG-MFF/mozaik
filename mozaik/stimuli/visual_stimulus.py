@@ -17,7 +17,7 @@ logger = mozaik.getMozaikLogger("Mozaik")
 
 class VisualStimulus(BaseStimulus):
     """Abstract base class for visual stimuli."""
-    max_luminance = SNumber(lux, doc="Maximum luminance")
+    background_luminance = SNumber(lux, doc="Background luminance. Maximum luminance of object allowed is 2*background_luminance")
     density = SNumber(1/(degrees), doc="The density of stimulus - units per degree")
     location_x = SNumber(degrees, doc="x location of the center of  visual region.")
     location_y = SNumber(degrees, doc="y location of the center of  visual region.")
@@ -121,7 +121,7 @@ class VisualStimulus(BaseStimulus):
             self.visible = False
         else:
             assert self.img.min() >= 0 or self.img.min() == TRANSPARENT, "frame minimum is less than zero: %g" % self.img.min()
-            assert self.img.max() <= self.max_luminance, "frame maximum (%g) is greater than the maximum luminance (%g)" % (self.img.max(), self.max_luminance)
+            assert self.img.max() <= 2*self.background_luminance, "frame maximum (%g) is greater than the maximum luminance (%g)" % (self.img.max(), 2*self.background_luminance)
         self._zoom_cache = {}
 
     def reset(self):
