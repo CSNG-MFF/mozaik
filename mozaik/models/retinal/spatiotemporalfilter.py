@@ -12,6 +12,7 @@ from mozaik.framework.space import VisualSpace
 from mozaik.framework.space import VisualRegion
 from mozaik.framework.interfaces import MozaikRetina
 from mozaik.framework.sheets import RetinalUniformSheet
+from mozaik.tools.mozaik_parametrized import MozaikParametrized
 
 #from NeuroTools import visual_logging
 from NeuroTools.plotting import progress_bar
@@ -330,10 +331,10 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
         logger.info("Presenting visual stimulus from visual space %s" % visual_space)
         visual_space.set_duration(duration)
         self.input = visual_space
-        stimulus = stimulus.copy()
-        stimulus.trial = None  # to avoid recalculating RFs response to multiple trials of the same stimulus
+        st = MozaikParametrized.idd(stimulus)
+        st.trial = None  # to avoid recalculating RFs response to multiple trials of the same stimulus
 
-        cached = self.get_cache(stimulus)
+        cached = self.get_cache(st)
 
         if cached == None:
             logger.debug("Generating output spikes...")
@@ -382,7 +383,7 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
 
         # if record() has already been called, setup the recording now
         self._built = True
-        self.write_cache(stimulus, input_currents, retinal_input)
+        self.write_cache(st, input_currents, retinal_input)
         return retinal_input
 
     def provide_null_input(self, visual_space, duration=None, offset=0):

@@ -22,8 +22,8 @@ class AnalysisDataStructure(MozaikParametrized):
     opposed to inputs. Each ADS should define a number of Parameters (see the
     documentation on Parameters).
     The importance of parameters is that they will offer a way to identify the
-    ADS in the data store (see analysis_data_structure_parameter_filter_query
-    in queries). Furthermore the constructor of the AnalysisDataStructure can
+    ADS in the data store (see param_filter_query in queries). 
+    Furthermore the constructor of the AnalysisDataStructure can
     accept inputs, which are standard variables that should correspond to the
     data that is actually stored in the ADS.
 

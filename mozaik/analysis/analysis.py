@@ -7,13 +7,13 @@ import numpy
 import time
 import quantities as qt
 import mozaik.tools.units as munits
-from mozaik.stimuli.stimulus import colapse, colapse_to_dictionary, Stimulus
+from mozaik.tools.mozaik_parametrized import colapse, colapse_to_dictionary, MozaikParametrized
 from mozaik.analysis.analysis_data_structures import PerNeuronValue, \
                                         ConductanceSignalList, AnalogSignalList
 from mozaik.analysis.analysis_helper_functions import psth
 from mozaik.framework.interfaces import MozaikParametrizeObject
 from NeuroTools.parameters import ParameterSet
-from mozaik.storage import queries, ads_queries
+from mozaik.storage import queries
 from neo.core.analogsignal import AnalogSignal
 from mozaik.tools.circ_stat import circ_mean, circular_dist
 from mozaik.tools.neo_object_operations import neo_mean
@@ -78,13 +78,11 @@ class TrialAveragedFiringRate(Analysis):
     })
 
     def perform_analysis(self):
-        dsv = queries.select_stimuli_type_query(self.datastore,
-                                                self.parameters.stimulus_type)
-
-        for sheet in dsv.sheets():
-            dsv1 = queries.select_result_sheet_query(dsv, sheet)
+        
+        for sheet in self.datastore.sheets():
+            dsv1 = queries.param_filter_query(self.datastore, sheet_name=sheet,st_name=self.parameters.stimulus_type)
             segs = dsv1.get_segments()
-            st = [Stimulus(s) for s in dsv1.get_stimuli()]
+            st = [MozaikParametrized.idd(s) for s in dsv1.get_stimuli()]
             # transform spike trains due to stimuly to mean_rates
             mean_rates = [numpy.array(s.mean_rates()) for s in segs]
             # collapse against all parameters other then trial
@@ -126,23 +124,19 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
     })
 
     def perform_analysis(self):
-        self.datastore.print_content()
-        dsv = ads_queries.analysis_data_structure_parameter_filter_query(
-                                                self.datastore,
-                                                identifier='PerNeuronValue')
         for sheet in self.datastore.sheets():
             # Get PerNeuronValue ASD and make sure they are all associated
             # with the same stimulus and do not differ in any
             # ASD parameters except the stimulus
-            dsv = queries.select_result_sheet_query(dsv, sheet)
-            if ads_queries.ads_is_empty(dsv):
+            dsv = queries.param_filter_query(dsv1, sheet_name=sheet,identifier='PerNeuronValue')
+            if len(dsv.analysis_results) == 0:
                 break
-            assert ads_queries.equal_ads_except(dsv, ['stimulus_id'])
-            assert ads_queries.ads_with_equal_stimulus_type(dsv, not_None=True)
+            assert queries.equal_ads_except(dsv, ['stimulus_id'])
+            assert queries.ads_with_equal_stimulus_type(dsv, not_None=True)
 
             self.pnvs = dsv.get_analysis_result(sheet_name=sheet)
             # get stimuli
-            st = [Stimulus(s.stimulus_id) for s in self.pnvs]
+            st = [MozaikParametrized.idd(s.stimulus_id) for s in self.pnvs]
 
             d = colapse_to_dictionary([z.values for z in self.pnvs],
                                       st,
@@ -162,8 +156,7 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
                                       high=st[0].params()[self.parameters.parameter_name].period,
                                       normalize=True)
 
-                logger.debug('Adding PerNeuronValue to datastore')
-
+                logger.debug('PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage: Adding PerNeuronValue to datastore')
                 self.datastore.full_datastore.add_analysis_result(
                     PerNeuronValue(pref,
                                    st[0].params()[self.parameters.parameter_name].units,
@@ -203,7 +196,7 @@ class GSTA(Analysis):
     def perform_analysis(self):
         dsv = self.datastore
         for sheet in dsv.sheets():
-            dsv1 = queries.select_result_sheet_query(dsv, sheet)
+            dsv1 = queries.param_filter_query(dsv, sheet_name=sheet)
             st = dsv1.get_stimuli()
             segs = dsv1.get_segments()
 
@@ -263,18 +256,18 @@ class Precision(Analysis):
         for sheet in self.datastore.sheets():
             # Load up spike trains for the right sheet and the corresponding
             # stimuli, and transform spike trains into psth
-            dsv = queries.select_result_sheet_query(self.datastore, sheet)
+            dsv = queries.param_filter_query(self.datastore, sheet_name=sheet)
             psths = [psth(seg.spiketrains, self.parameters.bin_length)
                      for seg in dsv.get_segments()]
 
-            st = [Stimulus(s) for s in dsv.get_stimuli()]
+            st = [MozaikParametrized.idd(s) for s in dsv.get_stimuli()]
 
             # average across trials
             psths, stids = colapse(psths,
                                    st,
                                    parameter_list=['trial'],
                                    func=neo_mean,
-                                   allow_non_identical_stimuli=True)
+                                   allow_non_identical_objects=True)
 
             for ppsth, stid in zip(psths, stids):
                 t_start = ppsth[0].t_start
@@ -323,21 +316,19 @@ class ModulationRatio(Analysis):
         for sheet in self.datastore.sheets():
             # Load up spike trains for the right sheet and the corresponding
             # stimuli, and transform spike trains into psth
-            dsv = queries.select_result_sheet_query(self.datastore, sheet)
-            assert ads_queries.equal_ads_except(dsv, ['stimulus_id'])
-            assert ads_queries.ads_with_equal_stimulus_type(dsv)
+            dsv = queries.param_filter_query(self.datastore, sheet_name=sheet)
             assert queries.equal_stimulus_type(dsv)
 
             psths = [psth(seg.spiketrains, self.parameters.bin_length)
                      for seg in dsv.get_segments()]
-            st = [Stimulus(s) for s in dsv.get_stimuli()]
+            st = [MozaikParametrized.idd(s) for s in dsv.get_stimuli()]
 
             # average across trials
             psths, stids = colapse(psths,
                                    st,
                                    parameter_list=['trial'],
                                    func=neo_mean,
-                                   allow_non_identical_stimuli=True)
+                                   allow_non_identical_objects=True)
 
             # retrieve the computed orientation preferences
             pnvs = self.datastore.get_analysis_result(identifier='PerNeuronValue',
@@ -348,8 +339,6 @@ class ModulationRatio(Analysis):
                              "with value_name 'orientation preference' in datastore, got: "
                              + str(len(pnvs)))
                 return None
-            else:
-                return 0
         
             or_pref = pnvs[0]
 
@@ -357,7 +346,7 @@ class ModulationRatio(Analysis):
             # first find all the different presented stimuli:
             ps = {}
             for s in st:
-                ps[Stimulus(s).orientation] = True
+                ps[MozaikParametrized.idd(s).orientation] = True
             ps = ps.keys()
 
             # now find the closest presented orientations
@@ -376,15 +365,16 @@ class ModulationRatio(Analysis):
             # collapse along orientation - we will calculate MR for each
             # parameter combination other than orientation
             d = colapse_to_dictionary(psths, stids, "orientation")
+            print d
             for (st, vl) in d.items():
                 # here we will store the modulation ratios, one per each neuron
                 modulation_ratio = numpy.zeros((numpy.shape(psths[0])[1],))
-                frequency = Stimulus(st).temporal_frequency * Stimulus(st).temporal_frequency.units
+                frequency = MozaikParametrized.idd(st).temporal_frequency * MozaikParametrized.idd(st).params()['temporal_frequency'].units
                 for (orr, ppsth) in zip(vl[0], vl[1]):
                     for j in numpy.nonzero(orr == closest_presented_orientation)[0]:
                         modulation_ratio[j] = self.calculate_MR(ppsth[:, j],
                                                                 frequency)
-
+                logger.debug('Adding PerNeuronValue:' + str(sheet))
                 self.datastore.full_datastore.add_analysis_result(
                     PerNeuronValue(modulation_ratio,
                                    qt.dimensionless,
