@@ -1,17 +1,16 @@
 """
 docstring goes here
 """
-
 from NeuroTools.parameters import ParameterSet
 from mozaik.stimuli.stimulus import Stimulus
 from queries import Query
-
+import collections
 
 def partition_analysis_results_by_parameter_name_query(dsv, ads_identifier='',
                                                        parameter_name=''):
     dsv = identifier_based_query(dsv, ads_identifier)
 
-    partiotioned_dsvs = {}
+    partiotioned_dsvs = collections.OrderedDict()
 
     for ads_object in dsv.analysis_results:
         partiotioned_dsvs.setdefault(ads_object.inspect_value(parameter_name),

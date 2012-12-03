@@ -19,13 +19,13 @@ and manipulation of string identities.
 Note that *all* such parameters defined in the class (and its ancestors) will
 be considered as parameters of the BaseStimulus.
 """
-
 import quantities as qt
 import numpy
 import mozaik
 from operator import itemgetter
 from mozaik.tools.mozaik_parametrized import MozaikParametrized, SNumber, SInteger, SString
 import inspect
+import collections
 
 logger = mozaik.getMozaikLogger("Mozaik")
 
@@ -132,7 +132,7 @@ Various common operations over BaseStimulus lists (and associated lists of data)
 """
 
 def _colapse(dd, param):
-    d = {}
+    d = collections.OrderedDict()
     for s in dd:
         s1 = Stimulus(s)
 
@@ -183,7 +183,7 @@ def colapse(data_list, stimuli_list, func=None, parameter_list=[],
     if (not allow_non_identical_stimuli and not identical_stimulus_type(stimuli_list)):
         raise ValueError("colapse accepts only stimuli lists of the same type")
 
-    d = {}
+    d = collections.OrderedDict()
     for v, s in zip(data_list, stimuli_list):
         d[str(s)]=[v]
 
@@ -209,7 +209,7 @@ def varying_parameters(stimulus_ids):
         raise ValueError("varying_parameters: accepts only stimulus lists of the same type")
 
     p = stimulus_ids[0].params().keys()
-    varying_params = {}
+    varying_params = collections.OrderedDict()
     for n in p.keys():
         for sid in stimulus_ids:
             if getattr(sid,n) != getattr(stimulus_ids[0],n):
@@ -228,7 +228,7 @@ def colapse_to_dictionary(value_list, stimuli_list, parameter_name):
     values from value_list that correspond to the keys.
     """
     assert(len(value_list) == len(stimuli_list))
-    d = {}
+    d = collections.OrderedDict()
 
     for (v, s) in zip(value_list, stimuli_list):
         s = s.copy()
@@ -240,7 +240,7 @@ def colapse_to_dictionary(value_list, stimuli_list, parameter_name):
             b.append(v)
         else:
             d[str(s)] = ([val], [v])
-    dd = {}
+    dd = collections.OrderedDict()
     for k in d:
         (a, b) = d[k]
         dd[k] = (a, b)
