@@ -610,8 +610,8 @@ class ConductancesPlot(StandardStyle):
         for e, i in zip(self.gsyn_es, self.gsyn_is):
             e = e 
             i = i 
-            self.axis.plot(time_axis, e.tolist(), color='#F5A9A9')
-            self.axis.plot(time_axis, i.tolist(), color='#A9BCF5')
+            #self.axis.plot(time_axis, e.tolist(), color='#F5A9A9')
+            #self.axis.plot(time_axis, i.tolist(), color='#A9BCF5')
             mean_gsyn_e = mean_gsyn_e + numpy.array(e.tolist())
             mean_gsyn_i = mean_gsyn_i + numpy.array(i.tolist())
 

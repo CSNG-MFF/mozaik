@@ -138,6 +138,7 @@ def partition_by_stimulus_paramter_query(dsv, parameter_name):
                              st,
                              parameter_list=[parameter_name],
                              allow_non_identical_stimuli=True)
+                             
         dsvs = []
         for vals in values:
             new_dsv = dsv.fromDataStoreView()

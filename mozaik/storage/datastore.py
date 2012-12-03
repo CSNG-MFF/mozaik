@@ -10,6 +10,7 @@ from mozaik.framework.interfaces import MozaikParametrizeObject
 from neo_neurotools_wrapper import NeoNeurotoolsWrapper, PickledDataStoreNeoWrapper
 from mozaik.stimuli.stimulus import Stimulus
 import cPickle
+import collections
 
 logger = mozaik.getMozaikLogger("Mozaik")
 
@@ -75,7 +76,7 @@ class DataStoreView(MozaikParametrizeObject):
         # we will hold the recordings as one neo Block
         self.block = Block()
         self.analysis_results = []
-        self.retinal_stimulus = {}
+        self.retinal_stimulus = collections.OrderedDict()
         self.full_datastore = full_datastore  # should be self if actually the
                                               # instance is actually DataStore
 

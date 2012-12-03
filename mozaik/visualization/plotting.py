@@ -404,7 +404,7 @@ class RetinalInputMovie(Plotting):
         self.length = None
         self.retinal_input = datastore.get_retinal_stimulus()
         self.st = datastore.retinal_stimulus.keys()
-
+        
     def subplot(self, subplotspec, params):
         LinePlot(function=self.ploter,
                  length=len(self.retinal_input)
