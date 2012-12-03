@@ -306,7 +306,7 @@ class OverviewPlot(Plotting):
 
         if offset == 1:
             p.setdefault('title', None)
-        p.setdefault('x_axis', False)
+        #p.setdefault('x_axis', False)
         p.setdefault('x_label', False)
         RasterPlot(self.datastore,
                    ParameterSet({'sheet_name': self.parameters.sheet_name,
@@ -315,7 +315,7 @@ class OverviewPlot(Plotting):
                    ).subplot(gs[0 + offset, 0], p)
 
         p = params.copy()
-        p.setdefault('x_axis', False)
+        #p.setdefault('x_axis', False)
         p.setdefault('x_label', False)
         p.setdefault('title', None)
         GSynPlot(self.datastore,
