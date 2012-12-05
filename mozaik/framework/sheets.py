@@ -141,27 +141,13 @@ class Sheet(MozaikComponent):
         In case offset is set it means we want to keep only data after time
         offset.
         """
-
         try:
             block = self.pop.get_data(['spikes', 'v', 'gsyn_exc', 'gsyn_inh'],
                                       clear=True)
         except NothingToWriteError, errmsg:
             logger.debug(errmsg)
-                
+        
         s = block.segments[-1]
-        
-        
-        print 'KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK'
-        print len(block.segments)    
-        print numpy.mean([s.spiketrains[i].t_start for i in xrange(0,len(s.spiketrains))])
-        print numpy.mean([s.spiketrains[i].t_stop for i in xrange(0,len(s.spiketrains))])
-        print s.analogsignalarrays[0].t_start
-        print s.analogsignalarrays[0].t_stop
-        print s.analogsignalarrays[1].t_start
-        print s.analogsignalarrays[1].t_stop
-        print s.analogsignalarrays[2].t_start
-        print s.analogsignalarrays[2].t_stop
-        
         s.annotations["sheet_name"] = self.name
 
         # lets sort spike train so that it is ordered by IDs and thus hopefully
@@ -176,11 +162,8 @@ class Sheet(MozaikComponent):
                s.spiketrains[i].t_stop -= s.spiketrains[i].t_start
                s.spiketrains[i].t_start = 0 * pq.ms
                
-               
            for i in xrange(0, len(s.analogsignalarrays)):
-               #s.analogsignalarrays[i].t_stop -= s.analogsignalarrays[i].t_start
                s.analogsignalarrays[i].t_start = 0 * pq.ms
-               
        
         return s
 
