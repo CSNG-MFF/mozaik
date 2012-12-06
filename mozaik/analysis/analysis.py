@@ -128,7 +128,7 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
             # Get PerNeuronValue ASD and make sure they are all associated
             # with the same stimulus and do not differ in any
             # ASD parameters except the stimulus
-            dsv = queries.param_filter_query(dsv1, sheet_name=sheet,identifier='PerNeuronValue')
+            dsv = queries.param_filter_query(self.datastore, sheet_name=sheet,identifier='PerNeuronValue')
             if len(dsv.analysis_results) == 0:
                 break
             assert queries.equal_ads_except(dsv, ['stimulus_id'])

@@ -3,6 +3,7 @@ from param import Number, Integer, String
 from sets import Set
 import logging
 import inspect
+import collections
 
 logger = logging.getLogger("mozaik")
 
@@ -206,7 +207,7 @@ def filter_query(object_list, extra_data_list=None,allow_non_existent_parameters
 
 
 def _colapse(dd, param):
-    d = {}
+    d = collections.OrderedDict()
     for s in dd:
         s1 = MozaikParametrized.idd(s)
 
@@ -256,7 +257,7 @@ def colapse(data_list, object_list, func=None, parameter_list=[],
     if (not allow_non_identical_objects and not identical_parametrized_object_params(object_list)):
         raise ValueError("colapse accepts only object lists of the same type")
 
-    d = {}
+    d = collections.OrderedDict()
     for v, s in zip(data_list, object_list):
         d[str(s)]=[v]
 
@@ -281,7 +282,7 @@ def varying_parameters(parametrized_objects):
         raise ValueError("varying_parameters: accepts only MozaikParametrized lists with the same parameters")
 
     p = parametrized_objects[0].params().keys()
-    varying_params = {}
+    varying_params = collections.OrderedDict()
     for n in p.keys():
         for o in parametrized_objects:
             if getattr(o,n) != getattr(parametrized_objects[0],n):
@@ -291,9 +292,8 @@ def varying_parameters(parametrized_objects):
 
 
 def identical_parametrized_object_params(parametrized_objects):
-    first =  parametrized_objects[0].params()
     for o in parametrized_objects:
-        if set(o.params().keys()) != set(first.keys()):
+        if set(o.params().keys()) != set(parametrized_objects[0].params().keys()):
                 return False
     return True
                 
@@ -319,7 +319,10 @@ def matching_parametrized_object_params(parametrized_objects,params=None,except_
     if except_params == None and params == None:
         params = parametrized_objects[0].params().keys()
     
-    first =  parametrized_objects[0].params()
+    if len(parametrized_objects) == 0:
+        return True
+    else:
+        first =  parametrized_objects[0].params()
 
     for o in parametrized_objects:
         if except_params == None:    
@@ -342,7 +345,7 @@ def colapse_to_dictionary(value_list, parametrized_objects, parameter_name):
     values from value_list that correspond to the keys.
     """
     assert(len(value_list) == len(parametrized_objects))
-    d = {}
+    d = collections.OrderedDict()
 
     for (v, s) in zip(value_list, parametrized_objects):
         s = MozaikParametrized.idd(s)

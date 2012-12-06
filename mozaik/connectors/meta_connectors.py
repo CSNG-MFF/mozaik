@@ -88,7 +88,11 @@ class GaborConnector(MozaikComponent):
 
     def __init__(self, network, lgn_on, lgn_off, target, parameters, name):
         MozaikComponent.__init__(self, network, parameters)
+        import numpy.random
         import pickle
+        numpy.random.seed(1023)
+        
+        
         self.name = name
         on = lgn_on.pop
         off = lgn_off.pop
