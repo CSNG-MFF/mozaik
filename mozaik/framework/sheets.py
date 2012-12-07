@@ -13,6 +13,7 @@ from pyNN import space
 from pyNN.errors import NothingToWriteError
 from string import Template
 from neo.core.spiketrain import SpikeTrain
+import quantities as pq
 
 logger = mozaik.getMozaikLogger("Mozaik")
 
@@ -140,12 +141,12 @@ class Sheet(MozaikComponent):
         In case offset is set it means we want to keep only data after time
         offset.
         """
-
         try:
             block = self.pop.get_data(['spikes', 'v', 'gsyn_exc', 'gsyn_inh'],
                                       clear=True)
         except NothingToWriteError, errmsg:
             logger.debug(errmsg)
+        
         s = block.segments[-1]
         s.annotations["sheet_name"] = self.name
 
@@ -155,23 +156,15 @@ class Sheet(MozaikComponent):
             return cmp(a.annotations['source_id'], b.annotations['source_id'])
 
         s.spiketrains = sorted(s.spiketrains, compare)
-        if stimulus_duration != None:
-            end = s.spiketrains[0].t_stop
-            start = s.spiketrains[0].t_stop - stimulus_duration * s.spiketrains[0].t_stop.units
-            for i in xrange(0, len(s.spiketrains)):
-                sp = s.spiketrains[i].time_slice(start, end).copy() - start
-                s.spiketrains[i] =  SpikeTrain(
-                                     sp.magnitude * start.units,
-                                     t_start=0 * start.units,
-                                     t_stop=stimulus_duration * start.units,
-                                     name=s.spiketrains[i].name,
-                                     description=s.spiketrains[i].description,
-                                     file_origin=s.spiketrains[i].file_origin,
-                                     **s.spiketrains[i].annotations)
-
-            for i in xrange(0, len(s.analogsignalarrays)):
-                s.analogsignalarrays[i] = s.analogsignalarrays[i].time_slice(start, end).copy()
-                s.analogsignalarrays[i].t_start = 0 * start.units
+        if stimulus_duration != None:        
+           for i in xrange(0, len(s.spiketrains)):
+               s.spiketrains[i] -= s.spiketrains[i].t_start
+               s.spiketrains[i].t_stop -= s.spiketrains[i].t_start
+               s.spiketrains[i].t_start = 0 * pq.ms
+               
+           for i in xrange(0, len(s.analogsignalarrays)):
+               s.analogsignalarrays[i].t_start = 0 * pq.ms
+       
         return s
 
     def prepare_input(self, duration, offset):

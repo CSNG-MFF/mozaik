@@ -89,7 +89,7 @@ class DataStoreView(MozaikParametrizeObject):
         Returns the list of all sheets that are present in at least one of the
         segments in the given DataStoreView
         """
-        sheets = {}
+        sheets = collections.OrderedDict()
         for s in self.block.segments:
             sheets[s.annotations['sheet_name']] = 1
         
@@ -125,7 +125,7 @@ class DataStoreView(MozaikParametrizeObject):
             return [self.retinal_stimulus[s] for s in stimuli]
 
     def retinal_stimulus_copy(self):
-        new_dict = {}
+        new_dict = collections.OrderedDict()
         for k in self.retinal_stimulus.keys():
             new_dict[k] = self.retinal_stimulus[k]
         return new_dict
@@ -189,7 +189,7 @@ class DataStore(DataStoreView):
 
         # used as a set to quickly identify whether a stimulus was already presented
         # stimuli are otherwise saved with segments within the block as annotations
-        self.stimulus_dict = {}
+        self.stimulus_dict = collections.OrderedDict()
 
         # load the datastore
         if load:

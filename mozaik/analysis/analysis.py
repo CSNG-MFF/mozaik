@@ -365,7 +365,6 @@ class ModulationRatio(Analysis):
             # collapse along orientation - we will calculate MR for each
             # parameter combination other than orientation
             d = colapse_to_dictionary(psths, stids, "orientation")
-            print d
             for (st, vl) in d.items():
                 # here we will store the modulation ratios, one per each neuron
                 modulation_ratio = numpy.zeros((numpy.shape(psths[0])[1],))

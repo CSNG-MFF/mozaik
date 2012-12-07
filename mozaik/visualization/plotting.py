@@ -209,6 +209,7 @@ class RasterPlot(Plotting):
 
     def subplot(self, subplotspec, params):
         dsv = queries.param_filter_query(self.datastore,sheet_name=self.parameters.sheet_name)
+
         PerStimulusPlot(dsv, function=self.ploter).make_line_plot(subplotspec, params)
 
     def ploter(self, dsv, gs, params):
@@ -299,7 +300,7 @@ class OverviewPlot(Plotting):
 
         if offset == 1:
             p.setdefault('title', None)
-        p.setdefault('x_axis', False)
+        #p.setdefault('x_axis', False)
         p.setdefault('x_label', False)
         RasterPlot(self.datastore,
                    ParameterSet({'sheet_name': self.parameters.sheet_name,
@@ -308,7 +309,7 @@ class OverviewPlot(Plotting):
                    ).subplot(gs[0 + offset, 0], p)
 
         p = params.copy()
-        p.setdefault('x_axis', False)
+        #p.setdefault('x_axis', False)
         p.setdefault('x_label', False)
         p.setdefault('title', None)
         GSynPlot(self.datastore,
@@ -397,7 +398,7 @@ class RetinalInputMovie(Plotting):
         self.length = None
         self.retinal_input = datastore.get_retinal_stimulus()
         self.st = datastore.retinal_stimulus.keys()
-
+        
     def subplot(self, subplotspec, params):
         LinePlot(function=self.ploter,
                  length=len(self.retinal_input)
@@ -482,12 +483,8 @@ class PerNeuronValuePlot(Plotting):
         self.poss = []
         self.pnvs = []
         self.sheets = []
-        print 'ZZZZZZZ'
-        print datastore.sheets()
         for sheet in datastore.sheets():
             z = datastore.get_analysis_result(identifier='PerNeuronValue',sheet_name=sheet)
-            print 'AAAAAAA'
-            print len(z)
             if len(z) != 0:
                 if len(z) > 1:
                     logger.error('Warning currently only one PerNeuronValue per sheet will be plotted!!!')

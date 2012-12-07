@@ -1,10 +1,10 @@
 """
 docstring goes here
-
 """
 import mozaik
 import mozaik.stimuli.topographica_based as topo
 import numpy
+import resource
 
 logger = mozaik.getMozaikLogger("Mozaik")
 
@@ -46,12 +46,12 @@ class VisualExperiment(Experiment):
     def run(self,data_store,stimuli):
         srtsum = 0
         for i,s in enumerate(stimuli):
-            logger.info('Presenting stimulus: ' + str(s) + '\n')
+            logger.debug('Presenting stimulus: ' + str(s) + '\n')
             (segments,input_stimulus,simulator_run_time) = self.model.present_stimulus_and_record(s)
             srtsum += simulator_run_time
             data_store.add_recording(segments,s)
             data_store.add_stimulus(input_stimulus,s)
-            logger.info('Stimulus %d/%d finished' % (i+1,len(stimuli)))
+            logger.info('Stimulus %d/%d finished. Memory usage: %iMB' % (i+1,len(stimuli),resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/1024))
         return srtsum
     
 

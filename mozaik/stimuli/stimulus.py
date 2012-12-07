@@ -19,12 +19,13 @@ and manipulation of string identities.
 Note that *all* such parameters defined in the class (and its ancestors) will
 be considered as parameters of the BaseStimulus.
 """
-
 import quantities as qt
 import numpy
 import mozaik
 from operator import itemgetter
 from mozaik.tools.mozaik_parametrized import MozaikParametrized, SNumber, SInteger, SString
+import collections
+
 
 logger = mozaik.getMozaikLogger("Mozaik")
 
@@ -87,4 +88,5 @@ class BaseStimulus(MozaikParametrized):
                path is None, then a temporary directory is created.
         """
         raise NotImplementedError("Must be implemented by child class.")
+
 
