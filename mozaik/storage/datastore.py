@@ -8,11 +8,12 @@ from neo.core.block import Block
 import mozaik
 from mozaik.framework.interfaces import MozaikParametrizeObject
 from neo_neurotools_wrapper import NeoNeurotoolsWrapper, PickledDataStoreNeoWrapper
-from mozaik.stimuli.stimulus import Stimulus
+from mozaik.tools.mozaik_parametrized import  MozaikParametrized,filter_query
 import cPickle
 import collections
 
 logger = mozaik.getMozaikLogger("Mozaik")
+
 
 
 class DataStoreView(MozaikParametrizeObject):
@@ -91,6 +92,13 @@ class DataStoreView(MozaikParametrizeObject):
         sheets = collections.OrderedDict()
         for s in self.block.segments:
             sheets[s.annotations['sheet_name']] = 1
+        
+        for ads in self.analysis_results:
+            sheets[ads.sheet_name] = 1
+        
+        if sheets.has_key(None):
+            sheet.pop(None)
+                
         return sheets.keys()
 
     def get_neuron_postions(self):
@@ -108,20 +116,7 @@ class DataStoreView(MozaikParametrizeObject):
         return [s.annotations['stimulus'] for s in self.block.segments]
 
     def get_analysis_result(self, **kwargs):
-        ars = []
-
-        for ads in self.analysis_results:
-            flag = True
-            for k in kwargs.keys():
-                if not k in ads.params():
-                    flag = False
-                    break
-                if ads.inspect_value(k) != kwargs[k]:
-                    flag = False
-                    break
-            if flag:
-                ars.append(ads)
-        return ars
+        return filter_query(self.analysis_results,**kwargs)
 
     def get_retinal_stimulus(self, stimuli=None):
         if stimuli == None:
@@ -152,7 +147,7 @@ class DataStoreView(MozaikParametrizeObject):
         print "   Number of recordings: " + str(len(self.block.segments))
         d = {}
         for st in [s.annotations['stimulus'] for s in self.block.segments]:
-            d[Stimulus(st).name] = d.get(Stimulus(st).name, 0) + 1
+            d[MozaikParametrized.idd(st).name] = d.get(MozaikParametrized.idd(st).name, 0) + 1
 
         for k in d.keys():
             print "     " + str(k) + " : " + str(d[k])

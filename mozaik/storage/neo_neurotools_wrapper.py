@@ -1,8 +1,6 @@
 """
 docstring goes here
-
 """
-
 from neo.core.segment import Segment
 from NeuroTools import signals
 import numpy
@@ -112,9 +110,9 @@ class NeoNeurotoolsWrapper(MozaikSegment):
                                                float(t_start),
                                                float(t_stop))
 
-            self.nt_gsyn_e = []
-            self.nt_gsyn_i = []
-            self.nt_vm = []
+            #self.nt_gsyn_e = []
+            #self.nt_gsyn_i = []
+            #self.nt_vm = []
 
             #for ar in self.analogsignalarrays:
                 #if ar.name == 'v':
@@ -135,7 +133,7 @@ class NeoNeurotoolsWrapper(MozaikSegment):
                 self.load_full()
             return self.nt_spikes.mean_rates()
     
-        def cv_isI(self):
+        def cv_isi(self):
             if not self.full:
                    self.load_full()
             return self.nt_spikes.cv_isi()

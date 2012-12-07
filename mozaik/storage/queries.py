@@ -1,10 +1,9 @@
 """
 docstring goes here
 """
-
 from mozaik.framework.interfaces import MozaikParametrizeObject
 from NeuroTools.parameters import ParameterSet
-from mozaik.stimuli.stimulus import colapse, Stimulus
+from mozaik.tools.mozaik_parametrized import colapse,  MozaikParametrized, filter_query, matching_parametrized_object_params
 import numpy
 
 
@@ -31,70 +30,62 @@ class Query(MozaikParametrizeObject):
     def query(self, dsv):
         raise NotImplementedError
 
-########################################################################
-def select_stimuli_type_query(dsv, stimulus_name, params=None):
-    new_dsv = dsv.fromDataStoreView()
-    new_dsv.analysis_results = dsv.analysis_result_copy()
-    new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
 
-    for seg in dsv.block.segments:
-        sid = Stimulus(seg.annotations['stimulus'])
-        if sid.name == stimulus_name:
-            if params:
-                flag = True
-                for n,f in params.items():
-                    if float(f) != float(getattr(sid,n)):
-                        flag = False
-                        break
-                if flag:
-                    new_dsv.block.segments.append(seg)
-            else:
-                new_dsv.block.segments.append(seg)
+########################################################################
+def param_filter_query(dsv,**kwargs):
+    new_dsv = dsv.fromDataStoreView()
+    
+    st_kwargs = dict([(k[3:],kwargs[k]) for k in kwargs.keys() if k[0:3] == 'st_'])
+    kwargs = dict([(k,kwargs[k]) for k in kwargs.keys() if k[0:3] != 'st_'])
+    
+    seg_st = [MozaikParametrized.idd(seg.annotations['stimulus']) for seg in dsv.block.segments]
+    ads_st = [MozaikParametrized.idd(ads.stimulus_id) for ads in dsv.analysis_results if ads.stimulus_id != None]
+    
+    if 'sheet_name' in set(kwargs):
+       if len(kwargs) == 1:
+           # This means that there is only one 'non-stimulus' parameter sheet, and thus we need
+           # to filter out all recordings that are associated with that sheet (otherwsie we do not pass any recordings)
+           seg_filtered = set([s for s in dsv.block.segments if s.annotations['sheet_name'] == kwargs['sheet_name']])
+       else:
+           seg_filtered = set([]) 
+    else:
+           seg_filtered = set(dsv.block.segments)
+           
+    ads_filtered= set(filter_query(dsv.analysis_results,**kwargs))
+    
+    if st_kwargs != {}:
+       seg_filtered_st= set(filter_query(seg_st,extra_data_list=dsv.block.segments,**st_kwargs)[1]) 
+       ads_filtered_st= set(filter_query(ads_st,extra_data_list=[ads for ads in dsv.analysis_results if ads.stimulus_id != None],**st_kwargs)[1])
+    else:
+       ads_filtered_st = set(dsv.analysis_results)
+       seg_filtered_st = set(dsv.block.segments)
+    
+    seg = seg_filtered_st & seg_filtered
+    ads = ads_filtered_st & ads_filtered
+    
+    new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
+    new_dsv.block.segments = list(seg)
+    new_dsv.analysis_results = list(ads)
     return new_dsv
 
-
-class SelectStimuliTypeQuery(Query):
+class ParamFilterQuery(Query):
     """
-    It will return all recordings to stimuli with name stimuli_name
-    Additionally one can filter out parameters:
-    params is a list that should have the same number of elements as the
-    number of free parameters of the given stimulus. Each parameter can be
-    set either to None indicating pick any stimulus with respect to this
-    parameter or to a value (number or string) which indicates pick only
-    stimuli that have this value of the parameter.
+    It will restrict the DSV to only recordings and ADS with parameters 
+    whose values match the params. 
+    
+    To restrict parameters of the stimuli to which the ADS or recordings 
+    have been done pre-pend 'st_' to the parameter name.
+    
+    For the recordings parameter sheet refers to the sheet for which
+    the recording was done. 
     """
     required_parameters = ParameterSet({
-        'stimulus_id': str,
-        'params': list
+        'params' : ParameterSet,
     })
 
     def query(self, dsv):
-        return select_stimuli_type_query(dsv, **self.paramters)
-
+        return param_filter_query(dsv, **self.params)
 ########################################################################
-
-def select_result_sheet_query(dsv, sheet_name):
-    new_dsv = dsv.fromDataStoreView()
-    new_dsv.analysis_results = dsv.analysis_result_copy()
-    new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
-
-    for seg in dsv.block.segments:
-        if seg.annotations['sheet_name'] == sheet_name:
-            new_dsv.block.segments.append(seg)
-    return new_dsv
-
-
-class SelectResultSheetQuery(Query):
-    """
-    Constraints datastore to results recorded in sheet sheet_name
-    """
-
-    required_parameters = ParameterSet({
-        'sheet_name': str
-    })
-
-    def query(self, dsv):
-        return select_result_sheet_query(dsv, **self.paramters)
 
 
 ########################################################################
@@ -118,7 +109,6 @@ def _tag_based_query(d, tags):
             nd.append(a)
     return nd
 
-
 class TagBasedQuery(Query):
     """
     This query filters out all AnalysisDataStructure's corresponding to the
@@ -132,19 +122,15 @@ class TagBasedQuery(Query):
         return tag_based_query(dsv, **self.parameters)
 ########################################################################
 
-def partition_by_stimulus_paramter_query(dsv, parameter_name):
+########################################################################
+def partition_by_stimulus_paramter_query(dsv, parameter_list):
         st = dsv.get_stimuli()
-        values, st = colapse(numpy.arange(0, len(st), 1),
-                             st,
-                             parameter_list=[parameter_name],
-                             allow_non_identical_stimuli=True)
-                             
+        values, st = colapse(dsv.block.segments,st,parameter_list=parameter_list,allow_non_identical_objects=True)
         dsvs = []
         for vals in values:
             new_dsv = dsv.fromDataStoreView()
             new_dsv.analysis_results = dsv.analysis_result_copy()
-            for v in vals:
-                new_dsv.block.segments.append(dsv.block.segments[v])
+            new_dsv.block.segments.extend(vals)
             dsvs.append(new_dsv)
         return dsvs
 
@@ -153,63 +139,104 @@ class PartitionByStimulusParamterQuery(Query):
     """
     This query will take all recordings and return list of DataStoreViews
     each holding recordings measured to the same stimulus with exception of
-    the parameter reference by parameter_name.
+    the parameters reference by parameter_list.
 
     Note that in most cases one wants to do this only against datastore holding
     only single Stimulus type! In that case the datastore is partitioned into
     subsets each holding recordings to the same stimulus with the same paramter
-    values, with the exception to the parameter_name
+    values, with the exception to the parameters in parameter_list
     """
 
     required_parameters = ParameterSet({
-        'parameter_name': list,  # the index of the parameter against which to partition
+        'parameter_list': list,  # the index of the parameter against which to partition
     })
 
     def query(self, dsv):
         return partition_by_stimulus_paramter_query(dsv, **self.parameters)
-
 ########################################################################
 
-def partition_recordings_by_sheet_query(dsv):
+
+######################################################################################################################################
+def partition_analysis_results_by_parameters_query(dsv, parameter_list):
+        values, st = colapse(dsv.analysis_results,dsv.analysis_results,parameter_list=parameter_list,allow_non_identical_objects=True)
         dsvs = []
-        for sheet in dsv.sheets():
+
+        for vals in values:
             new_dsv = dsv.fromDataStoreView()
-            new_dsv.analysis_results = dsv.analysis_result_copy()
+            new_dsv.block.segments = dsv.recordings_copy()
             new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
-
-            for seg in dsv.block.segments:
-                if seg.annotations['sheet_name'] == sheet:
-                    new_dsv.block.segments.append(seg)
-
+            new_dsv.analysis_results.extend(vals)
             dsvs.append(new_dsv)
         return dsvs
 
+class PartitionAnalysisResultsByParameterNameQuery(Query):
+    
+    """
+    This query will take all analysis results and return list of DataStoreViews
+    each holding analysis results that have the same parameters with exception of
+    the parameters reference by parameter_list.
 
-class PartitionRecordingsBySheetQuery(Query):
+    Note that in most cases one wants to do this only against datastore holding
+    only single analysis results type! In that case the datastore is partitioned into
+    subsets each holding recordings to the same stimulus with the same paramter
+    values, with the exception to the parameters in parameter_list.
     """
-    This query will take all recordings and return list of DataStoreViews
-    each corresponding to one of the sheets and holding recordings comming
-    from the corresponding sheet.
-    """
+
+    required_parameters = ParameterSet({
+        'parameter_list': list,  # the index of the parameter against which to partition
+    })
 
     def query(self, dsv):
-        return partition_recordings_by_sheet_query(dsv)
+        return partition_analysis_results_by_parameters_query(dsv,**self.parameters)
+######################################################################################################################################
+
+
+
+
+
+
+
+
+
 
 ########################################################################
+### Not queries, but some helper functions that make it easy to test 
+### whether given datastoreview has certain common properties
+########################################################################
 
+
+########################################################################
 def equal_stimulus_type(dsv):
     """
     This functions tests whether DSV contains only recordings associated
     with the same stimulus type.
     """
-    st = dsv.get_stimuli()
-    if len(st) == 0:
-        return True
+    return matching_parametrized_object_params([MozaikParametrized.idd(s) for s in dsv.get_stimuli()],params=['name'])
+########################################################################
 
-    first = Stimulus(st[0]).name
+########################################################################
+def equal_ads_except(dsv, except_params):
+    """
+    This functions tests whether DSV contains only ADS of the same kind
+    and parametrization with the exception of parameters listed in
+    except_params.
+    """
+    return matching_parametrized_object_params(dsv.analysis_results,except_params=except_params)
+########################################################################
 
-    for s in st:
-        if Stimulus(s).name != first:
-            return False
+########################################################################
+def ads_with_equal_stimulus_type(dsv, not_None=False):
+    """
+    This functions tests whether DSV contains only ADS associated
+    with the same stimulus type.
 
-    return True
+    not_None - if true it will not allow ADS that are not associated with
+               stimulus
+    """
+    if not_None:
+        return matching_parametrized_object_params([MozaikParametrized.idd(ads.stimulus_id) for ads in dsv.analysis_results if ads.stimulus_id != None],params=['name'])
+    else:
+        if len([MozaikParametrized.idd(ads.stimulus_id) for ads in dsv.analysis_results if ads.stimulus_id == None]) > 0:
+           return False
+        return matching_parametrized_object_params([MozaikParametrized.idd(ads.stimulus_id) for ads in dsv.analysis_results],params=['name'])    
+########################################################################

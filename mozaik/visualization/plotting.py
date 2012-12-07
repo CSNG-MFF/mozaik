@@ -74,8 +74,8 @@ from scipy.interpolate import griddata
 from NeuroTools.parameters import ParameterSet
 
 from mozaik.framework.interfaces import MozaikParametrizeObject
-from mozaik.storage import queries, ads_queries
-from mozaik.stimuli.stimulus import  colapse_to_dictionary, Stimulus
+from mozaik.storage import queries
+from mozaik.tools.mozaik_parametrized import colapse_to_dictionary, MozaikParametrized
 from numpy import pi
 
 from simple_plot import StandardStyleLinePlot, SpikeRasterPlot, \
@@ -142,24 +142,20 @@ class PlotTuningCurve(Plotting):
     def __init__(self, datastore, parameters, plot_file_name=None,
                  fig_param=None):
         Plotting.__init__(self, datastore, parameters, plot_file_name, fig_param)
-        dsv = ads_queries.analysis_data_structure_parameter_filter_query(
-                                                self.datastore,
-                                                identifier='PerNeuronValue')
-        dsv = queries.select_result_sheet_query(dsv, self.parameters.sheet_name)
-        assert ads_queries.equal_ads_except(dsv, ['stimulus_id'])
-        assert ads_queries.ads_with_equal_stimulus_type(dsv)
-        self.pnvs = dsv.get_analysis_result(identifier='PerNeuronValue',
-                                            sheet_name=parameters.sheet_name)
+        dsv = queries.param_filter_query(self.datastore,identifier='PerNeuronValue',sheet_name=self.parameters.sheet_name)
+        assert queries.equal_ads_except(dsv, ['stimulus_id'])
+        assert queries.ads_with_equal_stimulus_type(dsv)
+        self.pnvs = dsv.get_analysis_result()
+        
         # get stimuli
-        self.st = [Stimulus(s.stimulus_id) for s in self.pnvs]
+        self.st = [MozaikParametrized.idd(s.stimulus_id) for s in self.pnvs]
         # transform the pnvs into a dictionary of tuning curves according along the parameter_name
         self.tc_dict = colapse_to_dictionary([z.values for z in self.pnvs],
                                              self.st,
                                              self.parameters.parameter_name)
 
     def subplot(self, subplotspec, params):
-        LinePlot(function=self.ploter, length=1).make_line_plot(subplotspec,
-                                                                  params)
+        LinePlot(function=self.ploter, length=1).make_line_plot(subplotspec,params)
 
     def ploter(self, idx, gs, params):
         period = self.st[0].params()[self.parameters.parameter_name].period
@@ -212,8 +208,8 @@ class RasterPlot(Plotting):
             self.parameters.neurons = None
 
     def subplot(self, subplotspec, params):
-        dsv = queries.select_result_sheet_query(self.datastore,
-                                                self.parameters.sheet_name)
+        dsv = queries.param_filter_query(self.datastore,sheet_name=self.parameters.sheet_name)
+
         PerStimulusPlot(dsv, function=self.ploter).make_line_plot(subplotspec, params)
 
     def ploter(self, dsv, gs, params):
@@ -239,8 +235,7 @@ class VmPlot(Plotting):
     })
 
     def subplot(self, subplotspec, params):
-        dsv = queries.select_result_sheet_query(self.datastore,
-                                                self.parameters.sheet_name)
+        dsv = queries.param_filter_query(self.datastore,sheet_name=self.parameters.sheet_name)
         PerStimulusPlot(dsv, function=self.ploter, title_style="Standard"
                                          ).make_line_plot(subplotspec, params)
 
@@ -273,8 +268,7 @@ class GSynPlot(Plotting):
     })
 
     def subplot(self, subplotspec, params):
-        dsv = queries.select_result_sheet_query(self.datastore,
-                                                self.parameters.sheet_name)
+        dsv = queries.param_filter_query(self.datastore,sheet_name=self.parameters.sheet_name)
         PerStimulusPlot(dsv, function=self.ploter, title_style="Standard"
                                         ).make_line_plot(subplotspec, params)
 
@@ -427,8 +421,7 @@ class ActivityMovie(Plotting):
     })
 
     def subplot(self, subplotspec, params):
-        dsv = queries.select_result_sheet_query(self.datastore,
-                                                self.parameters.sheet_name)
+        dsv = queries.param_filter_query(self.datastore,sheet_name=self.parameters.sheet_name)
         PerStimulusPlot(dsv, function=self.ploter, title_style="Standard"
                         ).make_line_plot(subplotspec, params)
 
@@ -491,8 +484,7 @@ class PerNeuronValuePlot(Plotting):
         self.pnvs = []
         self.sheets = []
         for sheet in datastore.sheets():
-            z = datastore.get_analysis_result(identifier='PerNeuronValue',
-                                              sheet_name=sheet)
+            z = datastore.get_analysis_result(identifier='PerNeuronValue',sheet_name=sheet)
             if len(z) != 0:
                 if len(z) > 1:
                     logger.error('Warning currently only one PerNeuronValue per sheet will be plotted!!!')
@@ -548,7 +540,6 @@ class ConnectivityPlot(Plotting):
     """
 
     required_parameters = ParameterSet({
-        'sheet_name': str,
         'neuron': int,  # the target neuron whose connections are to be displayed
         'reversed': bool,  # if false the outgoing connections from the given neuron are shown. if true the incomming connections are shown
         'sheet_name': str,  # for neuron in which sheet to display connectivity
@@ -566,7 +557,7 @@ class ConnectivityPlot(Plotting):
         self.pnvs = None
         if pnv_dsv != None:
             self.pnvs = []
-            z = ads_queries.partition_analysis_results_by_parameter_name_query(
+            z = queries.partition_analysis_results_by_parameter_name_query(
                                                 pnv_dsv,
                                                 ads_identifier='PerNeuronValue',
                                                 parameter_name='sheet_name')

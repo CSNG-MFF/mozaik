@@ -1,7 +1,6 @@
 """
 docstring goes here
 """
-
 import mozaik.storage.queries as queries
 from mozaik.visualization.plotting import (Plotting, GSynPlot,
                                            VmPlot, ConductanceSignalListPlot,
@@ -20,17 +19,13 @@ class Figure2Gratings(Plotting):
     def subplot(self, subplotspec, params):
         gs = gridspec.GridSpecFromSubplotSpec(12, 18, subplot_spec=subplotspec,
                                               hspace=1.0, wspace=1.0)
-
-        dsv = queries.select_stimuli_type_query(self.datastore,
-                                                'FullfieldDriftingSinusoidalGrating',
-                                                {'orientation': 0.0,
-                                                 'contrast': 100.0})
-
-        lgn_on_dsv = queries.select_result_sheet_query(dsv, 'X_ON')
-        lgn_off_dsv = queries.select_result_sheet_query(dsv, 'X_OFF')
+        dsv = queries.param_filter_query(self.datastore,st_name = 'FullfieldDriftingSinusoidalGrating',st_orientation = 0.0,st_contrast = 100.0)
+        
+        lgn_on_dsv = queries.param_filter_query(dsv, sheet_name='X_ON')
+        lgn_off_dsv = queries.param_filter_query(dsv, sheet_name='X_OFF')
         lgn_spikes = [[s.spiketrains for s in lgn_on_dsv.get_segments()],
                       [s.spiketrains for s in lgn_off_dsv.get_segments()]]
-
+        
         SpikeRasterPlot(lgn_spikes, neurons=[0], x_axis=False, x_label=None,
                         colors=['#FACC2E', '#0080FF'])(gs[1:4, 0:5])
         SpikeHistogramPlot(lgn_spikes, neurons=[0], x_axis=False, x_label=None,
@@ -40,8 +35,7 @@ class Figure2Gratings(Plotting):
         SpikeHistogramPlot(lgn_spikes, neurons=[5],
                            colors=['#FACC2E', '#0080FF'])(gs[10:11, 0:5])
 
-        dsv1 = queries.select_result_sheet_query(dsv,
-                                                 self.parameters.sheet_name)
+        dsv1 = queries.param_filter_query(dsv,sheet_name=self.parameters.sheet_name)
         SpikeRasterPlot([[s.spiketrains for s in dsv1.get_segments()]],
                         neurons=[self.parameters.neuron], x_axis=False,
                         x_label=None)(gs[:3, 6:14])
@@ -84,12 +78,10 @@ class Figure2NaturalImagesWithEyeMovement(Plotting):
         gs = gridspec.GridSpecFromSubplotSpec(12, 18, subplot_spec=subplotspec,
                                               hspace=1.0, wspace=1.0)
 
-        dsv = queries.select_stimuli_type_query(self.datastore,
-                                                'NaturalImageWithEyeMovement',
-                                                {})
+        dsv = queries.param_filter_query(self.datastore,st_identifier='NaturalImageWithEyeMovement')
 
-        lgn_on_dsv = queries.select_result_sheet_query(dsv, 'X_ON')
-        lgn_off_dsv = queries.select_result_sheet_query(dsv, 'X_OFF')
+        lgn_on_dsv = queries.param_filter_query(dsv, sheet_name='X_ON')
+        lgn_off_dsv = queries.param_filter_query(dsv,sheet_name='X_OFF')
         lgn_spikes = [[s.spiketrains for s in lgn_on_dsv.get_segments()],
                       [s.spiketrains for s in lgn_off_dsv.get_segments()]]
 
@@ -102,7 +94,7 @@ class Figure2NaturalImagesWithEyeMovement(Plotting):
         SpikeHistogramPlot(lgn_spikes, neurons=[5],
                            colors=['#FACC2E', '#0080FF'])(gs[10:11, 0:5])
 
-        dsv1 = queries.select_result_sheet_query(dsv, self.parameters.sheet_name)
+        dsv1 = queries.param_filter_query(dsv, sheet_name=self.parameters.sheet_name)
         SpikeRasterPlot([[s.spiketrains for s in dsv1.get_segments()]],
                         neurons=[self.parameters.neuron], x_axis=False,
                         x_label=None)(gs[:3, 6:14])

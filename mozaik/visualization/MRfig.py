@@ -1,11 +1,11 @@
+import pylab
+import numpy
+
 import mozaik.storage.queries as queries
 import matplotlib.gridspec as gridspec
 from mozaik.visualization.plotting import Plotting
 from mozaik.visualization.plotting_helper_functions import *
-from mozaik.storage.queries import *
-select_stimuli_type_query,select_result_sheet_query,
-partition_by_stimulus_paramter_query
-import pylab
+from NeuroTools.parameters import ParameterSet
 
 class MRfig(Plotting):
       required_parameters = ParameterSet({
