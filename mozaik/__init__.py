@@ -22,4 +22,5 @@ if MPI:
 def getMozaikLogger(name):
     import logging
     logger = logging.getLogger(name)
+    logger.setLevel(logging.INFO)
     return logger

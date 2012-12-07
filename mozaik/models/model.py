@@ -93,7 +93,7 @@ class Model(MozaikComponent):
         return time.time()-t0
 
     def reset(self):
-        logger.info("Resetting the network")
+        logger.debug("Resetting the network")
         t0 = time.time()
         if self.parameters.reset:
             self.sim.reset()

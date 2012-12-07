@@ -329,7 +329,7 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
         Present a visual stimulus to the model, and create the LGN output
         (relay) neurons.
         """
-        logger.info("Presenting visual stimulus from visual space %s" % visual_space)
+        logger.debug("Presenting visual stimulus from visual space %s" % visual_space)
         visual_space.set_duration(duration)
         self.input = visual_space
         stimulus = stimulus.copy()
@@ -354,6 +354,9 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
                                                                 self.scs[rf_type],
                                                                 self.ncs[rf_type])):
                 assert isinstance(input_current, dict)
+                if i==0:
+                    import pylab
+                    pylab.plot(self.parameters.linear_scaler * input_current['amplitudes'])
                 t = input_current['times'] + offset
                 a = self.parameters.linear_scaler * input_current['amplitudes']
                 scs.set_parameters(times=t, amplitudes=a)
