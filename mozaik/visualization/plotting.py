@@ -110,7 +110,7 @@ class Plotting(MozaikParametrizeObject):
     def subplot(self, subplotspec, params):
         raise NotImplementedError
 
-    def plot(self, params=None):
+    def plot(self, **params):
         t1 = time.time()
         if params == None:
             params = {}

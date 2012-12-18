@@ -173,6 +173,35 @@ class MeasureNaturalImagesWithEyeMovement(VisualExperiment):
         pass
 
 
+class MeasureDriftingSineGratingWithEyeMovement(VisualExperiment):
+
+    def __init__(self, model, stimulus_duration, num_trials,spatial_frequency,temporal_frequency,contrast):
+        VisualExperiment.__init__(self, model)
+        for k in xrange(0, num_trials):
+            self.stimuli.append(
+                topo.DriftingGratingWithEyeMovement(
+                            frame_duration=7,
+                            size_x=model.visual_field.size_x,
+                            size_y=model.visual_field.size_y,
+                            location_x=0.0,
+                            location_y=0.0,
+                            background_luminance=self.background_luminance,
+                            duration=stimulus_duration,
+                            density=40,
+                            trial=k,
+                            contrast = contrast,
+                            eye_movement_period=6.66,  # eye movement period
+                            eye_path_location='./eye_path.pickle',
+                            orientation=0,
+                            spatial_frequency=spatial_frequency,
+                            temporal_frequency=temporal_frequency
+                            ))
+
+    def do_analysis(self, data_store):
+        pass
+
+
+
 class MeasureSpontaneousActivity(VisualExperiment):
     def __init__(self,model,duration,num_trials):
             VisualExperiment.__init__(self, model)

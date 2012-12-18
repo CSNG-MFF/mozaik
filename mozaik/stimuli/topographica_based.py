@@ -13,7 +13,7 @@ from mozaik.tools.mozaik_parametrized import SNumber, SString
 from mozaik.tools.units import cpd
 from numpy import pi
 from quantities import Hz, rad, degrees, ms, dimensionless
-
+import topo.pattern.image
 
 class FullfieldDriftingSinusoidalGrating(VisualStimulus):
     """
@@ -61,8 +61,6 @@ class NaturalImageWithEyeMovement(VisualStimulus):
 
     def frames(self):
         self.time = 0
-        import topo.pattern.image
-
         f = open(self.eye_path_location, 'r')
         self.eye_path = pickle.load(f)
         self.pattern_sampler = topo.pattern.image.PatternSampler(
@@ -101,15 +99,11 @@ class DriftingGratingWithEyeMovement(VisualStimulus):
     eye_path_location = SString(doc="Location of file containing the eye path (two columns of numbers)")
 
     def frames(self):
+        
         f = open(self.eye_path_location, 'r')
         self.eye_path = pickle.load(f)
-        self.pattern_sampler = topo.pattern.image.PatternSampler(
-                                        size_normalization='fit_longest',
-                                        whole_pattern_output_fns=[DivisiveNormalizeLinf()])
         self.time = 0
         self.current_phase = 0
-        import topo.pattern.image
-
         while True:
             location = self.eye_path[int(numpy.floor(self.frame_duration * self.time / self.eye_movement_period))]
 
@@ -118,15 +112,16 @@ class DriftingGratingWithEyeMovement(VisualStimulus):
                                              y=location[1],
                                              frequency=self.spatial_frequency,
                                              phase=self.current_phase,
-                                             bounds=BoundingBox(points=((-self.size_x/2, -self.size_x/2),
-                                                                        (-self.size_y/2, -self.size_y/2))),
+                                             bounds=BoundingBox(points=((-self.size_x/2, -self.size_y/2),
+                                                                        (self.size_x/2, self.size_y/2))),
                                              offset = self.background_luminance*(100.0 - self.contrast)/100.0,
                                              scale=2*self.background_luminance*self.contrast/100.0,
                                              xdensity=self.density,
                                              ydensity=self.density)()
-            self.time = self.time + 1
+
             self.current_phase += 2*pi * (self.frame_duration/1000) * self.temporal_frequency
             yield (image, [self.time])
+            self.time = self.time + 1
 
 
 class DriftingSinusoidalGratingDisk(VisualStimulus):
