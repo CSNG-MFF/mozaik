@@ -2,9 +2,9 @@
 docstring goes here
 """
 from neo.core.segment import Segment
-from NeuroTools import signals
 import numpy
 import cPickle
+import quantities as qt
 
 
 class MozaikSegment(Segment):
@@ -83,62 +83,17 @@ class MozaikSegment(Segment):
             """
             return len(self.spiketrains[0])
 
-
-"""
-This is a temporary wrapper that should be completely replaced by Neurotools
-once they have been converted to use Neo data structures.
-
-NOTE!!! Currently it is a big memory and CPU time liability!!!!
-NOTE!!!! We are also transposing all the Neo analogsignalarrays !!!
-This should be sorted in future!
-"""
-
-
-class NeoNeurotoolsWrapper(MozaikSegment):
-
-        def init_Neurotools(self):
-            # Store stuff also in Neurotools format
-            t_start = self.spiketrains[0].t_start
-            t_stop = self.spiketrains[0].t_stop
-
-            d = {}
-            for st in self.spiketrains:
-                d[st.annotations["source_id"]] = numpy.array(st)
-
-            self.nt_spikes = signals.SpikeList(spike_dic_to_list(d),
-                                               d.keys(),
-                                               float(t_start),
-                                               float(t_stop))
-
-            #self.nt_gsyn_e = []
-            #self.nt_gsyn_i = []
-            #self.nt_vm = []
-
-            #for ar in self.analogsignalarrays:
-                #if ar.name == 'v':
-                    #for a in ar:
-                        #self.nt_vm.append(signals.AnalogSignal(a, dt=ar.sampling_period))
-
-                #if ar.name == 'gsyn_exc':
-                    #for a in ar:
-
-                        #self.nt_gsyn_e.append(signals.AnalogSignal(a, dt=ar.sampling_period))
-
-                #if ar.name == 'gsyn_inh':
-                    #for a in ar:
-                        #self.nt_gsyn_i.append(signals.AnalogSignal(a, dt=ar.sampling_period))
-
         def mean_rates(self):
-            if not self.full:
-                self.load_full()
-            return self.nt_spikes.mean_rates()
-    
-        def cv_isi(self):
-            if not self.full:
-                   self.load_full()
-            return self.nt_spikes.cv_isi()
-    
-class PickledDataStoreNeoWrapper(NeoNeurotoolsWrapper):
+            """
+            Returns the mean rates of the spiketrains in spikes/s
+            """
+            return [len(s)/(s.t_stop.rescale(qt.s).magnitude-s.t_start.rescale(qt.s).magnitude) for s in self.spiketrains]
+
+"""
+This is a Mozaik wrapper of neo segment, that enables pickling and lazy loading.
+"""    
+
+class PickledDataStoreNeoWrapper(MozaikSegment):
         def __init__(self, segment, identifier, datastore_path):
             MozaikSegment.__init__(self, segment, identifier)
             self.datastore_path = datastore_path
@@ -150,7 +105,6 @@ class PickledDataStoreNeoWrapper(NeoNeurotoolsWrapper):
             self._spiketrains = s.spiketrains
             self.analogsignalarrays = s.analogsignalarrays
             self.full = True
-            self.init_Neurotools()
 
         def __getstate__(self):
             result = self.__dict__.copy()
