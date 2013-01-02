@@ -388,7 +388,7 @@ class ModulationRatio(Analysis):
             pylab.figure()
             pylab.hist(modulation_ratio)
 
-    def calculate_MR(self, signal, frequency):
+    def calculate_MR(signal, frequency):
         """
         Calculates MR at frequency 1/period for each of the signals in the signal_list
 
@@ -406,7 +406,31 @@ class ModulationRatio(Analysis):
             return 2 *abs(fft[first_har]) /abs(fft[0])
         else:
             return 0
-          
+
+class Conductance_F0andF1(Analysis):
+      """
+      Calculates the DC of conductances for each neuron. Stores them in PerNeuronValue datastructures (one for exc. one for inh. conductances).
+      Note that only neurons for which conductances were measured will be stored.
+      """
+
+      def perform_analysis(self):
+            for sheet in self.datastore.sheets():
+                dsv = select_result_sheet_query(self.datastore,sheet)
+                for seg in dsv.get_segments():
+                    first_analog_signal = seg.get_esyn(seg.get_stored_esyn_ids()[0])
+                    duration = first_analog_signal.t_stop - first_analog_signal.t_start
+                    period = 1/frequency
+                    period = period.rescale(first_analog_signal.t_start.units)
+                    cycles = duration / period
+                    first_har = round(cycles)
+                    e_f0 = [abs(numpy.fft.fft(seg.get_esyn(idd))[0]) for idd in seg.get_stored_esyn_ids()]
+                    i_f0 = [abs(numpy.fft.fft(seg.get_isyn(idd))[0]) for idd in seg.get_stored_isyn_ids()]
+                    e_f1 = [2*abs(numpy.fft.fft(seg.get_esyn(idd))[first_har]) for idd in seg.get_stored_esyn_ids()]
+                    i_f1 = [2*abs(numpy.fft.fft(seg.get_isyn(idd))[first_har]) for idd in seg.get_stored_isyn_ids()]
+                    self.datastore.full_datastore.add_analysis_result(PerNeuronValue(e_f0,first_analog_signal.units,value_name = 'F0_Exc_Cond',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+                    self.datastore.full_datastore.add_analysis_result(PerNeuronValue(i_f0,first_analog_signal.units,value_name = 'F0_Inh_Cond',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+                    self.datastore.full_datastore.add_analysis_result(PerNeuronValue(e_f1,first_analog_signal.units,value_name = 'F1_Exc_Cond',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+                    self.datastore.full_datastore.add_analysis_result(PerNeuronValue(i_f1,first_analog_signal.units,value_name = 'F1_Inh_Cond',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
           
 class CV_ISI(Analysis):
       """

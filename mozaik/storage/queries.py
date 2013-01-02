@@ -191,6 +191,42 @@ class PartitionAnalysisResultsByParameterNameQuery(Query):
 ######################################################################################################################################
 
 
+######################################################################################################################################
+def partition_analysis_results_by_parameter_values_query(dsv, parameter_list):
+        
+        if dsv.analysis_results != []:
+            p = set(dsv.analysis_results[0].params().keys()) - (set(parameter_list) | set(['name']))
+            values, st = colapse(dsv.analysis_results,dsv.analysis_results,parameter_list=p)
+            dsvs = []
+
+            for vals in values:
+                new_dsv = dsv.fromDataStoreView()
+                new_dsv.block.segments = dsv.recordings_copy()
+                new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
+                new_dsv.analysis_results.extend(vals)
+                dsvs.append(new_dsv)
+            return dsvs
+        else:
+           return [] 
+           
+class PartitionAnalysisResultsByParameterValuesQuery(Query):
+    
+    """
+    This query will take all analysis results and return list of DataStoreViews
+    each holding analysis results that have the same parameter values with exception of
+    the parameters reference by parameter_list.
+
+    This is allowed only on DSVs holding the same AnalysisDataStructures.
+    """
+
+    required_parameters = ParameterSet({
+        'parameter_list': list,  # the index of the parameter against which to partition
+    })
+
+    def query(self, dsv):
+        return partition_analysis_results_by_parameter_values_query(dsv,**self.parameters)
+######################################################################################################################################
+
 
 
 

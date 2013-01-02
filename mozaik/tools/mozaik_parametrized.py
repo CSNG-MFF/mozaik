@@ -131,6 +131,15 @@ class MozaikParametrized(Parameterized):
         r = "{ \"name\" :" + "\"" + self.name + "\""+ "," + "\"module_path\" :" + "\"" + self.module_path + "\"" +',' + ", ".join(settings) + "}"
         return r
 
+    def __repr__(self):
+        """
+        Returns the description of the ASD - its class name and the list of its
+        parameters and their values.
+        """
+        param_str = "\n".join(['   \"%s\":%s' % (name, repr(val))
+                               for name, val in self.get_param_values()])
+        return self.__class__.__name__ + "\n" + param_str + "\n"
+
     @classmethod
     def idd(cls,obj):
         """
@@ -166,7 +175,7 @@ def filter_query(object_list, extra_data_list=None,allow_non_existent_parameters
     for which the parameters in kwargs match.
 
     object_list - the list of MozaikParametrized objects to filter
-    data_list - the list of values corresponding to objects in object_list
+    extra_data_list - the list of values corresponding to objects in object_list
     **kwargs - the parameter names and values that have to match
     allow_non_existent_parameters - if True it will allow objects in object list that 
                                     miss some of the parameters listed in kwargs, 
@@ -260,10 +269,10 @@ def colapse(data_list, object_list, func=None, parameter_list=[],
     d = collections.OrderedDict()
     for v, s in zip(data_list, object_list):
         d[str(s)]=[v]
-
+    
     for param in parameter_list:
         d = _colapse(d, param)
-
+    print d.keys()
     values = d.values()
     st = [MozaikParametrized.idd(idd) for idd in d.keys()]
     

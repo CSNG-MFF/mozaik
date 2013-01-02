@@ -97,7 +97,7 @@ class DataStoreView(MozaikParametrizeObject):
             sheets[ads.sheet_name] = 1
         
         if sheets.has_key(None):
-            sheet.pop(None)
+           sheets.pop(None)
                 
         return sheets.keys()
 

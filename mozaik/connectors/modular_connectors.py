@@ -111,7 +111,6 @@ class ModularProbabilisticConnector(ModularConnector):
     })
 
     def _connect(self):
-        
         cl = []
         for i in xrange(0,self.target.pop.size):
             weights = self._obtain_weights(i)

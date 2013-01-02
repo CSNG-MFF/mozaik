@@ -93,7 +93,7 @@ class MozaikConnector(Connector):
                         proj_name=self.name,
                         source_name=self.source.name,
                         target_name=self.target.name,
-                        analysis_algorithm=self.__class__.__name__))
+                        analysis_algorithm='connection storage'))
 
 
 class SpecificArborization(MozaikConnector):

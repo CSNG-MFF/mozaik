@@ -82,7 +82,22 @@ class MozaikSegment(Segment):
             Return number of STORED neurons in the Segment.
             """
             return len(self.spiketrains[0])
+        
+        def get_stored_isyn_ids(self):
+            for a in self.analogsignalarrays:
+                if a.name == 'isyn_exc':
+                   return a.annotations['source_ids']
+        
+        def get_stored_esyn_ids(self):
+            for a in self.analogsignalarrays:
+                if a.name == 'gsyn_exc':
+                   return a.annotations['source_ids']
 
+
+        def get_stored_v_ids(self):
+            for a in self.analogsignalarrays:
+                if a.name == 'v':
+                   return a.annotations['source_ids']
 
 """
 This is a temporary wrapper that should be completely replaced by Neurotools
