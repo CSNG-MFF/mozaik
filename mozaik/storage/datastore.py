@@ -7,7 +7,7 @@ from neo.core.block import Block
 #from neo.io.hdf5io import NeoHdf5IO
 import mozaik
 from mozaik.framework.interfaces import MozaikParametrizeObject
-from neo_neurotools_wrapper import NeoNeurotoolsWrapper, PickledDataStoreNeoWrapper
+from neo_neurotools_wrapper import MozaikSegment, PickledDataStoreNeoWrapper
 from mozaik.tools.mozaik_parametrized import  MozaikParametrized,filter_query
 import cPickle
 import collections
@@ -242,7 +242,7 @@ class Hdf5DataStore(DataStore):
         # re-wrap segments
         new = []
         for s in self.block.segments:
-            new.append(NeoNeurotoolsWrapper(s))
+            new.append(MozaikSegment(s))
 
         self.block.segments = new
 
@@ -275,7 +275,7 @@ class Hdf5DataStore(DataStore):
         # we get recordings as seg
         for s in segments:
             s.annotations['stimulus'] = str(stimulus)
-            self.block.segments.append(NeoNeurotoolsWrapper(s))
+            self.block.segments.append(MozaikSegment(s))
         self.stimulus_dict[str(stimulus)] = True
 
     def add_stimulus(self, data, stimulus):
