@@ -82,12 +82,27 @@ class MozaikSegment(Segment):
             Return number of STORED neurons in the Segment.
             """
             return len(self.spiketrains[0])
+        
+        def get_stored_isyn_ids(self):
+            for a in self.analogsignalarrays:
+                if a.name == 'isyn_exc':
+                   return a.annotations['source_ids']
+        
+        def get_stored_esyn_ids(self):
+            for a in self.analogsignalarrays:
+                if a.name == 'gsyn_exc':
+                   return a.annotations['source_ids']
 
         def mean_rates(self):
             """
             Returns the mean rates of the spiketrains in spikes/s
             """
             return [len(s)/(s.t_stop.rescale(qt.s).magnitude-s.t_start.rescale(qt.s).magnitude) for s in self.spiketrains]
+
+        def get_stored_v_ids(self):
+            for a in self.analogsignalarrays:
+                if a.name == 'v':
+                   return a.annotations['source_ids']
 
 """
 This is a Mozaik wrapper of neo segment, that enables pickling and lazy loading.

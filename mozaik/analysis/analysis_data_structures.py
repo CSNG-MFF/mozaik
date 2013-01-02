@@ -86,15 +86,6 @@ class AnalysisDataStructure(MozaikParametrized):
         MozaikParametrized.__init__(self, **params)
         self.tags = tags
 
-    def __str__(self):
-        """
-        Returns the description of the ASD - its class name and the list of its
-        parameters and their values.
-        """
-        param_str = "\n".join(['   \"%s\":%s' % (name, repr(val))
-                               for name, val in self.get_param_values()])
-        return self.__class__.__name__ + "\n" + param_str
-
 
 class PerNeuronValue(AnalysisDataStructure):
     """

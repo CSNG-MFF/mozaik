@@ -557,12 +557,12 @@ class ConnectivityPlot(Plotting):
         self.pnvs = None
         if pnv_dsv != None:
             self.pnvs = []
-            z = queries.partition_analysis_results_by_parameter_name_query(
+            z = queries.partition_analysis_results_by_parameter_values_query(
                                                 pnv_dsv,
-                                                ads_identifier='PerNeuronValue',
-                                                parameter_name='sheet_name')
+                                                parameter_list=['sheet_name'])
             for dsv in z:
                 a = dsv.get_analysis_result(identifier='PerNeuronValue')
+                print a
                 if len(a) > 1:
                     logger.error('ERROR: Only one PerNeuronValue value per sheet is allowed in ConnectivityPlot. Ignoring PNVs')
                     self.pnvs = None
@@ -611,6 +611,11 @@ class ConnectivityPlot(Plotting):
 
         assert numpy.shape(w) == numpy.shape(d)
         
+        # checking 
+        print 'ZZZZZZZZZZZZZZZ'
+        print self.connections[idx].proj_name
+        print numpy.sum(w)
+        
         # pick the right PerNeuronValue to show
         pnv = []
         if self.pnvs != None:
@@ -632,40 +637,40 @@ class ConnectivityPlot(Plotting):
         
         # Plot the weights
         gs = gss[0,0]
-        params = params.copy()
+        p = params.copy()
         if pnv != []:
             from mozaik.tools.circ_stat import circ_mean
             (angle, mag) = circ_mean(numpy.array(pnv.values),
                                      weights=w,
                                      high=pnv.period)
-            params.setdefault("title", 'Weights: '+ str(self.connections[idx].proj_name) + "| Weighted mean: " + str(angle))
-            params.setdefault("colorbar_label", pnv.value_name)
-            params.setdefault("colorbar", True)
+            p.setdefault("title", 'Weights: '+ str(self.connections[idx].proj_name) + "| Weighted mean: " + str(angle))
+            p.setdefault("colorbar_label", pnv.value_name)
+            p.setdefault("colorbar", True)
 
             if self.connections[idx].source_name == self.connections[idx].target_name:
                 ConnectionPlot(sx, sy, tx, ty, w, colors=pnv.values, line=False,
-                               period=pnv.period, **params)(gs)
+                               period=pnv.period, **p)(gs)
             else:
                 ConnectionPlot(sx, sy, numpy.min(sx)*1.2, numpy.min(sy)*1.2, w,
                                colors=pnv.values, period=pnv.period, line=True,
-                               **params)(gs)
+                               **p)(gs)
         else:
-            params.setdefault("title", 'Weights: '+ self.connections[idx].proj_name)
+            p.setdefault("title", 'Weights: '+ self.connections[idx].proj_name)
             if self.connections[idx].source_name == self.connections[idx].target_name:
-                ConnectionPlot(sx, sy, tx, ty, w, line=False, **params)(gs)
+                ConnectionPlot(sx, sy, tx, ty, w, line=False, **p)(gs)
             else:
                 ConnectionPlot(sx, sy, numpy.min(sx)*1.2, numpy.min(sy)*1.2,
-                               w, line=True, **params)(gs)
+                               w, line=True, **p)(gs)
 
         # Plot the delays
         gs = gss[1,0]
-        params = params.copy()
-        params.setdefault("title", 'Delays: '+ self.connections[idx].proj_name)
+        p = params.copy()
+        p.setdefault("title", 'Delays: '+ self.connections[idx].proj_name)
         if self.connections[idx].source_name == self.connections[idx].target_name:
-            ConnectionPlot(sx, sy, tx, ty, (numpy.zeros(w.shape)+0.3)*(w!=0), colors=d, line=False, **params)(gs)
+            ConnectionPlot(sx, sy, tx, ty, (numpy.zeros(w.shape)+0.3)*(w!=0), colors=d, line=False, **p)(gs)
         else:
             ConnectionPlot(sx, sy, numpy.min(sx)*1.2, numpy.min(sy)*1.2,
-                           (numpy.zeros(w.shape)+0.3)*(w!=0), colors=d, line=True, **params)(gs)
+                           (numpy.zeros(w.shape)+0.3)*(w!=0), colors=d, line=True, **p)(gs)
         
         
 
