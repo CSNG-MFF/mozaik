@@ -128,7 +128,7 @@ class MozaikParametrized(Parameterized):
         Turn the MozaikParametrized instance into string - this stores ONLY the names and values of each parameter and the module path from which this instance class came from.
         """
         settings = ['\"%s\":%s' % (name, repr(val)) for name, val in self.get_param_values()]
-        r = "{ \"name\" :" + "\"" + self.name + "\""+ "," + "\"module_path\" :" + "\"" + self.module_path + "\"" +',' + ", ".join(settings) + "}"
+        r = "{\"module_path\" :" + "\"" + self.module_path + "\"" +',' + ", ".join(settings) + "}"
         return r
 
     def __repr__(self):
@@ -225,6 +225,7 @@ def _colapse(dd, param):
 
         setattr(s1,param,None)
         s1 = str(s1)
+
         if s1 in d:
            d[s1].extend(dd[s])
         else:
@@ -269,11 +270,11 @@ def colapse(data_list, object_list, func=None, parameter_list=[],
     d = collections.OrderedDict()
     for v, s in zip(data_list, object_list):
         d[str(s)]=[v]
-    
+
     for param in parameter_list:
         d = _colapse(d, param)
-    print d.keys()
     values = d.values()
+
     st = [MozaikParametrized.idd(idd) for idd in d.keys()]
     
     
@@ -290,22 +291,28 @@ def varying_parameters(parametrized_objects):
     if not identical_parametrized_object_params(parametrized_objects):
         raise ValueError("varying_parameters: accepts only MozaikParametrized lists with the same parameters")
 
-    p = parametrized_objects[0].params().keys()
     varying_params = collections.OrderedDict()
-    for n in p.keys():
+    for n in parametrized_objects[0].params().keys():
         for o in parametrized_objects:
             if getattr(o,n) != getattr(parametrized_objects[0],n):
                 varying_params[n] = True
                 break
     return varying_params.keys()
 
-
+def parameter_value_list(parametrized_objects,param):
+    """
+    parametrized_objects - a list of MozaikParametrized instances
+    param  - name of the parameter
+    
+    Returns a list of different values that the parameter param has across the MozaikParametrized objects in parametrized_objects list
+    """
+    return set([getattr(obj,param) for obj in parametrized_objects])
+    
 def identical_parametrized_object_params(parametrized_objects):
     for o in parametrized_objects:
         if set(o.params().keys()) != set(parametrized_objects[0].params().keys()):
                 return False
     return True
-                
                 
 def matching_parametrized_object_params(parametrized_objects,params=None,except_params=None):
     """

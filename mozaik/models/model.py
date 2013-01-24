@@ -45,7 +45,7 @@ class Model(MozaikComponent):
         MozaikComponent.__init__(self, self, parameters)
         self.first_time = True
         self.sim = sim
-        self.node = sim.setup(timestep=0.1, min_delay=0.1, max_delay=100.0)  # should have some parameters here
+        self.node = sim.setup(timestep=0.1, min_delay=0.1, max_delay=100.0, threads=4)  # should have some parameters here
         self.sheets = {}
         self.connectors = {}
 
@@ -71,15 +71,15 @@ class Model(MozaikComponent):
         sim_run_time += self.run(stimulus.duration)
 
         segments = []
-        #if (not MPI) or (mpi_comm.rank == MPI_ROOT):
-        for sheet in self.sheets.values():    
-            if sheet.to_record != None:
-                if self.parameters.reset:
-                    s = sheet.write_neo_object()
-                    segments.append(s)
-                else:
-                    s = sheet.write_neo_object(stimulus.duration)
-                    segments.append(s)
+        if (not MPI) or (mpi_comm.rank == MPI_ROOT):
+            for sheet in self.sheets.values():    
+                if sheet.to_record != None:
+                    if self.parameters.reset:
+                        s = sheet.write_neo_object()
+                        segments.append(s)
+                    else:
+                        s = sheet.write_neo_object(stimulus.duration)
+                        segments.append(s)
 
         self.first_time = False
         return (segments, sensory_input,sim_run_time)
@@ -105,10 +105,12 @@ class Model(MozaikComponent):
             logger.info("Simulating the network for %s ms with blank stimulus" % self.parameters.null_stimulus_period)
             self.sim.run(self.parameters.null_stimulus_period)
             self.simulator_time+=self.parameters.null_stimulus_period
-            for sheet in self.sheets.values():    
-                if sheet.to_record != None:
-                   sheet.write_neo_object()
-                
+            
+            if (not MPI) or (mpi_comm.rank == MPI_ROOT):
+                for sheet in self.sheets.values():    
+                    if sheet.to_record != None:
+                       sheet.write_neo_object()
+                    
         return time.time()-t0    
     
 

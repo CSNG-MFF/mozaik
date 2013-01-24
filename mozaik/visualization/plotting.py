@@ -557,12 +557,11 @@ class ConnectivityPlot(Plotting):
         self.pnvs = None
         if pnv_dsv != None:
             self.pnvs = []
-            z = queries.partition_analysis_results_by_parameter_values_query(
+            z = queries.partition_analysis_results_by_parameter_query(
                                                 pnv_dsv,
-                                                parameter_list=['sheet_name'])
+                                                parameter_list=['sheet_name'],excpt=True)
             for dsv in z:
                 a = dsv.get_analysis_result(identifier='PerNeuronValue')
-                print a
                 if len(a) > 1:
                     logger.error('ERROR: Only one PerNeuronValue value per sheet is allowed in ConnectivityPlot. Ignoring PNVs')
                     self.pnvs = None
@@ -610,11 +609,6 @@ class ConnectivityPlot(Plotting):
             d = self.connections[idx].delays[:, self.parameters.neuron]
 
         assert numpy.shape(w) == numpy.shape(d)
-        
-        # checking 
-        print 'ZZZZZZZZZZZZZZZ'
-        print self.connections[idx].proj_name
-        print numpy.sum(w)
         
         # pick the right PerNeuronValue to show
         pnv = []

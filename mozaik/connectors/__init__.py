@@ -59,14 +59,13 @@ class MozaikConnector(Connector):
         x = []
         y = []
         w = []
-        
         if afferent:
             weights = weights[:, index].ravel()
             p = self.proj.pre
         else:
             weights = weights[index, :].ravel()
             p = self.proj.post
-
+        
         for (ww, i) in zip(weights, numpy.arange(0, len(weights), 1)):
                 if not math.isnan(ww):                
                     x.append(p.positions[0][i])
@@ -78,7 +77,10 @@ class MozaikConnector(Connector):
         zi = griddata(x, y, w, xi, yi)
         pylab.figure()
         #pylab.imshow(zi)
-        pylab.scatter(x,y,marker='o',c=w,s=5,zorder=10)
+        pylab.scatter(x,y,marker='o',c=w,s=50)
+        pylab.xlim(-self.source.parameters.sx/2,self.source.parameters.sx/2)
+        pylab.ylim(-self.source.parameters.sy/2,self.source.parameters.sy/2)
+        pylab.colorbar()
         pylab.title('Connection field from %s to %s of neuron %d' % (self.source.name,
                                                                      self.target.name,
                                                                      index))
@@ -106,7 +108,7 @@ class SpecificArborization(MozaikConnector):
     """
 
     required_parameters = ParameterSet({
-        'weight_factor': float,  # weight scaler
+        'weight_factor': float,  # the overall (sum) weight that a single target neuron should receive
     })
 
     def __init__(self, network, source, target, connection_matrix,delay_matrix, parameters, name):
@@ -116,14 +118,26 @@ class SpecificArborization(MozaikConnector):
         self.delay_matrix = delay_matrix
 
     def _connect(self):
-        X,Y = numpy.meshgrid(numpy.arange(0,self.source.pop.size,1),numpy.arange(0,self.target.pop.size,1))
-        self.connection_list = zip((X.flatten(),Y.flatten(),self.connection_matrix.flatten()*self.parameters.weight_factor,self.delay_matrix.flatten()))
+        X = numpy.zeros(self.connection_matrix.shape)
+        Y = numpy.zeros(self.connection_matrix.shape)
         
-        self.method = self.sim.FromListConnector(self.connection_list)
+        for x in xrange(0,X.shape[0]):
+            for y in xrange(0,X.shape[1]):
+                X[x][y] = x
+                Y[x][y] = y
+        
+        for i in xrange(0,self.target.pop.size):
+            self.connection_matrix[:,i] = self.connection_matrix[:,i] / numpy.sum(self.connection_matrix[:,i])*self.parameters.weight_factor
+
+        self.connection_list = zip(numpy.array(X).flatten(),numpy.array(Y).flatten(),self.connection_matrix.flatten(),self.delay_matrix.flatten())
+        # get rid of very weak synapses
+        z = numpy.max(self.connection_matrix.flatten())
+        self.connection_list = [(int(a),int(b),c,d) for (a,b,c,d) in self.connection_list if c>(z/100.0)]
+        method = self.sim.FromListConnector(self.connection_list)
         self.proj = self.sim.Projection(
                                 self.source.pop,
                                 self.target.pop,
-                                self.method,
+                                method,
                                 synapse_dynamics=self.short_term_plasticity,
                                 label=self.name,
                                 rng=None,
@@ -159,16 +173,14 @@ class SpecificProbabilisticArborization(MozaikConnector):
         self.delay_matrix = delay_matrix
 
     def _connect(self):
-        X,Y = numpy.meshgrid(numpy.arange(0,self.source.pop.size,1),numpy.arange(0,self.target.pop.size,1))
         weights = self.connection_matrix
         delays = self.delay_matrix
-        
         cl = []
         
         for i in xrange(0,self.target.pop.size):
             co = Counter(sample_from_bin_distribution(weights[:,i].flatten(), int(self.parameters.num_samples)))
             cl.extend([(k,i,self.parameters.weight_factor*co[k]/self.parameters.num_samples,delays[k][i]) for k in co.keys()])
-            
+        
         method = self.sim.FromListConnector(cl)
         self.proj = self.sim.Projection(
                                 self.source.pop,

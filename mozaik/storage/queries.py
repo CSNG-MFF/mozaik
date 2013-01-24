@@ -50,7 +50,7 @@ def param_filter_query(dsv,**kwargs):
            seg_filtered = set([]) 
     else:
            seg_filtered = set(dsv.block.segments)
-           
+    
     ads_filtered= set(filter_query(dsv.analysis_results,**kwargs))
     
     if st_kwargs != {}:
@@ -124,6 +124,7 @@ class TagBasedQuery(Query):
 
 ########################################################################
 def partition_by_stimulus_paramter_query(dsv, parameter_list):
+        assert name not in parameter_list, "One cannot partition against <name> parameter"
         st = dsv.get_stimuli()
         values, st = colapse(dsv.block.segments,st,parameter_list=parameter_list,allow_non_identical_objects=True)
         dsvs = []
@@ -157,7 +158,13 @@ class PartitionByStimulusParamterQuery(Query):
 
 
 ######################################################################################################################################
-def partition_analysis_results_by_parameters_query(dsv, parameter_list):
+def partition_analysis_results_by_parameters_query(dsv, parameter_list=None,excpt=False):
+        if dsv.analysis_results == []: return []
+    
+        if excpt:
+            assert equal_ads_type(dsv), "If excpt==True you have to provide a dsv containing the same ADS type"
+            parameter_list = set(dsv.analysis_results[0].params().keys()) - (set(parameter_list) | set(['name']))
+            
         values, st = colapse(dsv.analysis_results,dsv.analysis_results,parameter_list=parameter_list,allow_non_identical_objects=True)
         dsvs = []
 
@@ -173,17 +180,20 @@ class PartitionAnalysisResultsByParameterNameQuery(Query):
     
     """
     This query will take all analysis results and return list of DataStoreViews
-    each holding analysis results that have the same parameters with exception of
-    the parameters reference by parameter_list.
+    each holding analysis results that have the same values of
+    the parameters in parameter_list.
 
     Note that in most cases one wants to do this only against datastore holding
     only single analysis results type! In that case the datastore is partitioned into
     subsets each holding recordings to the same stimulus with the same paramter
     values, with the exception to the parameters in parameter_list.
+    
+    In the case of exc this is allowed only on DSVs holding the same AnalysisDataStructures.
     """
 
     required_parameters = ParameterSet({
         'parameter_list': list,  # the index of the parameter against which to partition
+        'excpt' : bool, # will treat the parameter list as except list - i.e. it will partition again all parameter except those in parameter_list
     })
 
     def query(self, dsv):
@@ -191,41 +201,22 @@ class PartitionAnalysisResultsByParameterNameQuery(Query):
 ######################################################################################################################################
 
 
-######################################################################################################################################
-def partition_analysis_results_by_parameter_values_query(dsv, parameter_list):
-        
-        if dsv.analysis_results != []:
-            p = set(dsv.analysis_results[0].params().keys()) - (set(parameter_list) | set(['name']))
-            values, st = colapse(dsv.analysis_results,dsv.analysis_results,parameter_list=p)
-            dsvs = []
 
-            for vals in values:
-                new_dsv = dsv.fromDataStoreView()
-                new_dsv.block.segments = dsv.recordings_copy()
-                new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
-                new_dsv.analysis_results.extend(vals)
-                dsvs.append(new_dsv)
-            return dsvs
-        else:
-           return [] 
-           
-class PartitionAnalysisResultsByParameterValuesQuery(Query):
-    
-    """
-    This query will take all analysis results and return list of DataStoreViews
-    each holding analysis results that have the same parameter values with exception of
-    the parameters reference by parameter_list.
 
-    This is allowed only on DSVs holding the same AnalysisDataStructures.
-    """
 
-    required_parameters = ParameterSet({
-        'parameter_list': list,  # the index of the parameter against which to partition
-    })
 
-    def query(self, dsv):
-        return partition_analysis_results_by_parameter_values_query(dsv,**self.parameters)
-######################################################################################################################################
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -251,13 +242,21 @@ def equal_stimulus_type(dsv):
 ########################################################################
 
 ########################################################################
-def equal_ads_except(dsv, except_params):
+def equal_ads_except(dsv, params,excpt_params):
     """
     This functions tests whether DSV contains only ADS of the same kind
     and parametrization with the exception of parameters listed in
     except_params.
     """
     return matching_parametrized_object_params(dsv.analysis_results,except_params=except_params)
+########################################################################
+
+########################################################################
+def equal_ads_type(dsv):
+    """
+    Returns true if the dsv contains ADS of the same type.
+    """
+    return matching_parametrized_object_params(dsv.analysis_results,params=['name'])
 ########################################################################
 
 ########################################################################

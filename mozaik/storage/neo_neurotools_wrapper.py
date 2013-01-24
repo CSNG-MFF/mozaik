@@ -127,6 +127,11 @@ class PickledDataStoreNeoWrapper(MozaikSegment):
                 del result['_spiketrains']
                 del result['analogsignalarrays']
             return result
+        
+        def release(self):
+            self.full = False
+            del self._spiketrains
+            del self.analogsignalarrays
 
 
 def spike_dic_to_list(d):

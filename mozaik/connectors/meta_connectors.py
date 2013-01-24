@@ -170,6 +170,7 @@ class GaborConnector(MozaikComponent):
                                                        phase,
                                                        size,
                                                        aspect_ratio))
+              
                 off_weights[:,j] = -numpy.minimum(0, gabor(off.positions[0],
                                                          off.positions[1],
                                                          target.pop.positions[0][j],
@@ -189,7 +190,7 @@ class GaborConnector(MozaikComponent):
                                                        phase,
                                                        size,
                                                        aspect_ratio))
-                                                       
+                
                 off_weights[:,j] = -numpy.minimum(0, gabor(off.positions[0],
                                                          off.positions[1],
                                                          0,
@@ -220,7 +221,7 @@ class GaborConnector(MozaikComponent):
                             'OFF_to_[' + target.name + ']')
 
         on_proj.connect()
-        off_proj.connect()
-        #on_proj.connection_field_plot_continuous(0)
-        #off_proj.connection_field_plot_continuous(0)
+        on_proj.connection_field_plot_continuous(0)
         
+        off_proj.connect()
+        off_proj.connection_field_plot_continuous(0)

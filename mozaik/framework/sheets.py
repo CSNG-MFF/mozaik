@@ -233,24 +233,30 @@ class Sheet(MozaikComponent):
 
 
 class RetinalUniformSheet(Sheet):
-
+    """
+    Retinal sheet is organized on a grid
+    """
     required_parameters = ParameterSet({
         'sx': float,  # degrees, x size of the region
         'sy': float,  # degrees, y size of the region
-        'density': float,  # neurons/(degree^2)
+        'density': int,  # neurons along each axis
     })
 
     def __init__(self, model, parameters):
-        logger.info("Creating %s with %d neurons." % (self.__class__.__name__, int(parameters.sx * parameters.sy * parameters.density)))
+        logger.info("Creating %s with %d neurons." % (self.__class__.__name__, int(parameters.density * parameters.density)))
         Sheet.__init__(self, model, parameters)
-        rs = space.RandomStructure(boundary=space.Cuboid(parameters.sx, parameters.sy, 0),
-                                   origin=(0.0, 0.0, 0.0),
-                                   rng=mozaik.rng)
-        self.pop = self.sim.Population(int(parameters.sx * parameters.sy * parameters.density),
+        #rs = space.RandomStructure(boundary=space.Cuboid(parameters.sx, parameters.sy, 0),
+        #                           origin=(0.0, 0.0, 0.0),
+        #                           rng=mozaik.rng)
+        
+        rs = space.Grid2D(aspect_ratio=1, dx=parameters.sx/parameters.density, dy=parameters.sy/parameters.density, x0=-parameters.sx/2,y0=-parameters.sy/2,z=0.0)
+        
+        self.pop = self.sim.Population(int(parameters.density * parameters.density),
                                        getattr(self.model.sim, self.parameters.cell.model),
                                        self.parameters.cell.params,
                                        rs,
                                        label=self.name)
+                                       
         for var, val in self.parameters.cell.initial_values.items():
             self.pop.initialize(var, val)
 

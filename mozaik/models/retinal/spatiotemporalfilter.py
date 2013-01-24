@@ -215,7 +215,7 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
     """Retina/LGN model with spatiotemporal receptive field."""
 
     required_parameters = ParameterSet({
-        'density': float,  # neurons per degree squared
+        'density': int,  # neurons per degree squared
         'size': tuple,  # degrees of visual field
         'linear_scaler': float,  # linear scaler that the RF output is multiplied with
         'cached': bool,
@@ -244,8 +244,7 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
 
     def __init__(self, model, parameters):
         MozaikRetina.__init__(self, model, parameters)
-        self.shape = (int(self.parameters.size[0] * numpy.sqrt(self.parameters.density)),
-                      int(self.parameters.size[1] * numpy.sqrt(self.parameters.density)))
+        self.shape = (self.parameters.density,self.parameters.density)
         self.sheets = {}
         self._built = False
         self.rf_types = ('X_ON', 'X_OFF')
