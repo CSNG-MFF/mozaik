@@ -199,7 +199,13 @@ def filter_query(object_list, extra_data_list=None,allow_non_existent_parameters
         if not allow and not (set(kwargs.keys()) <= set(x.params().keys())):
            return False 
         keys = set(kwargs.keys()) & set(x.params().keys())
-        return [getattr(x,k) for k in keys] == [kwargs[k] for k in keys]
+        for k in keys:
+            if not isinstance(kwargs[k],list): 
+                if kwargs[k] != getattr(x,k):
+                   return False
+            elif not (getattr(x,k) in kwargs[k]):
+               return False
+        return True
     
     res = zip(*filter(lambda x : fl(x,kwargs,allow_non_existent_parameters),zip(object_list,extra_data_list)))
     
@@ -268,15 +274,16 @@ def colapse(data_list, object_list, func=None, parameter_list=[],
 
     d = collections.OrderedDict()
     for v, s in zip(data_list, object_list):
-        d[str(s)]=[v]
-    
+        if str(s) in d:
+            d[str(s)].append(v)
+        else:
+            d[str(s)]=[v]
+            
     for param in parameter_list:
         d = _colapse(d, param)
-    print d.keys()
+        
     values = d.values()
     st = [MozaikParametrized.idd(idd) for idd in d.keys()]
-    
-    
     if func != None:
         return ([func(v) for v in values], st)
     else:
@@ -292,7 +299,7 @@ def varying_parameters(parametrized_objects):
 
     p = parametrized_objects[0].params().keys()
     varying_params = collections.OrderedDict()
-    for n in p.keys():
+    for n in p:
         for o in parametrized_objects:
             if getattr(o,n) != getattr(parametrized_objects[0],n):
                 varying_params[n] = True

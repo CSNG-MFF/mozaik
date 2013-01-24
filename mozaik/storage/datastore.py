@@ -57,8 +57,7 @@ class DataStoreView(MozaikParametrizeObject):
     This can be a list. If further more specific 'addressing' is required it
     has to be done by the corresponding visualization or analysis code that
     asked for the AnalysisDataStructure's based on the knowledge of their
-    content.
-    Or specific query filters can be written that understand the specific type
+    content. Or a specific query filters can be written that understand the specific type
     of AnalysisDataStructure and can filter them based on their internal data.
 
     DataStoreView also keeps a reference to a full Datastore <full_datastore>
@@ -67,9 +66,16 @@ class DataStoreView(MozaikParametrizeObject):
     to insert their results into the original full datastore as this is
     (almost?) always the desired behaviours (note DSV does not actually have
     functions to add new recordings or analysis results).
+    
+    By default, the datastore will refuse to add a new AnalysisDataStructure 
+    to the datastore if the new ADS has the same values of all its parameters as
+    some other ADS already inserted in the datastore. This is so that each ADS
+    stored in datastore is uniquely identifiable based on its parameters.
+    If the datastore is created (loaded) with flag replace set to True in the situation
+    of such conflict the datastore will replace the new ADS for the one already in the datastore.
     """
 
-    def __init__(self, parameters, full_datastore):
+    def __init__(self, parameters, full_datastore,replace=False):
         """
         Just check the parameters, and load the data.
         """
@@ -77,6 +83,7 @@ class DataStoreView(MozaikParametrizeObject):
         # we will hold the recordings as one neo Block
         self.block = Block()
         self.analysis_results = []
+        self.replace = replace
         self.retinal_stimulus = collections.OrderedDict()
         self.full_datastore = full_datastore  # should be self if actually the
                                               # instance is actually DataStore
@@ -181,11 +188,11 @@ class DataStore(DataStoreView):
         'root_directory': str,
     })
 
-    def __init__(self, load, parameters):
+    def __init__(self, load, parameters, **params):
         """
         Just check the parameters, and load the data.
         """
-        DataStoreView.__init__(self, parameters, self)
+        DataStoreView.__init__(self, parameters, self, **params)
 
         # used as a set to quickly identify whether a stimulus was already presented
         # stimuli are otherwise saved with segments within the block as annotations
@@ -283,17 +290,20 @@ class Hdf5DataStore(DataStore):
 
     def add_analysis_result(self, result):
         flag = True
-        for ads in self.analysis_results:
+        for i,ads in enumerate(self.analysis_results):
             if result.equalParams(ads):
                 flag = False
                 break
-
+        
         if flag:
             self.analysis_results.append(result)
             return
-
-        logger.error("Analysis Data Structure with the same parametrization already added in the datastore. Currently uniqueness is required. The ADS was not added. User should modify analysis specification to avoid this!: %s" % (str(result)))
-        raise ValueError("Analysis Data Structure with the same parametrization already added in the datastore. Currently uniqueness is required. The ADS was not added. User should modify analysis specification to avoid this!: %s" % (str(result)))
+        else:
+            if self.replace:
+               self.analysis_results[i] = result
+               return
+            logger.error("Analysis Data Structure with the same parametrization already added in the datastore. Currently uniqueness is required. The ADS was not added. User should modify analysis specification to avoid this!: %s" % (str(result)))
+            raise ValueError("Analysis Data Structure with the same parametrization already added in the datastore. Currently uniqueness is required. The ADS was not added. User should modify analysis specification to avoid this!: %s" % (str(result)))
 
 
 class PickledDataStore(Hdf5DataStore):
@@ -305,6 +315,7 @@ class PickledDataStore(Hdf5DataStore):
         f = open(self.parameters.root_directory + '/datastore.recordings.pickle',  'rb')
         self.block = cPickle.load(f)
         for s in self.block.segments:
+            s.full = False
             self.stimulus_dict[s.annotations['stimulus']] = True
             s.datastore_path = self.parameters.root_directory
 

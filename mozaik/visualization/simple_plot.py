@@ -6,6 +6,7 @@ import mozaik.visualization.plotting_helper_functions as phf
 import pylab
 import numpy
 import mozaik
+import mozaik.tools.units 
 
 logger = mozaik.getMozaikLogger("Mozaik")
 
@@ -16,7 +17,7 @@ class SimplePlot(object):
     values by the `Plotting` mechanisms should take precedence over those done
     by specific instances of `SimplePlot`. In order to enforce this precedence,
     the modifiable parameters of the classes should be stored in the common
-    `dictionary` parameters. Each class derived from `SimplePlot` should add its
+    dictionary `parameters`. Each class derived from `SimplePlot` should add its
     modifiable parameters into the `parameters` dictionary in its constructor.
 
     The kwargs passed to the instances of `SimplePlot` from the `Plotting`
@@ -42,21 +43,20 @@ class SimplePlot(object):
     def pre_axis_plot(self):
         raise NotImplementedError
 
-    def __init__(self, **kwargs):
+    def __init__(self):
         self.parameters = {}  # the common modifiable parameter dictionary
-        self.to_be_modified_parameters = kwargs
 
     def __getattr__(self, name):
         if name == 'parameters':
             return self.__dict__[name]
         if name in self.__dict__['parameters'] and name in self.__dict__:
-            raise AttributeError("Error, attribute both in __dict__ and self.parameters")
+            raise AttributeError("Error, attribute %s both in __dict__ and self.parameters" % (name))
         elif name in self.__dict__['parameters']:
             return self.__dict__['parameters'][name]
         elif name in self.__dict__:
             return self.__dict__[name]
         else:
-            raise AttributeError
+            raise AttributeError(name)
 
     def __setattr__(self, name, value):
         if name == 'parameters':
@@ -71,38 +71,39 @@ class SimplePlot(object):
         else:
             self.__dict__[name] = value
 
-    def __call__(self, gs):
+    def __call__(self, gs,params):
         """
         Calls all the plotting styling and execution functions in the right
         order
         """
-        self.update_params()
+        self.update_params(params)
         self.pre_axis_plot()
         self.axis = pylab.subplot(gs)
         self.pre_plot()
         self.plot()
         self.post_plot()
+        return self.axis
 
-    def update_params(self):
+    def update_params(self,params):
         """
         Updates the modifiable parameters and sets them to be further
         un-modifiable
         """
-        for key in self.to_be_modified_parameters:
+        for key in params:
             if not key in self.__dict__['parameters']:
                 raise AttributeError("Error, unknown parameter supplied %s, known parameters: %s" % (key,
                                                                                                      self.__dict__['parameters'].keys()))
-        self.__dict__['parameters'].update(self.to_be_modified_parameters)
+        self.__dict__['parameters'].update(params)
         self.modified = {}
         for k in self.__dict__['parameters']:
             self.modified[k] = False
-        for k in self.to_be_modified_parameters:
+        for k in params:
             self.modified[k] = True
 
 
 class StandardStyle(SimplePlot):
 
-    def __init__(self, **kwargs):
+    def __init__(self):
         """
         fontsize            Font size to be used for tick labels and axis labels
         ?_tick_style        The style of ticks to be plotted. Note that the style interacts with the x_ticks and y_ticks commands in that it formats the ticks set by these
@@ -128,7 +129,7 @@ class StandardStyle(SimplePlot):
         y_tick_pad          what are the y tick padding of labels for axis
         """
 
-        SimplePlot.__init__(self, **kwargs)
+        SimplePlot.__init__(self)
         fontsize = 12
         self.parameters = {
             "fontsize": fontsize,
@@ -180,9 +181,9 @@ class StandardStyle(SimplePlot):
         self.ticks()
 
         if self.y_label:
-            pylab.ylabel(self.y_label)
+            pylab.ylabel(self.y_label,multialignment='center')
         if self.x_label:
-            pylab.xlabel(self.x_label)
+            pylab.xlabel(self.x_label,multialignment='center')
         if not self.top_right_border:
             phf.disable_top_right_axis(self.axis)
         if not self.left_border:
@@ -245,8 +246,8 @@ class SpikeRasterPlot(StandardStyle):
     plotted. If neurons are None, (up to) first 10 neurons will be plotted.
     """
 
-    def __init__(self, spike_lists, **kwargs):
-        StandardStyle.__init__(self, **kwargs)
+    def __init__(self, spike_lists):
+        StandardStyle.__init__(self)
         self.sps = spike_lists
         self.parameters["colors"] = None
         self.parameters["neurons"] = None
@@ -291,7 +292,6 @@ class SpikeRasterPlot(StandardStyle):
             self.y_label = 'Neuron/Trial'
         self.y_ticks = []
 
-
 class SpikeHistogramPlot(SpikeRasterPlot):
     """
     This function plots the raster plot of spikes in the spike_list argument.
@@ -309,12 +309,11 @@ class SpikeHistogramPlot(SpikeRasterPlot):
     grouped by the neurons. Only neurons in the neurons parameter will be
     plotted. If neurons are None, the first neuron will be plotted. """
 
-    def __init__(self, spike_lists, **kwargs):
-        SpikeRasterPlot.__init__(self, spike_lists, **kwargs)
+    def __init__(self, spike_lists):
+        SpikeRasterPlot.__init__(self, spike_lists)
         self.parameters["bin_width"] = 5.0
-
+        self.parameters["colors"] = ['#000000' for i in xrange(0, len(self.sps))]
     def plot(self):
-        self.colors = ['#000000' for i in xrange(0, len(self.sps))]
         self.neurons = [i for i in xrange(0, min(10, len(self.sps[0][0])))]
 
         t_stop = float(self.sps[0][0][0].t_stop)
@@ -343,7 +342,6 @@ class SpikeHistogramPlot(SpikeRasterPlot):
 
 animation_list = []
 
-
 class StandardStyleAnimatedPlot(StandardStyle):
     """
     This is an abstract class helping construction of animated graphs.
@@ -362,8 +360,8 @@ class StandardStyleAnimatedPlot(StandardStyle):
     figure, so now `draw()` or `show()` or event commands should be issued.
     """
 
-    def __init__(self, frame_duration, **kwargs):
-        StandardStyle.__init__(self, **kwargs)
+    def __init__(self, frame_duration):
+        StandardStyle.__init__(self)
         self.lock=False
         self.frame_duration = frame_duration
         self.artists = []
@@ -390,8 +388,8 @@ class StandardStyleAnimatedPlot(StandardStyle):
 
 class PixelMovie(StandardStyleAnimatedPlot):
 
-    def __init__(self, movie, frame_duration, **kwargs):
-        StandardStyleAnimatedPlot.__init__(self, frame_duration, **kwargs)
+    def __init__(self, movie, frame_duration):
+        StandardStyleAnimatedPlot.__init__(self, frame_duration)
         self.movie = movie
         self.l = len(movie)
         self.i = 0
@@ -411,8 +409,8 @@ class PixelMovie(StandardStyleAnimatedPlot):
 
 class ScatterPlotMovie(StandardStyleAnimatedPlot):
 
-    def __init__(self, x, y, z, frame_duration, **kwargs):
-        StandardStyleAnimatedPlot.__init__(self, frame_duration, **kwargs)
+    def __init__(self, x, y, z, frame_duration):
+        StandardStyleAnimatedPlot.__init__(self, frame_duration)
         self.z = z
         self.x = x
         self.y = y
@@ -460,12 +458,16 @@ class ScatterPlot(StandardStyle):
                       if the z is a periodic value
               period -
                       if periodic is True the z should come from (0,period)
+              
+              identity_line -
+                      should identity line be show?  
+              
               colorbar -
                       should there be a colorbar ?
     """
 
-    def __init__(self, x, y, z, periodic=False, period=None, **kwargs):
-        StandardStyle.__init__(self, **kwargs)
+    def __init__(self, x, y, z='b', periodic=False, period=None):
+        StandardStyle.__init__(self)
         self.z = z
         self.x = x
         self.y = y
@@ -477,12 +479,14 @@ class ScatterPlot(StandardStyle):
             self.parameters["colormap"] = 'gray'
         self.parameters["dot_size"] = 20
         self.parameters["marker"] = 'o'
+        self.parameters["equal_aspect_ratio"] = True
         self.parameters["top_right_border"]=True
         self.parameters["colorbar"] = False
+        self.parameters["identity_line"] = False
         self.parameters["colorbar_label"] = None
 
     def plot(self):
-        if not self.periodic:
+        if not self.periodic and self.z !='b':
             vmax = numpy.max(self.z)
             vmin = numpy.min(self.z)
         else:
@@ -496,13 +500,17 @@ class ScatterPlot(StandardStyle):
                                cmap=self.colormap,
                                vmin=vmin,
                                vmax=vmax)
-        self.axis.set_aspect(aspect=1.0, adjustable='box')
-        #self.x_lim = (1.1*numpy.min(self.x), 1.1*numpy.max(self.x))
-        #self.y_lim = (1.1*numpy.min(self.y), 1.1*numpy.max(self.y))
+        if self.equal_aspect_ratio:
+            self.axis.set_aspect(aspect=1.0, adjustable='box')
+        self.x_lim = (numpy.min(self.x),numpy.max(self.x))
+        self.y_lim = (numpy.min(self.y),numpy.max(self.y))
 
         #self.x_ticks = [1.1*numpy.min(self.x), 1.1*numpy.max(self.x)]
         #self.y_ticks = [1.1*numpy.min(self.y), 1.1*numpy.max(self.y)]
 
+        if self.identity_line:
+           pylab.plot([-1e10,1e10],[-1e10,1e10],'k',linewidth=2) 
+           
         if self.colorbar:
             cb = pylab.colorbar(ax, ticks=[vmin, vmax], use_gridspec=True)
             cb.set_label(self.colorbar_label)
@@ -528,8 +536,8 @@ class StandardStyleLinePlot(StandardStyle):
 
     """
 
-    def __init__(self, x, y, labels=None, **kwargs):
-        StandardStyle.__init__(self, **kwargs)
+    def __init__(self, x, y, labels=None):
+        StandardStyle.__init__(self)
         self.x = x
         self.y = y
         self.parameters["labels"] = labels
@@ -593,8 +601,8 @@ class ConductancesPlot(StandardStyle):
     The legend=(True/False) parameter says whether legend should be displayed.
     """
 
-    def __init__(self, exc, inh, **kwargs):
-        StandardStyle.__init__(self, **kwargs)
+    def __init__(self, exc, inh):
+        StandardStyle.__init__(self)
         self.gsyn_es = exc
         self.gsyn_is = inh
         self.parameters["legend"] = False
@@ -606,12 +614,12 @@ class ConductancesPlot(StandardStyle):
         t_stop = float(self.gsyn_es[0].t_stop - sampling_period)
         t_start = float(self.gsyn_es[0].t_start)
         time_axis = numpy.arange(0, len(self.gsyn_es[0]), 1) / float(len(self.gsyn_es[0])) * abs(t_start-t_stop) + t_start
-
+    
         for e, i in zip(self.gsyn_es, self.gsyn_is):
-            e = e 
-            i = i 
-            #self.axis.plot(time_axis, e.tolist(), color='#F5A9A9')
-            #self.axis.plot(time_axis, i.tolist(), color='#A9BCF5')
+            e=e*1000#e = e.rescale(mozaik.tools.units.nS) 
+            i=i*1000#i = i.rescale(mozaik.tools.units.nS)
+            self.axis.plot(time_axis, e.tolist(), color='#F5A9A9')
+            self.axis.plot(time_axis, i.tolist(), color='#A9BCF5')
             mean_gsyn_e = mean_gsyn_e + numpy.array(e.tolist())
             mean_gsyn_i = mean_gsyn_i + numpy.array(i.tolist())
 
@@ -627,7 +635,7 @@ class ConductancesPlot(StandardStyle):
         self.x_lim = (t_start, t_stop)
         self.x_ticks = [t_start, (t_stop - t_start)/2, t_stop]
         self.x_label = 'time(' + self.gsyn_es[0].t_start.dimensionality.latex + ')'
-        self.y_label = 'g(' + self.gsyn_es[0].dimensionality.latex + ')'
+        self.y_label = 'g(' + mozaik.tools.units.nS.dimensionality.latex + ')'
 
 
 class ConnectionPlot(StandardStyle):
@@ -664,22 +672,22 @@ class ConnectionPlot(StandardStyle):
 
     """
 
-    def __init__(self, pos_x, pos_y, source_x, source_y, weights, colors=None,
-                 period=None, **kwargs):
-        StandardStyle.__init__(self, **kwargs)
+    def __init__(self, pos_x, pos_y, source_x, source_y, weights,colors=None,period=None):
+        StandardStyle.__init__(self)
         self.pos_x = pos_x
         self.pos_y = pos_y
         self.source_x = source_x
         self.source_y = source_y
         self.weights = weights
         self.colors = colors
+        
         self.period = period
 
         if self.period:
             self.parameters["colormap"] = 'hsv'
         else:
             self.parameters["colormap"] = 'gray'
-            
+        
         self.parameters["top_right_border"] = True
         self.parameters["colorbar"] = False
         self.parameters["colorbar_label"] = None
@@ -694,9 +702,11 @@ class ConnectionPlot(StandardStyle):
         
         self.pos_x = self.pos_x[numpy.nonzero(self.weights)[0]]
         self.pos_y = self.pos_y[numpy.nonzero(self.weights)[0]]
+
         
         if self.colors != None:
-            self.colors = numpy.array(self.colors)[numpy.nonzero(self.weights)[0]] 
+            self.colors = numpy.array(self.colors)
+            self.colors = self.colors[numpy.nonzero(self.weights)[0]] 
         self.weights = self.weights[numpy.nonzero(self.weights)[0]]
 
         if self.colors == None:
@@ -712,8 +722,7 @@ class ConnectionPlot(StandardStyle):
             else:
                 vmax = self.period
                 vmin = 0
-            
-            ax = self.axis.scatter(self.pos_x, self.pos_y, c=self.colors,
+            ax = self.axis.scatter(self.pos_x, self.pos_y, c=numpy.array(self.colors),
                                    s=self.weights/numpy.max(self.weights)*200,
                                    lw=0, cmap=self.colormap,
                                    vmin=vmin, vmax=vmax)

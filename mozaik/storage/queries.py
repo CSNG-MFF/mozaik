@@ -261,7 +261,7 @@ def equal_ads_except(dsv, except_params):
 ########################################################################
 
 ########################################################################
-def ads_with_equal_stimulus_type(dsv, not_None=False):
+def ads_with_equal_stimulus_type(dsv, allow_None=False):
     """
     This functions tests whether DSV contains only ADS associated
     with the same stimulus type.
@@ -269,10 +269,10 @@ def ads_with_equal_stimulus_type(dsv, not_None=False):
     not_None - if true it will not allow ADS that are not associated with
                stimulus
     """
-    if not_None:
+    if allow_None:
         return matching_parametrized_object_params([MozaikParametrized.idd(ads.stimulus_id) for ads in dsv.analysis_results if ads.stimulus_id != None],params=['name'])
     else:
-        if len([MozaikParametrized.idd(ads.stimulus_id) for ads in dsv.analysis_results if ads.stimulus_id == None]) > 0:
+        if len([0 for ads in dsv.analysis_results if ads.stimulus_id == None]) > 0:
            return False
         return matching_parametrized_object_params([MozaikParametrized.idd(ads.stimulus_id) for ads in dsv.analysis_results],params=['name'])    
 ########################################################################

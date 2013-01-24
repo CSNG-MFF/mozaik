@@ -46,29 +46,40 @@ class MozaikSegment(Segment):
 
         spiketrains = property(get_spiketrains, set_spiketrains)
 
-        def get_vm(self, neuron):
+        def get_vm(self, neuron,idd=False):
             if not self.full:
                 self.load_full()
 
             for a in self.analogsignalarrays:
                 if a.name == 'v':
-                    idd = self.spiketrains[neuron].annotations['source_id']
+                    if idd == False:
+                        idd = self.spiketrains[neuron].annotations['source_id']
+                    else:
+                        idd = neuron
+                        
                     return a[:, numpy.where(a.annotations['source_ids'] == idd)[0]]
 
-        def get_esyn(self, neuron):
+        def get_esyn(self, neuron,idd=False):
             if not self.full:
                 self.load_full()
             for a in self.analogsignalarrays:
                 if a.name == 'gsyn_exc':
-                    idd = self.spiketrains[neuron].annotations['source_id']
+                    if idd == False:
+                        idd = self.spiketrains[neuron].annotations['source_id']
+                    else:
+                        idd = neuron
                     return a[:, numpy.where(a.annotations['source_ids'] == idd)[0]]
 
-        def get_isyn(self, neuron):
+        def get_isyn(self, neuron,idd=False):
             if not self.full:
                 self.load_full()
             for a in self.analogsignalarrays:
                 if a.name == 'gsyn_inh':
-                    idd = self.spiketrains[neuron].annotations['source_id']
+                    if idd == False:
+                        idd = self.spiketrains[neuron].annotations['source_id']
+                    else:
+                        idd = neuron
+                        
                     return a[:, numpy.where(a.annotations['source_ids'] == idd)[0]]
 
         def load_full(self):
@@ -84,14 +95,26 @@ class MozaikSegment(Segment):
             return len(self.spiketrains[0])
         
         def get_stored_isyn_ids(self):
+            if not self.full:
+                self.load_full()
             for a in self.analogsignalarrays:
-                if a.name == 'isyn_exc':
+                if a.name == 'gsyn_inh':
                    return a.annotations['source_ids']
         
         def get_stored_esyn_ids(self):
+            if not self.full:
+                self.load_full()
             for a in self.analogsignalarrays:
                 if a.name == 'gsyn_exc':
                    return a.annotations['source_ids']
+
+        def get_stored_v_ids(self):
+            if not self.full:
+                self.load_full()
+            for a in self.analogsignalarrays:
+                if a.name == 'v':
+                   return a.annotations['source_ids']
+
 
         def mean_rates(self):
             """
@@ -99,10 +122,6 @@ class MozaikSegment(Segment):
             """
             return [len(s)/(s.t_stop.rescale(qt.s).magnitude-s.t_start.rescale(qt.s).magnitude) for s in self.spiketrains]
 
-        def get_stored_v_ids(self):
-            for a in self.analogsignalarrays:
-                if a.name == 'v':
-                   return a.annotations['source_ids']
 
 """
 This is a Mozaik wrapper of neo segment, that enables pickling and lazy loading.
@@ -122,8 +141,10 @@ class PickledDataStoreNeoWrapper(MozaikSegment):
             self.full = True
 
         def __getstate__(self):
+            flag = self.full
+            self.full = False
             result = self.__dict__.copy()
-            if self.full:
+            if flag:
                 del result['_spiketrains']
                 del result['analogsignalarrays']
             return result
