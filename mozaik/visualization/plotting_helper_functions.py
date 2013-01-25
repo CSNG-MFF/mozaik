@@ -34,7 +34,7 @@ def disable_left_axis(ax):
 def three_tick_axis(axis):
     import matplotlib.ticker as mticker
     axis.set_major_locator(mticker.LinearLocator(3))
-    axis.set_major_formatter(mticker.FormatStrFormatter('%.04f'))
+    axis.set_major_formatter(mticker.FormatStrFormatter('%.2g'))
     
 
 def disable_xticks(ax):

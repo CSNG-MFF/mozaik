@@ -124,7 +124,7 @@ class TagBasedQuery(Query):
 
 ########################################################################
 def partition_by_stimulus_paramter_query(dsv, parameter_list):
-        assert name not in parameter_list, "One cannot partition against <name> parameter"
+        assert 'name' not in parameter_list, "One cannot partition against <name> parameter"
         st = dsv.get_stimuli()
         values, st = colapse(dsv.block.segments,st,parameter_list=parameter_list,allow_non_identical_objects=True)
         dsvs = []
@@ -203,29 +203,6 @@ class PartitionAnalysisResultsByParameterNameQuery(Query):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ########################################################################
 ### Not queries, but some helper functions that make it easy to test 
 ### whether given datastoreview has certain common properties
@@ -242,7 +219,7 @@ def equal_stimulus_type(dsv):
 ########################################################################
 
 ########################################################################
-def equal_ads_except(dsv, params,excpt_params):
+def equal_ads_except(dsv,except_params):
     """
     This functions tests whether DSV contains only ADS of the same kind
     and parametrization with the exception of parameters listed in
@@ -260,7 +237,7 @@ def equal_ads_type(dsv):
 ########################################################################
 
 ########################################################################
-def ads_with_equal_stimulus_type(dsv, not_None=False):
+def ads_with_equal_stimulus_type(dsv, allow_None=False):
     """
     This functions tests whether DSV contains only ADS associated
     with the same stimulus type.
@@ -268,10 +245,10 @@ def ads_with_equal_stimulus_type(dsv, not_None=False):
     not_None - if true it will not allow ADS that are not associated with
                stimulus
     """
-    if not_None:
+    if allow_None:
         return matching_parametrized_object_params([MozaikParametrized.idd(ads.stimulus_id) for ads in dsv.analysis_results if ads.stimulus_id != None],params=['name'])
     else:
-        if len([MozaikParametrized.idd(ads.stimulus_id) for ads in dsv.analysis_results if ads.stimulus_id == None]) > 0:
+        if len([0 for ads in dsv.analysis_results if ads.stimulus_id == None]) > 0:
            return False
         return matching_parametrized_object_params([MozaikParametrized.idd(ads.stimulus_id) for ads in dsv.analysis_results],params=['name'])    
 ########################################################################

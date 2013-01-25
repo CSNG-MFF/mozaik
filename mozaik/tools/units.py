@@ -36,6 +36,13 @@ lux = lx = UnitQuantity(
     aliases=['lux', 'lx']
 )
 
+nS = nanosiemens = UnitQuantity(
+    'nanosiemens',
+    1e-9*qt.S,
+    symbol='nS',
+    aliases=['nanosiemens']
+)
+
 
 def periodic(unit):
     """

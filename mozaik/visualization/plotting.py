@@ -41,27 +41,36 @@ plotting), with the exception of multi-axis figures whith complicated inter-axis
 dependencies, for which it is not practical to break them down into single
 SimplePlot instances.
 
-Each Plotting class should implement two plotting functions:  plot and subplot
-The much more important one is subplot that accepts a SubplotSpec object (see
-matplotlib doc) as input which will tell it where to plot. It can in turn create
-another SubplotSpec within the given SubplotSpec and call other plot commands to
-plot within specific subregions of the SubplotSpec. This allows natural way of
-nesting plots.
+Each Plotting class should implement two plotting functions:  plot and subplot.
+The subplot function accepts a SubplotSpec object (see matplotlib doc) as input which 
+will tell it where to plot. The subplot function returns a dictionary, where each key
+is a name of a subplot it generates (and will correspond to a creation of another Plotting or 
+SimplePlot plot), and the associated value is a tuple that contains the 
+    * Plotting or SimplePlot object
+    * the SubplotSpec subregion into which the plot is supposed to be drawn
+    * dictionary of parameters that to be passed to the plot.
+This way one can nest Plotting instances and eventualy simple_plot instances as the leafs of the tree.
 
-The subplot function has a second parameter which corresponds to dictionary of
-parameters that have to be passed onto the eventual call to SimplePlot class!
-New parameters can be added to the dictionary but they should not be
-overwritten! This way higher-level Plotting classes can modify the behaviour of
-their nested classes. Also whenever a class is passing this dictionary to
-multiple subplots it should always pasa a _copy_ of the parameter dictionary.
+The third element of the tuple discussed above is a dictionary of parameters that will be  passed onto the eventual call to SimplePlot class.
+At each level of hierarchy the Plotting instances can add some parameters via the third element of the tuple. But note that the parameters at 
+higher levels of hierarchy will overide the parameters given at lower level of hierarchy. 
+
+The names of the subplots that 
+are returned by the subplot function as the keys of the dictionary should be documented as they will be used 
+to identify the subplots by user should he wish to pass specific parameters to them. The user can do this by 
+passing a dictionary to the plot function. The keys of the dictionary are comma sepparated strings containing the 
+path to the plot in the plotting hierarchy to which the parameters will be passed, e.g: top_plot_name.first_level_subplot_name.second_level_subplot_name.parameter_name = value
+One can also use '*' instead of a plot name to indicated that the parameter should be passed to all the subplots at that level. Also if the path
+ends before it reaches a simple_plot level it is automatically assumed the parameter will be passed into the rest of the subtree.
+Finaly the subplots function can return plots which are names which use the '.' character. This will be processed in the same way as above
+and it allows for Plotting classes that create multiple groups of plots to let user sepparately target the different groups with parameters.
 
 The plot function can either not be defined in which case it defaults to the
 Plotting.plot, which simply creates a figure and calls subplot with SuplotSpec
 spanning the whole figure. Alternatively, one can define the plot function if
-one wants to add some additional decorations, in case the figure is plotted on
+one wants to add some additional figure level decorations, in case the figure is plotted on
 its own (i.e. becomes the highest-level), and that would otherwise prevent
 flexible use in nesting via the subplot.
-
 """
 
 import pylab
@@ -75,12 +84,12 @@ from NeuroTools.parameters import ParameterSet
 
 from mozaik.framework.interfaces import MozaikParametrizeObject
 from mozaik.storage import queries
-from mozaik.tools.mozaik_parametrized import colapse_to_dictionary, MozaikParametrized
+from mozaik.tools.mozaik_parametrized import colapse_to_dictionary, MozaikParametrized, varying_parameters
 from numpy import pi
 
 from simple_plot import StandardStyleLinePlot, SpikeRasterPlot, \
                         SpikeHistogramPlot, ConductancesPlot, PixelMovie, \
-                        ScatterPlotMovie, ScatterPlot, ConnectionPlot
+                        ScatterPlotMovie, ScatterPlot, ConnectionPlot, SimplePlot
 from plot_constructors import LinePlot, PerStimulusPlot
 
 import mozaik
@@ -107,17 +116,50 @@ class Plotting(MozaikParametrizeObject):
         self.plot_file_name = plot_file_name
         self.fig_param = fig_param if fig_param != None else {}
 
-    def subplot(self, subplotspec, params):
+    def subplot(self, subplotspec):
         raise NotImplementedError
+    
+    def nip_parameters(self,n,p):
+        d = {}
+        fd = {}
+        for (k,v) in p.iteritems():
+            l = k.split('.')
+            assert len(l) > 1, "Parameter %s not matching the simple plot" % (k)
+            if l[0] == n or l[0] == '*':
+                if len(l[1:]) >1 : 
+                   d[l[1:].join('.')] = v
+                else:
+                   fd[l[1]] = v
+        return d,fd
+    
+    def handle_parameters_and_execute_plots(self,parameters,user_parameters,gs):
+        d = self.subplot(gs)
+        for (k,(pl,gs,p)) in d.iteritems():
+            p.update(parameters)
+            ### THIS IS WRONG 'UP' DO NOT WORK        
+            up = user_parameters
+            for z in k.split('.'):    
+                up,fp = self.nip_parameters(z,up)
+                p.update(fp)
 
-    def plot(self, **params):
+            param = p
+            
+            if isinstance(pl,SimplePlot):
+               # print check whether all user_parameters have been nipped to minimum 
+               pl(gs,param) 
+            elif isinstance(pl,Plotting):
+               pl.handle_parameters_and_execute_plots(param,up,gs)     
+            else:
+               raise TypeError("The subplot object is not of type Plotting or SimplePlot") 
+    
+    def plot(self, params=None):
         t1 = time.time()
         if params == None:
             params = {}
         self.fig = pylab.figure(facecolor='w', **self.fig_param)
         gs = gridspec.GridSpec(1, 1)
         gs.update(left=0.1, right=0.9, top=0.9, bottom=0.1)
-        self.subplot(gs[0, 0], params)
+        self.handle_parameters_and_execute_plots({}, params,gs[0, 0])
         if self.plot_file_name:
             pylab.savefig(self.plot_file_name)
         t2 = time.time()
@@ -134,7 +176,7 @@ class PlotTuningCurve(Plotting):
     """
 
     required_parameters = ParameterSet({
-      'neuron': int,  # which neuron to plot
+      'neurons':  list,  # which neuron to plot
       'sheet_name': str,  # from which layer to plot the tuning curve
       'parameter_name': str  # the parameter_name through which to plot the tuning curve
     })
@@ -154,10 +196,10 @@ class PlotTuningCurve(Plotting):
                                              self.st,
                                              self.parameters.parameter_name)
 
-    def subplot(self, subplotspec, params):
-        LinePlot(function=self.ploter, length=1).make_line_plot(subplotspec,params)
+    def subplot(self, subplotspec):
+        return LinePlot(function=self.ploter, length=len(self.parameters.neurons)).make_line_plot(subplotspec)
 
-    def ploter(self, idx, gs, params):
+    def ploter(self, idx, gs):
         period = self.st[0].params()[self.parameters.parameter_name].period
         xs = []
         ys = []
@@ -167,7 +209,7 @@ class PlotTuningCurve(Plotting):
             par, val = zip(
                          *sorted(
                             zip(b,
-                                numpy.array(a)[:, self.parameters.neuron])))
+                                numpy.array(a)[:, self.parameters.neurons[idx]])))
             if period != None:
                 par = list(par)
                 val = list(val)
@@ -177,25 +219,28 @@ class PlotTuningCurve(Plotting):
             xs.append(numpy.array(par))
             ys.append(numpy.array(val))
             labels.append(str(k))
-
-        params.setdefault("title", 'Neuron: %d' % self.parameters.neuron)
-        params.setdefault("y_label", self.pnvs[0].value_name)
-
+        
+        params={}
+        params["title"] =  'Neuron: %d' % self.parameters.neurons[idx]
+        params["y_label"] = self.pnvs[0].value_name
+        params['labels']=None
         if period == pi:
-            params.setdefault("x_ticks", [0, pi/2, pi])
-            params.setdefault("x_lim", (0, pi))
-            params.setdefault("x_tick_style", "Custom")
-            params.setdefault("x_tick_labels", ["0", "$\\frac{\\pi}{2}$", "$\\pi$"])
+            params["x_ticks"] = [0, pi/2, pi]
+            params["x_lim"] = (0, pi)
+            params["x_tick_style"] = "Custom"
+            params["x_tick_labels"] = ["0", "$\\frac{\\pi}{2}$", "$\\pi$"]
         if period == 2*pi:
-            params.setdefault("x_ticks", [0,  pi, 2*pi])
-            params.setdefault("x_lim", (0, 2*pi))
-            params.setdefault("x_tick_labels", ["0", "$\\pi$", "$2\\pi$"])
-            params.setdefault("x_tick_style", "Custom")
-        labels=None
-        StandardStyleLinePlot(xs, ys, labels=labels, **params)(gs)
-
+            params["x_ticks"] = [0, pi, 2*pi]
+            params["x_lim"] = (0, 2*pi)
+            params["x_tick_style"] = "Custom"
+            params["x_tick_labels"] = ["0", "$\\pi$", "$2\\pi$"]
+        
+        return [("TuningCurve",StandardStyleLinePlot(xs, ys),gs,params)]
 
 class RasterPlot(Plotting):
+    """ 
+    Defines 'RasterPlot_0' ... 'RasterPlot_n'
+    """
     required_parameters = ParameterSet({
         'trial_averaged_histogram': bool,  # should the plot show also the trial averaged histogram
         'neurons': list,
@@ -204,42 +249,40 @@ class RasterPlot(Plotting):
 
     def __init__(self, datastore, parameters, plot_file_name=None, fig_param=None):
         Plotting.__init__(self, datastore, parameters, plot_file_name, fig_param)
-        if self.parameters.neurons == []:
-            self.parameters.neurons = None
 
-    def subplot(self, subplotspec, params):
+    def subplot(self, subplotspec):
+        return PerStimulusPlot(self.datastore, function=self.ploter).make_line_plot(subplotspec)
+
+    def ploter(self, dsv,gs):
         dsv = queries.param_filter_query(self.datastore,sheet_name=self.parameters.sheet_name)
-
-        PerStimulusPlot(dsv, function=self.ploter).make_line_plot(subplotspec, params)
-
-    def ploter(self, dsv, gs, params):
         sp = [[s.spiketrains for s in dsv.get_segments()]]
-
+        
+        d = {} 
         if self.parameters.trial_averaged_histogram:
             gs = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=gs)
             # first the raster
-            SpikeRasterPlot(sp, neurons=self.parameters.neurons,
-                            x_axis=False, x_label=None, **params.copy())(gs[:3, 0])
-            SpikeHistogramPlot(sp, neurons=self.parameters.neurons,
-                               **params.copy())(gs[3, 0])
+            return [ ('SpikeRasterPlot',SpikeRasterPlot(sp),gs[:3, 0],{'x_axis': False , 'x_label' :  None, 'neurons':self.parameters.neurons}),
+                     ('SpikeHistogramPlot',SpikeHistogramPlot(sp),gs[3, 0],{'neurons':self.parameters.neurons})]
         else:
-            SpikeRasterPlot(sp, neurons=self.parameters.neurons,
-                            **params.copy())(gs)
+            return [('SpikeRasterPlot',SpikeRasterPlot(sp),gs,{'neurons':self.parameters.neurons})]
 
-
+        
 class VmPlot(Plotting):
+    """
+    It defines one plot named: 'VmPlot_0' ... 'VmPlot_n'.
+    """
 
     required_parameters = ParameterSet({
       'neuron': int,  # we can only plot one neuron - which one ?
       'sheet_name': str,
     })
 
-    def subplot(self, subplotspec, params):
+    def subplot(self, subplotspec):
         dsv = queries.param_filter_query(self.datastore,sheet_name=self.parameters.sheet_name)
-        PerStimulusPlot(dsv, function=self.ploter, title_style="Standard"
-                                         ).make_line_plot(subplotspec, params)
+        return PerStimulusPlot(dsv, function=self.ploter, title_style="Standard"
+                                         ).make_line_plot(subplotspec)
 
-    def ploter(self, dsv, gs, params):
+    def ploter(self, dsv,gs):
         vms = [s.get_vm(self.parameters.neuron) for s in dsv.get_segments()]
         sampling_period = vms[0].sampling_period
         time_axis = numpy.arange(0, len(vms[0]), 1) / float(len(vms[0])) * float(vms[0].t_stop) + float(vms[0].t_start)
@@ -253,77 +296,86 @@ class VmPlot(Plotting):
             ys.append(numpy.array(vm.tolist()))
             colors.append("#848484")
 
-        params.setdefault("x_lim", (0, t_stop))
-        params.setdefault("x_ticks", [0, t_stop/2, t_stop])
-        params.setdefault("x_label", 'time(' + vms[0].t_stop.dimensionality.latex + ')')
-        params.setdefault("y_label", 'Vm(' + vms[0].dimensionality.latex + ')')
-        StandardStyleLinePlot(xs, ys, colors=colors, mean=True, **params)(gs)
+        return [('VmPlot',StandardStyleLinePlot(xs, ys),gs,{
+                    "mean" : True,
+                    "colors" : colors,
+                    "x_lim" : (0, t_stop), 
+                    "x_ticks": [0, t_stop/2, t_stop],
+                    "x_label": 'time(' + vms[0].t_stop.dimensionality.latex + ')',
+                    "y_label": 'Vm(' + vms[0].dimensionality.latex + ')'
+               })]
 
 
 class GSynPlot(Plotting):
-
+    """
+    It defines one plot named: 'ConductancesPlo_0' ... 'ConductancesPlo_n'.
+    """
+    
     required_parameters = ParameterSet({
         'neuron': int,  # we can only plot one neuron - which one ?
         'sheet_name': str,
     })
 
-    def subplot(self, subplotspec, params):
+    def subplot(self, subplotspec):
         dsv = queries.param_filter_query(self.datastore,sheet_name=self.parameters.sheet_name)
-        PerStimulusPlot(dsv, function=self.ploter, title_style="Standard"
-                                        ).make_line_plot(subplotspec, params)
+        return PerStimulusPlot(dsv, function=self.ploter, title_style="Standard"
+                                        ).make_line_plot(subplotspec)
 
-    def ploter(self, dsv, gs, params):
+    def ploter(self, dsv,gs):
         gsyn_es = [s.get_esyn(self.parameters.neuron) for s in dsv.get_segments()]
         gsyn_is = [s.get_isyn(self.parameters.neuron) for s in dsv.get_segments()]
-        ConductancesPlot(gsyn_es, gsyn_is, **params)(gs)
+        return [("ConductancesPlot",ConductancesPlot(gsyn_es, gsyn_is),gs,{})]
 
 
 class OverviewPlot(Plotting):
+    
+    """
+    It defines 4 (or 3 depending on the sheet_activity option) plots named: 'Activity_plot', 'Spike_plot', 'Vm_plot', 'Conductance_plot'
+    corresponding to the ActivityMovie RasterPlot, VmPlot, GSynPlot plots respectively.
+    """
+    
     required_parameters = ParameterSet({
         'sheet_name': str,  # the name of the sheet for which to plot
         'neuron': int,
         'sheet_activity': ParameterSet,  # if not empty the ParameterSet is passed to ActivityMovie which is displayed in to top row, note that the sheet_name will be set by OverviewPlot
     })
+    
+    def subplot(self, subplotspec):
+        dsv = queries.param_filter_query(self.datastore,sheet_name=self.parameters.sheet_name)
+        return PerStimulusPlot(dsv, function=self.ploter, title_style="Clever").make_line_plot(subplotspec)
 
-    def subplot(self, subplotspec, params):
+    def ploter(self, dsv,subplotspec):
         offset = 0
-        p = params.copy()
-
+        
         if len(self.parameters.sheet_activity.keys()) != 0:
             gs = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=subplotspec)
             self.parameters.sheet_activity['sheet_name'] = self.parameters.sheet_name
-            ActivityMovie(self.datastore,
-                          self.parameters.sheet_activity).subplot(gs[0, 0], p)
+            d["Activity_plot"] = (ActivityMovie(self.datastore,self.parameters.sheet_activity),gs[0, 0],{})
             offset = 1
         else:
             gs = gridspec.GridSpecFromSubplotSpec(3, 1, subplot_spec=subplotspec)
 
+        params = {}
         if offset == 1:
-            p.setdefault('title', None)
-        #p.setdefault('x_axis', False)
-        p.setdefault('x_label', False)
-        RasterPlot(self.datastore,
+            params['title'] = None
+        params['x_label']  = False
+        return [ ("Spike_plot",RasterPlot(dsv,
                    ParameterSet({'sheet_name': self.parameters.sheet_name,
                                  'trial_averaged_histogram': False,
                                  'neurons': [self.parameters.neuron]})
-                   ).subplot(gs[0 + offset, 0], p)
-
-        p = params.copy()
-        #p.setdefault('x_axis', False)
-        p.setdefault('x_label', False)
-        p.setdefault('title', None)
-        GSynPlot(self.datastore,
-                 ParameterSet({'sheet_name': self.parameters.sheet_name,
+                   ),gs[0 + offset, 0],params),
+                
+                 ("Conductance_plot",GSynPlot(dsv,
+                   ParameterSet({'sheet_name': self.parameters.sheet_name,
                                'neuron': self.parameters.neuron})
-                 ).subplot(gs[1 + offset, 0], p)
+                 ),gs[1 + offset, 0], {'x_label' : False, 'title' : None}),
 
-        p = params.copy()
-        p.setdefault('title', None)
-        VmPlot(self.datastore,
-               ParameterSet({'sheet_name': self.parameters.sheet_name,
+                 ("Vm_plot",VmPlot(dsv,
+                   ParameterSet({'sheet_name': self.parameters.sheet_name,
                              'neuron': self.parameters.neuron})
-               ).subplot(gs[2 + offset, 0], p)
-
+                 ),gs[2 + offset, 0], {'title' : None})
+              ]
+        
 
 class AnalogSignalListPlot(Plotting):
     required_parameters = ParameterSet({
@@ -342,7 +394,7 @@ class AnalogSignalListPlot(Plotting):
         self.analog_signal_list = self.analog_signal_list[0]
         self.asl = self.analog_signal_list.asl
 
-    def subplot(self, subplotspec, params):
+    def subplot(self, subplotspec):
         xs = []
         ys = []
         colors = []
@@ -352,12 +404,13 @@ class AnalogSignalListPlot(Plotting):
             ys.append(a)
             colors.append("#848484")
 
-        params.setdefault("x_lim", (a.t_start.magnitude, a.t_stop.magnitude))
-        params.setdefault("x_label", self.analog_signal_list.x_axis_name + '(' + self.asl[0].t_start.dimensionality.latex + ')')
-        params.setdefault("y_label", self.analog_signal_list.y_axis_name)
-        params.setdefault("x_ticks", [a.t_start.magnitude, a.t_stop.magnitude])
-        params.setdefault("mean", True)
-        StandardStyleLinePlot(xs, ys, colors=colors, **params)(subplotspec)
+        params["x_lim"] = (a.t_start.magnitude, a.t_stop.magnitude)
+        params["x_label"] = self.analog_signal_list.x_axis_name + '(' + self.asl[0].t_start.dimensionality.latex + ')'
+        params["y_label"] = self.analog_signal_list.y_axis_name
+        params["x_ticks"] = [a.t_start.magnitude, a.t_stop.magnitude]
+        params["mean"] = True
+        params["colors"] = colors
+        return {"AnalogSignalPlot": (StandardStyleLinePlot(xs, ys),subplotspec,params)}
 
 
 class ConductanceSignalListPlot(Plotting):
@@ -378,13 +431,13 @@ class ConductanceSignalListPlot(Plotting):
         self.e_con = self.conductance_signal_list.e_con
         self.i_con = self.conductance_signal_list.i_con
 
-    def subplot(self, subplotspec, params):
+    def subplot(self, subplotspec):
         exc =[]
         inh =[]
         for e, i in zip(self.e_con, self.i_con):
             exc.append(e)
             inh.append(i)
-        ConductancesPlot(exc, inh, **params)(subplotspec)
+        return {"ConductancePlot" : (ConductancesPlot(exc, inh),subplotspec,{})}
 
 
 class RetinalInputMovie(Plotting):
@@ -399,16 +452,13 @@ class RetinalInputMovie(Plotting):
         self.retinal_input = datastore.get_retinal_stimulus()
         self.st = datastore.retinal_stimulus.keys()
         
-    def subplot(self, subplotspec, params):
-        LinePlot(function=self.ploter,
+    def subplot(self, subplotspec):
+        return LinePlot(function=self.ploter,
                  length=len(self.retinal_input)
-                 ).make_line_plot(subplotspec, params)
+                 ).make_line_plot(subplotspec)
 
-    def ploter(self, idx, gs, params):
-        params.setdefault("title", str(self.st[idx]))
-        PixelMovie(self.retinal_input[idx],
-                   1.0/self.parameters.frame_rate*1000,
-                   x_axis=False, y_axis=False)(gs)
+    def ploter(self, idx, gs):
+        return [('PixelMovie',PixelMovie(self.retinal_input[idx],1.0/self.parameters.frame_rate*1000),gs,{'x_axis':False, 'y_axis':False, "title" : str(self.st[idx])})]
 
 
 class ActivityMovie(Plotting):
@@ -420,12 +470,12 @@ class ActivityMovie(Plotting):
           'sheet_name': str,  # the sheet for which to display the actvity movie
     })
 
-    def subplot(self, subplotspec, params):
+    def subplot(self, subplotspec):
         dsv = queries.param_filter_query(self.datastore,sheet_name=self.parameters.sheet_name)
-        PerStimulusPlot(dsv, function=self.ploter, title_style="Standard"
-                        ).make_line_plot(subplotspec, params)
+        return PerStimulusPlot(dsv, function=self.ploter, title_style="Standard"
+                        ).make_line_plot(subplotspec)
 
-    def ploter(self, dsv, gs, params):
+    def ploter(self, dsv, gs):
         sp = [s.spiketrains for s in dsv.get_segments()]
 
         start = sp[0][0].t_start.magnitude
@@ -460,12 +510,9 @@ class ActivityMovie(Plotting):
                                       (xi[None, :], yi[:, None]),
                                       method='cubic'))
 
-            PixelMovie(movie, 1.0/self.parameters.frame_rate*1000,
-                       x_axis=False, y_axis=False)(gs)
+            return [("PixelMovie",PixelMovie(movie, 1.0/self.parameters.frame_rate*1000),gs,{'x_axis':False, 'y_axis':False})]
         else:
-            ScatterPlotMovie(pos[0], pos[1], h.T,
-                             1.0/self.parameters.frame_rate*1000,
-                             x_axis=False, y_axis=False, dot_size=40)(gs)
+            return [(ScatterPlotMovie(pos[0], pos[1], h.T,1.0/self.parameters.frame_rate*1000),gs,{'x_axis':False, 'y_axis':False,'dot_size':40})]
 
 
 class PerNeuronValuePlot(Plotting):
@@ -495,11 +542,10 @@ class PerNeuronValuePlot(Plotting):
 
         self.length=len(self.poss)
 
-    def subplot(self, subplotspec, params):
-        LinePlot(function=self.ploter,
-                 length=self.length).make_line_plot(subplotspec, params)
+    def subplot(self, subplotspec):
+        return LinePlot(function=self.ploter,length=self.length).make_line_plot(subplotspec)
 
-    def ploter(self, idx, gs, params):
+    def ploter(self, idx, gs):
         posx = self.poss[idx][0]
         posy = self.poss[idx][1]
         values = self.pnvs[idx][0].values
@@ -509,22 +555,76 @@ class PerNeuronValuePlot(Plotting):
         else:
             periodic = False
             period = None
-
-        params.setdefault("x_label", 'x')
-        params.setdefault("y_label", 'y')
-        params.setdefault("title",
-                          self.sheets[idx] + '\n' + self.pnvs[idx][0].value_name)
-        params.setdefault("colorbar_label",
-                          self.pnvs[idx][0].value_units.dimensionality.latex)
+        params = {}
+        params["x_label"] = 'x'
+        params["y_label"] = 'y'
+        params["title"] = self.sheets[idx] + '\n' + self.pnvs[idx][0].value_name
+        params["colorbar_label"] = self.pnvs[idx][0].value_units.dimensionality.latex
 
         if periodic:
             if idx == self.length - 1:
-                params.setdefault("colorbar", True)
+                params["colorbar"]  = True
         else:
-            params.setdefault("colorbar", True)
-        ScatterPlot(posx, posy, values, periodic=periodic,
-                    period=period, **params)(gs)
+            params["colorbar"]  = True
+        return [("ScatterPlot",ScatterPlot(posx, posy, values, periodic=periodic,period=period),gs,params)]
 
+
+class PerNeuronValueScatterPlot(Plotting):
+    """
+    Takes each pair of PerNeuronValue analysis datastructures in the datastore that have the same units 
+    and plots a scatter plot of each such pair.
+    """
+    
+    def __init__(self, datastore, parameters,**kwargs):
+        Plotting.__init__(self, datastore, parameters,**kwargs)
+        self.pairs = []
+        self.sheets = []
+        for sheet in datastore.sheets():
+            dsvs = datastore.get_analysis_result(identifier='PerNeuronValue',sheet_name=sheet)
+            if len(dsvs) < 2:
+               raise ValueError('At least 2 DSVs have to be provided') 
+            for i in xrange(0,len(dsvs)):
+                for j in xrange(i+1,len(dsvs)):
+                    if dsvs[i].value_units == dsvs[j].value_units:
+                       self.pairs.append((dsvs[i],dsvs[j]))
+                       self.sheets.append(sheet) 
+                
+        self.length=len(self.pairs)
+        
+    def subplot(self, subplotspec):
+        return LinePlot(function=self.ploter,length=self.length,shared_axis=False).make_line_plot(subplotspec)
+
+    def ploter(self, idx, gs):
+        pair = self.pairs[idx]
+        # Let's figure out the varying parameters
+        p1 = varying_parameters(pair)
+        if MozaikParametrized.idd(pair[0].stimulus_id).name != MozaikParametrized.idd(pair[1].stimulus_id).name:
+            p2 = ['name']
+        else:
+            p2 = varying_parameters([MozaikParametrized.idd(p.stimulus_id) for p in pair])
+        p1 = [x for x in p1 if ((x != 'value_name') and (x != 'stimulus_id'))]
+
+        x_label = pair[0].value_name + '(' + pair[0].value_units.dimensionality.latex + ')'
+        y_label = pair[1].value_name + '(' + pair[1].value_units.dimensionality.latex + ')'
+
+        for p in p1:
+            x_label += '\n' + str(p) + " = " + str(getattr(pair[0],p))
+            y_label += '\n' + str(p) + " = " + str(getattr(pair[1],p))
+        
+        for p in p2:
+            x_label += '\n' + str(p) + " = " + str(getattr(MozaikParametrized.idd(pair[0].stimulus_id),p))
+            y_label += '\n' + str(p) + " = " + str(getattr(MozaikParametrized.idd(pair[1].stimulus_id),p))
+        
+        params = {}
+        params["x_label"] = x_label
+        params["y_label"] = y_label
+        params["title"] = self.sheets[idx]
+        if pair[0].value_units != pair[1].value_units:
+           params["equal_aspect_ratio"] = False
+        
+        
+        return [("ScatterPlot",ScatterPlot(pair[0].values, pair[1].values),gs,params)]
+        
 
 class ConnectivityPlot(Plotting):
     """
@@ -592,11 +692,11 @@ class ConnectivityPlot(Plotting):
 
         self.length=len(self.connections)
 
-    def subplot(self, subplotspec, params):
-        LinePlot(function=self.ploter, length=self.length, shared_axis=True
-                 ).make_line_plot(subplotspec, params)
+    def subplot(self, subplotspec):
+        return LinePlot(function=self.ploter, length=self.length, shared_axis=True
+                 ).make_line_plot(subplotspec)
 
-    def ploter(self, idx, gs, params):
+    def ploter(self, idx, gs):
         sx = self.connecting_neurons_positions[idx][0]
         sy = self.connecting_neurons_positions[idx][1]
         tx = self.connected_neuron_position[idx][0]
@@ -631,40 +731,43 @@ class ConnectivityPlot(Plotting):
         
         # Plot the weights
         gs = gss[0,0]
-        p = params.copy()
+        params = {}
         if pnv != []:
             from mozaik.tools.circ_stat import circ_mean
             (angle, mag) = circ_mean(numpy.array(pnv.values),
                                      weights=w,
                                      high=pnv.period)
-            p.setdefault("title", 'Weights: '+ str(self.connections[idx].proj_name) + "| Weighted mean: " + str(angle))
-            p.setdefault("colorbar_label", pnv.value_name)
-            p.setdefault("colorbar", True)
-
+            params["title"] = 'Weights: '+ str(self.connections[idx].proj_name) + "| Weighted mean: " + str(angle)
+            params["colorbar_label"] =  pnv.value_name
+            params["colorbar"] = True
+            
             if self.connections[idx].source_name == self.connections[idx].target_name:
-                ConnectionPlot(sx, sy, tx, ty, w, colors=pnv.values, line=False,
-                               period=pnv.period, **p)(gs)
+                params["line"] = False
+                plots = [("ConnectionsPlot",ConnectionPlot(sx, sy, tx, ty, w,colors=pnv.values,period=pnv.period),gs,params)]
             else:
-                ConnectionPlot(sx, sy, numpy.min(sx)*1.2, numpy.min(sy)*1.2, w,
-                               colors=pnv.values, period=pnv.period, line=True,
-                               **p)(gs)
+                params["line"] = True
+                plots = [("ConnectionsPlot",ConnectionPlot(sx, sy, numpy.min(sx)*1.2, numpy.min(sy)*1.2, w,colors=pnv.values,period=pnv.period),gs,params)]
         else:
-            p.setdefault("title", 'Weights: '+ self.connections[idx].proj_name)
+            params["title"] = 'Weights: '+ self.connections[idx].proj_name
+            
             if self.connections[idx].source_name == self.connections[idx].target_name:
-                ConnectionPlot(sx, sy, tx, ty, w, line=False, **p)(gs)
+                params["line"] = False
+                plots = [("ConnectionsPlot",ConnectionPlot(sx, sy, tx, ty, w,colors=pnv.values,period=pnv.period),gs,params)]
             else:
-                ConnectionPlot(sx, sy, numpy.min(sx)*1.2, numpy.min(sy)*1.2,
-                               w, line=True, **p)(gs)
+                params["line"] = True
+                plots = [("ConnectionsPlot",ConnectionPlot(sx, sy, numpy.min(sx)*1.2, numpy.min(sy)*1.2,w,colors=pnv.values,period=pnv.period),gs,params)]
 
         # Plot the delays
         gs = gss[1,0]
-        p = params.copy()
-        p.setdefault("title", 'Delays: '+ self.connections[idx].proj_name)
+        params = {}
+        params["title"]  = 'Delays: '+ self.connections[idx].proj_name
         if self.connections[idx].source_name == self.connections[idx].target_name:
-            ConnectionPlot(sx, sy, tx, ty, (numpy.zeros(w.shape)+0.3)*(w!=0), colors=d, line=False, **p)(gs)
+            params["line"] = False
+            plots.append(("DelaysPlot",ConnectionPlot(sx, sy, tx, ty, (numpy.zeros(w.shape)+0.3)*(w!=0),colors=d),gs,params))
         else:
-            ConnectionPlot(sx, sy, numpy.min(sx)*1.2, numpy.min(sy)*1.2,
-                           (numpy.zeros(w.shape)+0.3)*(w!=0), colors=d, line=True, **p)(gs)
+            params["line"] = True
+            plots.append(("DelaysPlot",ConnectionPlot(sx, sy, numpy.min(sx)*1.2, numpy.min(sy)*1.2,(numpy.zeros(w.shape)+0.3)*(w!=0),colors=d),gs,params))
         
+        return plots
         
 

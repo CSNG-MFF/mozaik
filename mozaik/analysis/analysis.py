@@ -4,6 +4,7 @@ various analysis algorithms
 """
 
 import numpy
+import scipy
 import time
 import quantities as qt
 import mozaik.tools.units as munits
@@ -132,8 +133,8 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
             if len(dsv.analysis_results) == 0:
                 break
             assert queries.equal_ads_except(dsv, ['stimulus_id'])
-            assert queries.ads_with_equal_stimulus_type(dsv, not_None=True)
-
+            assert queries.ads_with_equal_stimulus_type(dsv, allow_None=True)
+            assert len(set([dsv.value_name for a in dsv.get_analysis_result(sheet_name=sheet)])) , "PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage accepts only DSVs containing values with the same value_name"
             self.pnvs = dsv.get_analysis_result(sheet_name=sheet)
             # get stimuli
             st = [MozaikParametrized.idd(s.stimulus_id) for s in self.pnvs]
@@ -148,7 +149,6 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
                 for v, p in zip(values, keys):
                     y.append(v)
                     x.append(numpy.zeros(numpy.shape(v)) + p)
-
                 pref, sel = circ_mean(numpy.array(x),
                                       weights=numpy.array(y),
                                       axis=0,
@@ -316,7 +316,7 @@ class ModulationRatio(Analysis):
         for sheet in self.datastore.sheets():
             # Load up spike trains for the right sheet and the corresponding
             # stimuli, and transform spike trains into psth
-            dsv = queries.param_filter_query(self.datastore, sheet_name=sheet)
+            dsv = queries.param_filter_query(self.datastore, sheet_name=sheet,st_name='FullfieldDriftingSinusoidalGrating')
             assert queries.equal_stimulus_type(dsv)
 
             psths = [psth(seg.spiketrains, self.parameters.bin_length)
@@ -409,29 +409,174 @@ class ModulationRatio(Analysis):
 
 class Conductance_F0andF1(Analysis):
       """
-      Calculates the DC of conductances for each neuron. Stores them in PerNeuronValue datastructures (one for exc. one for inh. conductances).
+      Calculates the DC and first harmonic of trial averaged conductances for each neuron
+      measured to FullfieldDriftingSinusoidalGrating. 
+      Stores them in PerNeuronValue datastructures (one for exc. one for inh. conductances).
       Note that only neurons for which conductances were measured will be stored.
+      
+      DSV has to only contain 
       """
 
       def perform_analysis(self):
-            for sheet in self.datastore.sheets():
-                dsv = select_result_sheet_query(self.datastore,sheet)
-                for seg in dsv.get_segments():
-                    first_analog_signal = seg.get_esyn(seg.get_stored_esyn_ids()[0])
+            dsv1 = queries.param_filter_query(self.datastore,st_name='FullfieldDriftingSinusoidalGrating')
+            for sheet in dsv1.sheets():
+                dsv = queries.param_filter_query(dsv1, sheet_name=sheet)
+                segs, stids = colapse(dsv.get_segments(),dsv.get_stimuli(),parameter_list=['trial'],allow_non_identical_objects=True)
+                for segs,st in zip(segs, stids):
+                    first_analog_signal = segs[0].get_esyn(segs[0].get_stored_esyn_ids()[0],idd=True)
                     duration = first_analog_signal.t_stop - first_analog_signal.t_start
+                    frequency = MozaikParametrized.idd(st).temporal_frequency * MozaikParametrized.idd(st).params()['temporal_frequency'].units
                     period = 1/frequency
                     period = period.rescale(first_analog_signal.t_start.units)
                     cycles = duration / period
                     first_har = round(cycles)
-                    e_f0 = [abs(numpy.fft.fft(seg.get_esyn(idd))[0]) for idd in seg.get_stored_esyn_ids()]
-                    i_f0 = [abs(numpy.fft.fft(seg.get_isyn(idd))[0]) for idd in seg.get_stored_isyn_ids()]
-                    e_f1 = [2*abs(numpy.fft.fft(seg.get_esyn(idd))[first_har]) for idd in seg.get_stored_esyn_ids()]
-                    i_f1 = [2*abs(numpy.fft.fft(seg.get_isyn(idd))[first_har]) for idd in seg.get_stored_isyn_ids()]
+                    idd = segs[0].get_stored_esyn_ids()[0]
+                    e_f0 = [abs(numpy.fft.fft(numpy.mean([seg.get_esyn(idd,idd=True) for seg in segs],axis=0))[0]) for idd in segs[0].get_stored_esyn_ids()]
+                    i_f0 = [abs(numpy.fft.fft(numpy.mean([seg.get_isyn(idd,idd=True) for seg in segs],axis=0))[0]) for idd in segs[0].get_stored_isyn_ids()]
+                    e_f1 = [2*abs(numpy.fft.fft(numpy.mean([seg.get_esyn(idd,idd=True) for seg in segs],axis=0))[first_har]) for idd in segs[0].get_stored_esyn_ids()]
+                    i_f1 = [2*abs(numpy.fft.fft(numpy.mean([seg.get_isyn(idd,idd=True) for seg in segs],axis=0))[first_har]) for idd in segs[0].get_stored_isyn_ids()]
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(e_f0,first_analog_signal.units,value_name = 'F0_Exc_Cond',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(i_f0,first_analog_signal.units,value_name = 'F0_Inh_Cond',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(e_f1,first_analog_signal.units,value_name = 'F1_Exc_Cond',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(i_f1,first_analog_signal.units,value_name = 'F1_Inh_Cond',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+
+class TrialVariability(Analysis):
+      """
+      For each stimulus and neuron it calculates the average trial-to-trial variability of Vm or conductance (depending on parameters). 
+      It stores each in a PerNeuronValue structure, one per sheet and variable.
+      """
+      required_parameters = ParameterSet({
+        'vm': bool,  # calculate variability for Vm?
+        'cond_exc': bool,  # calculate variability for excitatory conductance?
+        'cond_inh': bool,  # calculate variability for inhibitory conductance?
+      })
+      
+      
+      def perform_analysis(self):
+            for sheet in self.datastore.sheets():
+                dsv = queries.param_filter_query(self.datastore, sheet_name=sheet)
+                segs, stids = colapse(dsv.get_segments(),dsv.get_stimuli(),parameter_list=['trial'],allow_non_identical_objects=True)
+                for segs,st in zip(segs,stids):
+                    if self.parameters.vm:
+                        vm = [numpy.mean(numpy.var(numpy.array([s.get_vm(i,idd=True) for s in segs]),axis=0)) for i in segs[0].get_stored_v_ids()]
+                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(vm,segs[0].get_vm(segs[0].get_stored_v_ids()[0],idd=True).units,value_name = 'VM Variance',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+                    if self.parameters.cond_exc:                        
+                        cond_exc = [numpy.mean(numpy.var(numpy.array([s.get_esyn(i,idd=True) for s in segs]),axis=0)) for i in segs[0].get_stored_esyn_ids()]
+                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(cond_exc,segs[0].get_esyn(segs[0].get_stored_esyn_ids()[0],idd=True).units,value_name = 'Exc. Cond. Variance',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+                    if self.parameters.cond_inh:                                                
+                        cond_inh = [numpy.mean(numpy.var(numpy.array([s.get_isyn(i,idd=True) for s in segs]),axis=0)) for i in segs[0].get_stored_isyn_ids()]
+                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(cond_inh,segs[0].get_isyn(segs[0].get_stored_isyn_ids()[0],idd=True).units,value_name = 'Inh. Cond. Variance',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+                    
+
+class TrialMean(Analysis):
+      """
+      For each stimulus and neuron it calculates the average trial-to-trial mean of Vm or conductance (depending on parameters). 
+      It stores each in a PerNeuronValue structure, one per sheet and variable.
+      """
+      required_parameters = ParameterSet({
+        'vm': bool,  # calculate variability for Vm?
+        'cond_exc': bool,  # calculate variability for excitatory conductance?
+        'cond_inh': bool,  # calculate variability for inhibitory conductance?
+      })
+      
+      
+      def perform_analysis(self):
+            for sheet in self.datastore.sheets():
+                dsv = queries.param_filter_query(self.datastore, sheet_name=sheet)
+                # colapse by trials 
+                segs, stids = colapse(dsv.get_segments(),dsv.get_stimuli(),parameter_list=['trial'],allow_non_identical_objects=True)
+                for segs,st in zip(segs,stids):
+                    if self.parameters.vm:
+                        vm = [numpy.mean(numpy.array([s.get_vm(i,idd=True) for s in segs])) for i in segs[0].get_stored_v_ids()]
+                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(vm,segs[0].get_vm(segs[0].get_stored_v_ids()[0],idd=True).units,value_name = 'VM Mean',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+                    if self.parameters.cond_exc:                        
+                        cond_exc = [numpy.mean(numpy.array([s.get_esyn(i,idd=True) for s in segs])) for i in segs[0].get_stored_esyn_ids()]
+                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(cond_exc,segs[0].get_esyn(segs[0].get_stored_esyn_ids()[0],idd=True).units,value_name = 'Exc. Cond. Mean',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+                    if self.parameters.cond_inh:                                                
+                        cond_inh = [numpy.mean(numpy.array([s.get_isyn(i,idd=True) for s in segs])) for i in segs[0].get_stored_isyn_ids()]
+                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(cond_inh,segs[0].get_isyn(segs[0].get_stored_isyn_ids()[0],idd=True).units,value_name = 'Inh. Cond. Mean',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+
+class GaussianTuningCurveFit(Analysis):
+      """
+      Fits each tuning curve with a gaussian.
+      
+      It takes a dsv containing some PerNeuronValues.
+      All PerNeuronValues have to belong to stimuli of the same type and
+      contain the same type of values (i.e. have the same `value_name`).
+
+      For each combination of parameters of the stimuli other than `parameter_name`
+      `GaussianTuningCurveFit` fits a gaussian tuning curve and stores the fitted 
+      parameters in a 
+    
+      """   
+      required_parameters = ParameterSet({
+          'parameter_name': str  # the parameter_name through which to fit the tuning curve
+      })      
+      
+      def perform_analysis(self):
+            for sheet in self.datastore.sheets():
+                dsv = queries.param_filter_query(self.datastore,identifier='PerNeuronValue',sheet_name=sheet)
+                if len(dsv.get_analysis_result()) == 0: continue
+                assert queries.equal_ads_except(dsv, ['stimulus_id'])
+                assert queries.ads_with_equal_stimulus_type(dsv)
+                self.pnvs = dsv.get_analysis_result()
+                
+                # get stimuli
+                self.st = [MozaikParametrized.idd(s.stimulus_id) for s in self.pnvs]
+                
+                # check that it is periodic 
+                period = self.st[0].params()[self.parameters.parameter_name].period
+                
+                # transform the pnvs into a dictionary of tuning curves according along the parameter_name
+                self.tc_dict = colapse_to_dictionary([z.values for z in self.pnvs],self.st,self.parameters.parameter_name)
+                for k in self.tc_dict.keys():
+                        z = []
+                        for i in xrange(0,len(self.pnvs[0].values)):
+                        #for i in xrange(0,20):
+                            res = self.fitgaussian(self.tc_dict[k][0],[a[i] for a in self.tc_dict[k][1]],period)
+                            if res == None:
+                               logger.debug('Failed to fit tuning curve %s for neuron %d' % (k,i))
+                               return
+                            z.append(res)    
+                        #import pylab
+                        #pylab.show()
+                        res = numpy.array(z)
+                        if res != None:
+                           self.datastore.full_datastore.add_analysis_result(PerNeuronValue(res[:,0],self.pnvs[0].value_units,value_name = self.parameters.parameter_name + ' baseline',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
+                           self.datastore.full_datastore.add_analysis_result(PerNeuronValue(res[:,1],self.pnvs[0].value_units,value_name = self.parameters.parameter_name + ' max',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))        
+                           self.datastore.full_datastore.add_analysis_result(PerNeuronValue(res[:,2],MozaikParametrized.idd(self.st[0]).params()[self.parameters.parameter_name].units,value_name = self.parameters.parameter_name + ' selectivity',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))        
+                           self.datastore.full_datastore.add_analysis_result(PerNeuronValue(res[:,3],MozaikParametrized.idd(self.st[0]).params()[self.parameters.parameter_name].units,value_name = self.parameters.parameter_name + ' preference',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))        
+                           self.datastore.full_datastore.add_analysis_result(PerNeuronValue(180*res[:,2]/numpy.pi*2.35482,MozaikParametrized.idd(self.st[0]).params()[self.parameters.parameter_name].units,value_name = self.parameters.parameter_name + ' HWHH',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))        
+                        else:
+                           logger.debug('Failed to fit tuning curve %s for neuron %d' % (k,i))
+                            
+                    
+       
+      def fitgaussian(self,X,Y,period):
+          if period != None:
+            fitfunc = lambda p,x:  p[0] + p[1]*numpy.exp(-circular_dist(p[3],x,period)**2/(2*p[2]**2))
+          else:
+            fitfunc = lambda p,x:  p[0] + p[1]*numpy.exp(-numpy.abs(p[3]-x)**2/(2*p[2]**2))  
+          errfunc = lambda p, x, y: fitfunc(p,x) - y # Distance to the target function
           
+          p0 = [0, 1.0, 0.5,0.0] # Initial guess for the parameters
+          p0[0] = numpy.min(Y)
+          if period != None:
+            p0[3] = circ_mean(numpy.array([X]),weights=numpy.array([Y]),axis=1,low=0,high=period,normalize=True)[0]
+          else:
+            p0[3] = numpy.average(numpy.array(X),weights=numpy.array(Y))[0]
+            
+          p1, success = scipy.optimize.leastsq(errfunc, p0[:], args=(X,Y))      
+          
+          # if the fit is very bad - error greater than 30% of the Y magnitude
+          if numpy.linalg.norm(fitfunc(p1,X)-Y)/numpy.linalg.norm(Y) > 0.1:
+             p1 = [0,0,0,0]
+                    
+          if success:
+            return p1
+          else :
+            return [0,0,0,0]
+                
 class CV_ISI(Analysis):
       """
       A wrapper over NeuroTools's cv_isi. 
@@ -443,12 +588,8 @@ class CV_ISI(Analysis):
             for sheet in self.datastore.sheets():
                 # Load up spike trains for the right sheet and the corresponding stimuli, and
                 # transform spike trains into psth
-                dsv = select_result_sheet_query(self.datastore,sheet)
+                dsv = queries.param_filter_query(self.datastore, sheet_name=sheet)
                 assert equal_ads_except(dsv,['stimulus_id'])
-                
-                segs = dsv.get_segments()
-                sts = dsv.get_stimuli()
-                
-                for seg,st in zip(segs,sts):
+                for seg,st in zip(dsv.get_segments(),dsv.get_stimuli()):
                     isi = seg.cv_isi()
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(isi,qt.dimensionless,value_name = 'CV of ISI',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        

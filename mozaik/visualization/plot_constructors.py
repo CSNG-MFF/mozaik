@@ -10,7 +10,7 @@ import param
 from param.parameterized import Parameterized
 from mozaik.storage.queries import partition_by_stimulus_paramter_query
 import matplotlib.gridspec as gridspec
-from mozaik.tools.mozaik_parametrized import MozaikParametrized
+from mozaik.tools.mozaik_parametrized import MozaikParametrized, varying_parameters
 import mozaik
 import numpy
 
@@ -19,7 +19,18 @@ logger = mozaik.getMozaikLogger("Mozaik")
 
 class LinePlot(Parameterized):
         """
-        Plot multiple plots with common x or y axis in a row or column.
+        Plot multiple plots with common x or y axis in a row or column. The user has to specify 
+        the function. This one has to return a list of tuples, each containing:
+            * a name of a plot
+            * a Plotting or SimplePlot instance
+            * the simple_plot parameters that should be passed on
+        
+        Assuming each *function* returns a list of plots with names PlotA,...PlotX
+        The LinePlot will create a list of plots named:
+                    PlotA.plot0 ... PlotA.plotN
+                    PlotX.plot0 ... PlotX.plotN
+        where N is defined by the length parameter.
+        User can this way target the plots with parameters as desribed in the Plotting class.
         """
         horizontal = param.Boolean(default=True, instantiate=True,
                                    doc="Should the line of plots be horizontal or vertical")
@@ -37,7 +48,7 @@ class LinePlot(Parameterized):
         extra_space_right = param.Number(default=0.0, instantiate=True,
                                          doc="Space to be reserved on the right side of the subplot, defined as fraction of the subplot.")
 
-        def make_line_plot(self, subplotspec, params):
+        def make_line_plot(self, subplotspec):
             """
             Call to execute the line plot.
 
@@ -46,12 +57,10 @@ class LinePlot(Parameterized):
 
             subplotspec - is the subplotspec into which the whole lineplot is
                           to be plotted
-            params - are the simple plot parameters that will be modified and
-                     passed to each of the subplots
             """
             if not self.length:
-                logger.error('Length not specified')
-                return
+                raise ValueError('Length not specified')
+                
 
             l = numpy.min([self.max_length, self.length])
             subplotspec = gridspec.GridSpecFromSubplotSpec(
@@ -62,26 +71,35 @@ class LinePlot(Parameterized):
                 gs = gridspec.GridSpecFromSubplotSpec(1, l, subplot_spec=subplotspec)
             else:
                 gs = gridspec.GridSpecFromSubplotSpec(l, 1, subplot_spec=subplotspec)
-
+            
+            d = {}
+            params = {}
             for idx in xrange(0, l):
-                p = params.copy()
                 if idx > 0 and self.shared_axis and self.horizontal:
-                    p.setdefault("y_label", None)
+                    params["y_label"]=None
                     if self.shared_lim:
-                        p.setdefault("y_axis", False)
+                        params["y_axis"] = False
 
                 if (idx < l-1) and self.shared_axis and not self.horizontal:
-                    p.setdefault("x_label", None)
+                    params["x_label"]=None
                     if self.shared_lim:
-                        p.setdefault("x_axis", False)
+                        params["x_axis"] = False
 
                 if self.horizontal:
-                    self._single_plot(idx, gs[0, idx], p)
+                    li = self._single_plot(idx,gs[0, idx])
+                    for (name,plot,gss,par) in li:
+                        par.update(params)
+                        d[name + '.' + 'plot' + str(idx)] = (plot,gss,par)
+                    
                 else:
-                    self._single_plot(idx, gs[idx, 0], p)
-
-        def _single_plot(self, idx, gs, p):
-            self.function(idx, gs, p)
+                    li = self._single_plot(idx,gs[idx, 0])
+                    for (name,plot,gss,par) in li:
+                        par.update(params)
+                        d[name + '.' + 'plot' +str(idx)] = (plot,gss,par)
+            return d
+                    
+        def _single_plot(self, idx,gs):
+            return self.function(idx,gs)
 
 
 class PerDSVPlot(LinePlot):
@@ -108,8 +126,8 @@ class PerDSVPlot(LinePlot):
     def partiotion_dsvs(self):
         raise NotImplementedError
 
-    def _single_plot(self, idx, gs, p):
-        self.function(self.dsvs[idx], gs, p)
+    def _single_plot(self, idx, gs):
+        return self.function(self.dsvs[idx],gs)
 
 
 class PerStimulusPlot(PerDSVPlot):
@@ -156,29 +174,25 @@ class PerStimulusPlot(PerDSVPlot):
 
         # lets find parameter indexes that vary if we need 'Clever' title style
         if self.title_style == "Clever":
-            stimulus = MozaikParametrized.idd(self.datastore.get_stimuli()[0])
-            self.varied = []
-            for pn, pv in stimulus.get_param_values():
-                if pn != 'trial':
-                    for s in self.datastore.get_stimuli():
-                        s = MozaikParametrized.idd(s)
-                        if s.params()[pn] != pv:
-                            self.varied.append(pn)
-                            break
-
+            self.varied = varying_parameters([MozaikParametrized.idd(s) for s in self.datastore.get_stimuli()])
+            self.varied = [x for x in self.varied if x != 'trial']
+            
+            
         if self.title_style == "Standard":
-            self.extra_space_top = 0.05
+            self.extra_space_top = 0.07
         if self.title_style == "Clever":
-            self.extra_space_top = 0.05
+            self.extra_space_top = len(self.varied)*0.005
 
     def partiotion_dsvs(self):
         return partition_by_stimulus_paramter_query(self.datastore,['trial'])
 
-    def _single_plot(self, idx, gs, p):
+    def _single_plot(self, idx,gs):
         title = self.title(idx)
-        if title != None:
-            p.setdefault("title", title)
-        PerDSVPlot._single_plot(self, idx, gs, p)
+        li = PerDSVPlot._single_plot(self, idx,gs)
+        for (name,plot,gs,par) in li:
+            if title != None:
+                par.setdefault('title',title)
+        return li
 
     def title(self, idx):
         if self.title_style == "None":
