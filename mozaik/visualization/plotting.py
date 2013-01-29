@@ -84,7 +84,7 @@ from NeuroTools.parameters import ParameterSet
 
 from mozaik.framework.interfaces import MozaikParametrizeObject
 from mozaik.storage import queries
-from mozaik.tools.mozaik_parametrized import colapse_to_dictionary, MozaikParametrized, varying_parameters
+from mozaik.tools.mozaik_parametrized import colapse_to_dictionary, MozaikParametrized, varying_parameters, matching_parametrized_object_params
 from numpy import pi
 
 from simple_plot import StandardStyleLinePlot, SpikeRasterPlot, \
@@ -168,78 +168,88 @@ class Plotting(MozaikParametrizeObject):
 
 class PlotTuningCurve(Plotting):
     """
-    values - contain a list of lists of values, the outer list corresponding
-             to stimuli the inner to neurons.
-    stimuli_ids - contain list of stimuli ids corresponding to the values
-    parameter_index - corresponds to the parameter that should be plotted as a
-                      tuning curve
+    Defines 'TuningCurve_' + value_name +  '.Plot0' ... 'TuningCurve_' + value_name +  '.Plotn'
+    
+    where n goes through number of neurons, and value_name creates one row for each value_name found in the different PerNeuron found
     """
 
     required_parameters = ParameterSet({
-      'neurons':  list,  # which neuron to plot
-      'sheet_name': str,  # from which layer to plot the tuning curve
+      'neurons':  list,  # which neurons to plot
+      'sheet_name': str,  # from which layer to plot the tuning curves
       'parameter_name': str  # the parameter_name through which to plot the tuning curve
     })
 
     def __init__(self, datastore, parameters, plot_file_name=None,
                  fig_param=None):
         Plotting.__init__(self, datastore, parameters, plot_file_name, fig_param)
-        dsv = queries.param_filter_query(self.datastore,identifier='PerNeuronValue',sheet_name=self.parameters.sheet_name)
-        assert queries.equal_ads_except(dsv, ['stimulus_id'])
-        assert queries.ads_with_equal_stimulus_type(dsv)
-        self.pnvs = dsv.get_analysis_result()
         
-        # get stimuli
-        self.st = [MozaikParametrized.idd(s.stimulus_id) for s in self.pnvs]
-        # transform the pnvs into a dictionary of tuning curves according along the parameter_name
-        self.tc_dict = colapse_to_dictionary([z.values for z in self.pnvs],
-                                             self.st,
-                                             self.parameters.parameter_name)
+        self.st = []
+        self.tc_dict = []
+        self.pnvs = []
+        assert queries.ads_with_equal_stimulus_type(self.datastore)
+        dsvs = queries.partition_analysis_results_by_parameters_query(self.datastore,parameter_list=['value_name'],excpt=True)
+        for dsv in dsvs:
+            dsv = queries.param_filter_query(dsv,identifier='PerNeuronValue',sheet_name=self.parameters.sheet_name)
+            assert matching_parametrized_object_params(dsv.get_analysis_result(), params=['value_name'])
+            self.pnvs.append(dsv.get_analysis_result())
+            # get stimuli
+            st = [MozaikParametrized.idd(s.stimulus_id) for s in self.pnvs[-1]]
+            self.st.append(st)
+            # transform the pnvs into a dictionary of tuning curves according along the parameter_name
+            self.tc_dict.append(colapse_to_dictionary([z.values for z in self.pnvs[-1]],st,self.parameters.parameter_name))
+            
 
     def subplot(self, subplotspec):
         return LinePlot(function=self.ploter, length=len(self.parameters.neurons)).make_line_plot(subplotspec)
 
     def ploter(self, idx, gs):
-        period = self.st[0].params()[self.parameters.parameter_name].period
-        xs = []
-        ys = []
-        labels = []
-        for k in  self.tc_dict:
-            (b, a) = self.tc_dict[k]
-            par, val = zip(
-                         *sorted(
-                            zip(b,
-                                numpy.array(a)[:, self.parameters.neurons[idx]])))
-            if period != None:
-                par = list(par)
-                val = list(val)
-                par.append(par[0] + period)
-                val.append(val[0])
+        plots  = []
+        gs = gridspec.GridSpecFromSubplotSpec(len(self.st), 1, subplot_spec=gs)
+        for i,(dic, st, pnvs) in enumerate(zip(self.tc_dict,self.st,self.pnvs)):
+            period = st[0].params()[self.parameters.parameter_name].period
+            xs = []
+            ys = []
+            labels = []
+            for k in  dic:
+                (b, a) = dic[k]
+                par, val = zip(
+                             *sorted(
+                                zip(b,
+                                    numpy.array(a)[:, self.parameters.neurons[idx]])))
+                if period != None:
+                    par = list(par)
+                    val = list(val)
+                    par.append(par[0] + period)
+                    val.append(val[0])
 
-            xs.append(numpy.array(par))
-            ys.append(numpy.array(val))
-            labels.append(str(k))
-        
-        params={}
-        params["title"] =  'Neuron: %d' % self.parameters.neurons[idx]
-        params["y_label"] = self.pnvs[0].value_name
-        params['labels']=None
-        if period == pi:
-            params["x_ticks"] = [0, pi/2, pi]
-            params["x_lim"] = (0, pi)
-            params["x_tick_style"] = "Custom"
-            params["x_tick_labels"] = ["0", "$\\frac{\\pi}{2}$", "$\\pi$"]
-        if period == 2*pi:
-            params["x_ticks"] = [0, pi, 2*pi]
-            params["x_lim"] = (0, 2*pi)
-            params["x_tick_style"] = "Custom"
-            params["x_tick_labels"] = ["0", "$\\pi$", "$2\\pi$"]
-        
-        return [("TuningCurve",StandardStyleLinePlot(xs, ys),gs,params)]
+                xs.append(numpy.array(par))
+                ys.append(numpy.array(val))
+                labels.append(str(k))
+            
+            params={}
+            params["y_label"] = pnvs[0].value_name
+            params['labels']=None
+            
+            if pnvs == self.pnvs[-1]:
+                params["title"] =  'Neuron: %d' % self.parameters.neurons[idx]
+                if period == pi:
+                    params["x_ticks"] = [0, pi/2, pi]
+                    params["x_lim"] = (0, pi)
+                    params["x_tick_style"] = "Custom"
+                    params["x_tick_labels"] = ["0", "$\\frac{\\pi}{2}$", "$\\pi$"]
+                if period == 2*pi:
+                    params["x_ticks"] = [0, pi, 2*pi]
+                    params["x_lim"] = (0, 2*pi)
+                    params["x_tick_style"] = "Custom"
+                    params["x_tick_labels"] = ["0", "$\\pi$", "$2\\pi$"]
+            else:
+                params["x_ticks"] = None
+            plots.append(("TuningCurve_" + pnvs[0].value_name,StandardStyleLinePlot(xs, ys),gs[i],params))
+        return plots
 
 class RasterPlot(Plotting):
     """ 
-    Defines 'RasterPlot_0' ... 'RasterPlot_n'
+    Defines 'RasterPlot.Plot0' ... 'RasterPlot.PlotN'
     """
     required_parameters = ParameterSet({
         'trial_averaged_histogram': bool,  # should the plot show also the trial averaged histogram
@@ -269,7 +279,7 @@ class RasterPlot(Plotting):
         
 class VmPlot(Plotting):
     """
-    It defines one plot named: 'VmPlot_0' ... 'VmPlot_n'.
+    It defines one plot named: 'VmPlot.Plot0' ... 'VmPlot.PlotN'.
     """
 
     required_parameters = ParameterSet({
@@ -308,7 +318,7 @@ class VmPlot(Plotting):
 
 class GSynPlot(Plotting):
     """
-    It defines one plot named: 'ConductancesPlo_0' ... 'ConductancesPlo_n'.
+    It defines one plot named: 'ConductancesPlot.Plot0' ... 'ConductancesPlot.PlotN'.
     """
     
     required_parameters = ParameterSet({
@@ -331,7 +341,7 @@ class OverviewPlot(Plotting):
     
     """
     It defines 4 (or 3 depending on the sheet_activity option) plots named: 'Activity_plot', 'Spike_plot', 'Vm_plot', 'Conductance_plot'
-    corresponding to the ActivityMovie RasterPlot, VmPlot, GSynPlot plots respectively.
+    corresponding to the ActivityMovie RasterPlot, VmPlot, GSynPlot plots respectively. And than a line of the with the extensions .Plot1 ... .PlotN 
     """
     
     required_parameters = ParameterSet({

@@ -430,11 +430,12 @@ class Conductance_F0andF1(Analysis):
                     period = period.rescale(first_analog_signal.t_start.units)
                     cycles = duration / period
                     first_har = round(cycles)
-                    idd = segs[0].get_stored_esyn_ids()[0]
-                    e_f0 = [abs(numpy.fft.fft(numpy.mean([seg.get_esyn(idd,idd=True) for seg in segs],axis=0))[0]) for idd in segs[0].get_stored_esyn_ids()]
-                    i_f0 = [abs(numpy.fft.fft(numpy.mean([seg.get_isyn(idd,idd=True) for seg in segs],axis=0))[0]) for idd in segs[0].get_stored_isyn_ids()]
-                    e_f1 = [2*abs(numpy.fft.fft(numpy.mean([seg.get_esyn(idd,idd=True) for seg in segs],axis=0))[first_har]) for idd in segs[0].get_stored_esyn_ids()]
-                    i_f1 = [2*abs(numpy.fft.fft(numpy.mean([seg.get_isyn(idd,idd=True) for seg in segs],axis=0))[first_har]) for idd in segs[0].get_stored_isyn_ids()]
+                    
+                    e_f0 = [abs(numpy.fft.fft(numpy.mean([seg.get_esyn(idd,idd=True) for seg in segs],axis=0).flatten())[0]) for idd in segs[0].get_stored_esyn_ids()]
+                    i_f0 = [abs(numpy.fft.fft(numpy.mean([seg.get_isyn(idd,idd=True) for seg in segs],axis=0).flatten())[0]) for idd in segs[0].get_stored_isyn_ids()]
+                    e_f1 = [2*abs(numpy.fft.fft(numpy.mean([seg.get_esyn(idd,idd=True) for seg in segs],axis=0).flatten())[first_har]) for idd in segs[0].get_stored_esyn_ids()]
+                    i_f1 = [2*abs(numpy.fft.fft(numpy.mean([seg.get_isyn(idd,idd=True) for seg in segs],axis=0).flatten())[first_har]) for idd in segs[0].get_stored_isyn_ids()]
+                    
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(e_f0,first_analog_signal.units,value_name = 'F0_Exc_Cond',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(i_f0,first_analog_signal.units,value_name = 'F0_Inh_Cond',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(e_f1,first_analog_signal.units,value_name = 'F1_Exc_Cond',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        

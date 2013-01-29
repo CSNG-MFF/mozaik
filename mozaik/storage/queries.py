@@ -32,7 +32,7 @@ class Query(MozaikParametrizeObject):
 
 
 ########################################################################
-def param_filter_query(dsv,**kwargs):
+def param_filter_query(dsv,ads_unique=False,rec_unique=False,**kwargs):
     new_dsv = dsv.fromDataStoreView()
     
     st_kwargs = dict([(k[3:],kwargs[k]) for k in kwargs.keys() if k[0:3] == 'st_'])
@@ -40,12 +40,12 @@ def param_filter_query(dsv,**kwargs):
     
     seg_st = [MozaikParametrized.idd(seg.annotations['stimulus']) for seg in dsv.block.segments]
     ads_st = [MozaikParametrized.idd(ads.stimulus_id) for ads in dsv.analysis_results if ads.stimulus_id != None]
-    
     if 'sheet_name' in set(kwargs):
        if len(kwargs) == 1:
            # This means that there is only one 'non-stimulus' parameter sheet, and thus we need
            # to filter out all recordings that are associated with that sheet (otherwsie we do not pass any recordings)
-           seg_filtered = set([s for s in dsv.block.segments if s.annotations['sheet_name'] == kwargs['sheet_name']])
+           kw = kwargs['sheet_name'] if isinstance(kwargs['sheet_name'],list) else [kwargs['sheet_name']]
+           seg_filtered = set([s for s in dsv.block.segments if s.annotations['sheet_name'] in kw])
        else:
            seg_filtered = set([]) 
     else:
@@ -60,12 +60,20 @@ def param_filter_query(dsv,**kwargs):
        ads_filtered_st = set(dsv.analysis_results)
        seg_filtered_st = set(dsv.block.segments)
     
+    
     seg = seg_filtered_st & seg_filtered
     ads = ads_filtered_st & ads_filtered
     
     new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
     new_dsv.block.segments = list(seg)
     new_dsv.analysis_results = list(ads)
+    
+    if ads_unique and len(ads) != 1:
+       raise ValueError("Result was expected to have only single ADS, it contains %d" % len(ads)) 
+        
+    if rec_unique and len(seg) != 1:
+       raise ValueError("Result was expected to have only single Segment, it contains %d" % len(seg)) 
+    
     return new_dsv
 
 class ParamFilterQuery(Query):
@@ -81,10 +89,12 @@ class ParamFilterQuery(Query):
     """
     required_parameters = ParameterSet({
         'params' : ParameterSet,
+        'ads_unique' : bool, # It will raise exception if result does not contain a single AnalysisDataStructure
+        'rec_unique' : bool, # It will raise exception if result does not contain a single segment (Recording structure)
     })
 
     def query(self, dsv):
-        return param_filter_query(dsv, **self.params)
+        return param_filter_query(dsv,ads_unique=self.parameters.ads_unique,rec_unique=self.parameters.rec_unique, **self.parameters.params)
 ########################################################################
 
 
@@ -158,9 +168,9 @@ class PartitionByStimulusParamterQuery(Query):
 
 
 ######################################################################################################################################
-def partition_analysis_results_by_parameters_query(dsv, parameter_list=None,excpt=False):
+def partition_analysis_results_by_parameters_query(dsv,parameter_list=None,excpt=False):
         if dsv.analysis_results == []: return []
-    
+        assert parameter_list != None , "parameter_list has to be given"
         if excpt:
             assert equal_ads_type(dsv), "If excpt==True you have to provide a dsv containing the same ADS type"
             parameter_list = set(dsv.analysis_results[0].params().keys()) - (set(parameter_list) | set(['name']))
@@ -188,7 +198,7 @@ class PartitionAnalysisResultsByParameterNameQuery(Query):
     subsets each holding recordings to the same stimulus with the same paramter
     values, with the exception to the parameters in parameter_list.
     
-    In the case of exc this is allowed only on DSVs holding the same AnalysisDataStructures.
+    If excpt!=None this is allowed only on DSVs holding the same AnalysisDataStructures.
     """
 
     required_parameters = ParameterSet({

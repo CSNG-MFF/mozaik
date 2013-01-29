@@ -493,7 +493,6 @@ class ScatterPlot(StandardStyle):
         else:
             vmax = self.period
             vmin = 0
-        print len(self.x)
         ax = self.axis.scatter(self.x, self.y, c=self.z,
                                s=self.dot_size,
                                marker=self.marker,
