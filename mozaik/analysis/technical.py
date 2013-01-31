@@ -4,6 +4,7 @@ docstring goes here
 
 from mozaik.analysis.analysis_data_structures import PerNeuronValue
 from mozaik.analysis.analysis import Analysis
+from mozaik.storage import queries
 from sets import Set
 import quantities as qt
 import numpy
@@ -31,6 +32,7 @@ class NeuronAnnotationsToPerNeuronValues(Analysis):
         anns = self.datastore.get_neuron_annotations()
 
         for sheet in self.datastore.sheets():
+            dsv = queries.param_filter_query(self.datastore,sheet_name=sheet)
             keys = Set([])
 
             for n in xrange(0, len(anns[sheet])):
@@ -58,6 +60,7 @@ class NeuronAnnotationsToPerNeuronValues(Analysis):
 
                     self.datastore.full_datastore.add_analysis_result(
                         PerNeuronValue(values,
+                                       dsv.get_segments()[0].get_stored_spike_train_ids(),
                                        qt.dimensionless,
                                        period=period,
                                        value_name=k,

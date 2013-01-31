@@ -65,7 +65,6 @@ class Model(MozaikComponent):
         self.input_space.clear()
         sim_run_time = self.reset()
         self.input_space.add_object(str(stimulus), stimulus)
-
                 
         sensory_input = self.input_layer.process_input(self.input_space, stimulus, stimulus.duration, self.simulator_time)
         sim_run_time += self.run(stimulus.duration)
