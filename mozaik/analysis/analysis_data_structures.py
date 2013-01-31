@@ -3,8 +3,8 @@ This module contains the definition of the AnalysisDataStructure API and
 implementation of some basic analysis data structures.
 """
 import mozaik
+import numpy
 from mozaik.tools.mozaik_parametrized import MozaikParametrized, SNumber, SInteger, SString
-
 logger = mozaik.getMozaikLogger("Mozaik")
 
 
@@ -92,25 +92,35 @@ class PerNeuronValue(AnalysisDataStructure):
     Data structure holding single value per neuron.
 
     values
-          - the vector of values one per neuron
+          - The vector of values one per neuron
 
     value_name
           - The name of the value.
 
     value_units
-          - quantities unit describing the units of the value
+          - Quantities unit describing the units of the value
 
     period
           - The period of the value. If value is not periodic period=None
+    
+    ids 
+          - The ids of the neurons which are stored, in the same order as in the values
     """
     value_name = SString(doc="The name of the value.")
     period = SNumber(units=None,default=None,doc="The name of the value.")
 
-    def __init__(self, values, value_units, **params):
+    def __init__(self, values, idds, value_units, **params):
         AnalysisDataStructure.__init__(self, identifier='PerNeuronValue', **params)
         self.value_units = value_units
-        self.values = values
-
+        self.values = numpy.array(values)
+        self.ids = list(idds)
+    
+    def get_value_by_id(self,idds):
+        self.ids
+        if isinstance(idds,list) or isinstance(idds,numpy.ndarray):
+            return [self.values[list(self.ids).index(i)] for i in idds]
+        else:
+            return numpy.array(self.values)[list(self.ids).index(idds)]
 
 class AnalysisDataStructure1D(AnalysisDataStructure):
     """
@@ -151,18 +161,20 @@ class AnalogSignalList(AnalysisDataStructure1D):
     asl -
          the variable containing the list of AnalogSignal objects, in the order
          corresponding to the order of neurons indexes in the indexes parameter.
-    indexes -
-         list of indexes of neurons in the original Mozaik sheet to which the
+    ids -
+         list of ids of neurons in the original Mozaik sheet to which the
          AnalogSignals correspond.
     """
 
-    def __init__(self, asl, indexes, x_axis_units, y_axis_units, **params):
+    def __init__(self, asl, ids, x_axis_units, y_axis_units, **params):
         AnalysisDataStructure1D.__init__(self, x_axis_units, y_axis_units,
                                          identifier='AnalogSignalList',
                                          **params)
         self.asl = asl
-        self.indexes = indexes
-
+        self.ids = ids
+    
+    def get_asl_by_id(self,idd):
+        return self.asl[self.ids.index(idd)]
 
 class ConductanceSignalList(AnalysisDataStructure1D):
     """
@@ -180,12 +192,12 @@ class ConductanceSignalList(AnalysisDataStructure1D):
        the variable containing the list of AnalogSignal objects corresponding
        to inhibitory conductances, in the order corresponding to the order of
        neurons indexes in the indexes parameter
-    indexes -
-       list of indexes of neurons in the original Mozaik sheet to which the
+    ids -
+       list of ids of neurons in the original Mozaik sheet to which the
        AnalogSignals correspond
     """
 
-    def __init__(self, e_con, i_con, indexes, **params):
+    def __init__(self, e_con, i_con, ids, **params):
         assert e_con[0].units == i_con[0].units
         AnalysisDataStructure1D.__init__(self,
                                          e_con[0].sampling_rate.units,
@@ -196,8 +208,13 @@ class ConductanceSignalList(AnalysisDataStructure1D):
                                          **params)
         self.e_con = e_con
         self.i_con = i_con
-        self.indexes = indexes
+        self.ids = ids
 
+    def get_econ_by_id(self,idd):
+        return self.e_con[self.ids.index(idd)]
+
+    def get_icon_by_id(self,idd):
+        return self.i_con[self.ids.index(idd)]
 
 class Connections(AnalysisDataStructure):
     """

@@ -46,41 +46,37 @@ class MozaikSegment(Segment):
 
         spiketrains = property(get_spiketrains, set_spiketrains)
 
-        def get_vm(self, neuron,idd=False):
+        def get_spiketrain(self, neuron_id):
+            """
+            Returns a spiktrain or a list of spike train corresponding to id(s) in neuron_id
+            """
+            ids = [s.annotations['source_id'] for s in self.spiketrains]
+            if isinstance(neuron_id,list) or isinstance(neuron_id,numpy.ndarray):
+              return [self.spiketrains[ids.index(i)] for i in neuron_id]
+            else:
+              return self.spiketrains[ids.index(neuron_id)]
+
+        def get_vm(self, neuron_id):
             if not self.full:
                 self.load_full()
 
             for a in self.analogsignalarrays:
                 if a.name == 'v':
-                    if idd == False:
-                        idd = self.spiketrains[neuron].annotations['source_id']
-                    else:
-                        idd = neuron
-                        
-                    return a[:, numpy.where(a.annotations['source_ids'] == idd)[0]]
+                    return a[:, a.annotations['source_ids'].tolist().index(neuron_id)]
 
-        def get_esyn(self, neuron,idd=False):
+        def get_esyn(self,neuron_id):
             if not self.full:
                 self.load_full()
             for a in self.analogsignalarrays:
                 if a.name == 'gsyn_exc':
-                    if idd == False:
-                        idd = self.spiketrains[neuron].annotations['source_id']
-                    else:
-                        idd = neuron
-                    return a[:, numpy.where(a.annotations['source_ids'] == idd)[0]]
+                    return a[:, a.annotations['source_ids'].tolist().index(neuron_id)]
 
-        def get_isyn(self, neuron,idd=False):
+        def get_isyn(self,neuron_id):
             if not self.full:
                 self.load_full()
             for a in self.analogsignalarrays:
                 if a.name == 'gsyn_inh':
-                    if idd == False:
-                        idd = self.spiketrains[neuron].annotations['source_id']
-                    else:
-                        idd = neuron
-                        
-                    return a[:, numpy.where(a.annotations['source_ids'] == idd)[0]]
+                    return a[:, a.annotations['source_ids'].tolist().index(neuron_id)]
 
         def load_full(self):
             """
@@ -92,7 +88,7 @@ class MozaikSegment(Segment):
             """
             Return number of STORED neurons in the Segment.
             """
-            return len(self.spiketrains[0])
+            return len(self.spiketrains)
         
         def get_stored_isyn_ids(self):
             if not self.full:
@@ -115,6 +111,10 @@ class MozaikSegment(Segment):
                 if a.name == 'v':
                    return a.annotations['source_ids']
 
+        def get_stored_spike_train_ids(self):
+            if not self.full:
+                self.load_full()
+            return [s.annotations['source_id'] for s in self.spiketrains]
 
         def mean_rates(self):
             """

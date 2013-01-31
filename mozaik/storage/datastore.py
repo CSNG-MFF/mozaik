@@ -111,6 +111,24 @@ class DataStoreView(MozaikParametrizeObject):
     def get_neuron_postions(self):
         return self.full_datastore.block.annotations['neuron_positions']
 
+    def get_sheet_indexes(self, sheet_name,neuron_id):
+        """
+        Returns the indexes of neurons in the sheet given the idds (this should be primarily used with annotations data such as positions etc.)
+        # JAHACK this is sort of a hack and should ideally disapear in future as we proparly handle ids in annotations
+        """
+        # find first segment from sheet sheet_name
+        for s in self.full_datastore.block.segments:
+            if s.annotations['sheet_name'] == sheet_name:
+               break
+        assert s.annotations['sheet_name'] == sheet_name , "Sheet does not exist in this datastore"
+        
+        ids = [ss.annotations['source_id'] for ss in s.spiketrains]
+        if isinstance(neuron_id,list) or isinstance(neuron_id,numpy.ndarray):
+          return [ids.index(i) for i in neuron_id]
+        else:
+          return ids.index(neuron_id)
+
+
     def get_neuron_annotations(self):
         return self.full_datastore.block.annotations['neuron_annotations']
 

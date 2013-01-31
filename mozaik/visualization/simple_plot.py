@@ -180,9 +180,9 @@ class StandardStyle(SimplePlot):
 
         self.ticks()
 
-        if self.y_label:
+        if self.y_label and self.y_axis:
             pylab.ylabel(self.y_label,multialignment='center')
-        if self.x_label:
+        if self.x_label and self.x_axis:
             pylab.xlabel(self.x_label,multialignment='center')
         if not self.top_right_border:
             phf.disable_top_right_axis(self.axis)
@@ -250,7 +250,6 @@ class SpikeRasterPlot(StandardStyle):
         StandardStyle.__init__(self)
         self.sps = spike_lists
         self.parameters["colors"] = None
-        self.parameters["neurons"] = None
 
     def plot(self):
         if self.parameters["colors"] == None:
@@ -258,11 +257,8 @@ class SpikeRasterPlot(StandardStyle):
         else:
             colors = self.colors
 
-        if self.parameters["neurons"] == None:
-            neurons = [i for i in xrange(0, min(10, len(self.sps[0][0])))]
-        else:
-            neurons = self.neurons
-
+        neurons = [i for i in xrange(0, min(10, len(self.sps[0][0])))]
+        
         t_stop = float(self.sps[0][0][0].t_stop)
         num_n = len(neurons)  # number of neurons
         num_t = len(self.sps[0])  # number of trials

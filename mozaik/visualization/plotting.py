@@ -158,7 +158,7 @@ class Plotting(MozaikParametrizeObject):
             params = {}
         self.fig = pylab.figure(facecolor='w', **self.fig_param)
         gs = gridspec.GridSpec(1, 1)
-        gs.update(left=0.1, right=0.9, top=0.9, bottom=0.1)
+        gs.update(left=0.07, right=0.97, top=0.97, bottom=0.03)
         self.handle_parameters_and_execute_plots({}, params,gs[0, 0])
         if self.plot_file_name:
             pylab.savefig(self.plot_file_name)
@@ -195,8 +195,9 @@ class PlotTuningCurve(Plotting):
             # get stimuli
             st = [MozaikParametrized.idd(s.stimulus_id) for s in self.pnvs[-1]]
             self.st.append(st)
-            # transform the pnvs into a dictionary of tuning curves according along the parameter_name
-            self.tc_dict.append(colapse_to_dictionary([z.values for z in self.pnvs[-1]],st,self.parameters.parameter_name))
+            # transform the pnvs into a dictionary of tuning curves along the parameter_name
+            # also make sure the values are ordered according to ids in the first pnv
+            self.tc_dict.append(colapse_to_dictionary([z.get_value_by_id(self.parameters.neurons) for z in self.pnvs[-1]],st,self.parameters.parameter_name))
             
 
     def subplot(self, subplotspec):
@@ -215,7 +216,7 @@ class PlotTuningCurve(Plotting):
                 par, val = zip(
                              *sorted(
                                 zip(b,
-                                    numpy.array(a)[:, self.parameters.neurons[idx]])))
+                                    numpy.array(a)[:, idx])))
                 if period != None:
                     par = list(par)
                     val = list(val)
@@ -230,20 +231,22 @@ class PlotTuningCurve(Plotting):
             params["y_label"] = pnvs[0].value_name
             params['labels']=None
             
-            if pnvs == self.pnvs[-1]:
-                params["title"] =  'Neuron: %d' % self.parameters.neurons[idx]
-                if period == pi:
-                    params["x_ticks"] = [0, pi/2, pi]
-                    params["x_lim"] = (0, pi)
-                    params["x_tick_style"] = "Custom"
-                    params["x_tick_labels"] = ["0", "$\\frac{\\pi}{2}$", "$\\pi$"]
-                if period == 2*pi:
-                    params["x_ticks"] = [0, pi, 2*pi]
-                    params["x_lim"] = (0, 2*pi)
-                    params["x_tick_style"] = "Custom"
-                    params["x_tick_labels"] = ["0", "$\\pi$", "$2\\pi$"]
-            else:
-                params["x_ticks"] = None
+            if pnvs == self.pnvs[0]:
+                params["title"] =  'Neuron ID: %d' % self.parameters.neurons[idx]
+            
+            if period == pi:
+                params["x_ticks"] = [0, pi/2, pi]
+                params["x_lim"] = (0, pi)
+                params["x_tick_style"] = "Custom"
+                params["x_tick_labels"] = ["0", "$\\frac{\\pi}{2}$", "$\\pi$"]
+            if period == 2*pi:
+                params["x_ticks"] = [0, pi, 2*pi]
+                params["x_lim"] = (0, 2*pi)
+                params["x_tick_style"] = "Custom"
+                params["x_tick_labels"] = ["0", "$\\pi$", "$2\\pi$"]
+
+            if pnvs != self.pnvs[-1]:
+                params["x_axis"] = None
             plots.append(("TuningCurve_" + pnvs[0].value_name,StandardStyleLinePlot(xs, ys),gs[i],params))
         return plots
 
@@ -265,16 +268,16 @@ class RasterPlot(Plotting):
 
     def ploter(self, dsv,gs):
         dsv = queries.param_filter_query(self.datastore,sheet_name=self.parameters.sheet_name)
-        sp = [[s.spiketrains for s in dsv.get_segments()]]
+        sp = [[s.get_spiketrain(self.parameters.neurons) for s in dsv.get_segments()]]
         
         d = {} 
         if self.parameters.trial_averaged_histogram:
             gs = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=gs)
             # first the raster
-            return [ ('SpikeRasterPlot',SpikeRasterPlot(sp),gs[:3, 0],{'x_axis': False , 'x_label' :  None, 'neurons':self.parameters.neurons}),
-                     ('SpikeHistogramPlot',SpikeHistogramPlot(sp),gs[3, 0],{'neurons':self.parameters.neurons})]
+            return [ ('SpikeRasterPlot',SpikeRasterPlot(sp),gs[:3, 0],{'x_axis': False , 'x_label' :  None}),
+                     ('SpikeHistogramPlot',SpikeHistogramPlot(sp),gs[3, 0],{})]
         else:
-            return [('SpikeRasterPlot',SpikeRasterPlot(sp),gs,{'neurons':self.parameters.neurons})]
+            return [('SpikeRasterPlot',SpikeRasterPlot(sp),gs,{})]
 
         
 class VmPlot(Plotting):
@@ -541,11 +544,11 @@ class PerNeuronValuePlot(Plotting):
         self.pnvs = []
         self.sheets = []
         for sheet in datastore.sheets():
-            z = datastore.get_analysis_result(identifier='PerNeuronValue',sheet_name=sheet)
+            dsv = queries.param_filter_query(self.datastore,sheet_name=sheet)
+            z = dsv.get_analysis_result(identifier='PerNeuronValue')
             if len(z) != 0:
                 if len(z) > 1:
                     logger.error('Warning currently only one PerNeuronValue per sheet will be plotted!!!')
-
                 self.poss.append(datastore.get_neuron_postions()[sheet])
                 self.pnvs.append(z)
                 self.sheets.append(sheet)
@@ -556,8 +559,9 @@ class PerNeuronValuePlot(Plotting):
         return LinePlot(function=self.ploter,length=self.length).make_line_plot(subplotspec)
 
     def ploter(self, idx, gs):
-        posx = self.poss[idx][0]
-        posy = self.poss[idx][1]
+        
+        posx = self.poss[idx][0,self.datastore.get_sheet_indexes(self.sheets[idx],self.pnvs[idx][0].ids)]
+        posy = self.poss[idx][1,self.datastore.get_sheet_indexes(self.sheets[idx],self.pnvs[idx][0].ids)]
         values = self.pnvs[idx][0].values
         if self.pnvs[idx][0].period != None:
             periodic = True
@@ -633,7 +637,7 @@ class PerNeuronValueScatterPlot(Plotting):
            params["equal_aspect_ratio"] = False
         
         
-        return [("ScatterPlot",ScatterPlot(pair[0].values, pair[1].values),gs,params)]
+        return [("ScatterPlot",ScatterPlot(pair[0].values, pair[1].get_value_by_id(pair[0].ids)),gs,params)]
         
 
 class ConnectivityPlot(Plotting):
