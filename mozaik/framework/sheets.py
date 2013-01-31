@@ -56,6 +56,7 @@ class Sheet(MozaikComponent):
         }),
         'mpi_safe': bool,
         'name': str,
+        'recorders' : ParameterSet
     })
 
     def __init__(self, model, parameters):
@@ -63,8 +64,14 @@ class Sheet(MozaikComponent):
         self.sim = self.model.sim
         self.name = parameters.name  # the name of the population
         self.model.register_sheet(self)
-        self.to_record = None
         self._pop = None
+        self.to_record = self.setup_to_record_list()
+
+    def setup_to_record_list(self):
+        print self.parameters.recorders
+        print self.parameters.recorders.keys()
+        print self.parameters.recorders.__dict__
+        #CortexExcL4 = load_component(self.parameters.recorders)
 
     def size_in_degrees(self):
         """Returns the x, y size in degrees of visual field of the given area"""
