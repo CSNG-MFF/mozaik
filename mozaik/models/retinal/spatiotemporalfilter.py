@@ -221,6 +221,7 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
         'cached': bool,
         'cache_path': str,
         'mpi_reproducible_noise': bool,  # if True, noise is precomputed and StepCurrentSource is used which makes it slower
+        'recorders' : ParameterSet,
         'receptive_field': ParameterSet({
             'func': str,
             'func_params': ParameterSet,
@@ -263,6 +264,7 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
                                                   'cell': self.parameters.cell,
                                                   'name': rf_type,
                                                   'background_noise': bn,
+                                                  'recorders' : self.parameters.recorders,
                                                   'mpi_safe': False}))
             self.sheets[rf_type] = p
 
