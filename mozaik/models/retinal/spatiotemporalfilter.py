@@ -348,6 +348,7 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
             (input_currents, retinal_input) = cached
 
         ts = self.model.sim.get_time_step()
+        import pylab
         pylab.figure()
         for rf_type in self.rf_types:
             assert isinstance(input_currents[rf_type], list)
@@ -358,7 +359,6 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
                                                                 self.ncs[rf_type])):
                 assert isinstance(input_current, dict)
                 if i==0:
-                    import pylab
                     pylab.plot(self.parameters.linear_scaler * input_current['amplitudes'])
                 t = input_current['times'] + offset
                 a = self.parameters.linear_scaler * input_current['amplitudes']
