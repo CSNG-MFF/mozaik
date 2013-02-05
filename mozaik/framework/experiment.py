@@ -19,9 +19,9 @@ class Experiment(object):
     recorded results that it performs. This can be left empty if analysis will
     be done later.
     """
-
-    stimuli = []
-
+    def __init__(self, model):
+        self.stimuli = []
+    
     def return_stimuli(self):
         return self.stimuli
         
@@ -40,6 +40,7 @@ class VisualExperiment(Experiment):
     """
     
     def __init__(self, model):
+        Experiment.__init__(self, model)
         self.background_luminance = model.input_space.background_luminance 
         self.model = model
 

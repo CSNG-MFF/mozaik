@@ -346,6 +346,7 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
             (input_currents, retinal_input) = cached
 
         ts = self.model.sim.get_time_step()
+        pylab.figure()
         for rf_type in self.rf_types:
             assert isinstance(input_currents[rf_type], list)
             for i, (lgn_cell, input_current, scs, ncs) in enumerate(

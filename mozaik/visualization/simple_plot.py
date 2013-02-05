@@ -723,9 +723,9 @@ class ConnectionPlot(StandardStyle):
             else:
                 vmax = self.period
                 vmin = 0
-            ax = self.axis.scatter(self.pos_x, self.pos_y, c=numpy.array(self.colors),
+            ax = self.axis.scatter(self.pos_x, self.pos_y, c=numpy.array(self.colors),edgecolors='k',
                                    s=self.weights/numpy.max(self.weights)*200,
-                                   lw=0, cmap=self.colormap,
+                                   lw=1, cmap=self.colormap,
                                    vmin=vmin, vmax=vmax)
             if self.colorbar:
                 cb = pylab.colorbar(ax, ticks=[vmin, vmax], use_gridspec=True)

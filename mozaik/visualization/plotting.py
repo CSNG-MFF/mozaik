@@ -632,10 +632,10 @@ class PerNeuronValueScatterPlot(Plotting):
         params = {}
         params["x_label"] = x_label
         params["y_label"] = y_label
+        print self.sheets[idx]
         params["title"] = self.sheets[idx]
         if pair[0].value_units != pair[1].value_units:
            params["equal_aspect_ratio"] = False
-        
         
         return [("ScatterPlot",ScatterPlot(pair[0].values, pair[1].get_value_by_id(pair[0].ids)),gs,params)]
         
@@ -671,7 +671,7 @@ class ConnectivityPlot(Plotting):
         self.pnvs = None
         if pnv_dsv != None:
             self.pnvs = []
-            z = queries.partition_analysis_results_by_parameter_query(
+            z = queries.partition_analysis_results_by_parameters_query(
                                                 pnv_dsv,
                                                 parameter_list=['sheet_name'],excpt=True)
             for dsv in z:
@@ -689,9 +689,10 @@ class ConnectivityPlot(Plotting):
                 self.connecting_neurons_positions.append(
                             datastore.get_neuron_postions()[conn.target_name])
                 z = datastore.get_neuron_postions()[conn.source_name]
+                idx = self.datastore.get_sheet_indexes(conn.source_name,self.parameters.neuron)
                 self.connected_neuron_position.append(
-                            (z[0][self.parameters.neuron],
-                             z[1][self.parameters.neuron]))
+                            (z[0][idx],
+                             z[1][idx]))
                 self.connections.append(conn)
             elif (self.parameters.reversed
                   and conn.target_name == self.parameters.sheet_name):
@@ -699,9 +700,10 @@ class ConnectivityPlot(Plotting):
                 self.connecting_neurons_positions.append(
                             datastore.get_neuron_postions()[conn.source_name])
                 z = datastore.get_neuron_postions()[conn.target_name]
+                idx = self.datastore.get_sheet_indexes(conn.target_name,self.parameters.neuron)
                 self.connected_neuron_position.append(
-                            (z[0][self.parameters.neuron],
-                             z[1][self.parameters.neuron]))
+                            (z[0][idx],
+                             z[1][idx]))
                 self.connections.append(conn)
 
         self.length=len(self.connections)
@@ -716,14 +718,15 @@ class ConnectivityPlot(Plotting):
         tx = self.connected_neuron_position[idx][0]
         ty = self.connected_neuron_position[idx][1]
         if not self.parameters.reversed:
-            w = self.connections[idx].weights[self.parameters.neuron, :]
-            d = self.connections[idx].delays[self.parameters.neuron, :]
+            i = self.datastore.get_sheet_indexes(self.connections[idx].source_name,self.parameters.neuron)
+            w = self.connections[idx].weights[i, :]
+            d = self.connections[idx].delays[i, :]
         else:
-            w = self.connections[idx].weights[:, self.parameters.neuron]
-            d = self.connections[idx].delays[:, self.parameters.neuron]
+            i = self.datastore.get_sheet_indexes(self.connections[idx].target_name,self.parameters.neuron)
+            w = self.connections[idx].weights[:, i]
+            d = self.connections[idx].delays[:, i]
 
         assert numpy.shape(w) == numpy.shape(d)
-        
         # pick the right PerNeuronValue to show
         pnv = []
         if self.pnvs != None:
@@ -769,7 +772,7 @@ class ConnectivityPlot(Plotting):
                 plots = [("ConnectionsPlot",ConnectionPlot(sx, sy, tx, ty, w,colors=pnv.values,period=pnv.period),gs,params)]
             else:
                 params["line"] = True
-                plots = [("ConnectionsPlot",ConnectionPlot(sx, sy, numpy.min(sx)*1.2, numpy.min(sy)*1.2,w,colors=pnv.values,period=pnv.period),gs,params)]
+                plots = [("ConnectionsPlot",ConnectionPlot(sx, sy, numpy.min(sx)*1.2, numpy.min(sy)*1.2,w),gs,params)]
 
         # Plot the delays
         gs = gss[1,0]

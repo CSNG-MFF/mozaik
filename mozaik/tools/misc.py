@@ -52,13 +52,18 @@ def find_neuron(which,positions):
         return numpy.argmin(numpy.sqrt(numpy.power(positions[0,:].flatten()-x,2) + numpy.power(positions[1,:].flatten()-y,2)))
     
     if which == 'center':
-       return closest(minx+(maxx-minx)/2,miny+(maxy-miny)/2,positions)
+       cl =  closest(minx+(maxx-minx)/2,miny+(maxy-miny)/2,positions)
     elif which == 'top_right':
-       return closest(maxx,maxy,positions)
+       cl = closest(maxx,maxy,positions)
     elif which == 'top_left':
-       return closest(minx,maxy,positions)
+       cl = closest(minx,maxy,positions)
     elif which == 'bottom_left':
-       return closest(minx,miny,positions)
+       cl = closest(minx,miny,positions)
     elif which == 'bottom_right':
-       return closest(maxx,miny,positions)
+       cl = closest(maxx,miny,positions)
+       
+    return cl
+    
+    
+    
     

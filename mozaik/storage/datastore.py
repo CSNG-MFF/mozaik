@@ -1,7 +1,7 @@
 """
 docstring goes here
 """
-
+import numpy
 from NeuroTools.parameters import ParameterSet
 from neo.core.block import Block
 #from neo.io.hdf5io import NeoHdf5IO
@@ -127,7 +127,20 @@ class DataStoreView(MozaikParametrizeObject):
           return [ids.index(i) for i in neuron_id]
         else:
           return ids.index(neuron_id)
-
+    
+    def get_sheet_ids(self, sheet_name,indexes):
+        """
+        Returns the idds of neurons in the sheet given the indexes (this should be primarily used with annotations data such as positions etc.)
+        # JAHACK this is sort of a hack and should ideally disapear in future as we proparly handle ids in annotations
+        """
+        # find first segment from sheet sheet_name
+        for s in self.full_datastore.block.segments:
+            if s.annotations['sheet_name'] == sheet_name:
+               break
+        assert s.annotations['sheet_name'] == sheet_name , "Sheet does not exist in this datastore"
+        
+        ids = [ss.annotations['source_id'] for ss in s.spiketrains]
+        return ids[indexes]
 
     def get_neuron_annotations(self):
         return self.full_datastore.block.annotations['neuron_annotations']
@@ -194,8 +207,7 @@ class DataStoreView(MozaikParametrizeObject):
             print 'ANALYSIS RESULTS'
             for a in self.analysis_results:
                 print str(a)
-
-
+    
 class DataStore(DataStoreView):
     """
     Abstract DataStore class the declares the parameters, and enforces the
