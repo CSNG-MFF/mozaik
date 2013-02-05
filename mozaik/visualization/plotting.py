@@ -158,7 +158,7 @@ class Plotting(MozaikParametrizeObject):
             params = {}
         self.fig = pylab.figure(facecolor='w', **self.fig_param)
         gs = gridspec.GridSpec(1, 1)
-        gs.update(left=0.07, right=0.97, top=0.97, bottom=0.03)
+        gs.update(left=0.07, right=0.97, top=0.95, bottom=0.05)
         self.handle_parameters_and_execute_plots({}, params,gs[0, 0])
         if self.plot_file_name:
             pylab.savefig(self.plot_file_name)

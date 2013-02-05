@@ -123,6 +123,12 @@ class Model(MozaikComponent):
             raise ValueError("ERROR: Connector %s already registerd" % connector.name)
         self.connectors[connector.name] = connector
 
+    def neuron_ids(self):
+        ids = {}
+        for s in self.sheets.values():
+            ids[s.name] = [int(a) for a in s.pop.all()]
+        return ids
+        
     def neuron_positions(self):
         pos = {}
         for s in self.sheets.values():

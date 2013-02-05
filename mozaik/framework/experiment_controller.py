@@ -70,9 +70,9 @@ def run_experiments(model,experiment_list,load_from=None):
         data_store = PickledDataStore(load=True,
                                       parameters=ParameterSet({'root_directory': load_from}))
     
+    data_store.set_neuron_ids(model.neuron_ids())
     data_store.set_neuron_positions(model.neuron_positions())
     data_store.set_neuron_annotations(model.neuron_annotations())
-    
     
     t0 = time.time()
     simulation_run_time=0

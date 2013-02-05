@@ -60,7 +60,7 @@ class NeuronAnnotationsToPerNeuronValues(Analysis):
 
                     self.datastore.full_datastore.add_analysis_result(
                         PerNeuronValue(values,
-                                       dsv.get_segments()[0].get_stored_spike_train_ids(),
+                                       dsv.get_sheet_ids(sheet),
                                        qt.dimensionless,
                                        period=period,
                                        value_name=k,

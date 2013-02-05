@@ -7,6 +7,7 @@ corresponding to the PyNN Population class with the added spatial structure.
 import numpy
 import mozaik
 from mozaik.framework.interfaces import MozaikComponent
+from mozaik.framework import load_component
 
 from NeuroTools.parameters import ParameterSet
 from pyNN import space
@@ -65,14 +66,23 @@ class Sheet(MozaikComponent):
         self.name = parameters.name  # the name of the population
         self.model.register_sheet(self)
         self._pop = None
-        self.to_record = self.setup_to_record_list()
 
     def setup_to_record_list(self):
-        print self.parameters.recorders
-        print self.parameters.recorders.keys()
-        print self.parameters.recorders.__dict__
-        #CortexExcL4 = load_component(self.parameters.recorders)
-
+        self.to_record = {}
+        for k in  self.parameters.recorders.keys():
+            recording_configuration = load_component(self.parameters.recorders[k].component)
+            l = recording_configuration(self,self.parameters.recorders[k].params).generate_idd_list_of_neurons_to_record()
+            if isinstance(self.parameters.recorders[k].variables,str):
+               self.parameters.recorders[k].variables = [self.parameters.recorders[k].variables]
+               
+            for var in self.parameters.recorders[k].variables:
+                self.to_record[var] = list(set(self.to_record.get(var,[])) | set(l))
+                
+        #convert ids to indexes
+        for k in self.to_record.keys():
+            idds = [i for i in self.pop.all()]
+            self.to_record[k] = [idds.index(idd) for idd in self.to_record[k]]
+            
     def size_in_degrees(self):
         """Returns the x, y size in degrees of visual field of the given area"""
         raise NotImplementedError
@@ -92,6 +102,7 @@ class Sheet(MozaikComponent):
             self._pop = value
             self._neuron_annotations = [{} for i in xrange(0, len(value))]
             self.setup_background_noise()
+            self.setup_to_record_list()
         return locals()
 
     pop = property(**pop())  # this will be populated by PyNN population, in the derived classes

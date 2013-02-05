@@ -114,19 +114,22 @@ class DataStoreView(MozaikParametrizeObject):
     def get_sheet_indexes(self, sheet_name,neuron_id):
         """
         Returns the indexes of neurons in the sheet given the idds (this should be primarily used with annotations data such as positions etc.)
-        # JAHACK this is sort of a hack and should ideally disapear in future as we proparly handle ids in annotations
         """
-        # find first segment from sheet sheet_name
-        for s in self.full_datastore.block.segments:
-            if s.annotations['sheet_name'] == sheet_name:
-               break
-        assert s.annotations['sheet_name'] == sheet_name , "Sheet does not exist in this datastore"
-        
-        ids = [ss.annotations['source_id'] for ss in s.spiketrains]
+        ids = self.full_datastore.block.annotations['neuron_ids'][sheet_name]
         if isinstance(neuron_id,list) or isinstance(neuron_id,numpy.ndarray):
           return [ids.index(i) for i in neuron_id]
         else:
           return ids.index(neuron_id)
+
+    def get_sheet_ids(self, sheet_name,indexes=None):
+        """
+        Returns the idds of neurons in the sheet given the indexes (this should be primarily used with annotations data such as positions etc.)
+        """
+        # find first segment from sheet sheet_name
+        if indexes == None:
+            return self.full_datastore.block.annotations['neuron_ids'][sheet_name]
+        else:
+            return self.full_datastore.block.annotations['neuron_ids'][sheet_name][indexes]
 
 
     def get_neuron_annotations(self):
@@ -226,6 +229,9 @@ class DataStore(DataStoreView):
     def set_neuron_annotations(self, neuron_annotations):
         self.block.annotations['neuron_annotations'] = neuron_annotations
 
+    def set_neuron_ids(self, neuron_ids):
+        self.block.annotations['neuron_ids'] = neuron_ids
+        
     def identify_unpresented_stimuli(self, stimuli):
         """
         It will filter out from stimuli all those which have already been
