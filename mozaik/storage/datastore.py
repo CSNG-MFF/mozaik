@@ -322,6 +322,7 @@ class Hdf5DataStore(DataStore):
             return
         else:
             if self.replace:
+               logger.info("Warning: ADS with the same parametrization already added in the datastore.: %s" % (str(result))) 
                self.analysis_results[i] = result
                return
             logger.error("Analysis Data Structure with the same parametrization already added in the datastore. Currently uniqueness is required. The ADS was not added. User should modify analysis specification to avoid this!: %s" % (str(result)))

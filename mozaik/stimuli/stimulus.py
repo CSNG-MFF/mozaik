@@ -36,6 +36,7 @@ class BaseStimulus(MozaikParametrized):
     frame_duration = SNumber(qt.ms, doc="The duration of single frame")
     duration = SNumber(qt.ms, doc="The duration of stimulus")
     trial = SInteger(doc="The trial of the stimulus")
+    stimulation_name = SString(default="None",doc="The name of the artifical stimulation protocol")
     
     def __init__(self, **params):
         MozaikParametrized.__init__(self, **params)

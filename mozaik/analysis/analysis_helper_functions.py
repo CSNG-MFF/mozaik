@@ -11,9 +11,9 @@ from neo.core.analogsignalarray import AnalogSignalArray
 logger = mozaik.getMozaikLogger("Mozaik")
 
 
-def psth(spike_list, bin_length):
+def psth(spiketrain, bin_length):
     """
-    spike_list - should contain list of spiketrain objects.
+    spiketrain - SpikeTrain object
     The function returns the psth of the spiketrains with bin length bin_length.
 
     bin_length - (ms) see spike_list explanation
@@ -21,21 +21,14 @@ def psth(spike_list, bin_length):
 
     Note, the spiketrains are assumed to start and stop at the same time!
     """
-    t_start = spike_list[0].t_start
-    t_stop = spike_list[0].t_stop
-    num_neurons = len(spike_list)
+    t_start = spike_list[0].t_start.rescale(qt.ms)
+    t_stop = spike_list[0].t_stop.rescale(qt.ms)
     num_bins = float((t_stop-t_start)/bin_length)
 
-    h = []
+    range = (float(t_start), float(t_stop))
+    h = numpy.histogram(spike_list[i], bins=num_bins, range=range)[0] / (bin_length/1000)
 
-    for i in xrange(0, num_neurons):
-        range = (float(t_start), float(t_stop))
-        h.append(
-            numpy.histogram(spike_list[i], bins=num_bins, range=range)[0] / (bin_length/1000)
-        )
-
-    return AnalogSignalArray(numpy.transpose(numpy.array(h)),
-                             t_start=t_start,
+    return AnalogSignal(h,t_start=t_start,
                              sampling_period=bin_length*qt.ms,
                              units=munits.spike_per_sec)
 

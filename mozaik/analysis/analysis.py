@@ -411,14 +411,12 @@ class ModulationRatio(Analysis):
         else:
             return 0
 
-class Conductance_F0andF1(Analysis):
+class Analog_F0andF1(Analysis):
       """
-      Calculates the DC and first harmonic of trial averaged conductances for each neuron
+      Calculates the DC and first harmonic of trial averaged vm and conductances for each neuron
       measured to FullfieldDriftingSinusoidalGrating. 
       Stores them in PerNeuronValue datastructures (one for exc. one for inh. conductances).
-      Note that only neurons for which conductances were measured will be stored.
-      
-      DSV has to only contain 
+      Note that only neurons for which the corresponding signals were measured will be stored.
       """
 
       def perform_analysis(self):
@@ -434,21 +432,24 @@ class Conductance_F0andF1(Analysis):
                     period = period.rescale(first_analog_signal.t_start.units)
                     cycles = duration / period
                     first_har = round(cycles)
-                    
                     e_f0 = [abs(numpy.fft.fft(numpy.mean([seg.get_esyn(idd) for seg in segs],axis=0).flatten())[0]) for idd in segs[0].get_stored_esyn_ids()]
                     i_f0 = [abs(numpy.fft.fft(numpy.mean([seg.get_isyn(idd) for seg in segs],axis=0).flatten())[0]) for idd in segs[0].get_stored_isyn_ids()]
+                    v_f0 = [abs(numpy.fft.fft(numpy.mean([seg.get_vm(idd) for seg in segs],axis=0).flatten())[0]) for idd in segs[0].get_stored_vm_ids()]
                     e_f1 = [2*abs(numpy.fft.fft(numpy.mean([seg.get_esyn(idd) for seg in segs],axis=0).flatten())[first_har]) for idd in segs[0].get_stored_esyn_ids()]
                     i_f1 = [2*abs(numpy.fft.fft(numpy.mean([seg.get_isyn(idd) for seg in segs],axis=0).flatten())[first_har]) for idd in segs[0].get_stored_isyn_ids()]
+                    v_f1 = [2*abs(numpy.fft.fft(numpy.mean([seg.get_vm(idd) for seg in segs],axis=0).flatten())[first_har]) for idd in segs[0].get_stored_vm_ids()]
                     
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(e_f0,segs[0].get_stored_esyn_ids(),first_analog_signal.units,value_name = 'F0_Exc_Cond',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(i_f0,segs[0].get_stored_isyn_ids(),first_analog_signal.units,value_name = 'F0_Inh_Cond',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+                    self.datastore.full_datastore.add_analysis_result(PerNeuronValue(v_f0,segs[0].get_stored_vm_ids(),first_analog_signal.units,value_name = 'F0_Vm',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(e_f1,segs[0].get_stored_esyn_ids(),first_analog_signal.units,value_name = 'F1_Exc_Cond',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(i_f1,segs[0].get_stored_isyn_ids(),first_analog_signal.units,value_name = 'F1_Inh_Cond',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+                    self.datastore.full_datastore.add_analysis_result(PerNeuronValue(v_f1,segs[0].get_stored_vm_ids(),first_analog_signal.units,value_name = 'F1_Vm',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
 
 class TrialVariability(Analysis):
       """
-      For each stimulus and neuron it calculates the average trial-to-trial variability of Vm or conductance (depending on parameters). 
-      It stores each in a PerNeuronValue structure, one per sheet and variable.
+      For each stimulus and neuron it calculates the trial-to-trial variability of Vm or conductance (depending on parameters). 
+      It creates a AnalogSignalList list for each segment (except trials)
       """
       required_parameters = ParameterSet({
         'vm': bool,  # calculate variability for Vm?
@@ -463,43 +464,18 @@ class TrialVariability(Analysis):
                 segs, stids = colapse(dsv.get_segments(),dsv.get_stimuli(),parameter_list=['trial'],allow_non_identical_objects=True)
                 for segs,st in zip(segs,stids):
                     if self.parameters.vm:
-                        vm = [numpy.mean(numpy.var(numpy.array([s.get_vm(i) for s in segs]),axis=0)) for i in segs[0].get_stored_v_ids()]
-                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(vm,segs[0].get_stored_v_ids(),segs[0].get_vm(segs[0].get_stored_v_ids()[0]).units,value_name = 'VM Variance',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+                        first_vm = segs[0].get_vm(segs[0].get_stored_vm_ids()[0])
+                        vm = [AnalogSignal(numpy.var(numpy.array([s.get_vm(i) for s in segs]),axis=0),t_start=first_vm.t_start,sampling_period=first_vm.sampling_period,units=first_vm.units) for i in segs[0].get_stored_vm_ids()]
+                        self.datastore.full_datastore.add_analysis_result(AnalogSignalList(vm,segs[0].get_stored_vm_ids(),segs[0].get_vm(segs[0].get_stored_vm_ids()[0]).units,y_axis_name = 'vm trial-to-trial variance',x_axis_name="time",sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                     if self.parameters.cond_exc:                        
-                        cond_exc = [numpy.mean(numpy.var(numpy.array([s.get_esyn(i) for s in segs]),axis=0)) for i in segs[0].get_stored_esyn_ids()]
-                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(cond_exc,segs[0].get_stored_esyn_ids(),segs[0].get_esyn(segs[0].get_stored_esyn_ids()[0]).units,value_name = 'Exc. Cond. Variance',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
-                    if self.parameters.cond_inh:                                                
-                        cond_inh = [numpy.mean(numpy.var(numpy.array([s.get_isyn(i) for s in segs]),axis=0)) for i in segs[0].get_stored_isyn_ids()]
-                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(cond_inh,segs[0].get_stored_isyn_ids(),segs[0].get_isyn(segs[0].get_stored_isyn_ids()[0]).units,value_name = 'Inh. Cond. Variance',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+                        first_cond = segs[0].get_esyn(segs[0].get_stored_esyn_ids()[0])
+                        cond_exc = [AnalogSignal(numpy.var(numpy.array([s.get_esyn(i) for s in segs]),axis=0),t_start=first_cond.t_start,sampling_period=first_cond.sampling_period,units=first_cond.units) for i in segs[0].get_stored_esyn_ids()]
+                        self.datastore.full_datastore.add_analysis_result(AnalogSignalList(cond_exc,segs[0].get_stored_esyn_ids(),segs[0].get_esyn(segs[0].get_stored_esyn_ids()[0]).units,y_axis_name = 'exc. conductance trial-to-trial variance',x_axis_name="time",sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+                    if self.parameters.cond_inh:                                    
+                        first_cond = segs[0].get_isyn(segs[0].get_stored_isyn_ids()[0])            
+                        cond_inh = [AnalogSignal(numpy.var(numpy.array([s.get_isyn(i) for s in segs]),axis=0),t_start=first_cond.t_start,sampling_period=first_cond.sampling_period,units=first_cond.units) for i in segs[0].get_stored_isyn_ids()]
+                        self.datastore.full_datastore.add_analysis_result(AnalogSignalList(cond_inh,segs[0].get_stored_isyn_ids(),segs[0].get_isyn(segs[0].get_stored_isyn_ids()[0]).units,y_axis_name = 'inh. conductance trial-to-trial variance',x_axis_name="time",sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                     
-
-class TrialMean(Analysis):
-      """
-      For each stimulus and neuron it calculates the average trial-to-trial mean of Vm or conductance (depending on parameters). 
-      It stores each in a PerNeuronValue structure, one per sheet and variable.
-      """
-      required_parameters = ParameterSet({
-        'vm': bool,  # calculate variability for Vm?
-        'cond_exc': bool,  # calculate variability for excitatory conductance?
-        'cond_inh': bool,  # calculate variability for inhibitory conductance?
-      })
-      
-      
-      def perform_analysis(self):
-            for sheet in self.datastore.sheets():
-                dsv = queries.param_filter_query(self.datastore, sheet_name=sheet)
-                # colapse by trials 
-                segs, stids = colapse(dsv.get_segments(),dsv.get_stimuli(),parameter_list=['trial'],allow_non_identical_objects=True)
-                for segs,st in zip(segs,stids):
-                    if self.parameters.vm:
-                        vm = [numpy.mean(numpy.array([s.get_vm(i) for s in segs])) for i in segs[0].get_stored_v_ids()]
-                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(vm,segs[0].get_stored_v_ids(),segs[0].get_vm(segs[0].get_stored_v_ids()[0]).units,value_name = 'VM Mean',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
-                    if self.parameters.cond_exc:                        
-                        cond_exc = [numpy.mean(numpy.array([s.get_esyn(i) for s in segs])) for i in segs[0].get_stored_esyn_ids()]
-                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(cond_exc,segs[0].get_stored_esyn_ids(),segs[0].get_esyn(segs[0].get_stored_esyn_ids()[0]).units,value_name = 'Exc. Cond. Mean',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
-                    if self.parameters.cond_inh:                                                
-                        cond_inh = [numpy.mean(numpy.array([s.get_isyn(i) for s in segs])) for i in segs[0].get_stored_isyn_ids()]
-                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(cond_inh,segs[0].get_stored_isyn_ids(),segs[0].get_isyn(segs[0].get_stored_isyn_ids()[0]).units,value_name = 'Inh. Cond. Mean',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
 
 class GaussianTuningCurveFit(Analysis):
       """
@@ -582,6 +558,125 @@ class GaussianTuningCurveFit(Analysis):
             return p1
           else :
             return [0,0,0,0]
+
+class PSTH(Analysis):
+      """
+      For each recording in the datastore view it creates an AnalogSignalList containing the PSTH of the neuron
+      using the bin length bin_length.
+      """  
+      required_parameters = ParameterSet({
+        'bin_length': float,  # the bin length of the PSTH
+      })
+      def perform_analysis(self):
+            # make sure spiketrains are also order in the same way
+            for sheet in self.datastore.sheets():
+                dsv = queries.param_filter_query(self.datastore,sheet_name=sheet)
+                for st,seg in zip([MozaikParametrized.idd(s) for s in dsv.get_stimuli()],dsv.get_segments()):
+                    psths = [psth(seg.get_spiketrain(n), self.parameters.bin_length) for n in seg.get_stored_spike_train_ids()]
+                    self.datastore.full_datastore.add_analysis_result(
+                        AnalogSignalList(psths,
+                                         seg.get_stored_spike_train_ids(),
+                                         psths[0].units,
+                                         x_axis_name='time',
+                                         y_axis_name='psth (bin=' + str(self.parameters.bin_length) + ')',
+                                         sheet_name=sheet,
+                                         tags=self.tags,
+                                         analysis_algorithm=self.__class__.__name__,
+                                         stimulus_id=str(st)))
+
+class TemporalBinAverage(Analysis):
+      """
+      For each recording or AnalogSingalList ADS with x_axis_name='time' in the datastore it creates a new
+      AnalogSingalList, containing a down-sampled version of the signal (vm, conductances or the AnalogSingalList), such that it will
+      bin the time axis with bin length bin_length and make average for each bin.
+      """
+      required_parameters = ParameterSet({
+        'bin_length' : float,
+        'vm': bool,  # calculate TemporalBinAverage for Vm?
+        'cond_exc': bool,  # calculate TemporalBinAverage for excitatory conductance?
+        'cond_inh': bool,  # calculate TemporalBinAverage for inhibitory conductance?
+      })
+      
+      def perform_analysis(self):
+            for sheet in self.datastore.sheets():
+                dsv = queries.param_filter_query(self.datastore, sheet_name=sheet)
+                
+                # First let's do recordings
+                for seg,st in zip(dsv.get_segments(),dsv.get_stimuli()):
+                    if self.parameters.vm:
+                        vm = [down_sample_analog_signal_list(seg.get_vm(i))  for i in seg.get_stored_vm_ids()]
+                        self.datastore.full_datastore.add_analysis_result(AnalogSignalList(vm,seg.get_stored_vm_ids(),vm[0].units,y_axis_name = 'bin averaged vm',x_axis_name="time",sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+                    if self.parameters.cond_exc:                        
+                        e_syn = [down_sample_analog_signal_list(seg.get_esyn(i))  for i in seg.get_stored_esyn_ids()]
+                        self.datastore.full_datastore.add_analysis_result(AnalogSignalList(e_syn,seg.get_stored_esyn_ids(),e_syn[0].units,y_axis_name = 'bin averaged exc. cond.',x_axis_name="time",sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+                    if self.parameters.cond_inh:                                    
+                        i_syn = [down_sample_analog_signal_list(seg.get_isyn(i))  for i in seg.get_stored_isyn_ids()]
+                        self.datastore.full_datastore.add_analysis_result(AnalogSignalList(i_syn,seg.get_stored_isyn_ids(),i_syn[0].units,y_axis_name = 'bin averaged inh. cond.',x_axis_name="time",sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+                
+                # Next let's do AnalogSingalLists
+                dsv = queries.param_filter_query(self.datastore, sheet_name=sheet,identifier='AnalogSignalList')
+                for asl in dsv.get_analysis_results():
+                    assert isinstance(asd,'AnalogSignalList')
+                    self.datastore.full_datastore.add_analysis_result(AnalogSignalList([down_sample_analog_signal_list(analog_signal,bin_length) for analog_signal in asl],asl.ids,asl.units,y_axis_name = 'bin averaged ' + asl.y_axis_name,x_axis_name="time",sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=asl.stimulus_id))
+                
+      def down_sample_analog_signal_list(analog_signal,bin_length):
+          assert (analog_signal.t_stop.rescale(qt.ms) % bin_length)  < 0.00000001, "TemporalBinAverage: The analog signal length has to be divisible by bin_length"
+          div = round(analog_signal.t_stop.rescale(qt.ms) / bin_length)
+          return AnalogSignal(numpy.mean(numpy.reshape(analog_signal,(div,)),axis=1).flatten(),
+                           t_start=0,
+                           sampling_period=bin_length*qt.ms,
+                           units=analog_signal.units)
+
+
+
+class ActionPotentialRemoval(Analysis):
+      """
+      For each recording in the datastore view it creates an AnalogSignalList containing the VMs with 
+      the spikes removed. 
+      
+      Vm, in the window starting at each spike time, and lasting the window_length is removed and replaced by linear
+      interpolation between the values of Vm at the extrems of the  cutout window.
+      """  
+      required_parameters = ParameterSet({
+        'window_length': float,  # the length of window in which the Vm starting at a spike time is replaced with interpolation (in milliseconds)
+      })
+      
+      @staticmethod
+      def remove_spikes(vm,spike_train,window_length):
+          new_vm=vm[:]
+          assert (window_length - int((window_length / vm.sampling_period.rescale(qt.ms).magnitude)) * vm.sampling_period.rescale(qt.ms).magnitude) < 0.00000000000001, ("%f" % (window_length % vm.sampling_period.rescale(qt.ms).magnitude))
+          for spike_time in spike_train:
+              spike_time_in_vm = int(spike_time / vm.sampling_period)
+              assert spike_time_in_vm != len(vm)-1
+              # we assume spike_time and sampling rates are in ms
+              window_end = spike_time_in_vm+round(window_length/vm.sampling_period.rescale(qt.ms).magnitude)
+              if window_end >= len(vm):
+                 window_end = len(vm)-1
+              if spike_time_in_vm != 0:
+                new_vm[spike_time_in_vm:window_end] = vm[spike_time_in_vm-1] + (vm[window_end]-vm[spike_time_in_vm-1])*numpy.linspace(0,1.0,(window_end-spike_time_in_vm)+2)[1:-1]
+              else:
+                print spike_time
+                new_vm[spike_time_in_vm:window_end] = vm[spike_time_in_vm] + (vm[window_end]-vm[spike_time_in_vm])*numpy.linspace(0,1.0,(window_end-spike_time_in_vm)+2)[1:-1]
+          return new_vm
+            
+      def perform_analysis(self):
+            # make sure spiketrains are also order in the same way
+            for sheet in self.datastore.sheets():
+                dsv = queries.param_filter_query(self.datastore,sheet_name=sheet)
+                for st,seg in zip([MozaikParametrized.idd(s) for s in dsv.get_stimuli()],dsv.get_segments()):
+                    asl = [ActionPotentialRemoval.remove_spikes(seg.get_vm(i),seg.get_spiketrain(i),self.parameters.window_length) for i in seg.get_stored_vm_ids()]
+                    self.datastore.full_datastore.add_analysis_result(
+                        AnalogSignalList(asl,
+                                         seg.get_stored_vm_ids(),
+                                         seg.get_vm(seg.get_stored_vm_ids()[0]).units,
+                                         x_axis_name='time',
+                                         y_axis_name='Vm (no AP)',
+                                         sheet_name=sheet,
+                                         tags=self.tags,
+                                         analysis_algorithm=self.__class__.__name__,
+                                         stimulus_id=str(st)))
+      
+      
                 
 #class CV_ISI(Analysis):
 #      """

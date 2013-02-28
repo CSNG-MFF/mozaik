@@ -221,7 +221,7 @@ class GaborConnector(MozaikComponent):
                             'OFF_to_[' + target.name + ']')
 
         on_proj.connect()
-        on_proj.connection_field_plot_continuous(0)
+        #on_proj.connection_field_plot_continuous(0)
         
         off_proj.connect()
-        off_proj.connection_field_plot_continuous(0)
+        #off_proj.connection_field_plot_continuous(0)

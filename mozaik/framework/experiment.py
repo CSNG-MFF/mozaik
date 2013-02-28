@@ -18,9 +18,23 @@ class Experiment(object):
     temporarily depend on others. It should also specify the analysis of the
     recorded results that it performs. This can be left empty if analysis will
     be done later.
+    
+    Also each Experiment can define the spike_stimulator and current_stimulator variables that 
+    allow the experiment to stimulate specific neurons in the model with either spike trains and conductances.
+    
+    The (exc/inh)_spike_stimulator is a dictionary where keys are the name of the sheets, and the values are tuples (neuron_list,spike_generator)
+    where neuron_list is a list of neuron_ids that should be stimulated, this varialbe can also be a string 'all', in which case all neurons 
+    in the given sheet will be stimulated. The spike_generator should be function that receives a single input - duration - that returns a 
+    spike train (list of spike times) of lasting the duration miliseconds. This function will be called for each stimulus presented during this experiment,
+    with the duration of the stimulus as the duration parameter. 
+    
+    NOTE!: The spikes from (exc/inh)_spike_stimulator will be weighted by the connection with weights defined by the sheet's background_noise.(exc/inh)_weight parameter!!!
     """
     def __init__(self, model):
         self.stimuli = []
+        self.exc_spike_stimulators = {}
+        self.inh_spike_stimulators = {}
+        self.current_stimulators = {}
     
     def return_stimuli(self):
         return self.stimuli
@@ -43,12 +57,21 @@ class VisualExperiment(Experiment):
         Experiment.__init__(self, model)
         self.background_luminance = model.input_space.background_luminance 
         self.model = model
+        #JAHACK: This is kind of a hack now. There needs to be generally defined interface of what is the resolution of a visual input layer
+        # possibly in the future we could force the visual_space to have resolution, perhaps something like native_resolution parameter!?
+        self.density  = 1/self.model.input_layer.parameters.receptive_field.spatial_resolution # in pixels per degree of visual space 
 
     def run(self,data_store,stimuli):
         srtsum = 0
         for i,s in enumerate(stimuli):
             logger.debug('Presenting stimulus: ' + str(s) + '\n')
-            (segments,input_stimulus,simulator_run_time) = self.model.present_stimulus_and_record(s)
+
+            print 'A1'            
+            for sheet_name in self.exc_spike_stimulators.keys():                
+                print len(self.exc_spike_stimulators[sheet_name][1](1000))
+
+            
+            (segments,input_stimulus,simulator_run_time) = self.model.present_stimulus_and_record(s,self.exc_spike_stimulators,self.inh_spike_stimulators)
             srtsum += simulator_run_time
             data_store.add_recording(segments,s)
             data_store.add_stimulus(input_stimulus,s)
@@ -73,12 +96,11 @@ class MeasureOrientationTuningFullfield(VisualExperiment):
                                     background_luminance=self.background_luminance,
                                     contrast = c,
                                     duration=grating_duration,
-                                    density=40,
+                                    density=self.density,
                                     trial=k,
                                     orientation=numpy.pi/num_orientations*i,
                                     spatial_frequency=spatial_frequency,
-                                    temporal_frequency=temporal_frequency
-                                ))
+                                    temporal_frequency=temporal_frequency))
 
     def do_analysis(self, data_store):
         pass
@@ -102,13 +124,12 @@ class MeasureSizeTuning(VisualExperiment):
                                     background_luminance=self.background_luminance,
                                     contrast = c,
                                     duration=grating_duration,
-                                    density=40,
+                                    density=self.density,
                                     trial=k,
                                     orientation=orientation,
                                     radius=max_size/num_sizes*i,
                                     spatial_frequency=spatial_frequency,
-                                    temporal_frequency=temporal_frequency
-                                ))
+                                    temporal_frequency=temporal_frequency))
 
     def do_analysis(self, data_store):
         pass
@@ -133,7 +154,7 @@ class MeasureOrientationContrastTuning(VisualExperiment):
                                     background_luminance=self.background_luminance,
                                     contrast = c,
                                     duration=grating_duration,
-                                    density=40,
+                                    density=self.density,
                                     trial=k,
                                     center_orientation=orientation,
                                     surround_orientation=numpy.pi/num_orientations*i,
@@ -141,8 +162,7 @@ class MeasureOrientationContrastTuning(VisualExperiment):
                                     center_radius=center_radius,
                                     surround_radius=surround_radius,
                                     spatial_frequency=spatial_frequency,
-                                    temporal_frequency=temporal_frequency
-                                ))
+                                    temporal_frequency=temporal_frequency))
 
     def do_analysis(self, data_store):
         pass
@@ -162,13 +182,12 @@ class MeasureNaturalImagesWithEyeMovement(VisualExperiment):
                             location_y=0.0,
                             background_luminance=self.background_luminance,
                             duration=stimulus_duration,
-                            density=40,
+                            density=self.density,
                             trial=k,
                             size=40,  # x size of image
                             eye_movement_period=6.66,  # eye movement period
                             eye_path_location='./eye_path.pickle',
-                            image_location='./image_naturelle_HIGH.bmp'
-                            ))
+                            image_location='./image_naturelle_HIGH.bmp'))
 
     def do_analysis(self, data_store):
         pass
@@ -188,15 +207,14 @@ class MeasureDriftingSineGratingWithEyeMovement(VisualExperiment):
                             location_y=0.0,
                             background_luminance=self.background_luminance,
                             duration=stimulus_duration,
-                            density=40,
+                            density=self.density,
                             trial=k,
                             contrast = contrast,
                             eye_movement_period=6.66,  # eye movement period
                             eye_path_location='./eye_path.pickle',
                             orientation=0,
                             spatial_frequency=spatial_frequency,
-                            temporal_frequency=temporal_frequency
-                            ))
+                            temporal_frequency=temporal_frequency))
 
     def do_analysis(self, data_store):
         pass
@@ -216,8 +234,36 @@ class MeasureSpontaneousActivity(VisualExperiment):
                                 location_y=0.0,
                                 background_luminance=self.background_luminance,
                                 duration=duration,
-                                density=40,
-                                trial=k
-                ))    
+                                density=self.density,
+                                trial=k))    
     def do_analysis(self, data_store):
         pass
+
+class PoissonNetworkKick(VisualExperiment):
+    """
+    This experiment simply shows a blank stimulus lasting duration miliseconds.
+    Importantly for the duration of the blank stimulus it will stimulate neurons 
+    definded by the recording configurations in recording_configuration_list
+    in the sheets specified in the sheet_list with Poisson spike train of mean 
+    frequency determined by the corresponding values in lambda_list.
+    """
+    def __init__(self,model,duration,sheet_list,recording_configuration_list,lambda_list):
+            VisualExperiment.__init__(self, model)
+            from NeuroTools import stgen
+            for sheet_name,lamb,rc in zip(sheet_list,lambda_list,recording_configuration_list):
+                self.exc_spike_stimulators[sheet_name] = (rc.generate_idd_list_of_neurons(),(lambda duration,lamb=lamb: stgen.StGen().poisson_generator(rate=lamb,t_start=0,t_stop=duration).spike_times))
+
+            self.stimuli.append(
+                        topo.Null(   
+                            frame_duration=7, 
+                            size_x=model.visual_field.size_x,
+                            size_y=model.visual_field.size_y,
+                            location_x=0.0,
+                            location_y=0.0,
+                            background_luminance=self.background_luminance,
+                            duration=duration,
+                            density=self.density,
+                            trial=0,stimulation_name='Kick'))
+    
+       
+        

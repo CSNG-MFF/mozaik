@@ -90,7 +90,7 @@ from numpy import pi
 from simple_plot import StandardStyleLinePlot, SpikeRasterPlot, \
                         SpikeHistogramPlot, ConductancesPlot, PixelMovie, \
                         ScatterPlotMovie, ScatterPlot, ConnectionPlot, SimplePlot
-from plot_constructors import LinePlot, PerStimulusPlot
+from plot_constructors import LinePlot, PerStimulusPlot, PerStimulusADSPlot
 
 import mozaik
 logger = mozaik.getMozaikLogger("Mozaik")
@@ -187,6 +187,7 @@ class PlotTuningCurve(Plotting):
         self.tc_dict = []
         self.pnvs = []
         assert queries.ads_with_equal_stimulus_type(self.datastore)
+        assert len(self.parameters.neurons) > 0 , "ERROR, empty list of neurons specified"
         dsvs = queries.partition_analysis_results_by_parameters_query(self.datastore,parameter_list=['value_name'],excpt=True)
         for dsv in dsvs:
             dsv = queries.param_filter_query(dsv,identifier='PerNeuronValue',sheet_name=self.parameters.sheet_name)
@@ -264,12 +265,11 @@ class RasterPlot(Plotting):
         Plotting.__init__(self, datastore, parameters, plot_file_name, fig_param)
 
     def subplot(self, subplotspec):
-        return PerStimulusPlot(self.datastore, function=self.ploter).make_line_plot(subplotspec)
+        dsv = queries.param_filter_query(self.datastore,sheet_name=self.parameters.sheet_name)
+        return PerStimulusPlot(dsv, function=self.ploter).make_line_plot(subplotspec)
 
     def ploter(self, dsv,gs):
-        dsv = queries.param_filter_query(self.datastore,sheet_name=self.parameters.sheet_name)
         sp = [[s.get_spiketrain(self.parameters.neurons) for s in dsv.get_segments()]]
-        
         d = {} 
         if self.parameters.trial_averaged_histogram:
             gs = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=gs)
@@ -292,7 +292,7 @@ class VmPlot(Plotting):
 
     def subplot(self, subplotspec):
         dsv = queries.param_filter_query(self.datastore,sheet_name=self.parameters.sheet_name)
-        return PerStimulusPlot(dsv, function=self.ploter, title_style="Standard"
+        return PerStimulusPlot(dsv, function=self.ploter, title_style="Clever"
                                          ).make_line_plot(subplotspec)
 
     def ploter(self, dsv,gs):
@@ -359,11 +359,11 @@ class OverviewPlot(Plotting):
 
     def ploter(self, dsv,subplotspec):
         offset = 0
-        
+        d = []
         if len(self.parameters.sheet_activity.keys()) != 0:
             gs = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=subplotspec)
             self.parameters.sheet_activity['sheet_name'] = self.parameters.sheet_name
-            d["Activity_plot"] = (ActivityMovie(self.datastore,self.parameters.sheet_activity),gs[0, 0],{})
+            d.append(("Activity_plot",ActivityMovie(dsv,self.parameters.sheet_activity),gs[0, 0],{}))
             offset = 1
         else:
             gs = gridspec.GridSpecFromSubplotSpec(3, 1, subplot_spec=subplotspec)
@@ -372,7 +372,7 @@ class OverviewPlot(Plotting):
         if offset == 1:
             params['title'] = None
         params['x_label']  = False
-        return [ ("Spike_plot",RasterPlot(dsv,
+        d.extend([ ("Spike_plot",RasterPlot(dsv,
                    ParameterSet({'sheet_name': self.parameters.sheet_name,
                                  'trial_averaged_histogram': False,
                                  'neurons': [self.parameters.neuron]})
@@ -387,43 +387,46 @@ class OverviewPlot(Plotting):
                    ParameterSet({'sheet_name': self.parameters.sheet_name,
                              'neuron': self.parameters.neuron})
                  ),gs[2 + offset, 0], {'title' : None})
-              ]
-        
+              ])
+        return d
 
 class AnalogSignalListPlot(Plotting):
     required_parameters = ParameterSet({
         'sheet_name': str,  # the name of the sheet for which to plot
-        'ylabel': str,  # what to put as ylabel
+        'neurons' : list, # list of neuron IDs to show, if empty all neurons are shown
     })
 
     def __init__(self, datastore, parameters, plot_file_name=None,
                  fig_param=None):
         Plotting.__init__(self, datastore, parameters, plot_file_name, fig_param)
-        self.analog_signal_list = self.datastore.get_analysis_result(
-                                            identifier='AnalogSignalList',
-                                            sheet_name=parameters.sheet_name)
-        if len(self.analog_signal_list) > 1:
-            logger.error('Warning currently only the first AnalogSignalList will be plotted')
-        self.analog_signal_list = self.analog_signal_list[0]
-        self.asl = self.analog_signal_list.asl
+        
 
     def subplot(self, subplotspec):
+        dsv = queries.param_filter_query(self.datastore,sheet_name=self.parameters.sheet_name,identifier='AnalogSignalList')
+        return PerStimulusADSPlot(dsv, function=self.ploter, title_style="Clever").make_line_plot(subplotspec)
+
+    def ploter(self, dsv,subplotspec):
+        self.analog_signal_list = dsv.get_analysis_result()
+        assert len(self.analog_signal_list) == 1, "Currently only one AnalogSignalList per stimulus can be plotted"
+        assert len(self.analog_signal_list) != 0, "ERROR, empty datastore"
+        self.analog_signal_list = self.analog_signal_list[0]
         xs = []
         ys = []
-        colors = []
-        for a in self.asl:
+        if self.parameters.neurons == []:
+           self.parameters.neurons = self.analog_signal_list.ids
+        for idd in self.parameters.neurons:
+            a = self.analog_signal_list.get_asl_by_id(idd)
             times = numpy.linspace(a.t_start, a.t_stop, len(a))
             xs.append(times)
             ys.append(a)
-            colors.append("#848484")
-
+        
+        params = {}
         params["x_lim"] = (a.t_start.magnitude, a.t_stop.magnitude)
-        params["x_label"] = self.analog_signal_list.x_axis_name + '(' + self.asl[0].t_start.dimensionality.latex + ')'
+        params["x_label"] = self.analog_signal_list.x_axis_name + '(' + a.t_start.dimensionality.latex + ')'
         params["y_label"] = self.analog_signal_list.y_axis_name
         params["x_ticks"] = [a.t_start.magnitude, a.t_stop.magnitude]
         params["mean"] = True
-        params["colors"] = colors
-        return {"AnalogSignalPlot": (StandardStyleLinePlot(xs, ys),subplotspec,params)}
+        return [("AnalogSignalPlot" ,StandardStyleLinePlot(xs, ys),subplotspec,params)]
 
 
 class ConductanceSignalListPlot(Plotting):
@@ -525,7 +528,7 @@ class ActivityMovie(Plotting):
 
             return [("PixelMovie",PixelMovie(movie, 1.0/self.parameters.frame_rate*1000),gs,{'x_axis':False, 'y_axis':False})]
         else:
-            return [(ScatterPlotMovie(pos[0], pos[1], h.T,1.0/self.parameters.frame_rate*1000),gs,{'x_axis':False, 'y_axis':False,'dot_size':40})]
+            return [("ScatterPlot",ScatterPlotMovie(pos[0], pos[1], h.T,1.0/self.parameters.frame_rate*1000),gs,{'x_axis':False, 'y_axis':False,'dot_size':40})]
 
 
 class PerNeuronValuePlot(Plotting):
@@ -602,7 +605,8 @@ class PerNeuronValueScatterPlot(Plotting):
                     if dsvs[i].value_units == dsvs[j].value_units:
                        self.pairs.append((dsvs[i],dsvs[j]))
                        self.sheets.append(sheet) 
-                
+                       
+        assert len(self.pairs) > 0, "Error, not pairs of PerNeuronValue ADS in datastore seem to have the same value_units"
         self.length=len(self.pairs)
         
     def subplot(self, subplotspec):
@@ -632,7 +636,6 @@ class PerNeuronValueScatterPlot(Plotting):
         params = {}
         params["x_label"] = x_label
         params["y_label"] = y_label
-        print self.sheets[idx]
         params["title"] = self.sheets[idx]
         if pair[0].value_units != pair[1].value_units:
            params["equal_aspect_ratio"] = False
@@ -713,18 +716,23 @@ class ConnectivityPlot(Plotting):
                  ).make_line_plot(subplotspec)
 
     def ploter(self, idx, gs):
-        sx = self.connecting_neurons_positions[idx][0]
-        sy = self.connecting_neurons_positions[idx][1]
+        # the 
+        ix = numpy.flatnonzero(self.connections[idx][:,1]==index)
+        x = self.proj.pre.positions[0][self.connections[idx][ix,0]]
+        y = self.proj.pre.positions[1][self.connections[idx][ix,0]]
+        w = weights[idx,2]
         tx = self.connected_neuron_position[idx][0]
         ty = self.connected_neuron_position[idx][1]
+        w = self.connections[idx].weights[ix,2]
+        d = self.connections[idx].delays[ix,2]
         if not self.parameters.reversed:
             i = self.datastore.get_sheet_indexes(self.connections[idx].source_name,self.parameters.neuron)
-            w = self.connections[idx].weights[i, :]
-            d = self.connections[idx].delays[i, :]
+            sx = self.connecting_neurons_positions[idx][0][self.connections[idx][ix,0]]
+            sy = self.connecting_neurons_positions[idx][1][self.connections[idx][ix,0]]
         else:
             i = self.datastore.get_sheet_indexes(self.connections[idx].target_name,self.parameters.neuron)
-            w = self.connections[idx].weights[:, i]
-            d = self.connections[idx].delays[:, i]
+            sx = self.connecting_neurons_positions[idx][0][self.connections[idx][ix,1]]
+            sy = self.connecting_neurons_positions[idx][1][self.connections[idx][ix,1]]
 
         assert numpy.shape(w) == numpy.shape(d)
         # pick the right PerNeuronValue to show

@@ -27,9 +27,14 @@ class VisualStimulus(BaseStimulus):
     def __init__(self, **params):
         BaseStimulus.__init__(self, **params)
         self._zoom_cache = {}
+        self.region_cache = {}
         self.is_visible = True
+        self.transparent = True # And efficiency flag. It should be set to false by the stimulus if there are no transparent points in it. 
+                                # This will avoid all the code related to transparency which is very expensive.
         self.region = VisualRegion(self.location_x, self.location_y,
                                    self.size_x, self.size_y)
+        self.first_resolution_mismatch_display=True
+        
 
     def _calculate_zoom(self, actual_pixel_size, desired_pixel_size):
         """
@@ -47,68 +52,88 @@ class VisualStimulus(BaseStimulus):
         size_in_pixels = numpy.ceil(
                             xy2ij((region.size_x, region.size_y))
                                 /float(pixel_size)).astype(int)
-        view = TRANSPARENT * numpy.ones(size_in_pixels)
+        if self.transparent:
+            view = TRANSPARENT * numpy.ones(size_in_pixels)
+        else:
+            view = self.background_luminance * numpy.ones(size_in_pixels)
+            
         if region.overlaps(self.region):
-            intersection = region.intersection(self.region)
-            assert intersection == self.region.intersection(region)  # just a consistency check. Could be removed if necessary for performance.
-            img_relative_left = (intersection.left - self.region.left) / self.region.width
-            img_relative_width = intersection.width/self.region.width
-            img_relative_top = (intersection.top - self.region.bottom) / self.region.height
-            #img_relative_bottom = (intersection.bottom - self.region.bottom) / self.region.height
-            img_relative_height = intersection.height / self.region.height
-            view_relative_left = (intersection.left - region.left) / region.width
-            view_relative_width = intersection.width / region.width
-            view_relative_top = (intersection.top - region.bottom) / region.height
-            #view_relative_bottom = (intersection.bottom - region.bottom) / region.height
-            view_relative_height = intersection.height / region.height
+            if not self.region_cache.has_key(region):
+                intersection = region.intersection(self.region)
+                assert intersection == self.region.intersection(region)  # just a consistency check. Could be removed if necessary for performance.
+                img_relative_left = (intersection.left - self.region.left) / self.region.width
+                img_relative_width = intersection.width/self.region.width
+                img_relative_top = (intersection.top - self.region.bottom) / self.region.height
+                #img_relative_bottom = (intersection.bottom - self.region.bottom) / self.region.height
+                img_relative_height = intersection.height / self.region.height
+                view_relative_left = (intersection.left - region.left) / region.width
+                view_relative_width = intersection.width / region.width
+                view_relative_top = (intersection.top - region.bottom) / region.height
+                #view_relative_bottom = (intersection.bottom - region.bottom) / region.height
+                view_relative_height = intersection.height / region.height
 
-            img_pixel_size = xy2ij((self.region.size_x, self.region.size_y)) / self.img.shape  # is self.size a tuple or an array?
-            assert img_pixel_size[0] == img_pixel_size[1]
-
-            if pixel_size == img_pixel_size[0]:
-                #logger.debug("Image pixel size matches desired size (%g degrees)" % pixel_size)
-                img = self.img
-            else:
-                # note that if the image is much larger than the view region, we might save some
-                # time by not rescaling the whole image, only the part within the view region.
-                zoom = self._calculate_zoom(img_pixel_size[0], pixel_size)  # img_pixel_size[0]/pixel_size
-                #logger.debug("Image pixel size (%g deg) does not match desired size (%g deg). Zooming image by a factor %g" % (img_pixel_size[0], pixel_size, zoom))
-                if zoom in self._zoom_cache:
-                    img = self._zoom_cache[zoom]
+                img_pixel_size = xy2ij((self.region.size_x, self.region.size_y)) / self.img.shape  # is self.size a tuple or an array?
+                assert img_pixel_size[0] == img_pixel_size[1]
+                
+                # necessary instead of == comparison due to the floating math rounding errors
+                if abs(pixel_size-img_pixel_size[0])<0.0001:
+                    img = self.img
                 else:
-                    img = interpolation.zoom(self.img, zoom)
-                    self._zoom_cache[zoom] = img
+                    if self.first_resolution_mismatch_display:
+                        logger.warning("Image pixel size does not match desired size (%g vs. %g) degrees. This is extremely inefficient!!!!!!!!!!!" % (pixel_size,img_pixel_size[0]))
+                        logger.warning("Image pixel size %g,%g" % numpy.shape(self.img))
+                        self.first_resolution_mismatch_display = False
+                    # note that if the image is much larger than the view region, we might save some
+                    # time by not rescaling the whole image, only the part within the view region.
+                    zoom = self._calculate_zoom(img_pixel_size[0], pixel_size)  # img_pixel_size[0]/pixel_size
+                    #logger.debug("Image pixel size (%g deg) does not match desired size (%g deg). Zooming image by a factor %g" % (img_pixel_size[0], pixel_size, zoom))
+                    if zoom in self._zoom_cache:
+                        img = self._zoom_cache[zoom]
+                    else:
+                        img = interpolation.zoom(self.img, zoom)
+                        self._zoom_cache[zoom] = img
 
-            j_start = numpy.round(img_relative_left * img.shape[1]).astype(int)
-            delta_j = numpy.round(img_relative_width * img.shape[1]).astype(int)
-            i_start = img.shape[0] - numpy.round(img_relative_top * img.shape[0]).astype(int)
-            delta_i = numpy.round(img_relative_height * img.shape[0]).astype(int)
+                j_start = numpy.round(img_relative_left * img.shape[1]).astype(int)
+                delta_j = numpy.round(img_relative_width * img.shape[1]).astype(int)
+                i_start = img.shape[0] - numpy.round(img_relative_top * img.shape[0]).astype(int)
+                delta_i = numpy.round(img_relative_height * img.shape[0]).astype(int)
 
-            l_start = numpy.round(view_relative_left * size_in_pixels[1]).astype(int)
-            delta_l = numpy.round(view_relative_width * size_in_pixels[1]).astype(int)
-            k_start = size_in_pixels[0] - numpy.round(view_relative_top * size_in_pixels[0]).astype(int)
-            delta_k = numpy.round(view_relative_height * size_in_pixels[0]).astype(int)
+                l_start = numpy.round(view_relative_left * size_in_pixels[1]).astype(int)
+                delta_l = numpy.round(view_relative_width * size_in_pixels[1]).astype(int)
+                k_start = size_in_pixels[0] - numpy.round(view_relative_top * size_in_pixels[0]).astype(int)
+                delta_k = numpy.round(view_relative_height * size_in_pixels[0]).astype(int)
 
-            assert delta_j == delta_l, "delta_j = %g, delta_l = %g" % (delta_j, delta_l)
-            assert delta_i == delta_k
+                assert delta_j == delta_l, "delta_j = %g, delta_l = %g" % (delta_j, delta_l)
+                assert delta_i == delta_k
 
-            i_stop = i_start + delta_i
-            j_stop = j_start + delta_j
-            k_stop = k_start + delta_k
-            l_stop = l_start + delta_l
-            ##logger.debug("i_start = %d, i_stop = %d, j_start = %d, j_stop = %d" % (i_start, i_stop, j_start, j_stop))
-            ##logger.debug("k_start = %d, k_stop = %d, l_start = %d, l_stop = %d" % (k_start, k_stop, l_start, l_stop))
+                i_stop = i_start + delta_i
+                j_stop = j_start + delta_j
+                k_stop = k_start + delta_k
+                l_stop = l_start + delta_l
+                ##logger.debug("i_start = %d, i_stop = %d, j_start = %d, j_stop = %d" % (i_start, i_stop, j_start, j_stop))
+                ##logger.debug("k_start = %d, k_stop = %d, l_start = %d, l_stop = %d" % (k_start, k_stop, l_start, l_stop))
 
-            try:
-                view[k_start:k_start+delta_k, l_start:l_start+delta_l] = img[i_start:i_start+delta_i, j_start:j_start+delta_j]
-            except ValueError:
-                logger.error("i_start = %d, i_stop = %d, j_start = %d, j_stop = %d" % (i_start, i_stop, j_start, j_stop))
-                logger.error("k_start = %d, k_stop = %d, l_start = %d, l_stop = %d" % (k_start, k_stop, l_start, l_stop))
-                logger.error("img.shape = %s, view.shape = %s" % (img.shape, view.shape))
-                logger.error("img[i_start:i_stop, j_start:j_stop].shape = %s" % str(img[i_start:i_stop, j_start:j_stop].shape))
-                logger.error("view[k_start:k_stop, l_start:l_stop].shape = %s" % str(view[k_start:k_stop, l_start:l_stop].shape))
-                raise
-        assert view.shape == tuple(size_in_pixels), "view.shape = %s, should be %s" % (view.shape, tuple(size_in_pixels))
+                try:
+                    self.region_cache[region] = ((k_start,k_start+delta_k,l_start,l_start+delta_l),(i_start,i_start+delta_i, j_start,j_start+delta_j))
+                    view[k_start:k_start+delta_k, l_start:l_start+delta_l] = img[i_start:i_start+delta_i, j_start:j_start+delta_j]
+                except ValueError:
+                    logger.error("i_start = %d, i_stop = %d, j_start = %d, j_stop = %d" % (i_start, i_stop, j_start, j_stop))
+                    logger.error("k_start = %d, k_stop = %d, l_start = %d, l_stop = %d" % (k_start, k_stop, l_start, l_stop))
+                    logger.error("img.shape = %s, view.shape = %s" % (img.shape, view.shape))
+                    logger.error("img[i_start:i_stop, j_start:j_stop].shape = %s" % str(img[i_start:i_stop, j_start:j_stop].shape))
+                    logger.error("view[k_start:k_stop, l_start:l_stop].shape = %s" % str(view[k_start:k_stop, l_start:l_stop].shape))
+                    raise
+            else:
+                try:
+                    ((sx_min,sx_max,sy_min,sy_max),(tx_min,tx_max,ty_min,ty_max)) = self.region_cache[region]
+                    view[sx_min:sx_max,sy_min:sy_max] = self.img[tx_min:tx_max,ty_min:ty_max]
+                except ValueError:
+                    logger.error("i_start = %d, i_stop = %d, j_start = %d, j_stop = %d" % (i_start, i_stop, j_start, j_stop))
+                    logger.error("k_start = %d, k_stop = %d, l_start = %d, l_stop = %d" % (k_start, k_stop, l_start, l_stop))
+                    logger.error("img.shape = %s, view.shape = %s" % (img.shape, view.shape))
+                    logger.error("img[i_start:i_stop, j_start:j_stop].shape = %s" % str(img[i_start:i_stop, j_start:j_stop].shape))
+                    logger.error("view[k_start:k_stop, l_start:l_stop].shape = %s" % str(view[k_start:k_stop, l_start:l_stop].shape))
+                    raise
         return view
 
     def update(self):

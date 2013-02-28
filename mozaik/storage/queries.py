@@ -210,6 +210,49 @@ class PartitionAnalysisResultsByParameterNameQuery(Query):
         return partition_analysis_results_by_parameters_query(dsv,**self.parameters)
 ######################################################################################################################################
 
+######################################################################################################################################
+def partition_analysis_results_by_stimulus_parameters_query(dsv,parameter_list=None,excpt=False):
+        if dsv.analysis_results == []: return []
+        st = [MozaikParametrized.idd(ads.stimulus_id) for ads in dsv.analysis_results]
+        assert parameter_list != None , "parameter_list has to be given"
+        if excpt:
+            assert matching_parametrized_object_params(st,params=['name']), "If excpt==True you have to provide a dsv containing the same ADS type"
+            parameter_list = set(st[0].params().keys()) - (set(parameter_list) | set(['name']))
+            
+        values, st = colapse(dsv.analysis_results,st,parameter_list=parameter_list,allow_non_identical_objects=True)
+        dsvs = []
+
+        for vals in values:
+            new_dsv = dsv.fromDataStoreView()
+            new_dsv.block.segments = dsv.recordings_copy()
+            new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
+            new_dsv.analysis_results.extend(vals)
+            dsvs.append(new_dsv)
+        return dsvs
+
+class PartitionAnalysisResultsByStimulusParameterNameQuery(Query):
+    
+    """
+    This query will take all analysis results and return list of DataStoreViews
+    each holding analysis results that have the same values of
+    of stimulus parameters in parameter_list.
+
+    Note that in most cases one wants to do this only against datastore holding
+    only analysis results  measured to the same stimulus type! In that case the datastore is partitioned into
+    subsets each holding recordings to the same stimulus with the same paramter
+    values, with the exception to the parameters in parameter_list.
+    
+    If excpt!=None this is allowed only on DSVs holding the same AnalysisDataStructures.
+    """
+
+    required_parameters = ParameterSet({
+        'parameter_list': list,  # the index of the parameter against which to partition
+        'excpt' : bool, # will treat the parameter list as except list - i.e. it will partition again all parameter except those in parameter_list
+    })
+
+    def query(self, dsv):
+        return partition_analysis_results_by_stimulus_parameters_query(dsv,**self.parameters)
+######################################################################################################################################
 
 
 

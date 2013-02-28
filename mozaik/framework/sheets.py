@@ -9,8 +9,9 @@ import mozaik
 from mozaik.framework.interfaces import MozaikComponent
 from mozaik.framework import load_component
 
-from NeuroTools.parameters import ParameterSet
+from NeuroTools.parameters import ParameterSet, UniformDist
 from pyNN import space
+from pyNN.random import RandomDistribution
 from pyNN.errors import NothingToWriteError
 from string import Template
 from neo.core.spiketrain import SpikeTrain
@@ -56,6 +57,10 @@ class Sheet(MozaikComponent):
             'inh_weight': float,
         }),
         'mpi_safe': bool,
+        'artificial_stimulation' : bool, # Has to be set to True, if one wants to use 
+                                         # stimulation beyond the non-specific 
+                                         # one defined in background_noise parameters during 
+                                         # the experiments. This is an efficiency flag 
         'name': str,
         'recorders' : ParameterSet
     })
@@ -71,17 +76,16 @@ class Sheet(MozaikComponent):
         self.to_record = {}
         for k in  self.parameters.recorders.keys():
             recording_configuration = load_component(self.parameters.recorders[k].component)
-            l = recording_configuration(self,self.parameters.recorders[k].params).generate_idd_list_of_neurons_to_record()
+            l = recording_configuration(self,self.parameters.recorders[k].params).generate_idd_list_of_neurons()
             if isinstance(self.parameters.recorders[k].variables,str):
                self.parameters.recorders[k].variables = [self.parameters.recorders[k].variables]
                
             for var in self.parameters.recorders[k].variables:
                 self.to_record[var] = list(set(self.to_record.get(var,[])) | set(l))
-                
         #convert ids to indexes
         for k in self.to_record.keys():
-            idds = [i for i in self.pop.all()]
-            self.to_record[k] = [idds.index(idd) for idd in self.to_record[k]]
+            idds = self.pop.all_cells.astype(int)
+            self.to_record[k] = [numpy.flatnonzero(idds == idd)[0] for idd in self.to_record[k]]
             
     def size_in_degrees(self):
         """Returns the x, y size in degrees of visual field of the given area"""
@@ -103,6 +107,7 @@ class Sheet(MozaikComponent):
             self._neuron_annotations = [{} for i in xrange(0, len(value))]
             self.setup_background_noise()
             self.setup_to_record_list()
+            self.setup_initial_values()
         return locals()
 
     pop = property(**pop())  # this will be populated by PyNN population, in the derived classes
@@ -110,9 +115,8 @@ class Sheet(MozaikComponent):
     def add_neuron_annotation(self, neuron_number, key, value, protected=True):
         if not self._pop:
             logger.error('Population has not been yet set in sheet: ' + self.name + '!')
-        if (protected
-              and key in self._neuron_annotations[neuron_number]
-              and self._neuron_annotations[neuron_number][key][0]):
+        if (key in self._neuron_annotations[neuron_number] and self._neuron_annotations[neuron_number][key][0]):
+            print self._neuron_annotations[neuron_number]
             logger.warning('The annotation<' + '> for neuron ' + str(neuron_number) + ' is protected. Annotation not updated')
         else:
             self._neuron_annotations[neuron_number][key] = (protected, value)
@@ -185,28 +189,35 @@ class Sheet(MozaikComponent):
        
         return s
 
-    def prepare_input(self, duration, offset):
-        if self.parameters.mpi_safe:
-            from NeuroTools import stgen
-            if (self.parameters.background_noise.exc_firing_rate != 0
-                  or self.parameters.background_noise.exc_weight != 0):
+    def prepare_input(self, duration, offset,exc_spiking_stimulation,inh_spiking_stimulation):
+        from NeuroTools import stgen
+        if self.parameters.mpi_safe or self.parameters.artificial_stimulation:
+            if (self.parameters.background_noise.exc_firing_rate != 0 and self.parameters.background_noise.exc_weight != 0) or self.parameters.artificial_stimulation:
+                idds = self.pop.all_cells.astype(int)
                 for i in numpy.nonzero(self.pop._mask_local)[0]:
-                    pg = stgen.StGen(seed=i).poisson_generator(
-                                rate=self.parameters.background_noise.exc_firing_rate,
-                                t_start=self.model.simulator_time,
-                                t_stop=self.model.simulator_time + duration)
-                    pp = numpy.array(pg.spike_times)
-                    self.ssae[i].set_parameters(spike_times=offset + pp)
+                    pp = []
+                    if (self.parameters.background_noise.exc_firing_rate != 0 and self.parameters.background_noise.exc_weight != 0):
+                        pp = stgen.StGen(seed=i).poisson_generator(
+                                    rate=self.parameters.background_noise.exc_firing_rate,
+                                    t_start=0,
+                                    t_stop=duration).spike_times
+                    if self.parameters.artificial_stimulation and exc_spiking_stimulation!=None and (exc_spiking_stimulation[0] == "all" or (idds[i] in exc_spiking_stimulation[0])):
+                       pp.extend(exc_spiking_stimulation[1](duration)) 
 
-            if (self.parameters.background_noise.inh_firing_rate != 0
-                  or self.parameters.background_noise.inh_weight != 0):
+                    self.ssae[i].set_parameters(spike_times=offset + numpy.array(pp))
+
+            if (self.parameters.background_noise.inh_firing_rate != 0 and self.parameters.background_noise.inh_weight) != 0 or self.parameters.artificial_stimulation:
+                idds = self.pop.all_cells.astype(int)
                 for i in numpy.nonzero(self.pop._mask_local)[0]:
-                    pg = stgen.StGen(seed=2*i).poisson_generator(
-                                rate=self.parameters.background_noise.inh_firing_rate,
-                                t_start=self.model.simulator_time,
-                                t_stop=self.model.simulator_time + duration)
-                    pp = numpy.array(pg.spike_times)
-                    self.ssai[i].set_parameters(spike_times=offset + pp)
+                    pp = []
+                    if (self.parameters.background_noise.inh_firing_rate != 0 and self.parameters.background_noise.inh_weight != 0):
+                        pp = stgen.StGen(seed=2*i).poisson_generator(
+                                    rate=self.parameters.background_noise.inh_firing_rate,
+                                    t_start=self.model.simulator_time,
+                                    t_stop=self.model.simulator_time + duration).spike_times
+                    if self.parameters.artificial_stimulation and inh_spiking_stimulation!=None and (inh_spiking_stimulation[0] == "all" or (idds[i] in inh_spiking_stimulation[0])):
+                       pp.extend(self.model.simulator_time+ inh_spiking_stimulation[1](duration)) 
+                    self.ssai[i].set_parameters(spike_times=offset + numpy.array(pp))
 
     def setup_background_noise(self):
         from pyNN.nest import native_cell_type
@@ -230,26 +241,35 @@ class Sheet(MozaikComponent):
                                 np_inh, self.pop,
                                 self.sim.AllToAllConnector(weights=self.parameters.background_noise.inh_weight),
                                 target='inhibitory')
-        else:
+        
+        if self.parameters.mpi_safe or self.parameters.artificial_stimulation:
             if (self.parameters.background_noise.exc_firing_rate != 0
-                  or self.parameters.background_noise.exc_weight != 0):
-                self.ssae = self.sim.Population(self.pop.size,
-                                                self.model.sim.SpikeSourceArray,
-                                                {'spike_times': []})
-                self.sim.Projection(self.ssae, self.pop,
-                                    self.sim.OneToOneConnector(weights=self.parameters.background_noise.exc_weight),
-                                    target='excitatory')
+                  or self.parameters.background_noise.exc_weight != 0 or self.parameters.artificial_stimulation):
+                        self.ssae = self.sim.Population(self.pop.size,
+                                                        self.model.sim.SpikeSourceArray,
+                                                        {'spike_times': []})
+                        self.sim.Projection(self.ssae, self.pop,
+                                            self.sim.OneToOneConnector(weights=self.parameters.background_noise.exc_weight),
+                                            target='excitatory')
 
             if (self.parameters.background_noise.inh_firing_rate != 0
-                  or self.parameters.background_noise.inh_weight != 0):
-                self.ssai = self.sim.Population(self.pop.size,
-                                                self.model.sim.SpikeSourceArray,
-                                                {'spike_times': []})
-                self.sim.Projection(self.ssai, self.pop,
-                                    self.sim.OneToOneConnector(weights=self.parameters.background_noise.inh_weight),
-                                    target='inhibitory')
+                  or self.parameters.background_noise.inh_weight != 0 or self.parameters.artificial_stimulation):
+                        self.ssai = self.sim.Population(self.pop.size,
+                                                        self.model.sim.SpikeSourceArray,
+                                                        {'spike_times': []})
+                        self.sim.Projection(self.ssai, self.pop,
+                                            self.sim.OneToOneConnector(weights=self.parameters.background_noise.inh_weight),
+                                            target='inhibitory')
 
-
+    def setup_initial_values(self):
+        for var, val in self.parameters.cell.initial_values.items():
+            if isinstance(val,UniformDist):
+                self.pop.initialize(var, RandomDistribution('uniform',parameters=[val.params["min"],val.params["max"]]))
+            else:
+                self.pop.initialize(var, val)
+        
+        
+        
 class RetinalUniformSheet(Sheet):
     """
     Retinal sheet is organized on a grid
@@ -274,10 +294,6 @@ class RetinalUniformSheet(Sheet):
                                        self.parameters.cell.params,
                                        rs,
                                        label=self.name)
-                                       
-        for var, val in self.parameters.cell.initial_values.items():
-            self.pop.initialize(var, val)
-
     def size_in_degrees(self):
         return (self.parameters.sx, self.parameters.sy)
 
@@ -344,6 +360,3 @@ class CorticalUniformSheet(SheetWithMagnificationFactor):
                                        self.parameters.cell.params,
                                        rs,
                                        label=self.name)
-
-        for var, val in self.parameters.cell.initial_values.items():
-            self.pop.initialize(var, val)

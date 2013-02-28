@@ -104,7 +104,7 @@ class MozaikSegment(Segment):
                 if a.name == 'gsyn_exc':
                    return a.annotations['source_ids']
 
-        def get_stored_v_ids(self):
+        def get_stored_vm_ids(self):
             if not self.full:
                 self.load_full()
             for a in self.analogsignalarrays:

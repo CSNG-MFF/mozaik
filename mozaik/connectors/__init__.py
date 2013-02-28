@@ -55,23 +55,19 @@ class MozaikConnector(Connector):
       raise NotImplementedError
 
     def connection_field_plot_continuous(self, index, afferent=True, density=30):
-        weights = self.proj.getWeights(format='array')
-        x = []
-        y = []
-        w = []
+        weights = self.proj.getWeights(format='list')
+        #print numpy.shape(weights)
         if afferent:
-            weights = weights[:, index].ravel()
-            p = self.proj.pre
+            idx = numpy.flatnonzero(weights[:,1]==index)
+            x = self.proj.pre.positions[0][weights[idx,0]]
+            y = self.proj.pre.positions[1][weights[idx,0]]
+            w = weights[idx,2]
         else:
-            weights = weights[index, :].ravel()
-            p = self.proj.post
-        
-        for (ww, i) in zip(weights, numpy.arange(0, len(weights), 1)):
-                if not math.isnan(ww):                
-                    x.append(p.positions[0][i])
-                    y.append(p.positions[1][i])
-                    w.append(ww)
-                        
+            idx = numpy.flatnonzero(weights[:,0]==index)
+            x = self.proj.post.positions[0][weights[idx,1]]
+            y = self.proj.post.positions[1][weights[idx,1]]
+            w = weights[idx,2]
+
         xi = numpy.linspace(min(x), max(x), 100)
         yi = numpy.linspace(min(y), max(y), 100)
         zi = griddata(x, y, w, xi, yi)
@@ -88,8 +84,9 @@ class MozaikConnector(Connector):
 
     def store_connections(self, datastore):
         from mozaik.analysis.analysis_data_structures import Connections
-        weights = numpy.nan_to_num(self.proj.getWeights(format='array'))
-        delays = numpy.nan_to_num(self.proj.getDelays(format='array'))
+        
+        weights = numpy.array(self.proj.getWeights(format='list', gather=True))
+        delays = numpy.array(self.proj.getDelays(format='list', gather=True))
         datastore.add_analysis_result(
             Connections(weights,delays,
                         proj_name=self.name,

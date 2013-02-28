@@ -8,7 +8,7 @@ common y axis.
 
 import param
 from param.parameterized import Parameterized
-from mozaik.storage.queries import partition_by_stimulus_paramter_query
+from mozaik.storage.queries import partition_by_stimulus_paramter_query, partition_analysis_results_by_stimulus_parameters_query
 import matplotlib.gridspec as gridspec
 from mozaik.tools.mozaik_parametrized import MozaikParametrized, varying_parameters
 import mozaik
@@ -162,8 +162,9 @@ class PerStimulusPlot(PerDSVPlot):
 
     def  __init__(self, datastore, **params):
         PerDSVPlot.__init__(self, datastore, **params)
+        ss = self._get_stimulus_ids()
+        assert ss != [], "Error, empty datastore!"
         if self.title_style == "Clever":
-            ss = datastore.get_stimuli()
             stimulus = MozaikParametrized.idd(ss[0])
             for s in ss:
                 s = MozaikParametrized.idd(s)
@@ -174,7 +175,7 @@ class PerStimulusPlot(PerDSVPlot):
 
         # lets find parameter indexes that vary if we need 'Clever' title style
         if self.title_style == "Clever":
-            self.varied = varying_parameters([MozaikParametrized.idd(s) for s in self.datastore.get_stimuli()])
+            self.varied = varying_parameters([MozaikParametrized.idd(s) for s in ss])
             self.varied = [x for x in self.varied if x != 'trial']
             
             
@@ -182,7 +183,10 @@ class PerStimulusPlot(PerDSVPlot):
             self.extra_space_top = 0.07
         if self.title_style == "Clever":
             self.extra_space_top = len(self.varied)*0.005
-
+        
+    def _get_stimulus_ids(self):
+        return self.datastore.get_stimuli()
+         
     def partiotion_dsvs(self):
         return partition_by_stimulus_paramter_query(self.datastore,['trial'])
 
@@ -195,11 +199,13 @@ class PerStimulusPlot(PerDSVPlot):
         return li
 
     def title(self, idx):
+        return self._title(MozaikParametrized.idd(self.dsvs[idx].get_stimuli()[0]))
+    
+    def _title(self,stimulus):
         if self.title_style == "None":
             return None
 
         if self.title_style == "Standard":
-            stimulus = MozaikParametrized.idd(self.dsvs[idx].get_stimuli()[0])
             title = ''
             title = title + stimulus.name + '\n'
             for pn, pv in stimulus.get_param_values():
@@ -207,12 +213,26 @@ class PerStimulusPlot(PerDSVPlot):
             return title
 
         if self.title_style == "Clever":
-           stimulus = MozaikParametrized.idd(self.dsvs[idx].get_stimuli()[0])
            title = ''
            for pn in self.varied:
                title = title + str(pn) + ' : ' + str(getattr(stimulus,pn)) + '\n' 
            return title
-           
+
+
+class PerStimulusADSPlot(PerStimulusPlot):
+      """
+      As PerStimulusPlot, but partitions the ADS not recordings. 
+      """
+      def _get_stimulus_ids(self):
+          return [MozaikParametrized.idd(ads.stimulus_id) for ads in self.datastore.get_analysis_result()]
+      
+      def title(self, idx):
+          return self._title([MozaikParametrized.idd(ads.stimulus_id) for ads in self.dsvs[idx].get_analysis_result()][0])
+
+      def partiotion_dsvs(self):
+          return partition_analysis_results_by_stimulus_parameters_query(self.datastore,['trial'])
+
+
 
 class GridPlot(Parameterized):
     """

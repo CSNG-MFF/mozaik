@@ -15,7 +15,12 @@ from numpy import pi
 from quantities import Hz, rad, degrees, ms, dimensionless
 import topo.pattern.image
 
-class FullfieldDriftingSinusoidalGrating(VisualStimulus):
+class TopographicaBasedVisualStimulus(VisualStimulus):
+    def __init__(self,**params):
+        VisualStimulus.__init__(self,**params)
+        self.transparent = False # We will not handle transparency anywhere here for now so let's make it fast
+
+class FullfieldDriftingSinusoidalGrating(TopographicaBasedVisualStimulus):
     """
     max_luminance is interpreted as scale
     and size_x/2 as the bounding box radius
@@ -28,7 +33,9 @@ class FullfieldDriftingSinusoidalGrating(VisualStimulus):
 
     def frames(self):
         self.current_phase=0
+        i = 0
         while True:
+            i=i+1
             yield (topo.pattern.SineGrating(orientation=self.orientation,
                                             frequency=self.spatial_frequency,
                                             phase=self.current_phase,
@@ -41,7 +48,7 @@ class FullfieldDriftingSinusoidalGrating(VisualStimulus):
             self.current_phase += 2*pi * (self.frame_duration/1000.0) * self.temporal_frequency
 
 
-class Null(VisualStimulus):
+class Null(TopographicaBasedVisualStimulus):
     def frames(self):
         """
         Empty stimulus
@@ -50,7 +57,7 @@ class Null(VisualStimulus):
             yield topo.pattern.Null(scale=self.background_luminance, bounds=BoundingBox(radius=self.size_x/2),xdensity=self.density,ydensity=self.density)(), []
 
 
-class NaturalImageWithEyeMovement(VisualStimulus):
+class NaturalImageWithEyeMovement(TopographicaBasedVisualStimulus):
     """
     A visual stimulus that simulates an eye movement over a static image
     """
@@ -86,7 +93,7 @@ class NaturalImageWithEyeMovement(VisualStimulus):
             self.time += 1
 
 
-class DriftingGratingWithEyeMovement(VisualStimulus):
+class DriftingGratingWithEyeMovement(TopographicaBasedVisualStimulus):
     """
     A visual stimulus that simulates an eye movement over a drifting  gratings
     """
@@ -124,7 +131,7 @@ class DriftingGratingWithEyeMovement(VisualStimulus):
             self.time = self.time + 1
 
 
-class DriftingSinusoidalGratingDisk(VisualStimulus):
+class DriftingSinusoidalGratingDisk(TopographicaBasedVisualStimulus):
     """
     size_x/2 as the bounding box radius
     """
@@ -155,7 +162,7 @@ class DriftingSinusoidalGratingDisk(VisualStimulus):
             self.current_phase += 2*pi * (self.frame_duration/1000) * self.temporal_frequency
 
 
-class DriftingSinusoidalGratingCenterSurroundStimulus(VisualStimulus):
+class DriftingSinusoidalGratingCenterSurroundStimulus(TopographicaBasedVisualStimulus):
     """
     A standard stimulus to probe orientation specific surround modulation:
     A drifting grating in center surrounded by a drifting grating in the surround.

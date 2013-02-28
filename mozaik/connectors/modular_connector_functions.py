@@ -22,6 +22,13 @@ class ModularConnectorFunction(MozaikParametrizeObject):
     def evaluate(self,index):
         raise NotImplemented
 
+class ConstantModularConnectorFunction(ModularConnectorFunction):
+      """
+      Triavial modular connection function assigning each connections the same weight
+      """
+      def evaluate(self,index):
+          return numpy.zeros(len(self.source.pop)) + 1
+          
 class DistanceDependentModularConnectorFunction(ModularConnectorFunction):
     """
     Helper abstract class to ease the definitions of purely distance dependent connector functions.
@@ -84,6 +91,20 @@ class LinearModularConnectorFunction(DistanceDependentModularConnectorFunction):
     def distance_dependent_function(self,distance):
         return self.parameters.linear_scaler*distance + self.parameters.constant_scaler
 
+class HyperbolicModularConnectorFunction(DistanceDependentModularConnectorFunction):
+    """
+    Corresponds to: exp(-alpha*distance*sqrt(\theta^2 + distance^2)) , where distance is in micrometers
+    And is the best fit I could so far find to the data from: 
+    Stepanyants, A., Hirsch, J. a, Martinez, L. M., Kisvárday, Z. F., Ferecskó, A. S., & Chklovskii, D. B. (2008). 
+    Local potential connectivity in cat primary visual cortex. Cerebral cortex, 18(1), 13–28. doi:10.1093/cercor/bhm027
+    """
+    required_parameters = ParameterSet({
+        'alpha' : float, # see description
+        'theta': float,  # see description
+    })
+    
+    def distance_dependent_function(self,distance):
+        return numpy.exp(-numpy.multiply(self.parameters.alpha,numpy.sqrt(numpy.power(self.parameters.theta,2) + numpy.power(distance,2))))
 
 
 class MapDependentModularConnectorFunction(ModularConnectorFunction):
@@ -111,15 +132,15 @@ class MapDependentModularConnectorFunction(ModularConnectorFunction):
         X, Y = numpy.meshgrid(coords_x, coords_y)
         self.mmap = NearestNDInterpolator(zip(X.flatten(), Y.flatten()),
                                        mmap.flatten())    
+        self.val_source=self.mmap(numpy.transpose(numpy.array([self.source.pop.positions[0],self.source.pop.positions[1]])))
         
     def evaluate(self,index):
-            val_source=self.mmap(numpy.transpose(numpy.array([self.source.pop.positions[0],self.source.pop.positions[1]])))
             val_target=self.mmap(self.target.pop.positions[0][index],self.target.pop.positions[1][index])
-            self.target.add_neuron_annotation(index, 'LGNAfferentOrientation', val_target*numpy.pi, protected=True) 
+            self.target.add_neuron_annotation(index, 'LGNAfferentOrientation', val_target*numpy.pi, protected=False) 
             if self.parameters.periodic:
-                distance = circular_dist(val_source,val_target,1.0)
+                distance = circular_dist(self.val_source,val_target,1.0)
             else:
-                distance = numpy.abs(sourcev-targetv)
+                distance = numpy.abs(self.val_source-val_target)
             return numpy.exp(-0.5*(distance/self.parameters.sigma)**2)/(self.parameters.sigma*numpy.sqrt(2*numpy.pi))
     
 

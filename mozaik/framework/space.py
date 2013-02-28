@@ -124,9 +124,13 @@ class VisualSpace(InputSpace):
 
         Returns a numpy array containing luminance values.
         """
+        # Let's make it more efficient if there is only one object in the scene that is not transparrent (which is often the case):
+        o = self.content.values()[0]
+        if len(self.content.values()) == 1 and not o.transparent and o.is_visible:
+           return o.display(region, pixel_size) 
+
         size_in_pixels = numpy.ceil(xy2ij((region.size_x, region.size_y)) / float(pixel_size)).astype(int)
         scene = TRANSPARENT*numpy.ones(size_in_pixels)
-
         for obj in self.content.values():
             if obj.is_visible:
                 if region.overlaps(obj.region):
@@ -141,7 +145,7 @@ class VisualSpace(InputSpace):
                 else:
                     #logger.debug("Warning: region %s does not overlap this object (%s)." % (region.describe(), obj.describe()))
                     pass
-        return numpy.where(scene != TRANSPARENT, scene, self.background_luminance)
+        return numpy.where(scene > TRANSPARENT, scene, self.background_luminance)
 
     def get_max_luminance(self):
         return max(obj.max_luminance for obj in self.content.values())

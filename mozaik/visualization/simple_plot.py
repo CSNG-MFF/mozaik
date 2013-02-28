@@ -244,12 +244,14 @@ class SpikeRasterPlot(StandardStyle):
     Each trial will be plotted as a sepparate line of spikes, and these will be
     grouped by the neurons. Only neurons in the neurons parameter will be
     plotted. If neurons are None, (up to) first 10 neurons will be plotted.
+    
+    group_trials - if is set to true - trials will be concatenated and plotted on the same line
     """
-
     def __init__(self, spike_lists):
         StandardStyle.__init__(self)
         self.sps = spike_lists
         self.parameters["colors"] = None
+        self.parameters["group_trials"] = False
 
     def plot(self):
         if self.parameters["colors"] == None:
@@ -257,35 +259,47 @@ class SpikeRasterPlot(StandardStyle):
         else:
             colors = self.colors
 
-        neurons = [i for i in xrange(0, min(10, len(self.sps[0][0])))]
+        neurons = [i for i in xrange(0, len(self.sps[0][0]))]
         
         t_stop = float(self.sps[0][0][0].t_stop)
         num_n = len(neurons)  # number of neurons
         num_t = len(self.sps[0])  # number of trials
 
         for k, sp in enumerate(self.sps):
-            for i, spike_list in enumerate(sp):
-                for j, n in enumerate(neurons):
-                    spike_train = spike_list[n]
-                    self.axis.plot(spike_train,
-                                   [j * (num_t + 1) + i + 1
-                                      for x in xrange(0, len(spike_train))],
-                                   '|',
-                                   color=colors[k])
-
-            for j in xrange(0, num_n - 1):
-                self.axis.axhline(j * (num_t + 1) + num_t + 1, c='k')
-
-        self.y_lim = (0, num_n * (num_t + 1))
+            for j, n in enumerate(neurons):
+                if self.group_trials:
+                   train = []
+                   for i, spike_list in enumerate(sp):
+                       train.extend(spike_list[n])
+                   self.axis.plot(train,[j for x in xrange(0, len(train))],'|',color=colors[k])
+                else:
+                    for i, spike_list in enumerate(sp):
+                        spike_train = spike_list[n]
+                        self.axis.plot(spike_train,
+                                       [j * (num_t + 1) + i + 1
+                                          for x in xrange(0, len(spike_train))],
+                                       '|',
+                                       color=colors[k])
+            if not self.group_trials:
+                for j in xrange(0, num_n - 1):
+                    self.axis.axhline(j * (num_t + 1) + num_t + 1, c='k')
+                    
+        if not self.group_trials:
+            self.y_lim = (0, num_n * (num_t + 1))
+        else:
+            self.y_lim = (0, num_n)
 
         self.x_ticks = [0, t_stop/2, t_stop]
         self.x_tick_style = 'Custom'
         self.x_lim = (0, t_stop)
         self.x_label = 'time (ms)'
-        if num_n == 1:
-            self.y_label = 'Trial'
+        if not self.group_trials:
+            if num_n == 1:
+                self.y_label = 'Trial'
+            else:
+                self.y_label = 'Neuron/Trial'
         else:
-            self.y_label = 'Neuron/Trial'
+            self.y_label = 'Neuron' 
         self.y_ticks = []
 
 class SpikeHistogramPlot(SpikeRasterPlot):

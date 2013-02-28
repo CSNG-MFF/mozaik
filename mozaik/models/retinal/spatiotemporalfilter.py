@@ -79,14 +79,14 @@ class SpatioTemporalReceptiveField(object):
         t = numpy.arange(0.0, duration, dt)
         X, Y, T = meshgrid3D(y, x, t)  # x,y are reversed because (x,y) <--> (j,i)
         kernel = self.func(X, Y, T, self.func_params)
-        logger.debug("Created receptive field kernel: width=%gº, height=%gº, duration=%g ms, shape=%s" %
-                         (width, height, duration, kernel.shape))
-        logger.debug("  before normalization: min=%g, max=%g" %
-                         (kernel.min(), kernel.max()))
+        #logger.debug("Created receptive field kernel: width=%gº, height=%gº, duration=%g ms, shape=%s" %
+        #                 (width, height, duration, kernel.shape))
+        #logger.debug("before normalization: min=%g, max=%g" %
+        #                 (kernel.min(), kernel.max()))
         kernel = kernel/(nx * ny * nt)  # normalize to make the kernel sum quasi-independent of the quantization
 
-        logger.debug("  after normalization: min=%g, max=%g, sum=%g" %
-                         (kernel.min(), kernel.max(), kernel.sum()))
+        #logger.debug("  after normalization: min=%g, max=%g, sum=%g" %
+        #                 (kernel.min(), kernel.max(), kernel.sum()))
         self.kernel = kernel
         self.spatial_resolution = dx
         self.temporal_resolution = dt
@@ -120,14 +120,28 @@ class CellWithReceptiveField(object):
     response_current() should be called at the end of stimulus presentation
     """
 
-    def __init__(self, x, y, receptive_field, gain):
+    def __init__(self, x, y, receptive_field, gain,visual_space):
         self.x = x  # position in space
         self.y = y  #
+        self.visual_space = visual_space
         assert isinstance(receptive_field, SpatioTemporalReceptiveField)
         self.receptive_field = receptive_field
         self.gain = gain  # (nA.m²/cd) could imagine making this a function of
                           # the background luminance
         self.i = 0
+        self.visual_region = VisualRegion(location_x=self.x,
+                                     location_y=self.y,
+                                     size_x=self.receptive_field.width,
+                                     size_y=self.receptive_field.height)
+        #logger.debug("view_array.shape = %s" % str(view_array.shape))
+        #logger.debug("receptive_field.kernel.shape = %s" % str(self.receptive_field.kernel.shape))
+        #logger.debug("response.shape = %s" % str(self.response.shape))
+        if visual_space.update_interval % self.receptive_field.temporal_resolution != 0:
+            errmsg = "The receptive field temporal resolution (%g ms) must be an integer multiple of the visual space update interval (%g ms)" % \
+                (self.receptive_field.temporal_resolution, visual_space.update_interval)
+            raise Exception(errmsg)
+        self.update_factor = int(visual_space.update_interval / self.receptive_field.temporal_resolution)
+        
         #logger.debug("Created cell with receptive field centred at %gº,%gº" % (x,y))
         #logger.debug("  " + str(receptive_field))
 
@@ -154,7 +168,7 @@ class CellWithReceptiveField(object):
             self.response[i] += background_luminance * self.receptive_field.kernel[:, :, i+1:L].sum()
         self.i = 0
         
-    def view(self, visual_space):
+    def view(self):
         """
         Look at the visual space and update t
         Where the kernel temporal resolution is the same as the frame duration
@@ -168,25 +182,12 @@ class CellWithReceptiveField(object):
         To avoid loading the entire image sequence into memory, we build up
          the response array one frame at a time.
         """
-        visual_region = VisualRegion(location_x=self.x,
-                                     location_y=self.y,
-                                     size_x=self.receptive_field.width,
-                                     size_y=self.receptive_field.height)
-        view_array = visual_space.view(visual_region,
-                                       pixel_size=self.receptive_field.spatial_resolution)
-        #logger.debug("view_array.shape = %s" % str(view_array.shape))
-        #logger.debug("receptive_field.kernel.shape = %s" % str(self.receptive_field.kernel.shape))
-        #logger.debug("response.shape = %s" % str(self.response.shape))
-        if visual_space.update_interval % self.receptive_field.temporal_resolution != 0:
-            errmsg = "The receptive field temporal resolution (%g ms) must be an integer multiple of the visual space update interval (%g ms)" % \
-                (self.receptive_field.temporal_resolution, visual_space.update_interval)
-            raise Exception(errmsg)
-        update_factor = int(visual_space.update_interval / self.receptive_field.temporal_resolution)
+        view_array = self.visual_space.view(self.visual_region,pixel_size=self.receptive_field.spatial_resolution)
         product = self.receptive_field.kernel * view_array[:, :, numpy.newaxis]
         time_course = product.sum(axis=0).sum(axis=0)  # sum over the space axes, leaving a time signal.
-        for j in range(self.i, self.i+update_factor):
+        for j in range(self.i, self.i+self.update_factor):
             #if self.response[j:j+self.receptive_field.kernel_duration].shape != time_course.shape:
-            #    logger.error("Shape mismatch: %s != %s (j=%d, len(response)=%d, update_factor=%d, time_course=%s)" % \
+            #    logger.error("Shape mismatch: %s != %s (j=%d, len(response)=%d, self.update_factor=%d, time_course=%s)" % \
             #                  (self.response[j:j+self.receptive_field.kernel_duration].shape,
             #                   time_course.shape, j, len(self.response),
             #                   update_factor, time_course))
@@ -194,7 +195,7 @@ class CellWithReceptiveField(object):
             # make sure we do not go beyond response array - this could happen if
             # visual_space.update_interval/self.receptive_field.temporal_resolution is not integer
             self.response[j: j+self.receptive_field.kernel_duration] += time_course[:len(self.response[j: j+self.receptive_field.kernel_duration])]
-        self.i += update_factor  # we assume there is only ever 1 visual space used between initializations
+        self.i += self.update_factor  # we assume there is only ever 1 visual space used between initializations
 
     def response_current(self):
         """
@@ -264,6 +265,7 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
                                                   'cell': self.parameters.cell,
                                                   'name': rf_type,
                                                   'background_noise': bn,
+                                                  'artificial_stimulation' : False,
                                                   'recorders' : self.parameters.recorders,
                                                   'mpi_safe': False}))
             self.sheets[rf_type] = p
@@ -288,6 +290,24 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
                 self.ncs[rf_type].append(ncs)
                 lgn_cell.inject(scs)
                 lgn_cell.inject(ncs)
+                
+        
+        P_rf = self.parameters.receptive_field
+        rf_function = eval(P_rf.func)
+
+        rf_ON = SpatioTemporalReceptiveField(rf_function,
+                                             P_rf.func_params,
+                                             P_rf.width, P_rf.height,
+                                             P_rf.duration)
+        rf_OFF = SpatioTemporalReceptiveField(lambda x, y, t, p: -1.0 * rf_function(x, y, t, p),
+                                              P_rf.func_params,
+                                              P_rf.width, P_rf.height,
+                                              P_rf.duration)
+        dx = dy = P_rf.spatial_resolution
+        dt = P_rf.temporal_resolution
+        for rf in rf_ON, rf_OFF:
+            rf.quantize(dx, dy, dt)
+        self.rf = {'X_ON': rf_ON, 'X_OFF': rf_OFF}                
 
     def get_cache(self, stimulus_id):
         if self.parameters.cached == False:
@@ -414,28 +434,12 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
         if duration is None:
             duration = visual_space.get_maximum_duration()
 
-        P_rf = self.parameters.receptive_field
-        rf_function = eval(P_rf.func)
-
-        rf_ON = SpatioTemporalReceptiveField(rf_function,
-                                             P_rf.func_params,
-                                             P_rf.width, P_rf.height,
-                                             P_rf.duration)
-        rf_OFF = SpatioTemporalReceptiveField(lambda x, y, t, p: -1.0 * rf_function(x, y, t, p),
-                                              P_rf.func_params,
-                                              P_rf.width, P_rf.height,
-                                              P_rf.duration)
-        dx = dy = P_rf.spatial_resolution
-        dt = P_rf.temporal_resolution
-        for rf in rf_ON, rf_OFF:
-            rf.quantize(dx, dy, dt)
-        rf = {'X_ON': rf_ON, 'X_OFF': rf_OFF}
 
         # create population of CellWithReceptiveFields, setting the receptive
         # field centres based on the size/location of self
         logger.debug("Creating population of `CellWithReceptiveField`s")
         input_cells = {}
-        effective_visual_field_width, effective_visual_field_height = self.parameters.size
+        #effective_visual_field_width, effective_visual_field_height = self.parameters.size
         #x_values = numpy.linspace(-effective_visual_field_width/2.0, effective_visual_field_width/2.0, self.shape[0])
         #y_values = numpy.linspace(-effective_visual_field_height/2.0, effective_visual_field_height/2.0, self.shape[1])
         for rf_type in self.rf_types:
@@ -444,8 +448,8 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
             #for i in xrange(0,len(self.sheets[rf_type].pop.positions[0])):
                 cell = CellWithReceptiveField(self.sheets[rf_type].pop.positions[0][i],
                                               self.sheets[rf_type].pop.positions[1][i],
-                                              rf[rf_type],
-                                              self.parameters.gain)
+                                              self.rf[rf_type],
+                                              self.parameters.gain,visual_space)
                 cell.initialize(visual_space.background_luminance, duration)
                 input_cells[rf_type].append(cell)
 
@@ -458,12 +462,12 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
             t = visual_space.update()
             for rf_type in self.rf_types:
                 for cell in input_cells[rf_type]:
-                    cell.view(visual_space)
+                    cell.view()
             visual_region = VisualRegion(location_x=0, location_y=0,
                                          size_x=self.parameters.size[0],
                                          size_y=self.parameters.size[1])
             im = visual_space.view(visual_region,
-                                   pixel_size=rf_ON.spatial_resolution)
+                                   pixel_size=self.rf["X_ON"].spatial_resolution)
             retinal_input.append(im)
             progress_bar(t/duration)
 

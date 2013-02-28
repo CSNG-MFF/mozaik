@@ -139,8 +139,6 @@ class AnalysisDataStructure1D(AnalysisDataStructure):
           the name of the x axis
     y_axis_name -
           the name of the y axis
-    x_axis_untis -
-          the quantities units of x axis
     y_axis_units -
           the quantities units of y axis
     """
@@ -148,9 +146,8 @@ class AnalysisDataStructure1D(AnalysisDataStructure):
     x_axis_name = SString(doc="the name of the x axis.")
     y_axis_name = SString(doc="the name of the y axis.")
 
-    def __init__(self, x_axis_units, y_axis_units, **params):
+    def __init__(self,  y_axis_units, **params):
         AnalysisDataStructure.__init__(self, **params)
-        self.x_axis_units = x_axis_units
         self.y_axis_units = y_axis_units
 
 
@@ -166,15 +163,15 @@ class AnalogSignalList(AnalysisDataStructure1D):
          AnalogSignals correspond.
     """
 
-    def __init__(self, asl, ids, x_axis_units, y_axis_units, **params):
-        AnalysisDataStructure1D.__init__(self, x_axis_units, y_axis_units,
+    def __init__(self, asl, ids, y_axis_units, **params):
+        AnalysisDataStructure1D.__init__(self,  y_axis_units,
                                          identifier='AnalogSignalList',
                                          **params)
         self.asl = asl
-        self.ids = ids
+        self.ids = list(ids)
     
     def get_asl_by_id(self,idd):
-        return self.asl[self.ids.index(idd)]
+        return self.asl[list(self.ids).index(idd)]
 
 class ConductanceSignalList(AnalysisDataStructure1D):
     """
@@ -208,7 +205,7 @@ class ConductanceSignalList(AnalysisDataStructure1D):
                                          **params)
         self.e_con = e_con
         self.i_con = i_con
-        self.ids = ids
+        self.ids = list(ids)
 
     def get_econ_by_id(self,idd):
         return self.e_con[self.ids.index(idd)]
@@ -230,12 +227,10 @@ class Connections(AnalysisDataStructure):
             the name of the target sheet
 
     weights -
-            matrix of weights from neurons in source sheet (first dimension) to
-            neurons in target sheet (second dimension)
+            list of tuples (i,j,w) where i is index of pre-synaptic neuron in sheet source_name and j is index of post-synaptic neuron in sheet target_name, and w is the weights
     
     delays -
-            matrix of delays from neurons in source sheet (first dimension) to
-            neurons in target sheet (second dimension)
+            list of tuples (i,j,d) where i is index of pre-synaptic neuron in sheet source_name and j is index of post-synaptic neuron in sheet target_name, and d is the delay
     
     """
 
