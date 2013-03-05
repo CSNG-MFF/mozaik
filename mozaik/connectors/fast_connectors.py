@@ -2,6 +2,7 @@
 import mozaik
 from mozaik.connectors import MozaikConnector
 from NeuroTools.parameters import ParameterSet, ParameterDist
+from pyNN import space
 import numpy
 
 logger = mozaik.getMozaikLogger("Mozaik")
@@ -33,7 +34,7 @@ class DistanceDependentProbabilisticArborization(MozaikConnector):
         raise NotImplementedError
         pass
         
-    def connect(self):
+    def _connect(self):
         # JAHACK, 0.1 as minimal delay should be replaced with the simulations time_step        
         if isinstance(self.target, SheetWithMagnificationFactor):
             self.arborization_expression = lambda d: self.arborization_function(self.target.dvf_2_dcs(d))
@@ -91,11 +92,7 @@ class UniformProbabilisticArborization(MozaikConnector):
         'delay': float,    # ms delay of the connections
     })
 
-    def __init__(self, network, source, target, parameters, name):
-        mozaikVisualSystemConnector.__init__(self, network, name, source,
-                                             target, parameters)
-
-    def connect(self):
+    def _connect(self):
         method = self.sim.FixedProbabilityConnector(
                                     self.parameters.connection_probability,
                                     allow_self_connections=False,

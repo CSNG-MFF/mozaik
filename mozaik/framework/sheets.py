@@ -328,7 +328,7 @@ class SheetWithMagnificationFactor(Sheet):
         the magnification_factor
         """
         return (micro_meters_x / self.magnification_factor,
-                micro_meters_x / self.magnification_factor)
+                micro_meters_y / self.magnification_factor)
 
     def dvf_2_dcs(self, distance_vf):
         """

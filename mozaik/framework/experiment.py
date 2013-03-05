@@ -3,6 +3,7 @@ docstring goes here
 """
 import mozaik
 import mozaik.stimuli.topographica_based as topo
+from mozaik.stimuli.stimulus import InternalStimulus
 import numpy
 import resource
 
@@ -31,6 +32,7 @@ class Experiment(object):
     NOTE!: The spikes from (exc/inh)_spike_stimulator will be weighted by the connection with weights defined by the sheet's background_noise.(exc/inh)_weight parameter!!!
     """
     def __init__(self, model):
+        self.model = model
         self.stimuli = []
         self.exc_spike_stimulators = {}
         self.inh_spike_stimulators = {}
@@ -40,8 +42,18 @@ class Experiment(object):
         return self.stimuli
         
     def run(self,data_store,stimuli):
-        raise NotImplementedError
-        pass
+        srtsum = 0
+        for i,s in enumerate(stimuli):
+            logger.debug('Presenting stimulus: ' + str(s) + '\n')
+            for sheet_name in self.exc_spike_stimulators.keys():                
+                print len(self.exc_spike_stimulators[sheet_name][1](1000))
+            
+            (segments,input_stimulus,simulator_run_time) = self.model.present_stimulus_and_record(s,self.exc_spike_stimulators,self.inh_spike_stimulators)
+            srtsum += simulator_run_time
+            data_store.add_recording(segments,s)
+            data_store.add_stimulus(input_stimulus,s)
+            logger.info('Stimulus %d/%d finished. Memory usage: %iMB' % (i+1,len(stimuli),resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/1024))
+        return srtsum
         
     def do_analysis(self):
         raise NotImplementedError
@@ -56,28 +68,9 @@ class VisualExperiment(Experiment):
     def __init__(self, model):
         Experiment.__init__(self, model)
         self.background_luminance = model.input_space.background_luminance 
-        self.model = model
         #JAHACK: This is kind of a hack now. There needs to be generally defined interface of what is the resolution of a visual input layer
         # possibly in the future we could force the visual_space to have resolution, perhaps something like native_resolution parameter!?
         self.density  = 1/self.model.input_layer.parameters.receptive_field.spatial_resolution # in pixels per degree of visual space 
-
-    def run(self,data_store,stimuli):
-        srtsum = 0
-        for i,s in enumerate(stimuli):
-            logger.debug('Presenting stimulus: ' + str(s) + '\n')
-
-            print 'A1'            
-            for sheet_name in self.exc_spike_stimulators.keys():                
-                print len(self.exc_spike_stimulators[sheet_name][1](1000))
-
-            
-            (segments,input_stimulus,simulator_run_time) = self.model.present_stimulus_and_record(s,self.exc_spike_stimulators,self.inh_spike_stimulators)
-            srtsum += simulator_run_time
-            data_store.add_recording(segments,s)
-            data_store.add_stimulus(input_stimulus,s)
-            logger.info('Stimulus %d/%d finished. Memory usage: %iMB' % (i+1,len(stimuli),resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/1024))
-        return srtsum
-    
 
 class MeasureOrientationTuningFullfield(VisualExperiment):
 
@@ -127,7 +120,7 @@ class MeasureSizeTuning(VisualExperiment):
                                     density=self.density,
                                     trial=k,
                                     orientation=orientation,
-                                    radius=max_size/num_sizes*i,
+                                    radius=max_size/num_sizes*(i+1),
                                     spatial_frequency=spatial_frequency,
                                     temporal_frequency=temporal_frequency))
 
@@ -219,8 +212,6 @@ class MeasureDriftingSineGratingWithEyeMovement(VisualExperiment):
     def do_analysis(self, data_store):
         pass
 
-
-
 class MeasureSpontaneousActivity(VisualExperiment):
     def __init__(self,model,duration,num_trials):
             VisualExperiment.__init__(self, model)
@@ -239,31 +230,40 @@ class MeasureSpontaneousActivity(VisualExperiment):
     def do_analysis(self, data_store):
         pass
 
-class PoissonNetworkKick(VisualExperiment):
+class PoissonNetworkKick(Experiment):
     """
-    This experiment simply shows a blank stimulus lasting duration miliseconds.
-    Importantly for the duration of the blank stimulus it will stimulate neurons 
+    This experiment does not show any stimulus.
+    Importantly for the duration of the experiment it will stimulate neurons 
     definded by the recording configurations in recording_configuration_list
     in the sheets specified in the sheet_list with Poisson spike train of mean 
     frequency determined by the corresponding values in lambda_list.
     """
     def __init__(self,model,duration,sheet_list,recording_configuration_list,lambda_list):
-            VisualExperiment.__init__(self, model)
+            Experiment.__init__(self, model)
             from NeuroTools import stgen
             for sheet_name,lamb,rc in zip(sheet_list,lambda_list,recording_configuration_list):
                 self.exc_spike_stimulators[sheet_name] = (rc.generate_idd_list_of_neurons(),(lambda duration,lamb=lamb: stgen.StGen().poisson_generator(rate=lamb,t_start=0,t_stop=duration).spike_times))
 
             self.stimuli.append(
-                        topo.Null(   
-                            frame_duration=7, 
-                            size_x=model.visual_field.size_x,
-                            size_y=model.visual_field.size_y,
-                            location_x=0.0,
-                            location_y=0.0,
-                            background_luminance=self.background_luminance,
-                            duration=duration,
-                            density=self.density,
-                            trial=0,stimulation_name='Kick'))
-    
-       
+                        InternalStimulus(   
+                                            frame_duration=duration, 
+                                            duration=duration,
+                                            trial=0,
+                                            direct_stimulation_name='Kick'
+                                         )
+                                )
         
+class NoStimulation(Experiment):
+    """
+    This experiment does not show any stimulus for the duration of the experiment.
+    """
+    def __init__(self,model,duration):
+        Experiment.__init__(self, model)
+        self.stimuli.append(
+                        InternalStimulus(   
+                                            frame_duration=duration, 
+                                            duration=duration,
+                                            trial=0,
+                                            direct_stimulation_name='None'
+                                         )
+                                )

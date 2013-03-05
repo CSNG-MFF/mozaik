@@ -99,7 +99,7 @@ class ModularProbabilisticConnector(ModularConnector):
     and for each neuron out connections it samples num_samples of
     connections that actually get realized according to these weights.
     Each such sample connections will have weight equal to
-    weight_factor/num_samples but note that there can be multiple
+    base_weight/num_samples but note that there can be multiple
     connections between a pair of neurons in this sample (in which case the
     weights are set to the multiple of the base weights times the number of
     occurrences in the sample).
@@ -117,6 +117,8 @@ class ModularProbabilisticConnector(ModularConnector):
             delays = self._obtain_delays(i)
             co = Counter(sample_from_bin_distribution(weights, self.parameters.num_samples))
             cl.extend([(k,i,self.parameters.base_weight*co[k]/self.parameters.num_samples,delays[k]) for k in co.keys()])
+        
+        print numpy.max(numpy.asarray(cl)[:,2])
         
         method = self.sim.FromListConnector(cl)
         self.proj = self.sim.Projection(

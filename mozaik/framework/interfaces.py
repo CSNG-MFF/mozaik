@@ -31,7 +31,7 @@ class MozaikParametrizeObject(object):
                         assert isinstance(P[k], ParameterSet), "Type mismatch for parameter %s: %s !=  ParameterSet, for %s " % (k, type(P[k]), P[k])
                         walk(v, P[k], section=k)
                 else:
-                    assert isinstance(P[k], v), "Type mismatch for parameter %s: %s !=  ParameterSet, for %s " % (k, type(P[k]), P[k])
+                    assert isinstance(P[k], v) or (v == ParameterSet and P[k] == None), "Type mismatch for parameter %s: %s != %s " % (k, v, P[k])
         try:
             # we first need to collect the required parameters from all the classes along the parent path
             new_param_dict = {}

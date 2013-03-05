@@ -37,7 +37,7 @@ class Model(MozaikComponent):
         'results_dir': str,
         'reset': bool,
         'null_stimulus_period': float,
-        'input_space': ParameterSet,
+        'input_space': ParameterSet, # can be none - in which case input_space_type is ignored
         'input_space_type': str,  # defining the type of input space, visual/auditory/... it is the class path to the class representing it
     })
 
@@ -50,8 +50,12 @@ class Model(MozaikComponent):
         self.connectors = {}
 
         # Set-up the input space
-        input_space_type = load_component(self.parameters.input_space_type)
-        self.input_space = input_space_type(self.parameters.input_space)
+        if self.parameters.input_space != None:
+            input_space_type = load_component(self.parameters.input_space_type)
+            self.input_space = input_space_type(self.parameters.input_space)
+        else:
+            self.input_space = None
+            
         self.simulator_time = 0
 
     def present_stimulus_and_record(self, stimulus,exc_spike_stimulators,inh_spike_stimulators):
@@ -61,13 +65,16 @@ class Model(MozaikComponent):
 
         # create empty arrays in annotations to store the sheet identity of stored data
         sim_run_time = self.reset()
-        self.input_space.clear()
-        self.input_space.add_object(str(stimulus), stimulus)
-        
         for sheet in self.sheets.values():
             sheet.prepare_input(stimulus.duration,self.simulator_time,exc_spike_stimulators.get(sheet.name,None),inh_spike_stimulators.get(sheet.name,None))
         
-        sensory_input = self.input_layer.process_input(self.input_space, stimulus, stimulus.duration, self.simulator_time)
+        if self.input_space:
+            self.input_space.clear()
+            self.input_space.add_object(str(stimulus), stimulus)
+            sensory_input = self.input_layer.process_input(self.input_space, stimulus, stimulus.duration, self.simulator_time)
+        else:
+            sensory_input = None
+             
         sim_run_time += self.run(stimulus.duration)
 
         segments = []
@@ -102,9 +109,11 @@ class Model(MozaikComponent):
             for sheet in self.sheets.values():
                 sheet.prepare_input(self.parameters.null_stimulus_period,self.simulator_time,None,None)
 
-            self.input_layer.provide_null_input(self.input_space,
-                                                self.parameters.null_stimulus_period,
-                                                self.simulator_time)
+            if self.input_space:
+                self.input_layer.provide_null_input(self.input_space,
+                                                    self.parameters.null_stimulus_period,
+                                                    self.simulator_time)
+                                                    
             logger.info("Simulating the network for %s ms with blank stimulus" % self.parameters.null_stimulus_period)
             self.sim.run(self.parameters.null_stimulus_period)
             self.simulator_time+=self.parameters.null_stimulus_period

@@ -102,9 +102,20 @@ class VisualStimulus(BaseStimulus):
                 delta_l = numpy.round(view_relative_width * size_in_pixels[1]).astype(int)
                 k_start = size_in_pixels[0] - numpy.round(view_relative_top * size_in_pixels[0]).astype(int)
                 delta_k = numpy.round(view_relative_height * size_in_pixels[0]).astype(int)
+                
+                # unfortunatelly the above code can give inconsistent results even if the inputs are correct due to rounding errors
+                # therefore:
+                
+                if abs(delta_j-delta_l) == 1:
+                   delta_j = min(delta_j,delta_l)
+                   delta_l = min(delta_j,delta_l)
 
+                if abs(delta_i-delta_k) == 1:
+                   delta_i = min(delta_i,delta_k)
+                   delta_k = min(delta_i,delta_k)
+                
                 assert delta_j == delta_l, "delta_j = %g, delta_l = %g" % (delta_j, delta_l)
-                assert delta_i == delta_k
+                assert delta_i == delta_k, "delta_i = %g, delta_k = %g" % (delta_i, delta_k)
 
                 i_stop = i_start + delta_i
                 j_stop = j_start + delta_j
@@ -115,6 +126,13 @@ class VisualStimulus(BaseStimulus):
 
                 try:
                     self.region_cache[region] = ((k_start,k_start+delta_k,l_start,l_start+delta_l),(i_start,i_start+delta_i, j_start,j_start+delta_j))
+                    print delta_i
+                    print delta_k
+                    print numpy.shape(view)
+                    print numpy.shape(img)
+                    print k_start
+                    print i_start
+                    
                     view[k_start:k_start+delta_k, l_start:l_start+delta_l] = img[i_start:i_start+delta_i, j_start:j_start+delta_j]
                 except ValueError:
                     logger.error("i_start = %d, i_stop = %d, j_start = %d, j_stop = %d" % (i_start, i_stop, j_start, j_stop))

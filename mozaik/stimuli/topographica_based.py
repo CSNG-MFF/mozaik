@@ -126,7 +126,7 @@ class DriftingGratingWithEyeMovement(TopographicaBasedVisualStimulus):
                                              xdensity=self.density,
                                              ydensity=self.density)()
 
-            self.current_phase += 2*pi * (self.frame_duration/1000) * self.temporal_frequency
+            self.current_phase += 2*pi * (self.frame_duration/1000.0) * self.temporal_frequency
             yield (image, [self.time])
             self.time = self.time + 1
 
@@ -159,8 +159,7 @@ class DriftingSinusoidalGratingDisk(TopographicaBasedVisualStimulus):
             d2 = numpy.multiply(b,-(c-1.0))
             d =  numpy.add.reduce([d1,d2])
             yield (d,[self.current_phase])
-            self.current_phase += 2*pi * (self.frame_duration/1000) * self.temporal_frequency
-
+            self.current_phase += 2*pi * (self.frame_duration/1000.0) * self.temporal_frequency
 
 class DriftingSinusoidalGratingCenterSurroundStimulus(TopographicaBasedVisualStimulus):
     """
@@ -204,4 +203,4 @@ class DriftingSinusoidalGratingCenterSurroundStimulus(TopographicaBasedVisualSti
                                                 xdensity=self.density,
                                                 ydensity=self.density)()
             yield (numpy.add.reduce([center, surround]), [self.current_phase])
-            self.current_phase += 2*pi * (self.frame_duration/1000) * self.temporal_frequency
+            self.current_phase += 2*pi * (self.frame_duration/1000.0) * self.temporal_frequency
