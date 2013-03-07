@@ -5,6 +5,7 @@ docstring goes here
 from NeuroTools.parameters import ParameterSet
 from mozaik.framework.interfaces import MozaikComponent
 from mozaik.framework import load_component
+from mozaik.stimuli.stimulus import InternalStimulus
 import mozaik
 import time
 
@@ -71,7 +72,11 @@ class Model(MozaikComponent):
         if self.input_space:
             self.input_space.clear()
             self.input_space.add_object(str(stimulus), stimulus)
-            sensory_input = self.input_layer.process_input(self.input_space, stimulus, stimulus.duration, self.simulator_time)
+            if not isinstance(stimulus,InternalStimulus):
+                sensory_input = self.input_layer.process_input(self.input_space, stimulus, stimulus.duration, self.simulator_time)
+            else:
+                self.input_layer.provide_null_input(self.input_space,stimulus.duration,self.simulator_time)
+                sensory_input = None                                                    
         else:
             sensory_input = None
              

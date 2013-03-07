@@ -126,13 +126,6 @@ class VisualStimulus(BaseStimulus):
 
                 try:
                     self.region_cache[region] = ((k_start,k_start+delta_k,l_start,l_start+delta_l),(i_start,i_start+delta_i, j_start,j_start+delta_j))
-                    print delta_i
-                    print delta_k
-                    print numpy.shape(view)
-                    print numpy.shape(img)
-                    print k_start
-                    print i_start
-                    
                     view[k_start:k_start+delta_k, l_start:l_start+delta_l] = img[i_start:i_start+delta_i, j_start:j_start+delta_j]
                 except ValueError:
                     logger.error("i_start = %d, i_stop = %d, j_start = %d, j_stop = %d" % (i_start, i_stop, j_start, j_stop))

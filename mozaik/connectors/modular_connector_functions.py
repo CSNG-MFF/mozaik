@@ -55,6 +55,7 @@ class DistanceDependentModularConnectorFunction(ModularConnectorFunction):
 class GaussianDecayModularConnectorFunction(DistanceDependentModularConnectorFunction):
     """
     Distance dependent arborization with gaussian fall-off of the connections: k * exp(-0.5*(distance/a)*2) / (a*sqrt(2*pi))
+    where a = arborization_constant, k = arborization_scaler
     """
     required_parameters = ParameterSet({
         'arborization_constant': float,  # μm distance constant of the gaussian decay of the connections with respect (in cortical distance)

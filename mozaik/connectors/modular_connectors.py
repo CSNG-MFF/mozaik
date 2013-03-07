@@ -93,9 +93,9 @@ class ModularConnector(MozaikConnector):
                                 rng=None,
                                 target=self.parameters.target_synapses)
 
-class ModularProbabilisticConnector(ModularConnector):
+class ModularSamplingProbabilisticConnector(ModularConnector):
     """
-    ModularConnector that interprets the weights as proportional probabilities of connectivity,
+    ModularConnector that interprets the weights as proportional probabilities of connectivity
     and for each neuron out connections it samples num_samples of
     connections that actually get realized according to these weights.
     Each such sample connections will have weight equal to
@@ -130,6 +130,39 @@ class ModularProbabilisticConnector(ModularConnector):
                                 rng=None,
                                 target=self.parameters.target_synapses)
     
+
+class ModularSingleWeightProbabilisticConnector(ModularConnector):
+    """
+    ModularConnector that interprets the weights as proportional probabilities of connectivity.
+    The parameter connection_probability is interepreted as the average probability that two neurons will be connected in this 
+    projection. For each pair this connecter will make one random choice of connecting them (where the probability of this choice
+    is determined as the proportional probability of the corresponding weight normalized by the connection_probability parameter).
+    It will set each connections to the weight base_weight.
+    """
+
+    required_parameters = ParameterSet({
+        'connection_probability': float,
+        'base_weight' : float
+    })
+
+    def _connect(self):
+        cl = []
+        for i in xrange(0,self.target.pop.size):
+            weights = self._obtain_weights(i)
+            delays = self._obtain_delays(i)
+            conections_probabilities = weights/numpy.sum(weights)*self.parameters.connection_probability*len(weights)
+            connection_indices = numpy.flatnonzero(conections_probabilities > numpy.random.rand(len(conections_probabilities)))
+            cl.extend([(k,i,self.parameters.base_weight,delays[k]) for k in connection_indices])
+        
+        method = self.sim.FromListConnector(cl)
+        self.proj = self.sim.Projection(
+                                self.source.pop,
+                                self.target.pop,
+                                method,
+                                synapse_dynamics=self.short_term_plasticity,
+                                label=self.name,
+                                rng=None,
+                                target=self.parameters.target_synapses)
 
 
 
