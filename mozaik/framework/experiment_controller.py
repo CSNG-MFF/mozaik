@@ -3,7 +3,7 @@ docstring goes here
 
 """
 from mozaik.storage.datastore import Hdf5DataStore, PickledDataStore
-from NeuroTools.parameters import ParameterSet
+from mozaik.tools.distribution_parametrization import MozaikExtendedParameterSet
 import sys
 import os
 import mozaik
@@ -12,6 +12,7 @@ from datetime import datetime
 from NeuroTools import logging
 from NeuroTools import init_logging
 from NeuroTools import visual_logging
+
 
 logger = mozaik.getMozaikLogger("Mozaik")
 
@@ -46,9 +47,10 @@ def setup_experiments(simulation_name, sim):
         parameters_url = sys.argv[1]
     else:
         raise ValueError("No parameter file supplied")
-
-    parameters = ParameterSet(parameters_url)
     
+    print 'A'
+    parameters = MozaikExtendedParameterSet(parameters_url)
+    print 'B'
     # Create results directory
     timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
     Global.root_directory = parameters.results_dir + simulation_name + '_' + \
@@ -65,10 +67,10 @@ def run_experiments(model,experiment_list,load_from=None):
     logger.info('Starting Experiemnts')
     if load_from == None:
         data_store = PickledDataStore(load=False,
-                                      parameters=ParameterSet({'root_directory': Global.root_directory}))
+                                      parameters=MozaikExtendedParameterSet({'root_directory': Global.root_directory}))
     else:
         data_store = PickledDataStore(load=True,
-                                      parameters=ParameterSet({'root_directory': load_from}))
+                                      parameters=MozaikExtendedParameterSet({'root_directory': load_from}))
     
     data_store.set_neuron_ids(model.neuron_ids())
     data_store.set_neuron_positions(model.neuron_positions())

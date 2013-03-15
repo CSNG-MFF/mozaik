@@ -2,6 +2,7 @@
 import numpy
 from mozaik.framework.interfaces import MozaikParametrizeObject
 from NeuroTools.parameters import ParameterSet, ParameterDist
+from mozaik.tools.distribution_parametrization import PyNNDistribution
 from mozaik.tools.circ_stat import *
 from mozaik.tools.misc import *
 from scipy.interpolate import NearestNDInterpolator
@@ -28,6 +29,19 @@ class ConstantModularConnectorFunction(ModularConnectorFunction):
       """
       def evaluate(self,index):
           return numpy.zeros(len(self.source.pop)) + 1
+
+class PyNNDistributionConnectorFunction(ModularConnectorFunction):
+      """
+      ConnectorFunction which draws the values from the PyNNDistribution
+      
+      """
+      required_parameters = ParameterSet({
+        'pynn_distribution': PyNNDistribution,  # The distribution
+      })
+
+      def evaluate(self,index):
+          return self.parameters.pynn_distribution.next(len(self.source.pop))
+
           
 class DistanceDependentModularConnectorFunction(ModularConnectorFunction):
     """

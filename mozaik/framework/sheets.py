@@ -3,22 +3,19 @@
 Sheet is an abstraction of a 2D continuous sheet of neurons, roughly
 corresponding to the PyNN Population class with the added spatial structure.
 """
-
 import numpy
 import mozaik
 from mozaik.framework.interfaces import MozaikComponent
 from mozaik.framework import load_component
-
+from mozaik.tools.distribution_parametrization import PyNNDistribution
 from NeuroTools.parameters import ParameterSet, UniformDist
 from pyNN import space
-from pyNN.random import RandomDistribution
 from pyNN.errors import NothingToWriteError
 from string import Template
 from neo.core.spiketrain import SpikeTrain
 import quantities as pq
 
 logger = mozaik.getMozaikLogger("Mozaik")
-
 
 class Sheet(MozaikComponent):
     """
@@ -71,6 +68,16 @@ class Sheet(MozaikComponent):
         self.name = parameters.name  # the name of the population
         self.model.register_sheet(self)
         self._pop = None
+        
+        # We want to be able to define in cell.params the cell parameters as also PyNNDistributions so we can get variably parametrized populations
+        # The problem is that the pyNN.Population can accept only scalar parameters. There fore we will remove from cell.params all parameters
+        # that are PyNNDistributions, and will initialize them later just after the population is initialized (in property pop())
+        self.dist_params = {}
+        for k in self.parameters.cell.params.keys():
+            if isinstance(self.parameters.cell.params[k],PyNNDistribution):
+               self.dist_params[k]=self.parameters.cell.params[k]
+               del self.parameters.cell.params[k]
+        
 
     def setup_to_record_list(self):
         self.to_record = {}
@@ -262,11 +269,12 @@ class Sheet(MozaikComponent):
                                             target='inhibitory')
 
     def setup_initial_values(self):
+        # Initial state variables
         for var, val in self.parameters.cell.initial_values.items():
-            if isinstance(val,UniformDist):
-                self.pop.initialize(var, RandomDistribution('uniform',parameters=[val.params["min"],val.params["max"]]))
-            else:
-                self.pop.initialize(var, val)
+            self.pop.initialize(var, val)
+        # Variable cell parameters
+        for k,v in self.dist_params.iteritems():
+            self.pop.rset(k,v)
         
         
         
