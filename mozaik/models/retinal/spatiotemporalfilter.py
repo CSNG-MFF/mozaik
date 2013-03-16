@@ -378,8 +378,8 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
                                                                 self.scs[rf_type],
                                                                 self.ncs[rf_type])):
                 assert isinstance(input_current, dict)
-                if i==0:
-                    pylab.plot(self.parameters.linear_scaler * input_current['amplitudes'])
+                #if i==0:
+                #    pylab.plot(self.parameters.linear_scaler * input_current['amplitudes'])
                 t = input_current['times'] + offset
                 a = self.parameters.linear_scaler * input_current['amplitudes']
                 scs.set_parameters(times=t, amplitudes=a)
