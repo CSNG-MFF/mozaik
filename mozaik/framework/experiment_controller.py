@@ -13,6 +13,7 @@ from NeuroTools import logging
 from NeuroTools import init_logging
 from NeuroTools import visual_logging
 
+import pyNN.nest as sim
 
 logger = mozaik.getMozaikLogger("Mozaik")
 
@@ -41,26 +42,43 @@ def setup_logging():
                                level=logging.INFO)
 
 
-def setup_experiments(simulation_name, sim):
+def run_workflow(simulation_name, model_class, create_experiments):
     # Read parameters
-    if len(sys.argv) > 1:
-        parameters_url = sys.argv[1]
-    else:
-        raise ValueError("No parameter file supplied")
+    #exec("import pyNN.nest as sim" )
     
-    print 'A'
+    if len(sys.argv) > 2 and len(sys.argv)%2 == 1:
+        simulator_name = sys.argv[1]
+        parameters_url = sys.argv[2]
+        modified_params = { sys.argv[i*2+3] : sys.argv[i*2+4]  for i in xrange(0,(len(sys.argv)-3)/2)}
+    else:
+        raise ValueError("Usage: runscript simulator_name parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n")
+    
     parameters = MozaikExtendedParameterSet(parameters_url)
-    print 'B'
+    parameters.replace_values(**modified_params)
+    
     # Create results directory
     timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
+    
+    
+    modified_params_str = [str(k) + ":" + str(modified_parameters[k]) for k in modified_parameters.keys()].join('_')
     Global.root_directory = parameters.results_dir + simulation_name + '_' + \
-                              timestamp + 'rank' + str(mpi_comm.rank) + '/'
+                              timestamp + 'rank' + str(mpi_comm.rank) + '_' + modified_params_str + '/'
     os.mkdir(Global.root_directory)
     parameters.save(Global.root_directory + "parameters", expand_urls=True)
-
+    
+    #let's store the modified parameters
+    import pickle
+    f = open(Global.root_directory+"modified_parameters","w")
+    pickle.dump(modified_params,f)
+    f.close()
     setup_logging()
-    return parameters
-
+    
+    model = model_class(sim,parameters)
+    data_store = run_experiments(model,create_experiments(model))
+    data_store.save()
+    import resource
+    print "Final memory usage: %iMB" % (resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/(1024))
+    return data_store
 
 def run_experiments(model,experiment_list,load_from=None):
     # first lets run all the measurements required by the experiments

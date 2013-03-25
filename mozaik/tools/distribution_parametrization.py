@@ -128,3 +128,19 @@ class MozaikExtendedParameterSet(ParameterSet):
         # for name in P.names():
         self.names = self.keys
         self.parameters = self.items
+    
+    def replace_values(self,**args):
+        for k in args.keys():
+            s = k.split('.')
+            if len(s) == 1:
+               if self.has_key(s[0]):
+                  self[s[0]] = args[k]
+               else:
+                  raise ValueError("None-existent parameter %s", s[0])
+            elif self.has_key(s[0]):
+                if isinstance(self[s[0]],ParameterSet):
+                   self[s[0]].replace_values(s[1:].join('.'))
+                else:
+                    raise ValueError("Error: parameter %s is not of type ParameterSet but of type %s", s[0], type(self[s[0]]))         
+            else:
+              raise ValueError("None-existent parameter %s", s[0])  
