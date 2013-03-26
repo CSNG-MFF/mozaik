@@ -80,7 +80,7 @@ import quantities as pq
 import matplotlib.gridspec as gridspec
 from scipy.interpolate import griddata
 
-from NeuroTools.parameters import ParameterSet
+from parameters import ParameterSet
 
 from mozaik.framework.interfaces import MozaikParametrizeObject
 from mozaik.storage import queries

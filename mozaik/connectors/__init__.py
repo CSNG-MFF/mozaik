@@ -10,7 +10,7 @@ import time
 from pylab import griddata
 from mozaik.framework.interfaces import Connector
 from mozaik.framework.sheets import SheetWithMagnificationFactor
-from NeuroTools.parameters import ParameterSet, ParameterDist
+from parameters import ParameterSet, ParameterDist
 from mozaik.tools.misc import sample_from_bin_distribution, normal_function
 from collections import Counter
 from pyNN import random, space

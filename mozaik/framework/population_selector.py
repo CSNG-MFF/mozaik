@@ -1,5 +1,5 @@
 from mozaik.framework.interfaces import MozaikParametrizeObject
-from NeuroTools.parameters import ParameterSet
+from parameters import ParameterSet
 import math
 import numpy
 

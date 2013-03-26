@@ -16,7 +16,7 @@ from mozaik.tools.mozaik_parametrized import MozaikParametrized
 
 #from NeuroTools import visual_logging
 from NeuroTools.plotting import progress_bar
-from NeuroTools.parameters import ParameterSet
+from parameters import ParameterSet
 
 logger = mozaik.getMozaikLogger("Mozaik")
 

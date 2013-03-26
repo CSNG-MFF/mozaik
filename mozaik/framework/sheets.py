@@ -8,7 +8,7 @@ import mozaik
 from mozaik.framework.interfaces import MozaikComponent
 from mozaik.framework import load_component
 from mozaik.tools.distribution_parametrization import PyNNDistribution
-from NeuroTools.parameters import ParameterSet, UniformDist
+from parameters import ParameterSet, UniformDist
 from pyNN import space
 from pyNN.errors import NothingToWriteError
 from string import Template

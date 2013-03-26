@@ -5,7 +5,7 @@ import mozaik.storage.queries as queries
 from mozaik.visualization.plotting import (Plotting, GSynPlot,
                                            VmPlot, ConductanceSignalListPlot,
                                            AnalogSignalListPlot)
-from NeuroTools.parameters import ParameterSet
+from parameters import ParameterSet
 import matplotlib.gridspec as gridspec
 from simple_plot import SpikeRasterPlot, SpikeHistogramPlot
 

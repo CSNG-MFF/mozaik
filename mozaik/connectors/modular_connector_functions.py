@@ -1,7 +1,7 @@
 # encoding: utf-8
 import numpy
 from mozaik.framework.interfaces import MozaikParametrizeObject
-from NeuroTools.parameters import ParameterSet, ParameterDist
+from parameters import ParameterSet, ParameterDist
 from mozaik.tools.distribution_parametrization import PyNNDistribution
 from mozaik.tools.circ_stat import *
 from mozaik.tools.misc import *

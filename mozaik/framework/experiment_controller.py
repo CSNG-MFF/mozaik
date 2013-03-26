@@ -49,18 +49,18 @@ def run_workflow(simulation_name, model_class, create_experiments):
     if len(sys.argv) > 2 and len(sys.argv)%2 == 1:
         simulator_name = sys.argv[1]
         parameters_url = sys.argv[2]
-        modified_params = { sys.argv[i*2+3] : sys.argv[i*2+4]  for i in xrange(0,(len(sys.argv)-3)/2)}
+        modified_parameters = { sys.argv[i*2+3] : sys.argv[i*2+4]  for i in xrange(0,(len(sys.argv)-3)/2)}
     else:
         raise ValueError("Usage: runscript simulator_name parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n")
-    
+    print 
     parameters = MozaikExtendedParameterSet(parameters_url)
-    parameters.replace_values(**modified_params)
+    parameters.replace_values(**modified_parameters)
     
     # Create results directory
     timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
     
     
-    modified_params_str = [str(k) + ":" + str(modified_parameters[k]) for k in modified_parameters.keys()].join('_')
+    modified_params_str = '_'.join([str(k) + ":" + str(modified_parameters[k]) for k in modified_parameters.keys()])
     Global.root_directory = parameters.results_dir + simulation_name + '_' + \
                               timestamp + 'rank' + str(mpi_comm.rank) + '_' + modified_params_str + '/'
     os.mkdir(Global.root_directory)
@@ -69,7 +69,7 @@ def run_workflow(simulation_name, model_class, create_experiments):
     #let's store the modified parameters
     import pickle
     f = open(Global.root_directory+"modified_parameters","w")
-    pickle.dump(modified_params,f)
+    pickle.dump(modified_parameters,f)
     f.close()
     setup_logging()
     

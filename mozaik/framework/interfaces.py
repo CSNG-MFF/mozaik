@@ -4,7 +4,7 @@ Definition of the component interfaces. These interfaces are not currently
 checked or enforced.
 """
 from mozaik import __version__
-from NeuroTools.parameters import ParameterSet
+from parameters import ParameterSet
 import mozaik
 from mozaik.tools.distribution_parametrization import PyNNDistribution
 from string import Template

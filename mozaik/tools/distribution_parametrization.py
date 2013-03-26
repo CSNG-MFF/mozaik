@@ -5,12 +5,11 @@ and pyNN distribution interface.
 In future pyNN plans to make an comprehensive merge between NeuroTools parametrization system and pyNN,
 in which case this code should become obsolete and mozaik should fully switch to such new system.
 """
-from NeuroTools.parameters import ParameterSet, ParameterRange, ParameterTable
+from parameters import ParameterSet, ParameterRange, ParameterTable
 from pyNN.random import RandomDistribution
 import urllib, copy, warnings, numpy, numpy.random  # to be replaced with srblib
 from urlparse import urlparse
-from NeuroTools import check_dependency
-from NeuroTools.random import ParameterDist, GammaDist, UniformDist, NormalDist
+from parameters.random import ParameterDist, GammaDist, UniformDist, NormalDist
 
 class PyNNDistribution(RandomDistribution):
       """

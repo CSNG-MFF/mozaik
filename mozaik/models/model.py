@@ -2,7 +2,7 @@
 docstring goes here
 
 """
-from NeuroTools.parameters import ParameterSet
+from parameters import ParameterSet
 from mozaik.framework.interfaces import MozaikComponent
 from mozaik.framework import load_component
 from mozaik.stimuli.stimulus import InternalStimulus

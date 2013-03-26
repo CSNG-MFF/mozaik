@@ -1,7 +1,7 @@
 # encoding: utf-8
 import mozaik
 from mozaik.connectors import MozaikConnector
-from NeuroTools.parameters import ParameterSet, ParameterDist
+from parameters import ParameterSet, ParameterDist
 from pyNN import space
 import numpy
 
