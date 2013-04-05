@@ -55,10 +55,9 @@ class DistanceDependentProbabilisticArborization(MozaikConnector):
         self.proj = self.sim.Projection(self.source.pop, 
                                         self.target.pop, 
                                         method, 
-                                        synapse_dynamics=self.short_term_plasticity, 
+                                        synapse_type=self.short_term_plasticity, 
                                         label=self.name, 
-                                        rng=None, 
-                                        target=self.parameters.target_synapses)
+                                        receptor_type=self.parameters.target_synapses)
     
 
 
@@ -105,8 +104,7 @@ class UniformProbabilisticArborization(MozaikConnector):
                                     self.source.pop,
                                     self.target.pop,
                                     method,
-                                    synapse_dynamics=self.short_term_plasticity,
+                                    synapse_type=self.short_term_plasticity,
                                     label=self.name,
-                                    rng=None,
-                                    target=self.parameters.target_synapses)
+                                    receptor_type=self.parameters.target_synapses)
         
