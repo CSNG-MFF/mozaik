@@ -4,7 +4,8 @@
 * scipy/numpy
 * nest (latest release)
 * pyNN (neo_output branch)
-* topographica (svn trunk)
+* imagen
+* parameters
 * quantities 
 * neo
 
@@ -57,10 +58,8 @@ Your shell should look now something like:
       git clone https://github.com/apdavison/python-neo
       cd python-neo
       python setup.py install
- * Topographica:
-   * git clone https://github.com/ioam/topographica topographica
-   * Just download it and add the topographica folder to your PYTHONPATH, e.g.
-     export PYTHONPATH=$PYTHONPATH:path_to_where_you_cloned_topographica
+ * imagen
+ * parameters
  * NeuroTools
    * svn co https://neuralensemble.org/svn/NeuroTools/trunk NeuroTools
    * In virt_env_mozaik: python setup.py install
@@ -80,6 +79,14 @@ you're using scipy, numpy, matplotlib anyway you don't have to install those in 
 
 Thanks to Bernhard Kaplan for these instructions.
 
+### Running tests
 
-:copyright: Copyright 2011-2012 by the mozaik team, see AUTHORS.
+To run tests and measure code coverage, run
+
+$ nosetests --with-coverage --cover-erase --cover-package=mozaik --cover-html --cover-inclusive
+
+in the root directory of the Mozaik package
+
+
+:copyright: Copyright 2011-2013 by the mozaik team, see AUTHORS.
 :license: CeCILL, see LICENSE for details.
