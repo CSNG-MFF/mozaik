@@ -4,7 +4,7 @@
 * scipy/numpy
 * nest (latest release)
 * pyNN (neo_output branch)
-* topographica (svn trunk)
+* imagen
 * quantities 
 * neo
 
@@ -24,12 +24,11 @@ instructions follow.
 
 ### Virtual env
 
-We recommended to install mozaik using the virtualenv python environment manager, 
-http://pypi.python.org/pypi/virtualenv/ virtual environment, to prevent potential
+We recommended to install mozaik using the virtualenv python environment manager (http://pypi.python.org/pypi/virtualenv/) , to prevent potential
 conflicts with standard versions of required libraries. Users can follow for example http://simononsoftware.com/virtualenv-tutorial/short tutorial or just do the following steps:
  
  * Install virtualenv
- * Create e.g. in your home directory a directory where all virtual
+ * Create (for example in your home directory) a directory where all virtual
    environments will be created home/virt_env
  * Create the virtual environment for mozaik: virtualenv virt_env/virt_env_mozaik/ --verbose --no-site-packages
 
@@ -44,7 +43,7 @@ Your shell should look now something like:
    * scipy requires the following packages if you install it 'by hand' in your
      virtual environment: liblapack-dev, libblas-dev, gfortran
  * numpy
- * matplotlib 1.1
+ * matplotlib (1.1 and higher)
  * quantities
  * PyNN:
      * PyNN requires currently the neo-output branch, NOT the standard one.
@@ -57,10 +56,8 @@ Your shell should look now something like:
       git clone https://github.com/apdavison/python-neo
       cd python-neo
       python setup.py install
- * Topographica:
-   * git clone https://github.com/ioam/topographica topographica
-   * Just download it and add the topographica folder to your PYTHONPATH, e.g.
-     export PYTHONPATH=$PYTHONPATH:path_to_where_you_cloned_topographica
+ * imagen:        
+      pip install --user imagen
  * NeuroTools
    * svn co https://neuralensemble.org/svn/NeuroTools/trunk NeuroTools
    * In virt_env_mozaik: python setup.py install
