@@ -5,11 +5,17 @@ and pyNN distribution interface.
 In future pyNN plans to make an comprehensive merge between NeuroTools parametrization system and pyNN,
 in which case this code should become obsolete and mozaik should fully switch to such new system.
 """
-from parameters import ParameterSet, ParameterRange, ParameterTable
+from parameters import ParameterSet, ParameterRange, ParameterTable, ParameterReference
 from pyNN.random import RandomDistribution
 import urllib, copy, warnings, numpy, numpy.random  # to be replaced with srblib
 from urlparse import urlparse
 from parameters.random import ParameterDist, GammaDist, UniformDist, NormalDist
+
+def load_parameters(parameter_url,modified_parameters):
+    parameters = MozaikExtendedParameterSet(parameter_url)
+    parameters.replace_values(**modified_parameters)
+    parameters.replace_references()
+    return parameters
 
 class PyNNDistribution(RandomDistribution):
       """
@@ -30,7 +36,7 @@ class PyNNDistribution(RandomDistribution):
 class MozaikExtendedParameterSet(ParameterSet):
     @staticmethod
     def read_from_str(s,update_namespace=None):
-        global_dict = dict(url=MozaikExtendedParameterSet,ParameterSet=ParameterSet)
+        global_dict = dict(ref=ParameterReference,url=MozaikExtendedParameterSet,ParameterSet=ParameterSet)
         global_dict.update(dict(ParameterRange=ParameterRange,
                                 ParameterTable=ParameterTable,
                                 GammaDist=GammaDist,
@@ -40,7 +46,6 @@ class MozaikExtendedParameterSet(ParameterSet):
                                 pi=numpy.pi))
         if update_namespace:
             global_dict.update(update_namespace)
-
         
         D=None
         try:
@@ -127,19 +132,3 @@ class MozaikExtendedParameterSet(ParameterSet):
         # for name in P.names():
         self.names = self.keys
         self.parameters = self.items
-    
-    def replace_values(self,**args):
-        for k in args.keys():
-            s = k.split('.')
-            if len(s) == 1:
-               if self.has_key(s[0]):
-                  self[s[0]] = args[k]
-               else:
-                  raise ValueError("None-existent parameter %s", s[0])
-            elif self.has_key(s[0]):
-                if isinstance(self[s[0]],ParameterSet):
-                   self[s[0]].replace_values(s[1:].join('.'))
-                else:
-                    raise ValueError("Error: parameter %s is not of type ParameterSet but of type %s", s[0], type(self[s[0]]))         
-            else:
-              raise ValueError("None-existent parameter %s", s[0])  

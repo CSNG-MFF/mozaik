@@ -3,7 +3,7 @@ docstring goes here
 
 """
 from mozaik.storage.datastore import Hdf5DataStore, PickledDataStore
-from mozaik.tools.distribution_parametrization import MozaikExtendedParameterSet
+from mozaik.tools.distribution_parametrization import MozaikExtendedParameterSet, load_parameters
 import sys
 import os
 import mozaik
@@ -43,26 +43,38 @@ def setup_logging():
 
 
 def run_workflow(simulation_name, model_class, create_experiments):
+    """
+    This is the main function that executes a workflow. 
+    
+    It expects it gets the simulation, class of the model, and a function that will create_experiments.
+    The create experiments function get a instance of a model as the only parameter and it is expected to return 
+    a list of Experiment instances that should be executed over the model.
+    
+    The run workflow will automatically parse the command line to determine the simulator to be used and the path to the root parameter file. 
+    It will also accept . (point) delimited path to parameteres in the configuration tree, and corresponding values. It will replace each such provided
+    parameter's value with the provided one on the command line. The intended sintax of the commandline is as follows:
+    
+    python userscript simulator_name parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n
+    """
     # Read parameters
     #exec("import pyNN.nest as sim" )
     
     if len(sys.argv) > 2 and len(sys.argv)%2 == 1:
         simulator_name = sys.argv[1]
         parameters_url = sys.argv[2]
-        modified_parameters = { sys.argv[i*2+3] : sys.argv[i*2+4]  for i in xrange(0,(len(sys.argv)-3)/2)}
+        modified_parameters = { sys.argv[i*2+3] : eval(sys.argv[i*2+4])  for i in xrange(0,(len(sys.argv)-3)/2)}
     else:
         raise ValueError("Usage: runscript simulator_name parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n")
-    print 
-    parameters = MozaikExtendedParameterSet(parameters_url)
-    parameters.replace_values(**modified_parameters)
+    
+    parameters = load_parameters(parameters_url,modified_parameters)
     
     # Create results directory
     timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
     
-    
-    modified_params_str = '_'.join([str(k) + ":" + str(modified_parameters[k]) for k in modified_parameters.keys()])
+    # We exclude the results_dir parameter from the directory naming
+    modified_params_str = '_'.join([str(k) + ":" + str(modified_parameters[k]) for k in modified_parameters.keys() if k!='results_dir'])
     Global.root_directory = parameters.results_dir + simulation_name + '_' + \
-                              timestamp + 'rank' + str(mpi_comm.rank) + '_' + modified_params_str + '/'
+                              timestamp + 'rank' + str(mpi_comm.rank) + '_____' + modified_params_str + '/'
     os.mkdir(Global.root_directory)
     parameters.save(Global.root_directory + "parameters", expand_urls=True)
     
