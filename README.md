@@ -5,6 +5,7 @@
 * nest (latest release)
 * pyNN (neo_output branch)
 * imagen
+* parameters
 * quantities 
 * neo
 
@@ -53,11 +54,15 @@ Your shell should look now something like:
      python setup.py install
  * Neo:
     * For Neo, you need to clone with the help of git:
-      git clone https://github.com/apdavison/python-neo
+      git clone https://github.com/apdavison/python-neo python-neo
       cd python-neo
       python setup.py install
  * imagen:        
       pip install --user imagen
+ * parameters
+      git clone https://github.com/apdavison/parameters.git parameters
+      cd parameters
+      python setup.py install
  * NeuroTools
    * svn co https://neuralensemble.org/svn/NeuroTools/trunk NeuroTools
    * In virt_env_mozaik: python setup.py install
@@ -77,6 +82,14 @@ you're using scipy, numpy, matplotlib anyway you don't have to install those in 
 
 Thanks to Bernhard Kaplan for these instructions.
 
+### Running tests
 
-:copyright: Copyright 2011-2012 by the mozaik team, see AUTHORS.
+To run tests and measure code coverage, run
+
+$ nosetests --with-coverage --cover-erase --cover-package=mozaik --cover-html --cover-inclusive
+
+in the root directory of the Mozaik package
+
+
+:copyright: Copyright 2011-2013 by the mozaik team, see AUTHORS.
 :license: CeCILL, see LICENSE for details.

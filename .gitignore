@@ -4,3 +4,5 @@ build
 *.tmp*
 *.orig
 *.komodoproject
+cover
+.coverage
