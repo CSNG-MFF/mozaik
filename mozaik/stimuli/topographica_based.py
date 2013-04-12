@@ -4,16 +4,13 @@ The file contains stimuli that use topographica to generate the stimulus
 """
 
 from visual_stimulus import VisualStimulus
-import topo.pattern
-from topo.base.boundingregion import BoundingBox
-from topo.transferfn import DivisiveNormalizeLinf
+import imagen
 import pickle
 import numpy
 from mozaik.tools.mozaik_parametrized import SNumber, SString
 from mozaik.tools.units import cpd
 from numpy import pi
 from quantities import Hz, rad, degrees, ms, dimensionless
-import topo.pattern.image
 
 class TopographicaBasedVisualStimulus(VisualStimulus):
     def __init__(self,**params):
@@ -35,15 +32,15 @@ class FullfieldDriftingSinusoidalGrating(TopographicaBasedVisualStimulus):
         self.current_phase=0
         i = 0
         while True:
-            i=i+1
-            yield (topo.pattern.SineGrating(orientation=self.orientation,
-                                            frequency=self.spatial_frequency,
-                                            phase=self.current_phase,
-                                            bounds=BoundingBox(radius=self.size_x/2),
-                                            offset = self.background_luminance*(100.0 - self.contrast)/100.0,
-                                            scale=2*self.background_luminance*self.contrast/100.0,
-                                            xdensity=self.density,
-                                            ydensity=self.density)(),
+            i += 1
+            yield (imagen.SineGrating(orientation=self.orientation,
+                                      frequency=self.spatial_frequency,
+                                      phase=self.current_phase,
+                                      bounds=imagen.BoundingBox(radius=self.size_x/2),
+                                      offset = self.background_luminance*(100.0 - self.contrast)/100.0,
+                                      scale=2*self.background_luminance*self.contrast/100.0,
+                                      xdensity=self.density,
+                                      ydensity=self.density)(),
                    [self.current_phase])
             self.current_phase += 2*pi * (self.frame_duration/1000.0) * self.temporal_frequency
 
@@ -54,7 +51,11 @@ class Null(TopographicaBasedVisualStimulus):
         Empty stimulus
         """
         while True:
-            yield topo.pattern.Null(scale=self.background_luminance, bounds=BoundingBox(radius=self.size_x/2),xdensity=self.density,ydensity=self.density)(), []
+            yield (imagen.Null(scale=self.background_luminance,
+                              bounds=imagen.BoundingBox(radius=self.size_x/2),
+                              xdensity=self.density,
+                              ydensity=self.density)(),
+                   [])
 
 
 class NaturalImageWithEyeMovement(TopographicaBasedVisualStimulus):
@@ -70,25 +71,25 @@ class NaturalImageWithEyeMovement(TopographicaBasedVisualStimulus):
         self.time = 0
         f = open(self.eye_path_location, 'r')
         self.eye_path = pickle.load(f)
-        self.pattern_sampler = topo.pattern.image.PatternSampler(
-                                           size_normalization='fit_longest',
-                                           whole_pattern_output_fns=[DivisiveNormalizeLinf()])
+        self.pattern_sampler = imagen.image.PatternSampler(
+                                    size_normalization='fit_longest',
+                                    whole_pattern_output_fns=[imagen.image.DivisiveNormalizeLinf()])
 
         while True:
             location = self.eye_path[int(numpy.floor(self.frame_duration * self.time / self.eye_movement_period))]
-            image = topo.pattern.image.FileImage(
-                                         filename=self.image_location,
-                                         x=location[0],
-                                         y=location[1],
-                                         orientation=0,
-                                         xdensity=self.density,
-                                         ydensity=self.density,
-                                         size=self.size,
-                                         bounds=BoundingBox(points=((-self.size_x/2, -self.size_y/2),
-                                                                    (self.size_x/2, self.size_y/2))),
-                                         scale=2*self.background_luminance,
-                                         pattern_sampler=self.pattern_sampler
-                                         )()
+            image = imagen.image.FileImage(
+                                    filename=self.image_location,
+                                    x=location[0],
+                                    y=location[1],
+                                    orientation=0,
+                                    xdensity=self.density,
+                                    ydensity=self.density,
+                                    size=self.size,
+                                    bounds=imagen.BoundingBox(points=((-self.size_x/2, -self.size_y/2),
+                                                               (self.size_x/2, self.size_y/2))),
+                                    scale=2*self.background_luminance,
+                                    pattern_sampler=self.pattern_sampler
+                                    )()
             yield (image, [self.time])
             self.time += 1
 
@@ -114,18 +115,17 @@ class DriftingGratingWithEyeMovement(TopographicaBasedVisualStimulus):
         while True:
             location = self.eye_path[int(numpy.floor(self.frame_duration * self.time / self.eye_movement_period))]
 
-            image = topo.pattern.SineGrating(orientation=self.orientation,
-                                             x=location[0],
-                                             y=location[1],
-                                             frequency=self.spatial_frequency,
-                                             phase=self.current_phase,
-                                             bounds=BoundingBox(points=((-self.size_x/2, -self.size_y/2),
-                                                                        (self.size_x/2, self.size_y/2))),
-                                             offset = self.background_luminance*(100.0 - self.contrast)/100.0,
-                                             scale=2*self.background_luminance*self.contrast/100.0,
-                                             xdensity=self.density,
-                                             ydensity=self.density)()
-
+            image = imagen.SineGrating(orientation=self.orientation,
+                                       x=location[0],
+                                       y=location[1],
+                                       frequency=self.spatial_frequency,
+                                       phase=self.current_phase,
+                                       bounds=imagen.BoundingBox(points=((-self.size_x/2, -self.size_y/2),
+                                                                  (self.size_x/2, self.size_y/2))),
+                                       offset = self.background_luminance*(100.0 - self.contrast)/100.0,
+                                       scale=2*self.background_luminance*self.contrast/100.0,
+                                       xdensity=self.density,
+                                       ydensity=self.density)()
             self.current_phase += 2*pi * (self.frame_duration/1000.0) * self.temporal_frequency
             yield (image, [self.time])
             self.time = self.time + 1
@@ -144,22 +144,31 @@ class DriftingSinusoidalGratingDisk(TopographicaBasedVisualStimulus):
     def frames(self):
         self.current_phase=0
         while True:
-            a = topo.pattern.SineGrating(orientation=self.orientation,
-                                            frequency=self.spatial_frequency,
-                                            phase=self.current_phase,
-                                            bounds=BoundingBox(radius=self.size_x/2),
-                                            offset = self.background_luminance*(100.0 - self.contrast)/100.0,
-                                            scale=2*self.background_luminance*self.contrast/100.0,
-                                            xdensity=self.density,
-                                            ydensity=self.density)()
+            a = imagen.SineGrating(orientation=self.orientation,
+                                   frequency=self.spatial_frequency,
+                                   phase=self.current_phase,
+                                   bounds=imagen.BoundingBox(radius=self.size_x/2),
+                                   offset = self.background_luminance*(100.0 - self.contrast)/100.0,
+                                   scale=2*self.background_luminance*self.contrast/100.0,
+                                   xdensity=self.density,
+                                   ydensity=self.density)()
             
-            b = topo.pattern.Null(scale=self.background_luminance, bounds=BoundingBox(radius=self.size_x/2),xdensity=self.density,ydensity=self.density)()
-            c = topo.pattern.Disk(smoothing=0.0, size=self.radius*2,scale=1.0,bounds=BoundingBox(radius=self.size_x/2),xdensity=self.density,ydensity=self.density)()    
+            b = imagen.Null(scale=self.background_luminance,
+                            bounds=imagen.BoundingBox(radius=self.size_x/2),
+                            xdensity=self.density,
+                            ydensity=self.density)()
+            c = imagen.Disk(smoothing=0.0,
+                            size=self.radius*2,
+                            scale=1.0,
+                            bounds=imagen.BoundingBox(radius=self.size_x/2),
+                            xdensity=self.density,
+                            ydensity=self.density)()    
             d1 = numpy.multiply(a,c)
             d2 = numpy.multiply(b,-(c-1.0))
             d =  numpy.add.reduce([d1,d2])
             yield (d,[self.current_phase])
             self.current_phase += 2*pi * (self.frame_duration/1000.0) * self.temporal_frequency
+
 
 class DriftingSinusoidalGratingCenterSurroundStimulus(TopographicaBasedVisualStimulus):
     """
@@ -182,25 +191,25 @@ class DriftingSinusoidalGratingCenterSurroundStimulus(TopographicaBasedVisualSti
     def frames(self):
         self.current_phase = 0
         while True:
-            center = topo.pattern.SineGrating(mask_shape=topo.pattern.Disk(smoothing=0.0, size=self.center_radius*2),
-                                              orientation=self.center_orientation,
-                                              frequency=self.spatial_frequency,
-                                              phase=self.current_phase,
-                                              bounds=BoundingBox(radius=self.size_x/2),
-                                              offset = self.background_luminance*(100.0 - self.contrast)/100.0,
-                                              scale=2*self.background_luminance*self.contrast/100.0,  
-                                              xdensity=self.density,
-                                              ydensity=self.density)()
+            center = imagen.SineGrating(mask_shape=topo.pattern.Disk(smoothing=0.0, size=self.center_radius*2),
+                                        orientation=self.center_orientation,
+                                        frequency=self.spatial_frequency,
+                                        phase=self.current_phase,
+                                        bounds=imagen.BoundingBox(radius=self.size_x/2),
+                                        offset = self.background_luminance*(100.0 - self.contrast)/100.0,
+                                        scale=2*self.background_luminance*self.contrast/100.0,  
+                                        xdensity=self.density,
+                                        ydensity=self.density)()
             r = (self.center_radius + self.surround_radius + self.gap)/2
             t = (self.surround_radius - self.surround_radius - self.gap)/2
-            surround = topo.pattern.SineGrating(mask_shape=topo.pattern.Ring(thickness=t, smoothing=0, size=r*2),
-                                                orientation=self.surround_orientation,
-                                                frequency=self.spatial_frequency,
-                                                phase=self.current_phase,
-                                                bounds=BoundingBox(radius=self.size_x/2),
-                                                offset = self.background_luminance*(100.0 - self.contrast)/100.0,
-                                                scale=2*self.background_luminance*self.contrast/100.0,   
-                                                xdensity=self.density,
-                                                ydensity=self.density)()
+            surround = imagen.SineGrating(mask_shape=topo.pattern.Ring(thickness=t, smoothing=0, size=r*2),
+                                          orientation=self.surround_orientation,
+                                          frequency=self.spatial_frequency,
+                                          phase=self.current_phase,
+                                          bounds=imagen.BoundingBox(radius=self.size_x/2),
+                                          offset = self.background_luminance*(100.0 - self.contrast)/100.0,
+                                          scale=2*self.background_luminance*self.contrast/100.0,   
+                                          xdensity=self.density,
+                                          ydensity=self.density)()
             yield (numpy.add.reduce([center, surround]), [self.current_phase])
             self.current_phase += 2*pi * (self.frame_duration/1000.0) * self.temporal_frequency
