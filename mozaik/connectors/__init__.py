@@ -36,13 +36,15 @@ class MozaikConnector(Connector):
     
     def __init__(self, network, name,source, target, parameters):
       Connector.__init__(self, network, name, source,target,parameters)
-      
+    
+    
+    def init_short_term_plasticity(self,weights=None,delays=None):
       if not self.parameters.short_term_plasticity != None:
-        self.short_term_plasticity = None
+        short_term_plasticity = None
       else:
         #self.short_term_plasticity = self.sim.SynapseDynamics(fast=self.sim.TsodyksMarkramMechanism(**self.parameters.short_term_plasticity_params))                    
-        self.short_term_plasticity = self.sim.NativeSynapseType("tsodyks_synapse", self.parameters.short_term_plasticity)
-      
+        short_term_plasticity = self.sim.NativeSynapseType("tsodyks_synapse", self.parameters.short_term_plasticity,weights=weights,delays=delays)
+      return short_term_plasticity
         
     def connect(self):
           t0 = time.time()
@@ -135,7 +137,7 @@ class SpecificArborization(MozaikConnector):
                                 self.source.pop,
                                 self.target.pop,
                                 method,
-                                synapse_type=self.short_term_plasticity,
+                                synapse_type=self.init_short_term_plasticity(),
                                 label=self.name,
                                 rng=None,
                                 receptor_type=self.parameters.target_synapses)
@@ -183,7 +185,7 @@ class SpecificProbabilisticArborization(MozaikConnector):
                                 self.source.pop,
                                 self.target.pop,
                                 method,
-                                synapse_type=self.short_term_plasticity,
+                                synapse_type=self.init_short_term_plasticity(),
                                 label=self.name,
                                 receptor_type=self.parameters.target_synapses)
                   

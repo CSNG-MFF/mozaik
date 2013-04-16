@@ -88,7 +88,7 @@ class ModularConnector(MozaikConnector):
                                 self.source.pop,
                                 self.target.pop,
                                 self.method,
-                                synapse_type=self.short_term_plasticity,
+                                synapse_type=self.init_short_term_plasticity(),
                                 label=self.name,
                                 receptor_type=self.parameters.target_synapses)
 
@@ -124,7 +124,7 @@ class ModularSamplingProbabilisticConnector(ModularConnector):
                                 self.source.pop,
                                 self.target.pop,
                                 method,
-                                synapse_type=self.short_term_plasticity,
+                                synapse_type=self.init_short_term_plasticity(),
                                 label=self.name,
                                 receptor_type=self.parameters.target_synapses)
     
@@ -157,7 +157,7 @@ class ModularSingleWeightProbabilisticConnector(ModularConnector):
                                 self.source.pop,
                                 self.target.pop,
                                 method,
-                                synapse_dynamics=self.short_term_plasticity,
+                                synapse_dynamics=self.init_short_term_plasticity(),
                                 label=self.name,
                                 rng=None,
                                 target=self.parameters.target_synapses)

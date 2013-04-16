@@ -210,8 +210,7 @@ class Sheet(MozaikComponent):
                                     t_stop=duration).spike_times
                     if self.parameters.artificial_stimulation and exc_spiking_stimulation!=None and (exc_spiking_stimulation[0] == "all" or (idds[i] in exc_spiking_stimulation[0])):
                        pp.extend(exc_spiking_stimulation[1](duration)) 
-
-                    self.ssae[i].set_parameters(spike_times=offset + numpy.array(pp))
+                    self.ssae[i].set_parameters(spike_times=[offset + numpy.array(pp)])
 
             if (self.parameters.background_noise.inh_firing_rate != 0 and self.parameters.background_noise.inh_weight) != 0 or self.parameters.artificial_stimulation:
                 idds = self.pop.all_cells.astype(int)
@@ -224,7 +223,7 @@ class Sheet(MozaikComponent):
                                     t_stop=self.model.simulator_time + duration).spike_times
                     if self.parameters.artificial_stimulation and inh_spiking_stimulation!=None and (inh_spiking_stimulation[0] == "all" or (idds[i] in inh_spiking_stimulation[0])):
                        pp.extend(self.model.simulator_time+ inh_spiking_stimulation[1](duration)) 
-                    self.ssai[i].set_parameters(spike_times=offset + numpy.array(pp))
+                    self.ssai[i].set_parameters(spike_times=[offset + numpy.array(pp)])
 
     def setup_background_noise(self):
         from pyNN.nest import native_cell_type
@@ -274,11 +273,11 @@ class Sheet(MozaikComponent):
 
     def setup_initial_values(self):
         # Initial state variables
-        for var, val in self.parameters.cell.initial_values.items():
-            self.pop.initialize(var, val)
+        self.pop.initialize(**self.parameters.cell.initial_values)
         # Variable cell parameters
-        for k,v in self.dist_params.iteritems():
-            self.pop.rset(k,v)
+        self.pop.set(**self.dist_params)
+        #for k,v in self.dist_params.iteritems():
+        #    self.pop.rset(k,v)
 
 
 class RetinalUniformSheet(Sheet):

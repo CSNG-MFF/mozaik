@@ -95,16 +95,13 @@ class UniformProbabilisticArborization(MozaikConnector):
         method = self.sim.FixedProbabilityConnector(
                                     self.parameters.connection_probability,
                                     allow_self_connections=False,
-                                    weights=self.parameters.weights,
-                                    delays=self.parameters.delay,
-                                    space=space.Space(axes='xy'),
                                     safe=True)
-                                    
+
         self.proj = self.sim.Projection(
                                     self.source.pop,
                                     self.target.pop,
                                     method,
-                                    synapse_type=self.short_term_plasticity,
+                                    synapse_type=self.init_short_term_plasticity(weights=self.parameters.weights,delays=self.parameters.delay),
                                     label=self.name,
+                                    space=space.Space(axes='xy'),
                                     receptor_type=self.parameters.target_synapses)
-        
