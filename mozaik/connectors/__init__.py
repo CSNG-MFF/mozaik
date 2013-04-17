@@ -42,8 +42,9 @@ class MozaikConnector(Connector):
       if not self.parameters.short_term_plasticity != None:
         short_term_plasticity = None
       else:
-        #self.short_term_plasticity = self.sim.SynapseDynamics(fast=self.sim.TsodyksMarkramMechanism(**self.parameters.short_term_plasticity_params))                    
-        short_term_plasticity = self.sim.NativeSynapseType("tsodyks_synapse", self.parameters.short_term_plasticity,weights=weights,delays=delays)
+        #self.short_term_plasticity = self.sim.SynapseDynamics(fast=self.sim.TsodyksMarkramMechanism(**self.parameters.short_term_plasticity_params)) 
+        #short_term_plasticity = self.sim.NativeSynapseType(nest_name="tsodyks_synapse", default_parameters = self.parameters.short_term_plasticity,weights=weights,delay=delays)
+        short_term_plasticity = self.sim.native_synapse_type("tsodyks_synapse")(weight=weights,delay=delays,**self.parameters.short_term_plasticity)                   
       return short_term_plasticity
         
     def connect(self):
@@ -178,9 +179,16 @@ class SpecificProbabilisticArborization(MozaikConnector):
         
         for i in xrange(0,self.target.pop.size):
             co = Counter(sample_from_bin_distribution(weights[:,i].flatten(), int(self.parameters.num_samples)))
-            cl.extend([(k,i,self.parameters.weight_factor*co[k]/self.parameters.num_samples,delays[k][i]) for k in co.keys()])
+            cl.extend([(int(k),int(i),self.parameters.weight_factor*co[k]/self.parameters.num_samples,delays[k][i]) for k in co.keys()])
         
         method = self.sim.FromListConnector(cl)
+        
+        print "Source length: ", len(self.source.pop)
+        print "Target length: ", len(self.target.pop)
+        print "Source max index: ",max(numpy.array(cl)[:,0].flatten())
+        print "Target max index: ",max(numpy.array(cl)[:,1].flatten())
+        print "Source min index: ",min(numpy.array(cl)[:,0].flatten())
+        print "Target min index: ",min(numpy.array(cl)[:,1].flatten())
         self.proj = self.sim.Projection(
                                 self.source.pop,
                                 self.target.pop,

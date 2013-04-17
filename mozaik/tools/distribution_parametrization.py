@@ -32,6 +32,7 @@ class PyNNDistribution(RandomDistribution):
           assert constrain == 'clip' or constrain == 'redraw', "The parameter constrain has to be either \'clip\' or \'redraw\'"
           assert isinstance(params,tuple) , "The boundries parameter of PyNNDistribution has to be tuple"
           RandomDistribution.__init__(self,parameters=params,boundaries=boundaries,constrain=constrain)  
+
           
 class MozaikExtendedParameterSet(ParameterSet):
     @staticmethod
