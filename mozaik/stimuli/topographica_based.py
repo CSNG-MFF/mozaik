@@ -5,6 +5,7 @@ The file contains stimuli that use topographica to generate the stimulus
 
 from visual_stimulus import VisualStimulus
 import imagen
+from imagen.image import BoundingBox
 import pickle
 import numpy
 from mozaik.tools.mozaik_parametrized import SNumber, SString
@@ -36,7 +37,7 @@ class FullfieldDriftingSinusoidalGrating(TopographicaBasedVisualStimulus):
             yield (imagen.SineGrating(orientation=self.orientation,
                                       frequency=self.spatial_frequency,
                                       phase=self.current_phase,
-                                      bounds=imagen.BoundingBox(radius=self.size_x/2),
+                                      bounds=BoundingBox(radius=self.size_x/2),
                                       offset = self.background_luminance*(100.0 - self.contrast)/100.0,
                                       scale=2*self.background_luminance*self.contrast/100.0,
                                       xdensity=self.density,
@@ -52,7 +53,7 @@ class Null(TopographicaBasedVisualStimulus):
         """
         while True:
             yield (imagen.Null(scale=self.background_luminance,
-                              bounds=imagen.BoundingBox(radius=self.size_x/2),
+                              bounds=BoundingBox(radius=self.size_x/2),
                               xdensity=self.density,
                               ydensity=self.density)(),
                    [])
@@ -85,7 +86,7 @@ class NaturalImageWithEyeMovement(TopographicaBasedVisualStimulus):
                                     xdensity=self.density,
                                     ydensity=self.density,
                                     size=self.size,
-                                    bounds=imagen.BoundingBox(points=((-self.size_x/2, -self.size_y/2),
+                                    bounds=BoundingBox(points=((-self.size_x/2, -self.size_y/2),
                                                                (self.size_x/2, self.size_y/2))),
                                     scale=2*self.background_luminance,
                                     pattern_sampler=self.pattern_sampler
@@ -120,7 +121,7 @@ class DriftingGratingWithEyeMovement(TopographicaBasedVisualStimulus):
                                        y=location[1],
                                        frequency=self.spatial_frequency,
                                        phase=self.current_phase,
-                                       bounds=imagen.BoundingBox(points=((-self.size_x/2, -self.size_y/2),
+                                       bounds=BoundingBox(points=((-self.size_x/2, -self.size_y/2),
                                                                   (self.size_x/2, self.size_y/2))),
                                        offset = self.background_luminance*(100.0 - self.contrast)/100.0,
                                        scale=2*self.background_luminance*self.contrast/100.0,
@@ -147,20 +148,20 @@ class DriftingSinusoidalGratingDisk(TopographicaBasedVisualStimulus):
             a = imagen.SineGrating(orientation=self.orientation,
                                    frequency=self.spatial_frequency,
                                    phase=self.current_phase,
-                                   bounds=imagen.BoundingBox(radius=self.size_x/2),
+                                   bounds=BoundingBox(radius=self.size_x/2),
                                    offset = self.background_luminance*(100.0 - self.contrast)/100.0,
                                    scale=2*self.background_luminance*self.contrast/100.0,
                                    xdensity=self.density,
                                    ydensity=self.density)()
             
             b = imagen.Null(scale=self.background_luminance,
-                            bounds=imagen.BoundingBox(radius=self.size_x/2),
+                            bounds=BoundingBox(radius=self.size_x/2),
                             xdensity=self.density,
                             ydensity=self.density)()
             c = imagen.Disk(smoothing=0.0,
                             size=self.radius*2,
                             scale=1.0,
-                            bounds=imagen.BoundingBox(radius=self.size_x/2),
+                            bounds=BoundingBox(radius=self.size_x/2),
                             xdensity=self.density,
                             ydensity=self.density)()    
             d1 = numpy.multiply(a,c)
@@ -195,7 +196,7 @@ class DriftingSinusoidalGratingCenterSurroundStimulus(TopographicaBasedVisualSti
                                         orientation=self.center_orientation,
                                         frequency=self.spatial_frequency,
                                         phase=self.current_phase,
-                                        bounds=imagen.BoundingBox(radius=self.size_x/2),
+                                        bounds=BoundingBox(radius=self.size_x/2),
                                         offset = self.background_luminance*(100.0 - self.contrast)/100.0,
                                         scale=2*self.background_luminance*self.contrast/100.0,  
                                         xdensity=self.density,
@@ -206,7 +207,7 @@ class DriftingSinusoidalGratingCenterSurroundStimulus(TopographicaBasedVisualSti
                                           orientation=self.surround_orientation,
                                           frequency=self.spatial_frequency,
                                           phase=self.current_phase,
-                                          bounds=imagen.BoundingBox(radius=self.size_x/2),
+                                          bounds=BoundingBox(radius=self.size_x/2),
                                           offset = self.background_luminance*(100.0 - self.contrast)/100.0,
                                           scale=2*self.background_luminance*self.contrast/100.0,   
                                           xdensity=self.density,
