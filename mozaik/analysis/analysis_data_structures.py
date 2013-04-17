@@ -107,7 +107,7 @@ class PerNeuronValue(AnalysisDataStructure):
           - The ids of the neurons which are stored, in the same order as in the values
     """
     value_name = SString(doc="The name of the value.")
-    period = SNumber(units=None,default=None,doc="The name of the value.")
+    period = SNumber(units=None,default=None,doc="The period of the value.")
 
     def __init__(self, values, idds, value_units, **params):
         AnalysisDataStructure.__init__(self, identifier='PerNeuronValue', **params)

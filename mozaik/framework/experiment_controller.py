@@ -9,7 +9,7 @@ import os
 import mozaik
 import time
 from datetime import datetime
-from NeuroTools import logging
+import logging
 from NeuroTools import init_logging
 from NeuroTools import visual_logging
 
@@ -73,8 +73,12 @@ def run_workflow(simulation_name, model_class, create_experiments):
     
     # We exclude the results_dir parameter from the directory naming
     modified_params_str = '_'.join([str(k) + ":" + str(modified_parameters[k]) for k in modified_parameters.keys() if k!='results_dir'])
-    Global.root_directory = parameters.results_dir + simulation_name + '_' + \
-                              timestamp + 'rank' + str(mpi_comm.rank) + '_____' + modified_params_str + '/'
+    if MPI:
+        Global.root_directory = parameters.results_dir + simulation_name + '_' + \
+                                  timestamp + 'rank' + str(mpi_comm.rank) + '_____' + modified_params_str + '/'
+    else:
+        Global.root_directory = parameters.results_dir + simulation_name + '_' + \
+                                  timestamp + 'rank' + '______' + modified_params_str + '/'
     os.mkdir(Global.root_directory)
     parameters.save(Global.root_directory + "parameters", expand_urls=True)
     
