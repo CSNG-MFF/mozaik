@@ -1,9 +1,8 @@
 """
 docstring goes here
 """
-
 import pylab
-
+from matplotlib.ticker import FuncFormatter
 
 def disable_top_right_axis(ax):
     for loc, spine in ax.spines.iteritems():
@@ -31,10 +30,22 @@ def disable_left_axis(ax):
         tick.tick1On = False
 
 
-def three_tick_axis(axis):
+def three_tick_axis1(axis):
     import matplotlib.ticker as mticker
     axis.set_major_locator(mticker.LinearLocator(3))
     axis.set_major_formatter(mticker.FormatStrFormatter('%.2g'))
+
+def three_tick_axis(axis):
+    import matplotlib.ticker as mticker
+    axis.set_major_locator(mticker.LinearLocator(3))
+    def millions(x, pos):
+        s_g = '%2g' % (x)
+        s_f = '%2f' % (x)
+        if len(s_f) < len(s_g):
+            return s_f
+        return s_g
+    axis.set_major_formatter(FuncFormatter(millions))
+
     
 
 def disable_xticks(ax):
@@ -48,6 +59,7 @@ def disable_yticks(ax):
 
 
 def remove_x_tick_labels():
+    print 'YO'
     pylab.xticks([], [])
 
 

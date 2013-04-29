@@ -77,6 +77,7 @@ import pylab
 import numpy
 import time
 import quantities as pq
+import matplotlib.cm as cm
 import matplotlib.gridspec as gridspec
 from scipy.interpolate import griddata
 
@@ -231,7 +232,9 @@ class PlotTuningCurve(Plotting):
             params={}
             params["y_label"] = pnvs[0].value_name
             params['labels']=None
-            
+            params['linewidth'] = 2
+            params['colors'] = [cm.jet(j/50.,1) for j  in xrange(0,len(xs))] 
+
             if pnvs == self.pnvs[0]:
                 params["title"] =  'Neuron ID: %d' % self.parameters.neurons[idx]
             
@@ -466,6 +469,7 @@ class RetinalInputMovie(Plotting):
         Plotting.__init__(self, datastore, parameters, plot_file_name, fig_param)
         self.length = None
         self.retinal_input = datastore.get_retinal_stimulus()
+        print len(self.retinal_input)
         self.st = datastore.retinal_stimulus.keys()
         
     def subplot(self, subplotspec):
@@ -637,7 +641,7 @@ class PerNeuronValueScatterPlot(Plotting):
         params["x_label"] = x_label
         params["y_label"] = y_label
         params["title"] = self.sheets[idx]
-        if pair[0].value_units != pair[1].value_units:
+        if pair[0].value_units != pair[1].value_units or pair[1].value_units == pq.dimensionless:
            params["equal_aspect_ratio"] = False
         
         return [("ScatterPlot",ScatterPlot(pair[0].values, pair[1].get_value_by_id(pair[0].ids)),gs,params)]

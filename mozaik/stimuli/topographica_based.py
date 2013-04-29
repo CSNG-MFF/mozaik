@@ -171,7 +171,7 @@ class DriftingSinusoidalGratingCenterSurroundStimulus(TopographicaBasedVisualSti
     """
     
     center_orientation = SNumber(rad, period=pi, bounds=[0,pi], doc="Center grating orientation")
-    surr_orientation = SNumber(rad, period=pi, bounds=[0,pi], doc="Surround grating orientation")
+    surround_orientation = SNumber(rad, period=pi, bounds=[0,pi], doc="Surround grating orientation")
     spatial_frequency = SNumber(cpd, doc="Spatial frequency of the grating (same for center and surround)")
     temporal_frequency = SNumber(Hz, doc="Temporal frequency of the grating (same for center and surround)")
     gap = SNumber(degrees, doc="The gap between center and surround grating - in degrees of visual field")
@@ -182,7 +182,7 @@ class DriftingSinusoidalGratingCenterSurroundStimulus(TopographicaBasedVisualSti
     def frames(self):
         self.current_phase = 0
         while True:
-            center = topo.pattern.SineGrating(mask_shape=topo.pattern.Disk(smoothing=0.0, size=self.center_radius*2),
+            center = topo.pattern.SineGrating(
                                               orientation=self.center_orientation,
                                               frequency=self.spatial_frequency,
                                               phase=self.current_phase,
@@ -191,9 +191,12 @@ class DriftingSinusoidalGratingCenterSurroundStimulus(TopographicaBasedVisualSti
                                               scale=2*self.background_luminance*self.contrast/100.0,  
                                               xdensity=self.density,
                                               ydensity=self.density)()
+            disk = topo.pattern.Disk(smoothing=0.0, size=self.center_radius*2,scale=1.0,bounds=BoundingBox(radius=self.size_x/2),xdensity=self.density,ydensity=self.density)()                                                        
+            center = numpy.multiply(center,disk)
+            
             r = (self.center_radius + self.surround_radius + self.gap)/2
-            t = (self.surround_radius - self.surround_radius - self.gap)/2
-            surround = topo.pattern.SineGrating(mask_shape=topo.pattern.Ring(thickness=t, smoothing=0, size=r*2),
+            t = (self.surround_radius - self.center_radius - self.gap)/2
+            surround = topo.pattern.SineGrating(
                                                 orientation=self.surround_orientation,
                                                 frequency=self.spatial_frequency,
                                                 phase=self.current_phase,
@@ -202,5 +205,8 @@ class DriftingSinusoidalGratingCenterSurroundStimulus(TopographicaBasedVisualSti
                                                 scale=2*self.background_luminance*self.contrast/100.0,   
                                                 xdensity=self.density,
                                                 ydensity=self.density)()
+           
+            ring = topo.pattern.Ring(thickness=2*t, smoothing=0, size=r*2,scale=1.0,bounds=BoundingBox(radius=self.size_x/2),xdensity=self.density,ydensity=self.density)()                                                        
+            surround = numpy.multiply(surround,ring)
             yield (numpy.add.reduce([center, surround]), [self.current_phase])
             self.current_phase += 2*pi * (self.frame_duration/1000.0) * self.temporal_frequency

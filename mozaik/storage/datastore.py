@@ -197,6 +197,20 @@ class DataStoreView(MozaikParametrizeObject):
             for a in self.analysis_results:
                 print str(a)
     
+    def __add__(self, other):
+        new_dsv = self.fromDataStoreView()
+        assert len(set(self.block.segments)) == len(self.block.segments)
+        assert len(set(other.block.segments)) == len(other.block.segments)
+        assert len(set(self.analysis_results)) == len(self.analysis_results)
+        assert len(set(other.analysis_results)) == len(other.analysis_results)
+        
+        new_dsv.block.segments = list(set(self.block.segments) | set(other.block.segments))
+        new_dsv.analysis_results = list(set(self.analysis_results) | set(other.analysis_results))
+        new_dsv.retinal_stimulus = self.retinal_stimulus_copy()
+        new_dsv.retinal_stimulus.update(other.retinal_stimulus)
+        return new_dsv
+
+    
 class DataStore(DataStoreView):
     """
     Abstract DataStore class the declares the parameters, and enforces the
@@ -308,7 +322,9 @@ class Hdf5DataStore(DataStore):
         self.stimulus_dict[str(stimulus)] = True
 
     def add_stimulus(self, data, stimulus):
+        print 'ZZZZ'
         self.retinal_stimulus[str(stimulus)] = data
+        print self.retinal_stimulus.keys()
 
     def add_analysis_result(self, result):
         flag = True

@@ -6,7 +6,7 @@ import numpy
 import quantities as qt
 import mozaik
 import mozaik.tools.units as munits
-from neo.core.analogsignalarray import AnalogSignalArray
+from neo.core.analogsignalarray import AnalogSignal
 
 logger = mozaik.getMozaikLogger("Mozaik")
 
@@ -21,12 +21,12 @@ def psth(spiketrain, bin_length):
 
     Note, the spiketrains are assumed to start and stop at the same time!
     """
-    t_start = spike_list[0].t_start.rescale(qt.ms)
-    t_stop = spike_list[0].t_stop.rescale(qt.ms)
+    t_start = spiketrain.t_start.rescale(qt.ms)
+    t_stop = spiketrain.t_stop.rescale(qt.ms)
     num_bins = float((t_stop-t_start)/bin_length)
 
     range = (float(t_start), float(t_stop))
-    h = numpy.histogram(spike_list[i], bins=num_bins, range=range)[0] / (bin_length/1000)
+    h = numpy.histogram(spiketrain, bins=num_bins, range=range)[0] / (bin_length/1000)
 
     return AnalogSignal(h,t_start=t_start,
                              sampling_period=bin_length*qt.ms,
