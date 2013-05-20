@@ -1,0 +1,3 @@
+prune drafts
+recursive-include doc *
+prune doc/build
