@@ -631,8 +631,8 @@ class ConductancesPlot(StandardStyle):
         time_axis = numpy.arange(0, len(self.gsyn_es[0]), 1) / float(len(self.gsyn_es[0])) * abs(t_start-t_stop) + t_start
     
         for e, i in zip(self.gsyn_es, self.gsyn_is):
-            e=e*1000#e = e.rescale(mozaik.tools.units.nS) 
-            i=i*1000#i = i.rescale(mozaik.tools.units.nS)
+            e = e.rescale(mozaik.tools.units.nS) #e=e*1000
+            i = i.rescale(mozaik.tools.units.nS) #i=i*1000
             self.axis.plot(time_axis, e.tolist(), color='#F5A9A9')
             self.axis.plot(time_axis, i.tolist(), color='#A9BCF5')
             mean_gsyn_e = mean_gsyn_e + numpy.array(e.tolist())

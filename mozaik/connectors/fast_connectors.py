@@ -38,7 +38,7 @@ class DistanceDependentProbabilisticArborization(MozaikConnector):
         # JAHACK, 0.1 as minimal delay should be replaced with the simulations time_step        
         if isinstance(self.target, SheetWithMagnificationFactor):
             self.arborization_expression = lambda d: self.arborization_function(self.target.dvf_2_dcs(d))
-            self.delay_expression = lambda d: self.delay_function(self.target.dvf_2_dcs(d))
+            self.delay_expression = lambda d: self.delay_function(self.target.dvf_2_dcs(d)) 
         else:
             self.arborization_expression = lambda d: self.arborization_function(d)
             self.delay_expression = lambda d: self.delay_function(d)
@@ -50,12 +50,12 @@ class DistanceDependentProbabilisticArborization(MozaikConnector):
                                                                 space=space.Space(axes='xy'), 
                                                                 safe=True, 
                                                                 verbose=False, 
-                                                                n_connections=None)
+                                                                n_connections=None,rng=mozaik.rng)
                                                                 
         self.proj = self.sim.Projection(self.source.pop, 
                                         self.target.pop, 
                                         method, 
-                                        synapse_type=self.short_term_plasticity, 
+                                        synapse_type=self.init_synaptic_mechanisms(), 
                                         label=self.name, 
                                         receptor_type=self.parameters.target_synapses)
     
@@ -95,13 +95,14 @@ class UniformProbabilisticArborization(MozaikConnector):
         method = self.sim.FixedProbabilityConnector(
                                     self.parameters.connection_probability,
                                     allow_self_connections=False,
-                                    safe=True)
-
+                                    safe=True,rng=mozaik.rng)
+                                    
+                                    
         self.proj = self.sim.Projection(
                                     self.source.pop,
                                     self.target.pop,
                                     method,
-                                    synapse_type=self.init_short_term_plasticity(weights=self.parameters.weights,delays=self.parameters.delay),
+                                    synapse_type=self.init_synaptic_mechanisms(weights=self.parameters.weights,delays=self.parameters.delay),
                                     label=self.name,
                                     space=space.Space(axes='xy'),
                                     receptor_type=self.parameters.target_synapses)

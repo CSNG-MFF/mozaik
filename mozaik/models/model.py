@@ -1,6 +1,8 @@
 """
-docstring goes here
+This module contains the implementation of a Model API. 
 
+Each simulation contains one model, that overarches the neural network that has been built using 
+the basic *mozaik* components (sheets and connectors) and some additional structures such as the recording configurations.
 """
 from parameters import ParameterSet
 from mozaik.framework.interfaces import MozaikComponent
@@ -23,14 +25,33 @@ logger = mozaik.getMozaikLogger("Mozaik")
 
 class Model(MozaikComponent):
     """
-    Model encapsulates a mozaik model and defines interfaces
-    with which one can do experiments to the model.
-
-    It has to be able to present stimulus  to the input space
-    record the activity in the model to this stimulus sequence
-    and return it as a neo object.
-    For this purpose, derive your model from this Model class and
-    give it a member named self.input_layer in the constructor.
+    Model encapsulates a mozaik model.
+    
+    Each mozaik model has to derive from this class,
+    and in its constructor it has to construct the model from
+    the basic *mozaik* building blocks (sheets and connectors),
+    and set the variable `input_layer` to the sheet corresponding to the sensory input sheet.
+    
+    Other parameters
+    ----------------
+    name : str
+         The name of the model.
+    
+    results_dir : str
+                Path to a directory where to store the results.
+    
+    rest : bool
+         If True the pyNN.reset() is used to reset the network between stimulus presentations. 
+         Otherwise a blank stimulus is shown for a period of time defined by the parameter null_stimulus_period.
+    
+    null_stimulus_period : float
+                         The length of blank stimulus presentation during the simulation.
+    
+    input_space : ParameterSet
+                The parameters for the InputSpace object that will become the sensory input space for the model.
+                
+    input_space_type : str
+                     The python class of the InputSpace object to use.
     """
 
     required_parameters = ParameterSet({
@@ -60,12 +81,37 @@ class Model(MozaikComponent):
         self.simulator_time = 0
 
     def present_stimulus_and_record(self, stimulus,exc_spike_stimulators,inh_spike_stimulators):
+        """
+        This method is the core of the model execution control. It ensures that a `stimulus` is presented
+        to the model, the simulation is ran for the duration of the stimulus, and all the data recorded during 
+        this period are retieved from the simulator. It also makes sure a blank stimulus preceds each stimulus presntation.
+        
+        Parameters
+        ----------
+        stimulus : Stimulus
+                 Stimulus to be presented.
+                 
+        exc_spike_stimulators : list
+                              The list of stimulation objects describing any 'artificial' stimulation of the network. See :mod:`mozaik.framework.experiment`
+        inh_spike_stimulators : list
+                              The list of stimulation objects describing any 'artificial' stimulation of the network. See :mod:`mozaik.framework.experiment`
+        
+        Returns
+        -------
+        segments : list
+                 List of segments holding the recorded data, one per each sheet.
+        sensory_input : object
+                 The 'raw' sensory input that has been shown to the network - the structure of this object depends on the sensory component.
+        sim_run_time : float (seconds)
+                     The biological time of the simulation up to this point (including blank presentations).
+                                          
+        """
         for sheet in self.sheets.values():
             if self.first_time:
                sheet.record()
+        sim_run_time = self.reset()
 
         # create empty arrays in annotations to store the sheet identity of stored data
-        sim_run_time = self.reset()
         for sheet in self.sheets.values():
             sheet.prepare_input(stimulus.duration,self.simulator_time,exc_spike_stimulators.get(sheet.name,None),inh_spike_stimulators.get(sheet.name,None))
         
@@ -79,24 +125,38 @@ class Model(MozaikComponent):
                 sensory_input = None                                                    
         else:
             sensory_input = None
-             
         sim_run_time += self.run(stimulus.duration)
-
+        
         segments = []
-        if (not MPI) or (mpi_comm.rank == MPI_ROOT):
-            for sheet in self.sheets.values():    
-                if sheet.to_record != None:
-                    if self.parameters.reset:
-                        s = sheet.write_neo_object()
+        
+        for sheet in self.sheets.values():    
+            if sheet.to_record != None:
+                if self.parameters.reset:
+                    s = sheet.write_neo_object()
+                    if (not MPI) or (mpi_comm.rank == MPI_ROOT):
                         segments.append(s)
-                    else:
-                        s = sheet.write_neo_object(stimulus.duration)
+                else:
+                    s = sheet.write_neo_object(stimulus.duration)
+                    if (not MPI) or (mpi_comm.rank == MPI_ROOT):
                         segments.append(s)
 
         self.first_time = False
         return (segments, sensory_input,sim_run_time)
         
     def run(self, tstop):
+        """
+        Run's the simulation for tstop time.
+        
+        Parameters
+        ----------
+        tstop : float (seconds)
+              The duration for which to run the simulation.
+        
+        Returns
+        -------
+        time : float (seconds)
+             The wall clock time for which the simulator ran.
+        """
         t0 = time.time()
         logger.info("Simulating the network for %s ms" % tstop)
         self.sim.run(tstop)
@@ -105,6 +165,11 @@ class Model(MozaikComponent):
         return time.time()-t0
 
     def reset(self):
+        """
+        Rests the network. Depending on the self.parameters.reset this is done either 
+        by using the pyNN `reset` function or by presenting a blank stimulus for self.parameters.null_stimulus_period
+        seconds.
+        """
         logger.debug("Resetting the network")
         t0 = time.time()
         if self.parameters.reset:
@@ -123,37 +188,56 @@ class Model(MozaikComponent):
             self.sim.run(self.parameters.null_stimulus_period)
             self.simulator_time+=self.parameters.null_stimulus_period
             
-            if (not MPI) or (mpi_comm.rank == MPI_ROOT):
-                for sheet in self.sheets.values():    
-                    if sheet.to_record != None:
-                       sheet.write_neo_object()
+            for sheet in self.sheets.values():    
+                if sheet.to_record != None:
+                   sheet.write_neo_object()
                     
         return time.time()-t0    
     
 
     def register_sheet(self, sheet):
+        """
+        This functions has to called to add a new sheet is added to the model.
+        """
         if sheet.name in self.sheets:
             raise ValueError("ERROR: Sheet %s already registerd" % sheet.name)
         self.sheets[sheet.name] = sheet
 
     def register_connector(self, connector):
+        """
+        This functions has to called to add a new connector to the model.
+        """
+        
         if connector.name in self.connectors:
             raise ValueError("ERROR: Connector %s already registerd" % connector.name)
         self.connectors[connector.name] = connector
 
     def neuron_ids(self):
+        """
+        Returns the list of ids of neurons in the model.
+        """
         ids = {}
         for s in self.sheets.values():
             ids[s.name] = [int(a) for a in s.pop.all()]
         return ids
         
     def neuron_positions(self):
+        """
+        Returns the positions of neurons in the model. 
+        The positions are return as a dictionary where each key
+        corresponds to a sheet name, and the value contains a 2D array of size (2,number_of_neurons)
+        containing the x and y coordinates of the neurons in the given sheet.
+        """
         pos = {}
         for s in self.sheets.values():
             pos[s.name] = s.pop.positions
         return pos
 
     def neuron_annotations(self):
+        """
+        Returns the neuron annotations, as a dictionary with sheet names as keys, and corresponding annotation
+        dictionaries as values.
+        """
         neuron_annotations = {}
         for s in self.sheets.values():
             neuron_annotations[s.name] = s.get_neuron_annotations()

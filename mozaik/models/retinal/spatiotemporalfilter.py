@@ -34,15 +34,30 @@ def meshgrid3D(x, y, z):
 
 
 class SpatioTemporalReceptiveField(object):
+    """
+    Implements spatio-temporal receptive field.
 
+    Parameters
+    ----------
+    func : function
+         should be a function of x, y, t, and a ParameterSet object
+    func_params : ParameterSet
+                ParameterSet that is passed to `func`.
+    width : float (degrees)
+          x-dimension size
+
+    height : float (degrees)
+          y-dimension size
+
+    duration : float (ms)
+             length of the temporal axis of the RF
+             
+    Notes
+    -----
+    Coordinates x = 0 and y = 0 are at the centre of the spatial kernel.
+    """
+    
     def __init__(self, func, func_params, width, height, duration):
-        """
-        `func` should be a function of x, y, t, and a ParameterSet object
-        `func_params` should be the ParameterSet that is passed to `func`.
-        `width` (x-dimension) and `height` (y-dimension) are in degrees and
-        `duration` is in ms.
-        We take x = 0 and y = 0 at the centre of the spatial kernel
-        """
         self.func = func
         self.func_params = func_params
         self.width = float(width)
@@ -54,10 +69,24 @@ class SpatioTemporalReceptiveField(object):
 
     def quantize(self, dx, dy, dt):
         """
-        Return a quantized version of the receptive field. If `dx` does not
+        Quantizes the the receptive field. 
+        
+        Parameters
+        ----------
+        dx : float
+           The number of pixels along x axis.
+        
+        dy : float
+           The number of pixels along y axis.
+        
+        dy : float
+           The number of time bins along the t axis.
+        
+        Notes
+        -----
+        If `dx` does not
         divide exactly into the width, then the actual width will be slightly
-        larger than the nominal width.
-        `dx` and `dy` should be in degrees and `dt` in ms.
+        larger than the nominal width. `dx` and `dy` should be in degrees and `dt` in ms.
         """
         assert dx == dy  # For now, at least
         nx = numpy.ceil(self.width/dx)
@@ -118,6 +147,20 @@ class CellWithReceptiveField(object):
     initialize() should be called once, before stimulus presentation
     view() should be called in a loop, once for each stimulus frame
     response_current() should be called at the end of stimulus presentation
+    
+    Parameters
+    ----------
+    x , y : float
+          x and y coordinates of the center of the RF in visual space.
+    
+    receptive_field : SpatioTemporalReceptiveField
+          The receptive field object containing the RFs data.
+          
+    gain : float
+         The calculated input current values will be multiplied by the gain parameter.
+    
+    visual_space : VisualSpace
+                 The object representing the visual space.
     """
 
     def __init__(self, x, y, receptive_field, gain,visual_space):
@@ -150,6 +193,16 @@ class CellWithReceptiveField(object):
         Create the array that will contain the current response, and set the
         initial values on the assumption that the system was looking at a blank
         screen of constant luminance prior to stimulus onset.
+        
+        Parameters
+        ----------
+        
+        background_luminance : float
+                             The background luminance of the visual space.
+        
+        stimulus_duration : float (ms)
+                          The duration  of the visual stimulus.
+            
         """
         # we add some extra padding to avoid having to check for index out-of-bounds in view()
         self.response_length = numpy.ceil(stimulus_duration / self.receptive_field.temporal_resolution) \
@@ -179,8 +232,7 @@ class CellWithReceptiveField(object):
            R_k = Sum[j=0,L-1] K_j.I_i'
              where i' = (k-j)//α  (// indicates integer division, discarding the
              remainder)
-        To avoid loading the entire image sequence into memory, we build up
-         the response array one frame at a time.
+        To avoid loading the entire image sequence into memory, we build up the response array one frame at a time.
         """
         view_array = self.visual_space.view(self.visual_region,pixel_size=self.receptive_field.spatial_resolution)
         product = self.receptive_field.kernel * view_array[:, :, numpy.newaxis]
@@ -201,9 +253,7 @@ class CellWithReceptiveField(object):
         """
         Multiply the response (units of luminance (cd/m²) if we assume the
         kernel values are dimensionless) by the 'gain', to produce a current in
-        nA.
-        ('gain' is not a good name, but I can't think of a better one).
-        Returns a dictionary containing 'times' and 'amplitudes'.
+        nA. Returns a dictionary containing 'times' and 'amplitudes'.
         Might be better to use a NeuroTools AnalogSignal.
         """
 
@@ -212,8 +262,46 @@ class CellWithReceptiveField(object):
         return {'times': time_points, 'amplitudes': response}
 
 
-class SpatioTemporalFilterRetinaLGN(MozaikRetina):
-    """Retina/LGN model with spatiotemporal receptive field."""
+class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
+    """
+    Retina/LGN model with spatiotemporal receptive field.
+    
+    Parameters
+    ----------
+    
+    density : int (1/degree^2)
+              Number of neurons to simulate per square degree of visual space.
+    size : tuple (degree,degree)
+         The x and y size of the visual field.
+    linear_scaler : float
+                  The linear scaler that the RF output is multiplied with.
+    cached : bool
+           If the stimuli are chached. 
+           
+    cache_path : str
+           Path to the directory where to store the create the cache.
+    
+    mpi_reproducible_noise : bool
+           If true the background noise is generated in such a way that is reproducible accross runs using different number of mpi processes. 
+           Significant slowdown if True.
+    recorders : 
+    
+    
+    Notes
+    -----
+    If the stimulus is cached SpatioTemporalFilterRetinaLGN will write in the local directory `parameters.cache_path`
+    the generated amplitudes for all the neurons in the retina (so this will be specific to the model)
+    for each new presented stimulus. If it is asked to generate activities for a stimulus that already exists in the directory (it just 
+    checks for the name and parameter values of the stimulus, *except* trail number) it will retrieve the values from the cahce.
+    Note that the input currents are stored without the noise and the aditional noise is still applied after retrieval 
+    so the actual current injected into the retinal neurons will not be identical to the one that was injected when 
+    the stimulus was saved in the cache.
+    
+    **IMPORTANT**
+    This mechanism assumes that the retinal model stays otherwise identical between 
+    simulations. The moment anything is changed in the retinal model one **has** to delete 
+    the retina_cache directory (which effectively rests the cache).
+    """
 
     required_parameters = ParameterSet({
         'density': int,  # neurons per degree squared
@@ -409,10 +497,13 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
         return retinal_input
 
     def provide_null_input(self, visual_space, duration=None, offset=0):
+        
         input_current = {}
         input_current['times'] = numpy.arange(0, duration, visual_space.update_interval) + offset
         input_current['amplitudes'] = numpy.zeros((len(input_current['times']),))
-
+        
+        ts = self.model.sim.get_time_step()
+        
         for rf_type in self.rf_types:
                 for i, (lgn_cell, scs, ncs) in enumerate(
                                                   zip(self.sheets[rf_type].pop,
@@ -421,7 +512,8 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
                     scs.set_parameters(times=input_current['times'],
                                        amplitudes=input_current['amplitudes'])
                     if self.parameters.mpi_reproducible_noise:
-                        t = numpy.arange(0, duration, self.model.sim.get_time_step()) + offset
+                        t = numpy.arange(0, duration, ts) + offset
+
                         amplitudes = (self.parameters.noise.mean
                                         + self.parameters.noise.stdev
                                            * self.ncs_rng[rf_type][i].randn(len(t)))

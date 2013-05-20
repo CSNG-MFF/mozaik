@@ -598,8 +598,8 @@ class PerNeuronValueScatterPlot(Plotting):
         self.pairs = []
         self.sheets = []
         for sheet in datastore.sheets():
-            dsvs = datastore.get_analysis_result(identifier='PerNeuronValue',sheet_name=sheet)
-            if len(dsvs) < 2:
+            pnvs = datastore.get_analysis_result(identifier='PerNeuronValue',sheet_name=sheet)
+            if len(pnvs) < 2:
                raise ValueError('At least 2 DSVs have to be provided') 
             for i in xrange(0,len(dsvs)):
                 for j in xrange(i+1,len(dsvs)):

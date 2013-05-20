@@ -1,5 +1,5 @@
-mozaik Package
-==============
+mozaik API
+==========
 
 :mod:`mozaik` Package
 ---------------------
@@ -16,6 +16,7 @@ Subpackages
     :maxdepth: 1
    
     mozaik.analysis
+    mozaik.connectors
     mozaik.framework
     mozaik.models
     mozaik.stimuli
