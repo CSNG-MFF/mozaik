@@ -1,7 +1,6 @@
 # encoding: utf-8
 """
-Sheet is an abstraction of a 2D continuous sheet of neurons, roughly
-corresponding to the PyNN Population class with the added spatial structure.
+Module containing the implementation of sheets - one of the basic building blocks of *mozaik* models.
 """
 import numpy
 import mozaik
@@ -18,6 +17,15 @@ import quantities as pq
 
 logger = mozaik.getMozaikLogger("Mozaik")
 
+try:
+    from mpi4py import MPI
+except ImportError:
+    MPI = None
+if MPI:
+    mpi_comm = MPI.COMM_WORLD
+MPI_ROOT = 0
+
+
 class Sheet(MozaikComponent):
     """
     Sheet is an abstraction of a 2D continuouse sheet of neurons, roughly
@@ -32,9 +40,68 @@ class Sheet(MozaikComponent):
     accept parameters in units that are most natural for the given parameter and
     recalculate these into the internal degrees of visual field representation.
 
-    The units in visual space should be in degrees.
-    The units for cortical space should be in μm.
-    The units for time are in ms.
+    As a rule of thumb in mozaik:
+       * the units in visual space should be in degrees.
+       * the units for cortical space should be in μm.
+       
+    Other parameters
+    ----------------
+    
+    cell : ParameterSet
+         The parametrization of the cell model that all neurons in this sheet will have.
+         
+    cell.model : str
+               The name of the cell model.
+    
+    cell.params : ParameterSet
+               The set of parameters that the given model requires.
+               
+    cell.initial_values : ParameterSet
+                   It can contain a ParameterSet containing the initial values for some of the parameters in cell.params
+                   
+    background_noise : ParameterSet
+                     The parametrization of background noise injected into the neurons in the form of Poisson spike trains.
+    
+    background_noise.exc_firing_rate : float
+                     The firing rate of external neurons sending excitatory inputs to each neuron of this sheet.
+ 
+    background_noise.inh_firing_rate : float
+                     The firing rate of external neurons sending inhibitory inputs to each neuron of this sheet.
+    
+    background_noise.exc_weight : float
+                     The weight of the synapses for the excitatory external Poisson input.
+ 
+    background_noise.inh_weight : float
+                     The weight of the synapses for the inhibitory external Poisson input.
+                     
+    mpi_safe : bool
+             Whether to set the sheet up to be reproducible in MPI environment. 
+             This is computationally less efficient that if it is set to false, but it will
+             guaruntee the same results irrespective of the number of MPI process used.
+             
+    artificial_stimulation : Has to be set to True, if one wants to use during experiments stimulation beyond the 
+                             non-specific one defined in background_noise parameters . This flag exists for optimization purposes.
+                             The artificial stimulation is then defined in experiments (see `mozaik.experiments`_)
+    
+    name : str
+        Name of the sheet.
+    
+    recorders : ParameterSet
+                Parametrization of recorders in this sheet. The recorders ParameterSet will contain as keys the names
+                of the different recording configuration user want to have in this sheet. For the format of each recording configuration see notes.
+
+    Notes
+    -----
+    
+    Each recording configuration requires the following parameters:
+    
+    *variables* 
+        tuple of strings specifying the variables to measure (allowd values are: 'spikes' , 'v','gsyn_exc' , 'gsyn_inh' )
+    *componnent* 
+        the path to the :class:`mozaik.framework.population_selector.PopulationSelector` class
+    *params*
+        a ParameterSet containing the parameters for the given :class:`mozaik.framework.population_selector.PopulationSelector` class 
+        
     """
 
     required_parameters = ParameterSet({
@@ -81,6 +148,10 @@ class Sheet(MozaikComponent):
         
 
     def setup_to_record_list(self):
+        """
+        Set up the recording configuration.
+        """
+        
         self.to_record = {}
         for k in  self.parameters.recorders.keys():
             recording_configuration = load_component(self.parameters.recorders[k].component)
@@ -96,12 +167,12 @@ class Sheet(MozaikComponent):
             self.to_record[k] = [numpy.flatnonzero(idds == idd)[0] for idd in self.to_record[k]]
             
     def size_in_degrees(self):
-        """Returns the x, y size in degrees of visual field of the given area"""
+        """Returns the x, y size in degrees of visual field of the given area."""
         raise NotImplementedError
         pass
 
     def pop():
-        doc = "PyNN population"
+        doc = "The PyNN population holding the neurons in this sheet."
 
         def fget(self):
             if not self._pop:
@@ -117,10 +188,27 @@ class Sheet(MozaikComponent):
             self.setup_to_record_list()
             self.setup_initial_values()
         return locals()
-
+    
     pop = property(**pop())  # this will be populated by PyNN population, in the derived classes
 
     def add_neuron_annotation(self, neuron_number, key, value, protected=True):
+        """
+        Adds annotation to neuron at index neuron_number.
+        
+        Parameters
+        ----------
+        neuron_number : int
+                      The index of the neuron in the population to which the annotation will be added.  
+        
+        key : str
+            The name of the annotation
+        
+        value : object
+              The value of the annotation
+        
+        protected : bool (default=True)
+                  If True, the annotation cannot be changed.
+        """
         if not self._pop:
             logger.error('Population has not been yet set in sheet: ' + self.name + '!')
         if (key in self._neuron_annotations[neuron_number] and self._neuron_annotations[neuron_number][key][0]):
@@ -130,6 +218,23 @@ class Sheet(MozaikComponent):
             self._neuron_annotations[neuron_number][key] = (protected, value)
 
     def get_neuron_annotation(self, neuron_number, key):
+        """
+        Retrieve annotation for a given neuron.
+        
+        Parameters
+        ----------
+        neuron_number : int
+                      The index of the neuron in the population to which the annotation will be added.  
+        
+        key : str
+            The name of the annotation
+        
+        Returns
+        -------
+            value : object
+                  The value of the annotation
+        """
+
         if not self._pop:
             logger.error('Population has not been yet set in sheet: ' + self.name + '!')
         return self._neuron_annotations[neuron_number][key][1]
@@ -166,17 +271,27 @@ class Sheet(MozaikComponent):
 
     def write_neo_object(self, stimulus_duration=None):
         """
-        Retrieve recorded data from pyNN.
-
-        In case offset is set it means we want to keep only data after time
-        offset.
+        Retrieve data recorded in this sheet from pyNN in response to the last presented stimulus.
+        
+        Parameters
+        ----------
+        stimulus_duration : float(ms)
+                          The length of the last stimulus presentation.
+        
+        Returns
+        -------
+        segment : Segment
+                The segment holding all the recorded data. See NEO documentation for detail on the format.
         """
+
         try:
             block = self.pop.get_data(['spikes', 'v', 'gsyn_exc', 'gsyn_inh'],
                                       clear=True)
         except NothingToWriteError, errmsg:
             logger.debug(errmsg)
         
+        if (MPI) and (mpi_comm.rank != MPI_ROOT):
+           return None
         s = block.segments[-1]
         s.annotations["sheet_name"] = self.name
 
@@ -198,6 +313,25 @@ class Sheet(MozaikComponent):
         return s
 
     def prepare_input(self, duration, offset,exc_spiking_stimulation,inh_spiking_stimulation):
+        """
+        Prepares the background noise and artificial stimulation for the population for the stimulus that is 
+        about to be presented. 
+        
+        Parameters
+        ----------
+        
+        duration : float (ms)
+                 The duration of the stimulus that will be presented.
+                
+        offset : float (ms)
+               The current time of the simulation.
+               
+        exc_spiking_stimulation : tuple
+                                The excitatory artificial stimulation data
+                                
+        inh_spiking_stimulation : tuple
+                                The inhibitory artificial stimulation data
+        """
         from NeuroTools import stgen
         if self.parameters.mpi_safe or self.parameters.artificial_stimulation:
             if (self.parameters.background_noise.exc_firing_rate != 0 and self.parameters.background_noise.exc_weight != 0) or self.parameters.artificial_stimulation:
@@ -227,6 +361,10 @@ class Sheet(MozaikComponent):
                     self.ssai[i].set_parameters(spike_times=Sequence(offset + numpy.array(pp)))
 
     def setup_background_noise(self):
+        """
+        Called once population is created. Sets up the background noise.
+        """
+        
         from pyNN.nest import native_cell_type
         exc_syn = self.sim.StaticSynapse(weight=self.parameters.background_noise.exc_weight)
         inh_syn = self.sim.StaticSynapse(weight=self.parameters.background_noise.inh_weight)
@@ -273,6 +411,9 @@ class Sheet(MozaikComponent):
                                             receptor_type='inhibitory')
 
     def setup_initial_values(self):
+        """
+        Called once population is set. Set's up the initial values of the neural model variables.
+        """
         # Initial state variables
         self.pop.initialize(**self.parameters.cell.initial_values)
         # Variable cell parameters
@@ -283,7 +424,19 @@ class Sheet(MozaikComponent):
 
 class RetinalUniformSheet(Sheet):
     """
-    Retinal sheet is organized on a grid
+    Retinal sheet corresponds to a grid of retinal cells (retinal ganglion cells or photoreceptors)
+    
+    Other parameters
+    ----------------
+    
+    sx : float (degrees)
+       X size of the region.
+        
+    sy : float (degrees)
+       Y size of the region.
+
+    density : int
+            Number of neurons along both axis.
     """
     required_parameters = ParameterSet({
         'sx': float,  # degrees, x size of the region
@@ -312,7 +465,20 @@ class RetinalUniformSheet(Sheet):
 
 
 class SheetWithMagnificationFactor(Sheet):
-
+    """
+    A Sheet that has a magnification factor (presumably this would correspond be cortical visual area).
+    
+    Other parameters
+    ----------------
+    magnification_factor : float (μm/degree)
+                         The magnification factor.
+    
+    sx : float (μm)
+       X size of the region.
+        
+    sy : float (μm)
+       Y size of the region.
+    """
     required_parameters = ParameterSet({
         'magnification_factor': float,  # μm / degree
         'sx': float,      # μm, x size of the region
@@ -330,6 +496,19 @@ class SheetWithMagnificationFactor(Sheet):
         """
         vf_2_cs converts the position (degree_x, degree_y) in visual field to
         position in cortical space (in μm) given the magnification_factor.
+        
+        Parameters
+        ----------
+        degree_x : float (degrees)
+                 X coordinate of the position in degrees of visual field
+        degree_y : float (degrees)
+                 Y coordinate of the position in degrees of visual field
+        
+        Returns
+        -------
+        microm_meters_x,microm_meters_y : float,float (μm,μm)
+                                          Tuple with the coordinates in cortical space (μm)
+        
         """
         return (degree_x * self.magnification_factor,
                 degree_y * self.magnification_factor)
@@ -339,6 +518,18 @@ class SheetWithMagnificationFactor(Sheet):
         cs_2_vf converts the position (micro_meters_x, micro_meters_y) in
         cortical space to the position in the visual field (in degrees) given
         the magnification_factor
+        
+        Parameters
+        ----------
+        micro_meters_x : float (μm)
+                 X coordinate of the position in μm of cortical space
+        micro_meters_y : float (μm)
+                 Y coordinate of the position in μm of cortical space
+        
+        Returns
+        -------
+        degrees_x,degrees_y : float,float (degrees,degrees)
+                                          Tuple with the coordinates in visual space (degrees)
         """
         return (micro_meters_x / self.magnification_factor,
                 micro_meters_y / self.magnification_factor)
@@ -347,15 +538,36 @@ class SheetWithMagnificationFactor(Sheet):
         """
         dvf_2_dcs converts the distance in visual space to the distance in
         cortical space given the magnification_factor
+        
+        Parameters
+        ----------
+        distance_vf : float (degrees)
+                 The distance in visual field coordinates (degrees).
+                 
+        Returns
+        -------
+        distance_cs : float (μm)
+                    Distance in cortical space.
         """
         return distance_vf * self.magnification_factor
 
     def size_in_degrees(self):
+        """
+        Returns the size of the sheet in cortical space (μm).
+        """
         return self.cs_2_vf(self.parameters.sx, self.parameters.sy)
 
 
 class CorticalUniformSheet(SheetWithMagnificationFactor):
-
+    """
+    Represents a cortical sheet of neurons, randomly uniformly distributed in space.
+    
+    Other parameters
+    ----------------
+    density : float (neurons/mm^2)
+            The density of neurons per square milimeter.
+    """
+    
     required_parameters = ParameterSet({
         'density': float,  # neurons/(mm^2)
     })

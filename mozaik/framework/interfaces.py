@@ -1,8 +1,8 @@
 # coding: utf-8
 """
-Definition of the component interfaces. These interfaces are not currently
-checked or enforced.
+Definition of the component interfaces. These interfaces are not currently directly checked or enforced.
 """
+
 from mozaik import __version__
 from parameters import ParameterSet
 import mozaik
@@ -14,14 +14,27 @@ logger = mozaik.getMozaikLogger("Mozaik")
 
 class MozaikParametrizeObject(object):
     """
-    Base class for for all Mozaik objects using the dynamic parameterization
-    framework.
+    Base class for for all Mozaik objects using the dynamic parameterization framework. See `getting_started`_ for more details.
+    
+    Parameters
+    ----------
+    parameters : dict
+               Dictionary of the parameter names and their values that has to match the required_parameters variable. 
     """
-
     required_parameters = ParameterSet({})
     version = __version__
 
     def check_parameters(self, parameters):
+        """
+        This is a function that checks whether all required (and no other) parameters have been specified and all their values have matching types.
+        This function gets automatically executed during initialization of each :class:.MozaikParametrizeObject object. 
+
+        Parameters
+        ----------
+        parameters : dict
+                   Dictionary of the parameter names and their values that has to match the required_parameters variable. 
+        """
+        
         def walk(tP, P, section=None):
             if set(tP.keys()) != set(P.keys()):
                 raise KeyError("Invalid parameters for %s.%s Required: %s. Supplied: %s. Difference: %s" % (self.__class__.__name__, section or '', tP.keys(), P.keys(), set(tP.keys()) ^ set(P.keys())))
@@ -56,43 +69,65 @@ class MozaikParametrizeObject(object):
 
 
 class MozaikComponent(MozaikParametrizeObject):
-    """Base class for visual system components and connectors."""
+    """
+    Base class for mozaik model components.
+    
+    Parameters
+    ----------
+    model : Model
+          Reference to the model to which the component will belong.
+    """
 
     def __init__(self, model, parameters):
         MozaikParametrizeObject.__init__(self, parameters)
         self.model = model
 
 
-class MozaikRetina(MozaikComponent):
+class SensoryInputComponent(MozaikComponent):
+    """
+    Abstract API of sensory input component. Each mozaik sensory input component should 
+    inherit from this class and implement its two abstrac methods.
+    
+    See Also
+    --------
+    mozaik.models : the implementation of the model package  
+    mozaik.models.retinal : the implementation of retinal input 
+    """
 
-    def process_visual_input(self, visual_space, stimulus_id, duration=None,
+    def process_input(self, input_space, stimulus_id, duration=None,
                              offset=0):
         """
-        This method is responsible for presenting the content of visual_space
-        the retina it represents, and all the mechanisms that are responsible to
+        This method is responsible for presenting the content of input_space
+        to the sensory input component, and all the mechanisms that are responsible to
         passing the output of the retina (in whatever form desired) to the Sheet
         objects that are connected to it and thus represent the interface
-        between the retina and the rest of the model.
+        between the input space component and the rest of the model.
 
-        The method should return the list of 2d numpy arrays containing the
-        raw frames of the  visual input to the retina.
+        The method should return the sensory input that has been effectivitly presented to 
+        the model, currently the format of it is not specified.
         """
         raise NotImplementedError
 
-    def provide_null_input(self, visual_space, duration=None, offset=0):
+    def provide_null_input(self, input_space, duration=None, offset=0):
         """
-        This method is responsible generating retinal input in the case of no
-        visual stimulus. This method should correspond to the special case of
-        process_visual_input method where the visual_space contains 'zero'
+        This method is responsible generating sensory input in the case of no
+        stimulus. This method should correspond to the special case of
+        process_input method where the input_space contains 'zero'
         input. This methods exists for optimization purposes as the 'zero' input
-        is presented often due to it's presentation between different visual
+        is presented often due to it's presentation between different sensory
         stimuli to allow for models to return to spontaneous activity state.
         """
         raise NotImplementedError
 
-
 class Connector(MozaikComponent):
-    """Base class for objects that connect mozaik sheets."""
+    """
+    Abstract API of connectors between sheets. 
+    
+    See Also
+    --------
+    mozaik.connectors : the implementation of the connectors package  
+    
+    """
 
     version = __version__
 

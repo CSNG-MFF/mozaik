@@ -8,6 +8,10 @@ class timeit(object):
     """
     Decorator that times the execution time of the function it wraps and
     writes this time to the log.
+    
+    Parameters
+        f : func
+          The function to time
     """
 
     def __init__(self, f):

@@ -117,8 +117,6 @@ class ModularSamplingProbabilisticConnector(ModularConnector):
             co = Counter(sample_from_bin_distribution(weights, self.parameters.num_samples))
             cl.extend([(k,i,self.parameters.base_weight*co[k]/self.parameters.num_samples,delays[k]) for k in co.keys()])
         
-        print numpy.max(numpy.asarray(cl)[:,2])
-        
         method = self.sim.FromListConnector(cl)
         self.proj = self.sim.Projection(
                                 self.source.pop,

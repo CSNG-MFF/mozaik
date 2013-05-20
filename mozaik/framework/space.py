@@ -1,11 +1,5 @@
 """
-Module for dealing with visual space.
-
-For now, we deal only with two-dimensions, i.e. everything projected onto a
-plane. We ignore distortions in going from a flat plane to the curved retina.
-
-Could consider using matplotlib.transforms for some of this.
-
+This modules implements the API for input space.
 """
 
 import os.path
@@ -28,10 +22,23 @@ def xy2ij(coordinates):
 
 class InputSpace(MozaikParametrizeObject):
     """
-    A class to structure and simplify operations taking place in the respective
-    sensory space, such as stimulus presentation.
-
+    A class to structure and unify operations taking place in the respective sensory space, such as stimulus presentation.
+    
+    The basic idea of the InputSpace API is following:
+    
+    The InputSpace assumes there is a scene, and a set of stimuli in this scene (visual objects, sounds, smells etc.).
+    These objects can be removed or added to the scene. After each interval lasting  `update_interval` miliseconds all the stimuli in the scene
+    are sequentially updated (following some rules of overlapping, this is left for the specific implementation of the input space).
+    After that update the scene is ready to be pased to the associated input sheet of the given model, which will use it to 
+    generate the responses of neurons in the input sheet.
+    
+    Other parameters
+    ----------------
+    
+    update_interval : float (ms)
+                    How often does the input space update.
     """
+    
     required_parameters = ParameterSet({
         'update_interval': float  # [ms] how fast the input is changed
         })
@@ -41,7 +48,7 @@ class InputSpace(MozaikParametrizeObject):
         self.content = {}
         self.input = None
 
-    def add_object(self, name, input_object):  # <-- previously: add_object
+    def add_object(self, name, input_object):  
         """Add an inputObject to the input scene."""
         logger.debug("Adding %s with name '%s' to the input scene." % (input_object, name))
         self.content[name] = input_object
@@ -57,7 +64,7 @@ class InputSpace(MozaikParametrizeObject):
 
     def clear(self):
         """
-        Reset the input space and clear stimuli in it
+        Reset the input space and clear stimuli in it.
         """
         self.content = {}
         self.input = None
@@ -75,19 +82,31 @@ class InputSpace(MozaikParametrizeObject):
         return self.frame_number * self.parameters.update_interval
 
     def get_maximum_duration(self):
+        """
+        The maximum duration of any of the stimuli in the inpust space.
+        """
         duration = 0
         for obj in self.content.values():
             duration = max(duration, self.update_interval*obj.n_frames)
         return duration
 
     def get_duration(self):
+        """
+        Get the duration of the stimulation in the input space.
+        """
         return self.parameters['duration']
 
     def set_duration(self, duration):
+        """
+        Set the duration of the stimulation in the input space.
+        """
         assert duration <= self.get_maximum_duration()
         self.parameters['duration'] = duration
 
     def time_points(self, duration=None):
+        """
+        Returns the time points of updates in the period 0,duration.
+        """
         duration = duration or self.get_maximum_duration()
         return numpy.arange(0, duration, self.update_interval)
 
@@ -96,6 +115,24 @@ class VisualSpace(InputSpace):
     """
     A class to structure and simplify operations taking place in visual
     space, such as stimulus presentation.
+    
+    In VisualSpace the stimuli are sequentially drawn into the scene in the order in which
+    thay have been added to the scene (thus later stimuli will draw over earlier added ones).
+    Stimuli can specify areas in which they are transparent by using the `TRANSPARENT` value.
+    
+    The key operation of VisualSpace is the :func:`.view` function that recieves a region and resolution 
+    and returns rendered scene as a 2D array, within that region and down-sampled to the specified 
+    resolution. This allows for implementation of a visual system that changes the viewed area of the scene.
+    The :func:`.view` function itself makes sequential calls to the :func:`mozaik.visual_stimulus.VisualStimulus.display` 
+    function passing the region and pixel size, which have to render themselves within the region and 
+    return 2D array of luminance values. :func:`.view` then assambles the final scene rendering from this data.
+    
+    Notes
+    -----
+    
+    For now, we deal only with two-dimensions, i.e. everything projected onto a
+    plane. We ignore distortions in going from a flat plane to the curved retina.
+    Could consider using matplotlib.transforms for some of this.
     """
 
     version = __version__
@@ -108,26 +145,32 @@ class VisualSpace(InputSpace):
         InputSpace.__init__(self, params)  # InputSpace requires only the update interval
         self.background_luminance = self.parameters.background_luminance
         self.update_interval = self.parameters.update_interval
-        self.size_in_degrees = 0.1
-        self.size_in_pixels = 1  # remove this? the viewing component should choose the pixel density it wants, and we use interpolation
         self.content = {}
         self.frame_number = 0
         self.input = None
-#        return self.frame_number * self.update_interval
 
     def view(self, region, pixel_size):
         """
         Show the scene within a specific region.
+        
+        Parameters
+        ----------
+        region : VisualRegion
+               Should be a VisualRegion object.
+        pixel_size : float (degrees)
+                   The size of a single pixel in degrees of visual field.
 
-        `region` should be a VisualRegion object.
-        `pixel_size` should be in degrees.
-
-        Returns a numpy array containing luminance values.
+        Returns
+        -------
+                array : nd_array 
+                       A numpy 2D array containing luminance values, corresponding to 
+                       to the visual scene in the visual region specified in `region` 
+                       downsample such that one pixel has `pixel_size` degree.
         """
         # Let's make it more efficient if there is only one object in the scene that is not transparrent (which is often the case):
         o = self.content.values()[0]
         if len(self.content.values()) == 1 and not o.transparent and o.is_visible:
-           return o.display(region, pixel_size) 
+           return o.display(region, pixel_size)
 
         size_in_pixels = numpy.ceil(xy2ij((region.size_x, region.size_y)) / float(pixel_size)).astype(int)
         scene = TRANSPARENT*numpy.ones(size_in_pixels)
@@ -148,6 +191,9 @@ class VisualSpace(InputSpace):
         return numpy.where(scene > TRANSPARENT, scene, self.background_luminance)
 
     def get_max_luminance(self):
+        """
+        Returns the maximum luminance in the scene.
+        """
         return max(obj.max_luminance for obj in self.content.values())
 
     def export(self, region, pixel_size, output_dir="."):
@@ -178,7 +224,23 @@ class VisualSpace(InputSpace):
 
 
 class VisualRegion(object):
-    """A rectangular region of visual space."""
+    """
+    A rectangular region of visual space.
+    
+    Parameters
+    ----------
+    location_x : float (degrees)
+               The x coordinate of the center of the region in the visual space. 
+            
+    location_y : float (degrees)
+               The y coordinate of the center of the region in the visual space. 
+
+    size_x : float (degrees)
+               The x size of the region in the visual space. 
+
+    size_y : float (degrees)
+               The y size of the region in the visual space. 
+    """
 
     def __init__(self, location_x, location_y, size_x, size_y):
 
@@ -208,11 +270,18 @@ class VisualRegion(object):
         return not self.__eq__(other)
 
     def overlaps(self, another_region):
+        """
+        Returns whether this region overlaps with the one in the `another_region` argument.
+        """
+
         lr = self.right <= another_region.left or self.left >= another_region.right
         tb = self.top <= another_region.bottom or self.bottom >= another_region.top
         return not(lr or tb)
 
     def intersection(self, another_region):
+        """
+        Returns VisualRegion corresponding to the intersection of this VisualRegion and the one in the `another_region` argument.
+        """
         if not self.overlaps(another_region):
             raise Exception("Regions do not overlap.")
         left = max(self.left, another_region.left)

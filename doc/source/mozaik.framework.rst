@@ -1,28 +1,23 @@
 framework Package
 =================
 
+Currently package framework contains most of the core *mozaik* modules. 
+However we are planning an reorganization of the module structure soon, and most of the
+content of the framework package will be moved to seperate packages.
+
 :mod:`framework` Package
 ------------------------
 
 .. automodule:: mozaik.framework
     :members:
-    :undoc-members:
     :show-inheritance:
 
-:mod:`connectors` Module
-------------------------
-
-.. automodule:: mozaik.framework.connectors
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 :mod:`decorators` Module
 ------------------------
 
 .. automodule:: mozaik.framework.decorators
     :members:
-    :undoc-members:
     :show-inheritance:
 
 :mod:`experiment` Module
@@ -30,7 +25,6 @@ framework Package
 
 .. automodule:: mozaik.framework.experiment
     :members:
-    :undoc-members:
     :show-inheritance:
 
 :mod:`experiment_controller` Module
@@ -38,7 +32,6 @@ framework Package
 
 .. automodule:: mozaik.framework.experiment_controller
     :members:
-    :undoc-members:
     :show-inheritance:
 
 :mod:`interfaces` Module
@@ -46,15 +39,21 @@ framework Package
 
 .. automodule:: mozaik.framework.interfaces
     :members:
-    :undoc-members:
     :show-inheritance:
+
+:mod:`population_selector` Module
+------------------------
+
+.. automodule:: mozaik.framework.population_selector
+    :members:
+    :show-inheritance:
+
 
 :mod:`sheets` Module
 --------------------
 
 .. automodule:: mozaik.framework.sheets
     :members:
-    :undoc-members:
     :show-inheritance:
 
 :mod:`space` Module
@@ -62,6 +61,5 @@ framework Package
 
 .. automodule:: mozaik.framework.space
     :members:
-    :undoc-members:
     :show-inheritance:
 

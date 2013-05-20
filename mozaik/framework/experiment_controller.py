@@ -1,7 +1,7 @@
 """
-docstring goes here
-
+This is the nexus of workflow execution controll of *mozaik*.
 """
+
 from mozaik.storage.datastore import Hdf5DataStore, PickledDataStore
 from mozaik.tools.distribution_parametrization import MozaikExtendedParameterSet, load_parameters
 import sys
@@ -13,7 +13,7 @@ import logging
 from NeuroTools import init_logging
 from NeuroTools import visual_logging
 
-import pyNN.nest as sim
+mozaik.setup_mpi()
 
 logger = mozaik.getMozaikLogger("Mozaik")
 
@@ -26,18 +26,20 @@ if MPI:
 
 
 class Global:
-    """global variable container"""
+    """global variable container currently only containing the root_directory variable that points to the root directory of the model specification"""
     root_directory = './'
 
 
 def setup_logging():
-    # Set-up logging
+    """
+    This functions sets up logging.
+    """
     if MPI:
-        init_logging(Global.root_directory + "log", file_level=logging.DEBUG,
-                     console_level=logging.DEBUG, mpi_rank=mpi_comm.rank)  # NeuroTools version
+        init_logging(Global.root_directory + "log", file_level=logging.INFO,
+                     console_level=logging.INFO, mpi_rank=mpi_comm.rank)  # NeuroTools version
     else:
-        init_logging(Global.root_directory + "log", file_level=logging.DEBUG,
-                     console_level=logging.DEBUG)  # NeuroTools version
+        init_logging(Global.root_directory + "log", file_level=logging.INFO,
+                     console_level=logging.INFO)  # NeuroTools version
     visual_logging.basicConfig(Global.root_directory + "visual_log.zip",
                                level=logging.INFO)
 
@@ -52,12 +54,27 @@ def run_workflow(simulation_name, model_class, create_experiments):
     
     The run workflow will automatically parse the command line to determine the simulator to be used and the path to the root parameter file. 
     It will also accept . (point) delimited path to parameteres in the configuration tree, and corresponding values. It will replace each such provided
-    parameter's value with the provided one on the command line. The intended sintax of the commandline is as follows:
+    parameter's value with the provided one on the command line. 
     
-    python userscript simulator_name parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n
+    Parameters
+    ----------
+    simulation_name : str
+                    The name of the simulation.
+    
+    model_class : class
+                The class from which the model instance will be created from.
+    
+    create_experiments : func
+                       The function that returns the list of experiments that will be executed on the model.
+    
+    Examples
+    --------
+    The intended syntax of the commandline is as follows:
+    
+    >>> python userscript simulator_name parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n
     """
     # Read parameters
-    #exec("import pyNN.nest as sim" )
+    exec "import pyNN.nest as sim" in  globals(), locals()
     
     if len(sys.argv) > 2 and len(sys.argv)%2 == 1:
         simulator_name = sys.argv[1]
@@ -94,9 +111,32 @@ def run_workflow(simulation_name, model_class, create_experiments):
     data_store.save()
     import resource
     print "Final memory usage: %iMB" % (resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/(1024))
-    return data_store
+    return (data_store,model)
 
 def run_experiments(model,experiment_list,load_from=None):
+    """
+    This is function called by :func:.run_workflow that executes the experiments in the `experiment_list` over the model. 
+    Alternatively, if load_from is specified it will load an existing simulation from the path specified in load_from.
+    
+    Parameters
+    ----------
+    
+    model : Model
+          The model to execute experiments on.
+    
+    experiment_list : list
+          The list of experiments to execute.
+          
+    load_from : str
+              If not None it will load the simulation from the specified directory.
+              
+    Returns
+    -------
+    
+    data_store : DataStore
+               The data store containing the recordings.
+    """
+    
     # first lets run all the measurements required by the experiments
     logger.info('Starting Experiemnts')
     if load_from == None:
