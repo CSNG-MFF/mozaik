@@ -4,10 +4,10 @@ Mozaik connector interface.
 """
 import math
 import numpy
-import pylab
+#import pylab
 import mozaik
 import time
-from pylab import griddata
+#from pylab import griddata
 from mozaik.framework.interfaces import Connector
 from mozaik.framework.sheets import SheetWithMagnificationFactor
 from parameters import ParameterSet, ParameterDist

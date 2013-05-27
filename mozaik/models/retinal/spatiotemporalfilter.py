@@ -362,21 +362,18 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
             self.scs[rf_type] = []
             self.ncs[rf_type] = []
             self.ncs_rng[rf_type] = []
-            for i, lgn_cell in enumerate(self.sheets[rf_type].pop):
+            for i, lgn_cell in enumerate(self.sheets[rf_type].pop.all_cells):
                 scs = sim.StepCurrentSource(times=[0.0], amplitudes=[0.0])
 
                 if not self.parameters.mpi_reproducible_noise:
-                    #ncs = sim.NoisyCurrentSource(mean=self.parameters.noise.mean,
-                    #                             stdev=self.parameters.noise.stdev)
                     ncs = sim.NoisyCurrentSource(**self.parameters.noise)
                 else:
                     ncs = sim.StepCurrentSource(times=[0.0], amplitudes=[0.0])
-                    index = numpy.nonzero(self.sheets[rf_type].pop._mask_local)[0][i]
-                    self.ncs_rng[rf_type].append(
-                        numpy.random.RandomState(seed=index + (rf_type=='X_ON')*len(self.sheets[rf_type].pop)))
-                        # should probably use pyNN.random.NumpyRNG here
-                self.scs[rf_type].append(scs)
-                self.ncs[rf_type].append(ncs)
+
+		if self.sheets[rf_type].pop._mask_local[i]:
+			self.ncs_rng[rf_type].append(numpy.random.RandomState(seed=i + (rf_type=='X_ON')*len(self.sheets[rf_type].pop)))
+        	        self.scs[rf_type].append(scs)
+	                self.ncs[rf_type].append(ncs)
                 lgn_cell.inject(scs)
                 lgn_cell.inject(ncs)
                 

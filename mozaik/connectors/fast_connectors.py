@@ -50,7 +50,7 @@ class DistanceDependentProbabilisticArborization(MozaikConnector):
                                                                 space=space.Space(axes='xy'), 
                                                                 safe=True, 
                                                                 verbose=False, 
-                                                                n_connections=None,rng=mozaik.rng)
+                                                                n_connections=None,rng=mozaik.pynn_rng)
                                                                 
         self.proj = self.sim.Projection(self.source.pop, 
                                         self.target.pop, 
@@ -95,7 +95,8 @@ class UniformProbabilisticArborization(MozaikConnector):
         method = self.sim.FixedProbabilityConnector(
                                     self.parameters.connection_probability,
                                     allow_self_connections=False,
-                                    safe=True,rng=mozaik.rng)
+                                    safe=True,rng=mozaik.pynn_rng)
+
                                     
                                     
         self.proj = self.sim.Projection(
