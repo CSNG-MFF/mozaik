@@ -10,7 +10,7 @@ import mozaik
 import cai97
 from mozaik.framework.space import VisualSpace
 from mozaik.framework.space import VisualRegion
-from mozaik.framework.interfaces import MozaikRetina
+from mozaik.framework.interfaces import SensoryInputComponent
 from mozaik.framework.sheets import RetinalUniformSheet
 from mozaik.tools.mozaik_parametrized import MozaikParametrized
 
@@ -333,7 +333,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
     })
 
     def __init__(self, model, parameters):
-        MozaikRetina.__init__(self, model, parameters)
+        SensoryInputComponent.__init__(self, model, parameters)
         self.shape = (self.parameters.density,self.parameters.density)
         self.sheets = {}
         self._built = False

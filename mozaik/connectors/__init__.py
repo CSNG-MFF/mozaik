@@ -31,7 +31,6 @@ class MozaikConnector(Connector):
                     'tau_fac': float,
                     'tau_psc': float
             }),
-    
     })
     
     def __init__(self, network, name,source, target, parameters):
