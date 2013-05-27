@@ -35,7 +35,7 @@ def setup_logging():
     This functions sets up logging.
     """
     if MPI:
-        init_logging(Global.root_directory + "log.", file_level=logging.INFO,
+        init_logging(Global.root_directory + "log", file_level=logging.INFO,
                      console_level=logging.INFO, mpi_rank=mpi_comm.rank)  # NeuroTools version
     else:
         init_logging(Global.root_directory + "log", file_level=logging.INFO,
@@ -96,8 +96,8 @@ def run_workflow(simulation_name, model_class, create_experiments):
                                   timestamp + 'rank' + '_____' + modified_params_str + '/' + str(mpi_comm.rank) + '/'
     else:
         Global.root_directory = parameters.results_dir + simulation_name + '_' + \
-                                  timestamp + 'rank' + '______' + modified_params_str + '/'
-    os.mkdir(Global.root_directory)
+                                  timestamp + 'rank' + '_____' + modified_params_str + '/'
+    os.makedirs(Global.root_directory)
     parameters.save(Global.root_directory + "parameters", expand_urls=True)
     
     #let's store the modified parameters
