@@ -35,13 +35,14 @@ def setup_logging():
     This functions sets up logging.
     """
     if MPI:
-        init_logging(Global.root_directory + "log", file_level=logging.INFO,
+        init_logging(Global.root_directory + "log.", file_level=logging.INFO,
                      console_level=logging.INFO, mpi_rank=mpi_comm.rank)  # NeuroTools version
     else:
         init_logging(Global.root_directory + "log", file_level=logging.INFO,
-                     console_level=logging.INFO)  # NeuroTools version
-    visual_logging.basicConfig(Global.root_directory + "visual_log.zip",
-                               level=logging.INFO)
+	             console_level=logging.INFO)  # NeuroTools version
+    if (not MPI) or mpi_comm.rank==0:
+	    visual_logging.basicConfig(Global.root_directory + "visual_log.zip",
+        	                       level=logging.INFO)
 
 
 def run_workflow(simulation_name, model_class, create_experiments):
@@ -90,9 +91,9 @@ def run_workflow(simulation_name, model_class, create_experiments):
     
     # We exclude the results_dir parameter from the directory naming
     modified_params_str = '_'.join([str(k) + ":" + str(modified_parameters[k]) for k in modified_parameters.keys() if k!='results_dir'])
-    if MPI:
+    if MPI and mpi_comm.rank != 0:
         Global.root_directory = parameters.results_dir + simulation_name + '_' + \
-                                  timestamp + 'rank' + str(mpi_comm.rank) + '_____' + modified_params_str + '/'
+                                  timestamp + 'rank' + '_____' + modified_params_str + '/' + str(mpi_comm.rank) + '/'
     else:
         Global.root_directory = parameters.results_dir + simulation_name + '_' + \
                                   timestamp + 'rank' + '______' + modified_params_str + '/'
@@ -100,15 +101,20 @@ def run_workflow(simulation_name, model_class, create_experiments):
     parameters.save(Global.root_directory + "parameters", expand_urls=True)
     
     #let's store the modified parameters
-    import pickle
-    f = open(Global.root_directory+"modified_parameters","w")
-    pickle.dump(modified_parameters,f)
-    f.close()
+    if mpi_comm.rank == 0:
+	    import pickle
+	    f = open(Global.root_directory+"modified_parameters","w")
+	    pickle.dump(modified_parameters,f)
+	    f.close()
+
     setup_logging()
     
     model = model_class(sim,parameters)
     data_store = run_experiments(model,create_experiments(model))
-    data_store.save()
+
+    if mpi_comm.rank == 0:
+	    data_store.save()
+
     import resource
     print "Final memory usage: %iMB" % (resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/(1024))
     return (data_store,model)

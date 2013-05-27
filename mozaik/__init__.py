@@ -10,22 +10,32 @@ mozaik is currently trying to address.
 """
 
 __version__ = None
-
+import numpy.random
 rng = None
+pynn_rng = None
 
 def setup_mpi():
     """
     Tests the presence of MPI and sets up mozaik wide random number generator.
     
+    Notes
+    -----
+    
     To obtain results repeatable over identical runs of mozaik
     one should use the mozaik.rng as the random noise generator passed to all pyNN
-    functions that accept rng as one of their paramters, and also use it for any auxiallary code 
-    that requires rng
+    functions that accept pynn_rng as one of their paramters
+    
+    Any other code using random numbers should instead use the mozaik.rng that hold a numpy RandomState instance.
+    It is important to make sure that any piece of  code using this random generator draws from it 
+    exactly the same number of numbers in each process, so that once the code is executed, the rng 
+    is in exactly the same state in each mpi process!
     """
-
     global rng
+    global pynn_rng
     from pyNN.random import NumpyRNG
-    rng = NumpyRNG(seed=1023)
+    pynn_rng = NumpyRNG(seed=1023)
+    rng = numpy.random.RandomState()
+    rng.seed(513)
     try:
         from mpi4py import MPI
     except ImportError:

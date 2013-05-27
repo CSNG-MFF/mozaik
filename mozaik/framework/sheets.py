@@ -151,7 +151,6 @@ class Sheet(MozaikComponent):
         """
         Set up the recording configuration.
         """
-        
         self.to_record = {}
         for k in  self.parameters.recorders.keys():
             recording_configuration = load_component(self.parameters.recorders[k].component)
@@ -161,6 +160,10 @@ class Sheet(MozaikComponent):
                
             for var in self.parameters.recorders[k].variables:
                 self.to_record[var] = list(set(self.to_record.get(var,[])) | set(l))
+
+
+	if self.name=="V1_Inh_L4":
+	   print self.to_record["gsyn_exc"]
         #convert ids to indexes
         for k in self.to_record.keys():
             idds = self.pop.all_cells.astype(int)
@@ -183,10 +186,18 @@ class Sheet(MozaikComponent):
             if self._pop:
                 raise Exception("Error population has already been set. It is not allowed to do this twice!")
             self._pop = value
-            self._neuron_annotations = [{} for i in xrange(0, len(value))]
+            print self.name
+            l = value.all_cells.astype(int)
+            print len(l), ' ', sum(l), ' ', min(l), ' ', max(l)
+
+	    
+	    self._neuron_annotations = [{} for i in xrange(0, len(value))]
             self.setup_background_noise()
             self.setup_to_record_list()
             self.setup_initial_values()
+
+
+
         return locals()
     
     pop = property(**pop())  # this will be populated by PyNN population, in the derived classes
@@ -261,10 +272,17 @@ class Sheet(MozaikComponent):
             return context
 
     def record(self):
+        print "REEECCCOOORD"
+
         if self.to_record != None:
             for variable in self.to_record.keys():
                 cells = self.to_record[variable]
                 if cells != 'all':
+		    #if self.name == 'V1_Inh_L4':
+		#	print self.name
+		#	print variable
+		#	print cells
+		#    	print self.pop.all_cells.astype(int)[cells]
                     self.pop[cells].record(variable)
                 else:
                     self.pop.record(variable)
@@ -449,7 +467,7 @@ class RetinalUniformSheet(Sheet):
         Sheet.__init__(self, model, parameters)
         #rs = space.RandomStructure(boundary=space.Cuboid(parameters.sx, parameters.sy, 0),
         #                           origin=(0.0, 0.0, 0.0),
-        #                           rng=mozaik.rng)
+        #                           rng=mozaik.pynn_rng)
         
         rs = space.Grid2D(aspect_ratio=1, dx=parameters.sx/parameters.density, dy=parameters.sy/parameters.density, x0=-parameters.sx/2,y0=-parameters.sy/2,z=0.0)
         
@@ -578,7 +596,7 @@ class CorticalUniformSheet(SheetWithMagnificationFactor):
 
         rs = space.RandomStructure(boundary=space.Cuboid(dx, dy, 0),
                                    origin=(0.0, 0.0, 0.0),
-                                   rng=mozaik.rng)
+                                   rng=mozaik.pynn_rng)
 
         self.pop = self.sim.Population(int(parameters.sx*parameters.sy/1000000*parameters.density),
                                        getattr(self.model.sim, self.parameters.cell.model),

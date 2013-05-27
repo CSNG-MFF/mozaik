@@ -2,6 +2,7 @@ from mozaik.framework.interfaces import MozaikParametrizeObject
 from parameters import ParameterSet
 import math
 import numpy
+import mozaik
 
 class PopulationSelector(MozaikParametrizeObject):
     """
@@ -58,7 +59,11 @@ class RCRandomN(PopulationSelector):
         
       def generate_idd_list_of_neurons(self):
           z = self.sheet.pop.all_cells.astype(int)
-          numpy.random.shuffle(z)
+	  #print "A",mozaik.rng.rand()	
+	  #print "B",sum(self.sheet.pop.all_cells.astype(int)),len(self.sheet.pop.all_cells.astype(int))
+          mozaik.rng.shuffle(z)
+	  #print "C",len(z)
+	  #print "D",z[:self.parameters.num_of_cells]
           return z[:self.parameters.num_of_cells]
 
 class RCRandomPercentage(PopulationSelector):
@@ -77,7 +82,7 @@ class RCRandomPercentage(PopulationSelector):
         
       def generate_idd_list_of_neurons(self):
           z = self.sheet.pop.all_cells.astype(int)
-          numpy.random.shuffle(z)
+          mozaik.rng.shuffle(z)
           return z[:int(len(z)*self.parameters.percentage/100)]
 
           
