@@ -59,11 +59,7 @@ class RCRandomN(PopulationSelector):
         
       def generate_idd_list_of_neurons(self):
           z = self.sheet.pop.all_cells.astype(int)
-	  #print "A",mozaik.rng.rand()	
-	  #print "B",sum(self.sheet.pop.all_cells.astype(int)),len(self.sheet.pop.all_cells.astype(int))
           mozaik.rng.shuffle(z)
-	  #print "C",len(z)
-	  #print "D",z[:self.parameters.num_of_cells]
           return z[:self.parameters.num_of_cells]
 
 class RCRandomPercentage(PopulationSelector):
@@ -114,7 +110,6 @@ class RCGrid(PopulationSelector):
       })  
       
       def generate_idd_list_of_neurons(self):
-          print math.fmod(self.parameters.size,self.parameters.spacing)
           assert math.fmod(self.parameters.size,self.parameters.spacing) < 0.000000001 , "Error the size has to be multiple of spacing!"
           
           picked = []

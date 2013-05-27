@@ -162,12 +162,11 @@ class Sheet(MozaikComponent):
                 self.to_record[var] = list(set(self.to_record.get(var,[])) | set(l))
 
 
-	if self.name=="V1_Inh_L4":
-	   print self.to_record["gsyn_exc"]
+        if self.name=="V1_Inh_L4":
         #convert ids to indexes
-        for k in self.to_record.keys():
-            idds = self.pop.all_cells.astype(int)
-            self.to_record[k] = [numpy.flatnonzero(idds == idd)[0] for idd in self.to_record[k]]
+            for k in self.to_record.keys():
+                idds = self.pop.all_cells.astype(int)
+                self.to_record[k] = [numpy.flatnonzero(idds == idd)[0] for idd in self.to_record[k]]
             
     def size_in_degrees(self):
         """Returns the x, y size in degrees of visual field of the given area."""
@@ -186,9 +185,7 @@ class Sheet(MozaikComponent):
             if self._pop:
                 raise Exception("Error population has already been set. It is not allowed to do this twice!")
             self._pop = value
-            print self.name
             l = value.all_cells.astype(int)
-            print len(l), ' ', sum(l), ' ', min(l), ' ', max(l)
 
 	    
 	    self._neuron_annotations = [{} for i in xrange(0, len(value))]
@@ -223,7 +220,6 @@ class Sheet(MozaikComponent):
         if not self._pop:
             logger.error('Population has not been yet set in sheet: ' + self.name + '!')
         if (key in self._neuron_annotations[neuron_number] and self._neuron_annotations[neuron_number][key][0]):
-            print self._neuron_annotations[neuron_number]
             logger.warning('The annotation<' + '> for neuron ' + str(neuron_number) + ' is protected. Annotation not updated')
         else:
             self._neuron_annotations[neuron_number][key] = (protected, value)
@@ -272,17 +268,10 @@ class Sheet(MozaikComponent):
             return context
 
     def record(self):
-        print "REEECCCOOORD"
-
         if self.to_record != None:
             for variable in self.to_record.keys():
                 cells = self.to_record[variable]
                 if cells != 'all':
-		    #if self.name == 'V1_Inh_L4':
-		#	print self.name
-		#	print variable
-		#	print cells
-		#    	print self.pop.all_cells.astype(int)[cells]
                     self.pop[cells].record(variable)
                 else:
                     self.pop.record(variable)

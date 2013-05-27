@@ -27,7 +27,6 @@ class PyNNDistribution(RandomDistribution):
       """
       def __init__(self,name,params=(),boundaries=None,constrain='clip'):
           if boundaries != None:
-            print boundaries  
             assert isinstance(boundaries,tuple) , "The boundries parameter of PyNNDistribution has to be tuple, while it is: %s" % type(boundaries)
           assert constrain == 'clip' or constrain == 'redraw', "The parameter constrain has to be either \'clip\' or \'redraw\'"
           assert isinstance(params,tuple) , "The boundries parameter of PyNNDistribution has to be tuple"

@@ -82,9 +82,6 @@ class Experiment(object):
         srtsum = 0
         for i,s in enumerate(stimuli):
             logger.debug('Presenting stimulus: ' + str(s) + '\n')
-            for sheet_name in self.exc_spike_stimulators.keys():                
-                print len(self.exc_spike_stimulators[sheet_name][1](1000))
-            
             (segments,input_stimulus,simulator_run_time) = self.model.present_stimulus_and_record(s,self.exc_spike_stimulators,self.inh_spike_stimulators)
             srtsum += simulator_run_time
             data_store.add_recording(segments,s)

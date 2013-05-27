@@ -762,7 +762,6 @@ class ActionPotentialRemoval(Analysis):
               if spike_time_in_vm != 0:
                 new_vm[spike_time_in_vm:window_end] = vm[spike_time_in_vm-1] + (vm[window_end]-vm[spike_time_in_vm-1])*numpy.linspace(0,1.0,(window_end-spike_time_in_vm)+2)[1:-1]
               else:
-                print spike_time
                 new_vm[spike_time_in_vm:window_end] = vm[spike_time_in_vm] + (vm[window_end]-vm[spike_time_in_vm])*numpy.linspace(0,1.0,(window_end-spike_time_in_vm)+2)[1:-1]
           return new_vm
             
