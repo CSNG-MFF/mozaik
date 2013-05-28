@@ -12,7 +12,14 @@ class ParameterSearchBackend(object):
     
     Parameters
     ----------
+    run_script : str
+               The name of the script corresponding to the simulation
     
+    simulator_name : str
+                   The name of the simulator to use
+    
+    parameters_url : str
+                   The path of the root simulation parameter file.
     """
      
      def __init__(self,run_script,simulator_name,parameters_url):
@@ -27,10 +34,37 @@ class ParameterSearchBackend(object):
          
          Parameters
          ----------
-            parameters : dict
-                       The dictionary holding the names of parameters to be modified as keys, and the values to set them to as the corresponding values. 
+         parameters : dict
+                    The dictionary holding the names of parameters to be modified as keys, and the values to set them to as the corresponding values. 
          """
          raise NotImplemented
+
+
+
+class LocalSequentialBackend(object):
+    """
+    This is the simplest backend that simply executes the simulation on the present 
+    machine sequentially (i.e. it waits for the simulation to end before starting new one).
+    """
+     
+     
+     def execute_job(parameters):
+         """
+         This function recevies the list of parameters to modify and their values, and has to 
+         execute the corresponding mozaik simulation.
+         
+         Parameters
+         ----------
+         parameters : dict
+                    The dictionary holding the names of parameters to be modified as keys, and the values to set them to as the corresponding values. 
+         """
+         modified_parameters = []
+         for k in parameters.keys():
+             modified_parameters.append(k)
+             modified_parameters.append(str(parameters[k]))
+         
+         subprocess.call(' '.join(["python", run_script, simulator_name, parameters_url]+modified_parameters),shell=True)
+
 
 class ParameterSearch(object):
     """
@@ -90,9 +124,10 @@ class ParameterSearch(object):
             modified_parameters.append('results_dir')
             modified_parameters.append('\"\'' + parameters.results_dir + master_directory + '\'\"')
             
-            print ' '.join(["python", run_script, simulator_name, parameters_url]+modified_parameters)
-            
-            subprocess.call(' '.join(["python", run_script, simulator_name, parameters_url]+modified_parameters),shell=True)
+
+
+class GridParameterSearch(ParameterSearch):
+
     
 def parameter_combinations(arrays):
     return _parameter_combinations_rec([],arrays)
