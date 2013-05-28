@@ -83,7 +83,7 @@ def run_workflow(simulation_name, model_class, create_experiments):
         parameters_url = sys.argv[2]
         modified_parameters = { sys.argv[i*2+3] : eval(sys.argv[i*2+4])  for i in xrange(0,(len(sys.argv)-4)/2)}
     else:
-        raise ValueError("Usage: runscript simulator_name parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n")
+        raise ValueError("Usage: runscript simulator_name parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n simulation_run_name")
     
     parameters = load_parameters(parameters_url,modified_parameters)
     

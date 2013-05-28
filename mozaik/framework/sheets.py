@@ -162,11 +162,9 @@ class Sheet(MozaikComponent):
                 self.to_record[var] = list(set(self.to_record.get(var,[])) | set(l))
 
 
-        if self.name=="V1_Inh_L4":
-        #convert ids to indexes
-            for k in self.to_record.keys():
-                idds = self.pop.all_cells.astype(int)
-                self.to_record[k] = [numpy.flatnonzero(idds == idd)[0] for idd in self.to_record[k]]
+        for k in self.to_record.keys():
+            idds = self.pop.all_cells.astype(int)
+            self.to_record[k] = [numpy.flatnonzero(idds == idd)[0] for idd in self.to_record[k]]
             
     def size_in_degrees(self):
         """Returns the x, y size in degrees of visual field of the given area."""
@@ -271,6 +269,10 @@ class Sheet(MozaikComponent):
         if self.to_record != None:
             for variable in self.to_record.keys():
                 cells = self.to_record[variable]
+                print cells
+                print min(self.pop.all_cells.astype(int))
+                print max(self.pop.all_cells.astype(int))
+                
                 if cells != 'all':
                     self.pop[cells].record(variable)
                 else:
