@@ -77,10 +77,11 @@ def run_workflow(simulation_name, model_class, create_experiments):
     # Read parameters
     exec "import pyNN.nest as sim" in  globals(), locals()
     
-    if len(sys.argv) > 2 and len(sys.argv)%2 == 1:
-        simulator_name = sys.argv[1]
-        parameters_url = sys.argv[2]
-        modified_parameters = { sys.argv[i*2+3] : eval(sys.argv[i*2+4])  for i in xrange(0,(len(sys.argv)-3)/2)}
+    if len(sys.argv) > 3 and len(sys.argv)%2 == 0:
+	simulation_run_name = sys.argv[1]    
+        simulator_name = sys.argv[2]
+        parameters_url = sys.argv[3]
+        modified_parameters = { sys.argv[i*2+4] : eval(sys.argv[i*2+5])  for i in xrange(0,(len(sys.argv)-4)/2)}
     else:
         raise ValueError("Usage: runscript simulator_name parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n")
     
@@ -93,10 +94,11 @@ def run_workflow(simulation_name, model_class, create_experiments):
     modified_params_str = '_'.join([str(k) + ":" + str(modified_parameters[k]) for k in modified_parameters.keys() if k!='results_dir'])
     if MPI and mpi_comm.rank != 0:
         Global.root_directory = parameters.results_dir + simulation_name + '_' + \
-                                  timestamp + 'rank' + '_____' + modified_params_str + '/' + str(mpi_comm.rank) + '/'
+                                  simulation_run_name + '_____' + modified_params_str + '/' + str(mpi_comm.rank) + '/'
     else:
         Global.root_directory = parameters.results_dir + simulation_name + '_' + \
-                                  timestamp + 'rank' + '_____' + modified_params_str + '/'
+                                  simulation_run_name + '_____' + modified_params_str + '/'
+				  
     os.makedirs(Global.root_directory)
     parameters.save(Global.root_directory + "parameters", expand_urls=True)
     
