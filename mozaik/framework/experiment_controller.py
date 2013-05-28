@@ -70,18 +70,18 @@ def run_workflow(simulation_name, model_class, create_experiments):
     
     Examples
     --------
-    The intended syntax of the commandline is as follows:
+    The intended syntax of the commandline is as follows (note that the simulation run name is the last argument):
     
-    >>> python userscript simulator_name parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n
+    >>> python userscript simulator_name parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n simulation_run_name
     """
     # Read parameters
     exec "import pyNN.nest as sim" in  globals(), locals()
     
     if len(sys.argv) > 3 and len(sys.argv)%2 == 0:
-	simulation_run_name = sys.argv[1]    
-        simulator_name = sys.argv[2]
-        parameters_url = sys.argv[3]
-        modified_parameters = { sys.argv[i*2+4] : eval(sys.argv[i*2+5])  for i in xrange(0,(len(sys.argv)-4)/2)}
+        simulation_run_name = sys.argv[-1]    
+        simulator_name = sys.argv[1]
+        parameters_url = sys.argv[2]
+        modified_parameters = { sys.argv[i*2+3] : eval(sys.argv[i*2+4])  for i in xrange(0,(len(sys.argv)-4)/2)}
     else:
         raise ValueError("Usage: runscript simulator_name parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n")
     
@@ -98,16 +98,17 @@ def run_workflow(simulation_name, model_class, create_experiments):
     else:
         Global.root_directory = parameters.results_dir + simulation_name + '_' + \
                                   simulation_run_name + '_____' + modified_params_str + '/'
-				  
-    os.makedirs(Global.root_directory)
-    parameters.save(Global.root_directory + "parameters", expand_urls=True)
     
-    #let's store the modified parameters
+    if not os.path.isdir(Global.root_directory):
+        os.makedirs(Global.root_directory)
+    
+    #let's store the full and modified parameters, if we are the 0 rank process
     if mpi_comm.rank == 0:
-	    import pickle
-	    f = open(Global.root_directory+"modified_parameters","w")
-	    pickle.dump(modified_parameters,f)
-	    f.close()
+        parameters.save(Global.root_directory + "parameters", expand_urls=True)        
+        import pickle
+        f = open(Global.root_directory+"modified_parameters","w")
+        pickle.dump(modified_parameters,f)
+        f.close()
 
     setup_logging()
     
