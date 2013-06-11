@@ -72,18 +72,19 @@ def run_workflow(simulation_name, model_class, create_experiments):
     --------
     The intended syntax of the commandline is as follows (note that the simulation run name is the last argument):
     
-    >>> python userscript simulator_name parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n simulation_run_name
+    >>> python userscript simulator_name num_threads parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n simulation_run_name
     """
     # Read parameters
     exec "import pyNN.nest as sim" in  globals(), locals()
     
-    if len(sys.argv) > 3 and len(sys.argv)%2 == 0:
+    if len(sys.argv) > 4 and len(sys.argv)%2 == 1:
         simulation_run_name = sys.argv[-1]    
         simulator_name = sys.argv[1]
-        parameters_url = sys.argv[2]
-        modified_parameters = { sys.argv[i*2+3] : eval(sys.argv[i*2+4])  for i in xrange(0,(len(sys.argv)-4)/2)}
+        num_threads = sys.argv[2]
+        parameters_url = sys.argv[3]
+        modified_parameters = { sys.argv[i*2+4] : eval(sys.argv[i*2+5])  for i in xrange(0,(len(sys.argv)-5)/2)}
     else:
-        raise ValueError("Usage: runscript simulator_name parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n simulation_run_name")
+        raise ValueError("Usage: runscript simulator_name num_threads parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n simulation_run_name")
     
     parameters = load_parameters(parameters_url,modified_parameters)
     
@@ -91,16 +92,19 @@ def run_workflow(simulation_name, model_class, create_experiments):
     timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
     
     # We exclude the results_dir parameter from the directory naming
-    modified_params_str = '_'.join([str(k) + ":" + str(modified_parameters[k]) for k in modified_parameters.keys() if k!='results_dir'])
+    modified_params_str = '_'.join([str(k) + ":" + str(modified_parameters[k]) for k in sorted(modified_parameters.keys()) if k!='results_dir'])
     if MPI and mpi_comm.rank != 0:
         Global.root_directory = parameters.results_dir + simulation_name + '_' + \
                                   simulation_run_name + '_____' + modified_params_str + '/' + str(mpi_comm.rank) + '/'
+        mpi_comm.barrier()                                  
     else:
         Global.root_directory = parameters.results_dir + simulation_name + '_' + \
                                   simulation_run_name + '_____' + modified_params_str + '/'
     
-    if not os.path.isdir(Global.root_directory):
-        os.makedirs(Global.root_directory)
+    
+    os.makedirs(Global.root_directory)
+    if MPI and mpi_comm.rank == 0:
+        mpi_comm.barrier()
     
     #let's store the full and modified parameters, if we are the 0 rank process
     if mpi_comm.rank == 0:
@@ -112,7 +116,7 @@ def run_workflow(simulation_name, model_class, create_experiments):
 
     setup_logging()
     
-    model = model_class(sim,parameters)
+    model = model_class(sim,num_threads,parameters)
     data_store = run_experiments(model,create_experiments(model))
 
     if mpi_comm.rank == 0:
@@ -121,6 +125,10 @@ def run_workflow(simulation_name, model_class, create_experiments):
     import resource
     print "Final memory usage: %iMB" % (resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/(1024))
     return (data_store,model)
+
+def result_directory_name(simulation_run_name,simulation_name,modified_params):
+    modified_params_str = '_'.join([str(k) + ":" + str(modified_params[k]) for k in sorted(modified_params.keys()) if k!='results_dir'])
+    return simulation_name + '_' + simulation_run_name + '_____' + modified_params_str
 
 def run_experiments(model,experiment_list,load_from=None):
     """

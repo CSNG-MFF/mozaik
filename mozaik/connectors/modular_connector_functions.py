@@ -166,12 +166,27 @@ class V1PushPullArborization(ModularConnectorFunction):
 
     Excitatory synapses are more likely on cooriented in-phase neurons
     Inhibitory synapses are more likely to cooriented anti-phase neurons
+    
+    
+    Notes
+    -----
+    The `push_pull_ratio` parameter essentially adds constant to the probability distribution
+    over the orientation and phase dependent connectivity probability space. The formula looks
+    like this: push_pull_ratio + (1-push_pull_ratio) * push_pull_term. Where the push_pull_term
+    is the term determining the pure push pull connectivity. However note that due to the Gaussian
+    terms being 0 in infinity and the finite distances in the orientation and phase space, the push-pull
+    connectivity effectively itself adds a constant probability to all phase and orientation combinations, and 
+    the value of this constant is dependent on the phase and orientation sigma parameters.
+    Therefore one has to be carefull in interpreting the push_pull_ratio parameter. If the phase and/or
+    orientation sigma parameters are rather small, it is however safe to interpret it as the ratio 
+    of connections that were drawn randomly to the number of connection drawn based on push-pull type of connectivity.
     """
 
     required_parameters = ParameterSet({
         'or_sigma': float,  # how sharply does the probability of connection fall off with orientation difference
         'phase_sigma': float,  # how sharply does the probability of connection fall off with phase difference
         'target_synapses' : str, # what type is the target excitatory/inhibitory
+        'push_pull_ratio' : float, # the ratio of push-pull connections, the rest will be random drawn randomly
     })
 
     def __init__(self, source,target, parameters):
@@ -199,4 +214,6 @@ class V1PushPullArborization(ModularConnectorFunction):
         or_gauss = normal_function(or_dist, mean=0, sigma=self.parameters.or_sigma)
         phase_gauss = normal_function(phase_dist, mean=0, sigma=self.parameters.phase_sigma)
         
-        return numpy.multiply(phase_gauss, or_gauss)
+        return self.parameters.push_pull_ratio +  (1-self.parameters.push_pull_ratio)*numpy.multiply(phase_gauss, or_gauss)
+
+

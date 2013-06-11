@@ -10,7 +10,7 @@ import quantities as qt
 import mozaik.tools.units as munits
 from mozaik.tools.mozaik_parametrized import colapse, colapse_to_dictionary, MozaikParametrized
 from mozaik.analysis.analysis_data_structures import PerNeuronValue, \
-                                        ConductanceSignalList, AnalogSignalList
+                                        ConductanceSignalList, AnalogSignalList, PerNeuronPairValue, SingleValue
 from mozaik.analysis.analysis_helper_functions import psth
 from mozaik.framework.interfaces import MozaikParametrizeObject
 from parameters import ParameterSet
@@ -77,21 +77,12 @@ class TrialAveragedFiringRate(Analysis):
     and calculates the average (over trials) number of spikes. For each set of equal recordings (except trial) it creates one PerNeuronValue 
     `AnalysisDataStructure` instance containing the trial averaged firing rate per each recorded 
     neuron.
-    
-    Other parameters
-    ------------------- 
-    stimulus_type : str
-                  The stimulus type for which to compute the TrialAveragedFiringRate.
     """
-
-    required_parameters = ParameterSet({
-      'stimulus_type': str,  # The stimulus type 
-    })
-
+    
     def perform_analysis(self):
         
         for sheet in self.datastore.sheets():
-            dsv1 = queries.param_filter_query(self.datastore, sheet_name=sheet,st_name=self.parameters.stimulus_type)
+            dsv1 = queries.param_filter_query(self.datastore, sheet_name=sheet)
             segs = dsv1.get_segments()
             st = [MozaikParametrized.idd(s) for s in dsv1.get_stimuli()]
             # transform spike trains due to stimuly to mean_rates
@@ -657,7 +648,7 @@ class PSTH(Analysis):
             for sheet in self.datastore.sheets():
                 dsv = queries.param_filter_query(self.datastore,sheet_name=sheet)
                 for st,seg in zip([MozaikParametrized.idd(s) for s in dsv.get_stimuli()],dsv.get_segments()):
-                    psths = [psth(seg.get_spiketrain(n), self.parameters.bin_length) for n in seg.get_stored_spike_train_ids()]
+                    psths = psth(seg.get_spiketrain(seg.get_stored_spike_train_ids()), self.parameters.bin_length)
                     self.datastore.full_datastore.add_analysis_result(
                         AnalogSignalList(psths,
                                          seg.get_stored_spike_train_ids(),
@@ -784,19 +775,74 @@ class ActionPotentialRemoval(Analysis):
       
       
                 
-#class CV_ISI(Analysis):
-#      """
-#      A wrapper over NeuroTools's cv_isi. 
-#      
-#      The datastore should contain 
-#      """
+class Irregularity(Analysis):
+      """
+      Irregularity as defined in:
+      Kumar, A., Schrader, S., Aertsen, A., & Rotter, S. (2008). The high-conductance state of cortical networks. Neural computation, 20(1), 1-43. 
+      It is the square of inter spike interval coefficient of variation.
+      
+      It creates on `PerNeuronValue` ADS per each recording in the DSV.
+      
+      Notes
+      -----
+      It is not possible to compute CV for neurons with no spikes. Therefore we exclude such neurons from the analysis.
+      This means that the resulting PerNeuronValue ADS might not contain all ids of neurons as the source recording.
+      """
 
-#      def perform_analysis(self):
-#           for sheet in self.datastore.sheets():
-#                # Load up spike trains for the right sheet and the corresponding stimuli, and
-#                # transform spike trains into psth
-#                dsv = queries.param_filter_query(self.datastore, sheet_name=sheet)
-#                assert equal_ads_except(dsv,['stimulus_id'])
-#                for seg,st in zip(dsv.get_segments(),dsv.get_stimuli()):
-#                    isi = seg.cv_isi()
-#                    self.datastore.full_datastore.add_analysis_result(PerNeuronValue(isi,qt.dimensionless,value_name = 'CV of ISI',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+      def perform_analysis(self):
+          for sheet in self.datastore.sheets():
+                # Load up spike trains for the right sheet and the corresponding stimuli, and
+                # transform spike trains into psth
+                dsv = queries.param_filter_query(self.datastore, sheet_name=sheet)
+                for seg,st in zip(dsv.get_segments(),dsv.get_stimuli()):
+                    cv_isi=seg.cv_isi()
+                    # Lets get rid of neurons for which ISI it was not possible to compute cv
+                    to_delete = [i for i, x in enumerate(cv_isi) if x == None]
+                    ids=numpy.delete(seg.get_stored_isyn_ids(),to_delete)
+                    cv_isi=numpy.power(numpy.delete(cv_isi,to_delete),2)
+                    self.datastore.full_datastore.add_analysis_result(PerNeuronValue(cv_isi,ids,qt.dimensionless,value_name = 'CV of ISI squared',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))
+           
+
+
+
+
+class NeuronToNeuronAnalogSignalCorrelations(Analysis):
+      """
+      Calculates the pairwise correlation of AnalogSignal object for each pair of neurons.
+      It creates one PerNeuronPairValue for each AnalogSignalList ADS present in the DSV.
+      
+      Parameters
+      ----------
+      convert_nan_to_zero : bool,  
+                          If true nan values in correlation coefficients which can result from non-varying varialbes will be turned to zeros.
+      """
+
+      required_parameters = ParameterSet({
+        'convert_nan_to_zero': bool,  # if true nan values in correlation coefficients which can result from non-varying varialbes will be turned to zeros.
+      })
+
+      def perform_analysis(self):
+           for sheet in self.datastore.sheets():
+                # Load up spike trains for the right sheet and the corresponding stimuli, and
+                # transform spike trains into psth
+                dsv = queries.param_filter_query(self.datastore, sheet_name=sheet,identifier='AnalogSignalList')
+                for asl in dsv.get_analysis_result():
+                    corrs = numpy.nan_to_num(numpy.corrcoef(asl.asl))
+                    self.datastore.full_datastore.add_analysis_result(PerNeuronPairValue(corrs,asl.ids,qt.dimensionless,value_name = 'Correlation coefficient(' +asl.y_axis_name + ')',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=asl.stimulus_id))        
+
+
+
+class PopulationMean(Analysis):
+      """
+      Calculates the mean value accross population of a quantity. Currently it can process PerNeuronValues and PerNeuronPairValue ADS.
+      This list might be increased.
+      """
+      def perform_analysis(self):
+          dsv = queries.param_filter_query(self.datastore,identifier=['PerNeuronPairValue','PerNeuronValue'])
+          for ads in dsv.get_analysis_result():
+              if ads.period == None:
+                 m = numpy.mean(ads.values)
+              else:
+                 m = circ_mean(ads.values.flatten(),high=ads.period) 
+              self.datastore.full_datastore.add_analysis_result(SingleValue(value=m,period=ads.period,value_name = 'Mean(' +ads.value_name + ')',sheet_name=ads.sheet_name,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=ads.stimulus_id))        
+              

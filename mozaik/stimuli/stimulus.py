@@ -1,20 +1,17 @@
 """
-This package defines the API for:
+This module defines the API for:
     - implementation of stimuli as input to models (see class BaseStimulus)
     - identification of stimulus identity 
     - function helpers for common manipulation with collections of stimuli
 
-Each stimulus is expected to have a dictionary of parameters which have to
-uniquely identify the stimulus.
-We implement this by using the Parametrized package that allows to specify
-parameters with the all above requirements.
-For Stimuli objects we will allow only SNumber, SInteger and SString parameters.
-These extend the corresponding parameterized parameters to allow specification
-of units (see tools/mozaik_parametrized.py).
+Each stimulus is expected to have a list of parameters which have to uniquely identify the stimulus.
+This parameterization is done via the MozaikParametrized package (see :class:`mozaik.tools.mozaik_parametrized.MozaikParametrized`)
+that allows to specify parameters with the all above requirements.
+For Stimuli objects we will allow only SNumber, SInteger and SString parameter types (see :mod:`mozaik.tools.mozaik_parametrized`).
+These extend the corresponding parameterized parameters to allow specification of units.
 
-Note that each stimulus can be converted back and forth into a string via the 
-str operator and the load_stimulus class function. The allows for efficient storing 
-and manipulation of string identities. 
+Note that each stimulus can be converted back and forth into a string via the str operator and the :func:`mozaik.tools.mozaik_parametrized.MozaikParametrized.idd` function. 
+This allows for efficient storing  and manipulation of stimulus identities. 
 
 Note that *all* such parameters defined in the class (and its ancestors) will
 be considered as parameters of the BaseStimulus.
@@ -31,7 +28,8 @@ logger = mozaik.getMozaikLogger("Mozaik")
 
 class BaseStimulus(MozaikParametrized):
     """
-    The abstract stimulus class. See the module documentation for more details
+    The abstract stimulus class. It defines the parameters common to all stimuli and
+    the list of function each stimulus has to provide.
     """
     frame_duration = SNumber(qt.ms, doc="The duration of single frame")
     duration = SNumber(qt.ms, doc="The duration of stimulus")

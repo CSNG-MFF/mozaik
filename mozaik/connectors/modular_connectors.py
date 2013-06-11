@@ -72,6 +72,7 @@ class ModularConnector(MozaikConnector):
         evaled = {}
         for k in self.delay_functions.keys():
             evaled[k] = self.delay_functions[k].evaluate(i)
+        
         delays = numpy.zeros((self.source.pop.size,)) + eval(self.parameters.delay_expression,globals(),evaled)
         #round to simulation step            
         delays = numpy.rint(delays / self.sim.get_time_step()) * self.sim.get_time_step()
@@ -155,10 +156,9 @@ class ModularSingleWeightProbabilisticConnector(ModularConnector):
                                 self.source.pop,
                                 self.target.pop,
                                 method,
-                                synapse_dynamics=self.init_synaptic_mechanisms(),
+                                synapse_type=self.init_synaptic_mechanisms(),
                                 label=self.name,
-                                rng=None,
-                                target=self.parameters.target_synapses)
+                                receptor_type=self.parameters.target_synapses)
 
 
 

@@ -63,11 +63,11 @@ class Model(MozaikComponent):
         'input_space_type': str,  # defining the type of input space, visual/auditory/... it is the class path to the class representing it
     })
 
-    def __init__(self, sim, parameters):
+    def __init__(self, sim, num_threads, parameters):
         MozaikComponent.__init__(self, self, parameters)
         self.first_time = True
         self.sim = sim
-        self.node = sim.setup(timestep=0.1, min_delay=0.1, max_delay=100.0, threads=5)  # should have some parameters here
+        self.node = sim.setup(timestep=0.1, min_delay=0.1, max_delay=100.0, threads=num_threads)  # should have some parameters here
         self.sheets = {}
         self.connectors = {}
 

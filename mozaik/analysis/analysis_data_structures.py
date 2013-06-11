@@ -32,6 +32,22 @@ class AnalysisDataStructure(MozaikParametrized):
         self.tags = tags
 
 
+class SingleValue(AnalysisDataStructure):
+    """
+    Data structure holding single value. This can be per model, if sheet parameter is None,
+    or per sheet if sheet is specified. In principle it can also be per neuron if the neuron
+    parameter is specified, but in most cases you probably want to use :class:.PerNeuronValue
+    instead.
+    """
+
+    value = SNumber(units=None,default=None,doc="The value.")
+    value_name = SString(doc="The name of the value.")
+    period = SNumber(units=None,default=None,doc="The period of the value. If value is not periodic period=None")
+    
+    def __init__(self, **params):
+        AnalysisDataStructure.__init__(self, identifier='SingleValue', **params)
+
+
 class PerNeuronValue(AnalysisDataStructure):
     """
     Data structure holding single value per neuron.
@@ -58,11 +74,66 @@ class PerNeuronValue(AnalysisDataStructure):
         self.ids = list(idds)
     
     def get_value_by_id(self,idds):
-        self.ids
+        """
+        Parameters
+        ---------- 
+        idd : int or list(int)
+            The ids for which the return the values.
+        
+        Returns
+        -------
+        ids : AnalogSignal or list(AnalogSignal)
+            List (or single) of AnalogSignal objects corresponding to ids in `idd`.
+        """
         if isinstance(idds,list) or isinstance(idds,numpy.ndarray):
             return [self.values[list(self.ids).index(i)] for i in idds]
         else:
             return numpy.array(self.values)[list(self.ids).index(idds)]
+
+class PerNeuronPairValue(AnalysisDataStructure):
+    """
+    Data structure holding values for each pair of neurons.
+    
+    Parameters
+    ---------- 
+    
+    values : numpy.nd_array
+           The 2D array holding the values. 
+
+    value_units : quantities
+                Quantities unit describing the units of the value
+    
+    ids : list(int)
+        The ids of the neurons which are stored, in the same order as in the values (along both axis).
+    """
+    value_name = SString(doc="The name of the value.")
+    period = SNumber(units=None,default=None,doc="The period of the value. If value is not periodic period=None")
+
+    def __init__(self, values, idds, value_units, **params):
+        AnalysisDataStructure.__init__(self, identifier='PerNeuronValue', **params)
+        self.value_units = value_units
+        self.values = numpy.array(values)
+        self.ids = list(idds)
+    
+    def get_value_by_ids(self,idds1,ids2):
+        """
+        Parameters
+        ---------- 
+        idd : int or list(int)
+            The ids for which the return the values.
+        
+        Returns
+        -------
+        ids : AnalogSignal or list(AnalogSignal)
+            List (or single) of AnalogSignal objects corresponding to ids in `idd`.
+        """
+
+        self.ids
+        if (isinstance(idds1,list) or isinstance(idds1,numpy.ndarray)) and (isinstance(idds2,list) or isinstance(idds2,numpy.ndarray)):
+            return self.values[[list(self.ids).index(i) for i in idds1]][[list(self.ids).index(i) for i in idds2]]
+        else:
+            return self.values[list(self.ids).index(idds1),list(self.ids).index(idds2)]
+
 
 class AnalysisDataStructure1D(AnalysisDataStructure):
     """
@@ -112,6 +183,7 @@ class AnalogSignalList(AnalysisDataStructure1D):
                                          **params)
         self.asl = asl
         self.ids = list(ids)
+        assert len(asl) == len(ids)
     
     def get_asl_by_id(self,idd):
         """
@@ -126,7 +198,7 @@ class AnalogSignalList(AnalysisDataStructure1D):
         """
 
         return self.asl[list(self.ids).index(idd)]
-
+        
 class ConductanceSignalList(AnalysisDataStructure1D):
     """
     This is a simple list of Neurotools AnalogSignal objects representing the

@@ -1,8 +1,9 @@
 import sys
 import subprocess
-from mozaik.tools.distribution_parametrization import MozaikExtendedParameterSet
+import pickle
 from datetime import datetime
 import os
+import time
 
 class ParameterSearchBackend(object):
     """
@@ -10,7 +11,7 @@ class ParameterSearchBackend(object):
     implements the execution of the job, using the information given to the 
     constructor, and the dictionary of modified parameters given in its arguments.
     """
-    def execute_job(self,run_script,simulator_name,parameters_url,parameters):
+    def execute_job(self,run_script,simulator_name,parameters_url,parameters,simulation_run_name):
          """
          This function recevies the list of parameters to modify and their values, and has to 
          execute the corresponding mozaik simulation.
@@ -30,7 +31,7 @@ class LocalSequentialBackend(object):
     machine sequentially (i.e. it waits for the simulation to end before starting new one).
     """
      
-    def execute_job(self,run_script,simulator_name,parameters_url,parameters):
+    def execute_job(self,run_script,simulator_name,parameters_url,parameters,simulation_run_name):
          """
          This function recevies the list of parameters to modify and their values, and has to 
          execute the corresponding mozaik simulation.
@@ -54,15 +55,22 @@ class SlurmSequentialBackend(object):
     
     Parameters
     ----------
-    num_processes : int
-                  If None, job is run without mpi as a single threaded job.
-                  Otherwise it specify how many processes to allocate for each simulation run.
+    num_threads : int
+                  Number of threads per mpi process.
+
+    num_mpi : int
+                  Number of mpi processes to spawn per job.
+
+    Note:
+    -----
+    The most common usage of slurm_options is the let slurm know how many mpi processed to spawn per job, and how to allocates resources to them.
     """
-    def __init__(self,num_processes=None):
-        self.num_processes = num_processes
+    def __init__(self,num_threads,num_mpi):
+        self.num_threads = num_threads
+        self.num_mpi = num_mpi
         
         
-    def execute_job(self,run_script,simulator_name,parameters_url,parameters):
+    def execute_job(self,run_script,simulator_name,parameters_url,parameters,simulation_run_name):
          """
          This function recevies the list of parameters to modify and their values, and has to 
          execute the corresponding mozaik simulation.
@@ -76,11 +84,25 @@ class SlurmSequentialBackend(object):
          for k in parameters.keys():
              modified_parameters.append(k)
              modified_parameters.append(str(parameters[k]))
-         
-         if self.num_processes:
-            subprocess.call(' '.join(["salloc mpirun -np", str(self.num_processes), run_script, simulator_name, parameters_url]+modified_parameters+['ParameterSearch']),shell=True)
-         else:
-            subprocess.call(' '.join(["salloc", run_script, simulator_name, parameters_url]+modified_parameters+['ParameterSearch']),shell=True) 
+        
+     
+         from subprocess import Popen, PIPE, STDOUT
+        
+         p = Popen(['sbatch','-o',parameters['results_dir'][2:-2]+"/slurm-%j.out"],stdin=PIPE,stdout=PIPE,stderr=PIPE)
+
+         data = '\n'.join([
+                            '#!/bin/bash',
+                            '#SBATCH -J MozaikParamSearch',
+                            '#SBATCH -n ' + str(self.num_mpi),
+                            '#SBATCH -c ' + str(self.num_threads),
+                            'source  /opt/software/mpi/openmpi-1.6.3-gcc/env',
+                            'source /home/antolikjan/env/mozaik-pynn0.8/bin/activate',
+                            'cd ' + os.getcwd(),
+                            ' '.join(["mpirun","--mca mtl ^psm","python",run_script, simulator_name, str(self.num_threads) ,parameters_url]+modified_parameters+[simulation_run_name]+['>']  + [parameters['results_dir'][1:-1] +'/OUTFILE'+str(time.time())]),
+                        ]) 
+         print p.communicate(input=data)[0]                  
+         print data
+         p.stdin.close()
 
 
 
@@ -101,6 +123,13 @@ class ParameterSearch(object):
     ----------
     params : ParameterSearchBackend
            The job execution backend to use. 
+           
+           
+    Examples
+    --------
+    The commandline usage should be:
+    
+    >>> parameter_search_script simulation_run_script simulator_name path_to_root_parameter_file
     """
     
     def __init__(self,backend):
@@ -139,14 +168,22 @@ class ParameterSearch(object):
         else:
             raise ValueError("Usage: python parameter_search_script simulation_run_script simulator_name root_parameter_file_name")
         
-        parameters = MozaikExtendedParameterSet(parameters_url)
-        
         mdn = self.master_directory_name()
         os.mkdir(mdn)
         
-        for combination in self.generate_parameter_combinations():
-            combination['results_dir']='\"\'' + parameters.results_dir + mdn + '\'\"'
-            self.backend.execute_job(run_script,simulator_name,parameters_url,combination)
+        counter=0
+        combinations = self.generate_parameter_combinations()
+        
+        f = open(mdn + '/parameter_combinations','wb')
+        pickle.dump(combinations,f)
+        f.close()
+        
+        for combination in combinations:
+            combination['results_dir']='\"\'' + os.getcwd() + '/' + mdn + '/\'\"'
+            self.backend.execute_job(run_script,simulator_name,parameters_url,combination,'ParameterSearch')
+            counter = counter + 1
+            
+        print ("Submitted %d jobs." % counter)
 
 
 class CombinationParameterSearch(ParameterSearch):
@@ -160,7 +197,7 @@ class CombinationParameterSearch(ParameterSearch):
                       Dictionary containing parameter names as keys, and lists as values, each corresponding to the list of values to test for the given parameter.
     """
     def __init__(self,backend,parameter_values):
-        CombinationParameterSearch.__init__(backend)
+        ParameterSearch.__init__(self,backend)
         self.parameter_values = parameter_values
     
     def generate_parameter_combinations(self):
@@ -171,7 +208,7 @@ class CombinationParameterSearch(ParameterSearch):
         
     def master_directory_name(self):
         timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
-        return timestamp + "CombinationParamSearch{" + ','.join([str(k) + ':' + str(self.parameter_values[k]) for k in self.parameter_values.keys()]) + '}/'
+        return timestamp + "CombinationParamSearch{" + ','.join([str(k) + ':' + (str(self.parameter_values[k]) if len(self.parameter_values[k]) < 5 else str(len(self.parameter_values[k]))) for k in self.parameter_values.keys()]) + '}/'
             
 def parameter_combinations(arrays):
     return _parameter_combinations_rec([],arrays)

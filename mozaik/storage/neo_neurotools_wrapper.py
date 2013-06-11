@@ -122,6 +122,35 @@ class MozaikSegment(Segment):
             """
             return [len(s)/(s.t_stop.rescale(qt.s).magnitude-s.t_start.rescale(qt.s).magnitude) for s in self.spiketrains]
 
+        def isi(self):
+            """
+            Return an array containing arrays (one per each neurons) with the inter-spike intervals of the SpikeTrain objects.
+            """
+            return [numpy.diff(s) for s in self.spiketrains]
+
+        def cv_isi(self):
+            """
+            Return array with the coefficient of variation of the isis, one per each neuron.
+            
+            cv_isi is the ratio between the standard deviation and the mean of the ISI
+            The irregularity of individual spike trains is measured by the squared
+            coefficient of variation of the corresponding inter-spike interval (ISI)
+            distribution.
+            In point processes, low values reflect more regular spiking, a
+            clock-like pattern yields CV2= 0. On the other hand, CV2 = 1 indicates
+            Poisson-type behavior. As a measure for irregularity in the network one
+            can use the average irregularity across all neurons.
+            
+            http://en.wikipedia.org/wiki/Coefficient_of_variation
+            """
+            isi = self.isi()
+            cv_isi = []
+            for _isi in isi:
+                if len(_isi) > 0:
+                    cv_isi.append(numpy.std(_isi)/numpy.mean(_isi))
+                else:
+                    cv_isi.append(None)
+            return cv_isi
 
 """
 This is a Mozaik wrapper of neo segment, that enables pickling and lazy loading.

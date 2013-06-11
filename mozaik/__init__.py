@@ -7,12 +7,26 @@ areas that the mozaik workflow covers increases. It is also likely that
 in future some of the subpackages will be removed (or replaced with dedicated packages)
 as the individual external tools overcome the 'coordination' issues that 
 mozaik is currently trying to address.
+
+This module exposes several parameters to the rest of mozaik:
+
+Parameters
+----------
+    rng : nest.RandomState
+        The global mozaik random number generator. It is crucially any mozaik code using it has to make sure that it will ensure that the 
+        random number generator will be in the same state on all processes after the codes execution.
+    pynn_rng : pynn.random.NumpyRNG
+        The random number generator that should be passed to all pynn objects requiring rng.
+    
+    mpi_comm : mpi4py.Comm
+             The mpi communication object, None if MPI not available.
 """
 
 __version__ = None
 import numpy.random
 rng = None
 pynn_rng = None
+mpi_comm = None
 
 def setup_mpi():
     """
@@ -32,6 +46,7 @@ def setup_mpi():
     """
     global rng
     global pynn_rng
+    global mpi_comm
     from pyNN.random import NumpyRNG
     pynn_rng = NumpyRNG(seed=1023)
     rng = numpy.random.RandomState()
@@ -39,7 +54,7 @@ def setup_mpi():
     try:
         from mpi4py import MPI
     except ImportError:
-        MPI = None
+        mpi_comm = None
     if MPI:
         mpi_comm = MPI.COMM_WORLD
 

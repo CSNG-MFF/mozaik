@@ -6,20 +6,22 @@ import numpy
 import quantities as qt
 import mozaik
 import mozaik.tools.units as munits
-from neo.core.analogsignalarray import AnalogSignalArray
+from neo.core.analogsignalarray import AnalogSignal
 
 logger = mozaik.getMozaikLogger("Mozaik")
 
 
-def psth(spiketrain, bin_length):
+def psth(spike_list, bin_length):
     """
+    The function returns the psth of the spiketrains with bin length bin_length.
+    
     Parameters
     ----------
-    spiketrain : SpikeTrain 
-               The function returns the psth of the spiketrains with bin length bin_length.
+    spike_list : list(SpikeTrain )
+               The list of spike trains. They are assumed to start and end at the same time.
 
     bin_length : float (ms) 
-               See 'spiketrain' explanation.
+               Bin length.
 
     Returns
     -------
@@ -34,12 +36,10 @@ def psth(spiketrain, bin_length):
     t_stop = spike_list[0].t_stop.rescale(qt.ms)
     num_bins = float((t_stop-t_start)/bin_length)
 
-    range = (float(t_start), float(t_stop))
-    h = numpy.histogram(spike_list[i], bins=num_bins, range=range)[0] / (bin_length/1000)
+    r = (float(t_start), float(t_stop))
+    h = [AnalogSignal(numpy.histogram(sp, bins=num_bins, range=r)[0] / (bin_length/1000),t_start=t_start,sampling_period=bin_length*qt.ms,units=munits.spike_per_sec) for sp in spike_list]
 
-    return AnalogSignal(h,t_start=t_start,
-                             sampling_period=bin_length*qt.ms,
-                             units=munits.spike_per_sec)
+    return  h
 
 
 def psth_across_trials(spike_trials, bin_length):
@@ -63,8 +63,5 @@ def psth_across_trials(spike_trials, bin_length):
     Note
     ----
     The spiketrains are assumed to start and stop at the same time.
-     
-     
-     
     """
     return sum([psth(st, bin_length) for st in spike_trials])/len(spike_trials)

@@ -300,7 +300,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
     **IMPORTANT**
     This mechanism assumes that the retinal model stays otherwise identical between 
     simulations. The moment anything is changed in the retinal model one **has** to delete 
-    the retina_cache directory (which effectively rests the cache).
+    the retina_cache directory (which effectively resets the cache).
     """
 
     required_parameters = ParameterSet({
@@ -396,7 +396,22 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         self.rf = {'X_ON': rf_ON, 'X_OFF': rf_OFF}                
 
     def get_cache(self, stimulus_id):
-        if self.parameters.cached == False:
+        """
+        Returns the cached calculated responses due to stimulus corresponding to `stimulus_id`.
+        
+        Parameters
+        ----------
+            stimulus_id : StimulusID
+                        The stimulus id of the stimulus for which to return the activities
+        
+        Returns
+        -------
+        Tuple (input_currents, retinal_input)  where input_currents are the currents due to the RFs of the individual RFs and retinal_input is the 
+        list of frames shown to the retina.
+        """
+        
+        #If the chache is switched off or the we run multiprocess job switch of the cache.
+        if self.parameters.cached == False or mozaik.mpi_comm.size>1:
             return None
 
         if not os.path.isfile(self.parameters.cache_path + '/' + 'stimuli.st'):
@@ -415,6 +430,21 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                 return None
 
     def write_cache(self, stimulus_id, input_currents, retinal_input):
+        """
+        Stores input currents and the retinal input corresponding to a given stimulus.
+        
+        Parameters
+        ----------
+                stimulus_id : StimulusID
+                        The stimulus id of the stimulus for which we will store the input currents
+                
+                input_currents : list
+                               List containing the input currents that will be injected to the LGN neurons due to the neuron's RFs. One per each LGN neuron.
+                
+                retinal_input : list(ndarray)
+                              List of 2D arrays containing the frames of luminances that were presented to the retina for the stimulus `stimulus_id`.
+        
+        """
         if self.parameters.cached == False:
             return None
 
@@ -436,6 +466,25 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         """
         Present a visual stimulus to the model, and create the LGN output
         (relay) neurons.
+        
+        Parameters
+        ----------
+        visual_space : VisualSpace
+                     The visual space to which the stimuli are presented.
+                     
+        stimulus : VisualStimulus    
+                 The visual stimulus to be shown.
+        
+        duration : int (ms)
+                 The time for which we will simulate the stimulus
+        
+        offset : int(ms)
+               The time (in absolute time of the whole simulation) at which the stimulus starts.
+        
+        Returns
+        -------
+        retinal_input : list(ndarray)
+                      List of 2D arrays containing the frames of luminances that were presented to the retina.
         """
         logger.debug("Presenting visual stimulus from visual space %s" % visual_space)
         visual_space.set_duration(duration)
@@ -494,6 +543,28 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         return retinal_input
 
     def provide_null_input(self, visual_space, duration=None, offset=0):
+        """
+        This function exists for optimization purposes. It is the analog to 
+        :func:.`mozaik.models.retinal.SpatioTemporalFilterRetinaLGN.process_input` for the 
+        special case when blank stimulus is shown.
+        
+        Parameters
+        ----------
+        visual_space : VisualSpace
+                     The visual space to which the blank stimulus are presented.
+                     
+        duration : int (ms)
+                 The time for which we will simulate the blank stimulus
+        
+        offset : int(ms)
+               The time (in absolute time of the whole simulation) at which the stimulus starts.
+        
+        Returns
+        -------
+        retinal_input : list(ndarray)
+                      List of 2D arrays containing the frames of luminances that were presented to the retina.
+
+        """
         
         input_current = {}
         input_current['times'] = numpy.arange(0, duration, visual_space.update_interval) + offset
