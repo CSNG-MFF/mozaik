@@ -14,7 +14,7 @@ from mozaik.analysis.analysis_data_structures import PerNeuronValue, \
                                         ConductanceSignalList, AnalogSignalList
 from mozaik.analysis.analysis_helper_functions import psth
 from mozaik.framework.interfaces import MozaikParametrizeObject
-from NeuroTools.parameters import ParameterSet
+from parameters import ParameterSet
 from mozaik.storage import queries
 from neo.core.analogsignal import AnalogSignal
 from mozaik.tools.circ_stat import circ_mean, circular_dist

@@ -12,7 +12,7 @@ import os.path
 import numpy
 import mozaik
 from PIL import Image
-from NeuroTools.parameters import ParameterSet
+from parameters import ParameterSet
 from mozaik.framework.interfaces import MozaikParametrizeObject
 
 from mozaik import __version__

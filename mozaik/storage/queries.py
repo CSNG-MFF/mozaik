@@ -2,7 +2,7 @@
 docstring goes here
 """
 from mozaik.framework.interfaces import MozaikParametrizeObject
-from NeuroTools.parameters import ParameterSet
+from parameters import ParameterSet
 from mozaik.tools.mozaik_parametrized import colapse,  MozaikParametrized, filter_query, matching_parametrized_object_params
 import numpy
 

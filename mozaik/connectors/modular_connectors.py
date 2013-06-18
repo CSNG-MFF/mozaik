@@ -4,7 +4,7 @@ import numpy
 from mozaik.connectors import MozaikConnector
 from mozaik.connectors.modular_connector_functions import ModularConnectorFunction
 from collections import Counter
-from NeuroTools.parameters import ParameterSet, ParameterDist
+from parameters import ParameterSet, ParameterDist
 from mozaik.tools.misc import sample_from_bin_distribution, normal_function
 from mozaik.framework import load_component
 
@@ -88,10 +88,9 @@ class ModularConnector(MozaikConnector):
                                 self.source.pop,
                                 self.target.pop,
                                 self.method,
-                                synapse_dynamics=self.short_term_plasticity,
+                                synapse_type=self.init_short_term_plasticity(),
                                 label=self.name,
-                                rng=None,
-                                target=self.parameters.target_synapses)
+                                receptor_type=self.parameters.target_synapses)
 
 class ModularSamplingProbabilisticConnector(ModularConnector):
     """
@@ -125,10 +124,9 @@ class ModularSamplingProbabilisticConnector(ModularConnector):
                                 self.source.pop,
                                 self.target.pop,
                                 method,
-                                synapse_dynamics=self.short_term_plasticity,
+                                synapse_type=self.init_short_term_plasticity(),
                                 label=self.name,
-                                rng=None,
-                                target=self.parameters.target_synapses)
+                                receptor_type=self.parameters.target_synapses)
     
 
 class ModularSingleWeightProbabilisticConnector(ModularConnector):
@@ -159,7 +157,7 @@ class ModularSingleWeightProbabilisticConnector(ModularConnector):
                                 self.source.pop,
                                 self.target.pop,
                                 method,
-                                synapse_dynamics=self.short_term_plasticity,
+                                synapse_dynamics=self.init_short_term_plasticity(),
                                 label=self.name,
                                 rng=None,
                                 target=self.parameters.target_synapses)

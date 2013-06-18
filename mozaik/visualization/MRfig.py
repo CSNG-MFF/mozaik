@@ -5,7 +5,7 @@ import mozaik.storage.queries as queries
 import matplotlib.gridspec as gridspec
 from mozaik.visualization.plotting import Plotting
 from mozaik.visualization.plotting_helper_functions import *
-from NeuroTools.parameters import ParameterSet
+from parameters import ParameterSet
 
 class MRfig(Plotting):
       required_parameters = ParameterSet({

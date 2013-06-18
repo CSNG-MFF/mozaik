@@ -16,7 +16,7 @@ from mozaik.tools.mozaik_parametrized import MozaikParametrized
 
 #from NeuroTools import visual_logging
 from NeuroTools.plotting import progress_bar
-from NeuroTools.parameters import ParameterSet
+from parameters import ParameterSet
 
 logger = mozaik.getMozaikLogger("Mozaik")
 
@@ -275,13 +275,14 @@ class SpatioTemporalFilterRetinaLGN(MozaikRetina):
             self.ncs[rf_type] = []
             self.ncs_rng[rf_type] = []
             for i, lgn_cell in enumerate(self.sheets[rf_type].pop):
-                scs = sim.StepCurrentSource({'times': [0.0], 'amplitudes': [0.0]})
+                scs = sim.StepCurrentSource(times=[0.0], amplitudes=[0.0])
 
                 if not self.parameters.mpi_reproducible_noise:
-                    ncs = sim.NoisyCurrentSource({'mean': self.parameters.noise.mean,
-                                                  'stdev': self.parameters.noise.stdev})
+                    #ncs = sim.NoisyCurrentSource(mean=self.parameters.noise.mean,
+                    #                             stdev=self.parameters.noise.stdev)
+                    ncs = sim.NoisyCurrentSource(**self.parameters.noise)
                 else:
-                    ncs = sim.StepCurrentSource({'times': [0.0], 'amplitudes': [0.0]})
+                    ncs = sim.StepCurrentSource(times=[0.0], amplitudes=[0.0])
                     index = numpy.nonzero(self.sheets[rf_type].pop._mask_local)[0][i]
                     self.ncs_rng[rf_type].append(
                         numpy.random.RandomState(seed=index + (rf_type=='X_ON')*len(self.sheets[rf_type].pop)))

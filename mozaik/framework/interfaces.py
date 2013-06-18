@@ -3,10 +3,10 @@
 Definition of the component interfaces. These interfaces are not currently
 checked or enforced.
 """
-
 from mozaik import __version__
-from NeuroTools.parameters import ParameterSet
+from parameters import ParameterSet
 import mozaik
+from mozaik.tools.distribution_parametrization import PyNNDistribution
 from string import Template
 
 logger = mozaik.getMozaikLogger("Mozaik")
@@ -30,6 +30,10 @@ class MozaikParametrizeObject(object):
                     if P[k] != None:
                         assert isinstance(P[k], ParameterSet), "Type mismatch for parameter %s: %s !=  ParameterSet, for %s " % (k, type(P[k]), P[k])
                         walk(v, P[k], section=k)
+                elif isinstance(v, PyNNDistribution):
+                     # We will allow for parameters requiring PyNN Distirbution to also fall back to single value - this is compatible with PyNN
+                     if isinstance(P[k],int) or isinstance(P[k],float):
+                        assert isinstance(P[k], PyNNDistribution), "Type mismatch for parameter %s: %s != %s " % (k, PyNNDistribution, P[k])
                 else:
                     assert isinstance(P[k], v) or (v == ParameterSet and P[k] == None), "Type mismatch for parameter %s: %s != %s " % (k, v, P[k])
         try:

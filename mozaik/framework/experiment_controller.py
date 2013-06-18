@@ -3,7 +3,7 @@ docstring goes here
 
 """
 from mozaik.storage.datastore import Hdf5DataStore, PickledDataStore
-from NeuroTools.parameters import ParameterSet
+from mozaik.tools.distribution_parametrization import MozaikExtendedParameterSet, load_parameters
 import sys
 import os
 import mozaik
@@ -12,6 +12,8 @@ from datetime import datetime
 from NeuroTools import logging
 from NeuroTools import init_logging
 from NeuroTools import visual_logging
+
+import pyNN.nest as sim
 
 logger = mozaik.getMozaikLogger("Mozaik")
 
@@ -40,35 +42,65 @@ def setup_logging():
                                level=logging.INFO)
 
 
-def setup_experiments(simulation_name, sim):
+def run_workflow(simulation_name, model_class, create_experiments):
+    """
+    This is the main function that executes a workflow. 
+    
+    It expects it gets the simulation, class of the model, and a function that will create_experiments.
+    The create experiments function get a instance of a model as the only parameter and it is expected to return 
+    a list of Experiment instances that should be executed over the model.
+    
+    The run workflow will automatically parse the command line to determine the simulator to be used and the path to the root parameter file. 
+    It will also accept . (point) delimited path to parameteres in the configuration tree, and corresponding values. It will replace each such provided
+    parameter's value with the provided one on the command line. The intended sintax of the commandline is as follows:
+    
+    python userscript simulator_name parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n
+    """
     # Read parameters
-    if len(sys.argv) > 1:
-        parameters_url = sys.argv[1]
+    #exec("import pyNN.nest as sim" )
+    
+    if len(sys.argv) > 2 and len(sys.argv)%2 == 1:
+        simulator_name = sys.argv[1]
+        parameters_url = sys.argv[2]
+        modified_parameters = { sys.argv[i*2+3] : eval(sys.argv[i*2+4])  for i in xrange(0,(len(sys.argv)-3)/2)}
     else:
-        raise ValueError("No parameter file supplied")
-
-    parameters = ParameterSet(parameters_url)
+        raise ValueError("Usage: runscript simulator_name parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n")
+    
+    parameters = load_parameters(parameters_url,modified_parameters)
     
     # Create results directory
     timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
+    
+    # We exclude the results_dir parameter from the directory naming
+    modified_params_str = '_'.join([str(k) + ":" + str(modified_parameters[k]) for k in modified_parameters.keys() if k!='results_dir'])
     Global.root_directory = parameters.results_dir + simulation_name + '_' + \
-                              timestamp + 'rank' + str(mpi_comm.rank) + '/'
+                              timestamp + 'rank' + str(mpi_comm.rank) + '_____' + modified_params_str + '/'
     os.mkdir(Global.root_directory)
     parameters.save(Global.root_directory + "parameters", expand_urls=True)
-
+    
+    #let's store the modified parameters
+    import pickle
+    f = open(Global.root_directory+"modified_parameters","w")
+    pickle.dump(modified_parameters,f)
+    f.close()
     setup_logging()
-    return parameters
-
+    
+    model = model_class(sim,parameters)
+    data_store = run_experiments(model,create_experiments(model))
+    data_store.save()
+    import resource
+    print "Final memory usage: %iMB" % (resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/(1024))
+    return data_store
 
 def run_experiments(model,experiment_list,load_from=None):
     # first lets run all the measurements required by the experiments
     logger.info('Starting Experiemnts')
     if load_from == None:
         data_store = PickledDataStore(load=False,
-                                      parameters=ParameterSet({'root_directory': Global.root_directory}))
+                                      parameters=MozaikExtendedParameterSet({'root_directory': Global.root_directory}))
     else:
         data_store = PickledDataStore(load=True,
-                                      parameters=ParameterSet({'root_directory': load_from}))
+                                      parameters=MozaikExtendedParameterSet({'root_directory': load_from}))
     
     data_store.set_neuron_ids(model.neuron_ids())
     data_store.set_neuron_positions(model.neuron_positions())

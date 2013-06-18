@@ -10,7 +10,7 @@ import time
 from pylab import griddata
 from mozaik.framework.interfaces import Connector
 from mozaik.framework.sheets import SheetWithMagnificationFactor
-from NeuroTools.parameters import ParameterSet, ParameterDist
+from parameters import ParameterSet, ParameterDist
 from mozaik.tools.misc import sample_from_bin_distribution, normal_function
 from collections import Counter
 from pyNN import random, space
@@ -36,13 +36,15 @@ class MozaikConnector(Connector):
     
     def __init__(self, network, name,source, target, parameters):
       Connector.__init__(self, network, name, source,target,parameters)
-      
+    
+    
+    def init_short_term_plasticity(self,weights=None,delays=None):
       if not self.parameters.short_term_plasticity != None:
-        self.short_term_plasticity = None
+        short_term_plasticity = None
       else:
         #self.short_term_plasticity = self.sim.SynapseDynamics(fast=self.sim.TsodyksMarkramMechanism(**self.parameters.short_term_plasticity_params))                    
-        self.short_term_plasticity = self.sim.NativeSynapseDynamics("tsodyks_synapse", self.parameters.short_term_plasticity)
-      
+        short_term_plasticity = self.sim.NativeSynapseType("tsodyks_synapse", self.parameters.short_term_plasticity,weights=weights,delays=delays)
+      return short_term_plasticity
         
     def connect(self):
           t0 = time.time()
@@ -135,10 +137,10 @@ class SpecificArborization(MozaikConnector):
                                 self.source.pop,
                                 self.target.pop,
                                 method,
-                                synapse_dynamics=self.short_term_plasticity,
+                                synapse_type=self.init_short_term_plasticity(),
                                 label=self.name,
                                 rng=None,
-                                target=self.parameters.target_synapses)
+                                receptor_type=self.parameters.target_synapses)
 
 
 class SpecificProbabilisticArborization(MozaikConnector):
@@ -183,10 +185,9 @@ class SpecificProbabilisticArborization(MozaikConnector):
                                 self.source.pop,
                                 self.target.pop,
                                 method,
-                                synapse_dynamics=self.short_term_plasticity,
+                                synapse_type=self.init_short_term_plasticity(),
                                 label=self.name,
-                                rng=None,
-                                target=self.parameters.target_synapses)
+                                receptor_type=self.parameters.target_synapses)
                   
 
 

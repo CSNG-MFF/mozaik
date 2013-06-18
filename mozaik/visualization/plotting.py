@@ -81,10 +81,11 @@ import matplotlib.cm as cm
 import matplotlib.gridspec as gridspec
 from scipy.interpolate import griddata
 
-from NeuroTools.parameters import ParameterSet
+from parameters import ParameterSet
 
 from mozaik.framework.interfaces import MozaikParametrizeObject
 from mozaik.storage import queries
+from mozaik.framework.experiment_controller import Global
 from mozaik.tools.mozaik_parametrized import colapse_to_dictionary, MozaikParametrized, varying_parameters, matching_parametrized_object_params
 from numpy import pi
 
@@ -162,7 +163,7 @@ class Plotting(MozaikParametrizeObject):
         gs.update(left=0.07, right=0.97, top=0.95, bottom=0.05)
         self.handle_parameters_and_execute_plots({}, params,gs[0, 0])
         if self.plot_file_name:
-            pylab.savefig(self.plot_file_name)
+            pylab.savefig(Global.root_directory+self.plot_file_name)
         t2 = time.time()
         logger.warning(self.__class__.__name__ + ' plotting took: ' + str(t2 - t1) + 'seconds')
 

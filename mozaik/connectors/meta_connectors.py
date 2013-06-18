@@ -5,7 +5,7 @@ from numpy import sin, cos, pi, exp
 from scipy.interpolate import NearestNDInterpolator
 from mozaik.framework.interfaces import MozaikComponent
 from mozaik.framework import load_component
-from NeuroTools.parameters import ParameterSet, ParameterDist
+from parameters import ParameterSet, ParameterDist
 from mozaik.connectors import SpecificProbabilisticArborization, SpecificArborization
 
 """

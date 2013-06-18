@@ -3,22 +3,19 @@
 Sheet is an abstraction of a 2D continuous sheet of neurons, roughly
 corresponding to the PyNN Population class with the added spatial structure.
 """
-
 import numpy
 import mozaik
 from mozaik.framework.interfaces import MozaikComponent
 from mozaik.framework import load_component
-
-from NeuroTools.parameters import ParameterSet, UniformDist
+from mozaik.tools.distribution_parametrization import PyNNDistribution
+from parameters import ParameterSet, UniformDist
 from pyNN import space
-from pyNN.random import RandomDistribution
 from pyNN.errors import NothingToWriteError
 from string import Template
 from neo.core.spiketrain import SpikeTrain
 import quantities as pq
 
 logger = mozaik.getMozaikLogger("Mozaik")
-
 
 class Sheet(MozaikComponent):
     """
@@ -71,6 +68,16 @@ class Sheet(MozaikComponent):
         self.name = parameters.name  # the name of the population
         self.model.register_sheet(self)
         self._pop = None
+        
+        # We want to be able to define in cell.params the cell parameters as also PyNNDistributions so we can get variably parametrized populations
+        # The problem is that the pyNN.Population can accept only scalar parameters. There fore we will remove from cell.params all parameters
+        # that are PyNNDistributions, and will initialize them later just after the population is initialized (in property pop())
+        self.dist_params = {}
+        for k in self.parameters.cell.params.keys():
+            if isinstance(self.parameters.cell.params[k],PyNNDistribution):
+               self.dist_params[k]=self.parameters.cell.params[k]
+               del self.parameters.cell.params[k]
+        
 
     def setup_to_record_list(self):
         self.to_record = {}
@@ -203,8 +210,7 @@ class Sheet(MozaikComponent):
                                     t_stop=duration).spike_times
                     if self.parameters.artificial_stimulation and exc_spiking_stimulation!=None and (exc_spiking_stimulation[0] == "all" or (idds[i] in exc_spiking_stimulation[0])):
                        pp.extend(exc_spiking_stimulation[1](duration)) 
-
-                    self.ssae[i].set_parameters(spike_times=offset + numpy.array(pp))
+                    self.ssae[i].set_parameters(spike_times=[offset + numpy.array(pp)])
 
             if (self.parameters.background_noise.inh_firing_rate != 0 and self.parameters.background_noise.inh_weight) != 0 or self.parameters.artificial_stimulation:
                 idds = self.pop.all_cells.astype(int)
@@ -217,10 +223,12 @@ class Sheet(MozaikComponent):
                                     t_stop=self.model.simulator_time + duration).spike_times
                     if self.parameters.artificial_stimulation and inh_spiking_stimulation!=None and (inh_spiking_stimulation[0] == "all" or (idds[i] in inh_spiking_stimulation[0])):
                        pp.extend(self.model.simulator_time+ inh_spiking_stimulation[1](duration)) 
-                    self.ssai[i].set_parameters(spike_times=offset + numpy.array(pp))
+                    self.ssai[i].set_parameters(spike_times=[offset + numpy.array(pp)])
 
     def setup_background_noise(self):
         from pyNN.nest import native_cell_type
+        exc_syn = self.sim.StaticSynapse(weight=self.parameters.background_noise.exc_weight)
+        inh_syn = self.sim.StaticSynapse(weight=self.parameters.background_noise.inh_weight)
         if not self.parameters.mpi_safe:
             if (self.parameters.background_noise.exc_firing_rate != 0
                   or self.parameters.background_noise.exc_weight != 0):
@@ -229,8 +237,9 @@ class Sheet(MozaikComponent):
                                 {'rate': self.parameters.background_noise.exc_firing_rate})
                 self.sim.Projection(
                                 np_exc, self.pop,
-                                self.sim.AllToAllConnector(weights=self.parameters.background_noise.exc_weight),
-                                target='excitatory')
+                                self.sim.AllToAllConnector(),
+                                synapse_type=exc_syn,
+                                receptor_type='excitatory')
 
             if (self.parameters.background_noise.inh_firing_rate != 0
                   or self.parameters.background_noise.inh_weight != 0):
@@ -239,37 +248,38 @@ class Sheet(MozaikComponent):
                                 {'rate': self.parameters.background_noise.inh_firing_rate})
                 self.sim.Projection(
                                 np_inh, self.pop,
-                                self.sim.AllToAllConnector(weights=self.parameters.background_noise.inh_weight),
-                                target='inhibitory')
+                                self.sim.AllToAllConnector(),
+                                synapse_type=inh_syn,
+                                receptor_type='inhibitory')
         
         if self.parameters.mpi_safe or self.parameters.artificial_stimulation:
             if (self.parameters.background_noise.exc_firing_rate != 0
                   or self.parameters.background_noise.exc_weight != 0 or self.parameters.artificial_stimulation):
                         self.ssae = self.sim.Population(self.pop.size,
-                                                        self.model.sim.SpikeSourceArray,
-                                                        {'spike_times': []})
+                                                        self.model.sim.SpikeSourceArray())
                         self.sim.Projection(self.ssae, self.pop,
-                                            self.sim.OneToOneConnector(weights=self.parameters.background_noise.exc_weight),
-                                            target='excitatory')
+                                            self.sim.OneToOneConnector(),
+                                            synapse_type=exc_syn,
+                                            receptor_type='excitatory')
 
             if (self.parameters.background_noise.inh_firing_rate != 0
                   or self.parameters.background_noise.inh_weight != 0 or self.parameters.artificial_stimulation):
                         self.ssai = self.sim.Population(self.pop.size,
-                                                        self.model.sim.SpikeSourceArray,
-                                                        {'spike_times': []})
+                                                        self.model.sim.SpikeSourceArray())
                         self.sim.Projection(self.ssai, self.pop,
-                                            self.sim.OneToOneConnector(weights=self.parameters.background_noise.inh_weight),
-                                            target='inhibitory')
+                                            self.sim.OneToOneConnector(),
+                                            synapse_type=inh_syn,
+                                            receptor_type='inhibitory')
 
     def setup_initial_values(self):
-        for var, val in self.parameters.cell.initial_values.items():
-            if isinstance(val,UniformDist):
-                self.pop.initialize(var, RandomDistribution('uniform',parameters=[val.params["min"],val.params["max"]]))
-            else:
-                self.pop.initialize(var, val)
-        
-        
-        
+        # Initial state variables
+        self.pop.initialize(**self.parameters.cell.initial_values)
+        # Variable cell parameters
+        self.pop.set(**self.dist_params)
+        #for k,v in self.dist_params.iteritems():
+        #    self.pop.rset(k,v)
+
+
 class RetinalUniformSheet(Sheet):
     """
     Retinal sheet is organized on a grid
@@ -292,8 +302,10 @@ class RetinalUniformSheet(Sheet):
         self.pop = self.sim.Population(int(parameters.density * parameters.density),
                                        getattr(self.model.sim, self.parameters.cell.model),
                                        self.parameters.cell.params,
-                                       rs,
+                                       structure=rs,
+                                       initial_values=self.parameters.cell.initial_values,
                                        label=self.name)
+
     def size_in_degrees(self):
         return (self.parameters.sx, self.parameters.sy)
 
@@ -358,5 +370,6 @@ class CorticalUniformSheet(SheetWithMagnificationFactor):
         self.pop = self.sim.Population(int(parameters.sx*parameters.sy/1000000*parameters.density),
                                        getattr(self.model.sim, self.parameters.cell.model),
                                        self.parameters.cell.params,
-                                       rs,
+                                       structure=rs,
+                                       initial_values=self.parameters.cell.initial_values,
                                        label=self.name)

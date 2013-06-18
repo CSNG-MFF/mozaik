@@ -1,7 +1,7 @@
 # encoding: utf-8
 import mozaik
 from mozaik.connectors import MozaikConnector
-from NeuroTools.parameters import ParameterSet, ParameterDist
+from parameters import ParameterSet, ParameterDist
 from pyNN import space
 import numpy
 
@@ -55,10 +55,9 @@ class DistanceDependentProbabilisticArborization(MozaikConnector):
         self.proj = self.sim.Projection(self.source.pop, 
                                         self.target.pop, 
                                         method, 
-                                        synapse_dynamics=self.short_term_plasticity, 
+                                        synapse_type=self.short_term_plasticity, 
                                         label=self.name, 
-                                        rng=None, 
-                                        target=self.parameters.target_synapses)
+                                        receptor_type=self.parameters.target_synapses)
     
 
 
@@ -96,17 +95,13 @@ class UniformProbabilisticArborization(MozaikConnector):
         method = self.sim.FixedProbabilityConnector(
                                     self.parameters.connection_probability,
                                     allow_self_connections=False,
-                                    weights=self.parameters.weights,
-                                    delays=self.parameters.delay,
-                                    space=space.Space(axes='xy'),
                                     safe=True)
-                                    
+
         self.proj = self.sim.Projection(
                                     self.source.pop,
                                     self.target.pop,
                                     method,
-                                    synapse_dynamics=self.short_term_plasticity,
+                                    synapse_type=self.init_short_term_plasticity(weights=self.parameters.weights,delays=self.parameters.delay),
                                     label=self.name,
-                                    rng=None,
-                                    target=self.parameters.target_synapses)
-        
+                                    space=space.Space(axes='xy'),
+                                    receptor_type=self.parameters.target_synapses)
