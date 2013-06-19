@@ -335,16 +335,16 @@ class PickledDataStore(Hdf5DataStore):
     """
 
     def load(self):
-        f = open(self.parameters.root_directory + '/datastore.recordings.pickle',  'rb')
-        self.block = cPickle.load(f)
-        for s in self.block.segments:
-            s.full = False
-            self.stimulus_dict[s.annotations['stimulus']] = True
-            s.datastore_path = self.parameters.root_directory
+        if True:
+            f = open(self.parameters.root_directory + '/datastore.recordings.pickle',  'rb')
+            self.block = cPickle.load(f)
+            for s in self.block.segments:
+                s.full = False
+                self.stimulus_dict[s.annotations['stimulus']] = True
+                s.datastore_path = self.parameters.root_directory
 
         f = open(self.parameters.root_directory + '/datastore.analysis.pickle', 'rb')
         self.analysis_results = cPickle.load(f)
-
         #f = open(self.parameters.root_directory + '/datastore.retinal.stimulus.pickle', 'rb')
         #self.retinal_stimulus = cPickle.load(f)
 
