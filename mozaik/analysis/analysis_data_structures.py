@@ -36,7 +36,7 @@ class SingleValue(AnalysisDataStructure):
     """
     Data structure holding single value. This can be per model, if sheet parameter is None,
     or per sheet if sheet is specified. In principle it can also be per neuron if the neuron
-    parameter is specified, but in most cases you probably want to use :class:.PerNeuronValue
+    parameter is specified, but in most cases you probably want to use :class:`.PerNeuronValue`
     instead.
     """
 
@@ -115,7 +115,7 @@ class PerNeuronPairValue(AnalysisDataStructure):
         self.values = numpy.array(values)
         self.ids = list(idds)
     
-    def get_value_by_ids(self,idds1,ids2):
+    def get_value_by_ids(self,idds1,idds2):
         """
         Parameters
         ---------- 
@@ -127,8 +127,6 @@ class PerNeuronPairValue(AnalysisDataStructure):
         ids : AnalogSignal or list(AnalogSignal)
             List (or single) of AnalogSignal objects corresponding to ids in `idd`.
         """
-
-        self.ids
         if (isinstance(idds1,list) or isinstance(idds1,numpy.ndarray)) and (isinstance(idds2,list) or isinstance(idds2,numpy.ndarray)):
             return self.values[[list(self.ids).index(i) for i in idds1]][[list(self.ids).index(i) for i in idds2]]
         else:

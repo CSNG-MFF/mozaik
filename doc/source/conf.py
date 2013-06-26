@@ -24,7 +24,7 @@ AUTHORS = u'mozaik authors and contributors <>'
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.todo', 'numpydoc']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest',  'numpydoc']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -217,14 +217,12 @@ def param_doc(app, what, name, obj, options, lines):
         lines = ["start"]
     
     new_lines = []
-    
     count = 0
     if what == 'class':
         if isinstance(obj, param.parameterized.ParameterizedMetaclass):
             params = obj.params()
-            new_lines.extend([""])
-            new_lines.extend(["Other Parameters"])
-            new_lines.extend(["----------------"])
+            new_lines.extend([unicode("")])
+            new_lines.extend([unicode(":Mozaik parameters:")])
             for child in params:
                 if child in obj.__dict__.keys():
                     if child not in ["print_level", "name"]:
@@ -237,11 +235,11 @@ def param_doc(app, what, name, obj, options, lines):
                             if m[0][0] != "_" and m[0] != "doc" and m[0] != "class_" and not inspect.ismethod(m[1]) and not inspect.isfunction(m[1]) and m[0] not in ["precedence",'time_fn','pickle_default_value','instantiate','allow_None']:
                                 params_str += "%s=%s, " % (m[0], m[1])
                         params_str = params_str[:-2]
-                        new_lines.extend(["%s : %s (%s)" % ( child, params[child].__class__.__name__, params_str), "    %s" % doc,""])
+                        new_lines.extend([unicode("        **%s** : %s(%s)" % ( child, params[child].__class__.__name__, params_str)), unicode("                %s" % doc),unicode("")])
                         count = count + 1
     if count != 0:
         lines.extend(new_lines)
-
+        
 def setup(app):
 	app.connect('autodoc-process-docstring', param_doc)
 

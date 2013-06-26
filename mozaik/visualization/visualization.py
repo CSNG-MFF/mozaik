@@ -5,7 +5,6 @@ defined in the mozaik.visualization.plotting module.
 
 Most of this code is likely being used as a debugging visualization tools or is
 generic visualization tools that can in turn be used by plotting algorithms.
-
 """
 
 import pylab
@@ -17,13 +16,21 @@ def plot_layer_activity(sheet, value_to_plot, cortical_coordinates=False,
     This function creates a scatter plot, where each point corresponds to a
     neuron (in cortical or visual space coordinates) and color of each point
     corresponds to the values_to_plot.
-
-    sheet - an instance of the Sheet class
-    value_to_plot - an list of numbers whose length corresponds to the number
-                    of neurons in sheet
-    cortical_coordinates - if true plotted in cortical coordinates, otherwise
-                           in degrees of visual field
-    labels - whether to include labels
+    
+    Parameters
+    ----------
+    
+    sheet : :class:`mozaik.framework.sheets.Sheet`
+          An instance of the Sheet class
+          
+    value_to_plot : list
+                  An list of numbers whose length corresponds to the number of neurons in sheet
+                  
+    cortical_coordinates : bool
+                         If true plotted in cortical coordinates, otherwise in degrees of visual field
+                         
+    labels : bool
+           Whether to include labels.
     """
 
     if cortical_coordinates:

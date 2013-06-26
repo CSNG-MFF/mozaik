@@ -1,51 +1,16 @@
 """
-The visualization for Mozaik objects is based on matplotlib and the GridSpec
-object.
+This module defines the :class:`mozaik.visualization.plotting.Plotting` API and offers
+a library of plotting commands derived from it. 
 
-The plotting framwork is divided into two main concepts, represented by the two
-high-level classes Plotting (this file) and SimplePlot (see simple_plot.py).
+The plotting API
+----------------
 
-The SimplePlot represent low-level plotting. It is assumed that this plot has
-only a single axis that is drawn into the region defined by the GridSpec
-instance that is passed into it. The role of the set of classes derived from
-SimplePlot is to standardize the low level looks of all figures (mainly related
-to axis, lables, titles etc.), and should assume data given to them in a format
-that is easy to use by the given plot. In order to unify the look of figures it
-defines four functions pre_axis_plot, pre_plot, plot, and post_plot. The actual
-plotting that user defines is typically defined in the plot function while the
-pre_axis_plot, pre_plot and post_plot functions handle the pre and post
-plotting adjustments to the plot (i.e. the typical post_plot function for
-example adjusts the ticks of the axis to a common format other such axis
-related properties). When defining a new SimplePlot function user is encoureged
-to push as much of it's 'decorating' funcitonality into the post and pre plot
-function and define only the absolute minimum in the plot function. At the same
-time, there is already a set of classes implementing a general common look
-provided, and so users are encouraged to use these as much as possible. If
-their formatting features are not sufficient or incompatible with a given plot,
-users are encoureged to define new virtual class that defines the formatting in
-the pre and post plot functions (and thus sepparating it from the plot itself),
-and incorporating these as low as possible within the hierarchy of the
-SimplePlot classes to re-use as much of the previous work as possible.
-
-NOTE SimplePlot now resides in a separate module visualization.simple_plot but
-its description stays as it is integral to how Plotting class works.
-
-The Plotting class (and its children) define the high level plotting
-mechanisms. They are mainly responsible for hierarchical organization of
-figures with multiple plots, any mechanisms that require consideration of
-several plots at the same time, and the translation of the data form the general
-format provided by Datastore, to specific format that the SimplePlot plots
-require. In general the Plotting instances should not do any plotting of axes
-them selves (but instead calling the SimplePlot instances to do the actual
-plotting), with the exception of multi-axis figures whith complicated inter-axis
-dependencies, for which it is not practical to break them down into single
-SimplePlot instances.
-
-Each Plotting class should implement two plotting functions:  plot and subplot.
+The high-level plotting API is defined by the :class:`mozaik.visualization.plotting.Plotting` class.
+Each  class derived from `Plotting` should implement two plotting functions:  plot and subplot.
 The subplot function accepts a SubplotSpec object (see matplotlib doc) as input which 
 will tell it where to plot. The subplot function returns a dictionary, where each key
 is a name of a subplot it generates (and will correspond to a creation of another Plotting or 
-SimplePlot plot), and the associated value is a tuple that contains the 
+SimplePlot plot), and the associated value is a tuple that contains the:
     * Plotting or SimplePlot object
     * the SubplotSpec subregion into which the plot is supposed to be drawn
     * dictionary of parameters that to be passed to the plot.
@@ -99,28 +64,41 @@ logger = mozaik.getMozaikLogger("Mozaik")
 
 class Plotting(MozaikParametrizeObject):
     """
-    The high level Plotting API.
+    The high level Plotting API. See the module information on more detailed description.
 
-    datastore - the DataStore from which to plot the data
-    parameters - no comment
-    plot_file_name - either None, in which case the plot is not saved onto
-                     HD, or path to a file into which to save the file (formats
-                     accepted by matplotlib)
-    fig_params - the parameters that are passed to the matplotlib figure
-                 command. (but note facecolor='w' is already supplied)
+    Parameters
+    ----------
+    
+    datastore : Datastore
+              the DataStore from which to plot the data
+              
+    parameters : ParameterSet
+               The mozaik parameters.
+               
+    plot_file_name : str
+                   Either None, in which case the plot is not saved onto
+                   HD, or path to a file into which to save the file (formats
+                   accepted by matplotlib).
+                   
+    fig_params : dict
+               The parameters that are passed to the matplotlib figure
+               command (but note facecolor='w' is already supplied).
     """
 
-    def  __init__(self, datastore, parameters, plot_file_name=None,
-                  fig_param=None):
+    def  __init__(self, datastore, parameters, plot_file_name=None,fig_param=None):
         MozaikParametrizeObject.__init__(self, parameters)
         self.datastore = datastore
         self.plot_file_name = plot_file_name
         self.fig_param = fig_param if fig_param != None else {}
 
     def subplot(self, subplotspec):
+        """
+        This is the function that each Plotting instance has to implement.
+        See the module documentation for more details.
+        """
         raise NotImplementedError
     
-    def nip_parameters(self,n,p):
+    def _nip_parameters(self,n,p):
         d = {}
         fd = {}
         for (k,v) in p.iteritems():
@@ -133,14 +111,14 @@ class Plotting(MozaikParametrizeObject):
                    fd[l[1]] = v
         return d,fd
     
-    def handle_parameters_and_execute_plots(self,parameters,user_parameters,gs):
+    def _handle_parameters_and_execute_plots(self,parameters,user_parameters,gs):
         d = self.subplot(gs)
         for (k,(pl,gs,p)) in d.iteritems():
             p.update(parameters)
             ### THIS IS WRONG 'UP' DO NOT WORK        
             up = user_parameters
             for z in k.split('.'):    
-                up,fp = self.nip_parameters(z,up)
+                up,fp = self._nip_parameters(z,up)
                 p.update(fp)
 
             param = p
@@ -149,18 +127,30 @@ class Plotting(MozaikParametrizeObject):
                # print check whether all user_parameters have been nipped to minimum 
                pl(gs,param) 
             elif isinstance(pl,Plotting):
-               pl.handle_parameters_and_execute_plots(param,up,gs)     
+               pl._handle_parameters_and_execute_plots(param,up,gs)     
             else:
                raise TypeError("The subplot object is not of type Plotting or SimplePlot") 
     
     def plot(self, params=None):
+        """
+        The top level plot function. It is this function that the user will call on the plot instance to 
+        execute the plotting.
+        
+        Parameters
+        ----------
+        
+        params : dict
+               The dictionary of parameters modifying the defaults across the plotting hierarchy.
+               Keys are comma sepparated path in the plot hierarchy, values are values to be substituted. 
+               See the module level info for more details. 
+        """
         t1 = time.time()
         if params == None:
             params = {}
         self.fig = pylab.figure(facecolor='w', **self.fig_param)
         gs = gridspec.GridSpec(1, 1)
         gs.update(left=0.07, right=0.97, top=0.95, bottom=0.05)
-        self.handle_parameters_and_execute_plots({}, params,gs[0, 0])
+        self._handle_parameters_and_execute_plots({}, params,gs[0, 0])
         if self.plot_file_name:
             pylab.savefig(Global.root_directory+self.plot_file_name)
         t2 = time.time()
@@ -169,8 +159,26 @@ class Plotting(MozaikParametrizeObject):
 
 class PlotTuningCurve(Plotting):
     """
-    Defines 'TuningCurve_' + value_name +  '.Plot0' ... 'TuningCurve_' + value_name +  '.Plotn'
+    Plots tuning curves, one plot in line per each neuron. This plotting function assumes a set of PerNeuronValue 
+    ADSs in the datastore associated with certain stimulus type. It will plot
+    the values stored in these  PerNeuronValue instances (corresponding to neurons in `neurons`) across the 
+    varying parameter `parameter_name` of thier associated stimuli. If other parameters of the 
+    stimuli are varying withing the datastore it will automatically plot one tuning curve per each combination
+    of values of the other parameters and label the curve accordingly.
     
+    Other parameters
+    ----------------
+    neurons : list
+            List of neuron ids for which to plot the tuning curves.
+            
+    sheet_name : str
+               From which layer to plot the tuning curves.
+               
+    parameter_name : str
+                   The parameter_name through which to plot the tuning curve.
+    
+    
+    Defines 'TuningCurve_' + value_name +  '.Plot0' ... 'TuningCurve_' + value_name +  '.Plotn'
     where n goes through number of neurons, and value_name creates one row for each value_name found in the different PerNeuron found
     """
 
@@ -180,8 +188,7 @@ class PlotTuningCurve(Plotting):
       'parameter_name': str  # the parameter_name through which to plot the tuning curve
     })
 
-    def __init__(self, datastore, parameters, plot_file_name=None,
-                 fig_param=None):
+    def __init__(self, datastore, parameters, plot_file_name=None,fig_param=None):
         Plotting.__init__(self, datastore, parameters, plot_file_name, fig_param)
         
         self.st = []
@@ -203,9 +210,9 @@ class PlotTuningCurve(Plotting):
             
 
     def subplot(self, subplotspec):
-        return LinePlot(function=self.ploter, length=len(self.parameters.neurons)).make_line_plot(subplotspec)
+        return LinePlot(function=self._ploter, length=len(self.parameters.neurons)).make_line_plot(subplotspec)
 
-    def ploter(self, idx, gs):
+    def _ploter(self, idx, gs):
         plots  = []
         gs = gridspec.GridSpecFromSubplotSpec(len(self.st), 1, subplot_spec=gs)
         for i,(dic, st, pnvs) in enumerate(zip(self.tc_dict,self.st,self.pnvs)):
@@ -254,8 +261,27 @@ class PlotTuningCurve(Plotting):
 
 class RasterPlot(Plotting):
     """ 
+    It plots raster plots of spikes stored in the recordings.
+    It assumes a datastore with a set of recordings. It will plot a line of raster 
+    plots, one per each recording, showing the raster plot corresponding to the given 
+    recording.
+    
     Defines 'RasterPlot.Plot0' ... 'RasterPlot.PlotN'
+    
+    Other parameters
+    ----------------
+    
+    sheet_name : str
+               From which layer to plot the raster plots.
+               
+    neurons : list
+            List of neuron ids for which to plot the tuning curves.
+    
+    trial_averaged_histogram : bool
+                             Should the plot show also the trial averaged histogram?
+            
     """
+    
     required_parameters = ParameterSet({
         'trial_averaged_histogram': bool,  # should the plot show also the trial averaged histogram
         'neurons': list,
@@ -267,9 +293,9 @@ class RasterPlot(Plotting):
 
     def subplot(self, subplotspec):
         dsv = queries.param_filter_query(self.datastore,sheet_name=self.parameters.sheet_name)
-        return PerStimulusPlot(dsv, function=self.ploter).make_line_plot(subplotspec)
+        return PerStimulusPlot(dsv, function=self._ploter).make_line_plot(subplotspec)
 
-    def ploter(self, dsv,gs):
+    def _ploter(self, dsv,gs):
         sp = [[s.get_spiketrain(self.parameters.neurons) for s in dsv.get_segments()]]
         d = {} 
         if self.parameters.trial_averaged_histogram:
@@ -283,7 +309,21 @@ class RasterPlot(Plotting):
         
 class VmPlot(Plotting):
     """
+    It plots the membrane potentials stored in the recordings.
+    It assumes a datastore with a set of recordings. It will plot a line of vm
+    plots, one per each recording, showing the vm corresponding to the given 
+    recording.
+    
     It defines one plot named: 'VmPlot.Plot0' ... 'VmPlot.PlotN'.
+    
+    Other parameters
+    ----------------
+    
+    sheet_name : str
+               From which layer to plot the vms.
+               
+    neuron : int
+            Id of the neuron to plot.
     """
 
     required_parameters = ParameterSet({
@@ -293,10 +333,10 @@ class VmPlot(Plotting):
 
     def subplot(self, subplotspec):
         dsv = queries.param_filter_query(self.datastore,sheet_name=self.parameters.sheet_name)
-        return PerStimulusPlot(dsv, function=self.ploter, title_style="Clever"
+        return PerStimulusPlot(dsv, function=self._ploter, title_style="Clever"
                                          ).make_line_plot(subplotspec)
 
-    def ploter(self, dsv,gs):
+    def _ploter(self, dsv,gs):
         vms = [s.get_vm(self.parameters.neuron) for s in dsv.get_segments()]
         sampling_period = vms[0].sampling_period
         time_axis = numpy.arange(0, len(vms[0]), 1) / float(len(vms[0])) * float(vms[0].t_stop) + float(vms[0].t_start)
@@ -322,7 +362,21 @@ class VmPlot(Plotting):
 
 class GSynPlot(Plotting):
     """
+    It plots the conductances stored in the recordings.
+    It assumes a datastore with a set of recordings. It will plot a line of conductance 
+    plots, one per each recording, showing the excitatory and inhibitory conductances corresponding to the given 
+    recording.
+    
     It defines one plot named: 'ConductancesPlot.Plot0' ... 'ConductancesPlot.PlotN'.
+    
+    Other parameters
+    ----------------
+    
+    sheet_name : str
+               From which layer to plot the conductances.
+               
+    neuron : int
+            Id of the neuron to plot.
     """
     
     required_parameters = ParameterSet({
@@ -332,10 +386,10 @@ class GSynPlot(Plotting):
 
     def subplot(self, subplotspec):
         dsv = queries.param_filter_query(self.datastore,sheet_name=self.parameters.sheet_name)
-        return PerStimulusPlot(dsv, function=self.ploter, title_style="Standard"
+        return PerStimulusPlot(dsv, function=self._ploter, title_style="Standard"
                                         ).make_line_plot(subplotspec)
 
-    def ploter(self, dsv,gs):
+    def _ploter(self, dsv,gs):
         gsyn_es = [s.get_esyn(self.parameters.neuron) for s in dsv.get_segments()]
         gsyn_is = [s.get_isyn(self.parameters.neuron) for s in dsv.get_segments()]
         return [("ConductancesPlot",ConductancesPlot(gsyn_es, gsyn_is),gs,{})]
@@ -346,6 +400,18 @@ class OverviewPlot(Plotting):
     """
     It defines 4 (or 3 depending on the sheet_activity option) plots named: 'Activity_plot', 'Spike_plot', 'Vm_plot', 'Conductance_plot'
     corresponding to the ActivityMovie RasterPlot, VmPlot, GSynPlot plots respectively. And than a line of the with the extensions .Plot1 ... .PlotN 
+    
+    Other parameters
+    ----------------
+    
+    sheet_name : str
+               From which layer to plot.
+               
+    neuron : int
+            Id of the neuron to plot.
+            
+    sheet_activity: bool
+            Whether to also show the sheet activity plot as the first row.
     """
     
     required_parameters = ParameterSet({
@@ -356,9 +422,9 @@ class OverviewPlot(Plotting):
     
     def subplot(self, subplotspec):
         dsv = queries.param_filter_query(self.datastore,sheet_name=self.parameters.sheet_name)
-        return PerStimulusPlot(dsv, function=self.ploter, title_style="Clever").make_line_plot(subplotspec)
+        return PerStimulusPlot(dsv, function=self._ploter, title_style="Clever").make_line_plot(subplotspec)
 
-    def ploter(self, dsv,subplotspec):
+    def _ploter(self, dsv,subplotspec):
         offset = 0
         d = []
         if len(self.parameters.sheet_activity.keys()) != 0:
@@ -392,21 +458,33 @@ class OverviewPlot(Plotting):
         return d
 
 class AnalogSignalListPlot(Plotting):
+    """
+    This plot shows a line of plots each showing analog signals, one plot per each AnalogSignalList instance
+    present in the datastore.
+    
+    It defines line of plots named: 'AnalogSignalPlot.Plot0' ... 'AnalogSignalPlot.PlotN'.
+    
+    Other parameters
+    ----------------
+    
+    sheet_name : str
+               From which layer to plot.
+               
+    neurons : list
+            List of neuron ids for which to plot the analog signals.
+            
+    """
+    
     required_parameters = ParameterSet({
         'sheet_name': str,  # the name of the sheet for which to plot
         'neurons' : list, # list of neuron IDs to show, if empty all neurons are shown
     })
 
-    def __init__(self, datastore, parameters, plot_file_name=None,
-                 fig_param=None):
-        Plotting.__init__(self, datastore, parameters, plot_file_name, fig_param)
-        
-
     def subplot(self, subplotspec):
         dsv = queries.param_filter_query(self.datastore,sheet_name=self.parameters.sheet_name,identifier='AnalogSignalList')
-        return PerStimulusADSPlot(dsv, function=self.ploter, title_style="Clever").make_line_plot(subplotspec)
+        return PerStimulusADSPlot(dsv, function=self._ploter, title_style="Clever").make_line_plot(subplotspec)
 
-    def ploter(self, dsv,subplotspec):
+    def _ploter(self, dsv,subplotspec):
         self.analog_signal_list = dsv.get_analysis_result()
         assert len(self.analog_signal_list) == 1, "Currently only one AnalogSignalList per stimulus can be plotted"
         assert len(self.analog_signal_list) != 0, "ERROR, empty datastore"
@@ -431,6 +509,23 @@ class AnalogSignalListPlot(Plotting):
 
 
 class ConductanceSignalListPlot(Plotting):
+    """
+    This plot shows a line of plots each showing excitatory and inhibitory conductances, one plot per each ConductanceSignalList instance 
+    present in the datastore.
+    
+    It defines line of plots named: 'ConductancePlot.Plot0' ... 'ConductancePlot.PlotN'.
+    
+    Other parameters
+    ----------------
+    
+    sheet_name : str
+               From which layer to plot.
+               
+    normalize_individually : bool
+                           Whether to normalize each trace individually by dividing it with its maximum.
+            
+    """
+    
     required_parameters = ParameterSet({
         'sheet_name': str,  # the name of the sheet for which to plot
         'normalize_individually': bool  # each trace will be normalized individually by dividing it with its maximum
@@ -458,6 +553,16 @@ class ConductanceSignalListPlot(Plotting):
 
 
 class RetinalInputMovie(Plotting):
+    """
+    This plots one plot showing the retinal input per each recording in the datastore. 
+    
+    It defines line of plots named: 'PixelMovie.Plot0' ... 'PixelMovie.PlotN'.
+    
+    Other parameters
+    ----------------
+    frame_rate : int
+                The desired frame rate (per sec), it might be less if the computer is too slow.
+    """
     required_parameters = ParameterSet({
         'frame_rate': int,  # the desired frame rate (per sec), it might be less if the computer is too slow
     })
@@ -470,15 +575,42 @@ class RetinalInputMovie(Plotting):
         self.st = datastore.retinal_stimulus.keys()
         
     def subplot(self, subplotspec):
-        return LinePlot(function=self.ploter,
+        return LinePlot(function=self._ploter,
                  length=len(self.retinal_input)
                  ).make_line_plot(subplotspec)
 
-    def ploter(self, idx, gs):
+    def _ploter(self, idx, gs):
         return [('PixelMovie',PixelMovie(self.retinal_input[idx],1.0/self.parameters.frame_rate*1000),gs,{'x_axis':False, 'y_axis':False, "title" : str(self.st[idx])})]
 
 
 class ActivityMovie(Plotting):
+    """
+    This plots one plot per each recording, each showing the activity during that recording 
+    based on the spikes stored in the recording. The activity is showed localized in the sheet cooridantes.
+    
+    It defines line of plots named: 'ScatterPlot.Plot0' ... 'ScatterPlot.PlotN' or 'PixelMovie.Plot0' ... 'PixelMovie.PlotN'
+    depending on the parameter `scatter`.
+    
+    Other parameters
+    ----------------
+    
+    frame_rate : int  
+                The desired frame rate (per sec), it might be less if the computer is too slow.
+                
+    bin_width : float
+              In ms the width of the bins into which to sample spikes.
+    
+    scatter :  bool   
+            Whether to plot neurons activity into a scatter plot (if True) or as an interpolated pixel image.
+            
+    resolution : int 
+               The number of pixels into which the activity will be interpolated in case scatter = False.
+               
+    sheet_name: str
+              The sheet for which to display the actvity movie.
+    
+    """
+    
     required_parameters = ParameterSet({
           'frame_rate': int,  # the desired frame rate (per sec), it might be less if the computer is too slow
           'bin_width': float,  # in ms the width of the bins into which to sample spikes
@@ -489,10 +621,10 @@ class ActivityMovie(Plotting):
 
     def subplot(self, subplotspec):
         dsv = queries.param_filter_query(self.datastore,sheet_name=self.parameters.sheet_name)
-        return PerStimulusPlot(dsv, function=self.ploter, title_style="Standard"
+        return PerStimulusPlot(dsv, function=self._ploter, title_style="Standard"
                         ).make_line_plot(subplotspec)
 
-    def ploter(self, dsv, gs):
+    def _ploter(self, dsv, gs):
         sp = [s.spiketrains for s in dsv.get_segments()]
 
         start = sp[0][0].t_start.magnitude
@@ -534,7 +666,9 @@ class ActivityMovie(Plotting):
 
 class PerNeuronValuePlot(Plotting):
     """
-    Plots PerNeuronValuePlots, one for each sheet.
+    Plots the values for all PerNeuronValue ADSs in teh datastore, one for each sheet.
+    
+    It defines line of plots named: 'ScatterPlot.Plot0' ... 'ScatterPlot.PlotN
 
     #JAHACK, so far doesn't support the situation where several types of
     PerNeuronValue analysys data structures are present in the supplied
@@ -560,9 +694,9 @@ class PerNeuronValuePlot(Plotting):
         self.length=len(self.poss)
 
     def subplot(self, subplotspec):
-        return LinePlot(function=self.ploter,length=self.length).make_line_plot(subplotspec)
+        return LinePlot(function=self._ploter,length=self.length).make_line_plot(subplotspec)
 
-    def ploter(self, idx, gs):
+    def _ploter(self, idx, gs):
         
         posx = self.poss[idx][0,self.datastore.get_sheet_indexes(self.sheets[idx],self.pnvs[idx][0].ids)]
         posy = self.poss[idx][1,self.datastore.get_sheet_indexes(self.sheets[idx],self.pnvs[idx][0].ids)]
@@ -589,12 +723,14 @@ class PerNeuronValuePlot(Plotting):
 
 class PerNeuronValueScatterPlot(Plotting):
     """
-    Takes each pair of PerNeuronValue analysis datastructures in the datastore that have the same units 
-    and plots a scatter plot of each such pair.
+    Takes each pair of PerNeuronValue ADSs in the datastore that have the same units and plots a scatter plot of each such pair.
+    
+    It defines line of plots named: 'ScatterPlot.Plot0' ... 'ScatterPlot.PlotN
     """
     
-    def __init__(self, datastore, parameters,**kwargs):
-        Plotting.__init__(self, datastore, parameters,**kwargs)
+    def __init__(self, datastore, parameters, plot_file_name=None,fig_param=None):
+        Plotting.__init__(self, datastore, parameters, plot_file_name, fig_param)
+
         self.pairs = []
         self.sheets = []
         for sheet in datastore.sheets():
@@ -611,9 +747,9 @@ class PerNeuronValueScatterPlot(Plotting):
         self.length=len(self.pairs)
         
     def subplot(self, subplotspec):
-        return LinePlot(function=self.ploter,length=self.length,shared_axis=False).make_line_plot(subplotspec)
+        return LinePlot(function=self._ploter,length=self.length,shared_axis=False).make_line_plot(subplotspec)
 
-    def ploter(self, idx, gs):
+    def _ploter(self, idx, gs):
         pair = self.pairs[idx]
         # Let's figure out the varying parameters
         p1 = varying_parameters(pair)
@@ -647,14 +783,37 @@ class PerNeuronValueScatterPlot(Plotting):
 class ConnectivityPlot(Plotting):
     """
     Plots Connectivity, one for each projection originating or targeting
-    (depending on parameter reversed) sheet_name for a single neuron in the
-    sheet sheet_name.
+    (depending on parameter reversed) sheet `sheet_name` for a single neuron in the
+    sheet.
 
     This plot can accept second DSV that contains the PerNeuronValues
     corresponding to the target sheets (or source sheet if reversed is True) to be displayed that will be plotted as
     well.
-
-    Note one PerNeuronValue can be present per target sheet!
+    
+    It defines line of plots named: 'ConnectionsPlot.Plot0' ... 'DelaysPlot.PlotN` and 'DelaysPlot.Plot0' ... 'DelaysPlot.PlotN
+    where N is number of projections.
+    
+    Parameters
+    ----------
+    
+    pnv_dsv : Datastore
+            The datastore holding PerNeuronValues - one per each sheet that will be displayed as colors for the connections.
+            
+    Other parameters
+    ----------------
+    neuron : int  
+           The target neuron whose connections are to be displayed.
+    
+    reversed : bool
+             If false the outgoing connections from the given neuron are shown. if true the incomming connections are shown.
+    
+    sheet_name : str
+               For neuron in which sheet to display connectivity.
+        
+    Notes
+    -----
+    
+    One PerNeuronValue can be present per target sheet!
     """
 
     required_parameters = ParameterSet({
@@ -713,10 +872,10 @@ class ConnectivityPlot(Plotting):
         self.length=len(self.connections)
 
     def subplot(self, subplotspec):
-        return LinePlot(function=self.ploter, length=self.length, shared_axis=True
+        return LinePlot(function=self._ploter, length=self.length, shared_axis=True
                  ).make_line_plot(subplotspec)
 
-    def ploter(self, idx, gs):
+    def _ploter(self, idx, gs):
         # the 
         ix = numpy.flatnonzero(self.connections[idx][:,1]==index)
         x = self.proj.pre.positions[0][self.connections[idx][ix,0]]

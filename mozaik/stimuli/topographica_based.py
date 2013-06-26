@@ -14,14 +14,21 @@ from numpy import pi
 from quantities import Hz, rad, degrees, ms, dimensionless
 
 class TopographicaBasedVisualStimulus(VisualStimulus):
+    """
+    As we do not handle transparency in the Topographica stimuli (i.e. all pixels of all stimuli difned here will have 0% transparancy)
+    in this abstract class we disable the transparent flag defined by the :class:`mozaik.stimuli.visual_stimulus.VisualStimulus`, to improve efficiency.
+    """
     def __init__(self,**params):
         VisualStimulus.__init__(self,**params)
         self.transparent = False # We will not handle transparency anywhere here for now so let's make it fast
 
 class FullfieldDriftingSinusoidalGrating(TopographicaBasedVisualStimulus):
     """
-    max_luminance is interpreted as scale
-    and size_x/2 as the bounding box radius
+    A full field sinusoidal grating stimulus. 
+    
+    Notes
+    -----
+    `max_luminance` is interpreted as scale and `size_x/2` as the bounding box radius.
     """
 
     orientation = SNumber(rad, period=pi, bounds=[0,pi], doc="Grating orientation")
@@ -47,10 +54,10 @@ class FullfieldDriftingSinusoidalGrating(TopographicaBasedVisualStimulus):
 
 
 class Null(TopographicaBasedVisualStimulus):
+    """
+    Blank stimulus.
+    """
     def frames(self):
-        """
-        Empty stimulus
-        """
         while True:
             yield (imagen.Null(scale=self.background_luminance,
                               bounds=BoundingBox(radius=self.size_x/2),
@@ -61,7 +68,7 @@ class Null(TopographicaBasedVisualStimulus):
 
 class NaturalImageWithEyeMovement(TopographicaBasedVisualStimulus):
     """
-    A visual stimulus that simulates an eye movement over a static image
+    A visual stimulus that simulates an eye movement over a static image.
     """
     size = SNumber(degrees, doc="The length of the longer axis of the image in visual degrees")
     eye_movement_period = SNumber(ms, doc="The time between two consequitve eye movements recorded in the eye_path file")
@@ -97,7 +104,7 @@ class NaturalImageWithEyeMovement(TopographicaBasedVisualStimulus):
 
 class DriftingGratingWithEyeMovement(TopographicaBasedVisualStimulus):
     """
-    A visual stimulus that simulates an eye movement over a drifting  gratings
+    A visual stimulus that simulates an eye movement over a drifting  gratings.
     """
 
     orientation = SNumber(rad, period=pi, bounds=[0,pi], doc="Grating orientation")
@@ -134,7 +141,11 @@ class DriftingGratingWithEyeMovement(TopographicaBasedVisualStimulus):
 
 class DriftingSinusoidalGratingDisk(TopographicaBasedVisualStimulus):
     """
-    size_x/2 as the bounding box radius
+    A drifting sinusoidal grating confined to a apareture of specified radius.
+    
+    Notes
+    -----
+    size_x/2 is interpreted as the bounding box radius.
     """
     contrast = SNumber(dimensionless,bounds=[0,100.0],doc="Contrast of the stimulus")
     orientation = SNumber(rad, period=pi, bounds=[0,pi], doc="Grating orientation")
@@ -177,6 +188,8 @@ class DriftingSinusoidalGratingCenterSurroundStimulus(TopographicaBasedVisualSti
     A drifting grating in center surrounded by a drifting grating in the surround.
     Orientations of both center and surround gratings can be varied independently.
 
+    Notes
+    -----
     max_luminance is interpreted as scale and size_x/2 as the bounding box radius.
     """
     

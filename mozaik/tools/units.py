@@ -1,7 +1,6 @@
 """
-Units used in mozaik project and not specified in quantities.
+This module defines units used in mozaik project and not specified in the quantities package.
 """
-
 import quantities as qt
 from quantities.unitquantity import UnitQuantity, UnitInformation
 import numpy
@@ -48,8 +47,10 @@ def periodic(unit):
     """
     Checks whether a units is periodic
 
-    return (a,b) where a is True if unit is periodic, and b corresponds to the
-    period if a is True
+    Returns
+    -------
+        (a,b): bool,double
+             Where a is True if unit is periodic, and b corresponds to the period if a is True.
     """
     periodic = False
     period = None

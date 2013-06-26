@@ -7,7 +7,7 @@ This module defines the API for:
 Each stimulus is expected to have a list of parameters which have to uniquely identify the stimulus.
 This parameterization is done via the MozaikParametrized package (see :class:`mozaik.tools.mozaik_parametrized.MozaikParametrized`)
 that allows to specify parameters with the all above requirements.
-For Stimuli objects we will allow only SNumber, SInteger and SString parameter types (see :mod:`mozaik.tools.mozaik_parametrized`).
+For Stimuli objects we will allow only SNumber, SInteger and SString parameter types (see :py:mod:`mozaik.tools.mozaik_parametrized`).
 These extend the corresponding parameterized parameters to allow specification of units.
 
 Note that each stimulus can be converted back and forth into a string via the str operator and the :func:`mozaik.tools.mozaik_parametrized.MozaikParametrized.idd` function. 

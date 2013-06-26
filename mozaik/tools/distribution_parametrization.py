@@ -1,10 +1,10 @@
 """
-This file contains code trying to make an interface between NeuroTools parameters,
-and pyNN distribution interface. 
+This module contains code interfacing NeuroTools parameters, and pyNN distribution interface. 
 
 In future pyNN plans to make an comprehensive merge between NeuroTools parametrization system and pyNN,
 in which case this code should become obsolete and mozaik should fully switch to such new system.
 """
+
 from parameters import ParameterSet, ParameterRange, ParameterTable, ParameterReference
 from pyNN.random import RandomDistribution
 import urllib, copy, warnings, numpy, numpy.random  # to be replaced with srblib
@@ -12,6 +12,10 @@ from urlparse import urlparse
 from parameters.random import ParameterDist, GammaDist, UniformDist, NormalDist
 
 def load_parameters(parameter_url,modified_parameters):
+    """
+    A simple function for loading parameters that replaces the values in *modified_parameters* in the loaded parameters
+    and subsequently expands references.
+    """
     parameters = MozaikExtendedParameterSet(parameter_url)
     parameters.replace_values(**modified_parameters)
     parameters.replace_references()
@@ -34,6 +38,10 @@ class PyNNDistribution(RandomDistribution):
 
           
 class MozaikExtendedParameterSet(ParameterSet):
+    """
+    This is an extension to `ParameterSet` class which adds the PyNNDistribution as a possible type of a parameter.
+    """
+    
     @staticmethod
     def read_from_str(s,update_namespace=None):
         global_dict = dict(ref=ParameterReference,url=MozaikExtendedParameterSet,ParameterSet=ParameterSet)

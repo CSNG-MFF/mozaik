@@ -16,7 +16,18 @@ logger = mozaik.getMozaikLogger("Mozaik")
 
 
 class VisualStimulus(BaseStimulus):
-    """Abstract base class for visual stimuli."""
+    """
+    Abstract base class for visual stimuli.
+    
+    This class defines all parameters common to all visual stimuli.
+    
+    This class implements all functions specified by the :class:`mozaik.stimuli.stimulus.BaseStimulus` interface.
+    The only function that remains to be implemented by the user whenever creating a new stimulus by subclassing
+    this class is the :func:`mozaik.stimuli.stimulus.BaseStimulus.frames` function.
+    
+    This class also implements functions common to all visual stimuli that are required for it to be compatible 
+    with the :class:`mozaik.framework.space.VisualSpace` and  class.
+    """
     background_luminance = SNumber(lux, doc="Background luminance. Maximum luminance of object allowed is 2*background_luminance")
     density = SNumber(1/(degrees), doc="The density of stimulus - units per degree")
     location_x = SNumber(degrees, doc="x location of the center of  visual region.")

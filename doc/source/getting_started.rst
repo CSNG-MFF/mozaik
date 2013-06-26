@@ -1,6 +1,45 @@
 Getting started
 ===============
 
+Here we will discuss several general topics that the user should be familiar before starting to use *mozaik*.
+
+
+Parametrization
+~~~~~~~~~~~~~~~
+
+There are two systems used to parametrize objects throughout mozaik, each with its own role.
+
+* ParemterSet - This system is used to parametrize objects for which the parameters are typically loaded from configuration files, and for which
+                we want to enforce typing. For more details. See :ref:`mposection` section for more details.
+
+* MozaikParametrizedObject - For objects that are stored in large numbers and for which we need to have a flexible way to sort between them based on their parameters
+                             we use the :class:`.mozaik.tools.mozaik_parametrized.MozaikParametrizedObject` interface. See :ref:`parametersetsection` section for more details.
+
+
+.. _mposection:
+
+MozaikParametrizedObject
+------------------------
+
+There are several situations in mozaik where we deal with large numbers of objects, each uniquely identified by a (potentiall different) set 
+of parameters. Often we want to refer to subsets of such set of objects based on combinations of their parameter values. In mozaik this happens
+when we deal with stimuli, with recordings and with analysis data structures. To facilitate a common handling of these cases we define a class 
+:class:`.mozaik.tools.mozaik_parametrized.MozaikParametrizedObject`, which represents a extension of this parameter package: `param <http://ioam.github.io/param/>`_.
+
+We restrict the types of parameters that can be used with :class:`.mozaik.tools.mozaik_parametrized.MozaikParametrizedObject` 
+class to those defined in :mod:`.mozaik.tools.mozaik_parametrized` module: :class:`.mozaik.tools.mozaik_parametrized.SNumber`, :class:`.mozaik.tools.mozaik_parametrized.SInteger` and :class:`.mozaik.tools.mozaik_parametrized.SString`,
+representing a floating number, integer or a string respectively. On top of the properties inherited from identical parameters of the `param <http://ioam.github.io/param/>`_ package we 
+allow for definition of period for the SNumber and SInteger parameter types, and units for the SNumber parameter. 
+If period is set, it declares the parameter to be periodic with the given period. The units declare the units in which the parameter value is given.
+
+The :mod:`.mozaik.tools.mozaik_parametrized` module containes number of methods that allow for powerfull filtering of sets of *MozaikParametrizedObject*
+objects. These methods are primarily used the the :mod:`.mozail.storage.queries` package. 
+
+The user will encounter the :class:`.mozaik.tools.mozaik_parametrized.MozaikParametrizedObject` class if he wants to define a new Stimulus or a
+new AnalysisDataStructure class. In this case it has to derive the new class from :class:`.mozaik.tools.mozaik_parametrized.MozaikParametrizedObject`
+and declare all parameters that will identify the object using the three parameter types declared in :mod:`.mozaik.tools.mozaik_parametrized` module.
+
+.. _parametersetsection:
 
 ParameterSet
 ------------
@@ -24,7 +63,9 @@ case the supplied parameter type does not have to match the required_parameters 
 
 The *mozaik* documentation quidelines stipulate that the parameters in the required_parameters attribute are documented via the standard 
 numpy parameter syntax in the numpydoc 'Other parameters' section and this section should not be used otherwise (this is a workaround as numpydoc does
-not support and other parameter sections, in future we would like to extend numpy doc to recongnice special 'Required parameters' section).
+not support and other parameter sections, in future we would like to extend numpydoc to recongnice special 'Required parameters' section).
+
+Throughout the documentation we will refer to this parameterization scheme as the 'required parameters` or RP.
 
 Common abreviations
 -------------------
@@ -34,3 +75,6 @@ Throughout the documentation we use several common abbreviations
 * DSV - Data Store View (see :class:`mozaik.storage.datastore.DataStoreView`)
 * ADS - Analysis Data Structure (see :mod:`mozaik.analysis.analysis_data_structures`)
 * PNV - Per Neuron Value analysis data structure (see :class:`mozaik.analysis.analysis_data_structures.PerNeuronValue`)
+* RP (or required parameters) - The required parameters parametrization scheme (see ParameterSet section above)
+
+

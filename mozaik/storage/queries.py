@@ -1,5 +1,8 @@
 """
-docstring goes here
+This module contain query manipulation system that is used to filter information stored in data store (:class:`.DataStore`).
+
+The basic principle is that each query takes a existing :class:`.DataSore` (or :class:`.DataStoreView`) as an input and 
+returns and new :class:`.DataSoreView` that is a subset of the input DSV.
 """
 from mozaik.framework.interfaces import MozaikParametrizeObject
 from parameters import ParameterSet
@@ -9,30 +12,72 @@ import numpy
 
 class Query(MozaikParametrizeObject):
     """
-    Query accepts a DataStoreView and returns a DataStoreView with potentially
+    Query accepts a :class:`.DataStoreView` and returns a :class:`.DataStoreView` (or set of DSVs) with potentially
     reduced set of recorded data or analysis results
 
     We recommend to write queries in a way where it can be invoked via the
-    ParamterSet method uding a class, but also directly as a function with
+    ParamterSet method using a class, but also directly as a function with
     (potentially with default paramter values)
 
-    See SelectStimuliTypeQuery for a simple example
+    See :class:`.ParamFilterQuery` for a simple example.
     """
     required_parameters = ParameterSet({
     })
 
     def __init__(self, parameters):
-        """
-        Just check the parameters, and load the data.
-        """
         MozaikParametrizeObject.__init__(self, parameters)
 
     def query(self, dsv):
+        """
+        Abstract function to be implemented by each query.
+        
+        This is the function that executes the query. It receives a DSV as input and has to return a DSV (or set of DSVs).
+        """
         raise NotImplementedError
 
 
 ########################################################################
 def param_filter_query(dsv,ads_unique=False,rec_unique=False,**kwargs):
+    """
+    It will return DSV with only recordings and ADSs with mozaik parameters 
+    whose values match the parameter values combinations provided in `kwargs`. 
+    
+    To restrict mozaik parameters of the stimuli associated with the ADS or recordings 
+    pre-pend 'st_' to the parameter name.
+    
+    For the recordings, parameter sheet refers to the sheet for which the recording was done. 
+    
+    
+    Parameters
+    ----------
+    
+    dsv : DataStoreView
+        The input DSV.
+    
+    ads_unique : bool, optional
+               If True the query will raise an exception if the query does not identify a unique ADS.
+
+    rec_unique : bool, optional
+               If True the query will raise an exception if the query does not identify a unique recording.
+    
+    \*\*kwargs : dict
+               Remaining keyword arguments will be interepreted as the mozaik parameter names and their associated values that all ASDs
+               or recordings have to match. The values of the parameters should be either directly the values to match or list of values in which
+               case this list is interpreted as *one of* of the values that each returned recording or ASD has to match (thus effectively there
+               is an *and* operation between the different parameters and *or* operation between the values specified for the given mozaik parameters). 
+               
+    Examples
+    --------
+    >>> datastore.param_filter_query(datastore,identifier=['PerNeuronValue','SingleValue'],sheet_name=sheet,value_name='orientation preference')
+    
+    This command should return DSV containing all recordings and ADSs whose identifier is *PerNeuronValue* or *SingleValue*, and are associated with sheet named *sheet_name* and as their value name have 'orientation preference'.
+    Note that since recordings do not have these parameters, this query would return a DSV containing only ADSs.
+    
+    >>> datastore.param_filter_query(datastore,st_orientation=0.5)
+    
+    This command should return DSV containing all recordings and ADSs that are associated with stimuli whose mozaik parameter orientation has value 0.5.
+    """
+    
     new_dsv = dsv.fromDataStoreView()
     
     st_kwargs = dict([(k[3:],kwargs[k]) for k in kwargs.keys() if k[0:3] == 'st_'])
@@ -78,15 +123,20 @@ def param_filter_query(dsv,ads_unique=False,rec_unique=False,**kwargs):
 
 class ParamFilterQuery(Query):
     """
-    It will restrict the DSV to only recordings and ADS with parameters 
-    whose values match the params. 
+    See :func:`.param_filter_query` for description.
     
-    To restrict parameters of the stimuli to which the ADS or recordings 
-    have been done pre-pend 'st_' to the parameter name.
+    Other parameters
+    ----------------
     
-    For the recordings parameter sheet refers to the sheet for which
-    the recording was done. 
+    params : ParameterSet
+               The set of mozaik parameters and their associated values to which to restrict the DSV. (see \*\*kwargs in :func:.`param_filter_query`)
+    ads_unique : bool, optional
+               If True the query will raise an exception if the query does not identify a unique ADS.
+
+    rec_unique : bool, optional
+               If True the query will raise an exception if the query does not identify a unique recording.
     """
+    
     required_parameters = ParameterSet({
         'params' : ParameterSet,
         'ads_unique' : bool, # It will raise exception if result does not contain a single AnalysisDataStructure
@@ -99,7 +149,16 @@ class ParamFilterQuery(Query):
 
 
 ########################################################################
-def tag_based_query(dsv, tags=[]):
+def tag_based_query(dsv, tags):
+        """
+        This query filters out all AnalysisDataStructure's corresponding to the given tags.
+        
+        Parameters
+        ----------
+        tags : list(str)
+                 The list of tags that each ADS has to contain.
+        """
+    
         new_dsv = dsv.fromDataStoreView()
         new_dsv.block.segments = dsv.recordings_copy()
         new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
@@ -121,9 +180,14 @@ def _tag_based_query(d, tags):
 
 class TagBasedQuery(Query):
     """
-    This query filters out all AnalysisDataStructure's corresponding to the
-    given tags
+    See  :func:`.tag_based_query`.
+    
+    Parameters
+    ----------
+    tags : list(str)
+         The list of tags that each ADS has to contain.
     """
+    
     required_parameters = ParameterSet({
         'tags': list,  # list of tags the the query will look for
     })
@@ -134,19 +198,6 @@ class TagBasedQuery(Query):
 
 ########################################################################
 def partition_by_stimulus_paramter_query(dsv, parameter_list):
-        assert 'name' not in parameter_list, "One cannot partition against <name> parameter"
-        st = dsv.get_stimuli()
-        values, st = colapse(dsv.block.segments,st,parameter_list=parameter_list,allow_non_identical_objects=True)
-        dsvs = []
-        for vals in values:
-            new_dsv = dsv.fromDataStoreView()
-            new_dsv.analysis_results = dsv.analysis_result_copy()
-            new_dsv.block.segments.extend(vals)
-            dsvs.append(new_dsv)
-        return dsvs
-
-
-class PartitionByStimulusParamterQuery(Query):
     """
     This query will take all recordings and return list of DataStoreViews
     each holding recordings measured to the same stimulus with exception of
@@ -155,7 +206,41 @@ class PartitionByStimulusParamterQuery(Query):
     Note that in most cases one wants to do this only against datastore holding
     only single Stimulus type! In that case the datastore is partitioned into
     subsets each holding recordings to the same stimulus with the same paramter
-    values, with the exception to the parameters in parameter_list
+    values, with the exception to the parameters in parameter_list.
+    
+    Parameters
+    ----------
+    
+    dsv : DataStoreView
+        The input DSV.
+    
+    parameter_list : list(string)
+               The list of parameters of the associated stimuli that will vary in the returned DSVs, all other stimulus parameters will have the same value within each of the 
+               returned DSVs.
+
+    """
+    assert 'name' not in parameter_list, "One cannot partition against <name> parameter"
+    st = dsv.get_stimuli()
+    values, st = colapse(dsv.block.segments,st,parameter_list=parameter_list,allow_non_identical_objects=True)
+    dsvs = []
+    for vals in values:
+        new_dsv = dsv.fromDataStoreView()
+        new_dsv.analysis_results = dsv.analysis_result_copy()
+        new_dsv.block.segments.extend(vals)
+        dsvs.append(new_dsv)
+    return dsvs
+
+
+class PartitionByStimulusParamterQuery(Query):
+    """
+    See  :func:`.partition_by_stimulus_paramter_query`.
+    
+    Other parameters
+    ----------------
+    
+    parameter_list : list(string)
+               The list of parameters that will vary in the returned DSVs, all other parameters will have the same value within each of the 
+               returned DSVs.
     """
 
     required_parameters = ParameterSet({
@@ -169,6 +254,29 @@ class PartitionByStimulusParamterQuery(Query):
 
 ######################################################################################################################################
 def partition_analysis_results_by_parameters_query(dsv,parameter_list=None,excpt=False):
+        """
+        This query will take all analysis results and return list of DataStoreViews
+        each holding analysis results that have the same values of
+        the parameters in parameter_list.
+
+        Note that in most cases one wants to do this only against datastore holding
+        only single analysis results type! In that case the datastore is partitioned into
+        subsets each holding recordings to the same stimulus with the same paramter
+        values, with the exception to the parameters in parameter_list.
+        
+        Parameters
+        ----------
+        
+        dsv : DataStoreView
+            The input DSV.
+        
+        parameter_list : list(string)
+               The list of parameters that will vary in the returned DSVs, all other parameters will have the same value within each of the 
+               returned DSVs.
+
+        except : bool
+               If excpt is True the query is allowed only on DSVs holding the same AnalysisDataStructures.
+        """
         if dsv.analysis_results == []: return []
         assert parameter_list != None , "parameter_list has to be given"
         if excpt:
@@ -187,19 +295,20 @@ def partition_analysis_results_by_parameters_query(dsv,parameter_list=None,excpt
         return dsvs
 
 class PartitionAnalysisResultsByParameterNameQuery(Query):
-    
     """
-    This query will take all analysis results and return list of DataStoreViews
-    each holding analysis results that have the same values of
-    the parameters in parameter_list.
+    See  :func:`.partition_analysis_results_by_parameters_query`.
+    
+    Other parameters
+    ----------------
+    
+    parameter_list : list(string)
+               The list of parameters that will vary in the returned DSVs, all other parameters will have the same value within each of the 
+               returned DSVs.
+    excpt : bool
+               If excpt is True the query is allowed only on DSVs holding the same AnalysisDataStructures.
+               
+    """
 
-    Note that in most cases one wants to do this only against datastore holding
-    only single analysis results type! In that case the datastore is partitioned into
-    subsets each holding recordings to the same stimulus with the same paramter
-    values, with the exception to the parameters in parameter_list.
-    
-    If excpt!=None this is allowed only on DSVs holding the same AnalysisDataStructures.
-    """
 
     required_parameters = ParameterSet({
         'parameter_list': list,  # the index of the parameter against which to partition
@@ -212,6 +321,29 @@ class PartitionAnalysisResultsByParameterNameQuery(Query):
 
 ######################################################################################################################################
 def partition_analysis_results_by_stimulus_parameters_query(dsv,parameter_list=None,excpt=False):
+        """
+        This query will take all analysis results and return list of DataStoreViews
+        each holding analysis results that have the same values of
+        of stimulus parameters in parameter_list.
+
+        Note that in most cases one wants to do this only against datastore holding
+        only analysis results  measured to the same stimulus type! In that case the datastore is partitioned into
+        subsets each holding recordings to the same stimulus with the same paramter
+        values, with the exception to the parameters in parameter_list.
+    
+        Parameters
+        ----------
+        
+        dsv : DataStoreView
+            The input DSV.
+        
+        parameter_list : list(string)
+               The list of stimulus parameters that will vary between the ASDs in the returned DSVs, all other parameters will have the same value within each of the 
+               returned DSVs.
+
+        except : bool
+               If excpt is True the query is allowed only on DSVs holding the same AnalysisDataStructures.
+        """
         if dsv.analysis_results == []: return []
         st = [MozaikParametrized.idd(ads.stimulus_id) for ads in dsv.analysis_results]
         assert parameter_list != None , "parameter_list has to be given"
@@ -231,18 +363,18 @@ def partition_analysis_results_by_stimulus_parameters_query(dsv,parameter_list=N
         return dsvs
 
 class PartitionAnalysisResultsByStimulusParameterNameQuery(Query):
-    
     """
-    This query will take all analysis results and return list of DataStoreViews
-    each holding analysis results that have the same values of
-    of stimulus parameters in parameter_list.
-
-    Note that in most cases one wants to do this only against datastore holding
-    only analysis results  measured to the same stimulus type! In that case the datastore is partitioned into
-    subsets each holding recordings to the same stimulus with the same paramter
-    values, with the exception to the parameters in parameter_list.
+    See  :func:`.partition_analysis_results_by_stimulus_parameters_query`.
     
-    If excpt!=None this is allowed only on DSVs holding the same AnalysisDataStructures.
+    Other parameters
+    ----------------
+    
+    
+    parameter_list : list(string)
+               The list of parameters that will vary in the returned DSVs, all other parameters will have the same value within each of the 
+               returned DSVs.
+    excpt : bool
+               If excpt is True the query is allowed only on DSVs holding the same AnalysisDataStructures.
     """
 
     required_parameters = ParameterSet({
@@ -265,8 +397,8 @@ class PartitionAnalysisResultsByStimulusParameterNameQuery(Query):
 ########################################################################
 def equal_stimulus_type(dsv):
     """
-    This functions tests whether DSV contains only recordings associated
-    with the same stimulus type.
+    This functions returns True if DSV contains only recordings associated
+    with the same stimulus type. Otherwise False.
     """
     return matching_parametrized_object_params([MozaikParametrized.idd(s) for s in dsv.get_stimuli()],params=['name'])
 ########################################################################
@@ -274,9 +406,9 @@ def equal_stimulus_type(dsv):
 ########################################################################
 def equal_ads_except(dsv,except_params):
     """
-    This functions tests whether DSV contains only ADS of the same kind
+    This functions returns true if DSV contains only ADS of the same kind
     and parametrization with the exception of parameters listed in
-    except_params.
+    except_params. Otherwise False.
     """
     return matching_parametrized_object_params(dsv.analysis_results,except_params=except_params)
 ########################################################################
@@ -284,7 +416,7 @@ def equal_ads_except(dsv,except_params):
 ########################################################################
 def equal_ads_type(dsv):
     """
-    Returns true if the dsv contains ADS of the same type.
+    Returns True if the dsv contains ADS of the same type. Otherwise False.
     """
     return matching_parametrized_object_params(dsv.analysis_results,params=['name'])
 ########################################################################
@@ -294,9 +426,11 @@ def ads_with_equal_stimulus_type(dsv, allow_None=False):
     """
     This functions tests whether DSV contains only ADS associated
     with the same stimulus type.
-
-    not_None - if true it will not allow ADS that are not associated with
-               stimulus
+    
+    Parameters
+    ----------
+    not_None : bool
+             If true it will not allow ADS that are not associated with stimulus
     """
     if allow_None:
         return matching_parametrized_object_params([MozaikParametrized.idd(ads.stimulus_id) for ads in dsv.analysis_results if ads.stimulus_id != None],params=['name'])

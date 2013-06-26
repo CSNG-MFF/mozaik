@@ -3,7 +3,6 @@ This file contains various operations over Neo objects. Such as sum over lists
 of Neo objects etc.
 """
 
-
 def neo_sum(l):
     """
     This function gets a list of Neo objects and it
@@ -14,7 +13,6 @@ def neo_sum(l):
     for z in l[1:]:
         a = a + z
     return a
-
 
 def neo_mean(l):
     """

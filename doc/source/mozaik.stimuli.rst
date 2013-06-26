@@ -16,7 +16,6 @@ See the :py:mod:`mozaik.stimuli.stimulus` for more general information on stimul
 
 .. automodule:: mozaik.stimuli.stimulus
     :members:
-    :undoc-members:
     :show-inheritance:
 
 
@@ -25,7 +24,6 @@ See the :py:mod:`mozaik.stimuli.stimulus` for more general information on stimul
 
 .. automodule:: mozaik.stimuli.visual_stimulus
     :members:
-    :undoc-members:
     :show-inheritance:
 
 
@@ -34,6 +32,5 @@ See the :py:mod:`mozaik.stimuli.stimulus` for more general information on stimul
 
 .. automodule:: mozaik.stimuli.topographica_based
     :members:
-    :undoc-members:
     :show-inheritance:
 

@@ -1,6 +1,7 @@
 """
-docstring goes here
+This module implements the data storage functionality.
 """
+
 import numpy
 from parameters import ParameterSet
 from neo.core.block import Block
@@ -21,13 +22,13 @@ class DataStoreView(MozaikParametrizeObject):
     This class represents a subset of a DataStore and defines the query
     interface and the structure in which the data are stored in the memory of
     any datastore. Main role of this class is to allow for creating subsets of
-    data stored in the DataStore, so that one can restrict other parts of
+    data stored in the :class:`.DataStore`, so that one can restrict other parts of
     Mozaik to work only over these subsets. This is done via means of queries
-    (see storage.queries) which produce DataStoreView objects and can be
+    (see :mod:`mozaik.storage.queries`) which produce :class:`.DataStoreView` objects and can be
     chained to work like filters.
 
     Note that the actual datastores inherit from this object and define how the
-    data are actualy stored on other media (i.e. HD via i.e. hdf5 file format).
+    data are actualy stored on other media (i.e. hdf5 file format or simple pickle).
 
     Data store should aggregate all data and analysis results collected across
     experiments and a given model.
@@ -38,30 +39,22 @@ class DataStoreView(MozaikParametrizeObject):
     segment corresponds to recordings from a single sheet to a single stimulus.
 
     Analysis results storage:
+    
+    A list containing the :class:`.mozaik.analysis.analysis_data_structures.AnalysisDataStructure` objects.
 
-    There are three categories of results that map to the MoziakLite model
-    structural building blocks:
-
-    Model specific - most general
-    Sheet specific
-    Neuron specific
-
-    This is a nested structure of which each level is addressed with appropriate
-    identifier and all levels can hold results. In future this structure might
-    be extended with more levels depending on the native structures added to
-    mozaik (i.e. cortical area, cortical layer etc.)
-
-    Further at each level the analysis results are addressed by the
+    The analysis results are addressed by the
     AnalysisDataStructure identifier. The call with this specification returns
     a set of AnalysisDataStructures that correspond to the above addressing.
-    This can be a list. If further more specific 'addressing' is required it
+    If further more specific 'addressing' is required it
     has to be done by the corresponding visualization or analysis code that
     asked for the AnalysisDataStructure's based on the knowledge of their
     content. Or a specific query filters can be written that understand the specific type
     of AnalysisDataStructure and can filter them based on their internal data.
+    For more details on addressing experimental results or analysis data structures
+    please reffer to :mod:`.queries` or :py:mod:`mozaik.tools.mozaik_parametrized` modules.
 
-    DataStoreView also keeps a reference to a full Datastore <full_datastore>
-    from which it was originally created (this might be have happened via a
+    DataStoreView also keeps a reference to a full `.Datastore` object
+    from which it was originally created (this might have happened via a
     chain of DSVs). This is on order to allow for operations that work over DSV
     to insert their results into the original full datastore as this is
     (almost?) always the desired behaviours (note DSV does not actually have
@@ -71,14 +64,11 @@ class DataStoreView(MozaikParametrizeObject):
     to the datastore if the new ADS has the same values of all its parameters as
     some other ADS already inserted in the datastore. This is so that each ADS
     stored in datastore is uniquely identifiable based on its parameters.
-    If the datastore is created (loaded) with flag replace set to True in the situation
+    If the datastore is created (loaded) with the replace flag set to True, in the situation
     of such conflict the datastore will replace the new ADS for the one already in the datastore.
     """
 
     def __init__(self, parameters, full_datastore,replace=False):
-        """
-        Just check the parameters, and load the data.
-        """
         MozaikParametrizeObject.__init__(self, parameters)
         # we will hold the recordings as one neo Block
         self.block = Block()
@@ -89,12 +79,15 @@ class DataStoreView(MozaikParametrizeObject):
                                               # instance is actually DataStore
 
     def get_segments(self):
+        """
+        Returns list of all recordings (as neo segments) stored in the datastore.
+        """
         return self.block.segments
 
     def sheets(self):
         """
         Returns the list of all sheets that are present in at least one of the
-        segments in the given DataStoreView
+        segments in the given DataStoreView.
         """
         sheets = collections.OrderedDict()
         for s in self.block.segments:
@@ -109,6 +102,13 @@ class DataStoreView(MozaikParametrizeObject):
         return sheets.keys()
 
     def get_neuron_postions(self):
+        """
+        Returns the positions for all neurons in the model within their respective sheets.
+        A dictionary is returned with keys names of sheets and values a 2d ndarray of size (2,number of neurons)
+        holding the x and y positions of all neurons in the rows.
+        
+        Use :func:`.get_sheet_indexes` to link the indexes in the returned array to neuron idds.
+        """
         return self.full_datastore.block.annotations['neuron_positions']
 
     def get_sheet_indexes(self, sheet_name,neuron_id):
@@ -132,6 +132,9 @@ class DataStoreView(MozaikParametrizeObject):
             return self.full_datastore.block.annotations['neuron_ids'][sheet_name][indexes]
 
     def get_neuron_annotations(self):
+        """
+        Returns neuron annotations.
+        """
         return self.full_datastore.block.annotations['neuron_annotations']
 
     def get_stimuli(self):
@@ -143,64 +146,118 @@ class DataStoreView(MozaikParametrizeObject):
         return [s.annotations['stimulus'] for s in self.block.segments]
 
     def get_analysis_result(self, **kwargs):
+        """
+        Return a list of ADSs, that match the parameter values specified in kwargs.
+        
+        Examples
+        --------
+        >>> datastore.get_analysis_result(identifier=['PerNeuronValue','SingleValue'],sheet_name=sheet,value_name='orientation preference')
+        
+        This command should return or ADS whose identifier is *PerNeuronValue* or *SingleValue*, and are associated with sheet named *sheet* and as their value name have 'orientation preference'
+        """
         return filter_query(self.analysis_results,**kwargs)
 
     def get_retinal_stimulus(self, stimuli=None):
+        """
+        Return the raw retinal stimulus that has been presented to the model due to stimuli specified by the stimuli argument.
+        If stimuli==None returns all retinal stimuli.
+        """
         if stimuli == None:
             return self.retinal_stimulus.values()
         else:
             return [self.retinal_stimulus[s] for s in stimuli]
 
     def retinal_stimulus_copy(self):
+        """
+        Utility function that makes a shallow copy of the dictionary holding retinal stimuli.
+        """
         new_dict = collections.OrderedDict()
         for k in self.retinal_stimulus.keys():
             new_dict[k] = self.retinal_stimulus[k]
         return new_dict
 
     def analysis_result_copy(self):
+        """
+        Utility function that makes a shallow copy of the list holding analysis data structures.
+        """
         return self.analysis_results[:]
 
     def recordings_copy(self):
+        """
+        Utility function that makes a shallow copy of the list holding recordings.
+        """
         return self.block.segments[:]
 
     def fromDataStoreView(self):
+        """
+        Returns a empty DSV that is linked to the same `.DataStore` as this DSV.
+        """
         return DataStoreView(ParameterSet({}), self.full_datastore)
 
     def print_content(self, full_recordings=False, full_ADS=False):
         """
-        Info for debugging purposes
+        Prints the content of the data store (specifically the list of recordings and ADSs in the DSV).
+        
+        If the 
+        
+        Parameters
+        ----------
+            full_recordings : bool (optional)
+                            If True each contained recording will be printed.
+                            Otherwise only the overview of the recordings based on stimulus type will be shown.
+                            
+            full_ADS : bool (optional)
+                     If True each contained ADS will be printed (for each this will print the set of their mozaik parameters together with their values).
+                     Otherwise only the overview of the ADSs based on their identifier will be shown.
         """
-        print "DSV info:"
-        print "   Number of recordings: " + str(len(self.block.segments))
+        logger.info("DSV info:")
+        logger.info("   Number of recordings: " + str(len(self.block.segments)))
         d = {}
         for st in [s.annotations['stimulus'] for s in self.block.segments]:
             d[MozaikParametrized.idd(st).name] = d.get(MozaikParametrized.idd(st).name, 0) + 1
 
         for k in d.keys():
-            print "     " + str(k) + " : " + str(d[k])
+            logger.info("     " + str(k) + " : " + str(d[k]))
 
-        print "   Number of ADS: " + str(len(self.analysis_results))
+        logger.info("   Number of ADS: " + str(len(self.analysis_results)))
         d = {}
         for ads in self.analysis_results:
             d[ads.identifier] = d.get(ads.identifier, 0) + 1
 
         for k in d.keys():
-            print "     " + str(k) + " : " + str(d[k])
+            logger.info("     " + str(k) + " : " + str(d[k]))
 
         if full_recordings:
-            print 'RECORDING RESULTS'
+            logger.info('RECORDING RESULTS')
             for s in [s.annotations['stimulus'] for s in self.block.segments]:
-                print str(s)
+                logger.info(str(s))
 
         if full_ADS:
-            print 'ANALYSIS RESULTS'
+            logger.info('ANALYSIS RESULTS')
             for a in self.analysis_results:
-                print str(a)
+                logger.info(str(a))
     
 class DataStore(DataStoreView):
     """
-    Abstract DataStore class the declares the parameters, and enforces the
-    interface
+    Abstract DataStore class that declares the *mozaik* data store interface.
+    
+    The role of mozaik data store is to store the recordings from simulation 
+    (generally this means the spike trains and the various analog signals such as conductances or membrane potential),
+    the analysis results and the various metedata that is generated during the model setup and it's subsequent simulation.
+    
+    The recordings are send to the DataStore in the neo format and are expected to be returned in neo format as well.
+    
+    mozaik generetas one neo segment per each model sheet (see :class:`.mozaik.framework.sheets.Sheet`) for each presented stimulus,
+    that is stored in the :class:`.DataStore`.
+    
+    Parameters
+    ----------
+    load : bool
+         If False datastore will be created in the parameter.root_directory directory. 
+         If True it will be loaded from the parameter.root_directory directory. 
+    
+    parameters : ParameterSet
+               The required parameter set.
     """
 
     required_parameters = ParameterSet({
@@ -232,7 +289,7 @@ class DataStore(DataStoreView):
         
     def identify_unpresented_stimuli(self, stimuli):
         """
-        It will filter out from stimuli all those which have already been
+        This method filters out from a list of stimuli all those which have already been
         presented.
         """
         unpresented_stimuli = []
@@ -242,18 +299,40 @@ class DataStore(DataStoreView):
         return unpresented_stimuli
 
     def load(self):
+        """
+        The DataStore interface function to be implemented by a given backend. 
+        It should load the datastore.
+        """
         raise NotImplementedError
 
     def save(self):
+        """
+        The DataStore interface function to be implemented by a given backend. 
+        It should store the datastore.
+        """
+        
         raise NotImplementedError
 
     def add_recording(self, segment, stimulus):
+        """
+        The DataStore interface function to be implemented by a given backend. 
+        It should add a recording into the datastore.
+        """
         raise NotImplementedError
 
-    def add_analysis_result(self, result, sheet_name=None, neuron_idx=None):
+    def add_analysis_result(self, result):
+        """
+        The DataStore interface function to be implemented by a given backend. 
+        It should add a ADS to the datastore.
+        """
         raise NotImplementedError
 
     def add_stimulus(self, data, stimulus):
+        """
+        The DataStore interface function to be implemented by a given backend. 
+        It should add a stimulus into the datastore.
+        """
+
         raise NotImplementedError
 
 

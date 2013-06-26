@@ -1,5 +1,5 @@
 """
-See visualization.plotting for documentation.
+See :mod:`mozaik.visualization` for more general documentation.
 """
 
 import mozaik.visualization.plotting_helper_functions as phf
@@ -13,13 +13,23 @@ logger = mozaik.getMozaikLogger("Mozaik")
 
 class SimplePlot(object):
     """
-    One general policy is that any overwriting of the standard style default
+    The low level plotting API based around matplotlib.
+    
+    Each simple plot is assumed to create a single axis - this happens in this class.
+    Each user defined low-level plotting function is supposed to derive from this class
+    and implement the four abstract methods: `pre_axis_plot`, `pre_plot`, `plot`, `post_plot`, to 
+    direct the styling and decoration of the plot, and call the actual matplotlib plotting functions in the 
+    `plot` function.
+    
+    The main policy that this API declares is that any overwriting of the standard style default
     values by the `Plotting` mechanisms should take precedence over those done
     by specific instances of `SimplePlot`. In order to enforce this precedence,
     the modifiable parameters of the classes should be stored in the common
     dictionary `parameters`. Each class derived from `SimplePlot` should add its
     modifiable parameters into the `parameters` dictionary in its constructor.
-
+    We will document the modifiable parameters the given class declares 
+    in the 'Other parameters' section.
+    
     The kwargs passed to the instances of `SimplePlot` from the `Plotting`
     mechanisms will be stored. At the beginning of the __call__ the dictionary
     will be updated with these stored kwargs, and the updated parameters (note
@@ -30,17 +40,30 @@ class SimplePlot(object):
     *Note, for this reason all `SimplePlot` classes need to take care that none
     of the modifiable attributes is also defined as a class attribute.*
     """
+    def pre_axis_plot(self):
+        """
+        The function that is executed before the axis is created.
+        """
+        raise NotImplementedError
+
 
     def pre_plot(self):
+        """
+        The function that is executed before the plotting but after the axis is created.
+        """
         raise NotImplementedError
 
     def plot(self):
+        """
+        The function that has to perform the low level plotting. This is where the 
+        main matplotlib plot calls will happen.
+        """
         raise NotImplementedError
 
     def post_plot(self):
-        raise NotImplementedError
-
-    def pre_axis_plot(self):
+        """
+        The function that is executed after the plotting.
+        """
         raise NotImplementedError
 
     def __init__(self):
@@ -73,8 +96,7 @@ class SimplePlot(object):
 
     def __call__(self, gs,params):
         """
-        Calls all the plotting styling and execution functions in the right
-        order
+        Calls all the plotting styling and execution functions in the right order.
         """
         self.update_params(params)
         self.pre_axis_plot()
@@ -86,8 +108,7 @@ class SimplePlot(object):
 
     def update_params(self,params):
         """
-        Updates the modifiable parameters and sets them to be further
-        un-modifiable
+        Updates the modifiable parameters and sets them to be further un-modifiable
         """
         for key in params:
             if not key in self.__dict__['parameters']:
@@ -105,28 +126,71 @@ class StandardStyle(SimplePlot):
 
     def __init__(self):
         """
-        fontsize            Font size to be used for tick labels and axis labels
-        ?_tick_style        The style of ticks to be plotted. Note that the style interacts with the x_ticks and y_ticks commands in that it formats the ticks set by these
-                            variables, or by the default ticks set by matplotlib
-                            Available styles are:
-                               Min - plots three ticks, 2 on sides one in the middle (if even number of xticks supplied only the side ones will be plotted)
-                               Custom - will plot tikcs as defined by x/yticks arguments
-        x_axis              whether to plot the x_axis (and  the ticks)
-        y_axis              whether to plot the y_axis (and  the ticks)
-        x_label             what is the xlabel (None means no label will be plotted)
-        y_label             what is the ylabel (None means no label will be plotted)
-        top_right_border    Whether to plot the top and right border of the axis
-        left_border         Whether to plot the left border of the axis
-        bottom_border       Whether to plot the right border of the axis
-        title               what is the title (None means no label will be plotted)
-        x_lim               what are the xlims (None means matplotlib will infer from data)
-        y_lim               what are the ylims (None means matplotlib will infer from data)
-        x_ticks             what are the xticks (note that the tick style, and x_axis can override/modify these)
-        y_ticks             what are the yticks (note that the tick style, and y_axis can override/modify these)
-        x_tick_labels       what are the x tick lables (note that the tick style, and x_axis can override/modify these, and x_tick_labels have to match x_ticks)
-        y_tick_labels       what are the y tick lables (note that the tick style, and y_axis can override/modify these, and y_tick_labels have to match y_ticks)
-        x_tick_pad          what are the x tick padding of labels for axis
-        y_tick_pad          what are the y tick padding of labels for axis
+        This is the standard SimplePlot used in this package. In most cases we recomand users to derive
+        all their plots from this class. In case users want to define their own plot styling they will 
+        want to create an analogous class as this one and then derive all their plots from it.
+        
+        The modifiable parameters that this SimplePlot defines
+        
+        Other parameters
+        ----------------
+        
+        fontsize : int
+                 Font size to be used for tick labels and axis labels.
+                 
+        ?_tick_style : str
+               The style of ticks to be plotted. Note that the style interacts with the x_ticks and y_ticks commands in that it formats the ticks set by these
+               variables, or by the default ticks set by matplotlib. Currently available styles are: 
+                            * Min - plots three ticks, 2 on sides one in the middle (if even number of xticks supplied only the side ones will be plotted)
+                            * Custom - will plot tikcs as defined by x/yticks arguments
+                            
+        x_axis  : bool 
+                Whether to plot the x_axis (and  the ticks).
+                
+        y_axis  : bool
+                Whether to plot the y_axis (and  the ticks).
+                
+        x_label : str
+                What is the xlabel (None means no label will be plotted).
+                
+        y_label : str
+                What is the ylabel (None means no label will be plotted).
+                
+        top_right_border : bool
+                         Whether to plot the top and right border of the axis.
+        
+        left_border : bool
+                    Whether to plot the left border of the axis.
+                    
+        bottom_border  : bool
+                       Whether to plot the right border of the axis.
+                       
+        title : str
+              What is the title (None means no label will be plotted)
+              
+        x_lim  : tuple
+               What are the xlims (None means matplotlib will infer from data).
+               
+        y_lim : tuple
+              What are the ylims (None means matplotlib will infer from data).
+        
+        x_ticks : list
+                What are the xticks (note that the tick style, and x_axis can override/modify these).
+                
+        y_ticks : list
+                What are the yticks (note that the tick style, and y_axis can override/modify these).
+                
+        x_tick_labels : list
+                      What are the x tick lables (note that the tick style, and x_axis can override/modify these, and x_tick_labels have to match x_ticks)
+                      
+        y_tick_labels : list
+                      What are the y tick lables (note that the tick style, and y_axis can override/modify these, and y_tick_labels have to match y_ticks)
+        
+        x_tick_pad  : float
+                    What are the x tick padding of labels for axis.
+                    
+        y_tick_pad  : float
+                    What are the y tick padding of labels for axis.
         """
 
         SimplePlot.__init__(self)
@@ -178,7 +242,7 @@ class StandardStyle(SimplePlot):
             phf.disable_yticks(self.axis)
             phf.remove_y_tick_labels()
 
-        self.ticks()
+        self._ticks()
 
         if self.y_label and self.y_axis:
             pylab.ylabel(self.y_label,multialignment='center')
@@ -195,7 +259,7 @@ class StandardStyle(SimplePlot):
         pylab.rcParams['xtick.major.pad'] = self.xtick_pad_backup
         pylab.rcParams['ytick.major.pad'] = self.ytick_pad_backup
 
-    def ticks(self):
+    def _ticks(self):
 
         if self.x_ticks != None:
             if self.x_tick_labels != None and (len(self.x_ticks) == len(self.x_tick_labels)):
@@ -231,21 +295,31 @@ class SpikeRasterPlot(StandardStyle):
     """
     This function plots the raster plot of spikes in the `spike_lists` argument.
 
-    The `spike_lists` argument is a list of list of SpikeList objects. The top
-    level list corresponds to different sets of spikes that should be plotted
-    over each other. They have to contain the same number of neurons. Each set
-    of spikes will be colored by the color on corresponding postion of the
-    colors parameter (matplotlib readable color formats accapted). If None all
-    colors will be set to '#848484' (gray).
+    Parameters
+    ----------
+    spike_lists : list
+                The `spike_lists` argument is a list of list of SpikeList objects. The top
+                level list corresponds to different sets of spikes that should be plotted
+                over each other. They have to contain the same number of neurons. Each set
+                of spikes will be colored by the color on corresponding postion of the
+                colors parameter (matplotlib readable color formats accapted). If None all
+                colors will be set to '#848484' (gray). The second level list contains 
+                different trials of the populations responses stored in the individual SpikeList objects.
 
-    The second level list contains different trials of the populations responses
-    stored in the individual SpikeList objects.
+    Other parameters
+    ----------------
+    group_trials : bool
+                 If is set to true - trials will be concatenated and plotted on the same line.
+    
+    colors : list
+           The colors to assign to the different sets of spikes. 
 
+    Notes
+    -----
+    
     Each trial will be plotted as a sepparate line of spikes, and these will be
     grouped by the neurons. Only neurons in the neurons parameter will be
     plotted. If neurons are None, (up to) first 10 neurons will be plotted.
-    
-    group_trials - if is set to true - trials will be concatenated and plotted on the same line
     """
     def __init__(self, spike_lists):
         StandardStyle.__init__(self)
@@ -305,19 +379,35 @@ class SpikeRasterPlot(StandardStyle):
 class SpikeHistogramPlot(SpikeRasterPlot):
     """
     This function plots the raster plot of spikes in the spike_list argument.
+    
+    Parameters
+    ----------
+    spike_list : list
+               List of list of SpikeList objects.
+               The top level list corresponds to different sets of spikes that should be
+               plotted over each other. They have to contain the same number of neurons.
+               Each set of spikes will be colored by the color on corresponding postion of
+               the colors parameter. If None all colors will be set to '#848484' (gray).
+               The second level list contains different trials of the populations responses
+               stored in the individual SpikeList objects.
 
-    The spike list argument is a list of list of SpikeList objects.
-    The top level list corresponds to different sets of spikes that should be
-    plotted over each other. They have to contain the same number of neurons.
-    Each set of spikes will be colored by the color on corresponding postion of
-    the colors parameter. If None all colors will be set to '#848484' (gray).
+    
+    Other parameters
+    ----------------
+    bin_width : bool
+                 The with of the bins into which to bin the spikes.
+    
+    colors : list
+           The colors to assign to the different sets of spikes. 
 
-    The second level list contains different trials of the populations responses
-    stored in the individual SpikeList objects.
 
+    Notes
+    -----
+    
     Each trial will be plotted as a sepparate line of spikes, and these will be
     grouped by the neurons. Only neurons in the neurons parameter will be
-    plotted. If neurons are None, the first neuron will be plotted. """
+    plotted. If neurons are None, the first neuron will be plotted. 
+    """
 
     def __init__(self, spike_lists):
         SpikeRasterPlot.__init__(self, spike_lists)
@@ -360,7 +450,7 @@ class StandardStyleAnimatedPlot(StandardStyle):
     `plot()` function in which it should draw the first frame of the animation
     with all the corresponding decorations.
 
-    Second it needs to implement the `plot_next_frame` function which should
+    Next it needs to implement the `plot_next_frame` function which should
     replot the data in the plot corresponding to the next frame. This function
     needs to keep track of the frame number itself if it needs it. Note that
     advanced usage of matplotlib is recomanded here so that not the whole graph
@@ -368,6 +458,12 @@ class StandardStyleAnimatedPlot(StandardStyle):
 
     The `StandardStyleAnimatedPlot` will take care of the updating of the
     figure, so now `draw()` or `show()` or event commands should be issued.
+
+    Parameters
+    ----------
+    
+    frame_duration : double
+                   Duration of single frame. 
     """
 
     def __init__(self, frame_duration):
@@ -377,6 +473,10 @@ class StandardStyleAnimatedPlot(StandardStyle):
         self.artists = []
 
     def plot_next_frame(self):
+        """
+        The function that each instance of `StandardStyleAnimatedPlot` has to implement, in which it updated
+        the data in the plot to the next frame.
+        """
         raise NotImplementedError
 
     @staticmethod  # hack to make it compatible with FuncAnimation - we have to make it static
@@ -397,7 +497,18 @@ class StandardStyleAnimatedPlot(StandardStyle):
 
 
 class PixelMovie(StandardStyleAnimatedPlot):
-
+    """
+    An instatiation of StandardStyleAnimatedPlot that works with regularly sampled data - i.e. 3D matricies
+    where axis are interpreted as x,y,t.
+    
+    Parameters
+    ----------
+    
+    movie : ndarray
+          3D array with axis (t,x,y) holding the data.
+          
+    """
+    
     def __init__(self, movie, frame_duration):
         StandardStyleAnimatedPlot.__init__(self, frame_duration)
         self.movie = movie
@@ -418,7 +529,23 @@ class PixelMovie(StandardStyleAnimatedPlot):
 
 
 class ScatterPlotMovie(StandardStyleAnimatedPlot):
+    """
+    An instatiation of StandardStyleAnimatedPlot that works with irregularly sampled data. That data
+    are assumed to have constant positions throught the time.
+    
+    Parameters
+    ----------
+    
+    x : ndarray
+        1D array containing the x coordinate of the values to be displayed.
 
+    y : ndarray
+        1D array containing the y coordinate of the values to be displayed.
+    
+    z : ndarray
+        2D array containing the values to be displayed (t,values)
+    """
+    
     def __init__(self, x, y, z, frame_duration):
         StandardStyleAnimatedPlot.__init__(self, frame_duration)
         self.z = z
@@ -456,24 +583,52 @@ class ScatterPlot(StandardStyle):
     """
     Simple scatter plot
 
-    The inputs are:
+    Parameters
+    ----------
 
-              z -
-                      array of the values to be plotted
-              x -
-                      array with the y positions of the neurons
-              y -
-                      array with the y positions of the neurons
-              periodic -
-                      if the z is a periodic value
-              period -
-                      if periodic is True the z should come from (0,period)
-              
-              identity_line -
-                      should identity line be show?  
-              
-              colorbar -
-                      should there be a colorbar ?
+    z : ndarray
+      Array of the values to be plotted.
+    
+    x : ndarray
+      Array with the y positions of the neurons.
+      
+    y : ndarray
+      Array with the y positions of the neurons.
+      
+      
+    periodic : bool
+             If the z is a periodic value.
+             
+    period : double
+           If periodic is True the z should come from (0,period).
+    
+    
+    Other parameters
+    ----------------
+    
+    identity_line : bool
+                  Should identity line be show?  
+      
+    colorbar : bool
+             Should there be a colorbar?
+             
+    colormap : colormap
+             The colormap to use.
+    
+    dot_size : double
+             The size of the markers in the scatter plot.
+             
+    marker : str
+           The type of marker to use in the scatter plot.
+    
+    equal_aspect_ratio : bool
+                       If to enforce equal aspect ratio. 
+        
+    mark_means : bool
+               Whether to mark the means of each axis.
+
+    colorbar_label : label
+               The label  that will be put on the colorbar.
     """
 
     def __init__(self, x, y, z='b', periodic=False, period=None):
@@ -535,19 +690,26 @@ class ScatterPlot(StandardStyle):
 class StandardStyleLinePlot(StandardStyle):
     """
     This function plots vector data in simple line plots.
+    
+    Parameters
+    ----------
+    x, y : list
+         lists each containing corresponding vectors of x and y axis values to
+         be plotted.
 
-    x, y - lists each containing corresponding vectors of x and y axis values to
-           be plotted.
+    labels : list, optional
+           Can contain the labels to be given to the individual line plots.
 
-    labels - can contain the labels to be given to the individual
-             line plots.
+    
+    Other parameters
+    ----------------
+    
+    colors : int or list
+           The colors of the plots. If it is one colour all plots will have that same color. If it is a list its
+          length should correspond to length of x and y and the corresponding colors will be assigned to the individual graphs.
 
-    colors - parameter will determine the colors of the plots. If it is one
-             colour all plots will have that same color. If it is a list its
-             length should correspond to length of x and y and the
-             corresponding colors will be assigned to the individual graphs.
-
-    mean - if the mean of the vectors should be plotted as well.
+    mean : bool
+         If the mean of the vectors should be plotted as well.
 
     """
 
@@ -610,10 +772,21 @@ class ConductancesPlot(StandardStyle):
     """
     Plots conductances.
 
-    exc - list of excitatory conductances (AnalogSignal type)
-    inh - list of inhibitory conductances (AnalogSignal type)
+    Parameters
+    ----------
+    
+    exc : list
+         List of excitatory conductances (AnalogSignal type).
+         
+    inh : list
+        List of inhibitory conductances (AnalogSignal type).
 
-    The legend=(True/False) parameter says whether legend should be displayed.
+    
+    Other parameters
+    ----------------
+
+    legend : bool
+           Whether legend should be displayed.
     """
 
     def __init__(self, exc, inh):
@@ -655,36 +828,49 @@ class ConductancesPlot(StandardStyle):
 
 class ConnectionPlot(StandardStyle):
     """
-    Simple scatter plot
+    A plot that will display connections.
 
-    The inputs are:
+    Parameters
+    ----------
 
-        pos_x -
-                array with x position of the target neurons
-        pos_y -
-                array with y position of the target neurons
+    pos_x : ndarray
+            Array with x position of the target neurons.
+    
+    pos_y : ndarray
+            Array with y position of the target neurons.
 
-        source_x -
-                x position of the source neuron
+    source_x : double
+             x position of the source neuron.
 
-        source_y -
-                y position of the source neuron
+    source_y : double
+             y position of the source neuron.
 
-        weights -
-                array of weights from source neuron to target neurons
-
-        line - (TODO) True means the existing connections will be displayed as lines, with their thickness indicating the strength.
-               False means the strength of connection will be indicated by the size of the circle representing the corresponding target neuron. 
+    weights : list
+            Array of weights from source neuron to target neurons.
 
 
-        colors - the extra information per neuron that will be displayed as colors. None if no info
+    colors : list, optional
+           The extra information per neuron that will be displayed as colors. None if no info.
 
-        period -
-                if period is not None the colors should come from (0,period)
+    period : float, optional
+           If period is not None the colors should come from (0,period)
 
-        colorbar -
-                should there be a colorbar ?
 
+    Other parameters
+    ----------------
+    
+    line : bool
+         (TODO) True means the existing connections will be displayed as lines, with their thickness indicating the strength.
+         False means the strength of connection will be indicated by the size of the circle representing the corresponding target neuron. 
+
+    colorbar : bool
+             Should there be a colorbar ?
+
+    colormap : colormap
+             The colormap to use.
+    
+    colorbar_label : label
+               The label  that will be put on the colorbar.             
     """
 
     def __init__(self, pos_x, pos_y, source_x, source_y, weights,colors=None,period=None):

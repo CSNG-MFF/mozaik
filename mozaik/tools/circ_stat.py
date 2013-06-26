@@ -1,5 +1,5 @@
 """
-Circular statistics
+This module contains several helper functions for working with periodic variables.
 """
 import logging
 import numpy
@@ -9,8 +9,7 @@ logger = logging.getLogger("mozaik")
 
 def circular_dist(a, b, period):
     """
-    The distance between a and b (scalars) in the periodic.
-    a, b have to be in (0, period)
+    Returns the distance between a and b (scalars) in a domain with `period` period.
     """
     return  numpy.minimum(numpy.abs(a - b), period - numpy.abs(a - b))
 
@@ -18,15 +17,15 @@ def circular_dist(a, b, period):
 def rad_to_complex(vector):
     """
     Converts a vector/matrix of angles (0, 2*pi) to vector/matrix of complex
-    numbers (that will lie on the unit circle)
+    numbers (that will lie on the unit circle) and correspond to the given angle.
     """
     return cos(vector) + 1j*sin(vector)
 
 
 def angle_to_pi(array):
     """
-    returns angles of complex numbers in array but in (0, 2*pi) interval unlike
-    numpy.angle the returns it in (-pi, pi)
+    Returns angles of complex numbers in array but in (0, 2*pi) interval unlike
+    numpy.angle the returns it in (-pi, pi).
     """
     return (numpy.angle(array) + 4*pi) % (pi*2)
 
@@ -35,18 +34,33 @@ def circ_mean(matrix, weights=None, axis=None, low=0, high=pi*2,
               normalize=False):
     """
     Circular mean of matrix. Weighted if weights are not none.
+    Mean will be computed along axis axis.
+    
+    Parameters
+    ----------
+    
+    matrix : ndarray
+           Matrix of data for which the compute the circular mean. 
+           
+    weights : ndarray, optional
+            If not none, matrix of the same size as matrix. It will be used as weighting for the mean.
+    
+    low, high : double, optional
+              The min and max values that will be mapped onto the periodic interval of (0, 2pi).
+              
+    axis : int, optional
+         Numpy axis along which to compute the circular mean. 
+    
+    
+    normalize : bool
+              If True weights will be normalized along axis. If any weights
+              that are to be jointly normalized are all zero they will be
+              kept zero!
 
-    matrix     - matrix of data. Mean will be computed along axis axis.
-    weights    - if not none, matrix of the same size as matrix
-    low, high  - the min and max values that will be mapped onto the periodic
-                 interval of (0, 2pi)
-    axis       - axis along which to compute the circular mean. default = 0 (columns)
-    normalize  - if True weights will be normalized along axis. If any weights
-                 that are to be jointly normalized are all zero they will be
-                 kept zero!
-
-    return (angle, length) - where angle is the circular mean, and len is the
-                           length of the resulting mean vector
+    Returns
+    -------
+    (angle, length) : ndarray,ndarray
+                    Where angle is the circular mean, and len is the length of the resulting mean vector.
     """
 
     # check whether matrix and weights are ndarrays

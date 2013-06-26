@@ -1,9 +1,6 @@
 """
-This module contains classes that assist with construction of complicated
-arrangements of plots.
-
-A typical example is a class that helps with creating a line of plots with a
-common y axis.
+This module contains classes that assist with construction of complicated arrangements of plots.
+A typical example is a class that helps with creating a line of plots with a common y axis.
 """
 
 import param
@@ -52,11 +49,13 @@ class LinePlot(Parameterized):
             """
             Call to execute the line plot.
 
-            funtion - is the function that plots the individual plots. Function
-                      has to accept idx
+            Parameters
+            ----------
+            funtion : func
+                    Is the function that plots the individual plots. Function has to accept idx
 
-            subplotspec - is the subplotspec into which the whole lineplot is
-                          to be plotted
+            subplotspec : subplotspec
+                        Is the subplotspec into which the whole lineplot is to be plotted.
             """
             if not self.length:
                 raise ValueError('Length not specified')
