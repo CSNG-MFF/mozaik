@@ -214,6 +214,6 @@ class V1PushPullArborization(ModularConnectorFunction):
         or_gauss = normal_function(or_dist, mean=0, sigma=self.parameters.or_sigma)
         phase_gauss = normal_function(phase_dist, mean=0, sigma=self.parameters.phase_sigma)
         
-        return self.parameters.push_pull_ratio +  (1-self.parameters.push_pull_ratio)*numpy.multiply(phase_gauss, or_gauss)
+        return (1.0-self.parameters.push_pull_ratio) +  self.parameters.push_pull_ratio*numpy.multiply(phase_gauss, or_gauss)
 
 
