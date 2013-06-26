@@ -4,6 +4,7 @@ import pickle
 from datetime import datetime
 import os
 import time
+import re
 
 class ParameterSearchBackend(object):
     """
@@ -60,14 +61,22 @@ class SlurmSequentialBackend(object):
 
     num_mpi : int
                   Number of mpi processes to spawn per job.
-
+                  
+    slurm_options : list(string), optional 
+                  List of strings that will be passed to slurm sbatch command as options.  
     Note:
     -----
     The most common usage of slurm_options is the let slurm know how many mpi processed to spawn per job, and how to allocates resources to them.
     """
-    def __init__(self,num_threads,num_mpi):
+    def __init__(self,num_threads,num_mpi,slurm_options=None):
         self.num_threads = num_threads
         self.num_mpi = num_mpi
+        if slurm_options==None:
+           self.slurm_options=[]
+        else:
+           self.slurm_options=slurm_options 
+        
+        
         
         
     def execute_job(self,run_script,simulator_name,parameters_url,parameters,simulation_run_name):
@@ -88,7 +97,7 @@ class SlurmSequentialBackend(object):
      
          from subprocess import Popen, PIPE, STDOUT
         
-         p = Popen(['sbatch','-o',parameters['results_dir'][2:-2]+"/slurm-%j.out"],stdin=PIPE,stdout=PIPE,stderr=PIPE)
+         p = Popen(['sbatch'] + self.slurm_options +  ['-o',parameters['results_dir'][2:-2]+"/slurm-%j.out"],stdin=PIPE,stdout=PIPE,stderr=PIPE)
 
          data = '\n'.join([
                             '#!/bin/bash',
@@ -98,7 +107,7 @@ class SlurmSequentialBackend(object):
                             'source  /opt/software/mpi/openmpi-1.6.3-gcc/env',
                             'source /home/antolikjan/env/mozaik-pynn0.8/bin/activate',
                             'cd ' + os.getcwd(),
-                            ' '.join(["mpirun","--mca mtl ^psm","python",run_script, simulator_name, str(self.num_threads) ,parameters_url]+modified_parameters+[simulation_run_name]+['>']  + [parameters['results_dir'][1:-1] +'/OUTFILE'+str(time.time())]),
+                            ' '.join(["mpirun"," --mca mtl ^psm python",run_script, simulator_name, str(self.num_threads) ,parameters_url]+modified_parameters+[simulation_run_name]+['>']  + [parameters['results_dir'][1:-1] +'/OUTFILE'+str(time.time())]),
                         ]) 
          print p.communicate(input=data)[0]                  
          print data
@@ -168,7 +177,8 @@ class ParameterSearch(object):
         else:
             raise ValueError("Usage: python parameter_search_script simulation_run_script simulator_name root_parameter_file_name")
         
-        mdn = self.master_directory_name()
+        timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
+        mdn = timestamp + "[" + parameters_url.replace('/','.') + "]" +  self.master_directory_name()
         os.mkdir(mdn)
         
         counter=0
@@ -207,8 +217,7 @@ class CombinationParameterSearch(ParameterSearch):
         return combs    
         
     def master_directory_name(self):
-        timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
-        return timestamp + "CombinationParamSearch{" + ','.join([str(k) + ':' + (str(self.parameter_values[k]) if len(self.parameter_values[k]) < 5 else str(len(self.parameter_values[k]))) for k in self.parameter_values.keys()]) + '}/'
+        return "CombinationParamSearch{" + ','.join([str(k) + ':' + (str(self.parameter_values[k]) if len(self.parameter_values[k]) < 5 else str(len(self.parameter_values[k]))) for k in self.parameter_values.keys()]) + '}/'
             
 def parameter_combinations(arrays):
     return _parameter_combinations_rec([],arrays)
