@@ -15,7 +15,7 @@ from mozaik.tools.misc import sample_from_bin_distribution, normal_function
 from collections import Counter
 from pyNN import random, space
 
-logger = mozaik.getMozaikLogger("Mozaik")
+logger = mozaik.getMozaikLogger()
 
 
 class MozaikConnector(Connector):

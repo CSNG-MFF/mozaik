@@ -9,7 +9,7 @@ from mozaik.tools.misc import sample_from_bin_distribution, normal_function
 from mozaik.framework import load_component
 
 
-logger = mozaik.getMozaikLogger("Mozaik")
+logger = mozaik.getMozaikLogger()
 
 class ModularConnector(MozaikConnector):
     """

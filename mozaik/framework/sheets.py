@@ -13,18 +13,11 @@ from pyNN.errors import NothingToWriteError
 from pyNN.parameters import Sequence
 from string import Template
 from neo.core.spiketrain import SpikeTrain
+from pyNN.nest import native_cell_type
 import quantities as pq
-
-logger = mozaik.getMozaikLogger("Mozaik")
-
-try:
-    from mpi4py import MPI
-except ImportError:
-    MPI = None
-if MPI:
-    mpi_comm = MPI.COMM_WORLD
-MPI_ROOT = 0
-
+from NeuroTools import stgen
+        
+logger = mozaik.getMozaikLogger()
 
 class Sheet(MozaikComponent):
     """
@@ -269,16 +262,12 @@ class Sheet(MozaikComponent):
         if self.to_record != None:
             for variable in self.to_record.keys():
                 cells = self.to_record[variable]
-                print cells
-                print min(self.pop.all_cells.astype(int))
-                print max(self.pop.all_cells.astype(int))
-                
                 if cells != 'all':
                     self.pop[cells].record(variable)
                 else:
                     self.pop.record(variable)
 
-    def write_neo_object(self, stimulus_duration=None):
+    def get_data(self, stimulus_duration=None):
         """
         Retrieve data recorded in this sheet from pyNN in response to the last presented stimulus.
         
@@ -299,7 +288,7 @@ class Sheet(MozaikComponent):
         except NothingToWriteError, errmsg:
             logger.debug(errmsg)
         
-        if (MPI) and (mpi_comm.rank != MPI_ROOT):
+        if (mozaik.mpi_comm) and (mozaik.mpi_comm.rank != mozaik.MPI_ROOT):
            return None
         s = block.segments[-1]
         s.annotations["sheet_name"] = self.name
@@ -315,7 +304,6 @@ class Sheet(MozaikComponent):
                s.spiketrains[i] -= s.spiketrains[i].t_start
                s.spiketrains[i].t_stop -= s.spiketrains[i].t_start
                s.spiketrains[i].t_start = 0 * pq.ms
-               
            for i in xrange(0, len(s.analogsignalarrays)):
                s.analogsignalarrays[i].t_start = 0 * pq.ms
        
@@ -341,40 +329,37 @@ class Sheet(MozaikComponent):
         inh_spiking_stimulation : tuple
                                 The inhibitory artificial stimulation data
         """
-        from NeuroTools import stgen
         if self.parameters.mpi_safe or self.parameters.artificial_stimulation:
-            if (self.parameters.background_noise.exc_firing_rate != 0 and self.parameters.background_noise.exc_weight != 0) or self.parameters.artificial_stimulation:
+            if (self.parameters.background_noise.exc_firing_rate != 0 and self.parameters.background_noise.exc_weight != 0 and self.parameters.mpi_safe) or self.parameters.artificial_stimulation:
                 idds = self.pop.all_cells.astype(int)
-                for i in numpy.nonzero(self.pop._mask_local)[0]:
+                for j,i in enumerate(numpy.nonzero(self.pop._mask_local)[0]):
                     pp = []
-                    if (self.parameters.background_noise.exc_firing_rate != 0 and self.parameters.background_noise.exc_weight != 0):
-                        pp = stgen.StGen(seed=i).poisson_generator(
+                    if (self.parameters.background_noise.exc_firing_rate != 0 and self.parameters.background_noise.exc_weight != 0 and self.parameters.mpi_safe):
+                        pp = self.stgene[j].poisson_generator(
                                     rate=self.parameters.background_noise.exc_firing_rate,
                                     t_start=0,
                                     t_stop=duration).spike_times
                     if self.parameters.artificial_stimulation and exc_spiking_stimulation!=None and (exc_spiking_stimulation[0] == "all" or (idds[i] in exc_spiking_stimulation[0])):
-                       pp.extend(exc_spiking_stimulation[1](duration)) 
+                       pp.extend(exc_spiking_stimulation[1][list(exc_spiking_stimulation[0]).index(idds[i])](duration))
                     self.ssae[i].set_parameters(spike_times=Sequence(offset + numpy.array(pp)))
 
-            if (self.parameters.background_noise.inh_firing_rate != 0 and self.parameters.background_noise.inh_weight) != 0 or self.parameters.artificial_stimulation:
+            if (self.parameters.background_noise.inh_firing_rate != 0 and self.parameters.background_noise.inh_weight != 0 and self.parameters.mpi_safe) or self.parameters.artificial_stimulation:
                 idds = self.pop.all_cells.astype(int)
-                for i in numpy.nonzero(self.pop._mask_local)[0]:
+                for j,i in enumerate(numpy.nonzero(self.pop._mask_local)[0]):
                     pp = []
-                    if (self.parameters.background_noise.inh_firing_rate != 0 and self.parameters.background_noise.inh_weight != 0):
-                        pp = stgen.StGen(seed=2*i).poisson_generator(
+                    if (self.parameters.background_noise.inh_firing_rate != 0 and self.parameters.background_noise.inh_weight != 0 and self.parameters.mpi_safe):
+                        pp = self.stgeni[j].poisson_generator(
                                     rate=self.parameters.background_noise.inh_firing_rate,
-                                    t_start=self.model.simulator_time,
-                                    t_stop=self.model.simulator_time + duration).spike_times
+                                    t_start=0,
+                                    t_stop=duration).spike_times
                     if self.parameters.artificial_stimulation and inh_spiking_stimulation!=None and (inh_spiking_stimulation[0] == "all" or (idds[i] in inh_spiking_stimulation[0])):
-                       pp.extend(self.model.simulator_time+ inh_spiking_stimulation[1](duration)) 
+                       pp.extend(inh_spiking_stimulation[1][list(inh_spiking_stimulation[0]).index(idds[i])](duration)) 
                     self.ssai[i].set_parameters(spike_times=Sequence(offset + numpy.array(pp)))
 
     def setup_background_noise(self):
         """
         Called once population is created. Sets up the background noise.
         """
-        
-        from pyNN.nest import native_cell_type
         exc_syn = self.sim.StaticSynapse(weight=self.parameters.background_noise.exc_weight)
         inh_syn = self.sim.StaticSynapse(weight=self.parameters.background_noise.inh_weight)
         if not self.parameters.mpi_safe:
@@ -405,6 +390,8 @@ class Sheet(MozaikComponent):
                   or self.parameters.background_noise.exc_weight != 0 or self.parameters.artificial_stimulation):
                         self.ssae = self.sim.Population(self.pop.size,
                                                         self.model.sim.SpikeSourceArray())
+                        seeds=mozaik.get_seeds((self.pop.size,))
+                        self.stgene = [stgen.StGen(seed=seeds[i]) for i in numpy.nonzero(self.pop._mask_local)[0]]
                         self.sim.Projection(self.ssae, self.pop,
                                             self.sim.OneToOneConnector(),
                                             synapse_type=exc_syn,
@@ -414,6 +401,8 @@ class Sheet(MozaikComponent):
                   or self.parameters.background_noise.inh_weight != 0 or self.parameters.artificial_stimulation):
                         self.ssai = self.sim.Population(self.pop.size,
                                                         self.model.sim.SpikeSourceArray())
+                        seeds=mozaik.get_seeds((self.pop.size,))
+                        self.stgeni = [stgen.StGen(seed=seeds[i]) for i in numpy.nonzero(self.pop._mask_local)[0]]
                         self.sim.Projection(self.ssai, self.pop,
                                             self.sim.OneToOneConnector(),
                                             synapse_type=inh_syn,

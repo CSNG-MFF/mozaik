@@ -5,7 +5,7 @@ from parameters import ParameterSet, ParameterDist
 from pyNN import space
 import numpy
 
-logger = mozaik.getMozaikLogger("Mozaik")
+logger = mozaik.getMozaikLogger()
 
 """
 This file contains connectors that were written for speed - as a general rule 

@@ -15,15 +15,7 @@ from NeuroTools import visual_logging
 
 mozaik.setup_mpi()
 
-logger = mozaik.getMozaikLogger("Mozaik")
-
-try:
-    from mpi4py import MPI
-except ImportError:
-    MPI = None
-if MPI:
-    mpi_comm = MPI.COMM_WORLD
-
+logger = mozaik.getMozaikLogger()
 
 class Global:
     """global variable container currently only containing the root_directory variable that points to the root directory of the model specification"""
@@ -34,13 +26,13 @@ def setup_logging():
     """
     This functions sets up logging.
     """
-    if MPI:
+    if mozaik.mpi_comm:
         init_logging(Global.root_directory + "log", file_level=logging.INFO,
-                     console_level=logging.INFO, mpi_rank=mpi_comm.rank)  # NeuroTools version
+                     console_level=logging.INFO, mpi_rank=mozaik.mpi_comm.rank)  # NeuroTools version
     else:
         init_logging(Global.root_directory + "log", file_level=logging.INFO,
 	             console_level=logging.INFO)  # NeuroTools version
-    if (not MPI) or mpi_comm.rank==0:
+    if (not mozaik.mpi_comm) or mozaik.mpi_comm.rank==mozaik.MPI_ROOT:
 	    visual_logging.basicConfig(Global.root_directory + "visual_log.zip",
         	                       level=logging.INFO)
 
@@ -93,21 +85,21 @@ def run_workflow(simulation_name, model_class, create_experiments):
     
     # We exclude the results_dir parameter from the directory naming
     modified_params_str = '_'.join([str(k) + ":" + str(modified_parameters[k]) for k in sorted(modified_parameters.keys()) if k!='results_dir'])
-    if MPI and mpi_comm.rank != 0:
+    if mozaik.mpi_comm and mozaik.mpi_comm.rank != 0:
         Global.root_directory = parameters.results_dir + simulation_name + '_' + \
-                                  simulation_run_name + '_____' + modified_params_str + '/' + str(mpi_comm.rank) + '/'
-        mpi_comm.barrier()                                  
+                                  simulation_run_name + '_____' + modified_params_str + '/' + str(mozaik.mpi_comm.rank) + '/'
+        mozaik.mpi_comm.barrier()                                  
     else:
         Global.root_directory = parameters.results_dir + simulation_name + '_' + \
                                   simulation_run_name + '_____' + modified_params_str + '/'
     
     
     os.makedirs(Global.root_directory)
-    if MPI and mpi_comm.rank == 0:
-        mpi_comm.barrier()
+    if mozaik.mpi_comm and mozaik.mpi_comm.rank == 0:
+        mozaik.mpi_comm.barrier()
     
     #let's store the full and modified parameters, if we are the 0 rank process
-    if mpi_comm.rank == 0:
+    if mozaik.mpi_comm.rank == 0:
         parameters.save(Global.root_directory + "parameters", expand_urls=True)        
         import pickle
         f = open(Global.root_directory+"modified_parameters","w")
@@ -119,7 +111,7 @@ def run_workflow(simulation_name, model_class, create_experiments):
     model = model_class(sim,num_threads,parameters)
     data_store = run_experiments(model,create_experiments(model))
 
-    if mpi_comm.rank == 0:
+    if mozaik.mpi_comm.rank == 0:
 	    data_store.save()
 
     import resource

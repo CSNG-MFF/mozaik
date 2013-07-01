@@ -8,7 +8,7 @@ from mozaik.stimuli.stimulus import InternalStimulus
 import numpy
 import resource
 
-logger = mozaik.getMozaikLogger("Mozaik")
+logger = mozaik.getMozaikLogger()
 
 
 class Experiment(object):
@@ -456,7 +456,11 @@ class PoissonNetworkKick(Experiment):
             Experiment.__init__(self, model)
             from NeuroTools import stgen
             for sheet_name,lamb,rc in zip(sheet_list,lambda_list,recording_configuration_list):
-                self.exc_spike_stimulators[sheet_name] = (rc.generate_idd_list_of_neurons(),(lambda duration,lamb=lamb: stgen.StGen().poisson_generator(rate=lamb,t_start=0,t_stop=duration).spike_times))
+                idlist = rc.generate_idd_list_of_neurons()
+                seeds=mozaik.get_seeds((len(idlist),))
+                stgens = [stgen.StGen(seed=seeds[i]) for i in xrange(0,len(idlist))]
+                generator_functions = [(lambda duration,lamb=lamb,stgen=stgens[i]: stgen.poisson_generator(rate=lamb,t_start=0,t_stop=duration).spike_times) for i in xrange(0,len(idlist))]
+                self.exc_spike_stimulators[sheet_name] = (list(idlist),generator_functions)
 
             self.stimuli.append(
                         InternalStimulus(   

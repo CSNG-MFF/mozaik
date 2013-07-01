@@ -24,7 +24,7 @@ from mozaik.tools.mozaik_parametrized import MozaikParametrized, SNumber, SInteg
 import collections
 
 
-logger = mozaik.getMozaikLogger("Mozaik")
+logger = mozaik.getMozaikLogger()
 
 class BaseStimulus(MozaikParametrized):
     """

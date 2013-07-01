@@ -13,7 +13,7 @@ from mozaik.tools.mozaik_parametrized import  MozaikParametrized,filter_query
 import cPickle
 import collections
 
-logger = mozaik.getMozaikLogger("Mozaik")
+logger = mozaik.getMozaikLogger()
 
 
 

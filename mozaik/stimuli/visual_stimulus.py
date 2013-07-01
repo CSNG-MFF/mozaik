@@ -12,7 +12,7 @@ from mozaik.tools.units import lux
 from mozaik.framework.space import VisualRegion
 from scipy.ndimage import interpolation
 
-logger = mozaik.getMozaikLogger("Mozaik")
+logger = mozaik.getMozaikLogger()
 
 
 class VisualStimulus(BaseStimulus):

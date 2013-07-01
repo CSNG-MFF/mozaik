@@ -11,7 +11,7 @@ from mozaik.tools.mozaik_parametrized import MozaikParametrized, varying_paramet
 import mozaik
 import numpy
 
-logger = mozaik.getMozaikLogger("Mozaik")
+logger = mozaik.getMozaikLogger()
 
 
 class LinePlot(Parameterized):

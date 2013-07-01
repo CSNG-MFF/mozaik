@@ -9,7 +9,7 @@ import mozaik
 from mozaik.tools.distribution_parametrization import PyNNDistribution
 from string import Template
 
-logger = mozaik.getMozaikLogger("Mozaik")
+logger = mozaik.getMozaikLogger()
 
 
 class MozaikParametrizeObject(object):

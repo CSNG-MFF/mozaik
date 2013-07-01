@@ -7,7 +7,7 @@ For more documentation refer to `mozaik.analysis`_
 import mozaik
 import numpy
 from mozaik.tools.mozaik_parametrized import MozaikParametrized, SNumber, SInteger, SString
-logger = mozaik.getMozaikLogger("Mozaik")
+logger = mozaik.getMozaikLogger()
 
 
 class AnalysisDataStructure(MozaikParametrized):

@@ -11,16 +11,7 @@ from mozaik.stimuli.stimulus import InternalStimulus
 import mozaik
 import time
 
-try:
-    from mpi4py import MPI
-except ImportError:
-    MPI = None
-if MPI:
-    mpi_comm = MPI.COMM_WORLD
-MPI_ROOT = 0
-
-
-logger = mozaik.getMozaikLogger("Mozaik")
+logger = mozaik.getMozaikLogger()
 
 
 class Model(MozaikComponent):
@@ -132,12 +123,12 @@ class Model(MozaikComponent):
         for sheet in self.sheets.values():    
             if sheet.to_record != None:
                 if self.parameters.reset:
-                    s = sheet.write_neo_object()
-                    if (not MPI) or (mpi_comm.rank == MPI_ROOT):
+                    s = sheet.get_data()
+                    if (not mozaik.mpi_comm) or (mozaik.mpi_comm.rank == mozaik.MPI_ROOT):
                         segments.append(s)
                 else:
-                    s = sheet.write_neo_object(stimulus.duration)
-                    if (not MPI) or (mpi_comm.rank == MPI_ROOT):
+                    s = sheet.get_data(stimulus.duration)
+                    if (not mozaik.mpi_comm) or (mozaik.mpi_comm.rank == mozaik.MPI_ROOT):
                         segments.append(s)
 
         self.first_time = False
@@ -176,22 +167,23 @@ class Model(MozaikComponent):
             self.sim.reset()
             self.simulator_time = 0
         else:
-            for sheet in self.sheets.values():
-                sheet.prepare_input(self.parameters.null_stimulus_period,self.simulator_time,None,None)
+            if self.parameters.null_stimulus_period != 0:
+                for sheet in self.sheets.values():
+                    sheet.prepare_input(self.parameters.null_stimulus_period,self.simulator_time,None,None)
 
-            if self.input_space:
-                self.input_layer.provide_null_input(self.input_space,
-                                                    self.parameters.null_stimulus_period,
-                                                    self.simulator_time)
-                                                    
-            logger.info("Simulating the network for %s ms with blank stimulus" % self.parameters.null_stimulus_period)
-            self.sim.run(self.parameters.null_stimulus_period)
-            self.simulator_time+=self.parameters.null_stimulus_period
-            
-            for sheet in self.sheets.values():    
-                if sheet.to_record != None:
-                   sheet.write_neo_object()
-                    
+                if self.input_space:
+                    self.input_layer.provide_null_input(self.input_space,
+                                                        self.parameters.null_stimulus_period,
+                                                        self.simulator_time)
+                                                        
+                logger.info("Simulating the network for %s ms with blank stimulus" % self.parameters.null_stimulus_period)
+                self.sim.run(self.parameters.null_stimulus_period)
+                self.simulator_time+=self.parameters.null_stimulus_period
+                
+                for sheet in self.sheets.values():    
+                    if sheet.to_record != None:
+                       sheet.get_data()
+
         return time.time()-t0    
     
 

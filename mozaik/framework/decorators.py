@@ -1,7 +1,7 @@
 import mozaik
 import time
 
-logger = mozaik.getMozaikLogger("Mozaik")
+logger = mozaik.getMozaikLogger()
 
 
 class timeit(object):

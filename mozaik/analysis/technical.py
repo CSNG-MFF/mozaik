@@ -11,7 +11,7 @@ import quantities as qt
 import numpy
 import mozaik
 
-logger = mozaik.getMozaikLogger("Mozaik")
+logger = mozaik.getMozaikLogger()
 
 
 class NeuronAnnotationsToPerNeuronValues(Analysis):

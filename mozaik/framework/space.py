@@ -12,7 +12,7 @@ from mozaik.framework.interfaces import MozaikParametrizeObject
 from mozaik import __version__
 
 TRANSPARENT = -1
-logger = mozaik.getMozaikLogger("Mozaik")
+logger = mozaik.getMozaikLogger()
 
 
 def xy2ij(coordinates):

@@ -8,7 +8,7 @@ import numpy
 import mozaik
 import mozaik.tools.units 
 
-logger = mozaik.getMozaikLogger("Mozaik")
+logger = mozaik.getMozaikLogger()
 
 
 class SimplePlot(object):

@@ -8,7 +8,7 @@ import mozaik
 import mozaik.tools.units as munits
 from neo.core.analogsignalarray import AnalogSignal
 
-logger = mozaik.getMozaikLogger("Mozaik")
+logger = mozaik.getMozaikLogger()
 
 
 def psth(spike_list, bin_length):

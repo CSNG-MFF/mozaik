@@ -59,7 +59,7 @@ from simple_plot import StandardStyleLinePlot, SpikeRasterPlot, \
 from plot_constructors import LinePlot, PerStimulusPlot, PerStimulusADSPlot
 
 import mozaik
-logger = mozaik.getMozaikLogger("Mozaik")
+logger = mozaik.getMozaikLogger()
 
 
 class Plotting(MozaikParametrizeObject):
@@ -296,7 +296,8 @@ class RasterPlot(Plotting):
         return PerStimulusPlot(dsv, function=self._ploter).make_line_plot(subplotspec)
 
     def _ploter(self, dsv,gs):
-        sp = [[s.get_spiketrain(self.parameters.neurons) for s in dsv.get_segments()]]
+        neurons = sorted(self.parameters.neurons)
+        sp = [[s.get_spiketrain(neurons) for s in dsv.get_segments()]]
         d = {} 
         if self.parameters.trial_averaged_histogram:
             gs = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=gs)

@@ -21,12 +21,12 @@ Parameters
     mpi_comm : mpi4py.Comm
              The mpi communication object, None if MPI not available.
 """
-
 __version__ = None
 import numpy.random
 rng = None
 pynn_rng = None
 mpi_comm = None
+MPI_ROOT = 0
 
 def setup_mpi():
     """
@@ -36,7 +36,7 @@ def setup_mpi():
     -----
     
     To obtain results repeatable over identical runs of mozaik
-    one should use the mozaik.rng as the random noise generator passed to all pyNN
+    one should use the mozaik.pynn_rng as the random noise generator passed to all pyNN
     functions that accept pynn_rng as one of their paramters
     
     Any other code using random numbers should instead use the mozaik.rng that hold a numpy RandomState instance.
@@ -58,11 +58,30 @@ def setup_mpi():
     if MPI:
         mpi_comm = MPI.COMM_WORLD
 
-def getMozaikLogger(name):
+def get_seeds(size=None):
+    """
+    This methods returns a set of inetegers that can be used as random seeds for RNGs. The main purpose
+    is that these numbers are large and random, with extremely low probability that two of the same numbers
+    are returned in a single simulation run.
+    
+    Returns
+    -------
+    A set of long integer as a ndarray of shape size. If size==None returns single seed. The integers have 64bit size.
+    
+    Notes
+    -----
+
+    We recommand users to use this method whenever seeding a new random generator. It is 
+    important that the same number of seeds are requested in each MPI process to ensure 
+    reproducability of simulations!
+    """
+    return rng.randint(9223372036854775807,size=size)
+
+def getMozaikLogger():
     """
     To maintain consistent logging settings around mozaik use this method to obtain the logger isntance.
     """
     import logging
-    logger = logging.getLogger(name)
+    logger = logging.getLogger("Mozaik")
     logger.setLevel(logging.INFO)
     return logger

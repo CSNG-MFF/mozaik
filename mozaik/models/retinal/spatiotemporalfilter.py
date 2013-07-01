@@ -18,7 +18,7 @@ from mozaik.tools.mozaik_parametrized import MozaikParametrized
 from NeuroTools.plotting import progress_bar
 from parameters import ParameterSet
 
-logger = mozaik.getMozaikLogger("Mozaik")
+logger = mozaik.getMozaikLogger()
 
 
 def meshgrid3D(x, y, z):
@@ -357,11 +357,12 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                                                   'recorders' : self.parameters.recorders,
                                                   'mpi_safe': False}))
             self.sheets[rf_type] = p
-
+        
         for rf_type in self.rf_types:
             self.scs[rf_type] = []
             self.ncs[rf_type] = []
             self.ncs_rng[rf_type] = []
+            seeds=mozaik.get_seeds((self.sheets[rf_type].pop.size,))
             for i, lgn_cell in enumerate(self.sheets[rf_type].pop.all_cells):
                 scs = sim.StepCurrentSource(times=[0.0], amplitudes=[0.0])
 
@@ -369,9 +370,9 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                     ncs = sim.NoisyCurrentSource(**self.parameters.noise)
                 else:
                     ncs = sim.StepCurrentSource(times=[0.0], amplitudes=[0.0])
-
+        
 		if self.sheets[rf_type].pop._mask_local[i]:
-			self.ncs_rng[rf_type].append(numpy.random.RandomState(seed=i + (rf_type=='X_ON')*len(self.sheets[rf_type].pop)))
+			self.ncs_rng[rf_type].append(numpy.random.RandomState(seed=seeds[i]))
         	        self.scs[rf_type].append(scs)
 	                self.ncs[rf_type].append(ncs)
                 lgn_cell.inject(scs)
