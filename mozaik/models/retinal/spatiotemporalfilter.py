@@ -504,8 +504,8 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
             (input_currents, retinal_input) = cached
 
         ts = self.model.sim.get_time_step()
-        import pylab
-        pylab.figure()
+        #import pylab
+        #pylab.figure()
         for rf_type in self.rf_types:
             assert isinstance(input_currents[rf_type], list)
             for i, (lgn_cell, input_current, scs, ncs) in enumerate(
@@ -514,8 +514,8 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                                                                 self.scs[rf_type],
                                                                 self.ncs[rf_type])):
                 assert isinstance(input_current, dict)
-                if i==0:
-                    pylab.plot(self.parameters.linear_scaler * input_current['amplitudes'])
+                #if i==0:
+                #    pylab.plot(self.parameters.linear_scaler * input_current['amplitudes'])
                 t = input_current['times'] + offset
                 a = self.parameters.linear_scaler * input_current['amplitudes']
                 scs.set_parameters(times=t, amplitudes=a)

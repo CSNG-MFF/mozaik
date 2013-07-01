@@ -196,6 +196,19 @@ class AnalogSignalList(AnalysisDataStructure1D):
         """
 
         return self.asl[list(self.ids).index(idd)]
+    
+    def __add__(self, other):
+        assert set(self.ids) <= set(other.ids) and set(self.ids) >= set(other.ids)  
+        assert self.x_axis_name == other.x_axis_name
+        assert self.y_axis_name == other.y_axis_name
+        assert self.y_axis_units == other.y_axis_units
+        
+        new_asl = []
+        for idd in self.ids:
+            new_asl.append(self.get_asl_by_id(idd) + other.get_asl_by_id(idd))
+            
+        return AnalogSignalList(new_asl,self.ids,y_axis_units = self.y_axis_units,x_axis_name = self.x_axis_name,y_axis_name = self.y_axis_name, sheet_name = self.sheet_name)
+
         
 class ConductanceSignalList(AnalysisDataStructure1D):
     """

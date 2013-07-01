@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 This module contains the Mozaik analysis interface and implementation of various analysis algorithms
 
@@ -17,7 +18,7 @@ from parameters import ParameterSet
 from mozaik.storage import queries
 from neo.core.analogsignal import AnalogSignal
 from mozaik.tools.circ_stat import circ_mean, circular_dist
-from mozaik.tools.neo_object_operations import neo_mean
+from mozaik.tools.neo_object_operations import neo_mean, neo_sum
 import mozaik
 
 logger = mozaik.getMozaikLogger()
@@ -355,32 +356,25 @@ class ModulationRatio(Analysis):
 
     """
 
-    required_parameters = ParameterSet({
-      'bin_length': float,  # (ms) the size of bin to construct the PSTH from
-    })
-
     def perform_analysis(self):
         for sheet in self.datastore.sheets():
             # Load up spike trains for the right sheet and the corresponding
             # stimuli, and transform spike trains into psth
-            dsv = queries.param_filter_query(self.datastore, sheet_name=sheet,st_name='FullfieldDriftingSinusoidalGrating')
-            assert queries.equal_stimulus_type(dsv)
-
-            psths = [psth(seg.spiketrains, self.parameters.bin_length)
-                     for seg in dsv.get_segments()]
-            st = [MozaikParametrized.idd(s) for s in dsv.get_stimuli()]
-
+            print sheet
+            self.datastore.print_content()
+            dsv = queries.param_filter_query(self.datastore,identifier='AnalogSignalList',sheet_name=sheet,analysis_algorithm='PSTH',st_name='FullfieldDriftingSinusoidalGrating')
+            dsv.print_content()
+            assert queries.equal_ads_except(dsv,['stimulus_id']) , "It seems PSTH of computed in different ways are present in datastore, ModulationRatio can accept only one"
+            psths = dsv.get_analysis_result()
+            st = [MozaikParametrized.idd(p.stimulus_id) for p in psths]
             # average across trials
-            psths, stids = colapse(psths,
-                                   st,
-                                   parameter_list=['trial'],
-                                   func=neo_mean,
-                                   allow_non_identical_objects=True)
+            psths, stids = colapse(psths,st,parameter_list=['trial'],func=neo_sum,allow_non_identical_objects=True)
 
             # retrieve the computed orientation preferences
             pnvs = self.datastore.get_analysis_result(identifier='PerNeuronValue',
                                                       sheet_name=sheet,
                                                       value_name='orientation preference')
+
             if len(pnvs) != 1:
                 logger.error("ERROR: Expected only one PerNeuronValue per sheet "
                              "with value_name 'orientation preference' in datastore, got: "
@@ -388,14 +382,13 @@ class ModulationRatio(Analysis):
                 return None
         
             or_pref = pnvs[0]
-
             # find closest orientation of grating to a given orientation preference of a neuron
             # first find all the different presented stimuli:
             ps = {}
             for s in st:
                 ps[MozaikParametrized.idd(s).orientation] = True
             ps = ps.keys()
-
+            print ps
             # now find the closest presented orientations
             closest_presented_orientation = []
             for i in xrange(0, len(or_pref.values)):
@@ -414,27 +407,30 @@ class ModulationRatio(Analysis):
             d = colapse_to_dictionary(psths, stids, "orientation")
             for (st, vl) in d.items():
                 # here we will store the modulation ratios, one per each neuron
-                modulation_ratio = numpy.zeros((numpy.shape(psths[0])[1],))
+                modulation_ratio = []
+                ids = []
                 frequency = MozaikParametrized.idd(st).temporal_frequency * MozaikParametrized.idd(st).params()['temporal_frequency'].units
                 for (orr, ppsth) in zip(vl[0], vl[1]):
                     for j in numpy.nonzero(orr == closest_presented_orientation)[0]:
-                        modulation_ratio[j] = self._calculate_MR(ppsth[:, j],
-                                                                frequency)
+                        if or_pref.ids[j] in ppsth.ids:
+                            modulation_ratio.append(self._calculate_MR(ppsth.get_asl_by_id(or_pref.ids[j]),frequency))
+                            ids.append(or_pref.ids[j])
+                            
                 logger.debug('Adding PerNeuronValue:' + str(sheet))
                 self.datastore.full_datastore.add_analysis_result(
                     PerNeuronValue(modulation_ratio,
-                                   dsv.get_segments()[0].get_stored_spike_train_ids(),
+                                   ids,
                                    qt.dimensionless,
-                                   value_name='Modulation ratio',
+                                   value_name='Modulation ratio' + '(' + psths[0].x_axis_name + ')',
                                    sheet_name=sheet,
                                    tags=self.tags,
                                    period=None,
                                    analysis_algorithm=self.__class__.__name__,
                                    stimulus_id=str(st)))
 
-            import pylab
-            pylab.figure()
-            pylab.hist(modulation_ratio)
+                import pylab
+                pylab.figure()
+                pylab.hist(modulation_ratio)
 
     def _calculate_MR(signal, frequency):
         """
@@ -772,7 +768,45 @@ class ActionPotentialRemoval(Analysis):
                                          tags=self.tags,
                                          analysis_algorithm=self.__class__.__name__,
                                          stimulus_id=str(st)))
-      
+
+class LocalHomogeneityIndex(Analysis):      
+    """
+    Calculates Local Homogeneity Index (LHI) for each neuron, of each PerNeuronValue that is present in the datastore, according to:
+    Nauhaus, I., Benucci, A., Carandini, M., & Ringach, D. (2008). Neuronal selectivity and local map structure in visual cortex. Neuron, 57(5), 673–679. 
+    """
+    required_parameters = ParameterSet({
+        'sigma' : float,
+    }) 
+    def perform_analysis(self):
+        sigma = self.parameters.sigma
+        for sheet in self.datastore.sheets():
+            positions = self.datastore.get_neuron_postions()[sheet]
+            for pnv in queries.param_filter_query(self.datastore,sheet_name=sheet,identifier='PerNeuronValue').get_analysis_result():
+                lhis = []
+                for x in pnv.ids:
+                    idx = self.datastore.get_sheet_indexes(sheet,x)
+                    sx = positions[0][idx]
+                    sy = positions[1][idx]
+                    lhi_current=[0,0]
+                    for y in pnv.ids:
+                        idx = self.datastore.get_sheet_indexes(sheet,y)
+                        tx = positions[0][idx]
+                        ty = positions[1][idx]
+                        lhi_current[0]+=numpy.exp(-((sx-tx)*(sx-tx)+(sy-ty)*(sy-ty))/(2*sigma*sigma))*numpy.cos(2*pnv.get_value_by_id(y))
+                        lhi_current[1]+=numpy.exp(-((sx-tx)*(sx-tx)+(sy-ty)*(sy-ty))/(2*sigma*sigma))*numpy.sin(2*pnv.get_value_by_id(y))
+                    lhis.append(numpy.sqrt(lhi_current[0]*lhi_current[0] + lhi_current[1]*lhi_current[1])/(2*numpy.pi*sigma*sigma))
+                
+                self.datastore.full_datastore.add_analysis_result(
+                    PerNeuronValue(lhis,
+                                   pnv.ids,
+                                   qt.dimensionless,
+                                   value_name='LocalHomogeneityIndex' + '(' + str(self.parameters.sigma) + ':' + pnv.value_name + ')',
+                                   sheet_name=sheet,
+                                   tags=self.tags,
+                                   period=None,
+                                   analysis_algorithm=self.__class__.__name__,
+                                   stimulus_id=str(pnv.stimulus_id)))
+
       
                 
 class Irregularity(Analysis):

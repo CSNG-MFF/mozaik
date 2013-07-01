@@ -260,12 +260,18 @@ class StandardStyle(SimplePlot):
         pylab.rcParams['ytick.major.pad'] = self.ytick_pad_backup
 
     def _ticks(self):
-
         if self.x_ticks != None:
             if self.x_tick_labels != None and (len(self.x_ticks) == len(self.x_tick_labels)):
                 pylab.xticks(self.x_ticks, self.x_tick_labels)
             else:
                 pylab.xticks(self.x_ticks)
+
+            if self.x_tick_style == 'Min':
+                phf.three_tick_axis(self.axis.xaxis)
+            elif self.x_tick_style == 'Custom':
+                pass
+            else:
+                raise ValueError('Unknown x tick style %s', self.x_tick_style)
 
         if self.y_ticks != None:
             if self.y_tick_labels != None and (len(self.y_ticks) == len(self.y_tick_labels)):
@@ -273,19 +279,12 @@ class StandardStyle(SimplePlot):
             else:
                 pylab.yticks(self.y_ticks)
 
-        if self.x_tick_style == 'Min':
-            phf.three_tick_axis(self.axis.xaxis)
-        elif self.x_tick_style == 'Custom':
-            pass
-        else:
-            raise ValueError('Unknown x tick style %s', self.x_tick_style)
-
-        if self.y_tick_style == 'Min':
-            phf.three_tick_axis(self.axis.yaxis)
-        elif self.y_tick_style == 'Custom':
-            pass
-        else:
-            raise ValueError('Unknow y tick style %s', self.y_tick_style)
+            if self.y_tick_style == 'Min':
+                phf.three_tick_axis(self.axis.yaxis)
+            elif self.y_tick_style == 'Custom':
+                pass
+            else:
+                raise ValueError('Unknow y tick style %s', self.y_tick_style)
 
         for label in self.axis.get_xticklabels() + self.axis.get_yticklabels():
             label.set_fontsize(self.fontsize)

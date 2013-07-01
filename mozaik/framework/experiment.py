@@ -274,7 +274,7 @@ class MeasureOrientationContrastTuning(VisualExperiment):
                  grating_duration, contrasts, num_trials):
         VisualExperiment.__init__(self, model)
         for c in contrasts:
-            for i in xrange(0, num_sizes):
+            for i in xrange(0, num_orientations):
                 for k in xrange(0, num_trials):
                     self.stimuli.append(
                         topo.DriftingSinusoidalGratingCenterSurroundStimulus(

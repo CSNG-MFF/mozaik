@@ -38,7 +38,6 @@ def psth(spike_list, bin_length):
 
     r = (float(t_start), float(t_stop))
     h = [AnalogSignal(numpy.histogram(sp, bins=num_bins, range=r)[0] / (bin_length/1000),t_start=t_start,sampling_period=bin_length*qt.ms,units=munits.spike_per_sec) for sp in spike_list]
-
     return  h
 
 
