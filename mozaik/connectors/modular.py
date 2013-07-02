@@ -1,17 +1,17 @@
 # encoding: utf-8
 import mozaik
 import numpy
-from mozaik.connectors import MozaikConnector
+from mozaik.connectors import Connector
 from mozaik.connectors.modular_connector_functions import ModularConnectorFunction
 from collections import Counter
 from parameters import ParameterSet, ParameterDist
 from mozaik.tools.misc import sample_from_bin_distribution, normal_function
-from mozaik.framework import load_component
+from mozaik import load_component
 
 
 logger = mozaik.getMozaikLogger()
 
-class ModularConnector(MozaikConnector):
+class ModularConnector(Connector):
     """
     An abstract connector than allows for mixing of various factors that can affect the connectivity.
     
@@ -43,7 +43,7 @@ class ModularConnector(MozaikConnector):
     })
     
     def __init__(self, network, name,source, target, parameters):
-      MozaikConnector.__init__(self, network, name, source,target,parameters)
+      Connector.__init__(self, network, name, source,target,parameters)
       
       # lets load up the weight ModularConnectorFunction's
       self.weight_functions = {}

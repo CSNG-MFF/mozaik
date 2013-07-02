@@ -1,10 +1,10 @@
-retinal Package
+vision Package
 ===============
 
 :mod:`cai97` Module
 -------------------
 
-.. automodule:: mozaik.models.retinal.cai97
+.. automodule:: mozaik.models.vision.cai97
     :members:
     :undoc-members:
     :show-inheritance:
@@ -12,7 +12,7 @@ retinal Package
 :mod:`spatiotemporalfilter` Module
 ----------------------------------
 
-.. automodule:: mozaik.models.retinal.spatiotemporalfilter
+.. automodule:: mozaik.models.vision.spatiotemporalfilter
     :members:
     :undoc-members:
     :show-inheritance:

@@ -3,7 +3,7 @@ This module contains special analysis functions that relate to some tehnical moz
 do not represent a standard analysis
 """
 
-from mozaik.analysis.analysis_data_structures import PerNeuronValue
+from mozaik.analysis.data_structures import PerNeuronValue
 from mozaik.analysis.analysis import Analysis
 from mozaik.storage import queries
 from sets import Set

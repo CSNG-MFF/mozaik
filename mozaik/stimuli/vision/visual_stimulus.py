@@ -1,15 +1,13 @@
 """
-Docstring goes here
+This module contains API of visual stimuli.
 """
-
 import numpy
 import mozaik
 from quantities import degrees
-from mozaik.stimuli.stimulus import BaseStimulus
-from mozaik.framework.space import TRANSPARENT, xy2ij
+from mozaik.stimuli import BaseStimulus
+from mozaik.space import TRANSPARENT, xy2ij, VisualRegion
 from mozaik.tools.mozaik_parametrized import SNumber
 from mozaik.tools.units import lux
-from mozaik.framework.space import VisualRegion
 from scipy.ndimage import interpolation
 
 logger = mozaik.getMozaikLogger()
@@ -26,7 +24,7 @@ class VisualStimulus(BaseStimulus):
     this class is the :func:`mozaik.stimuli.stimulus.BaseStimulus.frames` function.
     
     This class also implements functions common to all visual stimuli that are required for it to be compatible 
-    with the :class:`mozaik.framework.space.VisualSpace` and  class.
+    with the :class:`mozaik.space.VisualSpace` and  class.
     """
     background_luminance = SNumber(lux, doc="Background luminance. Maximum luminance of object allowed is 2*background_luminance")
     density = SNumber(1/(degrees), doc="The density of stimulus - units per degree")

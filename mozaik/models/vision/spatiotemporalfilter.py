@@ -8,10 +8,9 @@ import os.path
 import pickle
 import mozaik
 import cai97
-from mozaik.framework.space import VisualSpace
-from mozaik.framework.space import VisualRegion
-from mozaik.framework.interfaces import SensoryInputComponent
-from mozaik.framework.sheets import RetinalUniformSheet
+from mozaik.space import VisualSpace, VisualRegion
+from mozaik.core import SensoryInputComponent
+from mozaik.sheets.vision import RetinalUniformSheet
 from mozaik.tools.mozaik_parametrized import MozaikParametrized
 
 #from NeuroTools import visual_logging
@@ -546,7 +545,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
     def provide_null_input(self, visual_space, duration=None, offset=0):
         """
         This function exists for optimization purposes. It is the analog to 
-        :func:.`mozaik.models.retinal.SpatioTemporalFilterRetinaLGN.process_input` for the 
+        :func:.`mozaik.retinal.SpatioTemporalFilterRetinaLGN.process_input` for the 
         special case when blank stimulus is shown.
         
         Parameters

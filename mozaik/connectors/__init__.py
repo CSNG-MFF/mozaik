@@ -4,12 +4,10 @@ Mozaik connector interface.
 """
 import math
 import numpy
-#import pylab
 import mozaik
 import time
-#from pylab import griddata
-from mozaik.framework.interfaces import Connector
-from mozaik.framework.sheets import SheetWithMagnificationFactor
+from mozaik.core import BaseComponent
+from mozaik.sheets.vision import SheetWithMagnificationFactor
 from parameters import ParameterSet, ParameterDist
 from mozaik.tools.misc import sample_from_bin_distribution, normal_function
 from collections import Counter
@@ -17,8 +15,7 @@ from pyNN import random, space
 
 logger = mozaik.getMozaikLogger()
 
-
-class MozaikConnector(Connector):
+class Connector(BaseComponent):
     """
     An abstract interface class for Connectors in mozaik. Each mozaik connector should derive from this class and implement 
     the _connect function. The usage is: create the instance of MozaikConnector and call connect() to realize the connections.
@@ -33,9 +30,20 @@ class MozaikConnector(Connector):
             }),
     })
     
-    def __init__(self, network, name,source, target, parameters):
-      Connector.__init__(self, network, name, source,target,parameters)
-    
+    def __init__(self, model, name, source, target, parameters):
+        logger.info("Creating %s between %s and %s" % (self.__class__.__name__,
+                                                       source.__class__.__name__,
+                                                       target.__class__.__name__))
+        BaseComponent.__init__(self, model, parameters)
+        self.name = name
+        self.model.register_connector(self)
+        self.sim = self.model.sim
+        self.source = source
+        self.target = target
+        self.input = source
+        self.target.input = self
+
+
     
     def init_synaptic_mechanisms(self,weights=None,delays=None):
       if not self.parameters.short_term_plasticity != None:
@@ -88,7 +96,7 @@ class MozaikConnector(Connector):
         #pylab.colorbar()
 
     def store_connections(self, datastore):
-        from mozaik.analysis.analysis_data_structures import Connections
+        from mozaik.analysis.data_structures import Connections
         
         weights = self.proj.get('weight', format='list', gather=True)
         delays = self.proj.get('delay', format='list', gather=True)
@@ -100,7 +108,7 @@ class MozaikConnector(Connector):
                         analysis_algorithm='connection storage'))
 
 
-class SpecificArborization(MozaikConnector):
+class SpecificArborization(Connector):
     """
     Generic connector which gets directly list of connections as the list of
     quadruplets as accepted by the pyNN FromListConnector.
@@ -116,7 +124,7 @@ class SpecificArborization(MozaikConnector):
     })
 
     def __init__(self, network, source, target, connection_matrix,delay_matrix, parameters, name):
-        MozaikConnector.__init__(self, network, name, source,
+        Connector.__init__(self, network, name, source,
                                              target, parameters)
         self.connection_matrix = connection_matrix
         self.delay_matrix = delay_matrix
@@ -154,7 +162,7 @@ class SpecificArborization(MozaikConnector):
                                 receptor_type=self.parameters.target_synapses)
 
 
-class SpecificProbabilisticArborization(MozaikConnector):
+class SpecificProbabilisticArborization(Connector):
     """
     Generic connector which gets directly list of connections as the list
     of quadruplets as accepted by the pyNN FromListConnector.
@@ -178,7 +186,7 @@ class SpecificProbabilisticArborization(MozaikConnector):
     })
 
     def __init__(self, network, source, target, connection_matrix,delay_matrix, parameters, name):
-        MozaikConnector.__init__(self, network, name, source,target, parameters)
+        Connector.__init__(self, network, name, source,target, parameters)
         self.connection_matrix = connection_matrix
         self.delay_matrix = delay_matrix
 

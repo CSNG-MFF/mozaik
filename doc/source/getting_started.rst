@@ -73,8 +73,8 @@ Common abreviations
 Throughout the documentation we use several common abbreviations
 
 * DSV - Data Store View (see :class:`mozaik.storage.datastore.DataStoreView`)
-* ADS - Analysis Data Structure (see :mod:`mozaik.analysis.analysis_data_structures`)
-* PNV - Per Neuron Value analysis data structure (see :class:`mozaik.analysis.analysis_data_structures.PerNeuronValue`)
+* ADS - Analysis Data Structure (see :mod:`mozaik.analysis.data_structures`)
+* PNV - Per Neuron Value analysis data structure (see :class:`mozaik.analysis.data_structures.PerNeuronValue`)
 * RP (or required parameters) - The required parameters parametrization scheme (see ParameterSet section above)
 
 

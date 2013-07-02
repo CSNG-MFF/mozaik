@@ -7,7 +7,7 @@ from parameters import ParameterSet
 from neo.core.block import Block
 #from neo.io.hdf5io import NeoHdf5IO
 import mozaik
-from mozaik.framework.interfaces import MozaikParametrizeObject
+from mozaik.core import ParametrizedObject
 from neo_neurotools_wrapper import MozaikSegment, PickledDataStoreNeoWrapper
 from mozaik.tools.mozaik_parametrized import  MozaikParametrized,filter_query
 import cPickle
@@ -17,7 +17,7 @@ logger = mozaik.getMozaikLogger()
 
 
 
-class DataStoreView(MozaikParametrizeObject):
+class DataStoreView(ParametrizedObject):
     """
     This class represents a subset of a DataStore and defines the query
     interface and the structure in which the data are stored in the memory of
@@ -40,7 +40,7 @@ class DataStoreView(MozaikParametrizeObject):
 
     Analysis results storage:
     
-    A list containing the :class:`.mozaik.analysis.analysis_data_structures.AnalysisDataStructure` objects.
+    A list containing the :class:`.mozaik.analysis.data_structures.AnalysisDataStructure` objects.
 
     The analysis results are addressed by the
     AnalysisDataStructure identifier. The call with this specification returns
@@ -69,12 +69,12 @@ class DataStoreView(MozaikParametrizeObject):
     """
 
     def __init__(self, parameters, full_datastore,replace=False):
-        MozaikParametrizeObject.__init__(self, parameters)
+        ParametrizedObject.__init__(self, parameters)
         # we will hold the recordings as one neo Block
         self.block = Block()
         self.analysis_results = []
         self.replace = replace
-        self.retinal_stimulus = collections.OrderedDict()
+        self.sensory_stimulus = collections.OrderedDict()
         self.full_datastore = full_datastore  # should be self if actually the
                                               # instance is actually DataStore
 
@@ -157,23 +157,23 @@ class DataStoreView(MozaikParametrizeObject):
         """
         return filter_query(self.analysis_results,**kwargs)
 
-    def get_retinal_stimulus(self, stimuli=None):
+    def get_sensory_stimulus(self, stimuli=None):
         """
-        Return the raw retinal stimulus that has been presented to the model due to stimuli specified by the stimuli argument.
-        If stimuli==None returns all retinal stimuli.
+        Return the raw sensory stimulus that has been presented to the model due to stimuli specified by the stimuli argument.
+        If stimuli==None returns all sensory stimuli.
         """
         if stimuli == None:
-            return self.retinal_stimulus.values()
+            return self.sensory_stimulus.values()
         else:
-            return [self.retinal_stimulus[s] for s in stimuli]
+            return [self.sensory_stimulus[s] for s in stimuli]
 
-    def retinal_stimulus_copy(self):
+    def sensory_stimulus_copy(self):
         """
-        Utility function that makes a shallow copy of the dictionary holding retinal stimuli.
+        Utility function that makes a shallow copy of the dictionary holding sensory stimuli.
         """
         new_dict = collections.OrderedDict()
-        for k in self.retinal_stimulus.keys():
-            new_dict[k] = self.retinal_stimulus[k]
+        for k in self.sensory_stimulus.keys():
+            new_dict[k] = self.sensory_stimulus[k]
         return new_dict
 
     def analysis_result_copy(self):
@@ -246,8 +246,8 @@ class DataStoreView(MozaikParametrizeObject):
         
         new_dsv.block.segments = list(set(self.block.segments) | set(other.block.segments))
         new_dsv.analysis_results = list(set(self.analysis_results) | set(other.analysis_results))
-        new_dsv.retinal_stimulus = self.retinal_stimulus_copy()
-        new_dsv.retinal_stimulus.update(other.retinal_stimulus)
+        new_dsv.sensory_stimulus = self.sensory_stimulus_copy()
+        new_dsv.sensory_stimulus.update(other.sensory_stimulus)
         return new_dsv
 
     
@@ -261,7 +261,7 @@ class DataStore(DataStoreView):
     
     The recordings are send to the DataStore in the neo format and are expected to be returned in neo format as well.
     
-    mozaik generetas one neo segment per each model sheet (see :class:`.mozaik.framework.sheets.Sheet`) for each presented stimulus,
+    mozaik generetas one neo segment per each model sheet (see :class:`.mozaik.sheets.Sheet`) for each presented stimulus,
     that is stored in the :class:`.DataStore`.
     
     Parameters
@@ -401,9 +401,7 @@ class Hdf5DataStore(DataStore):
         self.stimulus_dict[str(stimulus)] = True
 
     def add_stimulus(self, data, stimulus):
-        print 'ZZZZ'
-        self.retinal_stimulus[str(stimulus)] = data
-        print self.retinal_stimulus.keys()
+        self.sensory_stimulus[str(stimulus)] = data
 
     def add_analysis_result(self, result):
         flag = True
@@ -440,8 +438,8 @@ class PickledDataStore(Hdf5DataStore):
 
         f = open(self.parameters.root_directory + '/datastore.analysis.pickle', 'rb')
         self.analysis_results = cPickle.load(f)
-        #f = open(self.parameters.root_directory + '/datastore.retinal.stimulus.pickle', 'rb')
-        #self.retinal_stimulus = cPickle.load(f)
+        #f = open(self.parameters.root_directory + '/datastore.sensory.stimulus.pickle', 'rb')
+        #self.sensory_stimulus = cPickle.load(f)
 
     def save(self):
         f = open(self.parameters.root_directory + '/datastore.recordings.pickle', 'wb')
@@ -452,8 +450,8 @@ class PickledDataStore(Hdf5DataStore):
         cPickle.dump(self.analysis_results, f)
         f.close()
 
-        #f = open(self.parameters.root_directory + '/datastore.retinal.stimulus.pickle', 'wb')
-        #cPickle.dump(self.retinal_stimulus, f)
+        #f = open(self.parameters.root_directory + '/datastore.sensory.stimulus.pickle', 'wb')
+        #cPickle.dump(self.sensory_stimulus, f)
         #f.close()
 
     def add_recording(self, segments, stimulus):

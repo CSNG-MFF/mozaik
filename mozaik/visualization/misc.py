@@ -20,7 +20,7 @@ def plot_layer_activity(sheet, value_to_plot, cortical_coordinates=False,
     Parameters
     ----------
     
-    sheet : :class:`mozaik.framework.sheets.Sheet`
+    sheet : :class:`mozaik.sheets.Sheet`
           An instance of the Sheet class
           
     value_to_plot : list

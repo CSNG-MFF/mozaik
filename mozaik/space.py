@@ -7,7 +7,7 @@ import numpy
 import mozaik
 from PIL import Image
 from parameters import ParameterSet
-from mozaik.framework.interfaces import MozaikParametrizeObject
+from mozaik.core import ParametrizedObject
 
 from mozaik import __version__
 
@@ -20,7 +20,7 @@ def xy2ij(coordinates):
     return numpy.array([coordinates[1], coordinates[0]], float)
 
 
-class InputSpace(MozaikParametrizeObject):
+class InputSpace(ParametrizedObject):
     """
     A class to structure and unify operations taking place in the respective sensory space, such as stimulus presentation.
     
@@ -44,7 +44,7 @@ class InputSpace(MozaikParametrizeObject):
         })
 
     def __init__(self, params):
-        MozaikParametrizeObject.__init__(self, params)
+        ParametrizedObject.__init__(self, params)
         self.content = {}
         self.input = None
 

@@ -2,7 +2,7 @@
 See :mod:`mozaik.visualization` for more general documentation.
 """
 
-import mozaik.visualization.plotting_helper_functions as phf
+import mozaik.visualization.helper_functions as phf
 import pylab
 import numpy
 import mozaik

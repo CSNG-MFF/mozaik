@@ -3,8 +3,8 @@ import pickle
 import numpy
 from numpy import sin, cos, pi, exp
 from scipy.interpolate import NearestNDInterpolator
-from mozaik.framework.interfaces import MozaikComponent
-from mozaik.framework import load_component
+from mozaik.core import BaseComponent
+from mozaik import load_component
 from parameters import ParameterSet, ParameterDist
 from mozaik.connectors import SpecificProbabilisticArborization, SpecificArborization
 
@@ -32,7 +32,7 @@ def gabor(x1, y1, x2, y2, orientation, frequency, phase, size, aspect_ratio):
     return numpy.exp(ker)*numpy.cos(2*numpy.pi*X*frequency + phase)
 
 
-class GaborConnector(MozaikComponent):
+class GaborConnector(BaseComponent):
     """
     Connector that creates Gabor projections.
 
@@ -89,7 +89,7 @@ class GaborConnector(MozaikComponent):
     def __init__(self, network, lgn_on, lgn_off, target, parameters, name):
         from numpy import random
         random.seed(1023)
-        MozaikComponent.__init__(self, network, parameters)
+        BaseComponent.__init__(self, network, parameters)
         self.name = name
         on = lgn_on.pop
         off = lgn_off.pop

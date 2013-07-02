@@ -12,7 +12,7 @@ from string import Template
 logger = mozaik.getMozaikLogger()
 
 
-class MozaikParametrizeObject(object):
+class ParametrizedObject(object):
     """
     Base class for for all Mozaik objects using the dynamic parameterization framework. See `getting_started`_ for more details.
     
@@ -27,7 +27,7 @@ class MozaikParametrizeObject(object):
     def check_parameters(self, parameters):
         """
         This is a function that checks whether all required (and no other) parameters have been specified and all their values have matching types.
-        This function gets automatically executed during initialization of each :class:.MozaikParametrizeObject object. 
+        This function gets automatically executed during initialization of each :class:.ParametrizedObject object. 
 
         Parameters
         ----------
@@ -68,7 +68,7 @@ class MozaikParametrizeObject(object):
             self.parameters = parameters
 
 
-class MozaikComponent(MozaikParametrizeObject):
+class BaseComponent(ParametrizedObject):
     """
     Base class for mozaik model components.
     
@@ -79,19 +79,18 @@ class MozaikComponent(MozaikParametrizeObject):
     """
 
     def __init__(self, model, parameters):
-        MozaikParametrizeObject.__init__(self, parameters)
+        ParametrizedObject.__init__(self, parameters)
         self.model = model
 
 
-class SensoryInputComponent(MozaikComponent):
+class SensoryInputComponent(BaseComponent):
     """
     Abstract API of sensory input component. Each mozaik sensory input component should 
     inherit from this class and implement its two abstrac methods.
     
     See Also
     --------
-    mozaik.models : the implementation of the model package  
-    mozaik.models.retinal : the implementation of retinal input 
+    mozaik.models.vision : the implementation of retinal input 
     """
 
     def process_input(self, input_space, stimulus_id, duration=None,
@@ -118,44 +117,3 @@ class SensoryInputComponent(MozaikComponent):
         stimuli to allow for models to return to spontaneous activity state.
         """
         raise NotImplementedError
-
-class Connector(MozaikComponent):
-    """
-    Abstract API of connectors between sheets. 
-    
-    See Also
-    --------
-    mozaik.connectors : the implementation of the connectors package  
-    
-    """
-
-    version = __version__
-
-    def __init__(self, model, name, source, target, parameters):
-        logger.info("Creating %s between %s and %s" % (self.__class__.__name__,
-                                                       source.__class__.__name__,
-                                                       target.__class__.__name__))
-        MozaikComponent.__init__(self, model, parameters)
-        self.name = name
-        self.model.register_connector(self)
-        self.sim = self.model.sim
-        self.source = source
-        self.target = target
-        self.input = source
-        self.target.input = self
-
-    def describe(self, template='default', render=lambda t, c: Template(t).safe_substitute(c)):
-        context = {
-            'name': self.__class__.__name__,
-            'source': {
-                'name': self.source.__class__.__name__,
-            },
-            'target': {
-                'name': self.target.__class__.__name__,
-            },
-            'projections': [prj.describe(template=None) for prj in self.projections]
-        }
-        if template:
-            render(template, context)
-        else:
-            return context

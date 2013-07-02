@@ -48,9 +48,9 @@ from scipy.interpolate import griddata
 
 from parameters import ParameterSet
 
-from mozaik.framework.interfaces import MozaikParametrizeObject
+from mozaik.core import ParametrizedObject
 from mozaik.storage import queries
-from mozaik.framework.experiment_controller import Global
+from mozaik.controller import Global
 from mozaik.tools.mozaik_parametrized import colapse_to_dictionary, MozaikParametrized, varying_parameters, matching_parametrized_object_params
 from numpy import pi
 
@@ -63,7 +63,7 @@ import mozaik
 logger = mozaik.getMozaikLogger()
 
 
-class Plotting(MozaikParametrizeObject):
+class Plotting(ParametrizedObject):
     """
     The high level Plotting API. See the module information on more detailed description.
 
@@ -87,7 +87,7 @@ class Plotting(MozaikParametrizeObject):
     """
 
     def  __init__(self, datastore, parameters, plot_file_name=None,fig_param=None):
-        MozaikParametrizeObject.__init__(self, parameters)
+        ParametrizedObject.__init__(self, parameters)
         self.datastore = datastore
         self.plot_file_name = plot_file_name
         self.fig_param = fig_param if fig_param != None else {}
@@ -575,9 +575,10 @@ class RetinalInputMovie(Plotting):
                  fig_param=None):
         Plotting.__init__(self, datastore, parameters, plot_file_name, fig_param)
         self.length = None
-        self.retinal_input = datastore.get_retinal_stimulus()
+        # currently there is no way to check whether the sensory input is retinal
+        self.retinal_input = datastore.get_sensory_stimulus_stimulus()
         print len(self.retinal_input)
-        self.st = datastore.retinal_stimulus.keys()
+        self.st = datastore.sensory_stimulus.keys()
         
     def subplot(self, subplotspec):
         return LinePlot(function=self._ploter,

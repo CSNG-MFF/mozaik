@@ -11,26 +11,19 @@ Modules
 
 See the :py:mod:`mozaik.stimuli.stimulus` for more general information on stimulus handling in *mozaik*.
 
-:mod:`stimulus` Module
+:mod:`stimuli` Module
 --------------------------------
 
-.. automodule:: mozaik.stimuli.stimulus
+.. automodule:: mozaik.stimuli.__init__
     :members:
     :show-inheritance:
 
 
-:mod:`visual_stimulus` Module
---------------------------------
+Subpackages
+-----------
 
-.. automodule:: mozaik.stimuli.visual_stimulus
-    :members:
-    :show-inheritance:
+.. toctree::
+    mozaik.stimuli.vision
 
 
-:mod:`topographica_based` Module
---------------------------------
-
-.. automodule:: mozaik.stimuli.topographica_based
-    :members:
-    :show-inheritance:
 

@@ -1,12 +1,4 @@
 # encoding: utf-8
-import mozaik
-from mozaik.connectors import MozaikConnector
-from parameters import ParameterSet, ParameterDist
-from pyNN import space
-import numpy
-
-logger = mozaik.getMozaikLogger()
-
 """
 This file contains connectors that were written for speed - as a general rule 
 they tend to use the more native pyNN or even backend specific pyNN methods.
@@ -14,7 +6,16 @@ they tend to use the more native pyNN or even backend specific pyNN methods.
 To obtain speed they generally sacrifice ease customization.
 """
 
-class DistanceDependentProbabilisticArborization(MozaikConnector):
+import mozaik
+from mozaik.connectors import Connector
+from parameters import ParameterSet, ParameterDist
+from pyNN import space
+import numpy
+
+logger = mozaik.getMozaikLogger()
+
+
+class DistanceDependentProbabilisticArborization(Connector):
     """
     A abstract connector that implements distance dependent connection.
     Each implementation just needs to implement the arborization_function and delay function.
@@ -80,7 +81,7 @@ class ExponentialProbabilisticArborization(DistanceDependentProbabilisticArboriz
         return numpy.maximum(distance * self.parameters.propagation_constant,0.1)
         
         
-class UniformProbabilisticArborization(MozaikConnector):
+class UniformProbabilisticArborization(Connector):
     """
     Connects source with target with equal probability between any two neurons.
     """

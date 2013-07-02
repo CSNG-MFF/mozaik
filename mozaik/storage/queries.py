@@ -4,13 +4,13 @@ This module contain query manipulation system that is used to filter information
 The basic principle is that each query takes a existing :class:`.DataSore` (or :class:`.DataStoreView`) as an input and 
 returns and new :class:`.DataSoreView` that is a subset of the input DSV.
 """
-from mozaik.framework.interfaces import MozaikParametrizeObject
+from mozaik.core import ParametrizedObject
 from parameters import ParameterSet
 from mozaik.tools.mozaik_parametrized import colapse,  MozaikParametrized, filter_query, matching_parametrized_object_params
 import numpy
 
 
-class Query(MozaikParametrizeObject):
+class Query(ParametrizedObject):
     """
     Query accepts a :class:`.DataStoreView` and returns a :class:`.DataStoreView` (or set of DSVs) with potentially
     reduced set of recorded data or analysis results
@@ -25,7 +25,7 @@ class Query(MozaikParametrizeObject):
     })
 
     def __init__(self, parameters):
-        MozaikParametrizeObject.__init__(self, parameters)
+        ParametrizedObject.__init__(self, parameters)
 
     def query(self, dsv):
         """
@@ -109,7 +109,7 @@ def param_filter_query(dsv,ads_unique=False,rec_unique=False,**kwargs):
     seg = seg_filtered_st & seg_filtered
     ads = ads_filtered_st & ads_filtered
     
-    new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
+    new_dsv.sensory_stimulus = dsv.sensory_stimulus_copy()
     new_dsv.block.segments = list(seg)
     new_dsv.analysis_results = list(ads)
     
@@ -161,7 +161,7 @@ def tag_based_query(dsv, tags):
     
         new_dsv = dsv.fromDataStoreView()
         new_dsv.block.segments = dsv.recordings_copy()
-        new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
+        new_dsv.sensory_stimulus = dsv.sensory_stimulus_copy()
         new_dsv.analysis_results = _tag_based_query(dsv.analysis_results, tags)
         return new_dsv
 
@@ -289,7 +289,7 @@ def partition_analysis_results_by_parameters_query(dsv,parameter_list=None,excpt
         for vals in values:
             new_dsv = dsv.fromDataStoreView()
             new_dsv.block.segments = dsv.recordings_copy()
-            new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
+            new_dsv.sensory_stimulus = dsv.sensory_stimulus_copy()
             new_dsv.analysis_results.extend(vals)
             dsvs.append(new_dsv)
         return dsvs
@@ -357,7 +357,7 @@ def partition_analysis_results_by_stimulus_parameters_query(dsv,parameter_list=N
         for vals in values:
             new_dsv = dsv.fromDataStoreView()
             new_dsv.block.segments = dsv.recordings_copy()
-            new_dsv.retinal_stimulus = dsv.retinal_stimulus_copy()
+            new_dsv.sensory_stimulus = dsv.sensory_stimulus_copy()
             new_dsv.analysis_results.extend(vals)
             dsvs.append(new_dsv)
         return dsvs

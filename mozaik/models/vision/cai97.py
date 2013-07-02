@@ -2,11 +2,8 @@
 docstring goes here
 
 """
-
 import numpy
 from numpy import exp
-from mozaik.framework.decorators import timeit
-
 
 def meshgrid3D(x, y, z):
     """A slimmed-down version of http://www.scipy.org/scipy/numpy/attachment/ticket/966/meshgrid.py"""
@@ -19,8 +16,6 @@ def meshgrid3D(x, y, z):
            y[nax, :, nax] * mult_fact, \
            z[nax, nax, :] * mult_fact
 
-
-@timeit
 def stRF_kernel_2d(duration=200.0, dt=1000.0/120.0, size=10.0,
                    scale_factor=10.0, p={}):
     """
@@ -37,7 +32,6 @@ def stRF_kernel_2d(duration=200.0, dt=1000.0/120.0, size=10.0,
     return kernel
 
 
-@timeit
 def stRF_2d(x, y, t, p):
     """
     x, y, and t should all be 3D arrays, produced by meshgrid3D.

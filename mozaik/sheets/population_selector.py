@@ -1,10 +1,18 @@
-from mozaik.framework.interfaces import MozaikParametrizeObject
+"""
+This module contains definition of the PopulationSelector API.
+It is used as mechanism for selecting subpopulations of neurons within
+Sheets. The most typical use is for selecting neurons for recordings, where 
+a PopulationSelector can for example simulate the sampling of neurons 
+when using a multi-electrode array of some specific spatial configuration.
+"""
+
+from mozaik.core import ParametrizedObject
 from parameters import ParameterSet
 import math
 import numpy
 import mozaik
 
-class PopulationSelector(MozaikParametrizeObject):
+class PopulationSelector(ParametrizedObject):
     """
     The PopulationSelector specifies which cells should be selected from population. 
     
@@ -21,7 +29,7 @@ class PopulationSelector(MozaikParametrizeObject):
     """
           
     def __init__(self, sheet, parameters):
-        MozaikParametrizeObject.__init__(self, parameters)
+        ParametrizedObject.__init__(self, parameters)
         self.sheet = sheet  
 
     def generate_idd_list_of_neurons(self):
