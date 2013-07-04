@@ -98,14 +98,15 @@ class SlurmSequentialBackend(object):
          from subprocess import Popen, PIPE, STDOUT
         
          p = Popen(['sbatch'] + self.slurm_options +  ['-o',parameters['results_dir'][2:-2]+"/slurm-%j.out"],stdin=PIPE,stdout=PIPE,stderr=PIPE)
-
+         
+         # THIS IS A BIT OF A HACK, have to add customization for other people ...            
          data = '\n'.join([
                             '#!/bin/bash',
                             '#SBATCH -J MozaikParamSearch',
                             '#SBATCH -n ' + str(self.num_mpi),
                             '#SBATCH -c ' + str(self.num_threads),
-                            'source  /opt/software/mpi/openmpi-1.6.3-gcc/env',
-                            'source /home/antolikjan/env/mozaik-pynn0.8/bin/activate',
+                            'source /opt/software/mpi/openmpi-1.6.3-gcc/env',
+                            'source /home/antolikjan/env/mozaik/bin/activate',
                             'cd ' + os.getcwd(),
                             ' '.join(["mpirun"," --mca mtl ^psm python",run_script, simulator_name, str(self.num_threads) ,parameters_url]+modified_parameters+[simulation_run_name]+['>']  + [parameters['results_dir'][1:-1] +'/OUTFILE'+str(time.time())]),
                         ]) 

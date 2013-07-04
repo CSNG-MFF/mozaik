@@ -1,16 +1,42 @@
 #!/usr/bin/env python
 from distutils.core import setup
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 setup(
     name = "mozaik",
     version = "0.1dev",
     package_dir = {'mozaik': 'mozaik'},
     packages = ['mozaik',
                 'mozaik.analysis',
-                'mozaik.framework',
+                'mozaik.experiments',
+                'mozaik.connectors',
+                'mozaik.sheets',
+                'mozaik.meta_workflow',
                 'mozaik.models',
-                'mozaik.models.retinal',
+                'mozaik.models.vision',
                 'mozaik.stimuli',
+                'mozaik.stimuli.vision',
                 'mozaik.storage',
                 'mozaik.tools',
                 'mozaik.visualization'

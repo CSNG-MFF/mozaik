@@ -5,7 +5,8 @@ Installation intructions
 Dependencies
 ============
 * scipy/numpy
-* nest (latest release)
+* nest (latest release, compiled with mpi)
+* mpi4py
 * pyNN (neo_output branch)
 * imagen
 * parameters
@@ -52,6 +53,7 @@ ____________
    * scipy requires the following packages if you install it 'by hand' in your virtual environment: liblapack-dev, libblas-dev, gfortran
  
  * numpy
+ * mpi4py
  * matplotlib (1.1 and higher)
  * quantities
  * PyNN:
