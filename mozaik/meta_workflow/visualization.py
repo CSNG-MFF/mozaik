@@ -1,5 +1,5 @@
 import pickle
-from mozaik.framework.controller import result_directory_name
+from mozaik.controller import result_directory_name
 from mozaik.storage.datastore import PickledDataStore
 from mozaik.storage.queries import *
 import pylab
