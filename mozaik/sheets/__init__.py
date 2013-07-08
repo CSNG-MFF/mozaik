@@ -392,7 +392,7 @@ class Sheet(BaseComponent):
                         self.ssae = self.sim.Population(self.pop.size,
                                                         self.model.sim.SpikeSourceArray())
                         seeds=mozaik.get_seeds((self.pop.size,))
-                        self.stgene = [stgen.StGen(seed=seeds[i]) for i in numpy.nonzero(self.pop._mask_local)[0]]
+                        self.stgene = [(stgen.StGen(rng=numpy.random.RandomState(seed=seeds[i])),logger.info(str(i))) for i in numpy.nonzero(self.pop._mask_local)[0]]
                         self.sim.Projection(self.ssae, self.pop,
                                             self.sim.OneToOneConnector(),
                                             synapse_type=exc_syn,
@@ -403,7 +403,7 @@ class Sheet(BaseComponent):
                         self.ssai = self.sim.Population(self.pop.size,
                                                         self.model.sim.SpikeSourceArray())
                         seeds=mozaik.get_seeds((self.pop.size,))
-                        self.stgeni = [stgen.StGen(seed=seeds[i]) for i in numpy.nonzero(self.pop._mask_local)[0]]
+                        self.stgeni = [stgen.StGen(rng=numpy.random.RandomState(seed=seeds[i])) for i in numpy.nonzero(self.pop._mask_local)[0]]
                         self.sim.Projection(self.ssai, self.pop,
                                             self.sim.OneToOneConnector(),
                                             synapse_type=inh_syn,

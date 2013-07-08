@@ -100,7 +100,10 @@ class V1PushPullArborization(ModularConnectorFunction):
         or_gauss = normal_function(or_dist, mean=0, sigma=self.parameters.or_sigma)
         phase_gauss = normal_function(phase_dist, mean=0, sigma=self.parameters.phase_sigma)
         
-        return (1.0-self.parameters.push_pull_ratio) +  self.parameters.push_pull_ratio*numpy.multiply(phase_gauss, or_gauss)
+        # normalize the product with the product of the two normal distribution at 0.
+        m = numpy.multiply(phase_gauss, or_gauss)/(normal_function([0], mean=0, sigma=self.parameters.or_sigma)[0] * normal_function([0], mean=0, sigma=self.parameters.phase_sigma)[0])
+        
+        return (1.0-self.parameters.push_pull_ratio) +  self.parameters.push_pull_ratio*m
 
 
 

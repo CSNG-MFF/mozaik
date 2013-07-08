@@ -103,5 +103,34 @@ $ nosetests --with-coverage --cover-erase --cover-package=mozaik --cover-html --
 in the root directory of the Mozaik package
 
 
+
+Ubuntu
+------
+Following these instruction should give you a working copy of mozaik on a 
+fresh installation of Ubuntu (at the time of the writing the version was 12.04)
+
+First the list of ubuntu package dependencies::
+
+$ sudo apt-get install python2.7 python-dev python-pip python-nose subversion git libopenmpi-dev g++ libjpeg8 libjpeg8-dev libfreetype6 libfreetype6-dev zlib1g-dev libpng++-dev libncurses5 libncurses5-dev libreadline-dev liblapack-dev libblas-dev gfortran libgsl0-dev
+
+Then python virtualenv and virtualenvwrapper (an handy way to manage python virtual environments)::
+$ sudo pip install virtualenv
+$ sudo pip install virtualenvwrapper
+
+To setup `virtualenvwrapper <http://virtualenvwrapper.readthedocs.org/en/latest//>`_ add the following lines at the top of ~/.bash_profile (create it if you don't have one)::
+
+# virtualenvwrapper
+export WORKON_HOME=~/.virtualenvs
+source /usr/local/bin/virtualenvwrapper.sh
+export PIP_VIRTUALENV_BASE=$WORKON_HOME
+export PIP_RESPECT_VIRTUALENV=true
+
+For the first time, run bash_profile (the next times it will be loaded by your terminal):
+$ source .bash_profile
+
+
+
+
+
 :copyright: Copyright 2011-2013 by the *mozaik* team, see AUTHORS.
 :license: `CECILL <http://www.cecill.info/>`_, see LICENSE for details.
