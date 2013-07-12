@@ -1,0 +1,26 @@
+{
+    #CorticalUniformSheet parameters
+    'component': 'mozaik.sheets.vision.VisualCorticalUniformSheet',
+    'params':{
+                'name':'Inh_Layer',
+                'sx': ref('exc_layer.params.sx'),
+                'sy': ref('exc_layer.params.sy'),
+                'density': 800.0,
+                'mpi_safe' : False,
+                'magnification_factor': ref('exc_layer.params.magnification_factor'),
+                'cell': ref('exc_layer.params.cell'),
+                'artificial_stimulation' : True,                    
+                'background_noise' : ref('exc_layer.params.background_noise'),
+                'recorders' : url("param/inh_rec"),    
+    },
+    
+    'InhExcConnection': {
+                'target_synapses' : 'inhibitory',             
+                'short_term_plasticity': None, 
+                'connection_probability': 0.02,  # probability of connection between two neurons from the two populations
+                'weights': 0.051,  # microS, the synapse strength
+                'delay': 0.2,    # ms delay of the connections    
+    },
+
+    'InhInhConnection': ref('inh_layer.InhExcConnection'),
+}
