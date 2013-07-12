@@ -60,6 +60,8 @@ class MozaikExtendedParameterSet(ParameterSet):
             D = eval(s, global_dict)
         except SyntaxError as e:
             raise SyntaxError("Invalid string for ParameterSet definition: %s\n%s" % (s,e))
+        except NameError as e:
+            raise NameError("%s\n%s" % (s,e))
             
         return D or {}
     

@@ -337,3 +337,62 @@ class MeasureSpontaneousActivity(VisualExperiment):
                                 trial=k))    
     def do_analysis(self, data_store):
         pass
+
+
+class MeasureSpontaneousActivityWithPoissonStimulation(VisualExperiment):
+    """
+    Measure spontaneous activity while presenting blank stimulus (all pixels set to background luminance).
+    Importantly for the duration of the experiment it will stimulate neurons 
+    definded by the recording configurations in recording_configuration_list
+    in the sheets specified in the sheet_list with Poisson spike train of mean 
+    frequency determined by the corresponding values in lambda_list.
+    
+        
+    Parameters
+    ----------
+    model : Model
+          The model on which to execute the experiment.
+
+
+    duration : str
+             The duration of single presentation of the stimulus.
+    
+    sheet_list : int
+               The list of sheets in which to do stimulation
+               
+    recording_configuration_list : list
+                                 The list of recording configurations (one per each sheet).
+                                 
+    lambda_list : list
+                List of the means of the Poisson spike train to be injected into the neurons specified in recording_configuration_list (one per each sheet).
+               
+    """
+
+    def __init__(self,model,duration,sheet_list,recording_configuration_list,lambda_list):
+            VisualExperiment.__init__(self, model)
+            
+            
+            from NeuroTools import stgen
+            for sheet_name,lamb,rc in zip(sheet_list,lambda_list,recording_configuration_list):
+                idlist = rc.generate_idd_list_of_neurons()
+                seeds=mozaik.get_seeds((len(idlist),))
+                stgens = [stgen.StGen(seed=seeds[i]) for i in xrange(0,len(idlist))]
+                generator_functions = [(lambda duration,lamb=lamb,stgen=stgens[i]: stgen.poisson_generator(rate=lamb,t_start=0,t_stop=duration).spike_times) for i in xrange(0,len(idlist))]
+                self.exc_spike_stimulators[sheet_name] = (list(idlist),generator_functions)
+
+            self.stimuli.append(
+                        topo.Null(   
+                            frame_duration=7, 
+                            size_x=model.visual_field.size_x,
+                            size_y=model.visual_field.size_y,
+                            location_x=0.0,
+                            location_y=0.0,
+                            background_luminance=self.background_luminance,
+                            duration=duration,
+                            direct_stimulation_name='Kick',
+                            density=self.density,
+                            trial=0))    
+    def do_analysis(self, data_store):
+        pass
+
+    
