@@ -8,6 +8,8 @@ from mozaik.tools.misc import *
 from parameters import ParameterSet
 from scipy.interpolate import NearestNDInterpolator
 
+logger = mozaik.getMozaikLogger()
+
 class MapDependentModularConnectorFunction(ModularConnectorFunction):
     """
     Corresponds to: distance*linear_scaler + constant_scaler
@@ -102,6 +104,8 @@ class V1PushPullArborization(ModularConnectorFunction):
         
         # normalize the product with the product of the two normal distribution at 0.
         m = numpy.multiply(phase_gauss, or_gauss)/(normal_function(numpy.array([0]), mean=0, sigma=self.parameters.or_sigma)[0] * normal_function(numpy.array([0]), mean=0, sigma=self.parameters.phase_sigma)[0])
+        
+        logger = mozaik.getMozaikLogger(str(numpy.max(m)))
         
         return (1.0-self.parameters.push_pull_ratio) +  self.parameters.push_pull_ratio*m
 
