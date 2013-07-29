@@ -1,10 +1,11 @@
 """
 Module containing the experiment API.
 """
-import mozaik
-from mozaik.stimuli import InternalStimulus
 import numpy
 import resource
+import mozaik
+from mozaik.stimuli import InternalStimulus
+from parameters import ParameterSet
 
 logger = mozaik.getMozaikLogger()
 
@@ -17,15 +18,11 @@ class Experiment(object):
     recorded results that it performs. This can be left empty if analysis will
     be done later.
     
-    Also each Experiment can define the spike_stimulator and current_stimulator variables that 
-    allow the experiment to stimulate specific neurons in the model with either spike trains and conductances.
-    
-    The (exc/inh)_spike_stimulator is a dictionary where keys are the name of the sheets, and the values are tuples (neuron_list,spike_generator)
-    where neuron_list is a list of neuron_ids that should be stimulated, this varialbe can also be a string 'all', in which case all neurons 
-    in the given sheet will be stimulated. The spike_generator should be function that receives a single input - duration - that returns a 
-    spike train (list of spike times) of lasting the duration miliseconds. This function will be called for each stimulus presented during this experiment,
-    with the duration of the stimulus as the duration parameter. 
-    
+    The experiment has to also define the `direct_stimulation` variable which should contain a list of dictionaries one per each stimulus.
+    The keys in these dictionaries are sheet names and values are list of :class:`mozail.sheets.direct_stimulator.DirectStimulator` instances,
+    that specify what direct stimulations should be applied to given layers during the corresponding stimulus. Layers to which no direct stimulation 
+    is applied can stay empty. Also if the direct_stimulation is set to None, empty dictionaries will be automatically passed to the model, 
+    indicating no direct stimulation is required.
     
     Parameters
     ----------
@@ -36,16 +33,13 @@ class Experiment(object):
     ----
     When creating a new Expriment, user inherits from the Experiment class, and in the constructor fills up the `self.stimuli` array with the list of stimuli
     that the experiment presents to the model. One can also implement the do_analysis method, which should perform the analysis that the experiments requires
-    at the end. Finaly the `self.exc_spike_stimulators` and `self.inh_spike_stimulators` dictionaries can also be specified in the constructor.
-    
-    The spikes from (exc/inh)_spike_stimulator will be weighted by the connection with weights defined by the sheet's background_noise.(exc/inh)_weight parameter!
+    at the end. 
     """
+    
     def __init__(self, model):
         self.model = model
         self.stimuli = []
-        self.exc_spike_stimulators = {}
-        self.inh_spike_stimulators = {}
-        self.current_stimulators = {}
+        self.direct_stimulation = None
     
     def return_stimuli(self):
         """
@@ -80,7 +74,11 @@ class Experiment(object):
         srtsum = 0
         for i,s in enumerate(stimuli):
             logger.debug('Presenting stimulus: ' + str(s) + '\n')
-            (segments,input_stimulus,simulator_run_time) = self.model.present_stimulus_and_record(s,self.exc_spike_stimulators,self.inh_spike_stimulators)
+            if self.direct_stimulation == None:
+               ds = {}
+            else:
+               ds = self.direct_stimulation[self.stimuli.index(s)] 
+            (segments,input_stimulus,simulator_run_time) = self.model.present_stimulus_and_record(s,ds)
             srtsum += simulator_run_time
             data_store.add_recording(segments,s)
             data_store.add_stimulus(input_stimulus,s)
@@ -111,21 +109,28 @@ class PoissonNetworkKick(Experiment):
     sheet_list : int
                The list of sheets in which to do stimulation
                
-    recording_configuration_list : list
-                                 The list of recording configurations (one per each sheet).
+    recording_configuration : ParameterSet
+                              The parameter set for recording configuration specifing neurons to which the kick will be administered.
                                  
     lambda_list : list
                 List of the means of the Poisson spike train to be injected into the neurons specified in recording_configuration_list (one per each sheet).
+    
+    weight_list : list
+                List of spike sizes of the Poisson spike train to be injected into the neurons specified in recording_configuration_list (one per each sheet).
     """
-    def __init__(self,model,duration,sheet_list,recording_configuration_list,lambda_list):
+    
+    def __init__(self,model,duration,sheet_list,recording_configuration,lambda_list,weight_list):
             Experiment.__init__(self, model)
-            from NeuroTools import stgen
-            for sheet_name,lamb,rc in zip(sheet_list,lambda_list,recording_configuration_list):
-                idlist = rc.generate_idd_list_of_neurons()
-                seeds=mozaik.get_seeds((len(idlist),))
-                stgens = [stgen.StGen(seed=seeds[i]) for i in xrange(0,len(idlist))]
-                generator_functions = [(lambda duration,lamb=lamb,stgen=stgens[i]: stgen.poisson_generator(rate=lamb,t_start=0,t_stop=duration).spike_times) for i in xrange(0,len(idlist))]
-                self.exc_spike_stimulators[sheet_name] = (list(idlist),generator_functions)
+            from mozaik.sheets.direct_stimulator import Kick
+            
+            d  = {}
+            for i,sheet in enumerate(sheet_list):
+                d[sheet] = [Kick(model.sheets[sheet],ParameterSet({'exc_firing_rate' : lambda_list[i],
+                                                      'exc_weight' : weight_list[i],
+                                                      'population_selector' : recording_configuration})
+                                )]
+            
+            self.direct_stimulation = [d]
 
             self.stimuli.append(
                         InternalStimulus(   

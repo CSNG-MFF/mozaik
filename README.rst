@@ -57,17 +57,14 @@ ____________
  * matplotlib (1.1 and higher)
  * quantities
  * PyNN:
-     
-     * PyNN requires currently the neo-output branch, NOT the standard one. So, you need to do the following: 
-     * svn co https://neuralensemble.org/svn/PyNN/branches/neo_output/
+     * git clone https://github.com/NeuralEnsemble/PyNN.git
      * Then, in your virtual environment: 
      * python setup.py install
  * Neo:
- 
     * For Neo, you need to clone with the help of git:
-    *  git clone https://github.com/apdavison/python-neo python-neo
-    *  cd python-neo
-    *  python setup.py install
+    * git clone https://github.com/apdavison/python-neo python-neo
+    * cd python-neo
+    * python setup.py install
  * imagen:        
  
       * pip install --user imagen
@@ -93,19 +90,9 @@ You can list the packages you have e.g. with the help of yolk):
 If you've set up the virt_env with the option --system-site-packages and
 you're using scipy, numpy, matplotlib anyway you don't have to install those in yout virt_env.
 
-Running tests
-_____________
-
-To run tests and measure code coverage, run
-
-$ nosetests --with-coverage --cover-erase --cover-package=mozaik --cover-html --cover-inclusive
-
-in the root directory of the Mozaik package
-
-
 
 Ubuntu
-------
+======
 Following these instruction should give you a working copy of mozaik on a 
 fresh installation of Ubuntu (at the time of the writing the version was 12.04)
 
@@ -114,22 +101,76 @@ First the list of ubuntu package dependencies::
 $ sudo apt-get install python2.7 python-dev python-pip python-nose subversion git libopenmpi-dev g++ libjpeg8 libjpeg8-dev libfreetype6 libfreetype6-dev zlib1g-dev libpng++-dev libncurses5 libncurses5-dev libreadline-dev liblapack-dev libblas-dev gfortran libgsl0-dev
 
 Then python virtualenv and virtualenvwrapper (an handy way to manage python virtual environments)::
+
 $ sudo pip install virtualenv
 $ sudo pip install virtualenvwrapper
 
 To setup `virtualenvwrapper <http://virtualenvwrapper.readthedocs.org/en/latest//>`_ add the following lines at the top of ~/.bash_profile (create it if you don't have one)::
 
-# virtualenvwrapper
-export WORKON_HOME=~/.virtualenvs
-source /usr/local/bin/virtualenvwrapper.sh
-export PIP_VIRTUALENV_BASE=$WORKON_HOME
-export PIP_RESPECT_VIRTUALENV=true
+    # virtualenvwrapper
+    export WORKON_HOME=~/.virtualenvs
+    source /usr/local/bin/virtualenvwrapper.sh
+    export PIP_VIRTUALENV_BASE=$WORKON_HOME
+    export PIP_RESPECT_VIRTUALENV=true
 
-For the first time, run bash_profile (the next times it will be loaded by your terminal):
+For the first time, run bash_profile (the next times it will be loaded by your terminal)::      
+
 $ source .bash_profile
 
+To create a new managed virtualenv you just need to::
 
+    $ mkvirtualenv --no-site-packages mozaik
+    $ workon mozaik
+    (mozaik)$>
+ 
+To produce a requirement file::
 
+(mozaik)$> pip freeze > requirements.txt
+ 
+Then you can use it to replicate installation::
+
+(mozaik)$> pip install -r requirements.txt
+ 
+To exit the environment::
+
+(mozaik)$> deactivate
+ 
+Now you can install in this protected environment all other dependencies::
+
+(mozaik)$ pip install numpy mpi4py scipy matplotlib quantities lazyarray
+
+Now we can install *Nest*:
+
+    - download the latest version from their website `http://www.nest-initiative.org/index.php/Software:Download`_
+    - untar and cd into it::
+
+        (mozaik)$ tar xvfz nest-2.2.2.tar.gz
+        (mozaik)$ cd nest-2.2.2
+    - then configure, choose if you want mpi. And, if you decide to have nest installed somewhere else from normal places add it with a prefix, then you also need to specify the pynest prefix::
+    
+        (mozaik)$ ./configure (--with-mpi) (--prefix=$HOME/opt/nest --with-pynest-prefix=$WORKON_HOME/mozaik)
+    - finally make and install (with sudo, since nest has also other places to install its own stuff)::
+
+        (mozaik)$ make
+        (mozaik)$ sudo make install
+    - in the ./~nestrc uncomment the lines regarding mpirun, then::
+        
+        (mozaik)$ sudo make installcheck
+...
+NEST Testsuite Summary
+----------------------
+  NEST Executable: /home/do/opt/nest/bin/nest
+  SLI Executable : /home/do/opt/nest/bin/sli
+  Total number of tests: 270
+     Passed: 270
+     Failed: 0 (0 PyNEST)
+
+The NEST executable will be installed to:
+  /home/.../opt/nest/bin/
+Documentation and examples will be installed to:
+  /home/.../opt/nest/share/doc/nest/
+PyNEST will be installed to:
+   /home/.../.virtualenvs/mozaik/lib/python2.7/site-packages/nest
 
 
 :copyright: Copyright 2011-2013 by the *mozaik* team, see AUTHORS.

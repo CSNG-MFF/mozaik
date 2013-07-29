@@ -10,11 +10,10 @@ from mozaik.tools.distribution_parametrization import PyNNDistribution
 from parameters import ParameterSet, UniformDist
 from pyNN import space
 from pyNN.errors import NothingToWriteError
-from pyNN.parameters import Sequence
 from string import Template
 from neo.core.spiketrain import SpikeTrain
 import quantities as pq
-from NeuroTools import stgen
+
 
 logger = mozaik.getMozaikLogger()
 
@@ -51,29 +50,15 @@ class Sheet(BaseComponent):
     cell.initial_values : ParameterSet
                    It can contain a ParameterSet containing the initial values for some of the parameters in cell.params
                    
-    background_noise : ParameterSet
-                     The parametrization of background noise injected into the neurons in the form of Poisson spike trains.
-    
-    background_noise.exc_firing_rate : float
-                     The firing rate of external neurons sending excitatory inputs to each neuron of this sheet.
- 
-    background_noise.inh_firing_rate : float
-                     The firing rate of external neurons sending inhibitory inputs to each neuron of this sheet.
-    
-    background_noise.exc_weight : float
-                     The weight of the synapses for the excitatory external Poisson input.
- 
-    background_noise.inh_weight : float
-                     The weight of the synapses for the inhibitory external Poisson input.
-                     
     mpi_safe : bool
              Whether to set the sheet up to be reproducible in MPI environment. 
              This is computationally less efficient that if it is set to false, but it will
              guaruntee the same results irrespective of the number of MPI process used.
              
-    artificial_stimulation : Has to be set to True, if one wants to use during experiments stimulation beyond the 
-                             non-specific one defined in background_noise parameters . This flag exists for optimization purposes.
-                             The artificial stimulation is then defined in experiments (see `mozaik.experiments`_)
+    artificial_stimulators : ParameterSet
+             Contains a list of ParameterSet objects, one per each :class:`.direct_stimulator.DirectStimulator` object to be created.
+             Each contains a parameter 'component' that specifies which :class:`.direct_stimulator.DirectStimulator` to use, and  a 
+             parameter 'params' which is a ParameterSet to be passed to that `DirectStimulator`.
     
     name : str
         Name of the sheet.
@@ -103,21 +88,8 @@ class Sheet(BaseComponent):
             'initial_values': ParameterSet,
         }),
 
-        'background_noise': ParameterSet({
-            # the background noise to the population. This will be generated as Poisson
-            # note that this is optimized for NEST !!!
-            # it used native_cell_type("poisson_generator") to generate the noise
-
-            'exc_firing_rate': float,
-            'exc_weight': float,
-            'inh_firing_rate': float,
-            'inh_weight': float,
-        }),
         'mpi_safe': bool,
-        'artificial_stimulation' : bool, # Has to be set to True, if one wants to use 
-                                         # stimulation beyond the non-specific 
-                                         # one defined in background_noise parameters during 
-                                         # the experiments. This is an efficiency flag 
+        'artificial_stimulators' : ParameterSet,
         'name': str,
         'recorders' : ParameterSet
     })
@@ -179,7 +151,7 @@ class Sheet(BaseComponent):
 
 	    
 	    self._neuron_annotations = [{} for i in xrange(0, len(value))]
-            self.setup_background_noise()
+            self.setup_artificial_stimulation()
             self.setup_to_record_list()
             self.setup_initial_values()
 
@@ -308,7 +280,7 @@ class Sheet(BaseComponent):
        
         return s
 
-    def prepare_input(self, duration, offset,exc_spiking_stimulation,inh_spiking_stimulation):
+    def prepare_artificial_stimulation(self, duration, offset,additional_stimulators):
         """
         Prepares the background noise and artificial stimulation for the population for the stimulus that is 
         about to be presented. 
@@ -318,97 +290,27 @@ class Sheet(BaseComponent):
         
         duration : float (ms)
                  The duration of the stimulus that will be presented.
+        
+        additional_stimulators : list
+                               List of additional stimulators, defined by the experiment that should be applied during this stimulus. 
                 
         offset : float (ms)
                The current time of the simulation.
-               
-        exc_spiking_stimulation : tuple
-                                The excitatory artificial stimulation data
-                                
-        inh_spiking_stimulation : tuple
-                                The inhibitory artificial stimulation data
         """
-        if self.parameters.mpi_safe or self.parameters.artificial_stimulation:
-            if (self.parameters.background_noise.exc_firing_rate != 0 and self.parameters.background_noise.exc_weight != 0 and self.parameters.mpi_safe) or self.parameters.artificial_stimulation:
-                idds = self.pop.all_cells.astype(int)
-                for j,i in enumerate(numpy.nonzero(self.pop._mask_local)[0]):
-                    pp = []
-                    if (self.parameters.background_noise.exc_firing_rate != 0 and self.parameters.background_noise.exc_weight != 0 and self.parameters.mpi_safe):
-                        pp = self.stgene[j].poisson_generator(
-                                    rate=self.parameters.background_noise.exc_firing_rate,
-                                    t_start=0,
-                                    t_stop=duration).spike_times
-                    if self.parameters.artificial_stimulation and exc_spiking_stimulation!=None and (exc_spiking_stimulation[0] == "all" or (idds[i] in exc_spiking_stimulation[0])):
-                       pp.extend(exc_spiking_stimulation[1][list(exc_spiking_stimulation[0]).index(idds[i])](duration))
-                    self.ssae[i].set_parameters(spike_times=Sequence(offset + numpy.array(pp)))
+        for ds in self.artificial_stimulators + additional_stimulators:
+            ds.prepare_stimulation(duration,offset)
+        
 
-            if (self.parameters.background_noise.inh_firing_rate != 0 and self.parameters.background_noise.inh_weight != 0 and self.parameters.mpi_safe) or self.parameters.artificial_stimulation:
-                idds = self.pop.all_cells.astype(int)
-                for j,i in enumerate(numpy.nonzero(self.pop._mask_local)[0]):
-                    pp = []
-                    if (self.parameters.background_noise.inh_firing_rate != 0 and self.parameters.background_noise.inh_weight != 0 and self.parameters.mpi_safe):
-                        pp = self.stgeni[j].poisson_generator(
-                                    rate=self.parameters.background_noise.inh_firing_rate,
-                                    t_start=0,
-                                    t_stop=duration).spike_times
-                    if self.parameters.artificial_stimulation and inh_spiking_stimulation!=None and (inh_spiking_stimulation[0] == "all" or (idds[i] in inh_spiking_stimulation[0])):
-                       pp.extend(inh_spiking_stimulation[1][list(inh_spiking_stimulation[0]).index(idds[i])](duration)) 
-                    self.ssai[i].set_parameters(spike_times=Sequence(offset + numpy.array(pp)))
-
-    def setup_background_noise(self):
+    def setup_artificial_stimulation(self):
         """
         Called once population is created. Sets up the background noise.
         """
-        from pyNN.nest import native_cell_type        
+        self.artificial_stimulators = []
+        for k in  self.parameters.artificial_stimulators.keys():
+            direct_stimulator = load_component(self.parameters.artificial_stimulators[k].component)
+            self.artificial_stimulators.append(direct_stimulator(self,self.parameters.artificial_stimulators[k].params))
+
         
-        exc_syn = self.sim.StaticSynapse(weight=self.parameters.background_noise.exc_weight)
-        inh_syn = self.sim.StaticSynapse(weight=self.parameters.background_noise.inh_weight)
-        if not self.parameters.mpi_safe:
-            if (self.parameters.background_noise.exc_firing_rate != 0
-                  or self.parameters.background_noise.exc_weight != 0):
-                np_exc = self.sim.Population(
-                                1, native_cell_type("poisson_generator"),
-                                {'rate': self.parameters.background_noise.exc_firing_rate})
-                self.sim.Projection(
-                                np_exc, self.pop,
-                                self.sim.AllToAllConnector(),
-                                synapse_type=exc_syn,
-                                receptor_type='excitatory')
-
-            if (self.parameters.background_noise.inh_firing_rate != 0
-                  or self.parameters.background_noise.inh_weight != 0):
-                np_inh = self.sim.Population(
-                                1, native_cell_type("poisson_generator"),
-                                {'rate': self.parameters.background_noise.inh_firing_rate})
-                self.sim.Projection(
-                                np_inh, self.pop,
-                                self.sim.AllToAllConnector(),
-                                synapse_type=inh_syn,
-                                receptor_type='inhibitory')
-        
-        if self.parameters.mpi_safe or self.parameters.artificial_stimulation:
-            if (self.parameters.background_noise.exc_firing_rate != 0
-                  or self.parameters.background_noise.exc_weight != 0 or self.parameters.artificial_stimulation):
-                        self.ssae = self.sim.Population(self.pop.size,
-                                                        self.model.sim.SpikeSourceArray())
-                        seeds=mozaik.get_seeds((self.pop.size,))
-                        self.stgene = [stgen.StGen(rng=numpy.random.RandomState(seed=seeds[i])) for i in numpy.nonzero(self.pop._mask_local)[0]]
-                        self.sim.Projection(self.ssae, self.pop,
-                                            self.sim.OneToOneConnector(),
-                                            synapse_type=exc_syn,
-                                            receptor_type='excitatory')
-
-            if (self.parameters.background_noise.inh_firing_rate != 0
-                  or self.parameters.background_noise.inh_weight != 0 or self.parameters.artificial_stimulation):
-                        self.ssai = self.sim.Population(self.pop.size,
-                                                        self.model.sim.SpikeSourceArray())
-                        seeds=mozaik.get_seeds((self.pop.size,))
-                        self.stgeni = [stgen.StGen(rng=numpy.random.RandomState(seed=seeds[i])) for i in numpy.nonzero(self.pop._mask_local)[0]]
-                        self.sim.Projection(self.ssai, self.pop,
-                                            self.sim.OneToOneConnector(),
-                                            synapse_type=inh_syn,
-                                            receptor_type='inhibitory')
-
     def setup_initial_values(self):
         """
         Called once population is set. Set's up the initial values of the neural model variables.

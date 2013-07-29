@@ -343,16 +343,13 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         self.ncs = {}
         self.ncs_rng = {}
         for rf_type in self.rf_types:
-            bn = ParameterSet({'exc_firing_rate': 0.0, 'exc_weight': 0.0,
-                               'inh_firing_rate': 0.0, 'inh_weight': 0.0})
             p = RetinalUniformSheet(model,
                                     ParameterSet({'sx': self.parameters.size[0],
                                                   'sy': self.parameters.size[1],
                                                   'density': self.parameters.density,
                                                   'cell': self.parameters.cell,
                                                   'name': rf_type,
-                                                  'background_noise': bn,
-                                                  'artificial_stimulation' : False,
+                                                  'artificial_stimulators' : {},
                                                   'recorders' : self.parameters.recorders,
                                                   'mpi_safe': False}))
             self.sheets[rf_type] = p

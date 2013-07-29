@@ -71,7 +71,7 @@ class Model(BaseComponent):
             
         self.simulator_time = 0
 
-    def present_stimulus_and_record(self, stimulus,exc_spike_stimulators,inh_spike_stimulators):
+    def present_stimulus_and_record(self, stimulus,artificial_stimulators):
         """
         This method is the core of the model execution control. It ensures that a `stimulus` is presented
         to the model, the simulation is ran for the duration of the stimulus, and all the data recorded during 
@@ -82,17 +82,17 @@ class Model(BaseComponent):
         stimulus : Stimulus
                  Stimulus to be presented.
                  
-        exc_spike_stimulators : list
-                              The list of stimulation objects describing any 'artificial' stimulation of the network. See :mod:`mozaik.framework.experiment`
-        inh_spike_stimulators : list
-                              The list of stimulation objects describing any 'artificial' stimulation of the network. See :mod:`mozaik.framework.experiment`
+        artificial_stimulators : dict
+                               Dictionary where keys are sheet names, and values are lists of DirectStimulator instances to be applied in the corresponding sheet.
         
         Returns
         -------
         segments : list
                  List of segments holding the recorded data, one per each sheet.
+        
         sensory_input : object
                  The 'raw' sensory input that has been shown to the network - the structure of this object depends on the sensory component.
+        
         sim_run_time : float (seconds)
                      The biological time of the simulation up to this point (including blank presentations).
                                           
@@ -102,9 +102,8 @@ class Model(BaseComponent):
                sheet.record()
         sim_run_time = self.reset()
 
-        # create empty arrays in annotations to store the sheet identity of stored data
         for sheet in self.sheets.values():
-            sheet.prepare_input(stimulus.duration,self.simulator_time,exc_spike_stimulators.get(sheet.name,None),inh_spike_stimulators.get(sheet.name,None))
+            sheet.prepare_artificial_stimulation(stimulus.duration,self.simulator_time,artificial_stimulators.get(sheet.name,[]))
         
         if self.input_space:
             self.input_space.clear()
@@ -132,6 +131,12 @@ class Model(BaseComponent):
                         segments.append(s)
 
         self.first_time = False
+        
+        #remove any artificial stimulators 
+        for sheet in self.sheets.values():
+            for ds in artificial_stimulators.get(sheet.name,[]):
+                ds.inactivate(self.simulator_time)
+        
         return (segments, sensory_input,sim_run_time)
         
     def run(self, tstop):
@@ -169,7 +174,7 @@ class Model(BaseComponent):
         else:
             if self.parameters.null_stimulus_period != 0:
                 for sheet in self.sheets.values():
-                    sheet.prepare_input(self.parameters.null_stimulus_period,self.simulator_time,None,None)
+                    sheet.prepare_artificial_stimulation(self.parameters.null_stimulus_period,self.simulator_time,[])
 
                 if self.input_space:
                     self.input_layer.provide_null_input(self.input_space,
