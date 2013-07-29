@@ -9,8 +9,7 @@
                 'mpi_safe' : False,
                 'magnification_factor': ref('exc_layer.params.magnification_factor'),
                 'cell': ref('exc_layer.params.cell'),
-                'artificial_stimulation' : True,                    
-                'background_noise' : ref('exc_layer.params.background_noise'),
+                'artificial_stimulators' : ref('exc_layer.params.artificial_stimulators'),
                 'recorders' : url("param/inh_rec"),    
     },
     

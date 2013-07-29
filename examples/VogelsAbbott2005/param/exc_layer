@@ -28,13 +28,7 @@
                                 },
 
                     },
-                'artificial_stimulation' : True,                    
-                'background_noise' : {
-                                        'exc_firing_rate' : 0.0, 
-                                        'exc_weight' : 0.1,
-                                        'inh_firing_rate' : 0.0,
-                                        'inh_weight' : 0.0,
-                                    },
+                'artificial_stimulators' : {},
                 'recorders' : url("param/exc_rec"),
     },
 
