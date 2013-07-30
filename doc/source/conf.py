@@ -117,7 +117,7 @@ html_theme = 'nature'
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-#html_logo ='images/neologo_light.png'
+html_logo ='mozaik_logo_small.svg'
 
 
 # The name of an image file (within the static path) to use as favicon of the

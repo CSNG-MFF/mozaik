@@ -141,7 +141,7 @@ Now you can install in this protected environment all other dependencies::
 
 Now we can install *Nest*:
 
-    - download the latest version from their website `http://www.nest-initiative.org/index.php/Software:Download`_
+    - download the latest version from their `website <http://www.nest-initiative.org/index.php/Software:Download>`_
     - untar and cd into it::
 
         (mozaik)$ tar xvfz nest-2.2.2.tar.gz
@@ -154,23 +154,50 @@ Now we can install *Nest*:
         (mozaik)$ make
         (mozaik)$ sudo make install
     - in the ./~nestrc uncomment the lines regarding mpirun, then::
-        
-        (mozaik)$ sudo make installcheck
-...
-NEST Testsuite Summary
-----------------------
-  NEST Executable: /home/do/opt/nest/bin/nest
-  SLI Executable : /home/do/opt/nest/bin/sli
-  Total number of tests: 270
-     Passed: 270
-     Failed: 0 (0 PyNEST)
 
-The NEST executable will be installed to:
-  /home/.../opt/nest/bin/
-Documentation and examples will be installed to:
-  /home/.../opt/nest/share/doc/nest/
-PyNEST will be installed to:
-   /home/.../.virtualenvs/mozaik/lib/python2.7/site-packages/nest
+        (mozaik)$ sudo make installcheck
+
+Install PyNN::
+
+    $ git clone https://github.com/NeuralEnsemble/PyNN.git
+    (mozaik)$ cd PyNN/
+    (mozaik)$ python setup.py install
+
+that will reside into::
+    
+    /home/.../.virtualenvs/mozaik/lib/python2.7/site-packages/PyNN-0.8dev-py2.7.egg-info
+
+Install NEO::
+
+    $ git clone https://github.com/apdavison/python-neo python-neo
+    (mozaik)$ cd python-neo/
+    (mozaik)$ python setup.py install
+
+Install Imagen::
+    
+    (mozaik)$ pip install imagen
+
+Install Parameters package::
+
+    $ git clone https://github.com/apdavison/parameters.git parameters
+    (mozaik)$ cd parameters/
+    (mozaik)$ python setup.py install
+
+Install NeuroTools::
+
+    $ svn co https://neuralensemble.org/svn/NeuroTools/trunk NeuroTools
+    (mozaik)$ cd NeuroTools/
+    (mozaik)$ python setup.py install
+
+And, finally, Mozaik::
+    
+    $ git clone https://github.com/antolikjan/mozaik.git
+    (mozaik)$ cd mozaik/
+    (mozaik)$ python setup.py install
+    
+at the moment::
+    
+    (mozaik):~/.virtualenvs/mozaik/lib/python2.7/site-packages$ ln -s ~/mozaik/mozaik/ mozaik
 
 
 :copyright: Copyright 2011-2013 by the *mozaik* team, see AUTHORS.

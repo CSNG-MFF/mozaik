@@ -1,7 +1,7 @@
 .. module:: mozaik
 
-.. image:: images/neologo.png
-..    :width: 600 px
+.. image:: mozaik_logo.svg
+..    :width: 1200 px
 
 This is the first alpha release of the *mozaik* package.
 *mozaik* is an integrated workflow framework for large scale neural simulations.
@@ -17,6 +17,7 @@ Documentation
    installation
    introduction
    getting_started
+   tutorials
    mozaik
    authors
 
