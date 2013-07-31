@@ -216,25 +216,23 @@ class Kick(DirectStimulator):
 
     def __init__(self, sheet, parameters):
         DirectStimulator.__init__(self, sheet,parameters)
-        
         population_selector = load_component(self.parameters.population_selector.component)
         self.ids = population_selector(sheet,self.parameters.population_selector.params).generate_idd_list_of_neurons()
+        d = dict((j,i) for i,j in enumerate(self.sheet.pop.all_cells))
+        self.local_and_to_record_indexes = [d[i] for i in set(self.ids) & set(self.sheet.pop.local_cells)]
         
         exc_syn = self.sheet.sim.StaticSynapse(weight=self.parameters.exc_weight)
-        
         if (self.parameters.exc_firing_rate != 0 or self.parameters.exc_weight != 0):
             self.ssae = self.sheet.sim.Population(self.sheet.pop.size,self.sheet.sim.SpikeSourceArray())
             seeds=mozaik.get_seeds((self.sheet.pop.size,))
-            self.stgene = [stgen.StGen(rng=numpy.random.RandomState(seed=seeds[i])) for i in numpy.nonzero(self.sheet.pop._mask_local)[0]]
-            self.sheet.sim.Projection(self.ssae, self.sheet.pop,self.sheet.sim.OneToOneConnector(),synapse_type=exc_syn,receptor_type='excitatory')
-
+            self.stgene = [stgen.StGen(rng=numpy.random.RandomState(seed=seeds[i])) for i in self.local_and_to_record_indexes]
+            self.sheet.sim.Projection(self.ssae, self.sheet.pop,self.sheet.sim.OneToOneConnector(),synapse_type=exc_syn,receptor_type='excitatory') 
 
     def prepare_stimulation(self,duration,offset):
         if (self.parameters.exc_firing_rate != 0 or self.parameters.exc_weight != 0):
-           for j,i in enumerate(numpy.nonzero(self.sheet.pop._mask_local)[0]):
-               if i in self.ids:
-                   pp = self.stgene[j].poisson_generator(rate=self.parameters.exc_firing_rate,t_start=0,t_stop=duration).spike_times
-                   self.ssae[i].set_parameters(spike_times=Sequence(offset + numpy.array(pp)))
+           for j,i in enumerate(self.local_and_to_record_indexes):
+               pp = self.stgene[j].poisson_generator(rate=self.parameters.exc_firing_rate,t_start=0,t_stop=duration).spike_times
+               self.ssae[i].set_parameters(spike_times=Sequence(offset + numpy.array(pp)))
         
     def inactivate(self,offset):        
         pass

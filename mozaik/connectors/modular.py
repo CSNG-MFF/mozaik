@@ -1,4 +1,4 @@
-# encoding: utf-8
+    # encoding: utf-8
 import mozaik
 import numpy
 from mozaik.connectors import Connector
