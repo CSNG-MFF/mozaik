@@ -276,7 +276,7 @@ class Depolarization(DirectStimulator):
             })
             
     })
-
+        
     def __init__(self, sheet, parameters):
         DirectStimulator.__init__(self, sheet,parameters)
         
@@ -287,7 +287,7 @@ class Depolarization(DirectStimulator):
             cell.inject(self.scs)
 
     def prepare_stimulation(self,duration,offset):
-        self.scs.set_parameters(times=[offset], amplitudes=[self.parameters.current])
+        self.scs.set_parameters(times=[offset+self.sheet.sim.state.dt*2], amplitudes=[self.parameters.current])
         
     def inactivate(self,offset):
-        self.scs.set_parameters(times=[offset], amplitudes=[0])
+        self.scs.set_parameters(times=[offset+self.sheet.sim.state.dt*2], amplitudes=[0.0])
