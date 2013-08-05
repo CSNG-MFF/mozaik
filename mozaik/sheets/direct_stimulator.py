@@ -191,6 +191,10 @@ class Kick(DirectStimulator):
  
     exc_weight : float
                      The weight of the synapses for the excitatory external Poisson input.    
+    
+    drive_period : float
+                     Period over which the Kick will deposit the full drive defined by the exc_firing_rate, after this time the 
+                     firing rates will be linearly reduced to reach zero at the end of stimulation.
 
     population_selector : ParemeterSet
                         Defines the population selector and its parameters to specify to which neurons in the population the 
@@ -206,6 +210,7 @@ class Kick(DirectStimulator):
     required_parameters = ParameterSet({
             'exc_firing_rate': float,
             'exc_weight': float,
+            'drive_period' : float,
             'population_selector' : ParameterSet({
                     'component' : str,
                     'params' : ParameterSet
@@ -219,19 +224,26 @@ class Kick(DirectStimulator):
         population_selector = load_component(self.parameters.population_selector.component)
         self.ids = population_selector(sheet,self.parameters.population_selector.params).generate_idd_list_of_neurons()
         d = dict((j,i) for i,j in enumerate(self.sheet.pop.all_cells))
-        self.local_and_to_record_indexes = [d[i] for i in set(self.ids) & set(self.sheet.pop.local_cells)]
+        self.local_and_to_stimulate_indexes = [d[i] for i in set(self.ids) & set(self.sheet.pop.local_cells)]
         
         exc_syn = self.sheet.sim.StaticSynapse(weight=self.parameters.exc_weight)
         if (self.parameters.exc_firing_rate != 0 or self.parameters.exc_weight != 0):
             self.ssae = self.sheet.sim.Population(self.sheet.pop.size,self.sheet.sim.SpikeSourceArray())
             seeds=mozaik.get_seeds((self.sheet.pop.size,))
-            self.stgene = [stgen.StGen(rng=numpy.random.RandomState(seed=seeds[i])) for i in self.local_and_to_record_indexes]
+            self.stgene = [stgen.StGen(rng=numpy.random.RandomState(seed=seeds[i])) for i in self.local_and_to_stimulate_indexes]
             self.sheet.sim.Projection(self.ssae, self.sheet.pop,self.sheet.sim.OneToOneConnector(),synapse_type=exc_syn,receptor_type='excitatory') 
 
     def prepare_stimulation(self,duration,offset):
-        if (self.parameters.exc_firing_rate != 0 or self.parameters.exc_weight != 0):
-           for j,i in enumerate(self.local_and_to_record_indexes):
-               pp = self.stgene[j].poisson_generator(rate=self.parameters.exc_firing_rate,t_start=0,t_stop=duration).spike_times
+        if (self.parameters.exc_firing_rate != 0 and self.parameters.exc_weight != 0):
+           for j,i in enumerate(self.local_and_to_stimulate_indexes):
+               if self.parameters.drive_period < duration:
+                   z = numpy.arange(self.parameters.drive_period+0.001,duration-100,10)
+                   times = [0] + z.tolist() 
+                   rate = [self.parameters.exc_firing_rate] + ((1.0-numpy.linspace(0,1.0,len(z)))*self.parameters.exc_firing_rate).tolist()
+               else:
+                   times = [0]  
+                   rate = [self.parameters.exc_firing_rate] 
+               pp = self.stgene[j].inh_poisson_generator(numpy.array(rate),numpy.array(times),t_stop=duration).spike_times
                self.ssae[i].set_parameters(spike_times=Sequence(offset + numpy.array(pp)))
         
     def inactivate(self,offset):        

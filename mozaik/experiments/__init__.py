@@ -108,7 +108,10 @@ class PoissonNetworkKick(Experiment):
     
     sheet_list : int
                The list of sheets in which to do stimulation
-               
+
+    drive_period : float (ms)
+                 The length of the constant drive, after which it will be linearly taken down to 0 at the end of the stimulation.   
+                        
     recording_configuration : ParameterSet
                               The parameter set for recording configuration specifing neurons to which the kick will be administered.
                                  
@@ -119,7 +122,7 @@ class PoissonNetworkKick(Experiment):
                 List of spike sizes of the Poisson spike train to be injected into the neurons specified in recording_configuration_list (one per each sheet).
     """
     
-    def __init__(self,model,duration,sheet_list,recording_configuration,lambda_list,weight_list):
+    def __init__(self,model,duration,sheet_list,drive_period,recording_configuration,lambda_list,weight_list):
             Experiment.__init__(self, model)
             from mozaik.sheets.direct_stimulator import Kick
             
@@ -127,6 +130,7 @@ class PoissonNetworkKick(Experiment):
             for i,sheet in enumerate(sheet_list):
                 d[sheet] = [Kick(model.sheets[sheet],ParameterSet({'exc_firing_rate' : lambda_list[i],
                                                       'exc_weight' : weight_list[i],
+                                                      'drive_period' : drive_period,
                                                       'population_selector' : recording_configuration})
                                 )]
             

@@ -108,3 +108,39 @@ class UniformProbabilisticArborization(Connector):
                                     label=self.name,
                                     space=space.Space(axes='xy'),
                                     receptor_type=self.parameters.target_synapses)
+
+class FixedKConnector(Connector):
+    """
+    Connects source with target such that each neuron will have the same number of presynaptic neurons chosen randomly.
+    """
+    
+    required_parameters = ParameterSet({
+        'k': int,  # probability of connection between two neurons from the two populations
+        'weights': float,  # nA, the synapse strength
+        'delay': float,    # ms delay of the connections
+    })
+
+    def _connect(self):
+        method = self.sim.FixedNumberPreConnector(
+                                    self.parameters.k,
+                                    allow_self_connections=False,
+                                    safe=True,rng=mozaik.pynn_rng)
+
+                                    
+                                    
+        self.proj = self.sim.Projection(
+                                    self.source.pop,
+                                    self.target.pop,
+                                    method,
+                                    synapse_type=self.init_synaptic_mechanisms(weights=self.parameters.weights,delays=self.parameters.delay),
+                                    label=self.name,
+                                    space=space.Space(axes='xy'),
+                                    receptor_type=self.parameters.target_synapses)
+
+
+
+
+
+
+
+
