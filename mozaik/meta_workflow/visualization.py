@@ -73,7 +73,11 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
                
     """
     (parameters,datastores) = load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir)
+    
+    sorted_parameter_indexes = zip(*sorted(enumerate(parameters), key=lambda x: x[1]))[0]
+    print sorted_parameter_indexes
     # if value_names isNone lets set it to set of value_names in the first datastore
+    
     if value_names == None:
         value_names = set([ads.value_name for ads in param_filter_query(datastores[0][1],identifier='SingleValue').get_analysis_result()])
     
@@ -87,8 +91,8 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
     pylab.figure(figsize=(12*len(value_names), 6), dpi=2000, facecolor='w', edgecolor='k')
     for i,value_name in enumerate(value_names): 
         pylab.subplot(1,len(value_names),i+1)
-        
         if len(parameters) == 1:
+            
                x = []
                y = []
                for (param_values,datastore) in datastores: 
@@ -103,19 +107,18 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
                z = []
                for (param_values,datastore) in datastores: 
                    dsv = query.query(datastore)
-                   x.append(param_values[1]) 
-                   y.append(param_values[0]) 
+                   x.append(param_values[sorted_parameter_indexes[0]]) 
+                   y.append(param_values[sorted_parameter_indexes[1]]) 
                    z.append(float(param_filter_query(dsv,identifier='SingleValue',value_name=value_name).get_analysis_result()[0].value))
                if treat_nan_as_zero: 
                   z = numpy.nan_to_num(z)
-               print value_name
-               print numpy.max(z) 
                
                if value_name in ranges:
                   vmin,vmax = ranges[value_name] 
                else:
                   vmin = min(z) 
                   vmax = max(z) 
+                  
                if resolution != None:
                    xi = numpy.linspace(numpy.min(x),numpy.max(x),resolution)
                    yi = numpy.linspace(numpy.min(y),numpy.max(y),resolution)
@@ -128,8 +131,8 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
                    pylab.scatter(x,y,marker='o',s=300,c=z,cmap=cm.jet,vmin=vmin,vmax=vmax)
                    pylab.colorbar()
                
-               pylab.xlabel(parameters[1]) 
-               pylab.ylabel(parameters[0]) 
+               pylab.xlabel(parameters[sorted_parameter_indexes[0]]) 
+               pylab.ylabel(parameters[sorted_parameter_indexes[1]]) 
         else:
             raise ValueError("Currently cannot handle more than 2D data")
         pylab.title(value_name)    
