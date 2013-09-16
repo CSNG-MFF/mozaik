@@ -4,6 +4,7 @@ Installation intructions
 
 Dependencies
 ============
+* python 2.7
 * scipy/numpy
 * nest (latest release, compiled with mpi)
 * mpi4py
