@@ -218,7 +218,11 @@ class CombinationParameterSearch(ParameterSearch):
         return combs    
         
     def master_directory_name(self):
-        return "CombinationParamSearch{" + ','.join([str(k) + ':' + (str(self.parameter_values[k]) if len(self.parameter_values[k]) < 5 else str(len(self.parameter_values[k]))) for k in self.parameter_values.keys()]) + '}/'
+        s = "CombinationParamSearch{" + ','.join([str(k) + ':' + (str(self.parameter_values[k]) if len(self.parameter_values[k]) < 5 else str(len(self.parameter_values[k]))) for k in self.parameter_values.keys()]) + '}/'
+        
+        if len(s) > 200:
+           s =  "CombinationParamSearch{" + str(len(self.parameter_values.keys())) + '}/'
+        return s
             
 def parameter_combinations(arrays):
     return _parameter_combinations_rec([],arrays)

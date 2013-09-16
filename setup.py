@@ -1,28 +1,6 @@
 #!/usr/bin/env python
 from distutils.core import setup
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 setup(
     name = "mozaik",
     version = "0.1dev",
@@ -44,7 +22,7 @@ setup(
     author = "The Mozaik team",
     author_email = "antolikjan@gmail.com",
     description = "Python package mozaik is an integrated workflow framework for large scale neural simulations.",
-    long_description = open('README.md').read(),
+    long_description = open('README.rst').read(),
     license = "CeCILL http://www.cecill.info",
     keywords = "computational neuroscience simulation large-scale model spiking",
     url = "http://neuralensemble.org/mozaik",

@@ -15,8 +15,6 @@ import collections
 
 logger = mozaik.getMozaikLogger()
 
-
-
 class DataStoreView(ParametrizedObject):
     """
     This class represents a subset of a DataStore and defines the query

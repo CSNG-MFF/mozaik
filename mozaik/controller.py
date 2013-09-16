@@ -83,15 +83,14 @@ def run_workflow(simulation_name, model_class, create_experiments):
     # Create results directory
     timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
     
-    # We exclude the results_dir parameter from the directory naming
-    modified_params_str = '_'.join([str(k) + ":" + str(modified_parameters[k]) for k in sorted(modified_parameters.keys()) if k!='results_dir'])
+    
+    ddir  = result_directory_name(simulation_run_name,simulation_name,modified_parameters)
+    
     if mozaik.mpi_comm and mozaik.mpi_comm.rank != 0:
-        Global.root_directory = parameters.results_dir + simulation_name + '_' + \
-                                  simulation_run_name + '_____' + modified_params_str + '/' + str(mozaik.mpi_comm.rank) + '/'
+        Global.root_directory = parameters.results_dir + ddir + '/' + str(mozaik.mpi_comm.rank) + '/'
         mozaik.mpi_comm.barrier()                                  
     else:
-        Global.root_directory = parameters.results_dir + simulation_name + '_' + \
-                                  simulation_run_name + '_____' + modified_params_str + '/'
+        Global.root_directory = parameters.results_dir + ddir + '/'
     
     
     os.makedirs(Global.root_directory)
@@ -118,8 +117,11 @@ def run_workflow(simulation_name, model_class, create_experiments):
     print "Final memory usage: %iMB" % (resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/(1024))
     return (data_store,model)
 
-def result_directory_name(simulation_run_name,simulation_name,modified_params):
-    modified_params_str = '_'.join([str(k) + ":" + str(modified_params[k]) for k in sorted(modified_params.keys()) if k!='results_dir'])
+def result_directory_name(simulation_run_name,simulation_name,modified_parameters):
+    modified_params_str = '_'.join([str(k) + ":" + str(modified_parameters[k]) for k in sorted(modified_parameters.keys()) if k!='results_dir'])
+    if len(modified_params_str) > 100:
+        modified_params_str = '_'.join([str(k).split('.')[-1] + ":" + str(modified_parameters[k]) for k in sorted(modified_parameters.keys()) if k!='results_dir'])
+    
     return simulation_name + '_' + simulation_run_name + '_____' + modified_params_str
 
 def run_experiments(model,experiment_list,load_from=None):

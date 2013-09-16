@@ -4,6 +4,7 @@ Installation intructions
 
 Dependencies
 ============
+* python 2.7
 * scipy/numpy
 * nest (latest release, compiled with mpi)
 * mpi4py
@@ -195,7 +196,7 @@ And, finally, Mozaik::
     (mozaik)$ cd mozaik/
     (mozaik)$ python setup.py install
     
-at the moment::
+If you plan to develop mozaik you can add symbolic link to mozaik from virtualenv package repo, so you do not have to do install after evert change:
     
     (mozaik):~/.virtualenvs/mozaik/lib/python2.7/site-packages$ ln -s ~/mozaik/mozaik/ mozaik
 
