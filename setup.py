@@ -1,31 +1,9 @@
 #!/usr/bin/env python
 from distutils.core import setup
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 setup(
     name = "mozaik",
-    version = "0.1dev",
+    version = "0.1.0",
     package_dir = {'mozaik': 'mozaik'},
     packages = ['mozaik',
                 'mozaik.analysis',
@@ -48,7 +26,7 @@ setup(
     license = "CeCILL http://www.cecill.info",
     keywords = "computational neuroscience simulation large-scale model spiking",
     url = "http://neuralensemble.org/mozaik",
-    classifiers = ['Development Status :: 2 - Pre-Alpha',
+    classifiers = ['Development Status :: 2 Alpha',
                    'Environment :: Console',
                    'Intended Audience :: Science/Research',
                    'License :: Other/Proprietary License',
