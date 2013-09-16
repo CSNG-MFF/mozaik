@@ -125,8 +125,6 @@ class FixedKConnector(Connector):
                                     self.parameters.k,
                                     allow_self_connections=False,
                                     safe=True,rng=mozaik.pynn_rng)
-
-                                    
                                     
         self.proj = self.sim.Projection(
                                     self.source.pop,

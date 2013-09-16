@@ -194,11 +194,6 @@ And, finally, Mozaik::
     $ git clone https://github.com/antolikjan/mozaik.git
     (mozaik)$ cd mozaik/
     (mozaik)$ python setup.py install
-    
-at the moment::
-    
-    (mozaik):~/.virtualenvs/mozaik/lib/python2.7/site-packages$ ln -s ~/mozaik/mozaik/ mozaik
-
 
 :copyright: Copyright 2011-2013 by the *mozaik* team, see AUTHORS.
 :license: `CECILL <http://www.cecill.info/>`_, see LICENSE for details.
