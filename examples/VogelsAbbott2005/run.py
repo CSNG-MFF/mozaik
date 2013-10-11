@@ -4,6 +4,12 @@ This is implementation of model of self-sustained activitity in balanced network
 Vogels, T. P., & Abbott, L. F. (2005). 
 Signal propagation and logic gating in networks of integrate-and-fire neurons. 
 The Journal of neuroscience : the official journal of the Society for Neuroscience, 25(46), 10786–95. 
+
+To run it, use:
+mpirun python run.py simulator_name number_processors parameters name_of_test
+
+For example:
+mpirun python run.py nest 2 param/defaults 'test'
 """
 from pyNN import nest
 import sys
