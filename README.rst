@@ -23,9 +23,9 @@ Instructions::
   python setup.py install
   
 Please see below:
- * :ref:`ref-detailed` for the installation of the dependencies.
- * :ref:`ref-ubuntu` for the installation on Ubuntu Linux
- * :ref:`ref-run` to run the examples
+ * the installation of the dependencies.
+ * the installation on Ubuntu Linux
+ * how to run the examples
  
 .. _ref-detailed:
 
