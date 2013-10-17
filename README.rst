@@ -2,7 +2,7 @@ Installation intructions
 ========================
 
 Dependencies
-============
+------------
 * python 2.7
 * scipy/numpy
 * nest (latest release, compiled with mpi)
@@ -14,7 +14,7 @@ Dependencies
 * neo
 
 Installation
-============
+------------
 
 Instructions::
 
@@ -30,7 +30,7 @@ Please see below:
 .. _ref-detailed:
 
 Detailed instructions
-=====================
+---------------------
 
 Mozaik requires currently some "non-standard" branches of software like the
 pyNN which will be resolved in the future. Therefore more detailed installation
@@ -39,7 +39,7 @@ instructions follow.
 .. _ref-virtual-env:
 
 Virtual env
-____________
+___________
 
 We recommend to install mozaik using the virtualenv python environment manager (http://pypi.python.org/pypi/virtualenv/) , to prevent potential
 conflicts with standard versions of required libraries. Users can follow for example http://simononsoftware.com/virtualenv-tutorial tutorial or just do the following steps:
@@ -113,7 +113,7 @@ you're using scipy, numpy, matplotlib anyway you don't have to install those in 
 .. _ref-ubuntu:
 
 Ubuntu
-======
+------
 
 Following these instruction should give you a working copy of mozaik on a 
 fresh installation of Ubuntu (at the time of the writing the version was 12.04)
@@ -238,7 +238,7 @@ And, finally, Mozaik::
 .. _ref-run:
 
 Running examples
-================
+----------------
 
 If you use mpi and mpirun, you should install first the mpi executables if not already done::
 
