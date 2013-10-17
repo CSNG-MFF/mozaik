@@ -26,7 +26,7 @@ setup(
     license = "CeCILL http://www.cecill.info",
     keywords = "computational neuroscience simulation large-scale model spiking",
     url = "http://neuralensemble.org/mozaik",
-    classifiers = ['Development Status :: 2 Alpha',
+    classifiers = ['Development Status :: 3 - Alpha',
                    'Environment :: Console',
                    'Intended Audience :: Science/Research',
                    'License :: Other/Proprietary License',
