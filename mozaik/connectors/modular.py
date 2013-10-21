@@ -81,7 +81,7 @@ class ModularConnector(Connector):
     def _connect(self):
         connection_list = []
         z = numpy.zeros((self.target.pop.size,))
-        for i in xrange(0,self.target.pop.size):
+        for i in numpy.nonzero(self.target.pop._mask_local)[0]: 
             connection_list.extend(zip(numpy.arange(0,self.source.pop.size,1),z+i,self._obtain_weights(i).flatten(),self._obtain_delays(i).flatten()))
         
         self.method = self.sim.FromListConnector(connection_list)
@@ -112,7 +112,7 @@ class ModularSamplingProbabilisticConnector(ModularConnector):
 
     def _connect(self):
         cl = []
-        for i in xrange(0,self.target.pop.size):
+        for i in numpy.nonzero(self.target.pop._mask_local)[0]:
             weights = self._obtain_weights(i)
             delays = self._obtain_delays(i)
             co = Counter(sample_from_bin_distribution(weights, self.parameters.num_samples))
@@ -144,11 +144,13 @@ class ModularSingleWeightProbabilisticConnector(ModularConnector):
 
     def _connect(self):
         cl = []
-        for i in xrange(0,self.target.pop.size):
+        for i in numpy.nonzero(self.target.pop._mask_local)[0]:
             weights = self._obtain_weights(i)
             delays = self._obtain_delays(i)
             conections_probabilities = weights/numpy.sum(weights)*self.parameters.connection_probability*len(weights)
             connection_indices = numpy.flatnonzero(conections_probabilities > numpy.random.rand(len(conections_probabilities)))
+            print len(connection_indices)
+            print connection_indices
             cl.extend([(k,i,self.parameters.base_weight,delays[k]) for k in connection_indices])
         
         method = self.sim.FromListConnector(cl)

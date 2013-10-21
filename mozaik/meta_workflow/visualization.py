@@ -213,7 +213,7 @@ def multi_curve_visualzition(simulation_name,master_results_dir,x_axis_parameter
     x = []
     y = []
     z = []
-    pylab.subplot(1,2,1)
+    pylab.subplot(2,2,1)
     for k in d.keys():
         color = ((k[0] - mmin[0]) /(mmax[0] - mmin[0]),
                  (k[1] - mmin[1]) /(mmax[1] - mmin[1]),
@@ -228,11 +228,44 @@ def multi_curve_visualzition(simulation_name,master_results_dir,x_axis_parameter
     pylab.ylabel(value_name)     
 
 
-    pylab.subplot(1,2,2)        
+    pylab.subplot(2,2,2)        
     pylab.scatter(x,y,marker='o',s=100,c=z)
     parameters.remove(x_axis_parameter_name)
     pylab.xlabel(parameters[0]) 
     pylab.ylabel(parameters[1])     
+
+    # let's add ratio colored plot
+    
+    x = []
+    y = []
+    z = []
+    pylab.subplot(2,2,3)
+    for k in d.keys():
+        a = (k[0] - mmin[0]) /(mmax[0] - mmin[0])
+        b = (k[1] - mmin[1]) /(mmax[1] - mmin[1])
+        color = [a,
+                 b,
+                 0]
+        if numpy.sqrt(numpy.sum(numpy.power(color,2))) != 0:
+            color = color / numpy.sqrt(numpy.sum(numpy.power(color,2)))
+            
+        color[2] = numpy.sqrt(a*a+b*b)/numpy.sqrt(2)
+            
+        x.append(k[0])
+        y.append(k[1])
+        z.append(color)
+        pylab.plot(d[k][0],d[k][1])
+        pylab.plot(d[k][0],d[k][1],color=color)
+    
+    pylab.xlabel(parameters[sorted_parameter_indexes[0]]) 
+    pylab.ylabel(value_name)     
+
+
+    pylab.subplot(2,2,4)        
+    pylab.scatter(x,y,marker='o',s=100,c=z)
+    pylab.xlabel(parameters[0]) 
+    pylab.ylabel(parameters[1])         
+    
 
     if filename != None:
        pylab.savefig(master_results_dir+'/'+filename)
