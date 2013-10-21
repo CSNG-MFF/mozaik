@@ -21,7 +21,7 @@ Parameters
     mpi_comm : mpi4py.Comm
              The mpi communication object, None if MPI not available.
 """
-__version__ = None
+__version__ = "0.1.0"
 import numpy.random
 rng = None
 pynn_rng = None

@@ -238,6 +238,7 @@ class PlotTuningCurve(Plotting):
                 labels.append(str(k))
             
             params={}
+            params["x_label"] = self.parameters.parameter_name
             params["y_label"] = pnvs[0].value_name
             params['labels']=None
             params['linewidth'] = 2
@@ -882,23 +883,28 @@ class ConnectivityPlot(Plotting):
                  ).make_line_plot(subplotspec)
 
     def _ploter(self, idx, gs):
-        # the 
-        ix = numpy.flatnonzero(self.connections[idx][:,1]==index)
-        x = self.proj.pre.positions[0][self.connections[idx][ix,0]]
-        y = self.proj.pre.positions[1][self.connections[idx][ix,0]]
-        w = weights[idx,2]
+        #ix = numpy.flatnonzero(self.connections[idx].weights[:,1]==index)
+        #x = self.proj.pre.positions[0][self.connections[idx].weights[ix,0]]
+        #y = self.proj.pre.positions[1][self.connections[idx].weights[ix,0]]
+        #w = weights[idx,2]
         tx = self.connected_neuron_position[idx][0]
         ty = self.connected_neuron_position[idx][1]
-        w = self.connections[idx].weights[ix,2]
-        d = self.connections[idx].delays[ix,2]
         if not self.parameters.reversed:
-            i = self.datastore.get_sheet_indexes(self.connections[idx].source_name,self.parameters.neuron)
-            sx = self.connecting_neurons_positions[idx][0][self.connections[idx][ix,0]]
-            sy = self.connecting_neurons_positions[idx][1][self.connections[idx][ix,0]]
+            index = self.datastore.get_sheet_indexes(self.connections[idx].source_name,self.parameters.neuron)
+            ix = numpy.flatnonzero(numpy.array(self.connections[idx].weights)[:,1]==index)
         else:
-            i = self.datastore.get_sheet_indexes(self.connections[idx].target_name,self.parameters.neuron)
-            sx = self.connecting_neurons_positions[idx][0][self.connections[idx][ix,1]]
-            sy = self.connecting_neurons_positions[idx][1][self.connections[idx][ix,1]]
+            index = self.datastore.get_sheet_indexes(self.connections[idx].target_name,self.parameters.neuron)
+            print self.connections[idx].weights[:500]
+            print len(self.connections[idx].weights)
+            print index
+            ix = numpy.flatnonzero(numpy.array(self.connections[idx].weights)[:,0]==index)
+            print ix
+            
+            
+        sx = self.connecting_neurons_positions[idx][0][ix]
+        sy = self.connecting_neurons_positions[idx][1][ix]
+        w = numpy.array(self.connections[idx].weights)[ix,2]
+        d = numpy.array(self.connections[idx].delays)[ix,2]
 
         assert numpy.shape(w) == numpy.shape(d)
         # pick the right PerNeuronValue to show

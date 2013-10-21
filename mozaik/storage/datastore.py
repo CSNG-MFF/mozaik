@@ -426,7 +426,7 @@ class PickledDataStore(Hdf5DataStore):
     """
 
     def load(self):
-        if False:
+        if True:
             f = open(self.parameters.root_directory + '/datastore.recordings.pickle',  'rb')
             self.block = cPickle.load(f)
             for s in self.block.segments:
