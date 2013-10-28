@@ -1,6 +1,7 @@
-    # encoding: utf-8
+# encoding: utf-8
 import mozaik
 import numpy
+import ast
 from mozaik.connectors import Connector
 from mozaik.connectors.modular_connector_functions import ModularConnectorFunction
 from collections import Counter
@@ -10,6 +11,20 @@ from mozaik import load_component
 
 
 logger = mozaik.getMozaikLogger()
+
+class ExpVisitor(ast.NodeVisitor):
+    """
+    AST tree visitor used for determining list of variables in the delay or weight expresions
+    """
+    
+    def __init__(self,**params):
+        ast.NodeVisitor.__init__(self,**params)
+        self.names = []
+    
+    def visit_Name(self, node):
+        node.id
+        if not (node.id in self.names):
+           self.names.append(node.id) 
 
 class ModularConnector(Connector):
     """
@@ -47,13 +62,22 @@ class ModularConnector(Connector):
       
       # lets load up the weight ModularConnectorFunction's
       self.weight_functions = {}
-      for k in self.parameters.weight_functions.keys():
+      self.delay_functions = {}
+      # lets determine the list of variables in weight expressions
+      v = ExpVisitor()
+      v.visit(ast.parse(self.parameters.weight_expression))
+      self.weight_function_names = v.names
+      # lets determine the list of variables in delay expressions
+      v = ExpVisitor()
+      v.visit(ast.parse(self.parameters.delay_expression))
+      self.delay_function_names = v.names
+      
+      
+      for k in self.weight_function_names:
           self.weight_functions[k] = load_component(self.parameters.weight_functions[k].component)(self.source,self.target,self.parameters.weight_functions[k].params)
           assert isinstance(self.weight_functions[k],ModularConnectorFunction)
           
-      # lets load up the delay ModularConnectorFunction's
-      self.delay_functions = {}
-      for k in self.parameters.delay_functions.keys():
+      for k in self.delay_function_names:
           self.delay_functions[k] = load_component(self.parameters.delay_functions[k].component)(self.source,self.target,self.parameters.delay_functions[k].params)
     
     def _obtain_weights(self,i):
@@ -61,7 +85,8 @@ class ModularConnector(Connector):
         This function calculates the combined weights from the ModularConnectorFunction in weight_functions
         """
         evaled = {}
-        for k in self.weight_functions.keys():
+       
+        for k in self.weight_function_names:
             evaled[k] = self.weight_functions[k].evaluate(i)
         return numpy.zeros((self.source.pop.size,)) + eval(self.parameters.weight_expression,globals(),evaled)
         
@@ -70,7 +95,7 @@ class ModularConnector(Connector):
         This function calculates the combined weights from the ModularConnectorFunction in weight_functions
         """
         evaled = {}
-        for k in self.delay_functions.keys():
+        for k in self.delay_function_names:
             evaled[k] = self.delay_functions[k].evaluate(i)
         
         delays = numpy.zeros((self.source.pop.size,)) + eval(self.parameters.delay_expression,globals(),evaled)
@@ -149,8 +174,6 @@ class ModularSingleWeightProbabilisticConnector(ModularConnector):
             delays = self._obtain_delays(i)
             conections_probabilities = weights/numpy.sum(weights)*self.parameters.connection_probability*len(weights)
             connection_indices = numpy.flatnonzero(conections_probabilities > numpy.random.rand(len(conections_probabilities)))
-            print len(connection_indices)
-            print connection_indices
             cl.extend([(k,i,self.parameters.base_weight,delays[k]) for k in connection_indices])
         
         method = self.sim.FromListConnector(cl)

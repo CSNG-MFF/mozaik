@@ -744,10 +744,10 @@ class PerNeuronValueScatterPlot(Plotting):
             pnvs = datastore.get_analysis_result(identifier='PerNeuronValue',sheet_name=sheet)
             if len(pnvs) < 2:
                raise ValueError('At least 2 DSVs have to be provided') 
-            for i in xrange(0,len(dsvs)):
-                for j in xrange(i+1,len(dsvs)):
-                    if dsvs[i].value_units == dsvs[j].value_units:
-                       self.pairs.append((dsvs[i],dsvs[j]))
+            for i in xrange(0,len(pnvs)):
+                for j in xrange(i+1,len(pnvs)):
+                    if pnvs[i].value_units == pnvs[j].value_units:
+                       self.pairs.append((pnvs[i],pnvs[j]))
                        self.sheets.append(sheet) 
                        
         assert len(self.pairs) > 0, "Error, not pairs of PerNeuronValue ADS in datastore seem to have the same value_units"

@@ -197,6 +197,7 @@ class SpecificProbabilisticArborization(Connector):
             wf = self.parameters.weight_factor * 1000
         else:
             wf = self.parameters.weight_factor
+        
         weights = self.connection_matrix
         delays = self.delay_matrix
         cl = []

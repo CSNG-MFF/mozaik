@@ -8,6 +8,8 @@ from mozaik import load_component
 from parameters import ParameterSet, ParameterDist
 from mozaik.connectors import SpecificProbabilisticArborization, SpecificArborization
 
+
+
 """
 This file contains meta-connectors. These are classes that represent some higher-level 
 algorithms for connecting neurons in mozaik.
@@ -22,9 +24,6 @@ follows the pattern of connectivity with respect to a given gabor pattern both i
 information has to be shared between these two projection during the creation process (e.g. the same orientation of the gabor for 
 a given neuron has to be used when calclulating both the ON and OFF connections to a given neuron)
 """
-
-
-
 def gabor(x1, y1, x2, y2, orientation, frequency, phase, size, aspect_ratio):
     X = (x1 - x2) * numpy.cos(orientation) + (y1 - y2) * numpy.sin(orientation)
     Y = -(x1 - x2) * numpy.sin(orientation) + (y1 - y2) * numpy.cos(orientation)

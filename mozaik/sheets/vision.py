@@ -36,15 +36,15 @@ class RetinalUniformSheet(Sheet):
     })
 
     def __init__(self, model, parameters):
-        logger.info("Creating %s with %d neurons." % (self.__class__.__name__, int(parameters.density * parameters.density)))
+        logger.info("Creating %s with %d neurons." % (self.__class__.__name__, int(parameters.sx * parameters.sy * parameters.density)))
         Sheet.__init__(self, model, parameters)
-        #rs = space.RandomStructure(boundary=space.Cuboid(parameters.sx, parameters.sy, 0),
-        #                           origin=(0.0, 0.0, 0.0),
-        #                           rng=mozaik.pynn_rng)
+        rs = space.RandomStructure(boundary=space.Cuboid(parameters.sx, parameters.sy, 0),
+                                   origin=(0.0, 0.0, 0.0),
+                                   rng=mozaik.pynn_rng)
         
-        rs = space.Grid2D(aspect_ratio=1, dx=parameters.sx/parameters.density, dy=parameters.sy/parameters.density, x0=-parameters.sx/2,y0=-parameters.sy/2,z=0.0)
+        #rs = space.Grid2D(aspect_ratio=1, dx=parameters.sx/parameters.density, dy=parameters.sy/parameters.density, x0=-parameters.sx/2,y0=-parameters.sy/2,z=0.0)
         
-        self.pop = self.sim.Population(int(parameters.density * parameters.density),
+        self.pop = self.sim.Population(int(parameters.sx * parameters.sy * parameters.density),
                                        getattr(self.model.sim, self.parameters.cell.model),
                                        self.parameters.cell.params,
                                        structure=rs,
@@ -170,7 +170,6 @@ class VisualCorticalUniformSheet(SheetWithMagnificationFactor):
     def __init__(self, model, parameters):
         SheetWithMagnificationFactor.__init__(self, model, parameters)
         dx, dy = self.cs_2_vf(parameters.sx, parameters.sy)
-
         rs = space.RandomStructure(boundary=space.Cuboid(dx, dy, 0),
                                    origin=(0.0, 0.0, 0.0),
                                    rng=mozaik.pynn_rng)
