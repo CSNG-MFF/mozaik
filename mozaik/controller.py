@@ -1,9 +1,9 @@
 """
 This is the nexus of workflow execution controll of *mozaik*.
 """
-
 from mozaik.storage.datastore import Hdf5DataStore, PickledDataStore
 from mozaik.tools.distribution_parametrization import MozaikExtendedParameterSet, load_parameters
+from mozaik.tools.misc import result_directory_name
 import sys
 import os
 import mozaik
@@ -13,14 +13,11 @@ import logging
 from NeuroTools import init_logging
 from NeuroTools import visual_logging
 
-mozaik.setup_mpi()
-
 logger = mozaik.getMozaikLogger()
 
 class Global:
     """global variable container currently only containing the root_directory variable that points to the root directory of the model specification"""
     root_directory = './'
-
 
 def setup_logging():
     """
@@ -66,6 +63,7 @@ def run_workflow(simulation_name, model_class, create_experiments):
     
     >>> python userscript simulator_name num_threads parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n simulation_run_name
     """
+    mozaik.setup_mpi()
     # Read parameters
     exec "import pyNN.nest as sim" in  globals(), locals()
     
@@ -116,13 +114,6 @@ def run_workflow(simulation_name, model_class, create_experiments):
     import resource
     print "Final memory usage: %iMB" % (resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/(1024))
     return (data_store,model)
-
-def result_directory_name(simulation_run_name,simulation_name,modified_parameters):
-    modified_params_str = '_'.join([str(k) + ":" + str(modified_parameters[k]) for k in sorted(modified_parameters.keys()) if k!='results_dir'])
-    if len(modified_params_str) > 100:
-        modified_params_str = '_'.join([str(k).split('.')[-1] + ":" + str(modified_parameters[k]) for k in sorted(modified_parameters.keys()) if k!='results_dir'])
-    
-    return simulation_name + '_' + simulation_run_name + '_____' + modified_params_str
 
 def run_experiments(model,experiment_list,load_from=None):
     """
