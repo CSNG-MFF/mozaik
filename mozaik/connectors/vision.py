@@ -8,6 +8,7 @@ from mozaik.tools.circ_stat import *
 from mozaik.tools.misc import *
 from parameters import ParameterSet
 from scipy.interpolate import NearestNDInterpolator
+from numpy import sin, cos, pi, exp
 
 logger = mozaik.getMozaikLogger()
 
@@ -18,7 +19,7 @@ class MapDependentModularConnectorFunction(ModularConnectorFunction):
     required_parameters = ParameterSet({
         'map_location': str,  # It has to point to a file containing a single pickled 2d numpy array, containing values in the interval [0..1].
         'sigma': float,  # How sharply does the wieght fall off with the increasing distance between the map values (exp(-0.5*(distance/sigma)*2)/(sigma*sqrt(2*pi)))
-        'periodic' : bool, # if true, the values in or_map will be treated as periodic (and consequently the distance between two values will be computed as circular distance).
+        'periodic' : bool, # if true, the values in map will be treated as periodic (and consequently the distance between two values will be computed as circular distance).
     })
     
     def __init__(self, source,target, parameters):
@@ -108,6 +109,61 @@ class V1PushPullArborization(ModularConnectorFunction):
         
         return (1.0-self.parameters.push_pull_ratio) +  self.parameters.push_pull_ratio*m
 
+def gabor(x1, y1, x2, y2, orientation, frequency, phase, size, aspect_ratio):
+    X = (x1 - x2) * numpy.cos(orientation) + (y1 - y2) * numpy.sin(orientation)
+    Y = -(x1 - x2) * numpy.sin(orientation) + (y1 - y2) * numpy.cos(orientation)
+    ker = - (X*X + Y*Y*(aspect_ratio**2)) / (2*(size**2))
+    return numpy.exp(ker)*numpy.cos(2*numpy.pi*X*frequency + phase)
 
 
+class GaborArborization(ModularConnectorFunction):
+    """
+    This connector function implements the standard Gabor-like afferent V1 connectivity. It takes the parameters of gabors from 
+    the annotations that have to be before assigned to neurons.
+    
+    Other parameters
+    ----------------
+    topological : bool
+                  Should the gabor in the input layer be centered on the retinotopic coordinates of the target neuron. If not it is centered at origin.
+    
+    ON : bool
+         Whether this is gabor on ON or OFF cells.
+    """
 
+    required_parameters = ParameterSet({
+        'topological': bool,  # should the receptive field centers vary with the position of the given neurons
+                              # (note positions of neurons are always stored in visual field coordinates)
+        'ON' : bool,          # Whether this is gabor on ON or OFF cells.
+    })
+
+    def evaluate(self,index):
+        target_or = self.target.get_neuron_annotation(index, 'LGNAfferentOrientation')
+        target_phase = self.target.get_neuron_annotation(index, 'LGNAfferentPhase')
+        target_ar = self.target.get_neuron_annotation(index, 'LGNAfferentAspectRatio')
+        target_freq = self.target.get_neuron_annotation(index, 'LGNAfferentFrequency')
+        target_size = self.target.get_neuron_annotation(index, 'LGNAfferentSize')
+        
+        if self.parameters.topological:
+            w = gabor(self.source.pop.positions[0],self.source.pop.positions[1],
+                                       self.target.pop.positions[0][index],
+                                       self.target.pop.positions[1][index],
+                                       target_or + pi/2,
+                                       target_freq,
+                                       target_phase,
+                                       target_size,
+                                       target_ar)
+        else:
+            w = gabor(self.source.pop.positions[0],self.source.pop.positions[1],
+                                       0,
+                                       0,
+                                       target_or + pi/2,
+                                       target_freq,
+                                       target_phase,
+                                       target_size,
+                                       target_ar)
+
+        if self.parameters.ON:
+           return numpy.maximum(0,w) 
+        else:
+           return -numpy.minimum(0,w) 
+ 

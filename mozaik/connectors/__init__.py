@@ -42,7 +42,12 @@ class Connector(BaseComponent):
         self.target = target
         self.input = source
         self.target.input = self
-
+        
+        self.weight_scaler = 1.0 # This scaler has to be always applied to all weights just before sent to pyNN connect command
+                                 # This is because certain pyNN synaptic models interpret weights with different units and the Connector
+                                 # function here corrects for these - ie. the Connectors in Mozaik will always assume the weights to be in nano-siemens 
+        if self.parameters.short_term_plasticity != None:
+           self.weight_scaler = 1000.0
 
     
     def init_synaptic_mechanisms(self,weights=None,delays=None):
@@ -143,10 +148,7 @@ class SpecificArborization(Connector):
 
         # This is due to native synapses models (which we currently use as the short term synaptic plasticity model) 
         # do not apply the 1000 factor scaler as the pyNN synaptic models
-        if self.parameters.short_term_plasticity != None:
-            self.connection_matrix = self.connection_matrix * 1000.0
-
-
+        self.connection_matrix = self.connection_matrix * self.weight_scaler
         self.connection_list = zip(numpy.array(X).flatten(),numpy.array(Y).flatten(),self.connection_matrix.flatten(),self.delay_matrix.flatten())
         # get rid of very weak synapses
         z = numpy.max(self.connection_matrix.flatten())
@@ -193,11 +195,7 @@ class SpecificProbabilisticArborization(Connector):
     def _connect(self):
         # This is due to native synapses models (which we currently use as the short term synaptic plasticity model) 
         # do not apply the 1000 factor scaler as the pyNN synaptic models
-        if self.parameters.short_term_plasticity != None:
-            wf = self.parameters.weight_factor * 1000
-        else:
-            wf = self.parameters.weight_factor
-        
+        wf = self.parameters.weight_factor * self.weight_scaler
         weights = self.connection_matrix
         delays = self.delay_matrix
         cl = []

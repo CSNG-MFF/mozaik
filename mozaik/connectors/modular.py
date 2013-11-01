@@ -72,7 +72,6 @@ class ModularConnector(Connector):
       v.visit(ast.parse(self.parameters.delay_expression))
       self.delay_function_names = v.names
       
-      
       for k in self.weight_function_names:
           self.weight_functions[k] = load_component(self.parameters.weight_functions[k].component)(self.source,self.target,self.parameters.weight_functions[k].params)
           assert isinstance(self.weight_functions[k],ModularConnectorFunction)
@@ -141,8 +140,7 @@ class ModularSamplingProbabilisticConnector(ModularConnector):
             weights = self._obtain_weights(i)
             delays = self._obtain_delays(i)
             co = Counter(sample_from_bin_distribution(weights, self.parameters.num_samples))
-            cl.extend([(k,i,self.parameters.base_weight*co[k]/self.parameters.num_samples,delays[k]) for k in co.keys()])
-        
+            cl.extend([(k,i,self.weight_scaler*self.parameters.base_weight*co[k]/self.parameters.num_samples,delays[k]) for k in co.keys()])
         method = self.sim.FromListConnector(cl)
         self.proj = self.sim.Projection(
                                 self.source.pop,
@@ -174,7 +172,7 @@ class ModularSingleWeightProbabilisticConnector(ModularConnector):
             delays = self._obtain_delays(i)
             conections_probabilities = weights/numpy.sum(weights)*self.parameters.connection_probability*len(weights)
             connection_indices = numpy.flatnonzero(conections_probabilities > numpy.random.rand(len(conections_probabilities)))
-            cl.extend([(k,i,self.parameters.base_weight,delays[k]) for k in connection_indices])
+            cl.extend([(k,i,self.weight_scaler*self.parameters.base_weight,delays[k]) for k in connection_indices])
         
         method = self.sim.FromListConnector(cl)
         self.proj = self.sim.Projection(
