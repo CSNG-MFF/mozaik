@@ -1,14 +1,11 @@
 # encoding: utf-8
 import pickle
 import numpy
-from numpy import sin, cos, pi, exp
 from scipy.interpolate import NearestNDInterpolator
 from mozaik.core import BaseComponent
 from mozaik import load_component
 from parameters import ParameterSet, ParameterDist
-from mozaik.connectors import SpecificProbabilisticArborization, SpecificArborization
-
-
+from mozaik.connectors.modular import ModularSamplingProbabilisticConnector
 
 """
 This file contains meta-connectors. These are classes that represent some higher-level 
@@ -24,11 +21,6 @@ follows the pattern of connectivity with respect to a given gabor pattern both i
 information has to be shared between these two projection during the creation process (e.g. the same orientation of the gabor for 
 a given neuron has to be used when calclulating both the ON and OFF connections to a given neuron)
 """
-def gabor(x1, y1, x2, y2, orientation, frequency, phase, size, aspect_ratio):
-    X = (x1 - x2) * numpy.cos(orientation) + (y1 - y2) * numpy.sin(orientation)
-    Y = -(x1 - x2) * numpy.sin(orientation) + (y1 - y2) * numpy.cos(orientation)
-    ker = - (X*X + Y*Y*(aspect_ratio**2)) / (2*(size**2))
-    return numpy.exp(ker)*numpy.cos(2*numpy.pi*X*frequency + phase)
 
 
 class GaborConnector(BaseComponent):
@@ -45,14 +37,18 @@ class GaborConnector(BaseComponent):
     `frequency`     -  the frequency of the gabor in degrees of visual field
 
     Other parameters:
-
+    
     `topological`          -  should the receptive field centers vary with the
                               position of the given neurons in the target sheet
                               (note positions of neurons are always stored in
                               visual field coordinates)
-    `probabilistic`        -  should the weights be probabilistic or directly
-                              proportianal to the gabor profile
+    
     `delay`                -  (ms/μm) the delay on the projections
+
+    `short_term_plasticity` - short term plasticity configuration (see basic connector)
+    
+    `base_weight`          - The weight of the synapses
+    `num_samples`           - The number of connections to generate
 
     `or_map`             - is an orientation map supplied?
     `or_map_location`    - if or_map is True where can one find the map. It
@@ -73,10 +69,11 @@ class GaborConnector(BaseComponent):
 
         'topological': bool,  # should the receptive field centers vary with the position of the given neurons
                               # (note positions of neurons are always stored in visual field coordinates)
-        'probabilistic': bool,  # should the weights be probabilistic or directly proportianal to the gabor profile
         'delay': float,         # ms/μm the delay on the projections
 
-        'specific_arborization': ParameterSet,
+        'short_term_plasticity': ParameterSet,
+        'base_weight' : float,
+        'num_samples' : int ,
 
         'or_map': bool,  # is a orientation map supplied?
         'or_map_location': str,  # if or_map is True where can one find the map. It has to be a file containing a single pickled 2d numpy array
@@ -90,11 +87,6 @@ class GaborConnector(BaseComponent):
         random.seed(1023)
         BaseComponent.__init__(self, network, parameters)
         self.name = name
-        on = lgn_on.pop
-        off = lgn_off.pop
-
-        on_weights = []
-        off_weights = []
 
         t_size = target.size_in_degrees()
         or_map = None
@@ -124,12 +116,7 @@ class GaborConnector(BaseComponent):
             X, Y = numpy.meshgrid(coords_x, coords_y)
             phase_map = NearestNDInterpolator(zip(X.flatten(), Y.flatten()),
                                               phase_map.flatten())
-        
-        on_weights = numpy.zeros((lgn_on.pop.size,target.pop.size))    
-        off_weights = numpy.zeros((lgn_on.pop.size,target.pop.size))    
-        on_delays = numpy.zeros((lgn_on.pop.size,target.pop.size))   + self.parameters.delay
-        off_delays = numpy.zeros((lgn_on.pop.size,target.pop.size))    + self.parameters.delay
-        
+
         for (j, neuron2) in enumerate(target.pop.all()):
             if or_map:
                 orientation = or_map(target.pop.positions[0][j],
@@ -147,7 +134,7 @@ class GaborConnector(BaseComponent):
             frequency = parameters.frequency.next()[0]
             size = parameters.size.next()[0]
 
-            assert orientation < pi
+            assert orientation < numpy.pi
 
             target.add_neuron_annotation(j, 'LGNAfferentOrientation', orientation, protected=True)
             target.add_neuron_annotation(j, 'LGNAfferentAspectRatio', aspect_ratio, protected=True)
@@ -155,70 +142,26 @@ class GaborConnector(BaseComponent):
             target.add_neuron_annotation(j, 'LGNAfferentSize', size, protected=True)
             target.add_neuron_annotation(j, 'LGNAfferentPhase', phase, protected=True)
 
+        ps = ParameterSet({   'target_synapses' : 'excitatory',               
+                              'weight_functions' : {  'f1' : {
+                                                                 'component' : 'mozaik.connectors.vision.GaborArborization',
+                                                                 'params' : {
+                                                                                'topological' : self.parameters.topological,
+                                                                                'ON' : True,
+                                                                            }
+                                                             }                                                                              
+                                                   },
+                             'delay_functions' : {},
+                             'weight_expression' : 'f1', # a python expression that can use variables f1..fn where n is the number of functions in weight_functions, and fi corresponds to the name given to a ModularConnectorFunction in weight_function ParameterSet. It determines how are the weight functions combined to obtain the weights
+                             'delay_expression' : str(self.parameters.delay),
+                             'short_term_plasticity' : self.parameters.short_term_plasticity,
+                             'base_weight' : self.parameters.base_weight * self.parameters.num_samples,
+                             'num_samples' : self.parameters.num_samples,
+                          })
 
-
-            if parameters.topological:
-                on_weights[:,j] =  numpy.maximum(0, gabor(on.positions[0],
-                                                       on.positions[1],
-                                                       target.pop.positions[0][j],
-                                                       target.pop.positions[1][j],
-                                                       orientation + pi/2,
-                                                       frequency,
-                                                       phase,
-                                                       size,
-                                                       aspect_ratio))
-              
-                off_weights[:,j] = -numpy.minimum(0, gabor(off.positions[0],
-                                                         off.positions[1],
-                                                         target.pop.positions[0][j],
-                                                         target.pop.positions[1][j],
-                                                         orientation + pi/2,
-                                                         frequency,
-                                                         phase,
-                                                         size,
-                                                         aspect_ratio))
-            else:
-                on_weights[:,j] = numpy.maximum(0, gabor(on.positions[0],
-                                                       on.positions[1],
-                                                       0,
-                                                       0,
-                                                       orientation + pi/2,
-                                                       frequency,
-                                                       phase,
-                                                       size,
-                                                       aspect_ratio))
-                
-                off_weights[:,j] = -numpy.minimum(0, gabor(off.positions[0],
-                                                         off.positions[1],
-                                                         0,
-                                                         0,
-                                                         orientation + pi/2,
-                                                         frequency,
-                                                         phase,
-                                                         size,
-                                                         aspect_ratio))
-                    
-        if parameters.probabilistic:
-            on_proj = SpecificProbabilisticArborization(
-                            network, lgn_on, target, on_weights,on_delays,
-                            parameters.specific_arborization,
-                            'ON_to_[' + target.name + ']')
-            off_proj = SpecificProbabilisticArborization(
-                            network, lgn_off, target, off_weights,off_delays,
-                            parameters.specific_arborization,
-                            'OFF_to_[' + target.name + ']')
-        else:
-            on_proj = SpecificArborization(
-                            network, lgn_on, target, on_weights,on_delays,
-                            parameters.specific_arborization,
-                            'ON_to_[' + target.name + ']')
-            off_proj = SpecificArborization(
-                            network, lgn_off, target, off_weights,off_delays,
-                            parameters.specific_arborization,
-                            'OFF_to_[' + target.name + ']')
-
-        on_proj.connect()
-        #on_proj.connection_field_plot_continuous(0)
-        
-        off_proj.connect()
-        #off_proj.connection_field_plot_continuous(0)
+        ModularSamplingProbabilisticConnector(network,name+'On',lgn_on,target,ps).connect()
+        #ps['weight_functions.f1.params.ON']=False
+        #ModularSamplingProbabilisticConnector(network,name+'Off',lgn_off,target,ps).connect()
+           
+           
+           

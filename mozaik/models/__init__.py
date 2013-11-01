@@ -175,7 +175,7 @@ class Model(BaseComponent):
             if self.parameters.null_stimulus_period != 0:
                 for sheet in self.sheets.values():
                     sheet.prepare_artificial_stimulation(self.parameters.null_stimulus_period,self.simulator_time,[])
-
+                
                 if self.input_space:
                     self.input_layer.provide_null_input(self.input_space,
                                                         self.parameters.null_stimulus_period,
