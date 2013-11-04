@@ -160,8 +160,8 @@ class GaborConnector(BaseComponent):
                           })
 
         ModularSamplingProbabilisticConnector(network,name+'On',lgn_on,target,ps).connect()
-        #ps['weight_functions.f1.params.ON']=False
-        #ModularSamplingProbabilisticConnector(network,name+'Off',lgn_off,target,ps).connect()
+        ps['weight_functions.f1.params.ON']=False
+        ModularSamplingProbabilisticConnector(network,name+'Off',lgn_off,target,ps).connect()
            
            
            
