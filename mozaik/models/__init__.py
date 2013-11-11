@@ -48,6 +48,7 @@ class Model(BaseComponent):
     required_parameters = ParameterSet({
         'name': str,
         'results_dir': str,
+        'store_stimuli' : bool,
         'reset': bool,
         'null_stimulus_period': float,
         'input_space': ParameterSet, # can be none - in which case input_space_type is ignored

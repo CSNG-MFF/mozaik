@@ -274,6 +274,7 @@ class DataStore(DataStoreView):
 
     required_parameters = ParameterSet({
         'root_directory': str,
+        'store_stimuli' : bool,
     })
 
     def __init__(self, load, parameters, **params):
@@ -341,10 +342,17 @@ class DataStore(DataStoreView):
 
     def add_stimulus(self, data, stimulus):
         """
+        The DataStore interface function that adds a stimulus into the datastore.
+        """
+        if self.parameters.store_stimuli:
+           print "ZZZZ"
+           _add_stimulus(data, stimulus)
+
+    def _add_stimulus(self, data, stimulus):
+        """
         The DataStore interface function to be implemented by a given backend. 
         It should add a stimulus into the datastore.
         """
-
         raise NotImplementedError
 
 
@@ -398,7 +406,7 @@ class Hdf5DataStore(DataStore):
             self.block.segments.append(MozaikSegment(s))
         self.stimulus_dict[str(stimulus)] = True
 
-    def add_stimulus(self, data, stimulus):
+    def _add_stimulus(self, data, stimulus):
         self.sensory_stimulus[str(stimulus)] = data
 
     def add_analysis_result(self, result):
