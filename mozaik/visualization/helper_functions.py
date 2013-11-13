@@ -4,6 +4,7 @@ This module contains several low level plotting function used mainly in simple_p
 import pylab
 from matplotlib.ticker import FuncFormatter
 
+
 def disable_top_right_axis(ax):
     for loc, spine in ax.spines.iteritems():
         if loc in ['right', 'top']:
@@ -12,7 +13,9 @@ def disable_top_right_axis(ax):
         tick.tick2On = False
     for tick in ax.xaxis.get_major_ticks():
         tick.tick2On = False
-
+    ax.xaxis.tick_bottom()
+    ax.yaxis.tick_left()
+    
 
 def disable_bottom_axis(ax):
     for loc, spine in ax.spines.iteritems():
@@ -34,6 +37,7 @@ def three_tick_axis1(axis):
     import matplotlib.ticker as mticker
     axis.set_major_locator(mticker.LinearLocator(3))
     axis.set_major_formatter(mticker.FormatStrFormatter('%.2g'))
+
 
 def three_tick_axis(axis):
     import matplotlib.ticker as mticker

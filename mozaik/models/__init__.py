@@ -31,7 +31,7 @@ class Model(BaseComponent):
     results_dir : str
                 Path to a directory where to store the results.
     
-    rest : bool
+    reset : bool
          If True the pyNN.reset() is used to reset the network between stimulus presentations. 
          Otherwise a blank stimulus is shown for a period of time defined by the parameter null_stimulus_period.
     

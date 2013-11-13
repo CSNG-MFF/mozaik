@@ -167,7 +167,19 @@ class StandardStyle(SimplePlot):
                        
         title : str
               What is the title (None means no label will be plotted)
+                       
+        x_scale : str
+              What is the scaling of the x-axis ('linear' | 'log' | 'symlog'), default is 'linear'
               
+        x_scale_base : int
+              What is the x base of the logarithm. Active only if x_scale != to 'linear'
+               
+        y_scale : str
+              What is the scaling of the y-axis ('linear' | 'log' | 'symlog'), default is 'linear'
+               
+        y_scale_base : int
+              What is the x base of the logarithm. Active only if x_scale != to 'linear'
+             
         x_lim  : tuple
                What are the xlims (None means matplotlib will infer from data).
                
@@ -207,6 +219,10 @@ class StandardStyle(SimplePlot):
             "left_border": True,
             "bottom_border": True,
             "title": None,
+            "x_scale": 'linear',
+            "x_scale_base": None,
+            "y_scale": 'linear',
+            "y_scale_base": None,
             "x_lim": None,
             "y_lim": None,
             "x_ticks": None,
@@ -235,6 +251,16 @@ class StandardStyle(SimplePlot):
             pylab.xlim(self.x_lim)
         if self.y_lim:
             pylab.ylim(self.y_lim)
+
+        if self.x_scale:
+            pylab.xscale(self.x_scale)
+            if self.x_scale_base:
+                pylab.xscale(self.x_scale, basex=self.x_scale_base)
+        if self.y_scale:
+            pylab.yscale(self.y_scale)
+            if self.y_scale_base:
+                pylab.yscale(self.y_scale, basey=self.y_scale_base)
+            
         if not self.x_axis:
             phf.disable_xticks(self.axis)
             phf.remove_x_tick_labels()
