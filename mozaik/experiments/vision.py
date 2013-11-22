@@ -130,7 +130,7 @@ class MeasureSizeTuning(VisualExperiment):
             sizes = numpy.logspace(0, base2max, num=num_sizes, base=2.0)  
         # stimuli creation        
         for c in contrasts:
-            for i in sizes:
+            for s in sizes:
                 for k in xrange(0, num_trials):
                     self.stimuli.append(topo.DriftingSinusoidalGratingDisk(
                                     frame_duration=7,
@@ -144,7 +144,7 @@ class MeasureSizeTuning(VisualExperiment):
                                     density=self.density,
                                     trial=k,
                                     orientation=orientation,
-                                    radius=max_size/num_sizes*(i+1),
+                                    radius=s,
                                     spatial_frequency=spatial_frequency,
                                     temporal_frequency=temporal_frequency))
 
