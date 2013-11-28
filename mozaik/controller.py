@@ -1,7 +1,6 @@
 """
 This is the nexus of workflow execution controll of *mozaik*.
 """
-
 from mozaik.storage.datastore import Hdf5DataStore, PickledDataStore
 from mozaik.tools.distribution_parametrization import MozaikExtendedParameterSet, load_parameters
 import sys
@@ -10,8 +9,6 @@ import mozaik
 import time
 from datetime import datetime
 import logging
-from NeuroTools import init_logging
-from NeuroTools import visual_logging
 
 mozaik.setup_mpi()
 
@@ -21,6 +18,50 @@ class Global:
     """global variable container currently only containing the root_directory variable that points to the root directory of the model specification"""
     root_directory = './'
 
+class FancyFormatter(logging.Formatter):
+    """
+    A log formatter that colours and indents the log message depending on the level.
+    """
+    
+    DEFAULT_INDENTS = {
+        'CRITICAL': "",
+        'ERROR': "",
+        'WARNING': "",
+        'HEADER': "",
+        'INFO': "  ",
+        'DEBUG': "    ",
+    }
+    
+    def __init__(self, fmt=None, datefmt=None, mpi_rank=None):
+        logging.Formatter.__init__(self, fmt, datefmt)
+        self._indents = FancyFormatter.DEFAULT_INDENTS
+        if mpi_rank is None:
+            self.prefix = ""
+        else:
+            self.prefix = "%-3d" % mpi_rank
+    
+    def format(self, record):
+        s = logging.Formatter.format(self, record)
+        if record.levelname == "HEADER":
+            s = "=== %s ===" % s
+        return self.prefix + self._indents[record.levelname] + s
+
+
+def init_logging(filename, file_level=logging.INFO, console_level=logging.WARNING, mpi_rank=None):
+    if mpi_rank is None:
+        mpi_fmt = ""
+    else:
+        mpi_fmt = "%3d " % mpi_rank
+    logging.basicConfig(level=file_level,
+                        format='%%(asctime)s %s%%(name)-10s %%(levelname)-6s %%(message)s [%%(pathname)s:%%(lineno)d]' % mpi_fmt,
+                        filename=filename,
+                        filemode='w')
+    console = logging.StreamHandler()
+    console.setLevel(console_level)
+    console.setFormatter(FancyFormatter('%(message)s', mpi_rank=mpi_rank))
+    logging.getLogger('').addHandler(console)
+    return console
+
 
 def setup_logging():
     """
@@ -28,13 +69,10 @@ def setup_logging():
     """
     if mozaik.mpi_comm:
         init_logging(Global.root_directory + "log", file_level=logging.INFO,
-                     console_level=logging.INFO, mpi_rank=mozaik.mpi_comm.rank)  # NeuroTools version
+                     console_level=logging.INFO, mpi_rank=mozaik.mpi_comm.rank)  
     else:
         init_logging(Global.root_directory + "log", file_level=logging.INFO,
-	             console_level=logging.INFO)  # NeuroTools version
-    if (not mozaik.mpi_comm) or mozaik.mpi_comm.rank==mozaik.MPI_ROOT:
-	    visual_logging.basicConfig(Global.root_directory + "visual_log.zip",
-        	                       level=logging.INFO)
+	             console_level=logging.INFO)  
 
 
 def run_workflow(simulation_name, model_class, create_experiments):

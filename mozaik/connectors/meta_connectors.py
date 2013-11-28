@@ -92,7 +92,7 @@ class GaborConnector(BaseComponent):
         or_map = None
         if self.parameters.or_map:
             f = open(self.parameters.or_map_location, 'r')
-            or_map = pickle.load(f)*pi
+            or_map = pickle.load(f)*numpy.pi
             coords_x = numpy.linspace(-t_size[0]/2.0,
                                       t_size[0]/2.0,
                                       numpy.shape(or_map)[0])

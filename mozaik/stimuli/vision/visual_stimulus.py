@@ -178,6 +178,6 @@ class VisualStimulus(BaseStimulus):
         self.update()
 
     def next_frame(self):
-        """For creating movies with NeuroTools.visualization."""
+        """For creating movies"""
         self.update()
         return [self.img]
