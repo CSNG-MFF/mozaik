@@ -146,7 +146,7 @@ def run_workflow(simulation_name, model_class, create_experiments):
     setup_logging()
     
     model = model_class(sim,num_threads,parameters)
-    data_store = run_experiments(model,create_experiments(model))
+    data_store = run_experiments(model,create_experiments(model),parameters)
 
     if mozaik.mpi_comm.rank == 0:
 	    data_store.save()
@@ -162,7 +162,7 @@ def result_directory_name(simulation_run_name,simulation_name,modified_parameter
     
     return simulation_name + '_' + simulation_run_name + '_____' + modified_params_str
 
-def run_experiments(model,experiment_list,load_from=None):
+def run_experiments(model,experiment_list,parameters,load_from=None):
     """
     This is function called by :func:.run_workflow that executes the experiments in the `experiment_list` over the model. 
     Alternatively, if load_from is specified it will load an existing simulation from the path specified in load_from.
@@ -175,6 +175,9 @@ def run_experiments(model,experiment_list,load_from=None):
     
     experiment_list : list
           The list of experiments to execute.
+    
+    parameters : ParameterSet
+               The parameters given to the simulation run.
           
     load_from : str
               If not None it will load the simulation from the specified directory.
@@ -190,10 +193,10 @@ def run_experiments(model,experiment_list,load_from=None):
     logger.info('Starting Experiemnts')
     if load_from == None:
         data_store = PickledDataStore(load=False,
-                                      parameters=MozaikExtendedParameterSet({'root_directory': Global.root_directory}))
-    else:
+                                      parameters=MozaikExtendedParameterSet({'root_directory': Global.root_directory,'store_stimuli' : parameters.store_stimuli}))
+    else: 
         data_store = PickledDataStore(load=True,
-                                      parameters=MozaikExtendedParameterSet({'root_directory': load_from}))
+                                      parameters=MozaikExtendedParameterSet({'root_directory': load_from,'store_stimuli' : parameters.store_stimuli}))
     
     data_store.set_neuron_ids(model.neuron_ids())
     data_store.set_neuron_positions(model.neuron_positions())
