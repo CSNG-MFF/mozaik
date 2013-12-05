@@ -152,6 +152,7 @@ class Plotting(ParametrizedObject):
         gs = gridspec.GridSpec(1, 1)
         gs.update(left=0.07, right=0.97, top=0.95, bottom=0.05)
         self._handle_parameters_and_execute_plots({}, params,gs[0, 0])
+        gs.tight_layout(self.fig)
         if self.plot_file_name:
             pylab.savefig(Global.root_directory+self.plot_file_name)
         t2 = time.time()

@@ -48,7 +48,7 @@ class GaborConnector(BaseComponent):
     `short_term_plasticity` - short term plasticity configuration (see basic connector)
     
     `base_weight`          - The weight of the synapses
-    `num_samples`           - The number of connections to generate
+    `num_samples`           - The number of synapses per cortical neuron from each of the ON and OFF LGN populations (so effectively there will be 2 * num_samples LGN synapses)
 
     `or_map`             - is an orientation map supplied?
     `or_map_location`    - if or_map is True where can one find the map. It
@@ -72,8 +72,8 @@ class GaborConnector(BaseComponent):
         'delay': float,         # ms/μm the delay on the projections
 
         'short_term_plasticity': ParameterSet,
-        'base_weight' : float,
-        'num_samples' : int ,
+        'base_weight' : float, # the weights of synapses
+        'num_samples' : int , # number of synapses per cortical neuron from each of the ON and OFF LGN populations (so effectively there will be 2 * num_samples LGN synapses)
 
         'or_map': bool,  # is a orientation map supplied?
         'or_map_location': str,  # if or_map is True where can one find the map. It has to be a file containing a single pickled 2d numpy array
