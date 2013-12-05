@@ -67,9 +67,39 @@ def run_analysis_on_parameter_search(simulation_name,master_results_dir,analysis
         analysis_function(d)
         d.save()
       
+def collect_results_from_parameter_search(simulation_name,master_results_dir,processing_function,file_name):
+    """
+    This function loads datastore associated with each parameter combination in the parameter search,
+    passes it to the *processing_function* function and then adds the result this function returns to a list. 
+    It then creates a tuple, with first element the list of parameter names in the same order as they appear in the parameter combinations,
+    second element is the list of parameter combinations and third element is the the corresponding list of results 
+    returned bu the processing function. It then pickles the resulting tuple into *file_name*.
+    
+    
+    Parameters
+    ----------
+    simulation_name : str
+                    The name of the simulation.
+    master_results_dir : str
+                    The directory where the parameter search results are stored.
+    
+    processing_function : func(ds)
+                    A function accepting one parameter which will be the given datastore, and returning a pickable python structure to be associated with the parameter combination of the simulation run that produced the given datastore.
+    
+    filename : str
+             The name of file into which to pickle the resutls.   
+    """
+    (parameters,datastores,n) = load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir)
+    results = [processing_function(d) for p,d in datastores]
+    param_combs = [p for (p,d) in datastores]
+    f = open(file_name,'wb')
+    import pickle
+    pickle.dump((parameters,param_combs,results),f)
+    f.close()
+
     
         
-def export_as_matricies(simulation_name,master_results_dir,query):
+def export_SingleValues_as_matricies(simulation_name,master_results_dir,query):
     """
     It assumes that there was a grid parameter search. Providing this it reformats the SingleValues into matricies
     (one per each value_name parameter encountered) and exports them as pickled numpy ndarrays.
@@ -80,8 +110,8 @@ def export_as_matricies(simulation_name,master_results_dir,query):
                     The name of the simulation.
     master_results_dir : str
                     The directory where the parameter search results are stored.
-    
-    Note: currently we only handle the case of 2D parameter search.                        
+    query : Query
+          The query applied to each datastore before the SingleValue ADSs to be saved are retrieved.
     """
     (parameters,datastores,n) = load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir)
     
@@ -102,8 +132,6 @@ def export_as_matricies(simulation_name,master_results_dir,query):
     dimensions = numpy.array([len(x) for x in param_values])
     
     # lets check that the dataset has the same number of entries as the number of all combinations of parameter values
-    print len(datastores)+n
-    print dimensions
     assert len(datastores)+n == dimensions.prod()
     
     for v in value_names:
@@ -112,8 +140,8 @@ def export_as_matricies(simulation_name,master_results_dir,query):
         for (pv,datastore) in datastores:
             index = [param_values[i].index(pv[i]) for i in xrange(0,len(param_values))]
             dsv = query.query(datastore)
-            matrix[index] = param_filter_query(dsv,identifier='SingleValue',value_name=v).get_analysis_result()[0].value
-
+            vv = param_filter_query(dsv,identifier='SingleValue',value_name=v).get_analysis_result()[0].value
+            matrix[tuple(index)] = vv
         f = open(v+'.txt','w')
         pickle.dump((parameters,param_values,matrix),f)
         

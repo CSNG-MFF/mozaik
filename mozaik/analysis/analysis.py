@@ -685,4 +685,3 @@ class PopulationMean(Analysis):
               else:
                  m = circ_mean(ads.values.flatten(),high=ads.period) 
               self.datastore.full_datastore.add_analysis_result(SingleValue(value=m,period=ads.period,value_name = 'Mean(' +ads.value_name + ')',sheet_name=ads.sheet_name,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=ads.stimulus_id))        
-              

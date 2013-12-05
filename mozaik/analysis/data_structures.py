@@ -208,7 +208,18 @@ class AnalogSignalList(AnalysisDataStructure1D):
             new_asl.append(self.get_asl_by_id(idd) + other.get_asl_by_id(idd))
             
         return AnalogSignalList(new_asl,self.ids,y_axis_units = self.y_axis_units,x_axis_name = self.x_axis_name,y_axis_name = self.y_axis_name, sheet_name = self.sheet_name)
-
+    
+    def mean(self):
+        """
+        Calculates the mean analog signal from the ones in the list.
+        """
+        for asl in self.asl:
+            assert asl.units == self.asl[0].units, "AnalogSignalList.mean: units of AnalogSignal objects in the list do not match."
+            assert asl.sampling_rate == self.asl[0].sampling_rate, "AnalogSignalList.mean: sampling_rate of AnalogSignal objects in the list do not match"
+            assert asl.t_start == self.asl[0].t_start, "AnalogSignalList.mean: t_start of AnalogSignal objects in the list do not match."        
+        
+        return numpy.sum(ads.asl)/len(ads.asl)
+        
         
 class ConductanceSignalList(AnalysisDataStructure1D):
     """

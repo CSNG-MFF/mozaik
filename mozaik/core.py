@@ -48,7 +48,7 @@ class ParametrizedObject(object):
                      if isinstance(P[k],int) or isinstance(P[k],float):
                         assert isinstance(P[k], PyNNDistribution), "Type mismatch for parameter %s: %s != %s " % (k, PyNNDistribution, P[k])
                 else:
-                    assert isinstance(P[k], v) or (v == ParameterSet and P[k] == None), "Type mismatch for parameter %s: %s != %s " % (k, v, P[k])
+                    assert isinstance(P[k], v) or (v == ParameterSet and P[k] == None) or (v == float and isinstance(P[k],int)) or (v == int and isinstance(P[k],float)), "Type mismatch for parameter %s: %s != %s " % (k, v, P[k])
         try:
             # we first need to collect the required parameters from all the classes along the parent path
             new_param_dict = {}

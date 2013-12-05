@@ -63,6 +63,7 @@ class ModularConnector(Connector):
       # lets load up the weight ModularConnectorFunction's
       self.weight_functions = {}
       self.delay_functions = {}
+      self.simulator_time_step = self.sim.get_time_step()
       # lets determine the list of variables in weight expressions
       v = ExpVisitor()
       v.visit(ast.parse(self.parameters.weight_expression))
@@ -99,14 +100,14 @@ class ModularConnector(Connector):
         
         delays = numpy.zeros((self.source.pop.size,)) + eval(self.parameters.delay_expression,globals(),evaled)
         #round to simulation step            
-        delays = numpy.rint(delays / self.sim.get_time_step()) * self.sim.get_time_step()
+        delays = numpy.rint(delays / self.simulator_time_step) * self.simulator_time_step
         return delays
         
     def _connect(self):
         connection_list = []
         z = numpy.zeros((self.target.pop.size,))
         for i in numpy.nonzero(self.target.pop._mask_local)[0]: 
-            connection_list.extend(zip(numpy.arange(0,self.source.pop.size,1),z+i,self._obtain_weights(i).flatten(),self._obtain_delays(i).flatten()))
+            connection_list.extend(zip(numpy.arange(0,self.source.pop.size,1),z+i,self.weight_scaler*self._obtain_weights(i).flatten(),self._obtain_delays(i).flatten()))
         
         self.method = self.sim.FromListConnector(connection_list)
         self.proj = self.sim.Projection(
@@ -173,7 +174,8 @@ class ModularSingleWeightProbabilisticConnector(ModularConnector):
             conections_probabilities = weights/numpy.sum(weights)*self.parameters.connection_probability*len(weights)
             connection_indices = numpy.flatnonzero(conections_probabilities > numpy.random.rand(len(conections_probabilities)))
             cl.extend([(k,i,self.weight_scaler*self.parameters.base_weight,delays[k]) for k in connection_indices])
-        
+        print self.name
+        print len(cl)/len(numpy.nonzero(self.target.pop._mask_local)[0])
         method = self.sim.FromListConnector(cl)
         self.proj = self.sim.Projection(
                                 self.source.pop,

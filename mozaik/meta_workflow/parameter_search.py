@@ -237,7 +237,7 @@ def _parameter_combinations_rec(combination,arrays):
 
 def parameter_search_run_script_distributed_slurm(simulation_name,master_results_dir,run_script,core_number):
     """
-    Scheadules the execution of *run_script*, one per each parameter combination in the parameter search run.
+    Scheadules the execution of *run_script*, one per each parameter combination of an existing parameter search run.
     Each execution receives as the first commandline argument the directory in which the results for the given
     parameter combination were stored.
     
