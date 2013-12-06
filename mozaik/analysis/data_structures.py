@@ -143,7 +143,7 @@ class AnalysisDataStructure1D(AnalysisDataStructure):
     Also the class can hold multiple instances of 1D data.
 
     It uses the quantities package to specify units.
-    If at all possible all data stored in numoy arrays should be quantities
+    If at all possible all data stored in numpy arrays should be quantities
     arrays with matching units!
 
     Parameters
@@ -155,9 +155,10 @@ class AnalysisDataStructure1D(AnalysisDataStructure):
     x_axis_name = SString(doc="the name of the x axis.")
     y_axis_name = SString(doc="the name of the y axis.")
 
-    def __init__(self,  y_axis_units, **params):
+    def __init__(self,x_axis_units,y_axis_units,**params):
         AnalysisDataStructure.__init__(self, **params)
         self.y_axis_units = y_axis_units
+        self.x_axis_units = x_axis_units
 
 
 class AnalogSignalList(AnalysisDataStructure1D):
@@ -176,7 +177,7 @@ class AnalogSignalList(AnalysisDataStructure1D):
     """
 
     def __init__(self, asl, ids, y_axis_units, **params):
-        AnalysisDataStructure1D.__init__(self,  y_axis_units,
+        AnalysisDataStructure1D.__init__(self,  asl[0].sampling_period.units,y_axis_units,
                                          identifier='AnalogSignalList',
                                          **params)
         self.asl = asl
@@ -249,7 +250,7 @@ class ConductanceSignalList(AnalysisDataStructure1D):
     def __init__(self, e_con, i_con, ids, **params):
         assert e_con[0].units == i_con[0].units
         AnalysisDataStructure1D.__init__(self,
-                                         e_con[0].sampling_rate.units,
+                                         e_con[0].sampling_period.units,
                                          e_con[0].units,
                                          x_axis_name='time',
                                          y_axis_name='conductance',

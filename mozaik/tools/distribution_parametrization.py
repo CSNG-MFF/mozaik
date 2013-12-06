@@ -1,7 +1,7 @@
 """
-This module contains code interfacing NeuroTools parameters, and pyNN distribution interface. 
+This module contains code interfacing parameters package, and pyNN distribution interface. 
 
-In future pyNN plans to make an comprehensive merge between NeuroTools parametrization system and pyNN,
+In future pyNN plans to make an comprehensive merge between the parameters parametrization system and pyNN,
 in which case this code should become obsolete and mozaik should fully switch to such new system.
 """
 

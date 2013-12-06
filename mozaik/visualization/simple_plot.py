@@ -167,7 +167,19 @@ class StandardStyle(SimplePlot):
                        
         title : str
               What is the title (None means no label will be plotted)
+                       
+        x_scale : str
+              What is the scaling of the x-axis ('linear' | 'log' | 'symlog'), default is 'linear'
               
+        x_scale_base : int
+              What is the x base of the logarithm. Active only if x_scale != to 'linear'
+               
+        y_scale : str
+              What is the scaling of the y-axis ('linear' | 'log' | 'symlog'), default is 'linear'
+               
+        y_scale_base : int
+              What is the x base of the logarithm. Active only if x_scale != to 'linear'
+             
         x_lim  : tuple
                What are the xlims (None means matplotlib will infer from data).
                
@@ -194,7 +206,7 @@ class StandardStyle(SimplePlot):
         """
 
         SimplePlot.__init__(self)
-        fontsize = 12
+        fontsize = 20
         self.parameters = {
             "fontsize": fontsize,
             "x_tick_style": 'Min',
@@ -207,6 +219,10 @@ class StandardStyle(SimplePlot):
             "left_border": True,
             "bottom_border": True,
             "title": None,
+            "x_scale": 'linear',
+            "x_scale_base": None,
+            "y_scale": 'linear',
+            "y_scale_base": None,
             "x_lim": None,
             "y_lim": None,
             "x_ticks": None,
@@ -229,12 +245,22 @@ class StandardStyle(SimplePlot):
 
     def post_plot(self):
         if self.title != None:
-            pylab.title(self.title, fontsize='x-small')
+            pylab.title(self.title, fontsize=self.fontsize)
 
         if self.x_lim:
             pylab.xlim(self.x_lim)
         if self.y_lim:
             pylab.ylim(self.y_lim)
+
+        if self.x_scale:
+            pylab.xscale(self.x_scale)
+            if self.x_scale_base:
+                pylab.xscale(self.x_scale, basex=self.x_scale_base)
+        if self.y_scale:
+            pylab.yscale(self.y_scale)
+            if self.y_scale_base:
+                pylab.yscale(self.y_scale, basey=self.y_scale_base)
+            
         if not self.x_axis:
             phf.disable_xticks(self.axis)
             phf.remove_x_tick_labels()
@@ -245,9 +271,9 @@ class StandardStyle(SimplePlot):
         self._ticks()
 
         if self.y_label and self.y_axis:
-            pylab.ylabel(self.y_label,multialignment='center')
+            pylab.ylabel(self.y_label,multialignment='center',fontsize=self.fontsize)
         if self.x_label and self.x_axis:
-            pylab.xlabel(self.x_label,multialignment='center')
+            pylab.xlabel(self.x_label,multialignment='center',fontsize=self.fontsize)
         if not self.top_right_border:
             phf.disable_top_right_axis(self.axis)
         if not self.left_border:

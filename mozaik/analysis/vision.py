@@ -152,8 +152,8 @@ class Analog_F0andF1(Analysis):
             dsv1 = queries.param_filter_query(self.datastore,st_name='FullfieldDriftingSinusoidalGrating')
             for sheet in dsv1.sheets():
                 dsv = queries.param_filter_query(dsv1, sheet_name=sheet)
-                segs, stids = colapse(dsv.get_segments(),dsv.get_stimuli(),parameter_list=['trial'],allow_non_identical_objects=True)
-                for segs,st in zip(segs, stids):
+                segs1, stids = colapse(dsv.get_segments(),dsv.get_stimuli(),parameter_list=['trial'],allow_non_identical_objects=True)
+                for segs,st in zip(segs1, stids):
                     first_analog_signal = segs[0].get_esyn(segs[0].get_stored_esyn_ids()[0])
                     duration = first_analog_signal.t_stop - first_analog_signal.t_start
                     frequency = MozaikParametrized.idd(st).temporal_frequency * MozaikParametrized.idd(st).params()['temporal_frequency'].units

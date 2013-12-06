@@ -113,14 +113,24 @@ class MeasureSizeTuning(VisualExperiment):
     
     num_trials : int
                Number of trials each each stimulus is shown.
+    
+    log_spacing : bool
+               Whether use logarithmic spaced sizes. By default False, meaning linear spacing 
     """
 
     def __init__(self, model, num_sizes, max_size, orientation,
                  spatial_frequency, temporal_frequency, grating_duration,
-                 contrasts, num_trials):
-        VisualExperiment.__init__(self, model)                                          
+                 contrasts, num_trials, log_spacing=False):
+        VisualExperiment.__init__(self, model)    
+        # linear or logarithmic spaced sizes
+        sizes = xrange(0, num_sizes)                     
+        if log_spacing:
+            # base2 log of max_size
+            base2max = numpy.sqrt(max_size)
+            sizes = numpy.logspace(0, base2max, num=num_sizes, base=2.0)  
+        # stimuli creation        
         for c in contrasts:
-            for i in xrange(0, num_sizes):
+            for s in sizes:
                 for k in xrange(0, num_trials):
                     self.stimuli.append(topo.DriftingSinusoidalGratingDisk(
                                     frame_duration=7,
@@ -134,7 +144,7 @@ class MeasureSizeTuning(VisualExperiment):
                                     density=self.density,
                                     trial=k,
                                     orientation=orientation,
-                                    radius=max_size/num_sizes*(i+1),
+                                    radius=s,
                                     spatial_frequency=spatial_frequency,
                                     temporal_frequency=temporal_frequency))
 
