@@ -196,28 +196,6 @@ class VisualSpace(InputSpace):
         """
         return max(obj.max_luminance for obj in self.content.values())
 
-    def export(self, region, pixel_size, output_dir="."):
-        """
-        Export a sequence of views of the visual space as image files.
-        Return a list of file paths.
-        """
-        if not os.path.exists(output_dir):
-            os.mkdir(output_dir)
-        self.reset()
-        assert self.get_duration() % self.update_interval == 0
-        num_frames = int(self.get_duration()/self.update_interval)
-        filename_fmt = os.path.join(output_dir, "frame%%0%dd.png" % len(str(num_frames)))
-        filenames = []
-        for i in range(num_frames):
-            scene = self.view(region, pixel_size) * 255 / self.get_max_luminance()
-            scene = scene.astype('uint8')
-            rgb_scene = numpy.array((scene, scene, scene)).transpose(1, 2, 0)
-            img = Image.fromarray(rgb_scene, 'RGB')
-            img.save(filename_fmt % i)
-            filenames.append(filename_fmt % i)
-            self.update()
-        return filenames
-
     def describe(self):
         return "visual space with background luminance %g cd/m2, updating every %g ms, containing %d objects" % \
             (self.background_luminance, self.update_interval, len(self.content))

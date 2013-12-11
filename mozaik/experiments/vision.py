@@ -7,6 +7,7 @@ import numpy
 
 logger = mozaik.getMozaikLogger()
 
+
 class VisualExperiment(Experiment):
     """
     Visual experiment. On top of Experiment class it defines a new variable background_luminance, 
@@ -26,6 +27,46 @@ class VisualExperiment(Experiment):
         #JAHACK: This is kind of a hack now. There needs to be generally defined interface of what is the resolution of a visual input layer
         # possibly in the future we could force the visual_space to have resolution, perhaps something like native_resolution parameter!?
         self.density  = 1/self.model.input_layer.parameters.receptive_field.spatial_resolution # in pixels per degree of visual space 
+
+
+class MeasureLuminanceSensitivity(VisualExperiment):
+    """
+    Measure luminance sensitivity using flat luminance screen.
+    
+    Parameters
+    ----------
+    model : Model
+          The model on which to execute the experiment.
+        
+    luminances : list(float) 
+              List of luminance (expressed as cd/m^2) at which to measure the response.
+    
+    step_duration : float
+                      The duration of single presentation of a luminance step.
+    
+    num_trials : int
+               Number of trials each each stimulus is shown.
+    """
+
+    def __init__(self, model, luminances, step_duration, num_trials):
+        VisualExperiment.__init__(self, model)    
+        # stimuli creation        
+        for l in luminances:
+            for k in xrange(0, num_trials):
+                self.stimuli.append( topo.Null(
+                    frame_duration=7,
+                    size_x=model.visual_field.size_x,
+                    size_y=model.visual_field.size_y,
+                    location_x=0.0,
+                    location_y=0.0,
+                    density=self.density,
+                    background_luminance=l,
+                    duration=step_duration,
+                    trial=k))
+
+    def do_analysis(self, data_store):
+        pass
+
 
 class MeasureOrientationTuningFullfield(VisualExperiment):
     """
@@ -147,6 +188,118 @@ class MeasureSizeTuning(VisualExperiment):
                                     radius=s,
                                     spatial_frequency=spatial_frequency,
                                     temporal_frequency=temporal_frequency))
+
+    def do_analysis(self, data_store):
+        pass
+
+
+class MeasureContrastSensitivity(VisualExperiment):
+    """
+    Measure contrast sensitivity using sinusoidal grating disk.
+    
+    Parameters
+    ----------
+    model : Model
+          The model on which to execute the experiment.
+        
+    orientation : float
+                The orientation (in radians) at which to measure the size tuning. (in future this will become automated)
+                
+    spatial_frequency : float
+                      Spatial frequency of the grating.
+                      
+    temporal_frequency : float
+                      Temporal frequency of the grating.
+
+    grating_duration : float
+                      The duration of single presentation of a grating.
+    
+    contrasts : list(float) 
+              List of contrasts (expressed as % : 0-100%) at which to measure the orientation tuning.
+    
+    num_trials : int
+               Number of trials each each stimulus is shown.
+    """
+
+    def __init__(self, model, size, orientation,
+                 spatial_frequency, temporal_frequency, grating_duration,
+                 contrasts, num_trials):
+        VisualExperiment.__init__(self, model)    
+        size = 20.0 #DG: very large!
+        # stimuli creation        
+        for c in contrasts:
+            for k in xrange(0, num_trials):
+                self.stimuli.append(topo.DriftingSinusoidalGratingDisk(
+                    frame_duration=7,
+                    size_x=model.visual_field.size_x,
+                    size_y=model.visual_field.size_y,
+                    location_x=0.0,
+                    location_y=0.0,
+                    background_luminance=self.background_luminance,
+                    contrast = c,
+                    duration=grating_duration,
+                    density=self.density,
+                    trial=k,
+                    orientation=orientation,
+                    radius=size,
+                    spatial_frequency=spatial_frequency,
+                    temporal_frequency=temporal_frequency))
+
+    def do_analysis(self, data_store):
+        pass
+
+
+class MeasureFrequencySensitivity(VisualExperiment):
+    """
+    Measure frequency sensitivity using sinusoidal grating disk.
+    
+    Parameters
+    ----------
+    model : Model
+          The model on which to execute the experiment.
+        
+    orientation : float
+                The orientation (in radians) at which to measure the size tuning. (in future this will become automated)
+                
+    spatial_frequency : float
+                      Spatial frequency of the grating.
+                      
+    contrast : float
+                      Temporal frequency of the grating.
+
+    grating_duration : float
+                      The duration of single presentation of a grating.
+    
+    spatial_frequencies : list(float) 
+              List of contrasts (expressed as % : 0-100%) at which to measure the orientation tuning.
+    
+    num_trials : int
+               Number of trials each each stimulus is shown.
+    """
+
+    def __init__(self, model, orientation,
+                 spatial_frequencies, temporal_frequency, grating_duration,
+                 contrast, num_trials):
+        VisualExperiment.__init__(self, model)    
+        size = 20.0 #DG: very large!
+        # stimuli creation        
+        for sf in spatial_frequencies:
+            for k in xrange(0, num_trials):
+                self.stimuli.append(topo.DriftingSinusoidalGratingDisk(
+                    frame_duration=7,
+                    size_x=model.visual_field.size_x,
+                    size_y=model.visual_field.size_y,
+                    location_x=0.0,
+                    location_y=0.0,
+                    background_luminance=self.background_luminance,
+                    contrast = contrast,
+                    duration=grating_duration,
+                    density=self.density,
+                    trial=k,
+                    orientation=orientation,
+                    radius=size,
+                    spatial_frequency=sf,
+                    temporal_frequency=temporal_frequency))
 
     def do_analysis(self, data_store):
         pass
