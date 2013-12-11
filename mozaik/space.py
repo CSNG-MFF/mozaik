@@ -52,7 +52,7 @@ class InputSpace(ParametrizedObject):
         """Add an inputObject to the input scene."""
         logger.debug("Adding %s with name '%s' to the input scene." % (input_object, name))
         self.content[name] = input_object
-        self.input = input_object  # really self.input should be a list, and we should append to it, but at the moment NeuroTools.datastore can't handle multiple inputs to a component
+        self.input = input_object  # really self.input should be a list, and we should append to it
 
     def reset(self):
         """

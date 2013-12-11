@@ -134,7 +134,7 @@ $ sudo pip install virtualenvwrapper
 To setup `virtualenvwrapper <http://virtualenvwrapper.readthedocs.org/en/latest//>`_ add the following lines at the top of ~/.bash_profile (create it if you don't have one)::
 
     # virtualenvwrapper
-    export WORKON_HOME=~/.virtualenvs
+    export WORKON_HOME=~/.virt_env
     source /usr/local/bin/virtualenvwrapper.sh
     export PIP_VIRTUALENV_BASE=$WORKON_HOME
     export PIP_RESPECT_VIRTUALENV=true

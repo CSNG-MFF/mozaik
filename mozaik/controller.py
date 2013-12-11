@@ -1,25 +1,66 @@
 """
 This is the nexus of workflow execution controll of *mozaik*.
 """
-
 from mozaik.storage.datastore import Hdf5DataStore, PickledDataStore
 from mozaik.tools.distribution_parametrization import MozaikExtendedParameterSet, load_parameters
+from mozaik.tools.misc import result_directory_name
 import sys
 import os
 import mozaik
 import time
 from datetime import datetime
 import logging
-from NeuroTools import init_logging
-from NeuroTools import visual_logging
-
-mozaik.setup_mpi()
 
 logger = mozaik.getMozaikLogger()
 
 class Global:
     """global variable container currently only containing the root_directory variable that points to the root directory of the model specification"""
     root_directory = './'
+
+class FancyFormatter(logging.Formatter):
+    """
+    A log formatter that colours and indents the log message depending on the level.
+    """
+    
+    DEFAULT_INDENTS = {
+        'CRITICAL': "",
+        'ERROR': "",
+        'WARNING': "",
+        'HEADER': "",
+        'INFO': "  ",
+        'DEBUG': "    ",
+    }
+    
+    def __init__(self, fmt=None, datefmt=None, mpi_rank=None):
+        logging.Formatter.__init__(self, fmt, datefmt)
+        self._indents = FancyFormatter.DEFAULT_INDENTS
+        if mpi_rank is None:
+            self.prefix = ""
+        else:
+            self.prefix = "%-3d" % mpi_rank
+    
+    def format(self, record):
+        s = logging.Formatter.format(self, record)
+        if record.levelname == "HEADER":
+            s = "=== %s ===" % s
+        return self.prefix + self._indents[record.levelname] + s
+
+
+def init_logging(filename, file_level=logging.INFO, console_level=logging.WARNING, mpi_rank=None):
+    if mpi_rank is None:
+        mpi_fmt = ""
+    else:
+        mpi_fmt = "%3d " % mpi_rank
+    logging.basicConfig(level=file_level,
+                        format='%%(asctime)s %s%%(name)-10s %%(levelname)-6s %%(message)s [%%(pathname)s:%%(lineno)d]' % mpi_fmt,
+                        filename=filename,
+                        filemode='w')
+    console = logging.StreamHandler()
+    console.setLevel(console_level)
+    console.setFormatter(FancyFormatter('%(message)s', mpi_rank=mpi_rank))
+    logging.getLogger('').addHandler(console)
+    return console
+
 
 
 def setup_logging():
@@ -28,13 +69,10 @@ def setup_logging():
     """
     if mozaik.mpi_comm:
         init_logging(Global.root_directory + "log", file_level=logging.INFO,
-                     console_level=logging.INFO, mpi_rank=mozaik.mpi_comm.rank)  # NeuroTools version
+                     console_level=logging.INFO, mpi_rank=mozaik.mpi_comm.rank)  
     else:
         init_logging(Global.root_directory + "log", file_level=logging.INFO,
-	             console_level=logging.INFO)  # NeuroTools version
-    if (not mozaik.mpi_comm) or mozaik.mpi_comm.rank==mozaik.MPI_ROOT:
-	    visual_logging.basicConfig(Global.root_directory + "visual_log.zip",
-        	                       level=logging.INFO)
+	             console_level=logging.INFO)  
 
 
 def run_workflow(simulation_name, model_class, create_experiments):
@@ -66,7 +104,8 @@ def run_workflow(simulation_name, model_class, create_experiments):
     
     >>> python userscript simulator_name num_threads parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n simulation_run_name
     """
-    # Read parameters
+    mozaik.setup_mpi()
+        # Read parameters
     exec "import pyNN.nest as sim" in  globals(), locals()
     
     if len(sys.argv) > 4 and len(sys.argv)%2 == 1:
@@ -77,12 +116,11 @@ def run_workflow(simulation_name, model_class, create_experiments):
         modified_parameters = { sys.argv[i*2+4] : eval(sys.argv[i*2+5])  for i in xrange(0,(len(sys.argv)-5)/2)}
     else:
         raise ValueError("Usage: runscript simulator_name num_threads parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n simulation_run_name")
-    
+        p
     parameters = load_parameters(parameters_url,modified_parameters)
     
     # Create results directory
     timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
-    
     
     ddir  = result_directory_name(simulation_run_name,simulation_name,modified_parameters)
     

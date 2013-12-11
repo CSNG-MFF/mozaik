@@ -46,7 +46,7 @@ class DistanceDependentProbabilisticArborization(Connector):
         
         method = self.sim.DistanceDependentProbabilityConnector(self.arborization_expression,
                                                                 allow_self_connections=False, 
-                                                                weights=self.parameters.weights, 
+                                                                weights=self.parameters.weights*self.weight_scaler, 
                                                                 delays=self.delay_expression, 
                                                                 space=space.Space(axes='xy'), 
                                                                 safe=True, 
@@ -99,12 +99,11 @@ class UniformProbabilisticArborization(Connector):
                                     safe=True,rng=mozaik.pynn_rng)
 
                                     
-                                    
         self.proj = self.sim.Projection(
                                     self.source.pop,
                                     self.target.pop,
                                     method,
-                                    synapse_type=self.init_synaptic_mechanisms(weights=self.parameters.weights,delays=self.parameters.delay),
+                                    synapse_type=self.init_synaptic_mechanisms(weight=self.parameters.weights*self.weight_scaler,delay=self.parameters.delay),
                                     label=self.name,
                                     space=space.Space(axes='xy'),
                                     receptor_type=self.parameters.target_synapses)
@@ -130,7 +129,7 @@ class FixedKConnector(Connector):
                                     self.source.pop,
                                     self.target.pop,
                                     method,
-                                    synapse_type=self.init_synaptic_mechanisms(weights=self.parameters.weights,delays=self.parameters.delay),
+                                    synapse_type=self.init_synaptic_mechanisms(weight=self.parameters.weights*self.weight_scaler,delay=self.parameters.delay),
                                     label=self.name,
                                     space=space.Space(axes='xy'),
                                     receptor_type=self.parameters.target_synapses)

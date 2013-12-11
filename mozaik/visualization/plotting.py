@@ -152,6 +152,7 @@ class Plotting(ParametrizedObject):
         gs = gridspec.GridSpec(1, 1)
         gs.update(left=0.07, right=0.97, top=0.95, bottom=0.05)
         self._handle_parameters_and_execute_plots({}, params,gs[0, 0])
+        gs.tight_layout(self.fig)
         if self.plot_file_name:
             pylab.savefig(Global.root_directory+self.plot_file_name)
         t2 = time.time()
@@ -207,6 +208,9 @@ class PlotTuningCurve(Plotting):
             self.st.append(st)
             # transform the pnvs into a dictionary of tuning curves along the parameter_name
             # also make sure the values are ordered according to ids in the first pnv
+            print self.parameters.neurons
+            for pnv in self.pnvs[-1]:
+                print pnv.ids
             self.tc_dict.append(colapse_to_dictionary([z.get_value_by_id(self.parameters.neurons) for z in self.pnvs[-1]],st,self.parameters.parameter_name))
             
 
@@ -522,9 +526,6 @@ class ConductanceSignalListPlot(Plotting):
     
     Other parameters
     ----------------
-    
-    sheet_name : str
-               From which layer to plot.
                
     normalize_individually : bool
                            Whether to normalize each trace individually by dividing it with its maximum.
@@ -532,29 +533,30 @@ class ConductanceSignalListPlot(Plotting):
     """
     
     required_parameters = ParameterSet({
-        'sheet_name': str,  # the name of the sheet for which to plot
         'normalize_individually': bool  # each trace will be normalized individually by dividing it with its maximum
     })
 
-    def __init__(self, datastore, parameters, plot_file_name=None,
-                 fig_param=None):
-        Plotting.__init__(self, datastore, parameters, plot_file_name, fig_param)
-        self.conductance_signal_list = self.datastore.get_analysis_result(
-                                            identifier='ConductanceSignalList',
-                                            sheet_name=parameters.sheet_name)
-        if len(self.conductance_signal_list) > 1:
-            logger.error('Warning currently only the first ConductanceSignalList will be plotted')
-        self.conductance_signal_list = self.conductance_signal_list[0]
-        self.e_con = self.conductance_signal_list.e_con
-        self.i_con = self.conductance_signal_list.i_con
 
     def subplot(self, subplotspec):
+        dsv = queries.param_filter_query(self.datastore,identifier='ConductanceSignalList')
+        return PerStimulusADSPlot(dsv, function=self._ploter, title_style="Clever").make_line_plot(subplotspec)
+
+
+    def _ploter(self, dsv,subplotspec):
+        conductance_signal_list = dsv.get_analysis_result()
+        assert len(conductance_signal_list) == 1, "Currently only one ConductanceSignalList per stimulus can be plotted"
+        assert len(conductance_signal_list) != 0, "ERROR, empty datastore"
+        conductance_signal_list = conductance_signal_list[0]
+        e_con = conductance_signal_list.e_con
+        i_con = conductance_signal_list.i_con
+       
         exc =[]
         inh =[]
-        for e, i in zip(self.e_con, self.i_con):
+        for e, i in zip(e_con, i_con):
             exc.append(e)
             inh.append(i)
-        return {"ConductancePlot" : (ConductancesPlot(exc, inh),subplotspec,{})}
+            
+        return [("ConductancePlot",ConductancesPlot(exc, inh),subplotspec,{})]
 
 
 class RetinalInputMovie(Plotting):

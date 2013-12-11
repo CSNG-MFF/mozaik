@@ -12,9 +12,6 @@ from mozaik.space import VisualSpace, VisualRegion
 from mozaik.core import SensoryInputComponent
 from mozaik.sheets.vision import RetinalUniformSheet
 from mozaik.tools.mozaik_parametrized import MozaikParametrized
-
-#from NeuroTools import visual_logging
-from NeuroTools.plotting import progress_bar
 from parameters import ParameterSet
 
 logger = mozaik.getMozaikLogger()
@@ -253,7 +250,6 @@ class CellWithReceptiveField(object):
         Multiply the response (units of luminance (cd/m²) if we assume the
         kernel values are dimensionless) by the 'gain', to produce a current in
         nA. Returns a dictionary containing 'times' and 'amplitudes'.
-        Might be better to use a NeuroTools AnalogSignal.
         """
 
         response = self.gain * self.response[:-self.receptive_field.kernel_duration]  # remove the extra padding at the end
@@ -521,7 +517,6 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                                    + self.parameters.noise.stdev
                                        * self.ncs_rng[rf_type][i].randn(len(t)))
                     ncs.set_parameters(times=t, amplitudes=amplitudes)
-
         # for debugging/testing, doesn't work with MPI !!!!!!!!!!!!
         #input_current_array = numpy.zeros((self.shape[1], self.shape[0], len(visual_space.time_points(duration))))
         #update_factor = int(visual_space.update_interval/self.parameters.receptive_field.temporal_resolution)
@@ -627,18 +622,9 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
             im = visual_space.view(visual_region,
                                    pixel_size=self.rf["X_ON"].spatial_resolution)
             retinal_input.append(im)
-            progress_bar(t/duration)
 
         input_currents = {}
         for rf_type in self.rf_types:
             input_currents[rf_type] = [cell.response_current()
                                        for cell in input_cells[rf_type]]
-            #cell0_currents = input_currents[rf_type][0]
-            #logger.debug("Input current values for %s cell #0: %s" % (rf_type, cell0_currents['amplitudes']))
-            #visual_logging.debug(cell0_currents['amplitudes'], cell0_currents['times'],
-            #                     "Time (ms)", "Current (nA)", "Input current values for %s cell #0" % rf_type)
-
-            #for i in xrange(0, 1):
-            #    a = [cell.response_current()['amplitudes'][i]
-            #         for cell in input_cells[rf_type]]
         return (input_currents, retinal_input)

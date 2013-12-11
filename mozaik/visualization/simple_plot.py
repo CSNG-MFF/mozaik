@@ -206,7 +206,7 @@ class StandardStyle(SimplePlot):
         """
 
         SimplePlot.__init__(self)
-        fontsize = 12
+        fontsize = 20
         self.parameters = {
             "fontsize": fontsize,
             "x_tick_style": 'Min',
@@ -245,7 +245,7 @@ class StandardStyle(SimplePlot):
 
     def post_plot(self):
         if self.title != None:
-            pylab.title(self.title, fontsize='x-small')
+            pylab.title(self.title, fontsize=self.fontsize)
 
         if self.x_lim:
             pylab.xlim(self.x_lim)
@@ -271,9 +271,9 @@ class StandardStyle(SimplePlot):
         self._ticks()
 
         if self.y_label and self.y_axis:
-            pylab.ylabel(self.y_label,multialignment='center')
+            pylab.ylabel(self.y_label,multialignment='center',fontsize=self.fontsize)
         if self.x_label and self.x_axis:
-            pylab.xlabel(self.x_label,multialignment='center')
+            pylab.xlabel(self.x_label,multialignment='center',fontsize=self.fontsize)
         if not self.top_right_border:
             phf.disable_top_right_axis(self.axis)
         if not self.left_border:

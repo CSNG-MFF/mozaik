@@ -50,15 +50,14 @@ class Connector(BaseComponent):
            self.weight_scaler = 1000.0
 
     
-    def init_synaptic_mechanisms(self,weights=None,delays=None):
+    def init_synaptic_mechanisms(self,weight=None,delay=None):
       if not self.parameters.short_term_plasticity != None:
-        sm = self.sim.StaticSynapse(weight=weights,delay=delays)                   
+        sm = self.sim.StaticSynapse(weight=weight,delay=delay)                   
       else:
-        #self.short_term_plasticity = self.sim.TsodyksMarkramSynapse(weight=weights,delay=delays,**self.parameters.short_term_plasticity)
-        if weights != None:
-            sm = self.sim.native_synapse_type("tsodyks_synapse")(weight=weights*1000.0,delay=delays,**self.parameters.short_term_plasticity)                   
+        if weight != None:
+            sm = self.sim.native_synapse_type("tsodyks_synapse")(weight=weight*1000.0,delay=delays,**self.parameters.short_term_plasticity)                   
         else:
-            sm = self.sim.native_synapse_type("tsodyks_synapse")(weight=weights,delay=delays,**self.parameters.short_term_plasticity)                   
+            sm = self.sim.native_synapse_type("tsodyks_synapse")(**self.parameters.short_term_plasticity)                   
             
             
       return sm

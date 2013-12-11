@@ -247,7 +247,13 @@ class DataStoreView(ParametrizedObject):
         new_dsv.sensory_stimulus = self.sensory_stimulus_copy()
         new_dsv.sensory_stimulus.update(other.sensory_stimulus)
         return new_dsv
-
+    
+    def remove_ads_from_datastore(self):
+        """
+        This operation removes all ADS that are present in this DataStoreView from the master DataStore.
+        """
+        for ads in self.analysis_results:
+            self.full_datastore.analysis_results.remove(ads)
     
 class DataStore(DataStoreView):
     """
@@ -326,35 +332,51 @@ class DataStore(DataStoreView):
         
         raise NotImplementedError
 
-    def add_recording(self, segment, stimulus):
-        """
-        The DataStore interface function to be implemented by a given backend. 
-        It should add a recording into the datastore.
-        """
-        raise NotImplementedError
 
-    def add_analysis_result(self, result):
+    def add_recording(self, segments, stimulus):
         """
-        The DataStore interface function to be implemented by a given backend. 
-        It should add a ADS to the datastore.
+        Add a recording into the datastore.
         """
-        raise NotImplementedError
+
+        # we get recordings as seg
+        for s in segments:
+            s.annotations['stimulus'] = str(stimulus)
+            self.block.segments.append(MozaikSegment(s))
+        self.stimulus_dict[str(stimulus)] = True
 
     def add_stimulus(self, data, stimulus):
         """
         The DataStore interface function that adds a stimulus into the datastore.
         """
         if self.parameters.store_stimuli:
-           print "ZZZZ"
            _add_stimulus(data, stimulus)
 
     def _add_stimulus(self, data, stimulus):
         """
-        The DataStore interface function to be implemented by a given backend. 
-        It should add a stimulus into the datastore.
+        This function adds raw sensory stimulus data that have been presented to the model into datastore. 
         """
-        raise NotImplementedError
+        self.sensory_stimulus[str(stimulus)] = data
 
+    def add_analysis_result(self, result):
+        """
+        Add analysis results to data store. If there already exists ADS in the data store with the same parametrization this operation will fail.
+        """
+        flag = True
+        for i,ads in enumerate(self.analysis_results):
+            if result.equalParams(ads):
+                flag = False
+                break
+        
+        if flag:
+            self.analysis_results.append(result)
+            return
+        else:
+            if self.replace:
+               logger.info("Warning: ADS with the same parametrization already added in the datastore.: %s" % (str(result))) 
+               self.analysis_results[i] = result
+               return
+            logger.error("Analysis Data Structure with the same parametrization already added in the datastore. Currently uniqueness is required. The ADS was not added. User should modify analysis specification to avoid this!: %s" % (str(result)))
+            raise ValueError("Analysis Data Structure with the same parametrization already added in the datastore. Currently uniqueness is required. The ADS was not added. User should modify analysis specification to avoid this!: %s" % (str(result)))
 
 class Hdf5DataStore(DataStore):
     """
@@ -406,9 +428,6 @@ class Hdf5DataStore(DataStore):
             self.block.segments.append(MozaikSegment(s))
         self.stimulus_dict[str(stimulus)] = True
 
-    def _add_stimulus(self, data, stimulus):
-        self.sensory_stimulus[str(stimulus)] = data
-
     def add_analysis_result(self, result):
         flag = True
         for i,ads in enumerate(self.analysis_results):
@@ -426,6 +445,7 @@ class Hdf5DataStore(DataStore):
                return
             logger.error("Analysis Data Structure with the same parametrization already added in the datastore. Currently uniqueness is required. The ADS was not added. User should modify analysis specification to avoid this!: %s" % (str(result)))
             raise ValueError("Analysis Data Structure with the same parametrization already added in the datastore. Currently uniqueness is required. The ADS was not added. User should modify analysis specification to avoid this!: %s" % (str(result)))
+
 
 
 class PickledDataStore(Hdf5DataStore):

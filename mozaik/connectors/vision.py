@@ -154,14 +154,14 @@ class GaborArborization(ModularConnectorFunction):
                                        target_ar)
         else:
             w = gabor(self.source.pop.positions[0],self.source.pop.positions[1],
-                                       0,
-                                       0,
+                                       0.0,
+                                       0.0,
                                        target_or + pi/2,
                                        target_freq,
                                        target_phase,
                                        target_size,
                                        target_ar)
-
+                                       
         if self.parameters.ON:
            return numpy.maximum(0,w) 
         else:

@@ -31,7 +31,7 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
            A dictionary with value names as keys, and tuples of (min,max) ranges as values indicating what range of values should be displayed.
                
     """
-    (parameters,datastores) = load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir)
+    (parameters,datastores,n) = load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir)
     
     sorted_parameter_indexes = zip(*sorted(enumerate(parameters), key=lambda x: x[1]))[0]
     
@@ -59,9 +59,10 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
                    y.append(float(param_filter_query(dsv,identifier='SingleValue',value_name=value_name).get_analysis_result()[0].value))
                pylab.plot(x,y)
                pylab.plot(x,y,marker='o')
+               pylab.xlabel(parameters[sorted_parameter_indexes[0]]) 
+               pylab.ylabel(value_name) 
                
         elif len(parameters) == 2:
-               print "ZZZ"
                x = []
                y = []
                z = []
@@ -124,7 +125,7 @@ def fixed_point_visualization(simulation_name,rate_name,master_results_dir,query
     file_name : str
               The file name into which to save the resulting figure. If None figure is just displayed.  
     """
-    (parameters,datastores) = load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir)
+    (parameters,datastores,n) = load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir)
     
     assert len(parameters) == 3
     
@@ -171,7 +172,7 @@ def multi_curve_visualzition(simulation_name,master_results_dir,x_axis_parameter
               The file name into which to save the resulting figure. If None figure is just displayed.  
                
     """
-    (parameters,datastores) = load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir)
+    (parameters,datastores,n) = load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir)
     
     sorted_parameter_indexes = zip(*sorted(enumerate(parameters), key=lambda x: x[1]))[0]
     print sorted_parameter_indexes
