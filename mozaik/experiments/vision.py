@@ -45,7 +45,7 @@ class MeasureLuminanceSensitivity(VisualExperiment):
                       The duration of single presentation of a luminance step.
     
     num_trials : int
-               Number of trials each each stimulus is shown.
+               Number of trials each stimulus is shown.
     """
 
     def __init__(self, model, luminances, step_duration, num_trials):
@@ -221,11 +221,16 @@ class MeasureContrastSensitivity(VisualExperiment):
                Number of trials each each stimulus is shown.
     """
 
-    def __init__(self, model, size, orientation,
-                 spatial_frequency, temporal_frequency, grating_duration,
-                 contrasts, num_trials):
+    def __init__(self, 
+                 model, 
+                 size,
+                 orientation,
+                 spatial_frequency, 
+                 temporal_frequency, 
+                 grating_duration,
+                 contrasts, 
+                 num_trials):
         VisualExperiment.__init__(self, model)    
-        size = 20.0 #DG: very large!
         # stimuli creation        
         for c in contrasts:
             for k in xrange(0, num_trials):

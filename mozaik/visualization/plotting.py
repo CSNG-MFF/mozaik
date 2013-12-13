@@ -196,7 +196,8 @@ class PlotTuningCurve(Plotting):
         self.st = []
         self.tc_dict = []
         self.pnvs = []
-        assert queries.ads_with_equal_stimulus_type(self.datastore)
+        print datastore
+        assert queries.ads_with_equal_stimulus_type(datastore)
         assert len(self.parameters.neurons) > 0 , "ERROR, empty list of neurons specified"
         dsvs = queries.partition_analysis_results_by_parameters_query(self.datastore,parameter_list=['value_name'],excpt=True)
         for dsv in dsvs:

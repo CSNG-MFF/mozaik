@@ -734,6 +734,7 @@ class Analog_MeanSTDAndFanoFactor(Analysis):
                     isyn_ids = segs[0].get_stored_isyn_ids()
                     
                     vm_mean = numpy.mean(numpy.array([numpy.array([numpy.mean(seg.get_vm(idd)) for idd in vm_ids]) for seg in segs]),axis=0)
+                    print vm_mean
                     esyn_mean = numpy.mean(numpy.array([numpy.array([numpy.mean(seg.get_esyn(idd)) for idd in esyn_ids]) for seg in segs]),axis=0)
                     isyn_mean = numpy.mean(numpy.array([numpy.array([numpy.mean(seg.get_isyn(idd)) for idd in isyn_ids]) for seg in segs]),axis=0)
                     
