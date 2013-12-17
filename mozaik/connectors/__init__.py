@@ -58,8 +58,6 @@ class Connector(BaseComponent):
             sm = self.sim.native_synapse_type("tsodyks_synapse")(weight=weight,delay=delay,**self.parameters.short_term_plasticity)                   
         else:
             sm = self.sim.native_synapse_type("tsodyks_synapse")(**self.parameters.short_term_plasticity)                   
-            
-            
       return sm
         
     def connect(self):

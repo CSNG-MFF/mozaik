@@ -8,4 +8,8 @@
     'input_space' : None,
     'input_space_type' : 'None',
     'store_stimuli' : False,
+    'min_delay' : 0.2,
+    'max_delay' : 0.2,
+    'time_step' : 0.1
+
 }

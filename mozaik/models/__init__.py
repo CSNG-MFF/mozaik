@@ -64,7 +64,7 @@ class Model(BaseComponent):
         'input_space_type': str,  # defining the type of input space, visual/auditory/... it is the class path to the class representing it
         'min_delay' : float,
         'max_delay' : float,
-        'timestep' : float
+        'time_step' : float
     })
 
     def __init__(self, sim, num_threads, parameters):
