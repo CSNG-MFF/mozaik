@@ -32,10 +32,13 @@ def psth(spike_list, bin_length):
     ----
     The spiketrains are assumed to start and stop at the same time!
     """
-    t_start = spike_list[0].t_start.rescale(qt.ms)
-    t_stop = spike_list[0].t_stop.rescale(qt.ms)
-    num_bins = float((t_stop-t_start)/bin_length)
+    t_start = round(spike_list[0].t_start.rescale(qt.ms),5)
+    t_stop = round(spike_list[0].t_stop.rescale(qt.ms),5)
+    num_bins = round((t_stop-t_start)/bin_length)
     r = (float(t_start), float(t_stop))
+
+    for sp in spike_list:
+        assert len(numpy.histogram(sp, bins=num_bins, range=r)[0]) == num_bins
     h = [AnalogSignal(numpy.histogram(sp, bins=num_bins, range=r)[0] / (bin_length/1000),t_start=t_start,sampling_period=bin_length*qt.ms,units=munits.spike_per_sec) for sp in spike_list]
     return  h
 

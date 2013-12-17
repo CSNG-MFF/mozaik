@@ -43,6 +43,15 @@ class Model(BaseComponent):
                 
     input_space_type : str
                      The python class of the InputSpace object to use.
+                     
+    min_delay : float (ms)
+                Minimum delay of connections allowed in the simulation. 
+
+    max_delay : float (ms)
+                Maximum delay of connections allowed in the simulation. 
+    
+    time_step : float (ms)
+                Length of the single step of the simulation. 
     """
 
     required_parameters = ParameterSet({
@@ -53,13 +62,16 @@ class Model(BaseComponent):
         'null_stimulus_period': float,
         'input_space': ParameterSet, # can be none - in which case input_space_type is ignored
         'input_space_type': str,  # defining the type of input space, visual/auditory/... it is the class path to the class representing it
+        'min_delay' : float,
+        'max_delay' : float,
+        'timestep' : float
     })
 
     def __init__(self, sim, num_threads, parameters):
         BaseComponent.__init__(self, self, parameters)
         self.first_time = True
         self.sim = sim
-        self.node = sim.setup(timestep=0.1, min_delay=0.1, max_delay=100.0, threads=num_threads)  # should have some parameters here
+        self.node = sim.setup(timestep=self.parameters.time_step, min_delay=self.parameters.min_delay, max_delay=self.parameters.max_delay, threads=num_threads)  # should have some parameters here
         self.sheets = {}
         self.connectors = {}
 

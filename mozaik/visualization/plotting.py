@@ -208,9 +208,6 @@ class PlotTuningCurve(Plotting):
             self.st.append(st)
             # transform the pnvs into a dictionary of tuning curves along the parameter_name
             # also make sure the values are ordered according to ids in the first pnv
-            print self.parameters.neurons
-            for pnv in self.pnvs[-1]:
-                print pnv.ids
             self.tc_dict.append(colapse_to_dictionary([z.get_value_by_id(self.parameters.neurons) for z in self.pnvs[-1]],st,self.parameters.parameter_name))
             
 
@@ -495,8 +492,8 @@ class AnalogSignalListPlot(Plotting):
 
     def _ploter(self, dsv,subplotspec):
         self.analog_signal_list = dsv.get_analysis_result()
-        assert len(self.analog_signal_list) == 1, "Currently only one AnalogSignalList per stimulus can be plotted"
         assert len(self.analog_signal_list) != 0, "ERROR, empty datastore"
+        assert len(self.analog_signal_list) == 1, "Currently only one AnalogSignalList per stimulus can be plotted"
         self.analog_signal_list = self.analog_signal_list[0]
         xs = []
         ys = []
@@ -580,7 +577,6 @@ class RetinalInputMovie(Plotting):
         self.length = None
         # currently there is no way to check whether the sensory input is retinal
         self.retinal_input = datastore.get_sensory_stimulus_stimulus()
-        print len(self.retinal_input)
         self.st = datastore.sensory_stimulus.keys()
         
     def subplot(self, subplotspec):
@@ -896,11 +892,7 @@ class ConnectivityPlot(Plotting):
             ix = numpy.flatnonzero(numpy.array(self.connections[idx].weights)[:,1]==index)
         else:
             index = self.datastore.get_sheet_indexes(self.connections[idx].target_name,self.parameters.neuron)
-            print self.connections[idx].weights[:500]
-            print len(self.connections[idx].weights)
-            print index
             ix = numpy.flatnonzero(numpy.array(self.connections[idx].weights)[:,0]==index)
-            print ix
             
             
         sx = self.connecting_neurons_positions[idx][0][ix]
