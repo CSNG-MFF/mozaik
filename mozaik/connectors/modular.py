@@ -143,14 +143,17 @@ class ModularSamplingProbabilisticConnector(ModularConnector):
             co = Counter(sample_from_bin_distribution(weights, self.parameters.num_samples))
             cl.extend([(k,i,self.weight_scaler*self.parameters.base_weight*co[k]/self.parameters.num_samples,delays[k]) for k in co.keys()])
         method = self.sim.FromListConnector(cl)
-        self.proj = self.sim.Projection(
+        if len(cl) > 0:
+            self.proj = self.sim.Projection(
                                 self.source.pop,
                                 self.target.pop,
                                 method,
                                 synapse_type=self.init_synaptic_mechanisms(),
                                 label=self.name,
                                 receptor_type=self.parameters.target_synapses)
-    
+        else:
+            logger.warning("%s(%s): empty projection - pyNN projection not created." % (self.name,self.__class__.__name__))
+
 
 class ModularSingleWeightProbabilisticConnector(ModularConnector):
     """
@@ -174,17 +177,19 @@ class ModularSingleWeightProbabilisticConnector(ModularConnector):
             conections_probabilities = weights/numpy.sum(weights)*self.parameters.connection_probability*len(weights)
             connection_indices = numpy.flatnonzero(conections_probabilities > numpy.random.rand(len(conections_probabilities)))
             cl.extend([(k,i,self.weight_scaler*self.parameters.base_weight,delays[k]) for k in connection_indices])
-      
+
         method = self.sim.FromListConnector(cl)
-        self.proj = self.sim.Projection(
-                                self.source.pop,
-                                self.target.pop,
-                                method,
-                                synapse_type=self.init_synaptic_mechanisms(),
-                                label=self.name,
-                                receptor_type=self.parameters.target_synapses)
-
-
+        if len(cl) > 0:
+            self.proj = self.sim.Projection(
+                                    self.source.pop,
+                                    self.target.pop,
+                                    method,
+                                    synapse_type=self.init_synaptic_mechanisms(),
+                                    label=self.name,
+                                    receptor_type=self.parameters.target_synapses)
+        else:
+            logger.warning("%s(%s): empty projection - pyNN projection not created." % (self.name,self.__class__.__name__))
+        
 
 
 

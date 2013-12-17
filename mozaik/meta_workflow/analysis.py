@@ -39,7 +39,7 @@ def load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir
         print i
         rdn = result_directory_name('ParameterSearch',simulation_name,combination)
         try:
-            data_store = PickledDataStore(load=True,parameters=ParameterSet({'root_directory': master_results_dir + '/' + rdn}),replace=False)
+            data_store = PickledDataStore(load=True,parameters=ParameterSet({'root_directory': master_results_dir + '/' + rdn,'store_stimuli' : False}),replace=False)
             datastore.append(([combination[k] for k in parameters],data_store))
         except IOError:
             number_of_unloadable_datastores = number_of_unloadable_datastores + 1

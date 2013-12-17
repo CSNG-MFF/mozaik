@@ -759,7 +759,9 @@ class PerNeuronValueScatterPlot(Plotting):
         pair = self.pairs[idx]
         # Let's figure out the varying parameters
         p1 = varying_parameters(pair)
-        if MozaikParametrized.idd(pair[0].stimulus_id).name != MozaikParametrized.idd(pair[1].stimulus_id).name:
+        if pair[0].stimulus_id == None or pair[1].stimulus_id == None:
+            p2 = []
+        elif MozaikParametrized.idd(pair[0].stimulus_id).name != MozaikParametrized.idd(pair[1].stimulus_id).name:
             p2 = ['name']
         else:
             p2 = varying_parameters([MozaikParametrized.idd(p.stimulus_id) for p in pair])
@@ -783,7 +785,8 @@ class PerNeuronValueScatterPlot(Plotting):
         if pair[0].value_units != pair[1].value_units or pair[1].value_units == pq.dimensionless:
            params["equal_aspect_ratio"] = False
         
-        return [("ScatterPlot",ScatterPlot(pair[0].values, pair[1].get_value_by_id(pair[0].ids)),gs,params)]
+        ids = list(set(pair[0].ids) & set(pair[1].ids))
+        return [("ScatterPlot",ScatterPlot(pair[0].get_value_by_id(ids), pair[1].get_value_by_id(ids)),gs,params)]
         
 
 class ConnectivityPlot(Plotting):
