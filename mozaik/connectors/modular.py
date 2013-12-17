@@ -174,11 +174,7 @@ class ModularSingleWeightProbabilisticConnector(ModularConnector):
             conections_probabilities = weights/numpy.sum(weights)*self.parameters.connection_probability*len(weights)
             connection_indices = numpy.flatnonzero(conections_probabilities > numpy.random.rand(len(conections_probabilities)))
             cl.extend([(k,i,self.weight_scaler*self.parameters.base_weight,delays[k]) for k in connection_indices])
-        print self.name
-        print self.parameters.connection_probability
-        print self.source.pop.size
-        print self.parameters.connection_probability * self.source.pop.size
-        print len(cl)/len(numpy.nonzero(self.target.pop._mask_local)[0])
+      
         method = self.sim.FromListConnector(cl)
         self.proj = self.sim.Projection(
                                 self.source.pop,

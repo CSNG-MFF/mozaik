@@ -55,7 +55,7 @@ class Connector(BaseComponent):
         sm = self.sim.StaticSynapse(weight=weight,delay=delay)                   
       else:
         if weight != None:
-            sm = self.sim.native_synapse_type("tsodyks_synapse")(weight=weight*1000.0,delay=delays,**self.parameters.short_term_plasticity)                   
+            sm = self.sim.native_synapse_type("tsodyks_synapse")(weight=weight,delay=delay,**self.parameters.short_term_plasticity)                   
         else:
             sm = self.sim.native_synapse_type("tsodyks_synapse")(**self.parameters.short_term_plasticity)                   
             
