@@ -22,6 +22,7 @@ class TopographicaBasedVisualStimulus(VisualStimulus):
         VisualStimulus.__init__(self,**params)
         self.transparent = False # We will not handle transparency anywhere here for now so let's make it fast
 
+
 class FullfieldDriftingSinusoidalGrating(TopographicaBasedVisualStimulus):
     """
     A full field sinusoidal grating stimulus. 
@@ -51,8 +52,8 @@ class FullfieldDriftingSinusoidalGrating(TopographicaBasedVisualStimulus):
                                       ydensity=self.density)(),
                    [self.current_phase])
             self.current_phase += 2*pi * (self.frame_duration/1000.0) * self.temporal_frequency
-
-
+            
+                            
 class Null(TopographicaBasedVisualStimulus):
     """
     Blank stimulus.
@@ -63,7 +64,7 @@ class Null(TopographicaBasedVisualStimulus):
                               bounds=BoundingBox(radius=self.size_x/2),
                               xdensity=self.density,
                               ydensity=self.density)(),
-                   [])
+                   [self.frame_duration])
 
 
 class NaturalImageWithEyeMovement(TopographicaBasedVisualStimulus):
