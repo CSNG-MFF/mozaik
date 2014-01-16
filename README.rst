@@ -131,7 +131,7 @@ Then python virtualenv and virtualenvwrapper (an handy way to manage python virt
 $ sudo pip install virtualenv
 $ sudo pip install virtualenvwrapper
 
-To setup `virtualenvwrapper <http://virtualenvwrapper.readthedocs.org/en/latest//>`_ add the following lines at the top of ~/.bash_profile (create it if you don't have one)::
+To setup `virtualenvwrapper <http://virtualenvwrapper.readthedocs.org/en/latest//>`_ add the following lines at the top of ~/.bashrc ::
 
     # virtualenvwrapper
     export WORKON_HOME=~/.virt_env
