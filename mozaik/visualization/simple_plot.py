@@ -206,7 +206,7 @@ class StandardStyle(SimplePlot):
         """
 
         SimplePlot.__init__(self)
-        fontsize = 20
+        fontsize = 10
         self.parameters = {
             "fontsize": fontsize,
             "x_tick_style": 'Min',

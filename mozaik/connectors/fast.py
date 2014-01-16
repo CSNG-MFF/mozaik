@@ -77,8 +77,7 @@ class ExponentialProbabilisticArborization(DistanceDependentProbabilisticArboriz
         return self.parameters.arborization_scaler*numpy.exp(-0.5*(distance/self.parameters.arborization_constant)**2)/(self.parameters.arborization_constant*numpy.sqrt(2*numpy.pi))
     
     def delay_function(distance):
-        # JAHACK, 0.1 as minimal delay should be replaced with the simulations time_step        
-        return numpy.maximum(distance * self.parameters.propagation_constant,0.1)
+        return distance * self.parameters.propagation_constant
         
         
 class UniformProbabilisticArborization(Connector):

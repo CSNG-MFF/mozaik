@@ -315,12 +315,12 @@ class TrialToTrialCrossCorrelation(Analysis):
                 for idd in self.parameters.neurons:
                     duration = segs[0].get_vm(idd).t_stop-segs[0].get_vm(idd).t_start
                     
-                    vm_cross = self.cross_correlation([seg.get_vm(idd) for seg in segs])
+                    vm_cross = self.cross_correlation([numpy.array(seg.get_vm(idd)) for seg in segs])
                     vm_ass.append(AnalogSignal(vm_cross,t_start=-duration,
-                                         sampling_period=segs[0].get_vm(idd).sampling_period*qt.ms,
+                                         sampling_period=segs[0].get_vm(idd).sampling_period,
                                          units=qt.dimensionless))        
-                                         
-                    psth_cross = self.cross_correlation([psth([seg.get_spiketrain(idd)], self.parameters.bin_length)[0] for seg in segs])                                         
+
+                    psth_cross = self.cross_correlation([numpy.array(psth([seg.get_spiketrain(idd)], self.parameters.bin_length)[0]) for seg in segs])                                         
                     psth_ass.append(AnalogSignal(psth_cross,t_start=-duration,
                                          sampling_period=self.parameters.bin_length*qt.ms,
                                          units=qt.dimensionless))        
@@ -356,9 +356,7 @@ class TrialToTrialCrossCorrelation(Analysis):
         
         for i in xrange(0,len(ass)):
             for j in xrange(i+1,len(ass)):
-                print len(ass[i])
-                print len(ass[j])
-                cc = cc + numpy.correlate(numpy.array(ass[i]),numpy.array(ass[j]),mode='full')
+                cc = cc + numpy.correlate(ass[i]-numpy.mean(ass[i]),ass[j]-numpy.mean(ass[j]),mode='full')/numpy.var(ass[i])/numpy.var(ass[j])/len(ass[i])
         cc = cc / (len(ass)*(len(ass)-1)/2)
         return cc
 

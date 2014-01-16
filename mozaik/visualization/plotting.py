@@ -209,9 +209,6 @@ class PlotTuningCurve(Plotting):
             self.st.append(st)
             # transform the pnvs into a dictionary of tuning curves along the parameter_name
             # also make sure the values are ordered according to ids in the first pnv
-            print self.parameters.neurons
-            for pnv in self.pnvs[-1]:
-                print pnv.ids
             self.tc_dict.append(colapse_to_dictionary([z.get_value_by_id(self.parameters.neurons) for z in self.pnvs[-1]],st,self.parameters.parameter_name))
             
 
@@ -496,8 +493,8 @@ class AnalogSignalListPlot(Plotting):
 
     def _ploter(self, dsv,subplotspec):
         self.analog_signal_list = dsv.get_analysis_result()
-        assert len(self.analog_signal_list) == 1, "Currently only one AnalogSignalList per stimulus can be plotted"
         assert len(self.analog_signal_list) != 0, "ERROR, empty datastore"
+        assert len(self.analog_signal_list) == 1, "Currently only one AnalogSignalList per stimulus can be plotted"
         self.analog_signal_list = self.analog_signal_list[0]
         xs = []
         ys = []
@@ -581,7 +578,6 @@ class RetinalInputMovie(Plotting):
         self.length = None
         # currently there is no way to check whether the sensory input is retinal
         self.retinal_input = datastore.get_sensory_stimulus_stimulus()
-        print len(self.retinal_input)
         self.st = datastore.sensory_stimulus.keys()
         
     def subplot(self, subplotspec):
@@ -763,7 +759,9 @@ class PerNeuronValueScatterPlot(Plotting):
         pair = self.pairs[idx]
         # Let's figure out the varying parameters
         p1 = varying_parameters(pair)
-        if MozaikParametrized.idd(pair[0].stimulus_id).name != MozaikParametrized.idd(pair[1].stimulus_id).name:
+        if pair[0].stimulus_id == None or pair[1].stimulus_id == None:
+            p2 = []
+        elif MozaikParametrized.idd(pair[0].stimulus_id).name != MozaikParametrized.idd(pair[1].stimulus_id).name:
             p2 = ['name']
         else:
             p2 = varying_parameters([MozaikParametrized.idd(p.stimulus_id) for p in pair])
@@ -787,7 +785,8 @@ class PerNeuronValueScatterPlot(Plotting):
         if pair[0].value_units != pair[1].value_units or pair[1].value_units == pq.dimensionless:
            params["equal_aspect_ratio"] = False
         
-        return [("ScatterPlot",ScatterPlot(pair[0].values, pair[1].get_value_by_id(pair[0].ids)),gs,params)]
+        ids = list(set(pair[0].ids) & set(pair[1].ids))
+        return [("ScatterPlot",ScatterPlot(pair[0].get_value_by_id(ids), pair[1].get_value_by_id(ids)),gs,params)]
         
 
 class ConnectivityPlot(Plotting):
@@ -897,11 +896,7 @@ class ConnectivityPlot(Plotting):
             ix = numpy.flatnonzero(numpy.array(self.connections[idx].weights)[:,1]==index)
         else:
             index = self.datastore.get_sheet_indexes(self.connections[idx].target_name,self.parameters.neuron)
-            print self.connections[idx].weights[:500]
-            print len(self.connections[idx].weights)
-            print index
             ix = numpy.flatnonzero(numpy.array(self.connections[idx].weights)[:,0]==index)
-            print ix
             
             
         sx = self.connecting_neurons_positions[idx][0][ix]
