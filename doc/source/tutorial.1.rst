@@ -2,22 +2,24 @@
 Mozaik Tutorial 1
 =================
 
-This tutorial assumes we have already installed mozaik. Being a workflow organizer, mozaik relies on several software packages and programs, e.g. a simulator like `NEST <http://www.nest-initiative.org/index.php/Software:About_NEST>`_, the `PyNN <http://neuralensemble.org/PyNN/>`_ simulation language, and their dependencies... Please refer to the installation instructions to have mozaik on your machine.
+This tutorial assumes we have already installed mozaik. Being a workflow organizer, mozaik relies on several software packages and programs, e.g. a simulator like `NEST <http://www.nest-initiative.org/index.php/Software:About_NEST>`_, the `PyNN <http://neuralensemble.org/PyNN/>`_ simulation language, and their dependencies... Please refer to the installation instructions for further details.
 
+This tutorial is based around example project that can be found in mozaik/examples/VogelsAbbott2005, which creates a simple randomly connected balanced network
+that should be able to self-sustain its actvity with no external stimulus.
 
 Project folder organization
 ---------------------------
-There would be no need to have the code for our project in separate files but it is a good practice for larger projects, so we will go through each file dealing with a part of the workflow:
+There would be no need to have the code for our project in separate files but it is a good practice for larger projects. Let's go through each file of the VogelsAbbott project, each dealing with a part of the workflow:
 
 * **model.py** contains the high level specification of the network (sheet creation, reference to parameters, connection schema, ...).
 
-* **param** is a folder containing a parameter file for each sheet.
+* **param** is a folder containing the parameter tree for the model, itself sepparated into several files
 
-* **experiments.py** contains a planned stimulation protocol for the network.
+* **experiments.py** contains the experimental protocol we wish to execute over the model.
 
-* **run.py** executes the experiment and, eventually, saves the results to file, runs analysis, plotting, ...
+* **run.py** the top level script, executes the experiment and, eventually, saves the results to file, runs analysis, plotting, ...
 
-* **analysis_and_visualization.py** specifies how to filter recorded data, what algorithm apply to these results and how to create publication-ready figures.
+* **analysis_and_visualization.py** specifies how to filter recorded data, what algorithm apply to these results and how to create figures.
 
 
 File Content
@@ -28,8 +30,7 @@ Now let's take a look at the content of the files. For simplicity, to force ours
 model.py
 ~~~~~~~~
 There are two main components of mozaik: **sheets** and **connectors**. These are the ones we are going to set in this file. 
-Mozaik comes with a whole set of sheets and connectors, we can specify their properties by assigning their parameteters. In addition, we can define our own sheets and connectors, and we will do this in the advanced tutorial.
-Each model should be derived from the mozaik base class Model::
+Mozaik comes with a whole set of sheets and connectors, we can specify their properties by assigning their parameteters. In addition, we can define our own sheets and connectors, and we will do this in the advanced tutorial. Each model should be derived from the mozaik base class Model::
 
     class VogelsAbbott( Model )
 
@@ -46,7 +47,7 @@ In fact *Model* is a hierarchy of objects which represent sheets, connectors and
 To create instances of them, we use a corresponding hierarchy of parameters which are read during init. 
 Therefore each of the above parameters is itself ParameterSet, as it will correspond to the subtree of parameters
 required to parameterize the given sheet and all its related components.
-We will set some of them in the default parameter file and others in the files inside param folder (more on this in the next section).
+We will set some of them in the top level parameter file named *default* and others in other files inside param folder (more on this in the next section).
 
 
 Then we will use the sheets component parameter to load the class corresponding to it::
@@ -78,12 +79,10 @@ Then we will use the sheet instances to specify how to connect each sheet in its
 
 param folder
 ~~~~~~~~~~~~
-Another important component of mozaik is the management of parameters. All parameters are loaded using the *ParameterSet* class which reads, upon initialization, the root parameter file that is given to 
-it on command line (see below), and recursively any other paramter files that are referenced from it (or from the other parameter files being loaded).
-In our case the root parameter file is called *default*. The root parameter file contains a dictionary of basic parameters used by mozaik to setup
+Another important component of mozaik is the management of parameters. All parameters are loaded by mozaik automatically from the root parameter file that is given to it on command line (see below), and recursively any other paramter files that are referenced from it (or from the other parameter files being loaded). In our case the root parameter file is called *default*. The root parameter file contains a dictionary of basic parameters used by mozaik to setup
 your project as well as references to other parameter files that will be included and expanded.
 
-The file *defaults* contains some general parameters which are almost self explaining (for the others have a look at the documentation)::
+The file *default* contains some general parameters which are almost self explaining (have a look at the documentation of the Model class)::
 
   {
     'exc_layer': url("param/exc_layer"),
@@ -113,15 +112,16 @@ The parameters can be nested, as for the cell model (with its own params!) used 
                         'model': 'IF_cond_exp',
                         'params': {
 
-Note that each file contains as well all the connector projecting from this sheet::
+Note that each file contains as well parameters for all the Connector classes specifing projections originating from this sheet::
 
     'ExcExcConnection': {
 
-that we can even refer to by reference to other files::
+In the parameter files we can refer to other parameter by using references, i.e.::
 
     'ExcInhConnection': ref('exc_layer.ExcExcConnection'),
 
-When creating a layer we can track back the parameters by looking at the API doc for 'mozaik.sheets.vision.VisualCorticalUniformSheet', for example.
+Generally when looking at the parameter files user should be able to track down which parameter belongs to which class and then check it's
+description in the documentation of that class.
 
 
 experiment.py
@@ -130,8 +130,9 @@ How to run the experiment is something unrelated to model creation. This is why 
 (then to reuse the same network with a different protocol we just need to use another experiment file).
 
 We write a method *create_experiment* to establish our protocol. In this case, we only want to give an initial kick, external spike train, 
-to the network followed by a period or recording when the network is running on its own. To do this we will have to experiments one that 
-supplies the network with the initial Kick (see the `PoissonNetworkKick` below), and one which effectively does nothing (see the `NoStimulation` below)::
+to the network followed by a period or recording when the network is running on its own. To do this we will have two experiments one that 
+supplies the network with the initial Kick (see the `PoissonNetworkKick` below), and one 'dummy' experiment which effectively does nothing but keeps recording the
+network (see the `NoStimulation` below)::
 
     return  [
                 #Lets kick the network up into activation
@@ -149,9 +150,8 @@ supplies the network with the initial Kick (see the `PoissonNetworkKick` below),
                 NoStimulation( model, duration=3*8*7 ),
     ]
 
-As you can see the `PoissonNetworkKick` gets several parameters. One interesting is the recording_configuration, which corresponds to a dictionary 
-containing the recording configuration class as the component parameter and the dictionary of parameters that will be passed to the recording configuration
-at initialization as ParameterSet as the params parameter.
+As you can see the `PoissonNetworkKick` gets several parameters. One, common to all experiments, is the recording_configuration which specifies what will
+be recorded in the network during the given experiment. The component parameter defines the recording configuration class and the param parameter the dictionary of parameters that will be passed to the recording configuration at initialization as ParameterSet.
 
 We can check, and modify, what is recorded by looking at the file specified as parameter 'recorders' for each sheet. For example, inside the parameter file for the excitatory sheet (as above), we find::
 

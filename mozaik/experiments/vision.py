@@ -532,8 +532,8 @@ class MeasureSpontaneousActivityWithPoissonStimulation(VisualExperiment):
     drive_period : float (ms)
                  The length of the constant drive, after which it will be linearly taken down to 0 at the end of the stimulation.   
                
-    recording_configuration : list
-                                 The list of recording configurations (one per each sheet).
+    stimulation_configuration : list
+                                 The list of stimulation configurations (one per each sheet).
                                  
     lambda_list : list
                 List of the means of the Poisson spike train to be injected into the neurons specified in recording_configuration_list (one per each sheet).
@@ -542,7 +542,7 @@ class MeasureSpontaneousActivityWithPoissonStimulation(VisualExperiment):
                 List of spike sizes of the Poisson spike train to be injected into the neurons specified in recording_configuration_list (one per each sheet).                
     """
 
-    def __init__(self,model,duration,sheet_list,drive_period,recording_configuration,lambda_list,weight_list):
+    def __init__(self,model,duration,sheet_list,drive_period,stimulation_configuration,lambda_list,weight_list):
             VisualExperiment.__init__(self, model)
             from mozaik.sheets.direct_stimulator import Kick
             
@@ -551,7 +551,7 @@ class MeasureSpontaneousActivityWithPoissonStimulation(VisualExperiment):
                 d[sheet] = [Kick(model.sheets[sheet],ParameterSet({'exc_firing_rate' : lambda_list[i],
                                                       'exc_weight' : weight_list[i],
                                                       'drive_period' : drive_period,
-                                                      'population_selector' : recording_configuration})
+                                                      'population_selector' : stimulation_configuration})
                                 )]
             
             self.direct_stimulation = [d]
