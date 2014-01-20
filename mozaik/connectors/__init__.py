@@ -23,7 +23,7 @@ class Connector(BaseComponent):
     required_parameters = ParameterSet({
             'target_synapses' : str,
             'short_term_plasticity': ParameterSet({
-                    'u': float, 
+                    'U': float, 
                     'tau_rec': float, 
                     'tau_fac': float,
                     'tau_psc': float

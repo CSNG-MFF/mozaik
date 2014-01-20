@@ -2,31 +2,28 @@
 Mozaik Tutorial 2
 =================
 
-In this tutorial we will design a new experiment, creating a new stimulus based on the functions already available in mozaik. We will make use of mozaik documentation, in particular 
-
-
+In this tutorial we will design a new experiment, creating a new stimulus based on the functions already available in mozaik. 
 
 Existing experiments
 --------------------
-In the first tutorial we briefly looked at the content of the file `experiment.py` where we specify our experimental protocol.
+In the first tutorial we briefly looked at the content of the file `experiment.py` from the VoglesAbbott2005 example project, where we specify experimental protocol.
 
 In short an experiment consists of:
 
-* The definition of a **stimulus** (even more than one) to be presented our model with.
+* The definition of a **stimulus** (possibly more than one) to be presented to our model.
 
-* A **protocol** organizing the stimulus into repetitions which change one or more parameters of the stimulus (trials).
+* A **protocol** organizing the stimuli into repetitions (which typically change one or more parameters of the stimuli).
 
 * An actual definition of the **experiment**, detailing parameter ranges and number of repetitions.
 
-* The eventual **analysis** to perform on the data acquired.
+If we have a look at some of the experiments available in mozaik, we can see that the experiment regarding vision are stored in the file `/mozaik/experiments/vision.py`.
 
-If we have a look at some of the experiments available in the `contrib` folder, we can see that the experiment regarding vision are stored in the file `/mozaik/experiments/vision.py`.
+This file contains the definition of the base class for all the visual experiments, **VisualExperiment**. This class simply sets the two internal parameters
+common to all visual experiments - density and background_luminance - to match values specified in the input space and input_layer.
 
-This file contains the definition of the base class for all the visual experiments, **VisualExperiment**. This class simply sets the background luminance and density to be specified as in the default parameter file.
+The  classe below derived from VisualExperiment will guide us in understanding how a protocol is shaped. Each one has a meaningful name. Here we picked  `MeasureOrientationTuningFullfield` (see the mozaik/experiments/visio.py for the full class) that will assess the responses of our model to stimuli differing by their orientation and can also vary the contrast at which this is done.
 
-One of the classes derived from VisualExperiment can guide us in understanding how a protocol is shaped. Each one has a meaningful name, let's pick up for example `MeasureOrientationTuningFullfield` that will assess the responses of our model to stimuli differing by their orientation.
-
-The structure of the init function tells us the way a protocol works::
+The structure of the init function tells us the way a protocol works:
 
     def __init__(self, model, num_orientations, spatial_frequency,
                  temporal_frequency, grating_duration, contrasts, num_trials):
@@ -49,7 +46,7 @@ The structure of the init function tells us the way a protocol works::
                         spatial_frequency=spatial_frequency,
                         temporal_frequency=temporal_frequency))
 
-There is:
+Above we see::
 
 * a cycle over the list of contrasts we want to check our model against,
 
@@ -59,7 +56,7 @@ There is:
 
 * a stimulus generator that fits our purpose, in this case `FullfieldDriftingSinusoidalGrating`.
 
-The last point needs some comments. We append the stimulus generator to a list of `stimuli` which is owned by the `Experiment` class. For the experiment we have chosen, we use `FullfieldDriftingSinusoidalGrating` from the file `/mozaik/stimuli/vision/topographica_based.py`, that is::
+The last point needs some comments. We append the stimulus to a list of `stimuli` which is owned by the `Experiment` class. For the experiment we have chosen, we use `FullfieldDriftingSinusoidalGrating` from the file `/mozaik/stimuli/vision/topographica_based.py`, that is::
 
     class FullfieldDriftingSinusoidalGrating(TopographicaBasedVisualStimulus):
 
@@ -86,17 +83,19 @@ The last point needs some comments. We append the stimulus generator to a list o
 
 Simply put, this class is derived from a basic `TopographicaBasedVisualStimulus`, already containing in turn some functionalities and parameters from its base class `VisualStimulus`, to which this class adds its own parameters (orientation, spatial_frequency, temporal_frequency and contrast).
 
-The generator itself relies on the image generator (imagen) module from the package Topographica (we can refer to their documentation for futher info, `imagen <http://topographica.org/Reference_Manual/imagen-module.html>`_). Usually our stimulus generator will be only a wrapper around one of the imagen class.
+The stimulus itself relies on the stimulus generator (imagen) module (refer to their documentation for futher info, `imagen <http://topographica.org/Reference_Manual/imagen-module.html>`_). We are free to define the stimuli in any way we want, but so far in
+mozaik (for visual stimuli) we have been using the imagen stimulus generator package. Therefore the stimuli are tipically only  wrappers around one of the imagen class.
 
-As we can see, this last class produces a series of frames guided by the parameter set that changes due to the instructions in `MeasureOrientationTuningFullfield`.
+As we can see, this last class produces a series of frames guided by the parameters. This means that each instantitation of the
+stimulus class will produce a series of frames, in the case of the above class containing a drifting grating stimulus.
+On top of that the `MeasureOrientationTuningFullfield` will create a series of such stimuli with changing paramters as dictated by the given experiemnt, in our case varing 
+the orientation paramter to asses the orientation preference of neurons (and also contrast).
 
-Let's do something similar...
-
-
+Let us now create our own new experiment...
 
 Writing a new experiment
 ------------------------
-We will now define a new type of stimulus protocol and an experiment that uses it. The experiment we want to design will test the responses of our model to full-field luminance step increments.
+We will now define a new type of stimulus and an experimental protocl that uses it. The experiment we want to design will test the responses of our model to full-field luminance step increments.
 
 Stimulus
 ~~~~~~~~
@@ -115,7 +114,7 @@ First of all, we need a stimulus generator. There is already one that fits our p
                           ydensity=self.density)(),
                       [self.frame_duration])
 
-This generator produces frames with a value for the luminance of the whole screen. That's the only value we will need to supply to this class (some other are assigned by default).
+This generator produces frames with a constant luminance (the scale parameter) values accross the whole screen. That's the only value we will need to supply to this class (some other are assigned by default).
 
 Protocol
 ~~~~~~~~
@@ -167,20 +166,21 @@ In the `experiments.py` file of our model we now can use the new protocol for an
         num_trials=4
     ),
 
-And that's it. Of course there can be more complex stimuli (see for example `DriftingSinusoidalGratingDisk` or `DriftingSinusoidalGratingCenterSurroundStimulus`) and more articulated protocols, although none of the ones needed up to now really is. This is one of the pros of working in mozaik ;)
+And that's it. Of course there can be more complex stimuli (see for example `DriftingSinusoidalGratingDisk` or `DriftingSinusoidalGratingCenterSurroundStimulus`) and more articulated protocols, although none of the ones needed up to now really is. This is one of the pros of working in mozaik, it allows for very general definitions, but usually keeps things very concise and simple (at least once we learn it :-))
 
 
 Analysis and Visualization
 --------------------------
-Once we will have our experiment done, we will need to analyse results. As shown in tutorial 1, this will imply getting the ids of the units we recorded from::
+Once we will have our experiment done, we will need to analyse the results that came out of the experiment. 
+Let's have a brief look at an example of such analysis. As shown in tutorial 1, we will first get the ids of the units we recorded from::
 
     analog_Xon_ids = sorted( param_filter_query(data_store,sheet_name="X_ON").get_segments()[0].get_stored_vm_ids() )
 
-We will filter our data_store set by taking only the part of recorded traces that were obtained during the 'DriftingSinusoidalGratingDisk' stimulus::
+We will filter our data_store set by taking only the part of recorded traces that were obtained during the 'Null' stimulus ::
 
-    dsv = param_filter_query( data_store, st_name='DriftingSinusoidalGratingDisk', sheet_name='X_ON' )  
+    dsv = param_filter_query( data_store, st_name='Null', sheet_name='X_ON' )  
 
-Next, we will compute the average firing rate, the most common kind of analyis::
+Next, we will compute the average firing rate::
 
     TrialAveragedFiringRate( dsv, ParameterSet({}) ).analyse()
 
@@ -204,6 +204,6 @@ And finally plot them as a tuning curve for luminance sensitivity::
     })
 
 
-A final note. Over the various modification we will make in order to test our model against different stimuli, we shall remember that if we change something, we must check the consistency among the triad of classes involved: experiment, analysis and plotting!
+A final note. Over the various modification we will make in order to test our model against different stimuli, we shall remember that if we change something, we must check the consistency among the chain of classes involved: experiment, analysis and plotting!
 
 Happy mozaiking!
