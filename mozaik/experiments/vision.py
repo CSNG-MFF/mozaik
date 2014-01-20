@@ -284,7 +284,7 @@ class MeasureFrequencySensitivity(VisualExperiment):
 
     def __init__(self, model, orientation,
                  spatial_frequencies, temporal_frequencies, contrasts, 
-                 grating_duration, num_trials):
+                 grating_duration, num_trials, frame_duration=7):
         VisualExperiment.__init__(self, model)    
         size = 20.0 #DG: very large!
         # stimuli creation        
@@ -293,7 +293,7 @@ class MeasureFrequencySensitivity(VisualExperiment):
                 for c in contrasts:
                     for k in xrange(0, num_trials):
                         self.stimuli.append(topo.DriftingSinusoidalGratingDisk(
-                            frame_duration=7,
+                            frame_duration=frame_duration,
                             size_x=model.visual_field.size_x,
                             size_y=model.visual_field.size_y,
                             location_x=0.0,
