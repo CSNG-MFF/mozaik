@@ -255,6 +255,14 @@ class DataStoreView(ParametrizedObject):
         for ads in self.analysis_results:
             self.full_datastore.analysis_results.remove(ads)
     
+    def remove_ads_outside_of_dsv(self):
+        z = [ads for ads in self.full_datastore.analysis_results if ads not in self.analysis_results]
+        for ads in z:
+            self.full_datastore.analysis_results.remove(ads)
+        
+               
+        
+    
 class DataStore(DataStoreView):
     """
     Abstract DataStore class that declares the *mozaik* data store interface.

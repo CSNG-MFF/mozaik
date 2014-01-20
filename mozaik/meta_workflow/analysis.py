@@ -7,7 +7,7 @@ import sys
 import os
 import time
 
-def load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir):
+def load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir,filter=None):
     """
     Loads all datastores of parameter search over a fixed set of parameters. 
     
@@ -40,6 +40,9 @@ def load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir
         rdn = result_directory_name('ParameterSearch',simulation_name,combination)
         try:
             data_store = PickledDataStore(load=True,parameters=ParameterSet({'root_directory': master_results_dir + '/' + rdn,'store_stimuli' : False}),replace=False)
+            if filter != None:
+               filter.query(data_store).remove_ads_outside_of_dsv()
+
             datastore.append(([combination[k] for k in parameters],data_store))
         except IOError:
             number_of_unloadable_datastores = number_of_unloadable_datastores + 1
