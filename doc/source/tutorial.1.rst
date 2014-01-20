@@ -123,6 +123,31 @@ In the parameter files we can refer to other parameter by using references, i.e.
 Generally when looking at the parameter files user should be able to track down which parameter belongs to which class and then check it's
 description in the documentation of that class.
 
+We can check, and modify, what is recorded by looking at parameter 'recorders' for each sheet. For example, inside the parameter file for the excitatory sheet (as above), we find::
+
+    'recorders' : url("param/exc_rec"),
+
+which tells us to look at *exc_rec* file to know the details of recording specifications::
+
+    {
+        "1": {
+            'component' : 'mozaik.sheets.population_selector.RCRandomN',
+            'variables' : ("spikes"),
+            'params' : { 'num_of_cells' : 100 }
+        },
+        "2": {
+            'component' : 'mozaik.sheets.population_selector.RCRandomN',
+            'variables' : ("spikes", "v", "gsyn_exc", "gsyn_inh"),
+            'params' : { 'num_of_cells' : 21 }
+        },
+    }
+
+This is neat! We are telling mozaik to record two *things* from the exc_layer. 
+The first one is just "spikes" (spike trains) from 100 randomly selected cells. 
+The second recording is a bit more complex, it instructs to store voltage and conductances (excitatory and inhibitory) from 21 randomly selected cells. 
+All these recordings will be automatically stored in the datastore for us and will come handy afterwards when we will use the *datastore* to run analysis and create figures
+based on the recorded data...
+
 
 experiment.py
 ~~~~~~~~~~~~~
@@ -139,7 +164,7 @@ network (see the `NoStimulation` below)::
                 PoissonNetworkKick(
                                     model,duration=8*7,
                                     sheet_list=["V1_Exc_L4","V1_Inh_L4"],
-                                    recording_configuration={
+                                    stimulation_configuration={
                                                               'component' : 'mozaik.sheets.population_selector.RCRandomPercentage',
                                                               'params' : {'percentage' : 20.0}
                                                             },
@@ -150,47 +175,25 @@ network (see the `NoStimulation` below)::
                 NoStimulation( model, duration=3*8*7 ),
     ]
 
-As you can see the `PoissonNetworkKick` gets several parameters. One, common to all experiments, is the recording_configuration which specifies what will
-be recorded in the network during the given experiment. The component parameter defines the recording configuration class and the param parameter the dictionary of parameters that will be passed to the recording configuration at initialization as ParameterSet.
-
-We can check, and modify, what is recorded by looking at the file specified as parameter 'recorders' for each sheet. For example, inside the parameter file for the excitatory sheet (as above), we find::
-
-    'recorders' : url("param/exc_rec"),
-
-which tells us to look at that file to know the details of recording specifications::
-
-    {
-        "1": {
-            'component' : 'mozaik.sheets.population_selector.RCRandomN',
-            'variables' : ("spikes"),
-            'params' : { 'num_of_cells' : 100 }
-        },
-        "2": {
-            'component' : 'mozaik.sheets.population_selector.RCRandomN',
-            'variables' : ("spikes", "v", "gsyn_exc", "gsyn_inh"),
-            'params' : { 'num_of_cells' : 21 }
-        },
-    }
-
-This is neat! We are telling mozaik to record two *things* from the exc_layer. 
-The first one is just "spikes", spike trains from 100 randomly selected cells. These 
-recording will go into the mozaik *datastore*, which we will cover in one of our future tutorials, and which based around the  `NEO <http://pythonhosted.org/neo/>`_ package. 
-The second recording is a bit more complex, in instructs to store voltage and conductances (excitatory and inhibitory) from 21 randomly selected cells. 
-This will be handy afterwards when we will use the *datastore* to run analysis and create images...
+As you can see the `PoissonNetworkKick` gets several parameters. One, common to all experiments, is the stimulation_configuration which specifies which
+neurons will be stimulated during this experiment. This is defined with a sub-class of PopulationSelector for which the stimulation_configuration parameter holds parameters. 
+The component parameter defines the population selector class and the param parameter the dictionary of parameters that will be passed to the population selector at initialization as ParameterSet.
 
 
 run.py
 ~~~~~~
 The run.py is our top level execution file.
+
 We start our simulation with one line. We chose to put it in a separate file thus we can add other running-related operations, like logging and plotting.
 The single interesting line here is::
 
 
    data_store,model = run_workflow( 'VogelsAbbott2005', VogelsAbbott, create_experiments )
 
-As we can see, we pass to run_workflow the name of our project, its model (that we construct in the model.py and configure via the configuration files) 
+As we can see, we pass to run_workflow the name of our project, the model class (that we specify in the model.py and configure via the configuration files) 
 and a function which returns the list of experiments to run on it.
-This Controller method will take care of simulating the model and returns an instance of  data_store contining the recorded data (dilligently labled with all 
+The run_workflow passes the control to mozaik, which will take care of construction and simulation the model as well as execution of all the experiments. 
+It returns an instance of data_store contining the recorded data (dilligently labled with all 
 relevant meta-data), which we can then use for analysis and visualization, see line below::
 
    perform_analysis_and_visualization(data_store)
@@ -198,7 +201,7 @@ relevant meta-data), which we can then use for analysis and visualization, see l
 
 analysis_and_visualization.py
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Last but not least, we can have a file to write our own analysis and plotting procedure. Mozaik comes with a set of analysis tools that we can further expand (we will in the advanced tutorial). In this example we will use just a couple of them in order to familirize with the process.
+Last but not least, we can have a file to write our own analysis and plotting procedure. Mozaik comes with a set of analysis tools that we can further expand (which we will show how in later tutorials). In this example we will use just a couple of them in order to familirize with the process.
 
 The method that gets called in the previous run.py file receives the simulation output *datastore*::
 
@@ -208,7 +211,7 @@ As seen before, *datastore* is a object holding a collection of recordings and a
 The recordings are stored as a list of `NEO <http://pythonhosted.org/neo/>`_ segments containing analog signals and spikes of cells from our sheets that we have instructed mozaik to record. 
 There are methods in the query mozaik subpackaged  that allow us to create sub-views of the *datastore* effectivly perform various filterings on our records base on range 
 of metadata such as the identyty and parameters of stimuli to which the recordings have been obtained. 
-Here we take only a simple subset and leave more sophisticated operation for a more advanced tutorial. 
+Here we take only a simple subset and leave more sophisticated operations for a more advanced tutorial. 
 To understand the analysis process we do a very simple, though still meaningful, example. 
 We simply take all recordings done in layer 'Exc_Layer' (funtion `param_filter_query`), retrieve the segments from this data
 store view, pick the first segment and get the ids of the neurons for which the excitatory conductances were stored, and saved this list 
@@ -217,7 +220,7 @@ in the variable `analog_ids`::
   analog_ids = sorted(param_filter_query(data_store,sheet_name="Exc_Layer").get_segments()[0].get_stored_esyn_ids())
 
 We filter our data_store set by taking only the part of recorded traces that were obtained during spontaneous activity after the kick.
-Then, we will process our traces using a Peri-Stimulus Time Histogram with bin length set at 5ms, just as a histogram binning example since this experiment has no stimulus::
+Then, we will process our traces using a Peri-Stimulus Time Histogram with bin length set at 5ms::
 
   PSTH(
      param_filter_query( data_store, st_direct_stimulation_name="None" ),
@@ -239,11 +242,13 @@ Then we check the correlation among analog signals on a per neuron basis::
      ParameterSet({'convert_nan_to_zero' : True})
  ).analyse()
 
-Note that, during the procedure, we can end up with some unassigned value. We can specify the conversion to be applied in this case.
-Finally we compute the population mean over any `PerNeuronValue` analysis data structures so far added to the datastore, which will effectively 
-give as the average firing rate and average PSTH correlation between neurons::
+Note that, during the procedure, we can end up with some NaN values due to correlations not being defined between zero arrays. We can specify the conversion to be applied in this case. Finally we compute the population mean over any `PerNeuronValue` analysis data structures so far added to the datastore, which will effectively 
+give us the average firing rate and PSTH correlations accross neurons::
 
   PopulationMean( data_store, ParameterSet({}) ).analyse()
+
+Plotting
+~~~~~~~~
 
 There are several nice things about plotting in mozaik. Plots are easily defined in all their aspects, using the same parameters approach common across mozaik.
 We simply take our data_store view from a query and pass it to the plot creator, which is based around matplotlib::
@@ -264,16 +269,13 @@ We simply take our data_store view from a query and pass it to the plot creator,
      'Conductance_plot.y_lim' : (0,500.0)
  })
 
-The parameters to specify are those of matplotlib, for 'fig_param' and plot(), plus some from our data_store.
-
-
 Results
 ~~~~~~~
 Running this project is as easy as enter this command line in the mozaik/contrib directory::
 
-  $ mpirun python run.py nest 1 param/defaults 'test'
+  $ mpirun -np 4 python run.py nest 1 param/defaults 'test'
 
-In this example mozaik uses MPI to run its jobs and NEST as simulator. These are specified as command line parameters, together with the name for this specific run (in this case 'test').
+In this example mozaik uses MPI to run the simulation as 4 processes, each using single thread and NEST as simulator. These are specified as command line parameters, together with the name for this specific simulation run (in this case 'test').
 
 The command will produce a quite long series of logging lines in our terminal, which we can briefly review (and which can be shut down commenting out logging in the run.py file). At start, our backend simulator, NEST, is called by PyNN on behalf of mozaik::
 
@@ -333,7 +335,7 @@ Then we have mozaik actually loading and working the classes to create our sheet
   There are some notes to these lines.
 
 | We see that NEST emits some alerts, due to initializations which cannot be accomplished. Don't worry they don't affect our simulation (they are just specification of PyNN not met in NEST).
-| Then we can see mozaik classes loaded to accomplish what we specified in our files: our model is derived from VisualCorticalUniformSheet and connected using UniformProbabilisticArborization. After network creation, our experiment is performed, which is composed of two phases (PoissonNetworkKick and NoStimulation). Data is then recorded and some statistic about the simulation emitted.
+| Then we can see mozaik classes loaded to accomplish what we specified in our files: our model is derived from VisualCorticalUniformSheet and connected using UniformProbabilisticArborization. After network creation, our experiment is performed, which is composed of two phases (PoissonNetworkKick and NoStimulation). Data is then recorded and some runtime statistic about the simulation emitted.
 
 Since we also chose to have some analysis and plotting, we can see logs also for these activities::
 
@@ -350,10 +352,10 @@ Since we also chose to have some analysis and plotting, we can see logs also for
   0  RasterPlot plotting took: 0.31383895874seconds
 
 All data and figures from the experiment are saved by mozaik in an additional folder, having the name we specified in the run_workflow call, 
-with appended the result name specified in the command line (<model_name>_<simulation_instance_name>____). We specified result folder location in the file param/defaults::
+with appended the simulation run name specified in the command line (<model_name>_<simulation_instance_name>____). We specified result folder location in the file param/defaults::
 
 'results_dir': ''
 
-Left blank, mozaik will assume that we want our result in the same folder of our project. Indeed, there we find our results folder "*VogelsAbbott2005_test_____*" containing several data_store pickled files and images.
+Left blank, mozaik will assume that we want our results in the same folder as our project. Indeed, there we find our results folder "VogelsAbbott2005_test_____*" containing several data_store pickled files and images containing the figure we have specified to plot.
 
 Happy mozaiking!

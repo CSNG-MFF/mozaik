@@ -63,7 +63,6 @@ def disable_yticks(ax):
 
 
 def remove_x_tick_labels():
-    print 'YO'
     pylab.xticks([], [])
 
 

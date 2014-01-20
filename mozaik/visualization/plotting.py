@@ -106,10 +106,12 @@ class Plotting(ParametrizedObject):
             l = k.split('.')
             assert len(l) > 1, "Parameter %s not matching the simple plot" % (k)
             if l[0] == n or l[0] == '*':
-                if len(l[1:]) >1 : 
-                   d[l[1:].join('.')] = v
+                print l
+                if len(l[1:]) >1: 
+                   d['.'.join(l[1:])] = v
                 else:
                    fd[l[1]] = v
+                
         return d,fd
     
     def _handle_parameters_and_execute_plots(self,parameters,user_parameters,gs):
@@ -121,9 +123,7 @@ class Plotting(ParametrizedObject):
             for z in k.split('.'):    
                 up,fp = self._nip_parameters(z,up)
                 p.update(fp)
-
             param = p
-            
             if isinstance(pl,SimplePlot):
                # print check whether all user_parameters have been nipped to minimum 
                pl(gs,param) 
@@ -150,7 +150,7 @@ class Plotting(ParametrizedObject):
             params = {}
         self.fig = pylab.figure(facecolor='w', **self.fig_param)
         gs = gridspec.GridSpec(1, 1)
-        gs.update(left=0.07, right=0.97, top=0.95, bottom=0.05)
+        gs.update(left=0.05, right=0.95, top=0.95, bottom=0.05)
         self._handle_parameters_and_execute_plots({}, params,gs[0, 0])
         gs.tight_layout(self.fig)
         if self.plot_file_name:
@@ -196,7 +196,6 @@ class PlotTuningCurve(Plotting):
         self.st = []
         self.tc_dict = []
         self.pnvs = []
-        print datastore
         assert queries.ads_with_equal_stimulus_type(datastore)
         assert len(self.parameters.neurons) > 0 , "ERROR, empty list of neurons specified"
         dsvs = queries.partition_analysis_results_by_parameters_query(self.datastore,parameter_list=['value_name'],excpt=True)
@@ -237,15 +236,20 @@ class PlotTuningCurve(Plotting):
 
                 xs.append(numpy.array(par))
                 ys.append(numpy.array(val))
-                labels.append(str(k))
+                
+                l = ""
+                for p in varying_parameters([MozaikParametrized.idd(e) for e in dic.keys()]):
+                    l = l + str(p) + " : " + str(getattr(MozaikParametrized.idd(k),p))
+                labels.append(l)
+            
+                
             
             params={}
             params["x_label"] = self.parameters.parameter_name
             params["y_label"] = pnvs[0].value_name
             params['labels']=None
             params['linewidth'] = 2
-            params['colors'] = [cm.jet(j/50.,1) for j  in xrange(0,len(xs))] 
-
+            params['colors'] = [cm.jet(j/float(len(xs))) for j in xrange(0,len(xs))] 
             if pnvs == self.pnvs[0]:
                 params["title"] =  'Neuron ID: %d' % self.parameters.neurons[idx]
             
@@ -254,6 +258,7 @@ class PlotTuningCurve(Plotting):
                 params["x_lim"] = (0, pi)
                 params["x_tick_style"] = "Custom"
                 params["x_tick_labels"] = ["0", "$\\frac{\\pi}{2}$", "$\\pi$"]
+           
             if period == 2*pi:
                 params["x_ticks"] = [0, pi, 2*pi]
                 params["x_lim"] = (0, 2*pi)
@@ -445,7 +450,10 @@ class OverviewPlot(Plotting):
         params = {}
         if offset == 1:
             params['title'] = None
-        params['x_label']  = False
+        params['x_label']  = None
+        params['x_tick_labels'] = None
+        params['x_tick_style'] ='Custom'
+        
         d.extend([ ("Spike_plot",RasterPlot(dsv,
                    ParameterSet({'sheet_name': self.parameters.sheet_name,
                                  'trial_averaged_histogram': False,
@@ -455,7 +463,7 @@ class OverviewPlot(Plotting):
                  ("Conductance_plot",GSynPlot(dsv,
                    ParameterSet({'sheet_name': self.parameters.sheet_name,
                                'neuron': self.parameters.neuron})
-                 ),gs[1 + offset, 0], {'x_label' : False, 'title' : None}),
+                 ),gs[1 + offset, 0], {'x_label' : None, 'x_tick_style' : 'Custom' , 'x_tick_labels' : None, 'title' : None}),
 
                  ("Vm_plot",VmPlot(dsv,
                    ParameterSet({'sheet_name': self.parameters.sheet_name,

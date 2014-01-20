@@ -31,7 +31,7 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
            A dictionary with value names as keys, and tuples of (min,max) ranges as values indicating what range of values should be displayed.
                
     """
-    (parameters,datastores,n) = load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir)
+    (parameters,datastores,n) = load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir,filter=ParamFilterQuery(ParameterSet({'ads_unique' : False, 'rec_unique' : False, 'params' : ParameterSet({'identifier' : 'SingleValue'})})))
     
     sorted_parameter_indexes = zip(*sorted(enumerate(parameters), key=lambda x: x[1]))[0]
     
@@ -48,6 +48,8 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
             assert len(param_filter_query(dsv,identifier='SingleValue',value_name=v).get_analysis_result()) == 1, "Error, %d ADS with value_name %s found for parameter combination:" % (len(param_filter_query(datastore,identifier='SingleValue').get_analysis_result()), str([str(a) + ':' + str(b) + ', ' for (a,b) in zip(parameters,param_values)]))
     
     pylab.figure(figsize=(12*len(value_names), 6), dpi=2000, facecolor='w', edgecolor='k')
+                
+    print value_names
     for i,value_name in enumerate(value_names): 
         pylab.subplot(1,len(value_names),i+1)
         if len(parameters) == 1:
