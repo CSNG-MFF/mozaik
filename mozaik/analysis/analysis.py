@@ -798,11 +798,8 @@ class TrialAveragedSparseness(Analysis):
     Activity ratio is computed, it has a maximum value of 1.0 when each stimulus or frame receives equal numbers of spikes, 
     and is near zero when one stimulus from the set of stimuli, or one frame, contains all the spikes (maximum sparsity).
 
-
-    This analysis takes each recording in DSV that has been done in response to stimulus type 'stimulus_type' 
-    and calculates the average (over trials) number of spikes. For each set of equal recordings (except trial) it creates one PerNeuronValue 
-    `AnalysisDataStructure` instance containing the trial averaged firing rate per each recorded 
-    neuron.
+    Based on Rolls Tovee 1995 paper, is:
+    A = [Sum(firingrate/numstimuli)]^2 / Sum(firingrate^2/numstimuli)
     """
     
     def perform_analysis(self):
@@ -810,22 +807,23 @@ class TrialAveragedSparseness(Analysis):
         for sheet in self.datastore.sheets():
             dsv1 = queries.param_filter_query(self.datastore, sheet_name=sheet)
             segs = dsv1.get_segments()
+            nstim = len(dsv1.get_stimuli())
             st = [MozaikParametrized.idd(s) for s in dsv1.get_stimuli()]
             # transform spike trains due to stimuly to mean_rates
             mean_rates = [numpy.array(s.mean_rates()) for s in segs]
             # collapse against all parameters other then trial
             (mean_rates, s) = colapse(mean_rates, st, parameter_list=['trial'])
-            # take a sum of each
+            # take a sum of each rate over trials
             mean_rates = [sum(a)/len(a) for a in mean_rates]
-
+            sparseness = [((a/nstim)**2)/((a**2)/nstim) for a in mean_rates]
             #JAHACK make sure that mean_rates() return spikes per second
             units = munits.spike / qt.s
-            logger.debug('Adding PerNeuronValue containing trial averaged firing rates to datastore')
-            for mr, st in zip(mean_rates, s):
+            logger.debug('Adding PerNeuronValue containing trial averaged sparseness to datastore')
+            for sp, st in zip(sparseness, s):
                 self.datastore.full_datastore.add_analysis_result(
-                    PerNeuronValue(mr,segs[0].get_stored_spike_train_ids(),units,
+                    PerNeuronValue(sp,segs[0].get_stored_spike_train_ids(), units,
                                    stimulus_id=str(st),
-                                   value_name='Firing rate',
+                                   value_name='Sparseness',
                                    sheet_name=sheet,
                                    tags=self.tags,
                                    analysis_algorithm=self.__class__.__name__,
