@@ -100,7 +100,7 @@ class MeasureSparse(VisualExperiment):
                                 background_luminance=self.background_luminance,
                                 density=self.density,
                                 trial=k,
-                              )
+                              ))
 
     def do_analysis(self, data_store):
         pass
