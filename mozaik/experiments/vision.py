@@ -66,6 +66,44 @@ class MeasureLuminanceSensitivity(VisualExperiment):
 
     def do_analysis(self, data_store):
         pass
+    
+class MeasureSparse(VisualExperiment):
+    """
+    Basic Sparse Stimulation Experiment
+    
+    Parameters
+    ----------
+    model : Model
+          The model on which to execute the experiment.
+
+    grating_duration : float
+                      The duration of single presentation of a grating.
+    
+    contrasts : list(float) 
+              List of contrasts (expressed as % : 0-100%) at which to measure the orientation tuning.
+    
+    num_trials : int
+               Number of trials each each stimulus is shown.
+    """
+    
+    
+    def __init__(self, model, contrasts,step_duration, num_trials):
+        VisualExperiment.__init__(self, model)
+        for c in contrasts:
+            for k in xrange(0, num_trials):
+                self.stimuli.append(topo.SparseNoise(
+                                frame_duration=7,
+                                size_x=model.visual_field.size_x,
+                                size_y=model.visual_field.size_y,
+                                location_x=0.0,
+                                location_y=0.0,
+                                background_luminance=self.background_luminance,
+                                density=self.density,
+                                trial=k,
+                              )
+
+    def do_analysis(self, data_store):
+        pass
 
 
 class MeasureOrientationTuningFullfield(VisualExperiment):

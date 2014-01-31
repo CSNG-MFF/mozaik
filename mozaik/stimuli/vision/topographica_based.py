@@ -23,6 +23,21 @@ class TopographicaBasedVisualStimulus(VisualStimulus):
         self.transparent = False # We will not handle transparency anywhere here for now so let's make it fast
 
 
+class SparseNoise(TopographicaBasedVisualStimulus):
+    """
+    Sparse noise 
+    """
+    
+    def frames(self):
+        while True:
+            yield (imagen.random.Sparse(scale=self.background_luminance,
+                                        bounds=BoundingBox(radius=self.size_x/2),
+                                        xdensity=self.density,
+                                        ydensity=self.density)(),
+                   [self.frame_duration])
+
+    
+
 class FullfieldDriftingSinusoidalGrating(TopographicaBasedVisualStimulus):
     """
     A full field sinusoidal grating stimulus. 
