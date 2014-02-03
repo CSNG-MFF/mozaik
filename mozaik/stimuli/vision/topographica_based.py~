@@ -31,18 +31,10 @@ class SparseNoise(TopographicaBasedVisualStimulus):
     
     def frames(self):
         while True:
-            print imagen_rand.Sparse()
-            print 'Error before calling ----------------------------------------------------------------------------------------------------------------------'
-            print imagen_rand.Sparse(scale=self.background_luminance,
-                                        bounds=BoundingBox(radius=self.size_x/2),
-                                        xdensity=self.density,
-                                        ydensity=self.density)()
-                                        
             yield (imagen_rand.Sparse(scale=self.background_luminance,
                                         bounds=BoundingBox(radius=self.size_x/2),
                                         xdensity=self.density,
-                                        ydensity=self.density)(),
-                  [self.frame_duration])
+                                        ydensity=self.density))
             
             
 
@@ -115,7 +107,7 @@ class Null(TopographicaBasedVisualStimulus):
     """
     def frames(self):
         while True:
-            yield (imagen.Constant(scale=self.background_luminance,
+            yield (imagen.Null(scale=self.background_luminance,
                               bounds=BoundingBox(radius=self.size_x/2),
                               xdensity=self.density,
                               ydensity=self.density)(),

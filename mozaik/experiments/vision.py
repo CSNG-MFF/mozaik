@@ -87,20 +87,63 @@ class MeasureSparse(VisualExperiment):
     """
     
     
-    def __init__(self, model, contrasts,step_duration, num_trials):
+    def __init__(self, model, step_duration, num_trials):
+        VisualExperiment.__init__(self, model)
+        print 'Error before calling 2 ----------------------------------------------------------------------------------------------------------------------'
+        
+        for k in xrange(0, num_trials):
+            print 'entra'
+            print topo.SparseNoise(
+                            frame_duration=7,
+                            size_x=model.visual_field.size_x,
+                            size_y=model.visual_field.size_y,
+                            location_x=0.0,
+                            location_y=0.0,
+                            background_luminance=self.background_luminance,
+                            density=self.density,
+                            trial = k)
+                            
+            self.stimuli.append(topo.SparseNoise(
+                            frame_duration=7,
+                            size_x=model.visual_field.size_x,
+                            size_y=model.visual_field.size_y,
+                            location_x=0.0,
+                            location_y=0.0,
+                            background_luminance=self.background_luminance,
+                            density=self.density,
+                            trial = k
+                          ))
+            print 'sale'
+
+    def do_analysis(self, data_store):
+        pass
+
+class MeasureSparse2(VisualExperiment):
+    """
+    bla 
+    """
+    
+    
+    def __init__(self, model, num_orientations, spatial_frequency,
+                 temporal_frequency, grating_duration, contrasts, num_trials):
         VisualExperiment.__init__(self, model)
         for c in contrasts:
-            for k in xrange(0, num_trials):
-                self.stimuli.append(topo.SparseNoise(
-                                frame_duration=7,
-                                size_x=model.visual_field.size_x,
-                                size_y=model.visual_field.size_y,
-                                location_x=0.0,
-                                location_y=0.0,
-                                background_luminance=self.background_luminance,
-                                density=self.density,
-                                trial=k,
-                              ))
+            for i in xrange(0, num_orientations):
+                for k in xrange(0, num_trials):
+                    self.stimuli.append(topo.SparseNoise2(
+                                    frame_duration=7,
+                                    size_x=model.visual_field.size_x,
+                                    size_y=model.visual_field.size_y,
+                                    location_x=0.0,
+                                    location_y=0.0,
+                                    background_luminance=self.background_luminance,
+                                    contrast = c,
+                                    duration=grating_duration,
+                                    density=self.density,
+                                    trial=k,
+                                    orientation=numpy.pi/num_orientations*i,
+                                    spatial_frequency=spatial_frequency,
+                                    temporal_frequency=temporal_frequency))
 
     def do_analysis(self, data_store):
         pass
