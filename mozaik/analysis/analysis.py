@@ -797,6 +797,7 @@ class TrialAveragedSparseness(Analysis):
     
     Activity ratio is computed, it has a maximum value of 1.0 when each stimulus or frame receives equal numbers of spikes, 
     and is near zero when one stimulus from the set of stimuli, or one frame, contains all the spikes (maximum sparsity).
+    Hence is giving the tuning of the neuron for a specific stimulus.
 
     Based on Rolls Tovee 1995 paper, is:
     A = [Sum(firingrate/numstimuli)]^2 / Sum(firingrate^2/numstimuli)
