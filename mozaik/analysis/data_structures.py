@@ -72,6 +72,7 @@ class PerNeuronValue(AnalysisDataStructure):
         self.value_units = value_units
         self.values = numpy.array(values)
         self.ids = list(idds)
+        assert(len(self.values) == len(self.ids))
     
     def get_value_by_id(self,idds):
         """
