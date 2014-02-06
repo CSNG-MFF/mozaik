@@ -49,7 +49,7 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
     
     pylab.figure(figsize=(12*len(value_names), 6), dpi=2000, facecolor='w', edgecolor='k')
                 
-    print value_names
+
     for i,value_name in enumerate(value_names): 
         pylab.subplot(1,len(value_names),i+1)
         if len(parameters) == 1:
@@ -81,17 +81,15 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
                else:
                   vmin = min(z) 
                   vmax = max(z) 
-                  
+               print value_name
                if resolution != None:
                    xi = numpy.linspace(numpy.min(x),numpy.max(x),resolution)
                    yi = numpy.linspace(numpy.min(y),numpy.max(y),resolution)
-                   #gr = griddata((x,y),z,(xi[None, :], yi[:, None]),method='cubic')
-                   #pylab.imshow(gr,interpolation='none',vmin=vmin,vmax=vmax,aspect='auto',cmap=cm.gray,origin='lower',extent=[numpy.min(x),numpy.max(x),numpy.min(y),numpy.max(y)])
-                   #pylab.hold('on')
-                   pylab.scatter(x,y,marker='o',s=50,c=z,cmap=cm.jet,vmin=vmin,vmax=vmax)
-                   pylab.colorbar()
+                   gr = griddata((x,y),z,(xi[None, :], yi[:, None]),method='cubic')
+                   pylab.imshow(gr,interpolation='none',vmin=vmin,vmax=vmax,aspect='auto',cmap=cm.gray,origin='lower',extent=[numpy.min(x),numpy.max(x),numpy.min(y),numpy.max(y)])
                else:     
                    pylab.scatter(x,y,marker='o',s=300,c=z,cmap=cm.jet,vmin=vmin,vmax=vmax)
+                   print numpy.max(z)
                    pylab.colorbar()
                
                pylab.xlabel(parameters[sorted_parameter_indexes[0]]) 

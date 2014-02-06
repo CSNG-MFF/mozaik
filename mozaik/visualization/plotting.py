@@ -466,7 +466,7 @@ class OverviewPlot(Plotting):
 
 class AnalogSignalListPlot(Plotting):
     """
-    This plot shows a line of plots each showing analog signals, one plot per each AnalogSignalList instance
+    This plot shows a line of plots each showing analog signals for different neurons (in the same plot), one plot per each AnalogSignalList instance
     present in the datastore.
     
     It defines line of plots named: 'AnalogSignalPlot.Plot0' ... 'AnalogSignalPlot.PlotN'.
@@ -513,6 +513,44 @@ class AnalogSignalListPlot(Plotting):
         params["x_ticks"] = [a.t_start.magnitude, a.t_stop.magnitude]
         params["mean"] = True
         return [("AnalogSignalPlot" ,StandardStyleLinePlot(xs, ys),subplotspec,params)]
+
+
+class AnalogSignalPlot(Plotting):
+    """
+    This plot shows a line of plots each showing the given AnalogSignal, one plot per each AnalogSignal instance present in the datastore.
+    
+    It defines line of plots named: 'AnalogSignalPlot.Plot0' ... 'AnalogSignalPlot.PlotN'.
+    
+    Other parameters
+    ----------------
+    
+    sheet_name : str
+               From which layer to plot.
+    """
+    
+    required_parameters = ParameterSet({
+        'sheet_name': str,  # the name of the sheet for which to plot
+    })
+
+    def subplot(self, subplotspec):
+        dsv = queries.param_filter_query(self.datastore,sheet_name=self.parameters.sheet_name,identifier='AnalogSignal')
+        return PerStimulusADSPlot(dsv, function=self._ploter, title_style="Clever").make_line_plot(subplotspec)
+
+    def _ploter(self, dsv,subplotspec):
+        self.analog_signal = dsv.get_analysis_result()
+        assert len(self.analog_signal) != 0, "ERROR, empty datastore"
+        assert len(self.analog_signal) == 1, "Currently only one AnalogSignal per stimulus can be plotted"
+        self.analog_signal = self.analog_signal[0]
+        a = self.analog_signal.analog_signal
+        times = numpy.linspace(a.t_start, a.t_stop, len(a))
+        
+        params = {}
+        params["x_lim"] = (a.t_start.magnitude, a.t_stop.magnitude)
+        params["x_label"] = self.analog_signal.x_axis_name + '(' + a.t_start.dimensionality.latex + ')'
+        params["y_label"] = self.analog_signal.y_axis_name
+        params["x_ticks"] = [a.t_start.magnitude, a.t_stop.magnitude]
+        params["mean"] = True
+        return [("AnalogSignalPlot" ,StandardStyleLinePlot([times], [a]),subplotspec,params)]
 
 
 class ConductanceSignalListPlot(Plotting):

@@ -299,9 +299,7 @@ def colapse(data_list, object_list, func=None, parameter_list=[],
 
     Parameters
     ----------
-    func : bool
-         If not None, func is applied to each member of v.
-
+    
     data_list : list
               The list of data corresponding to objects in object_list.
     
@@ -312,7 +310,7 @@ def colapse(data_list, object_list, func=None, parameter_list=[],
                    The list of parameter names against which to collapse the data.
     
     func : func()
-         The function to be applied to the lists formed by data associated
+         If not None, the function to be applied to the lists formed by data associated
          with the same object parametrizations with exception of the parameters in parameter_list
          
     allow_non_identical_objects : bool, optional
