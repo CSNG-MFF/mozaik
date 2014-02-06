@@ -266,45 +266,48 @@ class MeasureFrequencySensitivity(VisualExperiment):
     orientation : float
                 The orientation (in radians) at which to measure the size tuning. (in future this will become automated)
                 
-    spatial_frequency : float
-                      Spatial frequency of the grating.
+    temporal_frequencies : list(float)
+                      Temporal frequency of the gratings.
                       
-    contrast : float
-                      Temporal frequency of the grating.
+    contrasts : list(float)
+            List of contrasts (expressed as % : 0-100%) at which measure the tuning.
 
     grating_duration : float
                       The duration of single presentation of a grating.
     
     spatial_frequencies : list(float) 
-              List of contrasts (expressed as % : 0-100%) at which to measure the orientation tuning.
+              List of spatial frequencies of the gratings.
     
     num_trials : int
                Number of trials each each stimulus is shown.
     """
 
     def __init__(self, model, orientation,
-                 spatial_frequencies, temporal_frequency, grating_duration,
-                 contrast, num_trials):
+                 spatial_frequencies, temporal_frequencies, contrasts, 
+                 grating_duration, num_trials, frame_duration=7):
         VisualExperiment.__init__(self, model)    
         size = 20.0 #DG: very large!
         # stimuli creation        
-        for sf in spatial_frequencies:
-            for k in xrange(0, num_trials):
-                self.stimuli.append(topo.DriftingSinusoidalGratingDisk(
-                    frame_duration=7,
-                    size_x=model.visual_field.size_x,
-                    size_y=model.visual_field.size_y,
-                    location_x=0.0,
-                    location_y=0.0,
-                    background_luminance=self.background_luminance,
-                    contrast = contrast,
-                    duration=grating_duration,
-                    density=self.density,
-                    trial=k,
-                    orientation=orientation,
-                    radius=size,
-                    spatial_frequency=sf,
-                    temporal_frequency=temporal_frequency))
+        for tf in temporal_frequencies:
+            for sf in spatial_frequencies:
+                for c in contrasts:
+                    for k in xrange(0, num_trials):
+                        self.stimuli.append(topo.DriftingSinusoidalGratingDisk(
+                            frame_duration=frame_duration,
+                            size_x=model.visual_field.size_x,
+                            size_y=model.visual_field.size_y,
+                            location_x=0.0,
+                            location_y=0.0,
+                            background_luminance=self.background_luminance,
+                            contrast = c,
+                            duration=grating_duration,
+                            density=self.density,
+                            trial=k,
+                            orientation=orientation,
+                            radius=size,
+                            spatial_frequency=sf,
+                            temporal_frequency=tf
+                            ))
 
     def do_analysis(self, data_store):
         pass
@@ -506,69 +509,3 @@ class MeasureSpontaneousActivity(VisualExperiment):
                                 trial=k))    
     def do_analysis(self, data_store):
         pass
-
-
-class MeasureSpontaneousActivityWithPoissonStimulation(VisualExperiment):
-    """
-    Measure spontaneous activity while presenting blank stimulus (all pixels set to background luminance).
-    Importantly for the duration of the experiment it will stimulate neurons 
-    definded by the recording configurations in recording_configuration
-    in the sheets specified in the sheet_list with Poisson spike train of mean 
-    frequency determined by the corresponding values in lambda_list via synpases of size weight_list.
-    
-        
-    Parameters
-    ----------
-    model : Model
-          The model on which to execute the experiment.
-
-
-    duration : str
-             The duration of single presentation of the stimulus.
-    
-    sheet_list : int
-               The list of sheets in which to do stimulation
-    
-    drive_period : float (ms)
-                 The length of the constant drive, after which it will be linearly taken down to 0 at the end of the stimulation.   
-               
-    stimulation_configuration : list
-                                 The list of stimulation configurations (one per each sheet).
-                                 
-    lambda_list : list
-                List of the means of the Poisson spike train to be injected into the neurons specified in recording_configuration_list (one per each sheet).
-    
-    weight_list : list
-                List of spike sizes of the Poisson spike train to be injected into the neurons specified in recording_configuration_list (one per each sheet).                
-    """
-
-    def __init__(self,model,duration,sheet_list,drive_period,stimulation_configuration,lambda_list,weight_list):
-            VisualExperiment.__init__(self, model)
-            from mozaik.sheets.direct_stimulator import Kick
-            
-            d  = {}
-            for i,sheet in enumerate(sheet_list):
-                d[sheet] = [Kick(model.sheets[sheet],ParameterSet({'exc_firing_rate' : lambda_list[i],
-                                                      'exc_weight' : weight_list[i],
-                                                      'drive_period' : drive_period,
-                                                      'population_selector' : stimulation_configuration})
-                                )]
-            
-            self.direct_stimulation = [d]
-
-            self.stimuli.append(
-                        topo.Null(   
-                            frame_duration=7, 
-                            size_x=model.visual_field.size_x,
-                            size_y=model.visual_field.size_y,
-                            location_x=0.0,
-                            location_y=0.0,
-                            background_luminance=self.background_luminance,
-                            duration=duration,
-                            direct_stimulation_name='Kick',
-                            density=self.density,
-                            trial=0))    
-    def do_analysis(self, data_store):
-        pass
-
-    
