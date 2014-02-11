@@ -5,7 +5,7 @@ The file contains stimuli that use topographica to generate the stimulus
 
 from visual_stimulus import VisualStimulus
 import imagen
-from imagen import random as imagen_rand
+import imagen.random
 from imagen.image import BoundingBox
 import pickle
 import numpy
@@ -23,61 +23,68 @@ class TopographicaBasedVisualStimulus(VisualStimulus):
         VisualStimulus.__init__(self,**params)
         self.transparent = False # We will not handle transparency anywhere here for now so let's make it fast
 
-
 class SparseNoise(TopographicaBasedVisualStimulus):
     """
     Sparse noise 
+    Produces a matrix with zeros an one random entry with either
+    -1 or 1 allocated at random. Then the matrix is scaled 
+    and translated by scale and offset with the next
+    transformation rule: 
+    -1 -> 0  / offset - scale
+     1 -> 2*background_luminance / offset +scale 
     """
     
+    experiment_seed = SNumber(dimensionless, doc="The seed of a given experiment")
+    duration = SNumber(ms, doc='Total duration of the frames')
+    time_per_image = SNumber(ms, doc ='Duration of one image')
+        
     def frames(self):
+            
+        aux = imagen.random.SparseNoise(
+                                      offset=self.background_luminance,
+                                      scale=self.background_luminance,
+                                      bounds=BoundingBox(radius=self.size_x/2),
+                                      xdensity=self.density,
+                                      ydensity=self.density,
+                                      random_generator=numpy.random.RandomState(seed=self.experiment_seed))
         while True:
-            print imagen_rand.Sparse()
-            print 'Error before calling ----------------------------------------------------------------------------------------------------------------------'
-            print imagen_rand.Sparse(scale=self.background_luminance,
-                                        bounds=BoundingBox(radius=self.size_x/2),
-                                        xdensity=self.density,
-                                        ydensity=self.density)()
-                                        
-            yield (imagen_rand.Sparse(scale=self.background_luminance,
-                                        bounds=BoundingBox(radius=self.size_x/2),
-                                        xdensity=self.density,
-                                        ydensity=self.density)(),
-                  [self.frame_duration])
-            
+            aux2 = aux()
+            for i in range(self.time_per_image):
+                yield (aux2,[0])
             
 
-class SparseNoise2(TopographicaBasedVisualStimulus):
+class DenseNoise(TopographicaBasedVisualStimulus):
     """
-    A full field sinusoidal grating stimulus. 
+    Dense Noise 
+    Produces a matrix with the values -1, 0 and 1 allocated at random
+    and then scaled and translated by scale and offset with the next
+    transformation rule 
     
-    Notes
-    -----
-    `max_luminance` is interpreted as scale and `size_x/2` as the bounding box radius.
+    -1 -> 0  / offset - scale  
+    0 -> background.luminance / offset 
+    1 -> 2*background_luminance / offset +scale 
     """
-
-    orientation = SNumber(rad, period=pi, bounds=[0,pi], doc="Grating orientation")
-    spatial_frequency = SNumber(cpd, doc="Spatial frequency of grating")
-    temporal_frequency = SNumber(Hz, doc="Temporal frequency of grating")
-    contrast = SNumber(dimensionless,bounds=[0,100.0],doc="Contrast of the stimulus")
-    
+    experiment_seed = SNumber(dimensionless, doc="The seed of a given experiment") 
+    duration = SNumber(ms, doc='Total duration of the frames')
+    time_per_image = SNumber(ms, doc ='Duration of one image')
+  
     def frames(self):
-       self.current_phase=0
-       i = 0
-       while True:
-           i += 1
-           yield (imagen_rand.Sparse(orientation=self.orientation,
-                                     frequency=self.spatial_frequency,
-                                     phase=self.current_phase,
-                                     bounds=BoundingBox(radius=self.size_x/2),
-                                     offset = self.background_luminance*(100.0 - self.contrast)/100.0,
-                                     scale=2*self.background_luminance*self.contrast/100.0,
-                                     xdensity=self.density,
-                                     ydensity=self.density)(),
-                  [self.current_phase])
-           self.current_phase += 2*pi * (self.frame_duration/1000.0) * self.temporal_frequency
-           
+        
+        aux = imagen.random.DenseNoise(
+                                       offset = self.background_luminance,
+                                       scale = self.background_luminance, 
+                                       bounds = BoundingBox(radius=self.size_x/2),
+                                       xdensity = self.density,
+                                       ydensity = self.density,
+                                       random_generator=numpy.random.RandomState(seed=self.experiment_seed))
+        
+        while True:
+            aux2 = aux()
+            for i in range(self.time_per_image):
+                yield (aux2,[0])
 
 
+                    
 class FullfieldDriftingSinusoidalGrating(TopographicaBasedVisualStimulus):
     """
     A full field sinusoidal grating stimulus. 
@@ -96,7 +103,7 @@ class FullfieldDriftingSinusoidalGrating(TopographicaBasedVisualStimulus):
         self.current_phase=0
         i = 0
         while True:
-            i += 1
+            i += 1                                   
             yield (imagen.SineGrating(orientation=self.orientation,
                                       frequency=self.spatial_frequency,
                                       phase=self.current_phase,

@@ -74,77 +74,79 @@ class MeasureSparse(VisualExperiment):
     Parameters
     ----------
     model : Model
-          The model on which to execute the experiment.
+        The model on which to execute the experiment.
+          
+    time_per_image : float
+        The time it takes for the experiment to change single images 
+        Every time_per_image a new instance of sparse noise will be 
+        presented
 
-    grating_duration : float
-                      The duration of single presentation of a grating.
-    
-    contrasts : list(float) 
-              List of contrasts (expressed as % : 0-100%) at which to measure the orientation tuning.
+    total_number_images : int
+        The total number of images that will be presented
     
     num_trials : int
-               Number of trials each each stimulus is shown.
+           Number of trials each each stimulus is shown.
+    experiment_seed :  
+     sets a particular seed at the begining of each experiment
     """
     
     
-    def __init__(self, model, step_duration, num_trials):
+    def __init__(self, model,time_per_image, total_number_of_images, num_trials, seed):
         VisualExperiment.__init__(self, model)
-        print 'Error before calling 2 ----------------------------------------------------------------------------------------------------------------------'
-        
         for k in xrange(0, num_trials):
-            print 'entra'
-            print topo.SparseNoise(
-                            frame_duration=7,
-                            size_x=model.visual_field.size_x,
-                            size_y=model.visual_field.size_y,
-                            location_x=0.0,
-                            location_y=0.0,
-                            background_luminance=self.background_luminance,
-                            density=self.density,
-                            trial = k)
-                            
             self.stimuli.append(topo.SparseNoise(
                             frame_duration=7,
+                            time_per_image = time_per_image,
+                            duration = total_number_of_images * time_per_image,  
                             size_x=model.visual_field.size_x,
                             size_y=model.visual_field.size_y,
                             location_x=0.0,
-                            location_y=0.0,
+                            location_y=0.0, 
                             background_luminance=self.background_luminance,
                             density=self.density,
-                            trial = k
+                            trial = k,
+                            experiment_seed = seed
                           ))
-            print 'sale'
-
+   
     def do_analysis(self, data_store):
         pass
 
-class MeasureSparse2(VisualExperiment):
+class MeasureDense(VisualExperiment):
     """
-    bla 
-    """
+    Basic Sparse Stimulation Experiment
     
-    
-    def __init__(self, model, num_orientations, spatial_frequency,
-                 temporal_frequency, grating_duration, contrasts, num_trials):
-        VisualExperiment.__init__(self, model)
-        for c in contrasts:
-            for i in xrange(0, num_orientations):
-                for k in xrange(0, num_trials):
-                    self.stimuli.append(topo.SparseNoise2(
-                                    frame_duration=7,
-                                    size_x=model.visual_field.size_x,
-                                    size_y=model.visual_field.size_y,
-                                    location_x=0.0,
-                                    location_y=0.0,
-                                    background_luminance=self.background_luminance,
-                                    contrast = c,
-                                    duration=grating_duration,
-                                    density=self.density,
-                                    trial=k,
-                                    orientation=numpy.pi/num_orientations*i,
-                                    spatial_frequency=spatial_frequency,
-                                    temporal_frequency=temporal_frequency))
+    Parameters
+    ----------
+    model : Model
+          The model on which to execute the experiment.
 
+    duration: How long will the experiment take
+    
+    num_trials : int
+               Number of trials each each stimulus is shown.
+    experiment_seed :  
+     sets a particular seed at the begining of each experiment
+    """
+    
+    
+    def __init__(self, model, time_per_image, total_number_of_images, num_trials, seed):
+        VisualExperiment.__init__(self, model)
+        for k in xrange(0, num_trials):
+            self.stimuli.append(topo.DenseNoise(
+                            frame_duration=7,
+                            time_per_image = time_per_image,
+                            duration = total_number_of_images * time_per_image, 
+                            size_x=model.visual_field.size_x,
+                            size_y=model.visual_field.size_y,
+                            location_x=0.0,
+                            location_y=0.0, 
+                            duration = duration,
+                            background_luminance=self.background_luminance,
+                            density=self.density,
+                            trial = k,
+                            experiment_seed = seed
+                          ))
+         
     def do_analysis(self, data_store):
         pass
 
