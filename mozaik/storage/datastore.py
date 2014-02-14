@@ -357,7 +357,7 @@ class DataStore(DataStoreView):
         The DataStore interface function that adds a stimulus into the datastore.
         """
         if self.parameters.store_stimuli:
-           _add_stimulus(data, stimulus)
+           self._add_stimulus(data, stimulus)
 
     def _add_stimulus(self, data, stimulus):
         """
@@ -472,8 +472,9 @@ class PickledDataStore(Hdf5DataStore):
 
         f = open(self.parameters.root_directory + '/datastore.analysis.pickle', 'rb')
         self.analysis_results = cPickle.load(f)
-        #f = open(self.parameters.root_directory + '/datastore.sensory.stimulus.pickle', 'rb')
-        #self.sensory_stimulus = cPickle.load(f)
+        
+        f = open(self.parameters.root_directory + '/datastore.sensory.stimulus.pickle', 'rb')
+        self.sensory_stimulus = cPickle.load(f)
 
     def save(self):
         f = open(self.parameters.root_directory + '/datastore.recordings.pickle', 'wb')
@@ -484,9 +485,9 @@ class PickledDataStore(Hdf5DataStore):
         cPickle.dump(self.analysis_results, f)
         f.close()
 
-        #f = open(self.parameters.root_directory + '/datastore.sensory.stimulus.pickle', 'wb')
-        #cPickle.dump(self.sensory_stimulus, f)
-        #f.close()
+        f = open(self.parameters.root_directory + '/datastore.sensory.stimulus.pickle', 'wb')
+        cPickle.dump(self.sensory_stimulus, f)
+        f.close()
 
     def add_recording(self, segments, stimulus):
         # we get recordings as seg

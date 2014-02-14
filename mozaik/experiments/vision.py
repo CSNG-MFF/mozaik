@@ -23,7 +23,8 @@ class VisualExperiment(Experiment):
     
     def __init__(self, model):
         Experiment.__init__(self, model)
-        self.background_luminance = model.input_space.background_luminance 
+        self.background_luminance = model.input_space.background_luminance
+      
         #JAHACK: This is kind of a hack now. There needs to be generally defined interface of what is the resolution of a visual input layer
         # possibly in the future we could force the visual_space to have resolution, perhaps something like native_resolution parameter!?
         self.density  = 1/self.model.input_layer.parameters.receptive_field.spatial_resolution # in pixels per degree of visual space 
@@ -86,14 +87,19 @@ class MeasureSparse(VisualExperiment):
     
     num_trials : int
            Number of trials each each stimulus is shown.
+           
+    pattern_size: dimensionless
+           The size of the spot with respect to the smallest unit of distance in the experiment
+           
     experiment_seed :  
      sets a particular seed at the begining of each experiment
     """
     
     
-    def __init__(self, model,time_per_image, total_number_of_images, num_trials, seed):
+    def __init__(self, model,time_per_image, total_number_of_images, num_trials, seed, pattern_size = 1, grid = True):
         VisualExperiment.__init__(self, model)
         for k in xrange(0, num_trials):
+           
             self.stimuli.append(topo.SparseNoise(
                             frame_duration=7,
                             time_per_image = time_per_image,
@@ -105,7 +111,9 @@ class MeasureSparse(VisualExperiment):
                             background_luminance=self.background_luminance,
                             density=self.density,
                             trial = k,
-                            experiment_seed = seed
+                            experiment_seed = seed,
+                            pattern_size = pattern_size,
+                            grid = grid
                           ))
    
     def do_analysis(self, data_store):
@@ -129,7 +137,7 @@ class MeasureDense(VisualExperiment):
     """
     
     
-    def __init__(self, model, time_per_image, total_number_of_images, num_trials, seed):
+    def __init__(self, model, time_per_image, total_number_of_images, num_trials, seed, pattern_size = 1):
         VisualExperiment.__init__(self, model)
         for k in xrange(0, num_trials):
             self.stimuli.append(topo.DenseNoise(
@@ -140,11 +148,11 @@ class MeasureDense(VisualExperiment):
                             size_y=model.visual_field.size_y,
                             location_x=0.0,
                             location_y=0.0, 
-                            duration = duration,
                             background_luminance=self.background_luminance,
                             density=self.density,
                             trial = k,
-                            experiment_seed = seed
+                            experiment_seed = seed,
+                            pattern_size = pattern_size
                           ))
          
     def do_analysis(self, data_store):

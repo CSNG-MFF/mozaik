@@ -288,11 +288,6 @@ class StandardStyle(SimplePlot):
 
     def _ticks(self):
         
-        print "U"
-        print self.x_tick_style
-        print self.x_ticks
-        print self.x_tick_labels
-        
         if self.x_ticks != None and self.x_tick_style == 'Custom':
             if self.x_tick_labels != None and (len(self.x_ticks) == len(self.x_tick_labels)):
                 pylab.xticks(self.x_ticks, self.x_tick_labels)

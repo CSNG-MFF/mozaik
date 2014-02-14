@@ -35,12 +35,20 @@ class SparseNoise(TopographicaBasedVisualStimulus):
     """
     
     experiment_seed = SNumber(dimensionless, doc="The seed of a given experiment")
-    duration = SNumber(ms, doc='Total duration of the frames')
-    time_per_image = SNumber(ms, doc ='Duration of one image')
+    duration = SNumber(ms, doc="Total duration of the frames")
+    time_per_image = SNumber(ms, doc ="Duration of one image")
+    pattern_size = SNumber(dimensionless, doc = "Size of the spot")
+    grid = SNumber(dimensionless, doc = "Boolean string to decide whether there is grid or not")
+
+    def __init__(self,**params):
+        TopographicaBasedVisualStimulus.__init__(self, **params)
+        assert (self.time_per_image/self.frame_duration) % 1.0 == 0.0
         
     def frames(self):
             
         aux = imagen.random.SparseNoise(
+                                      pattern_size = self.pattern_size,
+                                      grid = self.grid,
                                       offset=self.background_luminance,
                                       scale=self.background_luminance,
                                       bounds=BoundingBox(radius=self.size_x/2),
@@ -49,7 +57,9 @@ class SparseNoise(TopographicaBasedVisualStimulus):
                                       random_generator=numpy.random.RandomState(seed=self.experiment_seed))
         while True:
             aux2 = aux()
-            for i in range(self.time_per_image):
+            print aux2
+            print "-----------------"
+            for i in range(self.time_per_image/self.frame_duration):
                 yield (aux2,[0])
             
 
@@ -64,13 +74,19 @@ class DenseNoise(TopographicaBasedVisualStimulus):
     0 -> background.luminance / offset 
     1 -> 2*background_luminance / offset +scale 
     """
+    
     experiment_seed = SNumber(dimensionless, doc="The seed of a given experiment") 
     duration = SNumber(ms, doc='Total duration of the frames')
     time_per_image = SNumber(ms, doc ='Duration of one image')
+    pattern_size = SNumber(dimensionless, doc = "Size of the spot")
+    
+    def __init__(self,**params):
+        TopographicaBasedVisualStimulus.__init__(self, **params)
+        assert (self.time_per_image/self.frame_duration) % 1.0 == 0.0
   
     def frames(self):
-        
         aux = imagen.random.DenseNoise(
+                                       pattern_size = self.pattern_size,
                                        offset = self.background_luminance,
                                        scale = self.background_luminance, 
                                        bounds = BoundingBox(radius=self.size_x/2),
@@ -80,7 +96,9 @@ class DenseNoise(TopographicaBasedVisualStimulus):
         
         while True:
             aux2 = aux()
-            for i in range(self.time_per_image):
+            print aux2
+            print "---------------"
+            for i in range(self.time_per_image/self.frame_duration):
                 yield (aux2,[0])
 
 
