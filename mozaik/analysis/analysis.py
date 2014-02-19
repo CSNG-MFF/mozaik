@@ -733,7 +733,7 @@ class NeuronToNeuronAnalogSignalCorrelations(Analysis):
 class PopulationMean(Analysis):
       """
       Calculates the mean value accross population of a quantity. Currently it can process PerNeuronValues , PerNeuronPairValue, and AnalogSignalList ADS.
-      This list might be increased.
+      This list is likely to grow in future.
       """
       def perform_analysis(self):
           dsv = queries.param_filter_query(self.datastore,identifier=['PerNeuronPairValue','PerNeuronValue'])

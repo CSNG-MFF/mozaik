@@ -1,13 +1,11 @@
 from mozaik.storage.queries import *
 import pylab
+import math
 from scipy.interpolate import griddata
 import matplotlib.cm as cm
 from analysis import load_fixed_parameter_set_parameter_search
         
-    
-    
-
-def single_value_visualization(simulation_name,master_results_dir,query,value_names=None,filename=None,resolution=None,treat_nan_as_zero=False,ranges={}):
+def single_value_visualization(simulation_name,master_results_dir,query,value_names=None,filename=None,resolution=None,treat_nan_as_zero=False,ranges={},cols=4):
     """
     Visualizes all single values (or those whose names match ones in `value_names` argument)
     present in the datastores of parameter search over a fixed set of parameters. 
@@ -29,36 +27,43 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
                If not None data will be plotted on a interpolated grid of size (resolution,...,resolution)
     ranges : dict
            A dictionary with value names as keys, and tuples of (min,max) ranges as values indicating what range of values should be displayed.
+           
+    cols : int
+         The number of columns in which to show plots, default is 4.
                
     """
     (parameters,datastores,n) = load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir,filter=ParamFilterQuery(ParameterSet({'ads_unique' : False, 'rec_unique' : False, 'params' : ParameterSet({'identifier' : 'SingleValue'})})))
+
+    # Lets first filter out stuff we were asked by user
+    datastores = [(a,query.query(b)) for a,b in datastores]
     
     sorted_parameter_indexes = zip(*sorted(enumerate(parameters), key=lambda x: x[1]))[0]
     
     # if value_names isNone lets set it to set of value_names in the first datastore
     if value_names == None:
-        value_names = set([ads.value_name for ads in param_filter_query(datastores[0][1],identifier='SingleValue').get_analysis_result()])
+        value_names = [ads.value_name for ads in param_filter_query(datastores[0][1],identifier='SingleValue').get_analysis_result()]
+        value_names = set(sorted(value_names))
     
+
     # Lets first make sure that the value_names uniqly identify a SingleValue ADS in each DataStore and 
     # that they exist in each DataStore.
-        
     for (param_values,datastore) in datastores:
-        dsv = query.query(datastore)
         for v in value_names:
-            assert len(param_filter_query(dsv,identifier='SingleValue',value_name=v).get_analysis_result()) == 1, "Error, %d ADS with value_name %s found for parameter combination:" % (len(param_filter_query(datastore,identifier='SingleValue').get_analysis_result()), str([str(a) + ':' + str(b) + ', ' for (a,b) in zip(parameters,param_values)]))
+            assert len(param_filter_query(datastore,identifier='SingleValue',value_name=v).get_analysis_result()) == 1, "Error, %d ADS with value_name %s found for parameter combination:" % (len(param_filter_query(datastore,identifier='SingleValue').get_analysis_result()), str([str(a) + ':' + str(b) + ', ' for (a,b) in zip(parameters,param_values)]))
     
-    pylab.figure(figsize=(12*len(value_names), 6), dpi=2000, facecolor='w', edgecolor='k')
+    rows = math.ceil(1.0*len(value_names)/cols)
+    
+    pylab.figure(figsize=(12*cols, 6*rows), dpi=2000, facecolor='w', edgecolor='k')
                 
 
     for i,value_name in enumerate(value_names): 
-        pylab.subplot(1,len(value_names),i+1)
+        pylab.subplot(rows,cols,i+1)
         if len(parameters) == 1:
                x = []
                y = []
                for (param_values,datastore) in datastores: 
-                   dsv = query.query(datastore)
                    x.append(param_values[0]) 
-                   y.append(float(param_filter_query(dsv,identifier='SingleValue',value_name=value_name).get_analysis_result()[0].value))
+                   y.append(float(param_filter_query(datastore,identifier='SingleValue',value_name=value_name).get_analysis_result()[0].value))
                pylab.plot(x,y)
                pylab.plot(x,y,marker='o')
                pylab.xlabel(parameters[sorted_parameter_indexes[0]]) 
@@ -69,10 +74,9 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
                y = []
                z = []
                for (param_values,datastore) in datastores: 
-                   dsv = query.query(datastore)
                    x.append(param_values[sorted_parameter_indexes[0]]) 
                    y.append(param_values[sorted_parameter_indexes[1]]) 
-                   z.append(float(param_filter_query(dsv,identifier='SingleValue',value_name=value_name).get_analysis_result()[0].value))
+                   z.append(float(param_filter_query(datastore,identifier='SingleValue',value_name=value_name).get_analysis_result()[0].value))
                if treat_nan_as_zero: 
                   z = numpy.nan_to_num(z)
                
@@ -81,7 +85,7 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
                else:
                   vmin = min(z) 
                   vmax = max(z) 
-               print value_name
+
                if resolution != None:
                    xi = numpy.linspace(numpy.min(x),numpy.max(x),resolution)
                    yi = numpy.linspace(numpy.min(y),numpy.max(y),resolution)
@@ -89,7 +93,6 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
                    pylab.imshow(gr,interpolation='none',vmin=vmin,vmax=vmax,aspect='auto',cmap=cm.gray,origin='lower',extent=[numpy.min(x),numpy.max(x),numpy.min(y),numpy.max(y)])
                else:     
                    pylab.scatter(x,y,marker='o',s=300,c=z,cmap=cm.jet,vmin=vmin,vmax=vmax)
-                   print numpy.max(z)
                    pylab.colorbar()
                
                pylab.xlabel(parameters[sorted_parameter_indexes[0]]) 
@@ -99,7 +102,7 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
         pylab.title(value_name)    
 
     if filename != None:
-       pylab.savefig(master_results_dir+'/'+filename)
+       pylab.savefig(master_results_dir+'/'+filename, bbox_inches='tight')
     
     
 

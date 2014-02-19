@@ -241,10 +241,8 @@ class PickledDataStoreNeoWrapper(MozaikSegment):
             self.full = True
 
         def __getstate__(self):
-            flag = self.full
-            self.full = False
             result = self.__dict__.copy()
-            if flag:
+            if self.full:
                 del result['_spiketrains']
                 del result['analogsignalarrays']
             return result
