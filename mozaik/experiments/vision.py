@@ -29,7 +29,7 @@ class VisualExperiment(Experiment):
         self.density  = 1/self.model.input_layer.parameters.receptive_field.spatial_resolution # in pixels per degree of visual space 
 
 
-class MeasureLuminanceSensitivity(VisualExperiment):
+class MeasureFlatLuminanceSensitivity(VisualExperiment):
     """
     Measure luminance sensitivity using flat luminance screen.
     
@@ -203,7 +203,7 @@ class MeasureContrastSensitivity(VisualExperiment):
           The model on which to execute the experiment.
         
     orientation : float
-                The orientation (in radians) at which to measure the size tuning. (in future this will become automated)
+                The orientation (in radians) at which to measure the contrast. (in future this will become automated)
                 
     spatial_frequency : float
                       Spatial frequency of the grating.

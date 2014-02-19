@@ -48,10 +48,17 @@ def stRF_2d(x, y, t, p):
     fsm = F_2d(x, y, p.As, p.sigma_s)
 
     ##rf = (fcm*tmc - fsm*tms)/(fcm - fsm).max()
-    rf = fcm*tmc - fsm*tms
+    rf = fcm*tmc + fsm*tms
+    x_res = x[1,0,0] - x[0,0,0]
+    fcm_area = fcm[:,:,0].sum()*x_res*x_res
+    center_area = 2*numpy.pi*p.sigma_c*p.sigma_c*p.Ac
+    assert abs(fcm_area - center_area) < 0.0001, "Synthesized center of RF doesn't fit the supplied sigma and amplitude (%f-%f=%f), check visual field size and model size!" % (fcm_area, center_area, abs(fcm_area - center_area))
+    fsm_area = fsm[:,:,0].sum()*x_res*x_res
+    surround_area = 2*numpy.pi*p.sigma_s*p.sigma_s*p.As
+    assert abs(fsm_area - surround_area) < 0.0001, "Synthesized surround of RF doesn't fit the supplied sigma and amplitude (%f-%f=%f), check visual field size and model size!" % (fsm_area, surround_area, abs(fsm_area - surround_area))
+
     if p.subtract_mean:
-        # lets normalize each time slice sepparately 
-        for i in xrange(0,numpy.shape(rf)[2]):
+        for i in xrange(0,numpy.shape(rf)[2]): # lets normalize each time slice separately
             rf[:,:,i] = rf[:,:,i] - rf[:,:,i].mean()
         #rf = rf - rf.mean()
     return rf
