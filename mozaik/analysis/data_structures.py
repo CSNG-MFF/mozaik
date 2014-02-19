@@ -330,7 +330,8 @@ class ConductanceSignalList(AnalysisDataStructure1D):
         self.e_con = e_con
         self.i_con = i_con
         self.ids = list(ids)
-        assert len(asl) == len(ids)
+        assert len(e_con) == len(ids)
+        assert len(i_con) == len(ids)
         
     def get_econ_by_id(self,idd):
         """
