@@ -88,15 +88,19 @@ class MeasureSparse(VisualExperiment):
     num_trials : int
            Number of trials each each stimulus is shown.
            
-    pattern_size: dimensionless
-           The size of the spot with respect to the smallest unit of distance in the experiment
+    grid_size: dimensionless
+           the grid will have grid_size x grid_size spots
            
     experiment_seed :  
-     sets a particular seed at the begining of each experiment
+     sets a particular seed at the beginning of each experiment
+     
+     grid: 
+     If true makes the patterns stick to a grid, otherwise the 
+     center of the pattern is distribuited randomly
     """
     
     
-    def __init__(self, model,time_per_image, total_number_of_images, num_trials, seed, pattern_size = 1, grid = True):
+    def __init__(self, model,time_per_image, total_number_of_images, num_trials, seed, grid_size, grid = True):
         VisualExperiment.__init__(self, model)
         for k in xrange(0, num_trials):
            
@@ -112,7 +116,7 @@ class MeasureSparse(VisualExperiment):
                             density=self.density,
                             trial = k,
                             experiment_seed = seed,
-                            pattern_size = pattern_size,
+                            grid_size = grid_size,
                             grid = grid
                           ))
    
@@ -132,12 +136,16 @@ class MeasureDense(VisualExperiment):
     
     num_trials : int
                Number of trials each each stimulus is shown.
+               
+     grid_size: dimensionless
+        the grid will have grid_size x grid_size spots     
+            
     experiment_seed :  
      sets a particular seed at the begining of each experiment
     """
     
     
-    def __init__(self, model, time_per_image, total_number_of_images, num_trials, seed, pattern_size = 1):
+    def __init__(self, model, time_per_image, total_number_of_images, num_trials, seed, grid_size):
         VisualExperiment.__init__(self, model)
         for k in xrange(0, num_trials):
             self.stimuli.append(topo.DenseNoise(
@@ -152,7 +160,7 @@ class MeasureDense(VisualExperiment):
                             density=self.density,
                             trial = k,
                             experiment_seed = seed,
-                            pattern_size = pattern_size
+                            grid_size = grid_size
                           ))
          
     def do_analysis(self, data_store):
