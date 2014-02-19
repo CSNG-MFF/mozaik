@@ -48,7 +48,7 @@ def stRF_2d(x, y, t, p):
     fsm = F_2d(x, y, p.As, p.sigma_s)
 
     ##rf = (fcm*tmc - fsm*tms)/(fcm - fsm).max()
-    rf = fcm*tmc + fsm*tms
+    rf = fcm*tmc - fsm*tms
     x_res = x[1,0,0] - x[0,0,0]
     fcm_area = fcm[:,:,0].sum()*x_res*x_res
     center_area = 2*numpy.pi*p.sigma_c*p.sigma_c*p.Ac
