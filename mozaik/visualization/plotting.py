@@ -56,7 +56,7 @@ from numpy import pi
 
 from simple_plot import StandardStyleLinePlot, SpikeRasterPlot, \
                         SpikeHistogramPlot, ConductancesPlot, PixelMovie, \
-                        ScatterPlotMovie, ScatterPlot, ConnectionPlot, SimplePlot
+                        ScatterPlotMovie, ScatterPlot, ConnectionPlot, SimplePlot, HistogramPlot
 from plot_constructors import LinePlot, PerStimulusPlot, PerStimulusADSPlot
 
 import mozaik
@@ -106,7 +106,6 @@ class Plotting(ParametrizedObject):
             l = k.split('.')
             assert len(l) > 1, "Parameter %s not matching the simple plot" % (k)
             if l[0] == n or l[0] == '*':
-                print l
                 if len(l[1:]) >1: 
                    d['.'.join(l[1:])] = v
                 else:
@@ -178,6 +177,13 @@ class PlotTuningCurve(Plotting):
                
     parameter_name : str
                    The parameter_name through which to plot the tuning curve.
+                   
+    centered : bool
+             If True it will center each set of tuning curves on the parameter value with the larges mean response across the other parameter variations
+    
+    mean : bool 
+         If True it will plot the mean tuning curve over all neurons (in case centered=True it will first center the TCs before computing the mean)
+                   
     
     
     Defines 'TuningCurve_' + value_name +  '.Plot0' ... 'TuningCurve_' + value_name +  '.Plotn'
@@ -187,7 +193,9 @@ class PlotTuningCurve(Plotting):
     required_parameters = ParameterSet({
       'neurons':  list,  # which neurons to plot
       'sheet_name': str,  # from which layer to plot the tuning curves
-      'parameter_name': str  # the parameter_name through which to plot the tuning curve
+      'parameter_name': str,  # the parameter_name through which to plot the tuning curve
+      'centered' : bool, # if True it will center each set of tuning curves on the parameter value with the larges mean response across the other parameter variations
+      'mean' : bool, # if True it will plot the mean tuning curve over the neurons (in case centered=True it will first center the TCs before computing the mean)
     })
 
     def __init__(self, datastore, parameters, plot_file_name=None,fig_param=None):
@@ -196,6 +204,7 @@ class PlotTuningCurve(Plotting):
         self.st = []
         self.tc_dict = []
         self.pnvs = []
+        self.max_mean_response_indexes = []
         assert queries.ads_with_equal_stimulus_type(datastore)
         assert len(self.parameters.neurons) > 0 , "ERROR, empty list of neurons specified"
         dsvs = queries.partition_analysis_results_by_parameters_query(self.datastore,parameter_list=['value_name'],excpt=True)
@@ -208,32 +217,60 @@ class PlotTuningCurve(Plotting):
             self.st.append(st)
             # transform the pnvs into a dictionary of tuning curves along the parameter_name
             # also make sure the values are ordered according to ids in the first pnv
-            self.tc_dict.append(colapse_to_dictionary([z.get_value_by_id(self.parameters.neurons) for z in self.pnvs[-1]],st,self.parameters.parameter_name))
+            dic = colapse_to_dictionary([z.get_value_by_id(self.parameters.neurons) for z in self.pnvs[-1]],st,self.parameters.parameter_name)
+            #sort the entries in dict according to the parameter parameter_name values 
+            for k in  dic:
+                (b, a) = dic[k]
+                par, val = zip(
+                             *sorted(
+                                zip(b,
+                                    numpy.array(a))))
+                dic[k] = (par,numpy.array(val))
+            self.tc_dict.append(dic)
+            if self.parameters.centered:
+               self.max_mean_response_indexes.append(numpy.argmax(sum([a[1] for a in dic.values()]),axis=0))
+               # lets find the highest average value for the neuron
+
             
 
     def subplot(self, subplotspec):
-        return LinePlot(function=self._ploter, length=len(self.parameters.neurons)).make_line_plot(subplotspec)
+        if self.parameters.mean:
+            return LinePlot(function=self._ploter, length=1).make_line_plot(subplotspec)
+        else:
+            return LinePlot(function=self._ploter, length=len(self.parameters.neurons)).make_line_plot(subplotspec)
 
     def _ploter(self, idx, gs):
         plots  = []
         gs = gridspec.GridSpecFromSubplotSpec(len(self.st), 1, subplot_spec=gs)
         for i,(dic, st, pnvs) in enumerate(zip(self.tc_dict,self.st,self.pnvs)):
             period = st[0].params()[self.parameters.parameter_name].period
+            if self.parameters.centered:        
+               assert period != None, "ERROR: You asked for centering of tuning curves even though the domain over which it is measured is not periodic." 
             xs = []
             ys = []
             labels = []
-            for k in  dic:
-                (b, a) = dic[k]
-                par, val = zip(
-                             *sorted(
-                                zip(b,
-                                    numpy.array(a)[:, idx])))
+                
+            for k in dic.keys():    
+                (par, val) = dic[k]
+                if self.parameters.mean:
+                    v = 0
+                    for idx in xrange(0,len(self.parameters.neurons)):
+                        vv,p = self.center_tc(val[:,idx],par,period,self.max_mean_response_indexes[i][idx])
+                        v = v + vv
+                    val = v / len(self.parameters.neurons)
+                    par = p
+                else:
+                    val,par = self.center_tc(val[:,idx],par,period,self.max_mean_response_indexes[i][idx])
+                    
                 if period != None:
                     par = list(par)
                     val = list(val)
                     par.append(par[0] + period)
                     val.append(val[0])
-
+                    if par != sorted(par):
+                       print "BBBBBBB"
+                       print par
+              
                 xs.append(numpy.array(par))
                 ys.append(numpy.array(val))
                 
@@ -253,23 +290,62 @@ class PlotTuningCurve(Plotting):
             if pnvs == self.pnvs[0]:
                 params["title"] =  'Neuron ID: %d' % self.parameters.neurons[idx]
             
-            if period == pi:
-                params["x_ticks"] = [0, pi/2, pi]
-                params["x_lim"] = (0, pi)
-                params["x_tick_style"] = "Custom"
-                params["x_tick_labels"] = ["0", "$\\frac{\\pi}{2}$", "$\\pi$"]
-           
-            if period == 2*pi:
-                params["x_ticks"] = [0, pi, 2*pi]
-                params["x_lim"] = (0, 2*pi)
-                params["x_tick_style"] = "Custom"
-                params["x_tick_labels"] = ["0", "$\\pi$", "$2\\pi$"]
+            if self.parameters.centered:        
+                if period == pi:
+                    params["x_ticks"] = [-pi/2, 0, pi/2]
+                    params["x_lim"] = (-pi/2, pi/2)
+                    params["x_tick_style"] = "Custom"
+                    params["x_tick_labels"] = ["-$\\frac{\\pi}{2}$", "0", "$\\frac{\\pi}{2}$"]
+               
+                if period == 2*pi:
+                    params["x_ticks"] = [-pi, 0, pi]
+                    params["x_lim"] = (-pi, pi)
+                    params["x_tick_style"] = "Custom"
+                    params["x_tick_labels"] = ["-$\\pi$","0", "$\\pi$"]
+            else:
+                if period == pi:
+                    params["x_ticks"] = [0, pi/2, pi]
+                    params["x_lim"] = (0, pi)
+                    params["x_tick_style"] = "Custom"
+                    params["x_tick_labels"] = ["0", "$\\frac{\\pi}{2}$", "$\\pi$"]
+               
+                if period == 2*pi:
+                    params["x_ticks"] = [0, pi, 2*pi]
+                    params["x_lim"] = (0, 2*pi)
+                    params["x_tick_style"] = "Custom"
+                    params["x_tick_labels"] = ["0", "$\\pi$", "$2\\pi$"]
 
             if pnvs != self.pnvs[-1]:
                 params["x_axis"] = None
             plots.append(("TuningCurve_" + pnvs[0].value_name,StandardStyleLinePlot(xs, ys),gs[i],params))
         return plots
 
+    def center_tc(self,val,par,period,center_index):
+           # first lets make the maximum to be at zero                   
+           q = center_index+len(val)/2 if center_index < len(val)/2 else center_index-len(val)/2
+           z = par[center_index]
+           c =  period/2.0
+           par = numpy.array([(p - z + c) % period for p in par])  - c
+           if q != 0:
+               a = val[:q].copy()[:] 
+               b = par[:q].copy()[:] 
+               val[:-q] = val[q:].copy()[:]   
+               par[:-q] = par[q:].copy()[:]   
+               val[-q:] = a
+               par[-q:] = b
+           
+           if list(par) != sorted(list(par)):
+              print "ZZZZZZZ"
+              print par
+              print q
+              print c
+              print z
+              print a
+              print b
+               
+           return val,par 
+        
+    
 class RasterPlot(Plotting):
     """ 
     It plots raster plots of spikes stored in the recordings.
@@ -718,15 +794,34 @@ class ActivityMovie(Plotting):
 
 class PerNeuronValuePlot(Plotting):
     """
-    Plots the values for all PerNeuronValue ADSs in teh datastore, one for each sheet.
+    Plots the values for all PerNeuronValue ADSs in the datastore, one for each sheet.
+    
+    If the paramter cortical_view is true it will plot the given PerNeuronValue data
+    structure values in a scatter plot where the coordinates of the points correspond 
+    to coordinates of the corresponding neurons in the cortical space and the colors 
+    correspond to the values. 
+    
+    If the paramter cortical_view is false, it will show the histogram of the values.
     
     It defines line of plots named: 'ScatterPlot.Plot0' ... 'ScatterPlot.PlotN
 
-    #JAHACK, so far doesn't support the situation where several types of
+    Other parameters
+    ----------------
+    
+    cortical_view : bool  
+                Whether to show cortical view or histogram (see class description for full detail.)
+                
+    Notes
+    -----
+    So far doesn't support the situation where several types of
     PerNeuronValue analysys data structures are present in the supplied
     datastore.
     """
-
+    
+    required_parameters = ParameterSet({
+          'cortical_view': bool,  #Whether to show cortical view or histogram (see class description for full detail.)
+    })
+    
     def __init__(self, datastore, parameters, plot_file_name=None,
                  fig_param=None):
         Plotting.__init__(self, datastore, parameters, plot_file_name, fig_param)
@@ -749,29 +844,33 @@ class PerNeuronValuePlot(Plotting):
         return LinePlot(function=self._ploter,length=self.length).make_line_plot(subplotspec)
 
     def _ploter(self, idx, gs):
-        
-        posx = self.poss[idx][0,self.datastore.get_sheet_indexes(self.sheets[idx],self.pnvs[idx][0].ids)]
-        posy = self.poss[idx][1,self.datastore.get_sheet_indexes(self.sheets[idx],self.pnvs[idx][0].ids)]
-        values = self.pnvs[idx][0].values
-        if self.pnvs[idx][0].period != None:
-            periodic = True
-            period = self.pnvs[idx][0].period
-        else:
-            periodic = False
-            period = None
-        params = {}
-        params["x_label"] = 'x'
-        params["y_label"] = 'y'
-        params["title"] = self.sheets[idx] + '\n' + self.pnvs[idx][0].value_name
-        params["colorbar_label"] = self.pnvs[idx][0].value_units.dimensionality.latex
+        if self.parameters.cortical_view:
+            posx = self.poss[idx][0,self.datastore.get_sheet_indexes(self.sheets[idx],self.pnvs[idx][0].ids)]
+            posy = self.poss[idx][1,self.datastore.get_sheet_indexes(self.sheets[idx],self.pnvs[idx][0].ids)]
+            values = self.pnvs[idx][0].values
+            if self.pnvs[idx][0].period != None:
+                periodic = True
+                period = self.pnvs[idx][0].period
+            else:
+                periodic = False
+                period = None
+            params = {}
+            params["x_label"] = 'x'
+            params["y_label"] = 'y'
+            params["title"] = self.sheets[idx] + '\n' + self.pnvs[idx][0].value_name
+            params["colorbar_label"] = self.pnvs[idx][0].value_units.dimensionality.latex
 
-        if periodic:
-            if idx == self.length - 1:
+            if periodic:
+                if idx == self.length - 1:
+                    params["colorbar"]  = True
+            else:
                 params["colorbar"]  = True
+            return [("ScatterPlot",ScatterPlot(posx, posy, values, periodic=periodic,period=period),gs,params)]
         else:
-            params["colorbar"]  = True
-        return [("ScatterPlot",ScatterPlot(posx, posy, values, periodic=periodic,period=period),gs,params)]
-
+            params = {}
+            params["y_label"] = '# neurons'
+            params["title"] = self.pnvs[idx][0].value_name
+            return [("HistogramPlot",HistogramPlot([self.pnvs[idx][0].values]),gs,params)]
 
 class PerNeuronValueScatterPlot(Plotting):
     """
