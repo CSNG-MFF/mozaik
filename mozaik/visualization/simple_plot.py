@@ -247,29 +247,30 @@ class StandardStyle(SimplePlot):
     def post_plot(self):
         if self.title != None:
             pylab.title(self.title, fontsize=self.fontsize)
-
+        
         if self.x_lim:
             pylab.xlim(self.x_lim)
         if self.y_lim:
             pylab.ylim(self.y_lim)
-
+        
         if self.x_scale:
             pylab.xscale(self.x_scale)
             if self.x_scale_base:
                 pylab.xscale(self.x_scale, basex=self.x_scale_base)
+        
         if self.y_scale:
             pylab.yscale(self.y_scale)
             if self.y_scale_base:
                 pylab.yscale(self.y_scale, basey=self.y_scale_base)
-        
-        self._ticks()
-            
+
         if not self.x_axis:
             phf.disable_xticks(self.axis)
             phf.remove_x_tick_labels()
         if not self.y_axis:
             phf.disable_yticks(self.axis)
             phf.remove_y_tick_labels()
+
+        self._ticks()
 
         if self.y_label and self.y_axis:
             pylab.ylabel(self.y_label,multialignment='center',fontsize=self.fontsize)
@@ -287,12 +288,6 @@ class StandardStyle(SimplePlot):
         pylab.rcParams['ytick.major.pad'] = self.ytick_pad_backup
 
     def _ticks(self):
-        
-        print "U"
-        print self.x_tick_style
-        print self.x_ticks
-        print self.x_tick_labels
-        
         if self.x_ticks != None and self.x_tick_style == 'Custom':
             if self.x_tick_labels != None and (len(self.x_ticks) == len(self.x_tick_labels)):
                 pylab.xticks(self.x_ticks, self.x_tick_labels)
@@ -720,7 +715,7 @@ class ScatterPlot(StandardStyle):
         if self.colorbar:
             cb = pylab.colorbar(ax, ticks=[vmin, vmax], use_gridspec=True)
             cb.set_label(self.colorbar_label)
-            cb.set_ticklabels(["%.3g" % vmin, "%.3g" % vmax])
+            cb.set_ticklabels(["%.2g" % vmin, "%.2g" % vmax])
 
 
 class StandardStyleLinePlot(StandardStyle):
@@ -970,3 +965,37 @@ class ConnectionPlot(StandardStyle):
 
         self.x_label = 'x'
         self.y_label = 'y'
+
+
+class HistogramPlot(StandardStyle):
+    """
+    This function plots the histogram of list of value lists, coloring each independently.
+    
+    Parameters
+    ----------
+    values : list
+               List of numpy arrays objects.
+               The top level list corresponds to different sets of values that will be 
+               plotted together.
+               
+               Each set will be colored by the color on corresponding postion of
+               the colors parameter. If None all colors will be set to '#848484' (gray).
+    
+    Other parameters
+    ----------------
+    num_bins : int
+                 The with of the bins into which to bin the spikes.
+    
+    colors : list
+           The colors to assign to the different sets of spikes. 
+    """
+
+    def __init__(self, values):
+        StandardStyle.__init__(self)
+        self.values = values
+        self.parameters["num_bins"] = 30.0
+
+    def plot(self):
+        self.axis.hist(self.values,bins=self.num_bins,edgecolor='none')
+        self.y_label = '#'
+        
