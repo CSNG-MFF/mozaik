@@ -151,7 +151,7 @@ class Plotting(ParametrizedObject):
         gs = gridspec.GridSpec(1, 1)
         gs.update(left=0.05, right=0.95, top=0.95, bottom=0.05)
         self._handle_parameters_and_execute_plots({}, params,gs[0, 0])
-        gs.tight_layout(self.fig)
+        # gs.tight_layout(self.fig)
         if self.plot_file_name:
             pylab.savefig(Global.root_directory+self.plot_file_name)
         t2 = time.time()
@@ -699,7 +699,7 @@ class RetinalInputMovie(Plotting):
         Plotting.__init__(self, datastore, parameters, plot_file_name, fig_param)
         self.length = None
         # currently there is no way to check whether the sensory input is retinal
-        self.retinal_input = datastore.get_sensory_stimulus_stimulus()
+        self.retinal_input = datastore.get_sensory_stimulus()
         self.st = datastore.sensory_stimulus.keys()
         
     def subplot(self, subplotspec):
