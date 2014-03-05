@@ -95,7 +95,10 @@ class MozaikParametrized(Parameterized):
     """
 
     name = SString(doc="String identifier for this object that is set to it's class name DO NOT TOUCH!")
-
+    
+    # we will chache imported modules due to the idd statement here, as module imports seem to be extremely costly.
+    _module_cache = {}
+    
     def __init__(self, **params):
         Parameterized.__init__(self, **params)
         self.module_path = inspect.getmodule(self).__name__
@@ -188,8 +191,13 @@ class MozaikParametrized(Parameterized):
         params = eval(obj)
         name = params.pop("name")
         module_path = params.pop("module_path")
-        z = __import__(module_path, globals(), locals(), name)
         
+        if (module_path,name) in MozaikParametrized._module_cache:
+            z = MozaikParametrized._module_cache[(module_path,name)]
+        else:
+            z = __import__(module_path, globals(), locals(), name)
+            MozaikParametrized._module_cache[(module_path,name)] = z
+            
         cls = getattr(z,name)
         
         obj = cls.__new__(cls,**params)

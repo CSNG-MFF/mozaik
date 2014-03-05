@@ -143,8 +143,8 @@ class GaborConnector(BaseComponent):
             target.add_neuron_annotation(j, 'LGNAfferentPhase', phase, protected=True)
             
             if self.parameters.topological:
-                target.add_neuron_annotation(j, 'LGNAfferentX', target.vf_2_cs(target.pop.positions[0][j]), protected=True)
-                target.add_neuron_annotation(j, 'LGNAfferentY', target.vf_2_cs(target.pop.positions[1][j]), protected=True)
+                target.add_neuron_annotation(j, 'LGNAfferentX', target.pop.positions[0][j], protected=True)
+                target.add_neuron_annotation(j, 'LGNAfferentY', target.pop.positions[1][j], protected=True)
             else:
                 target.add_neuron_annotation(j, 'LGNAfferentX', 0, protected=True)
                 target.add_neuron_annotation(j, 'LGNAfferentY', 0, protected=True)

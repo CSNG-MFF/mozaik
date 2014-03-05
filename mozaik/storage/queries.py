@@ -408,6 +408,17 @@ def equal_stimulus_type(dsv):
 ########################################################################
 
 ########################################################################
+def equal_stimulus(dsv,except_params):
+    """
+    This functions returns True if DSV contains only recordings associated
+    with stimuli of identical parameter values, with the exception of parameters in *except_params*
+    """
+    return matching_parametrized_object_params([MozaikParametrized.idd(s) for s in dsv.get_stimuli()],except_params=['name'])
+########################################################################
+
+
+
+########################################################################
 def equal_ads_except(dsv,except_params):
     """
     This functions returns true if DSV contains only ADS of the same kind
