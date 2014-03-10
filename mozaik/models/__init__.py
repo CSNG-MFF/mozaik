@@ -69,7 +69,6 @@ class Model(BaseComponent):
 
     def __init__(self, sim, num_threads, parameters):
         BaseComponent.__init__(self, self, parameters)
-        print "AAAAAAAAAAAAAA", num_threads
         self.first_time = True
         self.sim = sim
         self.node = sim.setup(timestep=self.parameters.time_step, min_delay=self.parameters.min_delay, max_delay=self.parameters.max_delay, threads=num_threads)  # should have some parameters here
@@ -195,11 +194,9 @@ class Model(BaseComponent):
                 logger.info("Simulating the network for %s ms with blank stimulus" % self.parameters.null_stimulus_period)
                 self.sim.run(self.parameters.null_stimulus_period)
                 self.simulator_time+=self.parameters.null_stimulus_period
-                
                 for sheet in self.sheets.values():    
                     if sheet.to_record != None:
                        sheet.get_data()
-
         return time.time()-t0    
     
 

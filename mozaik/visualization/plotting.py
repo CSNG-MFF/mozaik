@@ -837,7 +837,9 @@ class PerNeuronValuePlot(Plotting):
                 self.poss.append(datastore.get_neuron_postions()[sheet])
                 self.pnvs.append(z)
                 self.sheets.append(sheet)
-
+        
+        if len(self.poss):
+           logger.error('No PerNeuronValue plots found!')
         self.length=len(self.poss)
 
     def subplot(self, subplotspec):

@@ -467,9 +467,14 @@ class GaussianTuningCurveFit(Analysis):
                                logger.debug('Failed to fit tuning curve %s for neuron %d' % (k,i))
                                return
                             z.append(res)    
+                         
                         #import pylab
                         #pylab.show()
                         res = numpy.array(z)
+                        
+                        
+                           
+                            
                         if res != None:
                            self.datastore.full_datastore.add_analysis_result(PerNeuronValue(res[:,0],self.pnvs[0].ids,self.pnvs[0].value_units,value_name = self.parameters.parameter_name + ' baseline',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
                            self.datastore.full_datastore.add_analysis_result(PerNeuronValue(res[:,1],self.pnvs[0].ids,self.pnvs[0].value_units,value_name = self.parameters.parameter_name + ' max',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))        
@@ -478,7 +483,6 @@ class GaussianTuningCurveFit(Analysis):
                            self.datastore.full_datastore.add_analysis_result(PerNeuronValue(180*res[:,2]/numpy.pi*2.35482/2,self.pnvs[0].ids,MozaikParametrized.idd(self.st[0]).params()[self.parameters.parameter_name].units,value_name = self.parameters.parameter_name + ' HWHH',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))        
                         else:
                            logger.debug('Failed to fit tuning curve %s for neuron %d' % (k,i))
-                            
                     
        
       def _fitgaussian(self,X,Y,period):
@@ -490,17 +494,20 @@ class GaussianTuningCurveFit(Analysis):
           
           p0 = [0, 1.0, 0.5,0.0] # Initial guess for the parameters
           p0[0] = numpy.min(Y)
+          p0[1] = numpy.max(Y)-p0[0]
           if period != None:
             p0[3] = circ_mean(numpy.array([X]),weights=numpy.array([Y]),axis=1,low=0,high=period,normalize=True)[0]
           else:
             p0[3] = numpy.average(numpy.array(X),weights=numpy.array(Y))[0]
             
           p1, success = scipy.optimize.leastsq(errfunc, p0[:], args=(X,Y))      
+          p1[2]  = abs(p1[2])
           
           # if the fit is very bad - error greater than 30% of the Y magnitude
-          if numpy.linalg.norm(fitfunc(p1,X)-Y)/numpy.linalg.norm(Y) > 0.3:
-             p1 = numpy.array([0,0,0,0])
-          
+          #if numpy.linalg.norm(fitfunc(p1,X)-Y)/numpy.linalg.norm(Y) > 0.4:
+          #   #p1 = numpy.array([0,0,0,0])
+          #   p1=p0
+
           if False:
               import pylab
               pylab.figure()
@@ -511,6 +518,7 @@ class GaussianTuningCurveFit(Analysis):
           if success:
             return p1
           else :
+            print "Z"
             return [0,0,0,0]
 
 
@@ -921,56 +929,3 @@ class TrialAveragedSparseness(Analysis):
                                    tags=self.tags,
                                    analysis_algorithm=self.__class__.__name__,
                                    period=None))
-
-
-class MeanCyclicTuningCurve(Analysis):
-    """
-    Takes in DSV with PerNeuronValues (can be different ones) associated with the same stimulus with varying parameters. Calculates
-    the mean tuning curves across neurons via a specified parameter, by shifting each neurons tuning curve to 
-    be co-centered around they prefered (maximal) value.
-    
-    Stores the tuning curves in SingleValue ADS with stimuli parameters transformed such that 0 is the prefered value.
-    """
-    required_parameters = ParameterSet({
-    
-        'parameter_name': str,  # the parameter through which to cumpute the tuning curves
-        'sheet_name': str,  # sheet in which to process the results
-        
-    })
-
-    
-    def perform_analysis(self):
-        st = []
-        tc_dict = []
-        pnvs = []
-        dsv = queries.param_filter_query(self.datastore,identifier='PerNeuronValue',sheet_name=self.parameters.sheet_name)
-        assert queries.ads_with_equal_stimulus_type(dsv)
-        dsvs = queries.partition_analysis_results_by_parameters_query(dsv,parameter_list=['value_name'],excpt=True)
-        ids = dsvs[0].get_analysis_result()[0].ids
-        for dsv in dsvs:
-            assert queries.matching_parametrized_object_params(dsv.get_analysis_result(), params=['value_name'])
-            pnvs.append(dsv.get_analysis_result())
-            # get stimuli
-            sst = [MozaikParametrized.idd(s.stimulus_id) for s in pnvs[-1]]
-            st.append(sst)
-            # transform the pnvs into a dictionary of tuning curves along the parameter_name
-            # also make sure the values are ordered according to ids in the first pnv
-            tc_dict.append(colapse_to_dictionary([z.get_value_by_id(ids) for z in pnvs[-1]],sst,self.parameters.parameter_name))
-
-        
-        for (sst,tc) in zip(st,tc_dict):
-            period = sst[0].params()[self.parameters.parameter_name].period
-            xs = []
-            ys = []
-            labels = []
-            print tc.keys()
-            for k in tc.keys():
-                (b, a) = tc[k]
-                par, val = zip(*sorted(zip(b,numpy.array(a))))
-                val = numpy.array(val)
-                # now val should be list of lists with the first list running through the different values of the parameter "parameter_name" 
-                # and the second one running through neurons
-                print numpy.shape(val)
-                
-        
-        
