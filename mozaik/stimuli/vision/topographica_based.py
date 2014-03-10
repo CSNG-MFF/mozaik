@@ -183,6 +183,38 @@ class DriftingSinusoidalGratingDisk(TopographicaBasedVisualStimulus):
             self.current_phase += 2*pi * (self.frame_duration/1000.0) * self.temporal_frequency
 
 
+class FlatDisk(TopographicaBasedVisualStimulus):
+    """
+    A flat luminance aperture of specified radius.
+    
+    Notes
+    -----
+    size_x/2 is interpreted as the bounding box radius.
+    """
+    contrast = SNumber(dimensionless,bounds=[0,100.0],doc="Contrast of the stimulus")
+    radius = SNumber(degrees, doc="The radius of the disk - in degrees of visual field")
+
+    def frames(self):
+        self.current_phase=0
+        while True:  
+            # produce flat luminance of background luminance value          
+            b = imagen.Null(scale=self.background_luminance,
+                            bounds=BoundingBox(radius=self.size_x/2),
+                            xdensity=self.density,
+                            ydensity=self.density)()
+            # produce disk of radius size and contrast as specified
+            c = imagen.Disk(smoothing=0.0,
+                            size=self.radius*2,
+                            scale=1.0,
+                            offset = self.background_luminance*(100.0 - self.contrast)/100.0,
+                            bounds=BoundingBox(radius=self.size_x/2),
+                            xdensity=self.density,
+                            ydensity=self.density)()  
+            # multiply the flat luminance value by the disk (having a contrast) value
+            d = numpy.multiply(b,c)
+            yield (d,[self.current_phase])
+
+
 class DriftingSinusoidalGratingCenterSurroundStimulus(TopographicaBasedVisualStimulus):
     """
     A standard stimulus to probe orientation specific surround modulation:

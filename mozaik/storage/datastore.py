@@ -357,7 +357,7 @@ class DataStore(DataStoreView):
         The DataStore interface function that adds a stimulus into the datastore.
         """
         if self.parameters.store_stimuli:
-           _add_stimulus(data, stimulus)
+           self._add_stimulus(data, stimulus)
 
     def _add_stimulus(self, data, stimulus):
         """
