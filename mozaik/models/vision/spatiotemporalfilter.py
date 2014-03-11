@@ -617,8 +617,8 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                 for cell in input_cells[rf_type]:
                     cell.view()
             visual_region = VisualRegion(location_x=0, location_y=0,
-                                         size_x=self.parameters.size[0],
-                                         size_y=self.parameters.size[1])
+                                         size_x=self.model.visual_field.size_x,
+                                         size_y=self.model.visual_field.size_y)
             im = visual_space.view(visual_region,
                                    pixel_size=self.rf["X_ON"].spatial_resolution)
             retinal_input.append(im)
