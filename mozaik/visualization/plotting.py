@@ -206,9 +206,13 @@ class PlotTuningCurve(Plotting):
     
     mean : bool 
          If True it will plot the mean tuning curve over all neurons (in case centered=True it will first center the TCs before computing the mean)
-                   
     
+    pool : bool
+         If True it will not plot each different value_name found in datastore on a sepparete line of plots but pool them together.             
     
+    polar : bool
+          If True it will plot the tuning curves in polar coordinates, not that the stimulus parameter through which the tuning curves are  plotted has to be periodic, and this period will be mapped on to the (0,360) degrees interval of the polar plot.
+            
     Defines 'TuningCurve_' + value_name +  '.Plot0' ... 'TuningCurve_' + value_name +  '.Plotn'
     where n goes through number of neurons, and value_name creates one row for each value_name found in the different PerNeuron found
     """
@@ -219,6 +223,8 @@ class PlotTuningCurve(Plotting):
       'parameter_name': str,  # the parameter_name through which to plot the tuning curve
       'centered' : bool, # if True it will center each set of tuning curves on the parameter value with the larges mean response across the other parameter variations
       'mean' : bool, # if True it will plot the mean tuning curve over the neurons (in case centered=True it will first center the TCs before computing the mean)
+      'pool' : bool, # if True it will not plot each different value_name found in datastore on a sepparete line of plots but pool them together.
+      'polar' : bool # if True polar coordinates will be used
     })
 
     def __init__(self, datastore, parameters, plot_file_name=None,fig_param=None,frame_duration=0):
@@ -230,6 +236,9 @@ class PlotTuningCurve(Plotting):
         self.max_mean_response_indexes = []
         assert queries.ads_with_equal_stimulus_type(datastore)
         assert len(self.parameters.neurons) > 0 , "ERROR, empty list of neurons specified"
+        if self.parameters.mean:
+            assert self.parameters.centered , "Average tuning curve can be plotted only if the tuning curves are centerd"
+        
         dsvs = queries.partition_analysis_results_by_parameters_query(self.datastore,parameter_list=['value_name'],excpt=True)
         for dsv in dsvs:
             dsv = queries.param_filter_query(dsv,identifier='PerNeuronValue',sheet_name=self.parameters.sheet_name)
@@ -253,7 +262,11 @@ class PlotTuningCurve(Plotting):
             if self.parameters.centered:
                self.max_mean_response_indexes.append(numpy.argmax(sum([a[1] for a in dic.values()]),axis=0))
                # lets find the highest average value for the neuron
-
+        
+        if self.parameters.pool:
+           assert all([p[0].value_units == self.pnvs[0][0].value_units for p in self.pnvs]), "You asked to pool tuning curves across different value_names, but the datastore contains PerNeuronValue datastructures with different units"
+            
+            
     def subplot(self, subplotspec):
         if self.parameters.mean:
             return LinePlot(function=self._ploter, length=1).make_line_plot(subplotspec)
@@ -262,82 +275,134 @@ class PlotTuningCurve(Plotting):
 
     def _ploter(self, idx, gs):
         plots  = []
-        gs = gridspec.GridSpecFromSubplotSpec(len(self.st), 1, subplot_spec=gs)
-        for i,(dic, st, pnvs) in enumerate(zip(self.tc_dict,self.st,self.pnvs)):
+        xs = []
+        labels=[]
+        ys = []
+        
+        po = None if not self.parameters.polar else {'projection':'polar'}
+        
+        if not self.parameters.pool:
+            gs = gridspec.GridSpecFromSubplotSpec(len(self.st), 1, subplot_spec=gs)
+        
+        for i,(dic, st, pnv) in enumerate(zip(self.tc_dict,self.st,self.pnvs)):
+            if not self.parameters.pool:
+               xs = [] 
+               ys = []
+               labels = []
+                            
             period = st[0].params()[self.parameters.parameter_name].period
             if self.parameters.centered:        
                assert period != None, "ERROR: You asked for centering of tuning curves even though the domain over which it is measured is not periodic." 
-            xs = []
-            ys = []
-            labels = []
+            
+            if self.parameters.polar:
+               assert period != None, "ERROR: You asked to plot the tuning curve on polar axis even though the domain over which it is measured is not periodic." 
                 
             for k in dic.keys():    
                 (par, val) = dic[k]
                 if self.parameters.mean:
                     v = 0
-                    for idx in xrange(0,len(self.parameters.neurons)):
-                        vv,p = self.center_tc(val[:,idx],par,period,self.max_mean_response_indexes[i][idx])
+                    for j in xrange(0,len(self.parameters.neurons)):
+                        vv,p = self.center_tc(val[:,j],par,period,self.max_mean_response_indexes[i][j])
                         v = v + vv
                     val = v / len(self.parameters.neurons)
                     par = p
                 elif self.parameters.centered:
                     val,par = self.center_tc(val[:,idx],par,period,self.max_mean_response_indexes[i][idx])
+                else:
+                    val = val[:,idx]
+                    
                     
                 if period != None:
                     par = list(par)
                     val = list(val)
                     par.append(par[0] + period)
                     val.append(val[0])
-                    if par != sorted(par):
-                       print par
+
+                if self.parameters.polar:
+                   # we have to map the interval (0,period)  to (0,2*pi)
+                   par = [p/period*2*numpy.pi for p in par]
+
               
                 xs.append(numpy.array(par))
                 ys.append(numpy.array(val))
                 
                 l = ""
+                
+                if self.parameters.pool:
+                   l = pnv[0].value_name + " "
+                
                 for p in varying_parameters([MozaikParametrized.idd(e) for e in dic.keys()]):
                     l = l + str(p) + " : " + str(getattr(MozaikParametrized.idd(k),p))
                 labels.append(l)
-            
-            params={}
-            params["x_label"] = self.parameters.parameter_name
-            params["y_label"] = pnvs[0].value_name
-            params['labels']=None
-            params['linewidth'] = 2
-            params['colors'] = [cm.jet(j/float(len(xs))) for j in xrange(0,len(xs))] 
-            if pnvs == self.pnvs[0]:
-                params["title"] =  'Neuron ID: %d' % self.parameters.neurons[idx]
-            
-            if self.parameters.centered:        
-                if period == pi:
-                    params["x_ticks"] = [-pi/2, 0, pi/2]
-                    params["x_lim"] = (-pi/2, pi/2)
-                    params["x_tick_style"] = "Custom"
-                    params["x_tick_labels"] = ["-$\\frac{\\pi}{2}$", "0", "$\\frac{\\pi}{2}$"]
-               
-                if period == 2*pi:
-                    params["x_ticks"] = [-pi, 0, pi]
-                    params["x_lim"] = (-pi, pi)
-                    params["x_tick_style"] = "Custom"
-                    params["x_tick_labels"] = ["-$\\pi$","0", "$\\pi$"]
-            else:
-                if period == pi:
-                    params["x_ticks"] = [0, pi/2, pi]
-                    params["x_lim"] = (0, pi)
-                    params["x_tick_style"] = "Custom"
-                    params["x_tick_labels"] = ["0", "$\\frac{\\pi}{2}$", "$\\pi$"]
-               
-                if period == 2*pi:
-                    params["x_ticks"] = [0, pi, 2*pi]
-                    params["x_lim"] = (0, 2*pi)
-                    params["x_tick_style"] = "Custom"
-                    params["x_tick_labels"] = ["0", "$\\pi$", "$2\\pi$"]
 
-            if pnvs != self.pnvs[-1]:
-                params["x_axis"] = None
-            plots.append(("TuningCurve_" + pnvs[0].value_name,StandardStyleLinePlot(xs, ys),gs[i],params))
+            if not self.parameters.pool:
+                params = self.create_params(pnv[0].value_name,pnv[0].value_units,i==0,i==(len(self.pnvs)-1),period,self.parameters.neurons[idx],len(xs),self.parameters.polar,labels,idx)
+                plots.append(("TuningCurve_" + pnv[0].value_name,StandardStyleLinePlot(xs, ys,subplot_kw=po),gs[i],params))   
+
+        if self.parameters.pool:
+           params = self.create_params('mix',self.pnvs[0][0].value_units,True,True,period,self.parameters.neurons[idx],len(xs),self.parameters.polar,labels,idx)
+           if not self.parameters.polar:
+              plots.append(("TuningCurve_Stacked",StandardStyleLinePlot(xs, ys),gs,params))
+           else:
+              plots.append(("TuningCurve_Stacked",StandardStyleLinePlot(xs, ys,subplot_kw=po),gs,params)) 
+                
         return plots
 
+    def create_params(self,value_name,units,top_row,bottom_row,period,neuron_id,number_of_curves,polar,labels,idx):
+            params={}
+            
+            params["x_label"] = self.parameters.parameter_name
+            if idx == 0:
+                params["y_label"] = value_name + '(' + units.dimensionality.latex + ')'
+                
+            params['labels']=labels
+            params['linewidth'] = 2
+            params['colors'] = [cm.jet(j/float(number_of_curves)) for j in xrange(0,number_of_curves)] 
+            
+            if top_row:
+                params["title"] =  'Neuron ID: %d' % neuron_id
+            
+            if not polar:
+                if self.parameters.centered:        
+                    if period == pi:
+                        params["x_ticks"] = [-pi/2, 0, pi/2]
+                        params["x_lim"] = (-pi/2, pi/2)
+                        params["x_tick_style"] = "Custom"
+                        params["x_tick_labels"] = ["-$\\frac{\\pi}{2}$", "0", "$\\frac{\\pi}{2}$"]
+                   
+                    if period == 2*pi:
+                        params["x_ticks"] = [-pi, 0, pi]
+                        params["x_lim"] = (-pi, pi)
+                        params["x_tick_style"] = "Custom"
+                        params["x_tick_labels"] = ["-$\\pi$","0", "$\\pi$"]
+                else:
+                    if period == pi:
+                        params["x_ticks"] = [0, pi/2, pi]
+                        params["x_lim"] = (0, pi)
+                        params["x_tick_style"] = "Custom"
+                        params["x_tick_labels"] = ["0", "$\\frac{\\pi}{2}$", "$\\pi$"]
+                   
+                    if period == 2*pi:
+                        params["x_ticks"] = [0, pi, 2*pi]
+                        params["x_lim"] = (0, 2*pi)
+                        params["x_tick_style"] = "Custom"
+                        params["x_tick_labels"] = ["0", "$\\pi$", "$2\\pi$"]
+            
+            else:
+               params["y_tick_style"] = "Custom"
+               params["x_tick_style"] = "Custom"
+               params["x_ticks"]  = []
+               params["y_ticks"]  = []
+               params["x_tick_labels"]  = []
+               params["y_tick_labels"]  = []
+               params['grid'] = True
+               params['fill'] = True
+            
+            if not bottom_row:
+                params["x_axis"] = None
+                
+            return params
+            
     def center_tc(self,val,par,period,center_index):
            # first lets make the maximum to be at zero                   
            q = center_index+len(val)/2 if center_index < len(val)/2 else center_index-len(val)/2
@@ -352,15 +417,6 @@ class PlotTuningCurve(Plotting):
                val[-q:] = a
                par[-q:] = b
            
-           if list(par) != sorted(list(par)):
-              print "ZZZZZZZ"
-              print par
-              print q
-              print c
-              print z
-              print a
-              print b
-               
            return val,par 
         
     
@@ -665,11 +721,14 @@ class ConductanceSignalListPlot(Plotting):
                
     normalize_individually : bool
                            Whether to normalize each trace individually by dividing it with its maximum.
+                           
+    neurons : list 
             
     """
     
     required_parameters = ParameterSet({
-        'normalize_individually': bool  # each trace will be normalized individually by dividing it with its maximum
+        'normalize_individually': bool,  # each trace will be normalized individually by dividing it with its maximum
+        'neurons' : list, # list of neuron ids for which to plot the conductances
     })
 
 
@@ -685,12 +744,13 @@ class ConductanceSignalListPlot(Plotting):
         conductance_signal_list = conductance_signal_list[0]
         e_con = conductance_signal_list.e_con
         i_con = conductance_signal_list.i_con
-       
-        exc =[]
-        inh =[]
-        for e, i in zip(e_con, i_con):
-            exc.append(e)
-            inh.append(i)
+               
+        exc = conductance_signal_list.get_econ_by_id(self.parameters.neurons)
+        inh = conductance_signal_list.get_icon_by_id(self.parameters.neurons)
+        
+        if len(self.parameters.neurons) == 1:
+                exc = [exc]
+                inh = [inh]
             
         return [("ConductancePlot",ConductancesPlot(exc, inh),subplotspec,{})]
 

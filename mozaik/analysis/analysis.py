@@ -13,8 +13,6 @@ from mozaik.tools.mozaik_parametrized import colapse, colapse_to_dictionary, Moz
 from mozaik.analysis.data_structures import PerNeuronValue, \
                                         ConductanceSignalList, AnalogSignalList, PerNeuronPairValue, SingleValue, AnalogSignal
                                         
-                                        
-                                        
 from mozaik.analysis.helper_functions import psth
 from mozaik.core import ParametrizedObject
 from parameters import ParameterSet
@@ -25,10 +23,6 @@ from mozaik.tools.neo_object_operations import neo_mean, neo_sum
 import mozaik
 
 logger = mozaik.getMozaikLogger()
-
-
-
-
 
 class Analysis(ParametrizedObject):
     """
@@ -204,7 +198,7 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
 
 class GSTA(Analysis):
     """
-    Computes conductance spike triggered average, it uses all recordings present in the DSV for the given .
+    Computes conductance spike triggered average, it uses all recordings present in the DSV for the given neruon.
     
     Other parameters
     ---------------- 
@@ -252,14 +246,14 @@ class GSTA(Analysis):
                     g_i = [s.get_isyn(n) for s in segs]
                     asl_e.append(self._do_gsta(g_e, sp))
                     asl_i.append(self._do_gsta(g_i, sp))
-                    self.datastore.full_datastore.add_analysis_result(
-                    ConductanceSignalList(asl_e,
-                                          asl_i,
-                                          self.parameters.neurons,
-                                          sheet_name=sheet,
-                                          tags=self.tags,
-                                          analysis_algorithm=self.__class__.__name__,
-                                          stimulus_id=str(st)))
+                self.datastore.full_datastore.add_analysis_result(
+                ConductanceSignalList(asl_e,
+                                      asl_i,
+                                      self.parameters.neurons,
+                                      sheet_name=sheet,
+                                      tags=self.tags,
+                                      analysis_algorithm=self.__class__.__name__,
+                                      stimulus_id=str(st)))
 
     def _do_gsta(self, analog_signal, sp):
         dt = analog_signal[0].sampling_period
@@ -369,8 +363,12 @@ class TrialToTrialCrossCorrelationOfPSTH(Analysis):
 
 class TrialVariability(Analysis):
       """
-      For each stimulus and neuron it calculates the trial-to-trial variability of Vm or conductance (depending on parameters). 
-      It creates a AnalogSignalList list for each recording (except trials).
+      For each neuron it calculates the trial-to-trial variability of Vm or conductance (depending on parameters) for all recording in the datastore, 
+      and for all AnalogSignalList ADS in the datastore.
+      
+      For the AnalogSignalList we expect only identical AnalogSignalList with the exception of stimulus in the datastore view.
+      
+      It creates a AnalogSignalList list for each recording or AnalogSignalList (except trials).
       
       Other parameters
       ---------------- 
@@ -389,14 +387,16 @@ class TrialVariability(Analysis):
         'vm': bool,  # calculate variability for Vm?
         'cond_exc': bool,  # calculate variability for excitatory conductance?
         'cond_inh': bool,  # calculate variability for inhibitory conductance?
-      })
+       })
       
       
       def perform_analysis(self):
             for sheet in self.datastore.sheets():
-                dsv = queries.param_filter_query(self.datastore, sheet_name=sheet)
-                segs, stids = colapse(dsv.get_segments(),dsv.get_stimuli(),parameter_list=['trial'],allow_non_identical_objects=True)
-                for segs,st in zip(segs,stids):
+               dsv = queries.param_filter_query(self.datastore, sheet_name=sheet)
+                
+               # RECORDINGS PART
+               segs, stids = colapse(dsv.get_segments(),dsv.get_stimuli(),parameter_list=['trial'],allow_non_identical_objects=True)
+               for segs,st in zip(segs,stids):
                     if self.parameters.vm:
                         first_vm = segs[0].get_vm(segs[0].get_stored_vm_ids()[0])
                         vm = [NeoAnalogSignal(numpy.var(numpy.array([s.get_vm(i) for s in segs]),axis=0),t_start=first_vm.t_start,sampling_period=first_vm.sampling_period,units=first_vm.units) for i in segs[0].get_stored_vm_ids()]
@@ -410,7 +410,16 @@ class TrialVariability(Analysis):
                         cond_inh = [NeoAnalogSignal(numpy.var(numpy.array([s.get_isyn(i) for s in segs]),axis=0),t_start=first_cond.t_start,sampling_period=first_cond.sampling_period,units=first_cond.units) for i in segs[0].get_stored_isyn_ids()]
                         self.datastore.full_datastore.add_analysis_result(AnalogSignalList(cond_inh,segs[0].get_stored_isyn_ids(),segs[0].get_isyn(segs[0].get_stored_isyn_ids()[0]).units,y_axis_name = 'inh. conductance trial-to-trial variance',x_axis_name="time",sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                
+               # AnalogSignalList part 
+               dsv = queries.param_filter_query(self.datastore, sheet_name=sheet,name='AnalogSignalList')
+               if len(dsv.get_analysis_result()) == 0: continue
+               assert queries.equal_ads_except(dsv, ['stimulus_id'])
+               adss = dsv.get_analysis_result()
+               adss, stids = colapse(adss,[a.stimulus_id for a in adss],parameter_list=['trial'],allow_non_identical_objects=False)
                
+               for ads,st in zip(adss,stids):
+                   vm = [NeoAnalogSignal(numpy.var(numpy.array([s.get_vm(i) for s in segs]),axis=0),t_start=first_vm.t_start,sampling_period=first_vm.sampling_period,units=first_vm.units) for i in segs[0].get_stored_vm_ids()]
+                   self.datastore.full_datastore.add_analysis_result(AnalogSignalList(vm,segs[0].get_stored_vm_ids(),segs[0].get_vm(segs[0].get_stored_vm_ids()[0]).units,y_axis_name = 'vm trial-to-trial variance',x_axis_name="time",sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                
                
 
@@ -929,3 +938,56 @@ class TrialAveragedSparseness(Analysis):
                                    tags=self.tags,
                                    analysis_algorithm=self.__class__.__name__,
                                    period=None))
+
+
+class MeanCyclicTuningCurve(Analysis):
+    """
+    Takes in DSV with PerNeuronValues (can be different ones) associated with the same stimulus with varying parameters. Calculates
+    the mean tuning curves across neurons via a specified parameter, by shifting each neurons tuning curve to 
+    be co-centered around they prefered (maximal) value.
+    
+    Stores the tuning curves in SingleValue ADS with stimuli parameters transformed such that 0 is the prefered value.
+    """
+    required_parameters = ParameterSet({
+    
+        'parameter_name': str,  # the parameter through which to cumpute the tuning curves
+        'sheet_name': str,  # sheet in which to process the results
+        
+    })
+
+    
+    def perform_analysis(self):
+        st = []
+        tc_dict = []
+        pnvs = []
+        dsv = queries.param_filter_query(self.datastore,identifier='PerNeuronValue',sheet_name=self.parameters.sheet_name)
+        assert queries.ads_with_equal_stimulus_type(dsv)
+        dsvs = queries.partition_analysis_results_by_parameters_query(dsv,parameter_list=['value_name'],excpt=True)
+        ids = dsvs[0].get_analysis_result()[0].ids
+        for dsv in dsvs:
+            assert queries.matching_parametrized_object_params(dsv.get_analysis_result(), params=['value_name'])
+            pnvs.append(dsv.get_analysis_result())
+            # get stimuli
+            sst = [MozaikParametrized.idd(s.stimulus_id) for s in pnvs[-1]]
+            st.append(sst)
+            # transform the pnvs into a dictionary of tuning curves along the parameter_name
+            # also make sure the values are ordered according to ids in the first pnv
+            tc_dict.append(colapse_to_dictionary([z.get_value_by_id(ids) for z in pnvs[-1]],sst,self.parameters.parameter_name))
+
+        
+        for (sst,tc) in zip(st,tc_dict):
+            period = sst[0].params()[self.parameters.parameter_name].period
+            xs = []
+            ys = []
+            labels = []
+            print tc.keys()
+            for k in tc.keys():
+                (b, a) = tc[k]
+                par, val = zip(*sorted(zip(b,numpy.array(a))))
+                val = numpy.array(val)
+                # now val should be list of lists with the first list running through the different values of the parameter "parameter_name" 
+                # and the second one running through neurons
+                print numpy.shape(val)
+                
+        
+        
