@@ -314,7 +314,7 @@ class StandardStyle(SimplePlot):
         pylab.rc('axes', linewidth=1)
         pylab.rcParams['xtick.major.pad'] = self.xtick_pad_backup
         pylab.rcParams['ytick.major.pad'] = self.ytick_pad_backup
-        pylab.rcParams['axes.color_cycle'] =self.colormap_backup
+        #pylab.rcParams['axes.color_cycle'] =self.colormap_backup
 
     def _ticks(self):
         if self.x_axis:

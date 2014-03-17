@@ -948,13 +948,13 @@ class SubtractSpontaneousMean(Analysis):
       """
 
       def __init__(self, pnv,datastore, parameters, tags=None):
-          ParametrizedObject.__init__(self, datastore, parameters, tags)
+          Analysis.__init__(self, datastore, parameters, tags)
           self.pnv = pnv
 
       def perform_analysis(self):
             for sheet in self.datastore.sheets():
                 dsv = queries.param_filter_query(self.datastore, sheet_name=sheet,identifier='PerNeuronValue')
-                for p in dsv.get_analysis_results():
+                for p in dsv.get_analysis_result():
                     assert set(p.ids) == set(pnv.ids)
                     sub = p.get_value_by_id(p.ids) - pnv.get_value_by_id(p.ids)
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(sub,p.ids,p.value_units,value_name = p.value_name + '-' + pnv.value_name,sheet_name=sheet,tags=self.tags+p.tags,period=p.period,analysis_algorithm=self.__class__.__name__,stimulus_id=p.stimulus_id))        
