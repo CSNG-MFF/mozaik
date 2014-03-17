@@ -242,6 +242,17 @@ class StandardStyle(SimplePlot):
             "y_tick_pad": fontsize - 5,
             "grid" : False,
         }
+        
+        self.colormap = {
+                            'Bl':(0,0,0),
+                            'Or':(.9,.6,0),
+                            'SB':(.35,.7,.9),
+                            'bG':(0,.6,.5),
+                            'Ye':(.95,.9,.25),
+                            'Bu':(0,.45,.7),
+                            'Ve':(.8,.4,0),
+                            'rP':(.8,.6,.7),
+                        }
 
     def pre_axis_plot(self):
         pylab.rc('axes', linewidth=3)
@@ -249,6 +260,9 @@ class StandardStyle(SimplePlot):
         pylab.rcParams['xtick.major.pad'] = self.x_tick_pad
         self.ytick_pad_backup = pylab.rcParams['ytick.major.pad']
         pylab.rcParams['ytick.major.pad'] = self.y_tick_pad
+        self.colormap_backup = pylab.rcParams['axes.color_cycle']
+        pylab.rcParams['axes.color_cycle'] = [self.colormap[c] for c in sorted(self.colormap.keys())]
+
 
     def pre_plot(self):
         pass
@@ -300,6 +314,7 @@ class StandardStyle(SimplePlot):
         pylab.rc('axes', linewidth=1)
         pylab.rcParams['xtick.major.pad'] = self.xtick_pad_backup
         pylab.rcParams['ytick.major.pad'] = self.ytick_pad_backup
+        pylab.rcParams['axes.color_cycle'] =self.colormap_backup
 
     def _ticks(self):
         if self.x_axis:
@@ -1025,6 +1040,6 @@ class HistogramPlot(StandardStyle):
 
     def plot(self):
         print self.x_lim
-        self.axis.hist(self.values,bins=self.num_bins,range=self.x_lim,edgecolor='none')
+        self.axis.hist(self.values,bins=self.num_bins,range=self.x_lim,edgecolor='none',facecolor='b')
         self.y_label = '#'
         

@@ -940,54 +940,22 @@ class TrialAveragedSparseness(Analysis):
                                    period=None))
 
 
-class MeanCyclicTuningCurve(Analysis):
-    """
-    Takes in DSV with PerNeuronValues (can be different ones) associated with the same stimulus with varying parameters. Calculates
-    the mean tuning curves across neurons via a specified parameter, by shifting each neurons tuning curve to 
-    be co-centered around they prefered (maximal) value.
-    
-    Stores the tuning curves in SingleValue ADS with stimuli parameters transformed such that 0 is the prefered value.
-    """
-    required_parameters = ParameterSet({
-    
-        'parameter_name': str,  # the parameter through which to cumpute the tuning curves
-        'sheet_name': str,  # sheet in which to process the results
-        
-    })
 
-    
-    def perform_analysis(self):
-        st = []
-        tc_dict = []
-        pnvs = []
-        dsv = queries.param_filter_query(self.datastore,identifier='PerNeuronValue',sheet_name=self.parameters.sheet_name)
-        assert queries.ads_with_equal_stimulus_type(dsv)
-        dsvs = queries.partition_analysis_results_by_parameters_query(dsv,parameter_list=['value_name'],excpt=True)
-        ids = dsvs[0].get_analysis_result()[0].ids
-        for dsv in dsvs:
-            assert queries.matching_parametrized_object_params(dsv.get_analysis_result(), params=['value_name'])
-            pnvs.append(dsv.get_analysis_result())
-            # get stimuli
-            sst = [MozaikParametrized.idd(s.stimulus_id) for s in pnvs[-1]]
-            st.append(sst)
-            # transform the pnvs into a dictionary of tuning curves along the parameter_name
-            # also make sure the values are ordered according to ids in the first pnv
-            tc_dict.append(colapse_to_dictionary([z.get_value_by_id(ids) for z in pnvs[-1]],sst,self.parameters.parameter_name))
 
-        
-        for (sst,tc) in zip(st,tc_dict):
-            period = sst[0].params()[self.parameters.parameter_name].period
-            xs = []
-            ys = []
-            labels = []
-            print tc.keys()
-            for k in tc.keys():
-                (b, a) = tc[k]
-                par, val = zip(*sorted(zip(b,numpy.array(a))))
-                val = numpy.array(val)
-                # now val should be list of lists with the first list running through the different values of the parameter "parameter_name" 
-                # and the second one running through neurons
-                print numpy.shape(val)
+class SubtractSpontaneousMean(Analysis):
+      """
+      Takes datastore, and from each PerNeuronValue it subtracts the PerNeuronValue supplied in parameters, and saves the new PNVs into the datastore.
+      """
+
+      def __init__(self, pnv,datastore, parameters, tags=None):
+          ParametrizedObject.__init__(self, datastore, parameters, tags)
+          self.pnv = pnv
+
+      def perform_analysis(self):
+            for sheet in self.datastore.sheets():
+                dsv = queries.param_filter_query(self.datastore, sheet_name=sheet,identifier='PerNeuronValue')
+                for p in dsv.get_analysis_results():
+                    assert set(p.ids) == set(pnv.ids)
+                    sub = p.get_value_by_id(p.ids) - pnv.get_value_by_id(p.ids)
+                    self.datastore.full_datastore.add_analysis_result(PerNeuronValue(sub,p.ids,p.value_units,value_name = p.value_name + '-' + pnv.value_name,sheet_name=sheet,tags=self.tags+p.tags,period=p.period,analysis_algorithm=self.__class__.__name__,stimulus_id=p.stimulus_id))        
                 
-        
-        
