@@ -166,7 +166,7 @@ class VisualStimulus(BaseStimulus):
             self.visible = False
         else:
             assert self.img.min() >= 0 or self.img.min() == TRANSPARENT, "frame minimum is less than zero: %g" % self.img.min()
-            assert self.img.max() <= 2*self.background_luminance, "frame maximum (%g) is greater than the maximum luminance (%g)" % (self.img.max(), 2*self.background_luminance)
+            assert self.img.max() <= 10*self.background_luminance, "frame maximum (%g) is greater than the maximum luminance (%g)" % (self.img.max(), 2*self.background_luminance)
         self._zoom_cache = {}
 
     def reset(self):
