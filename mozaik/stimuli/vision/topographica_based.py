@@ -5,6 +5,7 @@ The file contains stimuli that use topographica to generate the stimulus
 
 from visual_stimulus import VisualStimulus
 import imagen
+import imagen.transferfn
 from imagen.image import BoundingBox
 import pickle
 import numpy
@@ -82,7 +83,7 @@ class NaturalImageWithEyeMovement(TopographicaBasedVisualStimulus):
         self.eye_path = pickle.load(f)
         self.pattern_sampler = imagen.image.PatternSampler(
                                     size_normalization='fit_longest',
-                                    whole_pattern_output_fns=[imagen.image.DivisiveNormalizeLinf()])
+                                    whole_pattern_output_fns=[imagen.transferfn.MaximumDynamicRange()])
 
         while True:
             location = self.eye_path[int(numpy.floor(self.frame_duration * self.time / self.eye_movement_period))]
