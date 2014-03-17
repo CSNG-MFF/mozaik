@@ -124,7 +124,7 @@ class MeasureOrientationTuningFullfield(VisualExperiment):
 
 class MeasureSizeTuning(VisualExperiment):
     """
-    Measure size tuning using expanding sinusoidal grating disk.
+    Measure size tuning using expanding flat luminance disks and sinusoidal grating disks.
     
     Parameters
     ----------
@@ -157,18 +157,21 @@ class MeasureSizeTuning(VisualExperiment):
     
     log_spacing : bool
                Whether use logarithmic spaced sizes. By default False, meaning linear spacing 
+    
+    with_flat : bool
+               Whether use also flat luminance disks as stimuli. By default False 
     """
 
     def __init__(self, model, num_sizes, max_size, orientation,
                  spatial_frequency, temporal_frequency, grating_duration,
-                 contrasts, num_trials, log_spacing=False):
+                 contrasts, num_trials, log_spacing=False, with_flat=False):
         VisualExperiment.__init__(self, model)    
         # linear or logarithmic spaced sizes
         sizes = xrange(0, num_sizes)                     
         if log_spacing:
             # base2 log of max_size
             base2max = numpy.sqrt(max_size)
-            sizes = numpy.logspace(0, base2max, num=num_sizes, base=2.0)  
+            sizes = numpy.logspace(start=-3.0, stop=base2max, num=num_sizes, base=2.0)  
         # stimuli creation        
         for c in contrasts:
             for s in sizes:
@@ -188,6 +191,19 @@ class MeasureSizeTuning(VisualExperiment):
                                     radius=s,
                                     spatial_frequency=spatial_frequency,
                                     temporal_frequency=temporal_frequency))
+                    if with_flat:
+                        self.stimuli.append(topo.FlatDisk(
+                                    frame_duration=7,
+                                    size_x=model.visual_field.size_x,
+                                    size_y=model.visual_field.size_y,
+                                    location_x=0.0,
+                                    location_y=0.0,
+                                    background_luminance=self.background_luminance,
+                                    disk_luminance = c/self.background_luminance,
+                                    duration=grating_duration,
+                                    density=self.density,
+                                    trial=k,
+                                    radius=s))
 
     def do_analysis(self, data_store):
         pass
@@ -286,13 +302,12 @@ class MeasureFrequencySensitivity(VisualExperiment):
                  spatial_frequencies, temporal_frequencies, contrasts, 
                  grating_duration, num_trials, frame_duration=7):
         VisualExperiment.__init__(self, model)    
-        size = 20.0 #DG: very large!
         # stimuli creation        
         for tf in temporal_frequencies:
             for sf in spatial_frequencies:
                 for c in contrasts:
                     for k in xrange(0, num_trials):
-                        self.stimuli.append(topo.DriftingSinusoidalGratingDisk(
+                        self.stimuli.append(topo.FullfieldDriftingSinusoidalGrating(
                             frame_duration=frame_duration,
                             size_x=model.visual_field.size_x,
                             size_y=model.visual_field.size_y,
@@ -304,10 +319,8 @@ class MeasureFrequencySensitivity(VisualExperiment):
                             density=self.density,
                             trial=k,
                             orientation=orientation,
-                            radius=size,
                             spatial_frequency=sf,
-                            temporal_frequency=tf
-                            ))
+                            temporal_frequency=tf))
 
     def do_analysis(self, data_store):
         pass

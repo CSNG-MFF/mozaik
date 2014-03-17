@@ -94,10 +94,11 @@ class SimplePlot(object):
         else:
             self.__dict__[name] = value
 
-    def __call__(self, gs,params):
+    def __call__(self, gs,params,plotting_parent):
         """
         Calls all the plotting styling and execution functions in the right order.
         """
+        self.plotting_parent=plotting_parent
         self.update_params(params)
         self.pre_axis_plot()
         self.axis = pylab.subplot(gs)
@@ -471,7 +472,7 @@ class SpikeHistogramPlot(SpikeRasterPlot):
         self.x_label = 'time (ms)'
 
 
-animation_list = []
+
 
 class StandardStyleAnimatedPlot(StandardStyle):
     """
@@ -497,12 +498,6 @@ class StandardStyleAnimatedPlot(StandardStyle):
                    Duration of single frame. 
     """
 
-    def __init__(self, frame_duration):
-        StandardStyle.__init__(self)
-        self.lock=False
-        self.frame_duration = frame_duration
-        self.artists = []
-
     def plot_next_frame(self):
         """
         The function that each instance of `StandardStyleAnimatedPlot` has to implement, in which it updated
@@ -511,21 +506,13 @@ class StandardStyleAnimatedPlot(StandardStyle):
         raise NotImplementedError
 
     @staticmethod  # hack to make it compatible with FuncAnimation - we have to make it static
-    def _plot_next_frame(b, self):
+    def _plot_next_frame(self):
         a = self.plot_next_frame()
         return a,
 
     def post_plot(self):
         StandardStyle.post_plot(self)
-        import matplotlib.animation as animation
-        ani = animation.FuncAnimation(self.axis.figure,
-                                      StandardStyleAnimatedPlot._plot_next_frame,
-                                      fargs=(self,),
-                                      interval=self.frame_duration,
-                                      blit=True)
-        global animation_list
-        animation_list.append(ani)
-
+        self.plotting_parent.register_animation_update_function(StandardStyleAnimatedPlot._plot_next_frame,self)
 
 class PixelMovie(StandardStyleAnimatedPlot):
     """
@@ -540,8 +527,8 @@ class PixelMovie(StandardStyleAnimatedPlot):
           
     """
     
-    def __init__(self, movie, frame_duration):
-        StandardStyleAnimatedPlot.__init__(self, frame_duration)
+    def __init__(self, movie):
+        StandardStyleAnimatedPlot.__init__(self)
         self.movie = movie
         self.l = len(movie)
         self.i = 0

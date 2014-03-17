@@ -86,10 +86,12 @@ class Plotting(ParametrizedObject):
                command (but note facecolor='w' is already supplied).
     """
 
-    def  __init__(self, datastore, parameters, plot_file_name=None,fig_param=None):
+    def  __init__(self, datastore, parameters, plot_file_name=None,fig_param=None,frame_duration=0):
         ParametrizedObject.__init__(self, parameters)
         self.datastore = datastore
         self.plot_file_name = plot_file_name
+        self.animation_update_functions = []
+        self.frame_duration = frame_duration
         self.fig_param = fig_param if fig_param != None else {}
 
     def subplot(self, subplotspec):
@@ -119,15 +121,15 @@ class Plotting(ParametrizedObject):
             p.update(parameters)
             ### THIS IS WRONG 'UP' DO NOT WORK        
             up = user_parameters
-            for z in k.split('.'):    
+            for z in k.split('.'): 
                 up,fp = self._nip_parameters(z,up)
                 p.update(fp)
             param = p
             if isinstance(pl,SimplePlot):
-               # print check whether all user_parameters have been nipped to minimum 
-               pl(gs,param) 
+                # print check whether all user_parameters have been nipped to minimum 
+                pl(gs,param,self)
             elif isinstance(pl,Plotting):
-               pl._handle_parameters_and_execute_plots(param,up,gs)     
+                pl._handle_parameters_and_execute_plots(param,up,gs)     
             else:
                raise TypeError("The subplot object is not of type Plotting or SimplePlot") 
     
@@ -151,12 +153,33 @@ class Plotting(ParametrizedObject):
         gs = gridspec.GridSpec(1, 1)
         gs.update(left=0.05, right=0.95, top=0.95, bottom=0.05)
         self._handle_parameters_and_execute_plots({}, params,gs[0, 0])
-        gs.tight_layout(self.fig)
+
+        # ANIMATION Handling
+        if self.animation_update_functions != []:
+          import matplotlib.animation as animation
+          self.animation = animation.FuncAnimation(self.fig,
+                                      Plotting.update_animation_function,
+                                      fargs=(self,),
+                                      interval=self.frame_duration,
+                                      blit=False)
+        #gs.tight_layout(self.fig)
         if self.plot_file_name:
-            pylab.savefig(Global.root_directory+self.plot_file_name)
+            #if there were animations, save them
+            if self.animation_update_functions != []:
+                self.animation.save(Global.root_directory+self.plot_file_name+'.gif', writer='imagemagick', fps=10) 
+            else:
+                # save the analysis plot
+                pylab.savefig(Global.root_directory+self.plot_file_name)              
         t2 = time.time()
         logger.warning(self.__class__.__name__ + ' plotting took: ' + str(t2 - t1) + 'seconds')
 
+    def register_animation_update_function(self,auf,parent):
+        self.animation_update_functions.append((auf,parent))
+
+    @staticmethod
+    def update_animation_function(b,self):
+        for auf,parent in self.animation_update_functions:
+            auf(parent)
 
 class PlotTuningCurve(Plotting):
     """
@@ -198,8 +221,8 @@ class PlotTuningCurve(Plotting):
       'mean' : bool, # if True it will plot the mean tuning curve over the neurons (in case centered=True it will first center the TCs before computing the mean)
     })
 
-    def __init__(self, datastore, parameters, plot_file_name=None,fig_param=None):
-        Plotting.__init__(self, datastore, parameters, plot_file_name, fig_param)
+    def __init__(self, datastore, parameters, plot_file_name=None,fig_param=None,frame_duration=0):
+        Plotting.__init__(self, datastore, parameters, plot_file_name, fig_param,frame_duration)
         
         self.st = []
         self.tc_dict = []
@@ -231,8 +254,6 @@ class PlotTuningCurve(Plotting):
                self.max_mean_response_indexes.append(numpy.argmax(sum([a[1] for a in dic.values()]),axis=0))
                # lets find the highest average value for the neuron
 
-            
-
     def subplot(self, subplotspec):
         if self.parameters.mean:
             return LinePlot(function=self._ploter, length=1).make_line_plot(subplotspec)
@@ -259,7 +280,7 @@ class PlotTuningCurve(Plotting):
                         v = v + vv
                     val = v / len(self.parameters.neurons)
                     par = p
-                else:
+                elif self.parameters.centered:
                     val,par = self.center_tc(val[:,idx],par,period,self.max_mean_response_indexes[i][idx])
                     
                 if period != None:
@@ -268,7 +289,6 @@ class PlotTuningCurve(Plotting):
                     par.append(par[0] + period)
                     val.append(val[0])
                     if par != sorted(par):
-                       print "BBBBBBB"
                        print par
               
                 xs.append(numpy.array(par))
@@ -278,8 +298,6 @@ class PlotTuningCurve(Plotting):
                 for p in varying_parameters([MozaikParametrized.idd(e) for e in dic.keys()]):
                     l = l + str(p) + " : " + str(getattr(MozaikParametrized.idd(k),p))
                 labels.append(l)
-            
-                
             
             params={}
             params["x_label"] = self.parameters.parameter_name
@@ -374,9 +392,6 @@ class RasterPlot(Plotting):
         'neurons': list,
         'sheet_name': str,
     })
-
-    def __init__(self, datastore, parameters, plot_file_name=None, fig_param=None):
-        Plotting.__init__(self, datastore, parameters, plot_file_name, fig_param)
 
     def subplot(self, subplotspec):
         dsv = queries.param_filter_query(self.datastore,sheet_name=self.parameters.sheet_name)
@@ -548,6 +563,7 @@ class OverviewPlot(Plotting):
               ])
         return d
 
+
 class AnalogSignalListPlot(Plotting):
     """
     This plot shows a line of plots each showing analog signals for different neurons (in the same plot), one plot per each AnalogSignalList instance
@@ -684,22 +700,12 @@ class RetinalInputMovie(Plotting):
     This plots one plot showing the retinal input per each recording in the datastore. 
     
     It defines line of plots named: 'PixelMovie.Plot0' ... 'PixelMovie.PlotN'.
-    
-    Other parameters
-    ----------------
-    frame_rate : int
-                The desired frame rate (per sec), it might be less if the computer is too slow.
     """
-    required_parameters = ParameterSet({
-        'frame_rate': int,  # the desired frame rate (per sec), it might be less if the computer is too slow
-    })
-
-    def __init__(self, datastore, parameters, plot_file_name=None,
-                 fig_param=None):
-        Plotting.__init__(self, datastore, parameters, plot_file_name, fig_param)
+    def __init__(self, datastore, parameters, plot_file_name=None, fig_param=None, frame_duration=0):
+        Plotting.__init__(self, datastore, parameters, plot_file_name, fig_param, frame_duration)
         self.length = None
         # currently there is no way to check whether the sensory input is retinal
-        self.retinal_input = datastore.get_sensory_stimulus_stimulus()
+        self.retinal_input = datastore.get_sensory_stimulus()
         self.st = datastore.sensory_stimulus.keys()
         
     def subplot(self, subplotspec):
@@ -708,7 +714,7 @@ class RetinalInputMovie(Plotting):
                  ).make_line_plot(subplotspec)
 
     def _ploter(self, idx, gs):
-        return [('PixelMovie',PixelMovie(self.retinal_input[idx],1.0/self.parameters.frame_rate*1000),gs,{'x_axis':False, 'y_axis':False, "title" : str(self.st[idx])})]
+        return [( 'PixelMovie', PixelMovie(self.retinal_input[idx]), gs, {'x_axis':False, 'y_axis':False, "title" : str(self.st[idx])} )]
 
 
 class ActivityMovie(Plotting):
@@ -722,9 +728,6 @@ class ActivityMovie(Plotting):
     Other parameters
     ----------------
     
-    frame_rate : int  
-                The desired frame rate (per sec), it might be less if the computer is too slow.
-                
     bin_width : float
               In ms the width of the bins into which to sample spikes.
     
@@ -740,7 +743,6 @@ class ActivityMovie(Plotting):
     """
     
     required_parameters = ParameterSet({
-          'frame_rate': int,  # the desired frame rate (per sec), it might be less if the computer is too slow
           'bin_width': float,  # in ms the width of the bins into which to sample spikes
           'scatter':  bool,   # whether to plot neurons activity into a scatter plot (if True) or as an interpolated pixel image
           'resolution': int,  # the number of pixels into which the activity will be interpolated in case scatter = False
@@ -749,8 +751,7 @@ class ActivityMovie(Plotting):
 
     def subplot(self, subplotspec):
         dsv = queries.param_filter_query(self.datastore,sheet_name=self.parameters.sheet_name)
-        return PerStimulusPlot(dsv, function=self._ploter, title_style="Standard"
-                        ).make_line_plot(subplotspec)
+        return PerStimulusPlot(dsv, function=self._ploter, title_style="Standard").make_line_plot(subplotspec)
 
     def _ploter(self, dsv, gs):
         sp = [s.spiketrains for s in dsv.get_segments()]
@@ -787,9 +788,9 @@ class ActivityMovie(Plotting):
                                       (xi[None, :], yi[:, None]),
                                       method='cubic'))
 
-            return [("PixelMovie",PixelMovie(movie, 1.0/self.parameters.frame_rate*1000),gs,{'x_axis':False, 'y_axis':False})]
+            return [("PixelMovie",PixelMovie(movie),gs,{'x_axis':False, 'y_axis':False})]
         else:
-            return [("ScatterPlot",ScatterPlotMovie(pos[0], pos[1], h.T,1.0/self.parameters.frame_rate*1000),gs,{'x_axis':False, 'y_axis':False,'dot_size':40})]
+            return [("ScatterPlot",ScatterPlotMovie(pos[0], pos[1], h.T),gs,{'x_axis':False, 'y_axis':False,'dot_size':40})]
 
 
 class PerNeuronValuePlot(Plotting):
@@ -823,8 +824,8 @@ class PerNeuronValuePlot(Plotting):
     })
     
     def __init__(self, datastore, parameters, plot_file_name=None,
-                 fig_param=None):
-        Plotting.__init__(self, datastore, parameters, plot_file_name, fig_param)
+                 fig_param=None,frame_duration=0):
+        Plotting.__init__(self, datastore, parameters, plot_file_name, fig_param,frame_duration)
         self.poss = []
         self.pnvs = []
         self.sheets = []
@@ -879,8 +880,8 @@ class PerNeuronValueScatterPlot(Plotting):
     It defines line of plots named: 'ScatterPlot.Plot0' ... 'ScatterPlot.PlotN
     """
     
-    def __init__(self, datastore, parameters, plot_file_name=None,fig_param=None):
-        Plotting.__init__(self, datastore, parameters, plot_file_name, fig_param)
+    def __init__(self, datastore, parameters, plot_file_name=None,fig_param=None,frame_duration=0):
+        Plotting.__init__(self, datastore, parameters, plot_file_name, fig_param,frame_duration)
 
         self.pairs = []
         self.sheets = []
@@ -977,8 +978,8 @@ class ConnectivityPlot(Plotting):
     })
 
     def __init__(self, datastore, parameters, pnv_dsv=None,
-                 plot_file_name=None, fig_param=None):
-        Plotting.__init__(self, datastore, parameters, plot_file_name, fig_param)
+                 plot_file_name=None, fig_param=None,frame_duration=0):
+        Plotting.__init__(self, datastore, parameters, plot_file_name, fig_param,frame_duration)
         self.connecting_neurons_positions = []
         self.connected_neuron_position = []
         self.connections = []
