@@ -252,7 +252,7 @@ class GSTA(Analysis):
                     g_i = [s.get_isyn(n) for s in segs]
                     asl_e.append(self._do_gsta(g_e, sp))
                     asl_i.append(self._do_gsta(g_i, sp))
-                    self.datastore.full_datastore.add_analysis_result(
+                self.datastore.full_datastore.add_analysis_result(
                     ConductanceSignalList(asl_e,
                                           asl_i,
                                           self.parameters.neurons,
