@@ -97,7 +97,7 @@ class NaturalImageWithEyeMovement(TopographicaBasedVisualStimulus):
                                     size=self.size,
                                     bounds=BoundingBox(points=((-self.size_x/2, -self.size_y/2),
                                                                (self.size_x/2, self.size_y/2))),
-                                    scale=10*self.background_luminance,
+                                    scale=2*self.background_luminance,
                                     pattern_sampler=self.pattern_sampler
                                     )()
             yield (image, [self.time])

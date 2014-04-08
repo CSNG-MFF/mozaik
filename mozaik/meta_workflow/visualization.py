@@ -179,8 +179,8 @@ def multi_curve_visualzition(simulation_name,master_results_dir,x_axis_parameter
     
     sorted_parameter_indexes = zip(*sorted(enumerate(parameters), key=lambda x: x[1]))[0]
     print sorted_parameter_indexes
+
     # if value_names isNone lets set it to set of value_names in the first datastore
-    
     if value_name == None:
         value_name = set([ads.value_name for ads in param_filter_query(datastores[0][1],identifier='SingleValue').get_analysis_result()])
         assert len(value_name) == 1
@@ -197,7 +197,7 @@ def multi_curve_visualzition(simulation_name,master_results_dir,x_axis_parameter
     
     pylab.figure(figsize=(24, 12), dpi=2000, facecolor='w', edgecolor='k')
     
-    assert len(parameters) == 3
+    #assert len(parameters) == 3, "We required there to be three changing parameters for this visualization, you provided %d" % (len(parameters))
     
     a = numpy.array([param_values for (param_values,datastore) in datastores])
     a = a[:,[j for j in [0,1,2] if j != x_axis_parameter_index]]
@@ -230,19 +230,20 @@ def multi_curve_visualzition(simulation_name,master_results_dir,x_axis_parameter
     
     pylab.xlabel(parameters[sorted_parameter_indexes[0]]) 
     pylab.ylabel(value_name)     
-
+    pylab.ylim(0,20)
 
     pylab.subplot(2,2,2)        
     pylab.scatter(x,y,marker='o',s=100,c=z)
     parameters.remove(x_axis_parameter_name)
     pylab.xlabel(parameters[0]) 
     pylab.ylabel(parameters[1])     
-
-    # let's add ratio colored plot
     
+    
+    # let's add ratio colored plot
     x = []
     y = []
     z = []
+
     pylab.subplot(2,2,3)
     for k in d.keys():
         a = (k[0] - mmin[0]) /(mmax[0] - mmin[0])
