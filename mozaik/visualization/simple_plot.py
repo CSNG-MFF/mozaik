@@ -594,8 +594,8 @@ class ScatterPlotMovie(StandardStyleAnimatedPlot):
         2D array containing the values to be displayed (t,values)
     """
     
-    def __init__(self, x, y, z, frame_duration,**param):
-        StandardStyleAnimatedPlot.__init__(self, frame_duration,**param)
+    def __init__(self, x, y, z,**param):
+        StandardStyleAnimatedPlot.__init__(self,**param)
         self.z = z
         self.x = x
         self.y = y
@@ -710,7 +710,8 @@ class ScatterPlot(StandardStyle):
                                s=self.dot_size,
                                marker=self.marker,
                                lw=0,
-                               cmap=self.colormap,
+                               # cmap=self.colormap,
+                               color='k',
                                vmin=vmin,
                                vmax=vmax)
         if self.equal_aspect_ratio:
@@ -1040,6 +1041,6 @@ class HistogramPlot(StandardStyle):
 
     def plot(self):
         print self.x_lim
-        self.axis.hist(self.values,bins=self.num_bins,range=self.x_lim,edgecolor='none',facecolor='b')
+        self.axis.hist(self.values,bins=self.num_bins,range=self.x_lim,edgecolor='none')
         self.y_label = '#'
         
