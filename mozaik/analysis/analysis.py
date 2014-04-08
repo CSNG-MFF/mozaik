@@ -415,11 +415,14 @@ class TrialVariability(Analysis):
                if len(dsv.get_analysis_result()) == 0: continue
                assert queries.equal_ads_except(dsv, ['stimulus_id'])
                adss = dsv.get_analysis_result()
-               adss, stids = colapse(adss,[a.stimulus_id for a in adss],parameter_list=['trial'],allow_non_identical_objects=False)
+               adss, stids = colapse(adss,[MozaikParametrized.idd(a.stimulus_id) for a in adss],parameter_list=['trial'],allow_non_identical_objects=False)
+               
+               print segs
                
                for ads,st in zip(adss,stids):
-                   vm = [NeoAnalogSignal(numpy.var(numpy.array([s.get_vm(i) for s in segs]),axis=0),t_start=first_vm.t_start,sampling_period=first_vm.sampling_period,units=first_vm.units) for i in segs[0].get_stored_vm_ids()]
-                   self.datastore.full_datastore.add_analysis_result(AnalogSignalList(vm,segs[0].get_stored_vm_ids(),segs[0].get_vm(segs[0].get_stored_vm_ids()[0]).units,y_axis_name = 'vm trial-to-trial variance',x_axis_name="time",sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+                   first = ads[0].asl[0]
+                   vm = [NeoAnalogSignal(numpy.var(numpy.array([s.get_asl_by_id(i) for s in ads]),axis=0),t_start=first.t_start,sampling_period=first.sampling_period,units=first.units) for i in ads[0].ids]
+                   self.datastore.full_datastore.add_analysis_result(AnalogSignalList(vm,ads[0].ids,first.units,y_axis_name = ads[0].y_axis_name + ' trial-to-trial variance',x_axis_name=ads[0].x_axis_name,sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                
                
 
@@ -796,7 +799,7 @@ class Analog_MeanSTDAndFanoFactor(Analysis):
                     esyn_ids = segs[0].get_stored_esyn_ids()
                     isyn_ids = segs[0].get_stored_isyn_ids()
                     # mean
-                    vm_mean = numpy.mean(numpy.array([numpy.array([numpy.mean(seg.get_vm(idd)) for idd in vm_ids]) for seg in segs]),axis=0)
+                    vm_mean = abs(numpy.mean(numpy.array([numpy.array([numpy.mean(seg.get_vm(idd)) for idd in vm_ids]) for seg in segs]),axis=0))
                     esyn_mean = numpy.mean(numpy.array([numpy.array([numpy.mean(seg.get_esyn(idd)) for idd in esyn_ids]) for seg in segs]),axis=0)
                     isyn_mean = numpy.mean(numpy.array([numpy.array([numpy.mean(seg.get_isyn(idd)) for idd in isyn_ids]) for seg in segs]),axis=0)
                     # standard deviation
@@ -942,7 +945,7 @@ class TrialAveragedSparseness(Analysis):
 
 
 
-class SubtractSpontaneousMean(Analysis):
+class SubtractPNVfromPNVS(Analysis):
       """
       Takes datastore, and from each PerNeuronValue it subtracts the PerNeuronValue supplied in parameters, and saves the new PNVs into the datastore.
       """
@@ -955,7 +958,7 @@ class SubtractSpontaneousMean(Analysis):
             for sheet in self.datastore.sheets():
                 dsv = queries.param_filter_query(self.datastore, sheet_name=sheet,identifier='PerNeuronValue')
                 for p in dsv.get_analysis_result():
-                    assert set(p.ids) == set(pnv.ids)
-                    sub = p.get_value_by_id(p.ids) - pnv.get_value_by_id(p.ids)
-                    self.datastore.full_datastore.add_analysis_result(PerNeuronValue(sub,p.ids,p.value_units,value_name = p.value_name + '-' + pnv.value_name,sheet_name=sheet,tags=self.tags+p.tags,period=p.period,analysis_algorithm=self.__class__.__name__,stimulus_id=p.stimulus_id))        
+                    assert set(p.ids) == set(self.pnv.ids)
+                    sub = list(numpy.array(p.get_value_by_id(p.ids)) - numpy.array(self.pnv.get_value_by_id(p.ids)))
+                    self.datastore.full_datastore.add_analysis_result(PerNeuronValue(sub,p.ids,p.value_units,value_name = p.value_name + '-' + self.pnv.value_name,sheet_name=sheet,tags=self.tags+p.tags,period=p.period,analysis_algorithm=self.__class__.__name__,stimulus_id=p.stimulus_id))        
                 

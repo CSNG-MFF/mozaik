@@ -823,34 +823,42 @@ class ActivityMovie(Plotting):
         bw = bw.rescale(units).magnitude
         bins = numpy.arange(start, stop, bw)
 
+
         h = []
         for spike_trains in sp:
             hh = []
             for st in spike_trains:
                 hh.append(numpy.histogram(st.magnitude, bins, (start, stop))[0])
             h.append(numpy.array(hh))
+        
         h = numpy.sum(h, axis=0)
-
+        
         pos = dsv.get_neuron_postions()[self.parameters.sheet_name]
 
+        posx = pos[0,self.datastore.get_sheet_indexes(self.parameters.sheet_name,dsv.get_segments()[0].get_stored_spike_train_ids())]
+        posy = pos[1,self.datastore.get_sheet_indexes(self.parameters.sheet_name,dsv.get_segments()[0].get_stored_spike_train_ids())]
+
+                
         if not self.parameters.scatter:
-            xi = numpy.linspace(numpy.min(pos[0])*1.1,
-                                numpy.max(pos[0])*1.1,
+            xi = numpy.linspace(numpy.min(posx)*1.1,
+                                numpy.max(posy)*1.1,
                                 self.parameters.resolution)
-            yi = numpy.linspace(numpy.min(pos[1])*1.1,
-                                numpy.max(pos[1])*1.1,
+            yi = numpy.linspace(numpy.min(posx)*1.1,
+                                numpy.max(posy)*1.1,
                                 self.parameters.resolution)
 
             movie = []
             for i in xrange(0, numpy.shape(h)[1]):
-                movie.append(griddata((pos[0], pos[1]),
+                movie.append(griddata((posx, posy),
                                       h[:, i],
                                       (xi[None, :], yi[:, None]),
-                                      method='cubic'))
-
-            return [("PixelMovie",PixelMovie(movie),gs,{'x_axis':False, 'y_axis':False})]
+                                      method='nearest'))
+            w = numpy.isnan(numpy.array(movie))
+            numpy.array(movie)[w]=0
+            
+            return [("PixelMovie",PixelMovie(40000.0*numpy.array(movie)),gs,{'x_axis':False, 'y_axis':False})]
         else:
-            return [("ScatterPlot",ScatterPlotMovie(pos[0], pos[1], h.T),gs,{'x_axis':False, 'y_axis':False,'dot_size':40})]
+            return [("ScatterPlot",ScatterPlotMovie(posx, posy, h.T),gs,{'x_axis':False, 'y_axis':False,'dot_size':40})]
 
 
 class PerNeuronValuePlot(Plotting):
