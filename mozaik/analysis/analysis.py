@@ -280,14 +280,14 @@ class GSTA(Analysis):
 
 
 
-class TrialToTrialCrossCorrelationOfPSTH(Analysis):
+class TrialToTrialCrossCorrelationOfPSTHandVM(Analysis):
     """
     Computes the cross-correlation between the PSTH and VM of different trials.
 
     Takes all the responses in the datastore, and for each recording group that is identical except the 
     trial number it will compute the cross-correlation between the PSTH and Vm of different trials. For each such 
     group it will create and add two AnalogSignalList instances into the datastore containing the calculated cross-correlation (one for PSTH and for Vm)
-    vector for each neuron in `required_parameters.neurons`.
+    vector for each neuron in `required_parameters.neurons`
     
     Other parameters
     ---------------- 
@@ -349,12 +349,29 @@ class TrialToTrialCrossCorrelationOfPSTH(Analysis):
 
                 
     def cross_correlation(self,ass):
+        import scipy.signal
+        import pylab
         cc = 0
         
         for i in xrange(0,len(ass)):
             for j in xrange(i+1,len(ass)):
-                cc = cc + numpy.correlate(ass[i]-numpy.mean(ass[i]),ass[j]-numpy.mean(ass[j]),mode='full')/numpy.var(ass[i])/numpy.var(ass[j])/len(ass[i])
+                #cc = cc + scipy.signal.fftconvolve(ass[i]-numpy.mean(ass[i]),ass[j]-numpy.mean(ass[j]))
+                #cc = cc + numpy.correlate(ass[i],ass[j])
+                cc = cc + scipy.signal.fftconvolve(ass[i],ass[j])
+                #scipy.signal.fftconvolve(ass[i]-numpy.mean(ass[i]),ass[j]-numpy.mean(ass[j]),mode='full')/numpy.var(ass[i])/numpy.var(ass[j])/len(ass[i])
+
+        
         cc = cc / (len(ass)*(len(ass)-1)/2)
+        print len(ass)
+        import pylab
+        pylab.figure()
+        pylab.plot(cc)
+    
+        pylab.figure()
+        for a in ass:
+            pylab.plot(a)
+    
+    
         return cc
 
 
