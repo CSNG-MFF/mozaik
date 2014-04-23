@@ -195,6 +195,28 @@ class MozaikParametrized(Parameterized):
         obj = cls.__new__(cls,**params)
         MozaikParametrized.__init__(obj,**params)
         return obj
+
+    @classmethod
+    def 	(cls,obj):
+        """
+        This class method is used in concjuction with the MozaikParametrized.__str__ function that stores all the parameters and the class and module of an object.
+        This method restores a 'Shell' object out of this str. The returned object will be of the same type as the original object and will contain all its original parameters
+        and their values, BUT WILL NOT BE INITIALIZED and so should not be used for anything else other than examining it's parameters!!!!
+        
+        Furthermore if given an instance of MozaikParametrized instead it will convert it into the 'Shell' object.
+        """
+        if isinstance(obj,MozaikParametrized):
+           return MozaikParametrized.idd(str(obj))
+        assert isinstance(obj,str)
+        
+        params = eval(obj)
+        name = params.pop("name")
+        module_path = params.pop("module_path")
+        z = __import__(module_path, globals(), locals(), name)
+        
+        cls = getattr(z,name)
+	return cls(**params)        
+
     
     
 """

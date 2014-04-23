@@ -26,12 +26,9 @@ class TopographicaBasedVisualStimulus(VisualStimulus):
 class SparseNoise(TopographicaBasedVisualStimulus):
     """
     Sparse noise 
-    Produces a matrix with zeros an one random entry with either
-    -1 or 1 allocated at random. Then the matrix is scaled 
-    and translated by scale and offset with the next
-    transformation rule: 
-    -1 -> 0  / offset - scale
-     1 -> 2*background_luminance / offset +scale 
+    Produces a matrix with 0.5 and one random entry with 0 or 1
+    The output is then transformed with the following rule:
+    output = output * scale  + offset 
     """
     
     experiment_seed = SNumber(dimensionless, doc="The seed of a given experiment")
@@ -47,10 +44,10 @@ class SparseNoise(TopographicaBasedVisualStimulus):
     def frames(self):
             
         aux = imagen.random.SparseNoise(
-                                      grid_size = self.grid_size,
+                                      grid_density = self.grid_size / self.size_x 
                                       grid = self.grid,
-                                      offset=self.background_luminance,
-                                      scale=self.background_luminance,
+                                      offset= 0,
+                                      scale= 2 * self.background_luminance,
                                       bounds=BoundingBox(radius=self.size_x/2),
                                       xdensity=self.density,
                                       ydensity=self.density,
@@ -64,13 +61,11 @@ class SparseNoise(TopographicaBasedVisualStimulus):
 class DenseNoise(TopographicaBasedVisualStimulus):
     """
     Dense Noise 
-    Produces a matrix with the values -1, 0 and 1 allocated at random
+    Produces a matrix with the values 0, 0.5 and 1 allocated at random
     and then scaled and translated by scale and offset with the next
-    transformation rule 
+    transformation rule:  result*scale + offset
     
-    -1 -> 0  / offset - scale  
-    0 -> background.luminance / offset 
-    1 -> 2*background_luminance / offset +scale 
+   
     """
     
     experiment_seed = SNumber(dimensionless, doc="The seed of a given experiment") 
@@ -84,9 +79,9 @@ class DenseNoise(TopographicaBasedVisualStimulus):
   
     def frames(self):
         aux = imagen.random.DenseNoise(
-                                       grid_size = self.grid_size,
-                                       offset = self.background_luminance,
-                                       scale = self.background_luminance, 
+                                       grid_density = self.grid_size / self.size_x,
+                                       offset = 0,
+                                       scale = 2 * self.background_luminance, 
                                        bounds = BoundingBox(radius=self.size_x/2),
                                        xdensity = self.density,
                                        ydensity = self.density,
