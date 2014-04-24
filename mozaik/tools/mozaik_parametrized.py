@@ -197,13 +197,9 @@ class MozaikParametrized(Parameterized):
         return obj
 
     @classmethod
-    def 	(cls,obj):
+    def idd_to_instance(cls,obj):
         """
-        This class method is used in concjuction with the MozaikParametrized.__str__ function that stores all the parameters and the class and module of an object.
-        This method restores a 'Shell' object out of this str. The returned object will be of the same type as the original object and will contain all its original parameters
-        and their values, BUT WILL NOT BE INITIALIZED and so should not be used for anything else other than examining it's parameters!!!!
         
-        Furthermore if given an instance of MozaikParametrized instead it will convert it into the 'Shell' object.
         """
         if isinstance(obj,MozaikParametrized):
            return MozaikParametrized.idd(str(obj))
