@@ -44,7 +44,7 @@ class SparseNoise(TopographicaBasedVisualStimulus):
     def frames(self):
             
         aux = imagen.random.SparseNoise(
-                                      grid_density = self.grid_size / self.size_x 
+                                      grid_density = self.grid_size / self.size_x,
                                       grid = self.grid,
                                       offset= 0,
                                       scale= 2 * self.background_luminance,
