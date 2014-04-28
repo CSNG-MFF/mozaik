@@ -162,7 +162,7 @@ class Plotting(ParametrizedObject):
                                       fargs=(self,),
                                       interval=self.frame_duration,
                                       blit=False)
-        #gs.tight_layout(self.fig)
+        gs.tight_layout(self.fig)
         if self.plot_file_name:
             #if there were animations, save them
             if self.animation_update_functions != []:

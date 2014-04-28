@@ -489,6 +489,9 @@ class GaussianTuningCurveFit(Analysis):
                 
                 self.tc_dict = colapse_to_dictionary([z.get_value_by_id(self.pnvs[0].ids) for z in self.pnvs],self.st,self.parameters.parameter_name)
                 for k in self.tc_dict.keys():
+                        if len(self.tc_dict[k][0]) < 4:
+                           logger.debug('Failed to fit tuning curve, not enough points supplied: %d' % len(self.tc_dict[k][0]))
+                           return
                         z = []
                         for i in xrange(0,len(self.pnvs[0].values)):
                             res = self._fitgaussian(self.tc_dict[k][0],[a[i] for a in self.tc_dict[k][1]],period)
