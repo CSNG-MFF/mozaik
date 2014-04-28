@@ -342,7 +342,7 @@ def partition_analysis_results_by_stimulus_parameters_query(dsv,parameter_list=N
                returned DSVs.
 
         except : bool
-               If excpt is True the query is allowed only on DSVs holding the same AnalysisDataStructures.
+               If excpt is True the query is allowed only on DSVs holding the same AnalysisDataStructures type.
         """
         if dsv.analysis_results == []: return []
         
@@ -366,7 +366,7 @@ def partition_analysis_results_by_stimulus_parameters_query(dsv,parameter_list=N
             dsvs.append(new_dsv)
         return dsvs
 
-class PartitionAnalysisResultsByStimulusParameterNameQuery(Query):
+class PartitionAnalysisResultsByStimulusParameterQuery(Query):
     """
     See  :func:`.partition_analysis_results_by_stimulus_parameters_query`.
     

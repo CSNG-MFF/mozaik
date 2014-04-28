@@ -280,13 +280,13 @@ class GSTA(Analysis):
 
 
 
-class TrialToTrialCrossCorrelationOfPSTHandVM(Analysis):
+class TrialToTrialCrossCorrelationOfAnalogSignalList(Analysis):
     """
-    Computes the cross-correlation between the PSTH and VM of different trials.
+    Computes the cross-correlation between identical AnalogSignalList ADSs associated with different trials.
 
-    Takes all the responses in the datastore, and for each recording group that is identical except the 
-    trial number it will compute the cross-correlation between the PSTH and Vm of different trials. For each such 
-    group it will create and add two AnalogSignalList instances into the datastore containing the calculated cross-correlation (one for PSTH and for Vm)
+    Takes all the responses in the datastore, and for each group of AnalogSignalList ADSs that is identical except the 
+    trial number it will compute the cross-correlation between the analog signals corresponding to the same neurons. For each such 
+    group it will create and add an AnalogSignalList instances into the datastore containing the calculated cross-correlation 
     vector for each neuron in `required_parameters.neurons`
     
     Other parameters
@@ -299,79 +299,47 @@ class TrialToTrialCrossCorrelationOfPSTHandVM(Analysis):
 
     required_parameters = ParameterSet({
         'neurons': list,  # the list of neuron ids for which to compute the
-        'bin_length': float,  # (ms) the size of bin to construct the PSTH from
     })
 
     def perform_analysis(self):
         for sheet in self.datastore.sheets():
             dsv = queries.param_filter_query(self.datastore, sheet_name=sheet)
-            segs1, stids = colapse(dsv.get_segments(),dsv.get_stimuli(),parameter_list=['trial'],allow_non_identical_objects=True)
-            for segs,st in zip(segs1, stids):
-                vm_ass =[]
-                psth_ass =[]
+            
+            #AnalogSignalList
+            dsv = queries.param_filter_query(self.datastore,identifier="AnalogSignalList")
+            assert queries.ads_with_equal_stimulus_type(dsv)
+            assert queries.equal_ads_except(dsv,'stimulus_id')
+            dsvs = queries.partition_analysis_results_by_stimulus_parameters_query(dsv,parameter_list="trial",excpt=True)
+            for dsv in dsvs:
+                st = MozaikParametrized.idd(dsv.get_analysis_result()[0].stimulus_id)
+                setattr(st,'trial',None)
+                st = str(st)
+
+                asl_ass = []
                 for idd in self.parameters.neurons:
-                    duration = segs[0].get_vm(idd).t_stop-segs[0].get_vm(idd).t_start
-                    
-                    vm_cross = self.cross_correlation([numpy.array(seg.get_vm(idd)) for seg in segs])
-                    vm_ass.append(NeoAnalogSignal(vm_cross,t_start=-duration,
-                                         sampling_period=segs[0].get_vm(idd).sampling_period,
+                    asl_cross = self.cross_correlation([ads.get_asl_by_id(idd).magnitude for ads in dsv.get_analysis_result()])                                         
+                    asl_ass.append(NeoAnalogSignal(asl_cross,t_start=-dsv.get_analysis_result()[0].get_asl_by_id(idd).duration,
+                                         sampling_period=dsv.get_analysis_result()[0].get_asl_by_id(idd).sampling_period,
                                          units=qt.dimensionless))        
-
-                    psth_cross = self.cross_correlation([numpy.array(psth([seg.get_spiketrain(idd)], self.parameters.bin_length)[0]) for seg in segs])                                         
-                    psth_ass.append(NeoAnalogSignal(psth_cross,t_start=-duration,
-                                         sampling_period=self.parameters.bin_length*qt.ms,
-                                         units=qt.dimensionless))        
-                                         
-                    
+         
                 self.datastore.full_datastore.add_analysis_result(
-                    AnalogSignalList(vm_ass,
-                                     self.parameters.neurons,
-                                     qt.dimensionless,
-                                     x_axis_name='time',
-                                     y_axis_name='trial-trial cross-correlation of Vm',
-                                     sheet_name=sheet,
-                                     tags=self.tags,
-                                     analysis_algorithm=self.__class__.__name__,
-                                     stimulus_id=str(st)))
-
-
-                self.datastore.full_datastore.add_analysis_result(
-                    AnalogSignalList(psth_ass,
-                                     self.parameters.neurons,
-                                     qt.dimensionless,
-                                     x_axis_name='time',
-                                     y_axis_name='trial-trial cross-correlation of PSTH',
-                                     sheet_name=sheet,
-                                     tags=self.tags,
-                                     analysis_algorithm=self.__class__.__name__,
-                                     stimulus_id=str(st)))
-
-
+                        AnalogSignalList(asl_ass,
+                                         self.parameters.neurons,
+                                         qt.dimensionless,
+                                         x_axis_name='time',
+                                         y_axis_name='trial-trial cross-correlation of ' + dsv.get_analysis_result()[0].y_axis_name,
+                                         sheet_name=sheet,
+                                         tags=self.tags,
+                                         analysis_algorithm=self.__class__.__name__,
+                                         stimulus_id=str(st)))           
                 
     def cross_correlation(self,ass):
-        import scipy.signal
-        import pylab
         cc = 0
-        
         for i in xrange(0,len(ass)):
             for j in xrange(i+1,len(ass)):
-                #cc = cc + scipy.signal.fftconvolve(ass[i]-numpy.mean(ass[i]),ass[j]-numpy.mean(ass[j]))
-                #cc = cc + numpy.correlate(ass[i],ass[j])
-                cc = cc + scipy.signal.fftconvolve(ass[i],ass[j])
-                #scipy.signal.fftconvolve(ass[i]-numpy.mean(ass[i]),ass[j]-numpy.mean(ass[j]),mode='full')/numpy.var(ass[i])/numpy.var(ass[j])/len(ass[i])
-
-        
+                cc= cc + scipy.signal.fftconvolve(ass[i]-numpy.mean(ass[i]),ass[j][::-1]-numpy.mean(ass[j]),mode='full')/numpy.var(ass[i])/numpy.var(ass[j])/len(ass[i])
+                
         cc = cc / (len(ass)*(len(ass)-1)/2)
-        print len(ass)
-        import pylab
-        pylab.figure()
-        pylab.plot(cc)
-    
-        pylab.figure()
-        for a in ass:
-            pylab.plot(a)
-    
-    
         return cc
 
 
