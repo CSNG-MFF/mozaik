@@ -67,6 +67,9 @@ class Sheet(BaseComponent):
                 Parametrization of recorders in this sheet. The recorders ParameterSet will contain as keys the names
                 of the different recording configuration user want to have in this sheet. For the format of each recording configuration see notes.
 
+    recording_interval : float (ms)
+                The interval at which analog signals in this sheet will be recorded. 
+
     Notes
     -----
     
@@ -78,7 +81,6 @@ class Sheet(BaseComponent):
         the path to the :class:`mozaik.sheets.population_selector.PopulationSelector` class
     *params*
         a ParameterSet containing the parameters for the given :class:`mozaik.sheets.population_selector.PopulationSelector` class 
-        
     """
 
     required_parameters = ParameterSet({
@@ -91,7 +93,8 @@ class Sheet(BaseComponent):
         'mpi_safe': bool,
         'artificial_stimulators' : ParameterSet,
         'name': str,
-        'recorders' : ParameterSet
+        'recorders' : ParameterSet,
+        'recording_interval' : float,
     })
 
     def __init__(self, model, parameters):
@@ -234,9 +237,9 @@ class Sheet(BaseComponent):
             for variable in self.to_record.keys():
                 cells = self.to_record[variable]
                 if cells != 'all':
-                    self.pop[cells].record(variable)
+                    self.pop[cells].record(variable,sampling_interval=self.parameters.recording_interval)
                 else:
-                    self.pop.record(variable)
+                    self.pop.record(variable,sampling_interval=self.parameters.recording_interval)
 
     def get_data(self, stimulus_duration=None):
         """
