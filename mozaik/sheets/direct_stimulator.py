@@ -5,8 +5,6 @@ would happen during electrophisiological experiment - such a injection
 of spikes/currents etc into cells. In mozaik this happens at population level - i.e.
 each direct stimulator specifies how the given population is stimulated. In general each population can have several
 stimultors.
-
-
 """
 from mozaik.core import ParametrizedObject
 from parameters import ParameterSet
