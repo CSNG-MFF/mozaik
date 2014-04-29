@@ -155,7 +155,6 @@ class Sheet(BaseComponent):
 	    
 	    self._neuron_annotations = [{} for i in xrange(0, len(value))]
             self.setup_artificial_stimulation()
-            self.setup_to_record_list()
             self.setup_initial_values()
 
 
@@ -233,6 +232,8 @@ class Sheet(BaseComponent):
             return context
 
     def record(self):
+        # this should be only called once.
+        self.setup_to_record_list()
         if self.to_record != None:
             for variable in self.to_record.keys():
                 cells = self.to_record[variable]

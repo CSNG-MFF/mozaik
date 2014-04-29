@@ -247,13 +247,13 @@ class GSTA(Analysis):
                     asl_e.append(self._do_gsta(g_e, sp))
                     asl_i.append(self._do_gsta(g_i, sp))
                 self.datastore.full_datastore.add_analysis_result(
-                ConductanceSignalList(asl_e,
-                                      asl_i,
-                                      self.parameters.neurons,
-                                      sheet_name=sheet,
-                                      tags=self.tags,
-                                      analysis_algorithm=self.__class__.__name__,
-                                      stimulus_id=str(st)))
+                    ConductanceSignalList(asl_e,
+                                          asl_i,
+                                          self.parameters.neurons,
+                                          sheet_name=sheet,
+                                          tags=self.tags,
+                                          analysis_algorithm=self.__class__.__name__,
+                                          stimulus_id=str(st)))
 
     def _do_gsta(self, analog_signal, sp):
         dt = analog_signal[0].sampling_period
@@ -457,6 +457,9 @@ class GaussianTuningCurveFit(Analysis):
                 
                 self.tc_dict = colapse_to_dictionary([z.get_value_by_id(self.pnvs[0].ids) for z in self.pnvs],self.st,self.parameters.parameter_name)
                 for k in self.tc_dict.keys():
+                        if len(self.tc_dict[k][0]) < 4:
+                           logger.debug('Failed to fit tuning curve, not enough points supplied: %d' % len(self.tc_dict[k][0]))
+                           return
                         z = []
                         for i in xrange(0,len(self.pnvs[0].values)):
                             res = self._fitgaussian(self.tc_dict[k][0],[a[i] for a in self.tc_dict[k][1]],period)
