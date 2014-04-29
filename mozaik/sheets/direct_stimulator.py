@@ -156,12 +156,14 @@ class BackgroundActivityBombardment(DirectStimulator):
            if (self.parameters.exc_firing_rate != 0 or self.parameters.exc_weight != 0):
                 for j,i in enumerate(numpy.nonzero(self.sheet.pop._mask_local)[0]):
                     pp = self.stgene[j].poisson_generator(rate=self.parameters.exc_firing_rate,t_start=0,t_stop=duration).spike_times
-                    self.ssae[i].set_parameters(spike_times=Sequence(offset + numpy.array(pp)))
+                    a = offset + numpy.array(pp)
+                    self.ssae[i].set_parameters(spike_times=Sequence(a.astype(float)))
                
            if (self.parameters.inh_firing_rate != 0 or self.parameters.inh_weight != 0):
                 for j,i in enumerate(numpy.nonzero(self.sheet.pop._mask_local)[0]):
                     pp = self.stgene[j].poisson_generator(rate=self.parameters.inh_firing_rate,t_start=0,t_stop=duration).spike_times
-                    self.ssai[i].set_parameters(spike_times=Sequence(offset + numpy.array(pp)))
+                    a = offset + numpy.array(pp)
+                    self.ssai[i].set_parameters(spike_times=Sequence(a.astype(float)))
         
 
         
@@ -244,8 +246,9 @@ class Kick(DirectStimulator):
                    times = [0]  
                    rate = [self.parameters.exc_firing_rate] 
                pp = self.stgene[j].inh_poisson_generator(numpy.array(rate),numpy.array(times),t_stop=duration).spike_times
-               self.ssae[i].set_parameters(spike_times=Sequence(offset + numpy.array(pp)))
-        
+               a = offset + numpy.array(pp)
+               self.ssae[i].set_parameters(spike_times=Sequence(a.astype(float)))
+
     def inactivate(self,offset):        
         pass
 
