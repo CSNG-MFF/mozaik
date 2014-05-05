@@ -203,6 +203,24 @@ class MozaikParametrized(Parameterized):
         obj = cls.__new__(cls,**params)
         MozaikParametrized.__init__(obj,**params)
         return obj
+
+    @classmethod
+    def idd_to_instance(cls,obj):
+        """
+        
+        """
+        if isinstance(obj,MozaikParametrized):
+           return MozaikParametrized.idd(str(obj))
+        assert isinstance(obj,str)
+        
+        params = eval(obj)
+        name = params.pop("name")
+        module_path = params.pop("module_path")
+        z = __import__(module_path, globals(), locals(), name)
+        
+        cls = getattr(z,name)
+	return cls(**params)        
+
     
     
 """

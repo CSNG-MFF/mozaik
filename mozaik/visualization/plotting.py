@@ -775,7 +775,12 @@ class RetinalInputMovie(Plotting):
                  ).make_line_plot(subplotspec)
 
     def _ploter(self, idx, gs):
-        return [( 'PixelMovie', PixelMovie(self.retinal_input[idx]), gs, {'x_axis':False, 'y_axis':False, "title" : str(self.st[idx])} )]
+        stimulus = MozaikParametrized.idd(self.st[idx])
+        title = ''
+        title = title + stimulus.name + '\n'
+        for pn, pv in stimulus.get_param_values():
+                title = title + pn + ' : ' + str(pv) + '\n'
+        return [('PixelMovie',PixelMovie(self.retinal_input[idx],1.0/self.parameters.frame_rate*1000),gs,{'x_axis':False, 'y_axis':False, "title" : title})]
 
 
 class ActivityMovie(Plotting):
