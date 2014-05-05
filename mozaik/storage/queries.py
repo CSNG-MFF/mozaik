@@ -346,9 +346,6 @@ def partition_analysis_results_by_stimulus_parameters_query(dsv,parameter_list=N
         """
         if dsv.analysis_results == []: return []
         
-        for ads in dsv.analysis_results:
-            print ads
-        
         st = [MozaikParametrized.idd(ads.stimulus_id) for ads in dsv.analysis_results]
         assert parameter_list != None , "parameter_list has to be given"
         if excpt:

@@ -240,6 +240,7 @@ class PlotTuningCurve(Plotting):
             assert self.parameters.centered , "Average tuning curve can be plotted only if the tuning curves are centerd"
         
         dsvs = queries.partition_analysis_results_by_parameters_query(self.datastore,parameter_list=['value_name'],excpt=True)
+        print len(dsvs)
         for dsv in dsvs:
             dsv = queries.param_filter_query(dsv,identifier='PerNeuronValue',sheet_name=self.parameters.sheet_name)
             assert matching_parametrized_object_params(dsv.get_analysis_result(), params=['value_name'])
