@@ -43,9 +43,9 @@ class SparseNoise(TopographicaBasedVisualStimulus):
         assert (self.time_per_image/self.frame_duration) % 1.0 == 0.0
                 
     def frames(self):
-            
+  
         aux = imagen.random.SparseNoise(
-                                      grid_density = self.grid_size / self.size_x,
+                                      grid_density = self.grid_size * 1.0 / self.size_x,
                                       grid = self.grid,
                                       offset= 0,
                                       scale= 2 * self.background_luminance,
@@ -80,7 +80,7 @@ class DenseNoise(TopographicaBasedVisualStimulus):
   
     def frames(self):
         aux = imagen.random.DenseNoise(
-                                       grid_density = self.grid_size / self.size_x,
+                                       grid_density = self.grid_size * 1.0 / self.size_x,
                                        offset = 0,
                                        scale = 2 * self.background_luminance, 
                                        bounds = BoundingBox(radius=self.size_x/2),
