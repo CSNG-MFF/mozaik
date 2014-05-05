@@ -95,7 +95,10 @@ class MozaikParametrized(Parameterized):
     """
 
     name = SString(doc="String identifier for this object that is set to it's class name DO NOT TOUCH!")
-
+    
+    # we will chache imported modules due to the idd statement here, as module imports seem to be extremely costly.
+    _module_cache = {}
+    
     def __init__(self, **params):
         Parameterized.__init__(self, **params)
         self.module_path = inspect.getmodule(self).__name__
@@ -188,8 +191,13 @@ class MozaikParametrized(Parameterized):
         params = eval(obj)
         name = params.pop("name")
         module_path = params.pop("module_path")
-        z = __import__(module_path, globals(), locals(), name)
         
+        if (module_path,name) in MozaikParametrized._module_cache:
+            z = MozaikParametrized._module_cache[(module_path,name)]
+        else:
+            z = __import__(module_path, globals(), locals(), name)
+            MozaikParametrized._module_cache[(module_path,name)] = z
+            
         cls = getattr(z,name)
         
         obj = cls.__new__(cls,**params)
@@ -317,9 +325,7 @@ def colapse(data_list, object_list, func=None, parameter_list=[],
 
     Parameters
     ----------
-    func : bool
-         If not None, func is applied to each member of v.
-
+    
     data_list : list
               The list of data corresponding to objects in object_list.
     
@@ -330,7 +336,7 @@ def colapse(data_list, object_list, func=None, parameter_list=[],
                    The list of parameter names against which to collapse the data.
     
     func : func()
-         The function to be applied to the lists formed by data associated
+         If not None, the function to be applied to the lists formed by data associated
          with the same object parametrizations with exception of the parameters in parameter_list
          
     allow_non_identical_objects : bool, optional

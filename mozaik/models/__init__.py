@@ -194,11 +194,9 @@ class Model(BaseComponent):
                 logger.info("Simulating the network for %s ms with blank stimulus" % self.parameters.null_stimulus_period)
                 self.sim.run(self.parameters.null_stimulus_period)
                 self.simulator_time+=self.parameters.null_stimulus_period
-                
                 for sheet in self.sheets.values():    
                     if sheet.to_record != None:
                        sheet.get_data()
-
         return time.time()-t0    
     
 

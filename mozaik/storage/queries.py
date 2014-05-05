@@ -342,7 +342,7 @@ def partition_analysis_results_by_stimulus_parameters_query(dsv,parameter_list=N
                returned DSVs.
 
         except : bool
-               If excpt is True the query is allowed only on DSVs holding the same AnalysisDataStructures.
+               If excpt is True the query is allowed only on DSVs holding the same AnalysisDataStructures type.
         """
         if dsv.analysis_results == []: return []
         
@@ -366,7 +366,7 @@ def partition_analysis_results_by_stimulus_parameters_query(dsv,parameter_list=N
             dsvs.append(new_dsv)
         return dsvs
 
-class PartitionAnalysisResultsByStimulusParameterNameQuery(Query):
+class PartitionAnalysisResultsByStimulusParameterQuery(Query):
     """
     See  :func:`.partition_analysis_results_by_stimulus_parameters_query`.
     
@@ -406,6 +406,17 @@ def equal_stimulus_type(dsv):
     """
     return matching_parametrized_object_params([MozaikParametrized.idd(s) for s in dsv.get_stimuli()],params=['name'])
 ########################################################################
+
+########################################################################
+def equal_stimulus(dsv,except_params):
+    """
+    This functions returns True if DSV contains only recordings associated
+    with stimuli of identical parameter values, with the exception of parameters in *except_params*
+    """
+    return matching_parametrized_object_params([MozaikParametrized.idd(s) for s in dsv.get_stimuli()],except_params=['name'])
+########################################################################
+
+
 
 ########################################################################
 def equal_ads_except(dsv,except_params):

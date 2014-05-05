@@ -141,12 +141,19 @@ class GaborConnector(BaseComponent):
             target.add_neuron_annotation(j, 'LGNAfferentFrequency', frequency, protected=True)
             target.add_neuron_annotation(j, 'LGNAfferentSize', size, protected=True)
             target.add_neuron_annotation(j, 'LGNAfferentPhase', phase, protected=True)
+            
+            if self.parameters.topological:
+                target.add_neuron_annotation(j, 'LGNAfferentX', target.pop.positions[0][j], protected=True)
+                target.add_neuron_annotation(j, 'LGNAfferentY', target.pop.positions[1][j], protected=True)
+            else:
+                target.add_neuron_annotation(j, 'LGNAfferentX', 0, protected=True)
+                target.add_neuron_annotation(j, 'LGNAfferentY', 0, protected=True)
+                
 
         ps = ParameterSet({   'target_synapses' : 'excitatory',               
                               'weight_functions' : {  'f1' : {
                                                                  'component' : 'mozaik.connectors.vision.GaborArborization',
                                                                  'params' : {
-                                                                                'topological' : self.parameters.topological,
                                                                                 'ON' : True,
                                                                             }
                                                              }                                                                              
@@ -155,7 +162,7 @@ class GaborConnector(BaseComponent):
                              'weight_expression' : 'f1', # a python expression that can use variables f1..fn where n is the number of functions in weight_functions, and fi corresponds to the name given to a ModularConnectorFunction in weight_function ParameterSet. It determines how are the weight functions combined to obtain the weights
                              'delay_expression' : str(self.parameters.delay),
                              'short_term_plasticity' : self.parameters.short_term_plasticity,
-                             'base_weight' : self.parameters.base_weight * self.parameters.num_samples,
+                             'base_weight' : self.parameters.base_weight,
                              'num_samples' : self.parameters.num_samples,
                           })
         ModularSamplingProbabilisticConnector(network,name+'On',lgn_on,target,ps).connect()

@@ -1,14 +1,14 @@
 import unittest
 
-class TestSheet(unitest.TestCase):
+class TestSheet(unittest.TestCase):
     pass
 
-class TestRetinalUniformSheet(unitest.TestCase):
+class TestRetinalUniformSheet(unittest.TestCase):
     pass
 
-class TestSheetWithMagnificationFactor(unitest.TestCase):
+class TestSheetWithMagnificationFactor(unittest.TestCase):
     pass
 
-class TestCorticalUniformSheet(unitest.TestCase):
+class TestCorticalUniformSheet(unittest.TestCase):
     pass
 

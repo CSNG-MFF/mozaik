@@ -279,8 +279,6 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
     mpi_reproducible_noise : bool
            If true the background noise is generated in such a way that is reproducible accross runs using different number of mpi processes. 
            Significant slowdown if True.
-    recorders : 
-    
     
     Notes
     -----
@@ -306,6 +304,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         'cache_path': str,
         'mpi_reproducible_noise': bool,  # if True, noise is precomputed and StepCurrentSource is used which makes it slower
         'recorders' : ParameterSet,
+        'recording_interval' : float,
         'receptive_field': ParameterSet({
             'func': str,
             'func_params': ParameterSet,
@@ -347,6 +346,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                                                   'name': rf_type,
                                                   'artificial_stimulators' : {},
                                                   'recorders' : self.parameters.recorders,
+                                                  'recording_interval'  :  self.parameters.recording_interval,
                                                   'mpi_safe': False}))
             self.sheets[rf_type] = p
         

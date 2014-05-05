@@ -7,6 +7,7 @@ when using a multi-electrode array of some specific spatial configuration.
 """
 
 from mozaik.core import ParametrizedObject
+from mozaik.tools.circ_stat import circular_dist
 from parameters import ParameterSet
 import math
 import numpy
@@ -128,3 +129,44 @@ class RCGrid(PopulationSelector):
                   picked.append(z[numpy.argmin(numpy.power(self.sheet.pop.positions[0] - xx,2) +  numpy.power(self.sheet.pop.positions[1] - yy,2))])
           
           return list(set(picked))
+
+class SimilarAnnotationSelector(PopulationSelector):
+      """
+      This PopulationSelector picks random n neurons whose *annotation* value is closer than *distance* from specified *value* (based on euclidian norm).
+      
+      Other parameters
+      ----------------
+      annotation : str
+                 The name of the annotation value. It has to be defined in the given population for all neurons.
+      
+      distance : The the upper limit on distance between the given neurons annotation value and the specified value that permits inclusion.
+      
+      value : The value from which to calculate distance.
+      
+      num_of_cells : int
+                   The number of cells to be selected.
+      """
+      
+      required_parameters = ParameterSet({
+        'annotation' : str,
+        'distance' : float,
+        'value': float,
+        'num_of_cells': int,  # The number of cells to be selected
+        'period' :  float, # if the value is periodic this should be set to the period, oterwise it should be set to 0.
+      })  
+
+      
+      def generate_idd_list_of_neurons(self):
+          picked = []
+          z = self.sheet.pop.all_cells.astype(int)
+          vals = [self.sheet.get_neuron_annotation(i,self.parameters.annotation) for i in xrange(0,len(z))]
+          if self.parameters.period != 0
+            pikced = [i for i in xrange(0,len(z)) if abs(vals[i]-self.parameters.value) < self.parameters.distance]
+          else:
+            pikced = [i for i in xrange(0,len(z)) if circular_dist(vals[i],self.parameters.value,self.parameters.period) < self.parameters.distance]  
+          
+          return z[mozaik.rng.shuffle(picked)[:self.parameters.num_of_cells]]
+          
+          
+          
+          

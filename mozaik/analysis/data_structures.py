@@ -72,6 +72,7 @@ class PerNeuronValue(AnalysisDataStructure):
         self.value_units = value_units
         self.values = numpy.array(values)
         self.ids = list(idds)
+        assert len(values) == len(idds), '%s %s' % (str(values),str(idds))
     
     def get_value_by_id(self,idds):
         """
@@ -114,6 +115,7 @@ class PerNeuronPairValue(AnalysisDataStructure):
         self.value_units = value_units
         self.values = numpy.array(values)
         self.ids = list(idds)
+        assert values.shape == (len(idds),len(idds))
     
     def get_value_by_ids(self,idds1,idds2):
         """
@@ -160,6 +162,27 @@ class AnalysisDataStructure1D(AnalysisDataStructure):
         self.y_axis_units = y_axis_units
         self.x_axis_units = x_axis_units
 
+class AnalogSignal(AnalysisDataStructure1D):
+    """
+    A single analog signal. This is effectively a wrapper around a single Neo AnalogSignal object.
+
+    Parameters
+    ---------- 
+    analog_signal : AnalogSignal
+         The neo AnalogSignal
+    """
+
+    def __init__(self, analog_signal, y_axis_units, **params):
+        AnalysisDataStructure1D.__init__(self,  analog_signal.sampling_period.units,y_axis_units,
+                                         identifier='AnalogSignal',
+                                         **params)
+        self.analog_signal = analog_signal
+    
+    def __add__(self, other):
+        assert self.x_axis_name == other.x_axis_name
+        assert self.y_axis_name == other.y_axis_name
+        assert self.y_axis_units == other.y_axis_units
+        return AnalogSignal(self.analog_signal+other.analog_signal,y_axis_units = self.y_axis_units,x_axis_name = self.x_axis_name,y_axis_name = self.y_axis_name, sheet_name = self.sheet_name)
 
 class AnalogSignalList(AnalysisDataStructure1D):
     """
@@ -219,7 +242,55 @@ class AnalogSignalList(AnalysisDataStructure1D):
             assert asl.sampling_rate == self.asl[0].sampling_rate, "AnalogSignalList.mean: sampling_rate of AnalogSignal objects in the list do not match"
             assert asl.t_start == self.asl[0].t_start, "AnalogSignalList.mean: t_start of AnalogSignal objects in the list do not match."        
         
-        return numpy.sum(ads.asl)/len(ads.asl)
+        return numpy.mean(self.asl,axis=0)
+
+class PerNeuronPairAnalogSignalList(AnalysisDataStructure1D):
+    """
+    This is a list of Neo AnalogSignal objects associated with pairs of neurons.
+
+    Parameters
+    ---------- 
+    asl : list(AnalogSignal)
+         The variable containing the list of AnalogSignal objects, in the order
+         corresponding to the order of neuron indexe pairs in the ids parameter.
+    
+    ids : list((int,int))
+         List of id pairs of neurons to which the AnalogSignals correspond.
+    """
+
+    def __init__(self, asl, ids, y_axis_units, **params):
+        AnalysisDataStructure1D.__init__(self,  asl[0].sampling_period.units,y_axis_units,
+                                         identifier='AnalogSignalList',
+                                         **params)
+        self.asl = asl
+        self.ids = list(ids)
+        assert len(asl) == len(ids)
+    
+    def get_asl_by_id_pair(self,idd_pair):
+        """
+        Parameters
+        ---------- 
+        idd_pair : tuple of neuron ids or list of tuples of neuron ids
+        
+        Returns
+        -------
+        ids : AnalogSignal or list(AnalogSignal)
+            List (or single) of AnalogSignal objects corresponding to id pairs specified in `idd_pair` parameter.
+        """
+
+        return self.asl[list(self.ids).index(idd_pair)]
+
+    def mean(self):
+        """
+        Calculates the mean analog signal from the ones in the list.
+        """
+        for asl in self.asl:
+            assert asl.units == self.asl[0].units, "AnalogSignalList.mean: units of AnalogSignal objects in the list do not match."
+            assert asl.sampling_rate == self.asl[0].sampling_rate, "AnalogSignalList.mean: sampling_rate of AnalogSignal objects in the list do not match"
+            assert asl.t_start == self.asl[0].t_start, "AnalogSignalList.mean: t_start of AnalogSignal objects in the list do not match."        
+        
+        return numpy.sum(self.asl)/len(self.asl)
+
         
         
 class ConductanceSignalList(AnalysisDataStructure1D):
@@ -259,7 +330,9 @@ class ConductanceSignalList(AnalysisDataStructure1D):
         self.e_con = e_con
         self.i_con = i_con
         self.ids = list(ids)
-
+        assert len(e_con) == len(ids)
+        assert len(i_con) == len(ids)
+        
     def get_econ_by_id(self,idd):
         """
         Parameters
@@ -285,6 +358,23 @@ class ConductanceSignalList(AnalysisDataStructure1D):
             List (or single) of AnalogSignal objects containing inhibitory conductanes corresponding to ids in `idd`.
         """
         return self.i_con[self.ids.index(idd)]
+
+    def mean(self):
+        """
+        Calculates the mean conductance from the ones in the list.
+        """
+        for asl in self.e_con:
+            assert asl.units == self.asl[0].units, "ConductanceSignalList.mean: units of AnalogSignal objects in the exc. list do not match."
+            assert asl.sampling_rate == self.asl[0].sampling_rate, "ConductanceSignalList.mean: sampling_rate of AnalogSignal objects in the exc.list do not match"
+            assert asl.t_start == self.asl[0].t_start, "ConductanceSignalList.mean: t_start of AnalogSignal objects in the exc. list do not match."        
+
+        for asl in self.i_con:
+            assert asl.units == self.asl[0].units, "ConductanceSignalList.mean: units of AnalogSignal objects in the inh. list do not match."
+            assert asl.sampling_rate == self.asl[0].sampling_rate, "ConductanceSignalList.mean: sampling_rate of AnalogSignal objects in the inh. list do not match"
+            assert asl.t_start == self.asl[0].t_start, "ConductanceSignalList.mean: t_start of AnalogSignal objects in the inh. list do not match."        
+
+        return (numpy.sum(self.e_con)/len(self.e_con),numpy.sum(self.i_con)/len(self.i_con))
+
 
 class Connections(AnalysisDataStructure):
     """

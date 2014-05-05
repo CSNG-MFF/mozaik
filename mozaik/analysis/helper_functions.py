@@ -39,7 +39,7 @@ def psth(spike_list, bin_length):
 
     for sp in spike_list:
         assert len(numpy.histogram(sp, bins=num_bins, range=r)[0]) == num_bins
-    h = [AnalogSignal(numpy.histogram(sp, bins=num_bins, range=r)[0] / (bin_length/1000),t_start=t_start,sampling_period=bin_length*qt.ms,units=munits.spike_per_sec) for sp in spike_list]
+    h = [AnalogSignal(numpy.histogram(sp, bins=num_bins, range=r)[0] / (bin_length/1000),t_start=t_start*qt.ms,sampling_period=bin_length*qt.ms,units=munits.spike_per_sec) for sp in spike_list]
     return  h
 
 
