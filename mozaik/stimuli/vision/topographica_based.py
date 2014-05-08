@@ -13,6 +13,7 @@ from mozaik.tools.units import cpd
 from numpy import pi
 from quantities import Hz, rad, degrees, ms, dimensionless
 
+
 class TopographicaBasedVisualStimulus(VisualStimulus):
     """
     As we do not handle transparency in the Topographica stimuli (i.e. all pixels of all stimuli difned here will have 0% transparancy)
@@ -42,6 +43,7 @@ class FullfieldDriftingSinusoidalGrating(TopographicaBasedVisualStimulus):
         i = 0
         while True:
             i += 1
+            #print i
             yield (imagen.SineGrating(orientation=self.orientation,
                                       frequency=self.spatial_frequency,
                                       phase=self.current_phase,
@@ -52,8 +54,92 @@ class FullfieldDriftingSinusoidalGrating(TopographicaBasedVisualStimulus):
                                       ydensity=self.density)(),
                    [self.current_phase])
             self.current_phase += 2*pi * (self.frame_duration/1000.0) * self.temporal_frequency
-            
-                            
+
+
+class FullfieldDriftingSquareGrating(TopographicaBasedVisualStimulus):
+    """
+    A full field square grating stimulus. 
+    """
+
+    orientation = SNumber(rad, period=pi, bounds=[0,pi], doc="Grating orientation")
+    spatial_frequency = SNumber(cpd, doc="Spatial frequency of grating")
+    temporal_frequency = SNumber(Hz, doc="Temporal frequency of grating")
+    contrast = SNumber(dimensionless,bounds=[0,100.0],doc="Contrast of the stimulus")
+
+    def frames(self):
+        self.current_phase=0
+        i = 0
+        while True:
+            i += 1
+            yield (imagen.SquareGrating(
+                    orientation = self.orientation,
+                    frequency = self.spatial_frequency,
+                    phase = self.current_phase,
+                    bounds = BoundingBox( radius=self.size_x/2 ),
+                    offset = self.background_luminance*(100.0 - self.contrast)/100.0,
+                    scale = 2*self.background_luminance*self.contrast/100.0,
+                    xdensity = self.density,
+                    ydensity = self.density)(),
+                [self.current_phase])
+            self.current_phase += 2*pi * (self.frame_duration/1000.0) * self.temporal_frequency
+ 
+
+class FlashingSquares(TopographicaBasedVisualStimulus):
+    """
+    A couple of squares of dimension fitting provided spatial frequency and flashing at provided temporal frequency. 
+    """
+    orientation = SNumber(rad, period=pi, bounds=[0,pi], doc="Orientation of the square axis")
+    spatial_frequency = SNumber(cpd, doc="Spatial frequency created by the squares and the gap between them")
+    temporal_frequency = SNumber(Hz, doc="Temporal frequency of the flashing")
+    contrast = SNumber(dimensionless,bounds=[0,100.0],doc="Contrast of the stimulus")
+
+    def frames(self):
+        # the size length is given by half the period
+        size = 1./(2*self.spatial_frequency)
+        time = self.duration/self.frame_duration
+        # flashing squares with a temporal frequency of 6Hz are happening every 1000/6=167ms
+        stim_period = time/self.temporal_frequency
+        t = 0
+        t0 = 0
+        # total time of the stimulus
+        while t <= time:
+            # frequency tick
+            if (t-t0) >= stim_period:
+                t0 = t
+            # squares presence on screen is half of the period
+            if t <= t0+(stim_period/2):
+                a = imagen.RawRectangle(
+                        x = -size, 
+                        y = 0,
+                        orientation = 0, #self.orientation,
+                        bounds = BoundingBox( radius=self.size_x/2 ),
+                        offset = self.background_luminance*(100.0 - self.contrast)/100.0,
+                        scale = 2*self.background_luminance*self.contrast/100.0,
+                        xdensity = self.density,
+                        ydensity = self.density,
+                        size = size)()
+                b = imagen.RawRectangle(
+                        x = size, 
+                        y = 0,
+                        orientation = 0, #self.orientation,
+                        bounds = BoundingBox( radius=self.size_x/2 ),
+                        offset = self.background_luminance*(100.0 - self.contrast)/100.0,
+                        scale = 2*self.background_luminance*self.contrast/100.0,
+                        xdensity = self.density,
+                        ydensity = self.density,
+                        size = size)()
+                yield (numpy.add(a,b),[t])
+            else:
+                yield (imagen.Null(
+                        scale=self.background_luminance,
+                        bounds=BoundingBox(radius=self.size_x/2),
+                        xdensity=self.density,
+                        ydensity=self.density)(),
+                    [t])
+            # time
+            t += 1
+
+
 class Null(TopographicaBasedVisualStimulus):
     """
     Blank stimulus.
