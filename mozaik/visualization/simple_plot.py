@@ -66,9 +66,10 @@ class SimplePlot(object):
         """
         raise NotImplementedError
 
-    def __init__(self):
+    def __init__(self,subplot_kw=None):
         self.parameters = {}  # the common modifiable parameter dictionary
-
+        self.subplot_kw = subplot_kw
+        
     def __getattr__(self, name):
         if name == 'parameters':
             return self.__dict__[name]
@@ -101,7 +102,10 @@ class SimplePlot(object):
         self.plotting_parent=plotting_parent
         self.update_params(params)
         self.pre_axis_plot()
-        self.axis = pylab.subplot(gs)
+        if self.subplot_kw != None:
+           self.axis = pylab.subplot(gs,**self.subplot_kw)
+        else:
+           self.axis = pylab.subplot(gs)
         self.pre_plot()
         self.plot()
         self.post_plot()
@@ -126,7 +130,7 @@ class SimplePlot(object):
 
 class StandardStyle(SimplePlot):
 
-    def __init__(self):
+    def __init__(self,**param):
         """
         This is the standard SimplePlot used in this package. In most cases we recomand users to derive
         all their plots from this class. In case users want to define their own plot styling they will 
@@ -205,9 +209,12 @@ class StandardStyle(SimplePlot):
                     
         y_tick_pad  : float
                     What are the y tick padding of labels for axis.
+                    
+        grid : bool
+             Do we show grid?
         """
 
-        SimplePlot.__init__(self)
+        SimplePlot.__init__(self,**param)
         fontsize = 15
         self.parameters = {
             "fontsize": fontsize,
@@ -233,7 +240,19 @@ class StandardStyle(SimplePlot):
             "y_tick_labels": None,
             "x_tick_pad": fontsize - 5,
             "y_tick_pad": fontsize - 5,
+            "grid" : False,
         }
+        
+        self.colormap = {
+                            'Bl':(0,0,0),
+                            'Or':(.9,.6,0),
+                            'SB':(.35,.7,.9),
+                            'bG':(0,.6,.5),
+                            'Ye':(.95,.9,.25),
+                            'Bu':(0,.45,.7),
+                            'Ve':(.8,.4,0),
+                            'rP':(.8,.6,.7),
+                        }
 
     def pre_axis_plot(self):
         pylab.rc('axes', linewidth=3)
@@ -241,11 +260,15 @@ class StandardStyle(SimplePlot):
         pylab.rcParams['xtick.major.pad'] = self.x_tick_pad
         self.ytick_pad_backup = pylab.rcParams['ytick.major.pad']
         pylab.rcParams['ytick.major.pad'] = self.y_tick_pad
+        self.colormap_backup = pylab.rcParams['axes.color_cycle']
+        pylab.rcParams['axes.color_cycle'] = [self.colormap[c] for c in sorted(self.colormap.keys())]
+
 
     def pre_plot(self):
         pass
 
     def post_plot(self):
+       
         if self.title != None:
             pylab.title(self.title, fontsize=self.fontsize)
         
@@ -284,40 +307,47 @@ class StandardStyle(SimplePlot):
         if not self.bottom_border:
             phf.disable_bottom_axis(self.axis)
 
+        if self.grid:
+            self.axis.grid(True)
+
+        
         pylab.rc('axes', linewidth=1)
         pylab.rcParams['xtick.major.pad'] = self.xtick_pad_backup
         pylab.rcParams['ytick.major.pad'] = self.ytick_pad_backup
+        #pylab.rcParams['axes.color_cycle'] =self.colormap_backup
 
     def _ticks(self):
-        if self.x_ticks != None and self.x_tick_style == 'Custom':
-            if self.x_tick_labels != None and (len(self.x_ticks) == len(self.x_tick_labels)):
-                pylab.xticks(self.x_ticks, self.x_tick_labels)
-            else:
-                pylab.xticks(self.x_ticks)
-                phf.remove_x_tick_labels()
-        else:    
-            if self.x_tick_style == 'Min':
-                phf.three_tick_axis(self.axis.xaxis)
-            elif self.x_tick_style == 'Custom':                
-               phf.disable_xticks(self.axis)
-               phf.remove_x_tick_labels()
-            else:
-                raise ValueError('Unknown x tick style %s', self.x_tick_style)
+        if self.x_axis:
+            if self.x_ticks != None and self.x_tick_style == 'Custom':
+                if self.x_tick_labels != None and (len(self.x_ticks) == len(self.x_tick_labels)):
+                    pylab.xticks(self.x_ticks, self.x_tick_labels)
+                else:
+                    pylab.xticks(self.x_ticks)
+                    phf.remove_x_tick_labels()
+            else:    
+                if self.x_tick_style == 'Min':
+                    phf.three_tick_axis(self.axis.xaxis)
+                elif self.x_tick_style == 'Custom':                
+                   phf.disable_xticks(self.axis)
+                   phf.remove_x_tick_labels()
+                else:
+                    raise ValueError('Unknown x tick style %s', self.x_tick_style)
 
-        if self.y_ticks != None and self.x_tick_style == 'Custom':
-            if self.y_tick_labels != None and (len(self.y_ticks) == len(self.y_tick_labels)):
-                pylab.yticks(self.y_ticks, self.y_tick_labels)
+        if self.y_axis:
+            if self.y_ticks != None and self.x_tick_style == 'Custom':
+                if self.y_tick_labels != None and (len(self.y_ticks) == len(self.y_tick_labels)):
+                    pylab.yticks(self.y_ticks, self.y_tick_labels)
+                else:
+                    pylab.yticks(self.y_ticks)
+                    phf.remove_y_tick_labels()
             else:
-                pylab.yticks(self.y_ticks)
-                phf.remove_y_tick_labels()
-        else:
-            if self.y_tick_style == 'Min':
-                phf.three_tick_axis(self.axis.yaxis)
-            elif self.y_tick_style == 'Custom':                
-               phf.disable_yticks(self.axis)
-               phf.remove_y_tick_labels()
-            else:
-                raise ValueError('Unknow y tick style %s', self.y_tick_style)
+                if self.y_tick_style == 'Min':
+                    phf.three_tick_axis(self.axis.yaxis)
+                elif self.y_tick_style == 'Custom':                
+                   phf.disable_yticks(self.axis)
+                   phf.remove_y_tick_labels()
+                else:
+                    raise ValueError('Unknow y tick style %s', self.y_tick_style)
 
         for label in self.axis.get_xticklabels() + self.axis.get_yticklabels():
             label.set_fontsize(self.fontsize)
@@ -353,8 +383,8 @@ class SpikeRasterPlot(StandardStyle):
     grouped by the neurons. Only neurons in the neurons parameter will be
     plotted. If neurons are None, (up to) first 10 neurons will be plotted.
     """
-    def __init__(self, spike_lists):
-        StandardStyle.__init__(self)
+    def __init__(self, spike_lists,**param):
+        StandardStyle.__init__(self,**param)
         self.sps = spike_lists
         self.parameters["colors"] = None
         self.parameters["group_trials"] = False
@@ -441,8 +471,8 @@ class SpikeHistogramPlot(SpikeRasterPlot):
     plotted. If neurons are None, the first neuron will be plotted. 
     """
 
-    def __init__(self, spike_lists):
-        SpikeRasterPlot.__init__(self, spike_lists)
+    def __init__(self, spike_lists,**param):
+        SpikeRasterPlot.__init__(self, spike_lists,**param)
         self.parameters["bin_width"] = 5.0
         self.parameters["colors"] = ['#000000' for i in xrange(0, len(self.sps))]
     def plot(self):
@@ -527,8 +557,8 @@ class PixelMovie(StandardStyleAnimatedPlot):
           
     """
     
-    def __init__(self, movie):
-        StandardStyleAnimatedPlot.__init__(self)
+    def __init__(self, movie,**param):
+        StandardStyleAnimatedPlot.__init__(self,**param)
         self.movie = movie
         self.l = len(movie)
         self.i = 0
@@ -564,8 +594,8 @@ class ScatterPlotMovie(StandardStyleAnimatedPlot):
         2D array containing the values to be displayed (t,values)
     """
     
-    def __init__(self, x, y, z, frame_duration):
-        StandardStyleAnimatedPlot.__init__(self, frame_duration)
+    def __init__(self, x, y, z,**param):
+        StandardStyleAnimatedPlot.__init__(self,**param)
         self.z = z
         self.x = x
         self.y = y
@@ -649,8 +679,8 @@ class ScatterPlot(StandardStyle):
                The label  that will be put on the colorbar.
     """
 
-    def __init__(self, x, y, z='b', periodic=False, period=None):
-        StandardStyle.__init__(self)
+    def __init__(self, x, y, z='b', periodic=False, period=None,**param):
+        StandardStyle.__init__(self,**param)
         self.z = z
         self.x = x
         self.y = y
@@ -680,7 +710,8 @@ class ScatterPlot(StandardStyle):
                                s=self.dot_size,
                                marker=self.marker,
                                lw=0,
-                               cmap=self.colormap,
+                               # cmap=self.colormap,
+                               color='k',
                                vmin=vmin,
                                vmax=vmax)
         if self.equal_aspect_ratio:
@@ -722,30 +753,48 @@ class StandardStyleLinePlot(StandardStyle):
     Other parameters
     ----------------
     
-    colors : int or list
-           The colors of the plots. If it is one colour all plots will have that same color. If it is a list its
-          length should correspond to length of x and y and the corresponding colors will be assigned to the individual graphs.
+    colors : int or list or dict
+           The colors of the plots. If it is one color all plots will have that same color. If it is a list its
+           length should correspond to length of x and y and the corresponding colors will be assigned to the individual graphs.
+           If dict, the keys should be labels, and values will be the colors that will be assigned to the lines that correspond to the labels.
 
     mean : bool
          If the mean of the vectors should be plotted as well.
+         
+    fill : bool
+         If true the graphs bellow the lines will be filled, with the same color as the one assigned to the line but with 50% transparency
+    
+    legend : bool
+           If true the legend will be shown
 
     """
 
-    def __init__(self, x, y, labels=None):
-        StandardStyle.__init__(self)
+    def __init__(self, x, y, labels=None,**param):
+        StandardStyle.__init__(self,**param)
         self.x = x
         self.y = y
         self.parameters["labels"] = labels
         self.parameters["colors"] = None
         self.parameters["mean"] = False
+        self.parameters["fill"] = False
+        self.parameters["legend"] = False
         self.parameters["linewidth"] = 1
 
+        assert len(x) == len(y)
+        if labels != None:
+            assert len(x) == len(labels)
+        
         if self.mean:
             for i in xrange(0, len(x)):
                 if not numpy.all(x[i] == x[0]):
                     raise ValueError("Mean cannot be calculated from data not containing identical x axis values")
 
     def plot(self):
+        
+        if type(self.colors) == dict:
+           assert self.labels != None
+           assert len(self.colors.keys()) == len(self.labels)
+        
         tmin = 10**10
         tmax = -10**10
         for i in xrange(0, len(self.x)):
@@ -759,6 +808,9 @@ class StandardStyleLinePlot(StandardStyle):
                 color = 'k'
             elif type(self.colors) == list:
                 color = self.colors[i]
+            elif type(self.colors) == dict:
+                assert self.labels[i] in self.colors.keys(), "Cannot find curve named %s" % (self.labels[i])
+                color = self.colors[self.labels[i]]
             else:
                 color = self.colors
 
@@ -771,6 +823,12 @@ class StandardStyleLinePlot(StandardStyle):
                 self.axis.plot(self.x[i], self.y[i],
                                linewidth=self.linewidth,
                                color=color)
+            
+            if self.fill:
+               d = numpy.zeros(len(self.y[i]))
+               self.axis.fill_between(self.x[i],self.y[i],where=self.y[i]>=d, color=color, alpha=0.2,linewidth=0)
+               self.axis.fill_between(self.x[i],self.y[i],where=self.y[i]<=d, color=color, alpha=0.2,linewidth=0)
+                
             pylab.hold('on')
 
             tmin = min(tmin, self.x[i][0])
@@ -780,11 +838,10 @@ class StandardStyleLinePlot(StandardStyle):
             m = m / len(self.x)
             self.axis.plot(self.x[0], m, color='k', linewidth=2*self.linewidth)
 
-        if self.labels!=None:
+        if self.legend:
             self.axis.legend()
 
         self.xlim = (tmin, tmax)
-
 
 class ConductancesPlot(StandardStyle):
     """
@@ -807,8 +864,8 @@ class ConductancesPlot(StandardStyle):
            Whether legend should be displayed.
     """
 
-    def __init__(self, exc, inh):
-        StandardStyle.__init__(self)
+    def __init__(self, exc, inh,**param):
+        StandardStyle.__init__(self,**param)
         self.gsyn_es = exc
         self.gsyn_is = inh
         self.parameters["legend"] = False
@@ -891,8 +948,8 @@ class ConnectionPlot(StandardStyle):
                The label  that will be put on the colorbar.             
     """
 
-    def __init__(self, pos_x, pos_y, source_x, source_y, weights,colors=None,period=None):
-        StandardStyle.__init__(self)
+    def __init__(self, pos_x, pos_y, source_x, source_y, weights,colors=None,period=None,**param):
+        StandardStyle.__init__(self,**param)
         self.pos_x = pos_x
         self.pos_y = pos_y
         self.source_x = source_x
@@ -977,12 +1034,13 @@ class HistogramPlot(StandardStyle):
            The colors to assign to the different sets of spikes. 
     """
 
-    def __init__(self, values):
-        StandardStyle.__init__(self)
+    def __init__(self, values,**param):
+        StandardStyle.__init__(self,**param)
         self.values = values
         self.parameters["num_bins"] = 30.0
 
     def plot(self):
-        self.axis.hist(self.values,bins=self.num_bins,edgecolor='none')
+        print self.x_lim
+        self.axis.hist(self.values,bins=self.num_bins,range=self.x_lim,edgecolor='none')
         self.y_label = '#'
         

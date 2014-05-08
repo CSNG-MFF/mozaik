@@ -23,7 +23,8 @@ class VisualExperiment(Experiment):
     
     def __init__(self, model):
         Experiment.__init__(self, model)
-        self.background_luminance = model.input_space.background_luminance 
+        self.background_luminance = model.input_space.background_luminance
+      
         #JAHACK: This is kind of a hack now. There needs to be generally defined interface of what is the resolution of a visual input layer
         # possibly in the future we could force the visual_space to have resolution, perhaps something like native_resolution parameter!?
         self.density  = 1/self.model.input_layer.parameters.receptive_field.spatial_resolution # in pixels per degree of visual space 
@@ -64,6 +65,104 @@ class MeasureFlatLuminanceSensitivity(VisualExperiment):
                     duration=step_duration,
                     trial=k))
 
+    def do_analysis(self, data_store):
+        pass
+    
+class MeasureSparse(VisualExperiment):
+    """
+    Basic Sparse Stimulation Experiment
+    
+    Parameters
+    ----------
+    model : Model
+        The model on which to execute the experiment.
+          
+    time_per_image : float
+        The time it takes for the experiment to change single images 
+        Every time_per_image a new instance of sparse noise will be 
+        presented
+
+    total_number_images : int
+        The total number of images that will be presented
+    
+    num_trials : int
+           Number of trials each each stimulus is shown.
+           
+    grid_size: dimensionless
+           the grid will have grid_size x grid_size spots
+           
+    experiment_seed :  
+     sets a particular seed at the beginning of each experiment
+     
+     grid: 
+     If true makes the patterns stick to a grid, otherwise the 
+     center of the pattern is distribuited randomly
+    """
+    
+    
+    def __init__(self, model,time_per_image, total_number_of_images, num_trials, seed, grid_size, grid = True):
+        VisualExperiment.__init__(self, model)
+        for k in xrange(0, num_trials):
+           
+            self.stimuli.append(topo.SparseNoise(
+                            frame_duration=7,
+                            time_per_image = time_per_image,
+                            duration = total_number_of_images * time_per_image,  
+                            size_x=model.visual_field.size_x,
+                            size_y=model.visual_field.size_y,
+                            location_x=0.0,
+                            location_y=0.0, 
+                            background_luminance=self.background_luminance,
+                            density=self.density,
+                            trial = k,
+                            experiment_seed = seed,
+                            grid_size = grid_size,
+                            grid = grid
+                          ))
+   
+    def do_analysis(self, data_store):
+        pass
+
+class MeasureDense(VisualExperiment):
+    """
+    Basic Sparse Stimulation Experiment
+    
+    Parameters
+    ----------
+    model : Model
+          The model on which to execute the experiment.
+
+    duration: How long will the experiment take
+    
+    num_trials : int
+               Number of trials each each stimulus is shown.
+               
+     grid_size: dimensionless
+        the grid will have grid_size x grid_size spots     
+            
+    experiment_seed :  
+     sets a particular seed at the begining of each experiment
+    """
+    
+    
+    def __init__(self, model, time_per_image, total_number_of_images, num_trials, seed, grid_size):
+        VisualExperiment.__init__(self, model)
+        for k in xrange(0, num_trials):
+            self.stimuli.append(topo.DenseNoise(
+                            frame_duration=7,
+                            time_per_image = time_per_image,
+                            duration = total_number_of_images * time_per_image, 
+                            size_x=model.visual_field.size_x,
+                            size_y=model.visual_field.size_y,
+                            location_x=0.0,
+                            location_y=0.0, 
+                            background_luminance=self.background_luminance,
+                            density=self.density,
+                            trial = k,
+                            experiment_seed = seed,
+                            grid_size = grid_size
+                          ))
+         
     def do_analysis(self, data_store):
         pass
 

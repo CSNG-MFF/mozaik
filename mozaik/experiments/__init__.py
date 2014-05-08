@@ -77,7 +77,7 @@ class Experiment(object):
             if self.direct_stimulation == None:
                ds = {}
             else:
-               ds = self.direct_stimulation[self.stimuli.index(s)] 
+               ds = self.direct_stimulation[self.stimuli.index(s)]
             (segments,input_stimulus,simulator_run_time) = self.model.present_stimulus_and_record(s,ds)
             srtsum += simulator_run_time
             data_store.add_recording(segments,s)

@@ -31,14 +31,17 @@ class LinePlot(Parameterized):
         """
         horizontal = param.Boolean(default=True, instantiate=True,
                                    doc="Should the line of plots be horizontal or vertical")
+
         shared_axis = param.Boolean(default=True, instantiate=True,
                                     doc="should the x axis or y axis (depending on the horizontal flag) considered shared")
+
         shared_lim = param.Boolean(default=False, instantiate=True,
                                    doc="should the limits of the x axis or y axis (depending on the horizontal flag) be considered shared")
+                                   
         length = param.Integer(default=0, instantiate=True,
                                doc="how many plots will there be")
         function = param.Callable(doc="The function that should be called to plot individual plots. It should accept three parameters: self, index in the line, gridspec object into which to plot the plot, the simple_plot parameters")
-        max_length = param.Integer(default=8, instantiate=True,
+        max_length = param.Integer(default=10, instantiate=True,
                                    doc="The maximum # plots actually displayed")
         extra_space_top = param.Number(default=0.0, instantiate=True,
                                        doc="Space to be reserved on top of the subplot, defined as fraction of the subplot.")
@@ -80,6 +83,7 @@ class LinePlot(Parameterized):
                         params["y_axis"] = False
 
                 if (idx < l-1) and self.shared_axis and not self.horizontal:
+                    
                     params["x_label"]=None
                     if self.shared_lim:
                         params["x_axis"] = False
