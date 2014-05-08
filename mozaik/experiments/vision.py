@@ -349,7 +349,7 @@ class MeasureContrastSensitivity(VisualExperiment):
         # stimuli creation        
         for c in contrasts:
             for k in xrange(0, num_trials):
-                self.stimuli.append(topo.DriftingSinusoidalGratingDisk(
+                self.stimuli.append(topo.FullfieldDriftingSinusoidalGrating(
                     frame_duration=7,
                     size_x=model.visual_field.size_x,
                     size_y=model.visual_field.size_y,
@@ -361,7 +361,6 @@ class MeasureContrastSensitivity(VisualExperiment):
                     density=self.density,
                     trial=k,
                     orientation=orientation,
-                    radius=size,
                     spatial_frequency=spatial_frequency,
                     temporal_frequency=temporal_frequency))
 
@@ -395,31 +394,50 @@ class MeasureFrequencySensitivity(VisualExperiment):
     
     num_trials : int
                Number of trials each each stimulus is shown.
+
+    square : bool
+                Whether the stimulus shoul be sinusoidal or square grating
     """
 
     def __init__(self, model, orientation,
                  spatial_frequencies, temporal_frequencies, contrasts, 
-                 grating_duration, num_trials, frame_duration=7):
+                 grating_duration, num_trials, frame_duration=7, square=False):
         VisualExperiment.__init__(self, model)    
         # stimuli creation        
         for tf in temporal_frequencies:
             for sf in spatial_frequencies:
                 for c in contrasts:
                     for k in xrange(0, num_trials):
-                        self.stimuli.append(topo.FullfieldDriftingSinusoidalGrating(
-                            frame_duration=frame_duration,
-                            size_x=model.visual_field.size_x,
-                            size_y=model.visual_field.size_y,
-                            location_x=0.0,
-                            location_y=0.0,
-                            background_luminance=self.background_luminance,
-                            contrast = c,
-                            duration=grating_duration,
-                            density=self.density,
-                            trial=k,
-                            orientation=orientation,
-                            spatial_frequency=sf,
-                            temporal_frequency=tf))
+                        if square:
+                            self.stimuli.append(topo.FullfieldDriftingSquareGrating(
+                                frame_duration=frame_duration,
+                                size_x=model.visual_field.size_x,
+                                size_y=model.visual_field.size_y,
+                                location_x=0.0,
+                                location_y=0.0,
+                                background_luminance=self.background_luminance,
+                                contrast = c,
+                                duration=grating_duration,
+                                density=self.density,
+                                trial=k,
+                                orientation=orientation,
+                                spatial_frequency=sf,
+                                temporal_frequency=tf))
+                        else:
+                            self.stimuli.append(topo.FullfieldDriftingSinusoidalGrating(
+                                frame_duration=frame_duration,
+                                size_x=model.visual_field.size_x,
+                                size_y=model.visual_field.size_y,
+                                location_x=0.0,
+                                location_y=0.0,
+                                background_luminance=self.background_luminance,
+                                contrast = c,
+                                duration=grating_duration,
+                                density=self.density,
+                                trial=k,
+                                orientation=orientation,
+                                spatial_frequency=sf,
+                                temporal_frequency=tf))
 
     def do_analysis(self, data_store):
         pass
@@ -491,6 +509,37 @@ class MeasureOrientationContrastTuning(VisualExperiment):
                                     surround_radius=surround_radius,
                                     spatial_frequency=spatial_frequency,
                                     temporal_frequency=temporal_frequency))
+
+    def do_analysis(self, data_store):
+        pass
+
+
+class MeasureFlashingSquares(VisualExperiment):
+    """
+    ...
+    """
+
+    def __init__(self, model, orientation, exp_duration, spatial_frequencies, temporal_frequency, contrast, num_trials):
+        VisualExperiment.__init__(self, model)
+        for sf in spatial_frequencies:
+            for k in xrange(0, num_trials):
+                self.stimuli.append(
+                    topo.FlashingSquares(
+                        frame_duration=7,
+                        size_x=model.visual_field.size_x,
+                        size_y=model.visual_field.size_y,
+                        location_x=0.0,
+                        location_y=0.0,
+                        background_luminance=self.background_luminance,
+                        contrast = contrast,
+                        density = self.density,
+                        trial = k,
+                        duration=exp_duration,
+                        orientation = orientation,
+                        spatial_frequency = sf,
+                        temporal_frequency = temporal_frequency
+                    )
+                )
 
     def do_analysis(self, data_store):
         pass
