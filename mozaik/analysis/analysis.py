@@ -402,8 +402,6 @@ class TrialVariability(Analysis):
                adss = dsv.get_analysis_result()
                adss, stids = colapse(adss,[MozaikParametrized.idd(a.stimulus_id) for a in adss],parameter_list=['trial'],allow_non_identical_objects=False)
                
-               print segs
-               
                for ads,st in zip(adss,stids):
                    first = ads[0].asl[0]
                    vm = [NeoAnalogSignal(numpy.var(numpy.array([s.get_asl_by_id(i) for s in ads]),axis=0),t_start=first.t_start,sampling_period=first.sampling_period,units=first.units) for i in ads[0].ids]

@@ -57,10 +57,11 @@ def down_sample_analog_signal(analog_signal,new_sampling_period):
                         The desired new sampling period of the signal
     """ 
     if abs(analog_signal.t_stop.rescale(qt.ms) -  new_sampling_period) > 0.000000001:
-        assert (new_sampling_period % analog_signal.sampling_period.rescale(qt.ms))  < 0.000000001, "TemporalBinAverage: The analog signal sampling period is not divisible by new sampling period"
-        div = round(new_sampling_period / analog_signal.sampling_period.rescale(qt.ms))
-        return NeoAnalogSignal(analog_signal[::div],
+       div = round(new_sampling_period / analog_signal.sampling_period.rescale(qt.ms))
+       return NeoAnalogSignal(analog_signal[::div],
                        t_start=0*qt.ms,
                        sampling_period=new_sampling_period*qt.ms,
                        units=analog_signal.units)
 
+    else:
+        return analog_signal
