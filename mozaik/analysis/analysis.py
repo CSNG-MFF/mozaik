@@ -647,7 +647,6 @@ class ActionPotentialRemoval(Analysis):
           assert (window_length - int((window_length / vm.sampling_period.rescale(qt.ms).magnitude)) * vm.sampling_period.rescale(qt.ms).magnitude) < 0.00000000000001, ("%f" % (window_length % vm.sampling_period.rescale(qt.ms).magnitude))
           for spike_time in spike_train:
               spike_time_in_vm = int(spike_time / vm.sampling_period)
-              assert spike_time_in_vm != len(vm)-1
               # we assume spike_time and sampling rates are in ms
               window_end = spike_time_in_vm+round(window_length/vm.sampling_period.rescale(qt.ms).magnitude)
               if window_end >= len(vm):
