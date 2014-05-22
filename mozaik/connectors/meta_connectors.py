@@ -91,6 +91,7 @@ class GaborConnector(BaseComponent):
         t_size = target.size_in_degrees()
         or_map = None
         if self.parameters.or_map:
+
             f = open(self.parameters.or_map_location, 'r')
             or_map = pickle.load(f)*numpy.pi
             coords_x = numpy.linspace(-t_size[0]/2.0,
@@ -99,7 +100,11 @@ class GaborConnector(BaseComponent):
             coords_y = numpy.linspace(-t_size[1]/2.0,
                                       t_size[1]/2.0,
                                       numpy.shape(or_map)[1])
+            print min(coords_x), max(coords_x)
+            print min(coords_y), max(coords_y)
+                                      
             X, Y = numpy.meshgrid(coords_x, coords_y)
+            
             or_map = NearestNDInterpolator(zip(X.flatten(), Y.flatten()),
                                            or_map.flatten())
 
@@ -116,7 +121,9 @@ class GaborConnector(BaseComponent):
             X, Y = numpy.meshgrid(coords_x, coords_y)
             phase_map = NearestNDInterpolator(zip(X.flatten(), Y.flatten()),
                                               phase_map.flatten())
-
+        
+        print min(target.pop.positions[0]), max(target.pop.positions[0])
+        print min(target.pop.positions[1]), max(target.pop.positions[1])
         for (j, neuron2) in enumerate(target.pop.all()):
             if or_map:
                 orientation = or_map(target.pop.positions[0][j],

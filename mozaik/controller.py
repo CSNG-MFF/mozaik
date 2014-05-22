@@ -201,6 +201,8 @@ def run_experiments(model,experiment_list,parameters,load_from=None):
     data_store.set_neuron_ids(model.neuron_ids())
     data_store.set_neuron_positions(model.neuron_positions())
     data_store.set_neuron_annotations(model.neuron_annotations())
+    data_store.set_model_parameters(str(parameters))
+    data_store.set_sheet_parameters(str(model.sheet_parameters()))
     
     t0 = time.time()
     simulation_run_time=0

@@ -2,6 +2,7 @@
 """
 This module contains implementation of vision related sheets.
 """
+
 import numpy
 import mozaik
 from parameters import ParameterSet
@@ -37,8 +38,8 @@ class RetinalUniformSheet(Sheet):
 
     def __init__(self, model, parameters):
         logger.info("Creating %s with %d neurons." % (self.__class__.__name__, int(parameters.sx * parameters.sy * parameters.density)))
-        Sheet.__init__(self, model, parameters)
-        rs = space.RandomStructure(boundary=space.Cuboid(parameters.sx, parameters.sy, 0),
+        Sheet.__init__(self, model,parameters.sx, parameters.sy, parameters)
+        rs = space.RandomStructure(boundary=space.Cuboid(self.size_x,self.size_y, 0),
                                    origin=(0.0, 0.0, 0.0),
                                    rng=mozaik.pynn_rng)
         
@@ -84,7 +85,7 @@ class SheetWithMagnificationFactor(Sheet):
         """
         """
         logger.info("Creating %s with %d neurons." % (self.__class__.__name__, int(parameters.sx*parameters.sy/1000000*parameters.density)))
-        Sheet.__init__(self, model, parameters)
+        Sheet.__init__(self, model, parameters.sx/ parameters.magnification_factor,parameters.sy/parameters.magnification_factor,parameters)
         self.magnification_factor = parameters.magnification_factor
 
     def vf_2_cs(self, degree_x, degree_y):

@@ -70,6 +70,7 @@ class SimplePlot(object):
         self.parameters = {}  # the common modifiable parameter dictionary
         self.subplot_kw = subplot_kw
         
+        
     def __getattr__(self, name):
         if name == 'parameters':
             return self.__dict__[name]
@@ -243,7 +244,7 @@ class StandardStyle(SimplePlot):
             "grid" : False,
         }
         
-        self.colormap = {
+        self.color_cycle = {
                             'Bl':(0,0,0),
                             'Or':(.9,.6,0),
                             'SB':(.35,.7,.9),
@@ -253,6 +254,9 @@ class StandardStyle(SimplePlot):
                             'Ve':(.8,.4,0),
                             'rP':(.8,.6,.7),
                         }
+        import matplotlib.colors
+        
+        self.colormap = matplotlib.colors.LinearSegmentedColormap.from_list('CMcmSBVe',[self.color_cycle['SB'],self.color_cycle['Ve']])
 
     def pre_axis_plot(self):
         pylab.rc('axes', linewidth=3)
@@ -261,7 +265,7 @@ class StandardStyle(SimplePlot):
         self.ytick_pad_backup = pylab.rcParams['ytick.major.pad']
         pylab.rcParams['ytick.major.pad'] = self.y_tick_pad
         self.colormap_backup = pylab.rcParams['axes.color_cycle']
-        pylab.rcParams['axes.color_cycle'] = [self.colormap[c] for c in sorted(self.colormap.keys())]
+        pylab.rcParams['axes.color_cycle'] = [self.color_cycle[c] for c in sorted(self.color_cycle.keys())]
 
 
     def pre_plot(self):
@@ -314,7 +318,7 @@ class StandardStyle(SimplePlot):
         pylab.rc('axes', linewidth=1)
         pylab.rcParams['xtick.major.pad'] = self.xtick_pad_backup
         pylab.rcParams['ytick.major.pad'] = self.ytick_pad_backup
-        #pylab.rcParams['axes.color_cycle'] =self.colormap_backup
+        pylab.rcParams['axes.color_cycle'] =self.colormap_backup
 
     def _ticks(self):
         if self.x_axis:
@@ -687,12 +691,12 @@ class ScatterPlot(StandardStyle):
         self.periodic = periodic
         self.period = period
         if self.periodic:
-            self.parameters["colormap"] = 'hsv'
+            self.parameters["cmp"] = 'hsv'
         else:
-            self.parameters["colormap"] = 'gray'
+            self.parameters["cmp"] = self.colormap
         self.parameters["dot_size"] = 20
         self.parameters["marker"] = 'o'
-        self.parameters["equal_aspect_ratio"] = True
+        self.parameters["equal_aspect_ratio"] = False
         self.parameters["top_right_border"]=True
         self.parameters["colorbar"] = False
         self.parameters["mark_means"] = False
@@ -710,7 +714,7 @@ class ScatterPlot(StandardStyle):
                                s=self.dot_size,
                                marker=self.marker,
                                lw=0,
-                               # cmap=self.colormap,
+                               cmap=self.cmp,
                                color='k',
                                vmin=vmin,
                                vmax=vmax)
@@ -941,7 +945,7 @@ class ConnectionPlot(StandardStyle):
     colorbar : bool
              Should there be a colorbar ?
 
-    colormap : colormap
+    cmp : colormap
              The colormap to use.
     
     colorbar_label : label
@@ -959,10 +963,10 @@ class ConnectionPlot(StandardStyle):
         
         self.period = period
 
-        if self.period:
-            self.parameters["colormap"] = 'hsv'
+        if self.period != None:
+            self.parameters["cmp"] = 'hsv'
         else:
-            self.parameters["colormap"] = 'gray'
+            self.parameters["cmp"] = self.colormap
         
         self.parameters["top_right_border"] = True
         self.parameters["colorbar"] = False
@@ -998,14 +1002,17 @@ class ConnectionPlot(StandardStyle):
             else:
                 vmax = self.period
                 vmin = 0
-            ax = self.axis.scatter(self.pos_x, self.pos_y, c=numpy.array(self.colors),edgecolors='k',
-                                   s=self.weights/numpy.max(self.weights)*200,
-                                   lw=1, cmap=self.colormap,
+                
+            ax = self.axis.scatter(self.pos_x, self.pos_y, c=numpy.array(self.colors),edgecolors=None,
+                                   s=self.weights/numpy.max(self.weights)*100,
+                                   lw=1, cmap=self.cmp,
                                    vmin=vmin, vmax=vmax)
             if self.colorbar:
                 cb = pylab.colorbar(ax, ticks=[vmin, vmax], use_gridspec=True)
                 cb.set_label(self.colorbar_label)
                 cb.set_ticklabels(["%.3g" % vmin, "%.3g" % vmax])
+
+        self.axis.set_aspect(aspect=1.0, adjustable='box')
 
         self.x_label = 'x'
         self.y_label = 'y'
@@ -1040,7 +1047,6 @@ class HistogramPlot(StandardStyle):
         self.parameters["num_bins"] = 30.0
 
     def plot(self):
-        print self.x_lim
         self.axis.hist(self.values,bins=self.num_bins,range=self.x_lim,edgecolor='none')
         self.y_label = '#'
         

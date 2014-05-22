@@ -171,6 +171,7 @@ class ModularSingleWeightProbabilisticConnector(ModularConnector):
 
     def _connect(self):
         cl = []
+        print "DSADAS"
         for i in numpy.nonzero(self.target.pop._mask_local)[0]:
             weights = self._obtain_weights(i)
             delays = self._obtain_delays(i)
