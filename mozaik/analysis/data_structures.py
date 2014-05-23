@@ -450,7 +450,9 @@ class Connections(AnalysisDataStructure):
     source_name = SString(doc="The name of the source sheet.")
     target_name = SString(doc="The name of the target sheet.")
 
-    def __init__(self, weights, delays, **params):
+    def __init__(self, weights, delays, source_size, target_size, **params):
         AnalysisDataStructure.__init__(self, identifier='Connections', **params)
         self.weights = weights
         self.delays =  delays
+        self.source_size = source_size
+        self.target_size = target_size

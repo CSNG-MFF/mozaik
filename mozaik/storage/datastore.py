@@ -109,15 +109,15 @@ class DataStoreView(ParametrizedObject):
         """
         return self.full_datastore.block.annotations['neuron_positions']
 
-    def get_sheet_indexes(self, sheet_name,neuron_id):
+    def get_sheet_indexes(self, sheet_name,neuron_ids):
         """
         Returns the indexes of neurons in the sheet given the idds (this should be primarily used with annotations data such as positions etc.)
         """
         ids = self.full_datastore.block.annotations['neuron_ids'][sheet_name]
-        if isinstance(neuron_id,list) or isinstance(neuron_id,numpy.ndarray):
-          return [ids.index(i) for i in neuron_id]
+        if isinstance(neuron_ids,list) or isinstance(neuron_ids,numpy.ndarray):
+          return [numpy.where(ids == i)[0] for i in neuron_ids]
         else:
-          return ids.index(neuron_id)
+          return numpy.where(ids == neuron_ids)[0]
 
     def get_sheet_ids(self, sheet_name,indexes=None):
         """
@@ -128,6 +128,20 @@ class DataStoreView(ParametrizedObject):
             return self.full_datastore.block.annotations['neuron_ids'][sheet_name]
         else:
             return self.full_datastore.block.annotations['neuron_ids'][sheet_name][indexes]
+
+    def get_sheet_parameters(self,sheet_name):
+        """
+        Returns the *ParemterSet* instance corresponding to the given sheet.
+        """
+        return self.full_datastore.block.annotations['sheet_parameters'][sheet_name]
+
+
+    def get_model_parameters(self):
+        """
+        Returns the *ParemterSet* instance corresponding to the whole model.
+        """
+        return self.full_datastore.block.annotations['model_parameters']
+
 
     def get_neuron_annotations(self):
         """
@@ -252,13 +266,17 @@ class DataStoreView(ParametrizedObject):
         """
         This operation removes all ADS that are present in this DataStoreView from the master DataStore.
         """
-        for ads in self.analysis_results:
-            self.full_datastore.analysis_results.remove(ads)
-    
+        if self.full_datastore == self:
+           self.analysis_results = []
+        else:
+            for ads in self.analysis_results:
+                self.full_datastore.analysis_results.remove(ads)
+
     def remove_ads_outside_of_dsv(self):
-        z = [ads for ads in self.full_datastore.analysis_results if ads not in self.analysis_results]
-        for ads in z:
-            self.full_datastore.analysis_results.remove(ads)
+        if self.full_datastore != self:
+            z = [ads for ads in self.full_datastore.analysis_results if ads not in self.analysis_results]
+            for ads in z:
+                self.full_datastore.analysis_results.remove(ads)
         
                
         
@@ -313,6 +331,12 @@ class DataStore(DataStoreView):
 
     def set_neuron_ids(self, neuron_ids):
         self.block.annotations['neuron_ids'] = neuron_ids
+        
+    def set_model_parameters(self,parameters):
+        self.block.annotations['model_parameters'] = parameters
+
+    def set_sheet_parameters(self,parameters):
+        self.block.annotations['sheet_parameters'] = parameters
         
     def identify_unpresented_stimuli(self, stimuli):
         """
@@ -473,8 +497,8 @@ class PickledDataStore(Hdf5DataStore):
         f = open(self.parameters.root_directory + '/datastore.analysis.pickle', 'rb')
         self.analysis_results = cPickle.load(f)
         
-        f = open(self.parameters.root_directory + '/datastore.sensory.stimulus.pickle', 'rb')
-        self.sensory_stimulus = cPickle.load(f)
+        #f = open(self.parameters.root_directory + '/datastore.sensory.stimulus.pickle', 'rb')
+        #self.sensory_stimulus = cPickle.load(f)
 
     def save(self):
         f = open(self.parameters.root_directory + '/datastore.recordings.pickle', 'wb')
@@ -485,9 +509,9 @@ class PickledDataStore(Hdf5DataStore):
         cPickle.dump(self.analysis_results, f)
         f.close()
 
-        f = open(self.parameters.root_directory + '/datastore.sensory.stimulus.pickle', 'wb')
-        cPickle.dump(self.sensory_stimulus, f)
-        f.close()
+        #f = open(self.parameters.root_directory + '/datastore.sensory.stimulus.pickle', 'wb')
+        #cPickle.dump(self.sensory_stimulus, f)
+        #f.close()
 
     def add_recording(self, segments, stimulus):
         # we get recordings as seg

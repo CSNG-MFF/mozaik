@@ -10,6 +10,7 @@ from mozaik import load_component
 from mozaik.stimuli import InternalStimulus
 import mozaik
 import time
+import numpy
 
 logger = mozaik.getMozaikLogger()
 
@@ -223,8 +224,18 @@ class Model(BaseComponent):
         """
         ids = {}
         for s in self.sheets.values():
-            ids[s.name] = [int(a) for a in s.pop.all()]
+            ids[s.name] = numpy.array([int(a) for a in s.pop.all()])
         return ids
+
+    def sheet_parameters(self):
+        """
+        Returns the list of ids of neurons in the model.
+        """
+        p = {}
+        for s in self.sheets.values():
+            p[s.name] = s.parameters
+        return p
+
         
     def neuron_positions(self):
         """
