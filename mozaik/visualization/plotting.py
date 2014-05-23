@@ -63,6 +63,7 @@ import mozaik
 logger = mozaik.getMozaikLogger()
 
 
+
 class Plotting(ParametrizedObject):
     """
     The high level Plotting API. See the module information on more detailed description.
@@ -180,6 +181,8 @@ class Plotting(ParametrizedObject):
     def update_animation_function(b,self):
         for auf,parent in self.animation_update_functions:
             auf(parent)
+
+
 
 class PlotTuningCurve(Plotting):
     """
@@ -419,6 +422,7 @@ class PlotTuningCurve(Plotting):
            
            return val,par 
         
+
     
 class RasterPlot(Plotting):
     """ 
@@ -464,6 +468,7 @@ class RasterPlot(Plotting):
                      ('SpikeHistogramPlot',SpikeHistogramPlot(sp),gs[3, 0],{})]
         else:
             return [('SpikeRasterPlot',SpikeRasterPlot(sp),gs,{})]
+
 
         
 class VmPlot(Plotting):
@@ -519,6 +524,7 @@ class VmPlot(Plotting):
                })]
 
 
+
 class GSynPlot(Plotting):
     """
     It plots the conductances stored in the recordings.
@@ -552,6 +558,7 @@ class GSynPlot(Plotting):
         gsyn_es = [s.get_esyn(self.parameters.neuron) for s in dsv.get_segments()]
         gsyn_is = [s.get_isyn(self.parameters.neuron) for s in dsv.get_segments()]
         return [("ConductancesPlot",ConductancesPlot(gsyn_es, gsyn_is),gs,{})]
+
 
 
 class OverviewPlot(Plotting):
@@ -620,6 +627,7 @@ class OverviewPlot(Plotting):
         return d
 
 
+
 class AnalogSignalListPlot(Plotting):
     """
     This plot shows a line of plots each showing analog signals for different neurons (in the same plot), one plot per each AnalogSignalList instance
@@ -671,6 +679,7 @@ class AnalogSignalListPlot(Plotting):
         return [("AnalogSignalPlot" ,StandardStyleLinePlot(xs, ys),subplotspec,params)]
 
 
+
 class AnalogSignalPlot(Plotting):
     """
     This plot shows a line of plots each showing the given AnalogSignal, one plot per each AnalogSignal instance present in the datastore.
@@ -707,6 +716,7 @@ class AnalogSignalPlot(Plotting):
         params["x_ticks"] = [a.t_start.magnitude, a.t_stop.magnitude]
         params["mean"] = True
         return [("AnalogSignalPlot" ,StandardStyleLinePlot([times], [a]),subplotspec,params)]
+
 
 
 class ConductanceSignalListPlot(Plotting):
@@ -755,6 +765,49 @@ class ConductanceSignalListPlot(Plotting):
         return [("ConductancePlot",ConductancesPlot(exc, inh),subplotspec,{})]
 
 
+
+class PerNeuronPairAnalogSignalListPlot(Plotting):
+    """
+    This plot shows a line of plots each showing analog signals for pairs of neurons (in the same plot), one plot per each AnalogSignalList instance
+    present in the datastore.
+    
+    It defines line of plots named: 'AnalogSignalPlot.Plot0' ... 'AnalogSignalPlot.PlotN'.
+    
+    Other parameters
+    ----------------
+    
+    sheet_name : str
+               From which layer to plot.
+            
+    """
+    required_parameters = ParameterSet({
+        'sheet_name': str,  # the name of the sheet for which to plot
+    })
+
+    def subplot(self, subplotspec):
+        dsv = queries.param_filter_query(self.datastore, sheet_name=self.parameters.sheet_name, identifier='AnalogSignalList')
+        return PerStimulusADSPlot(dsv, function=self._ploter, title_style="Clever").make_line_plot( subplotspec )
+
+    def _ploter(self, dsv, subplotspec):
+        self.analog_signal_list = dsv.get_analysis_result()
+        #print "self.analog_signal_list:",self.analog_signal_list
+        assert len(self.analog_signal_list) != 0, "ERROR, empty datastore"
+        assert len(self.analog_signal_list) == 1, "Currently only one AnalogSignalList per stimulus can be plotted"
+        self.analog_signal_list = self.analog_signal_list[0] # take only one, the first
+        # get the asl from the first tuple id pair
+        asl = self.analog_signal_list.get_asl_by_id_pair( (self.analog_signal_list.ids)[0] )
+        times = numpy.linspace(asl.t_start, asl.t_stop, len(asl))
+        params = {}
+        params["x_lim"] = (asl.t_start.magnitude, asl.t_stop.magnitude)
+        params["x_label"] = self.analog_signal_list.x_axis_name + '(' + asl.t_start.dimensionality.latex + ')'
+        params["y_label"] = self.analog_signal_list.y_axis_name
+        params["x_ticks"] = [asl.t_start.magnitude, asl.t_stop.magnitude]
+        params["mean"] = True
+        # generate the plot
+        return [ ("AnalogSignalPlot", StandardStyleLinePlot([times],[asl]), subplotspec, params) ]
+
+
+
 class RetinalInputMovie(Plotting):
     """
     This plots one plot showing the retinal input per each recording in the datastore. 
@@ -780,6 +833,7 @@ class RetinalInputMovie(Plotting):
         for pn, pv in stimulus.get_param_values():
                 title = title + pn + ' : ' + str(pv) + '\n'
         return [('PixelMovie',PixelMovie(self.retinal_input[idx]),gs,{'x_axis':False, 'y_axis':False, "title" : title})]
+
 
 
 class ActivityMovie(Plotting):
@@ -866,6 +920,7 @@ class ActivityMovie(Plotting):
             return [("ScatterPlot",ScatterPlotMovie(posx, posy, h.T),gs,{'x_axis':False, 'y_axis':False,'dot_size':40})]
 
 
+
 class PerNeuronValuePlot(Plotting):
     """
     Plots the values for all PerNeuronValue ADSs in the datastore, one for each sheet.
@@ -948,6 +1003,8 @@ class PerNeuronValuePlot(Plotting):
             params["title"] = self.pnvs[idx][0].value_name
             return [("HistogramPlot",HistogramPlot([self.pnvs[idx][0].values]),gs,params)]
 
+
+
 class PerNeuronValueScatterPlot(Plotting):
     """
     Takes each pair of PerNeuronValue ADSs in the datastore that have the same units and plots a scatter plot of each such pair.
@@ -1009,6 +1066,7 @@ class PerNeuronValueScatterPlot(Plotting):
         ids = list(set(pair[0].ids) & set(pair[1].ids))
         return [("ScatterPlot",ScatterPlot(pair[0].get_value_by_id(ids), pair[1].get_value_by_id(ids)),gs,params)]
         
+
 
 class ConnectivityPlot(Plotting):
     """

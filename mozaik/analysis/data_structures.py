@@ -10,6 +10,7 @@ from mozaik.tools.mozaik_parametrized import MozaikParametrized, SNumber, SInteg
 logger = mozaik.getMozaikLogger()
 
 
+
 class AnalysisDataStructure(MozaikParametrized):
     """
     Encapsulates data that a certain Analysis class generates.
@@ -32,6 +33,7 @@ class AnalysisDataStructure(MozaikParametrized):
         self.tags = tags
 
 
+
 class SingleValue(AnalysisDataStructure):
     """
     Data structure holding single value. This can be per model, if sheet parameter is None,
@@ -46,6 +48,7 @@ class SingleValue(AnalysisDataStructure):
     
     def __init__(self, **params):
         AnalysisDataStructure.__init__(self, identifier='SingleValue', **params)
+
 
 
 class PerNeuronValue(AnalysisDataStructure):
@@ -91,6 +94,8 @@ class PerNeuronValue(AnalysisDataStructure):
         else:
             return numpy.array(self.values)[list(self.ids).index(idds)]
 
+
+
 class PerNeuronPairValue(AnalysisDataStructure):
     """
     Data structure holding values for each pair of neurons.
@@ -135,6 +140,7 @@ class PerNeuronPairValue(AnalysisDataStructure):
             return self.values[list(self.ids).index(idds1),list(self.ids).index(idds2)]
 
 
+
 class AnalysisDataStructure1D(AnalysisDataStructure):
     """
     Data structure representing 1D data.
@@ -162,6 +168,8 @@ class AnalysisDataStructure1D(AnalysisDataStructure):
         self.y_axis_units = y_axis_units
         self.x_axis_units = x_axis_units
 
+
+
 class AnalogSignal(AnalysisDataStructure1D):
     """
     A single analog signal. This is effectively a wrapper around a single Neo AnalogSignal object.
@@ -183,6 +191,8 @@ class AnalogSignal(AnalysisDataStructure1D):
         assert self.y_axis_name == other.y_axis_name
         assert self.y_axis_units == other.y_axis_units
         return AnalogSignal(self.analog_signal+other.analog_signal,y_axis_units = self.y_axis_units,x_axis_name = self.x_axis_name,y_axis_name = self.y_axis_name, sheet_name = self.sheet_name)
+
+
 
 class AnalogSignalList(AnalysisDataStructure1D):
     """
@@ -244,6 +254,8 @@ class AnalogSignalList(AnalysisDataStructure1D):
         
         return numpy.mean(self.asl,axis=0)
 
+
+
 class PerNeuronPairAnalogSignalList(AnalysisDataStructure1D):
     """
     This is a list of Neo AnalogSignal objects associated with pairs of neurons.
@@ -259,9 +271,13 @@ class PerNeuronPairAnalogSignalList(AnalysisDataStructure1D):
     """
 
     def __init__(self, asl, ids, y_axis_units, **params):
-        AnalysisDataStructure1D.__init__(self,  asl[0].sampling_period.units,y_axis_units,
-                                         identifier='AnalogSignalList',
-                                         **params)
+        AnalysisDataStructure1D.__init__(
+            self,  
+            asl[0].sampling_period.units, 
+            y_axis_units,
+            identifier='AnalogSignalList',
+            **params
+        )
         self.asl = asl
         self.ids = list(ids)
         assert len(asl) == len(ids)
@@ -277,8 +293,48 @@ class PerNeuronPairAnalogSignalList(AnalysisDataStructure1D):
         ids : AnalogSignal or list(AnalogSignal)
             List (or single) of AnalogSignal objects corresponding to id pairs specified in `idd_pair` parameter.
         """
-
         return self.asl[list(self.ids).index(idd_pair)]
+
+    def __add__(self, other):
+        assert set(self.ids) <= set(other.ids) and set(self.ids) >= set(other.ids)  
+        assert self.x_axis_name == other.x_axis_name
+        assert self.y_axis_name == other.y_axis_name
+        assert self.y_axis_units == other.y_axis_units
+        
+        new_asl = []
+        for idd in self.ids:
+            new_asl.append(self.get_asl_by_id_pair(idd) + other.get_asl_by_id_pair(idd))
+            
+        return PerNeuronPairAnalogSignalList( new_asl, self.ids, analysis_algorithm=self.analysis_algorithm, y_axis_units=self.y_axis_units, x_axis_name=self.x_axis_name, y_axis_name=self.y_axis_name, sheet_name=self.sheet_name, stimulus_id=self.stimulus_id )
+
+    def __sub__(self, other):
+        assert set(self.ids) <= set(other.ids) and set(self.ids) >= set(other.ids)  
+        assert self.x_axis_name == other.x_axis_name
+        assert self.y_axis_name == other.y_axis_name
+        assert self.y_axis_units == other.y_axis_units
+        
+        new_asl = []
+        for idd in self.ids:
+            new_asl.append(self.get_asl_by_id_pair(idd) - other.get_asl_by_id_pair(idd))
+            
+        return PerNeuronPairAnalogSignalList( new_asl, self.ids, analysis_algorithm=self.analysis_algorithm, y_axis_units=self.y_axis_units, x_axis_name=self.x_axis_name, y_axis_name=self.y_axis_name, sheet_name=self.sheet_name, stimulus_id=self.stimulus_id )
+
+    def division_by_num(self, num):
+        """
+        Divides all asl by the supplied number.
+        """
+        for asl in self.asl:
+            assert asl.units == self.asl[0].units, "AnalogSignalList.mean: units of AnalogSignal objects in the list do not match."
+            assert asl.sampling_rate == self.asl[0].sampling_rate, "AnalogSignalList.mean: sampling_rate of AnalogSignal objects in the list do not match"
+            assert asl.t_start == self.asl[0].t_start, "AnalogSignalList.mean: t_start of AnalogSignal objects in the list do not match."        
+        
+        assert num!=0.0
+
+        new_asl = []
+        for idd in self.ids:
+            new_asl.append(self.get_asl_by_id_pair(idd) / num)
+
+        return PerNeuronPairAnalogSignalList( new_asl, self.ids, analysis_algorithm=self.analysis_algorithm, y_axis_units=self.y_axis_units, x_axis_name=self.x_axis_name, y_axis_name=self.y_axis_name, sheet_name=self.sheet_name, stimulus_id=self.stimulus_id )
 
     def mean(self):
         """
