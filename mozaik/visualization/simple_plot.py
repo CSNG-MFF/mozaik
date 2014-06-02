@@ -323,12 +323,16 @@ class StandardStyle(SimplePlot):
     def _ticks(self):
         if self.x_axis:
             if self.x_ticks != None and self.x_tick_style == 'Custom':
-                if self.x_tick_labels != None and (len(self.x_ticks) == len(self.x_tick_labels)):
+                if self.x_tick_labels != None:
+                    assert len(self.x_ticks) == len(self.x_tick_labels)
                     pylab.xticks(self.x_ticks, self.x_tick_labels)
                 else:
                     pylab.xticks(self.x_ticks)
                     phf.remove_x_tick_labels()
-            else:    
+            elif self.x_ticks != None:    
+                 pylab.xticks(self.x_ticks)
+                 phf.short_tick_labels_axis(self.axis.xaxis)
+            else:
                 if self.x_tick_style == 'Min':
                     phf.three_tick_axis(self.axis.xaxis)
                 elif self.x_tick_style == 'Custom':                
@@ -339,11 +343,15 @@ class StandardStyle(SimplePlot):
 
         if self.y_axis:
             if self.y_ticks != None and self.x_tick_style == 'Custom':
-                if self.y_tick_labels != None and (len(self.y_ticks) == len(self.y_tick_labels)):
+                if self.y_tick_labels != None:
+                    assert len(self.y_ticks) == len(self.y_tick_labels)
                     pylab.yticks(self.y_ticks, self.y_tick_labels)
                 else:
                     pylab.yticks(self.y_ticks)
                     phf.remove_y_tick_labels()
+            elif self.y_ticks != None:    
+                 pylab.yticks(self.y_ticks)
+                 phf.short_tick_labels_axis(self.axis.yaxis)
             else:
                 if self.y_tick_style == 'Min':
                     phf.three_tick_axis(self.axis.yaxis)
@@ -401,7 +409,10 @@ class SpikeRasterPlot(StandardStyle):
 
         neurons = [i for i in xrange(0, len(self.sps[0][0]))]
         
+        t_start = float(self.sps[0][0][0].t_start)
         t_stop = float(self.sps[0][0][0].t_stop)
+        
+        
         num_n = len(neurons)  # number of neurons
         num_t = len(self.sps[0])  # number of trials
 
@@ -415,6 +426,7 @@ class SpikeRasterPlot(StandardStyle):
                 else:
                     for i, spike_list in enumerate(sp):
                         spike_train = spike_list[n]
+                        print spike_train
                         self.axis.plot(spike_train,
                                        [j * (num_t + 1) + i + 1
                                           for x in xrange(0, len(spike_train))],
@@ -428,10 +440,10 @@ class SpikeRasterPlot(StandardStyle):
             self.y_lim = (0, num_n * (num_t + 1))
         else:
             self.y_lim = (0, num_n)
-
-        self.x_ticks = [0, t_stop/2, t_stop]
+        
+        self.x_ticks = [t_start, (t_stop-t_start)/2, t_stop]
         self.x_tick_style = 'Custom'
-        self.x_lim = (0, t_stop)
+        self.x_lim = (t_start, t_stop)
         self.x_label = 'time (ms)'
         if not self.group_trials:
             if num_n == 1:
@@ -483,6 +495,7 @@ class SpikeHistogramPlot(SpikeRasterPlot):
         self.neurons = [i for i in xrange(0, min(10, len(self.sps[0][0])))]
 
         t_stop = float(self.sps[0][0][0].t_stop)
+        t_start = float(self.sps[0][0][0].t_start)
 
         all_spikes = []
         for k, sp in enumerate(self.sps):
@@ -501,8 +514,8 @@ class SpikeHistogramPlot(SpikeRasterPlot):
 
         self.y_label = '(spk/ms)'
         self.x_tick_style = 'Custom'
-        self.x_ticks = [0, t_stop/2, t_stop]
-        self.x_lim = (0, t_stop)
+        self.x_ticks = [t_start, (t_stop-t_start)/2, t_stop]
+        self.x_lim = (t_start, t_stop)
         self.x_label = 'time (ms)'
 
 

@@ -114,7 +114,7 @@ class Model(BaseComponent):
         for sheet in self.sheets.values():
             if self.first_time:
                sheet.record()
-        sim_run_time = self.reset()
+        null_segments,sim_run_time = self.reset()
         for sheet in self.sheets.values():
             sheet.prepare_artificial_stimulation(stimulus.duration,self.simulator_time,artificial_stimulators.get(sheet.name,[]))
         if self.input_space:
@@ -148,7 +148,7 @@ class Model(BaseComponent):
             for ds in artificial_stimulators.get(sheet.name,[]):
                 ds.inactivate(self.simulator_time)
         
-        return (segments, sensory_input,sim_run_time)
+        return (segments, null_segments,sensory_input,sim_run_time)
         
     def run(self, tstop):
         """
@@ -179,6 +179,7 @@ class Model(BaseComponent):
         """
         logger.debug("Resetting the network")
         t0 = time.time()
+        segments = []
         if self.parameters.reset:
             self.sim.reset()
             self.simulator_time = 0
@@ -197,8 +198,10 @@ class Model(BaseComponent):
                 self.simulator_time+=self.parameters.null_stimulus_period
                 for sheet in self.sheets.values():    
                     if sheet.to_record != None:
-                       sheet.get_data()
-        return time.time()-t0    
+                       s = sheet.get_data(self.parameters.null_stimulus_period)
+                       if (not mozaik.mpi_comm) or (mozaik.mpi_comm.rank == mozaik.MPI_ROOT):
+                           segments.append(s)
+        return segments,time.time()-t0    
     
 
     def register_sheet(self, sheet):

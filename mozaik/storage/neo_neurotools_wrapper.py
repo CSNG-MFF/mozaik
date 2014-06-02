@@ -22,7 +22,7 @@ class MozaikSegment(Segment):
         obsolete and this file should be discarded.
         """
 
-        def __init__(self, segment, identifier):
+        def __init__(self, segment, identifier,null=False):
             """
             """
             self.init = True
@@ -35,6 +35,7 @@ class MozaikSegment(Segment):
 
             self.annotations = segment.annotations
             self.identifier = identifier
+            self.null = null
             # indicates whether the segment has been fully loaded
             self.full = False
 
@@ -228,8 +229,8 @@ class PickledDataStoreNeoWrapper(MozaikSegment):
         This is a Mozaik wrapper of neo segment, that enables pickling and lazy loading.
         """    
 
-        def __init__(self, segment, identifier, datastore_path):
-            MozaikSegment.__init__(self, segment, identifier)
+        def __init__(self, segment, identifier, datastore_path,null=False):
+            MozaikSegment.__init__(self, segment, identifier,null)
             self.datastore_path = datastore_path
 
         def load_full(self):

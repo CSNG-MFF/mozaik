@@ -53,7 +53,8 @@ from mozaik.storage import queries
 from mozaik.controller import Global
 from mozaik.tools.mozaik_parametrized import colapse_to_dictionary, MozaikParametrized, varying_parameters, matching_parametrized_object_params
 from numpy import pi
-
+from neo.core.analogsignal import AnalogSignal as NeoAnalogSignal
+from neo.core.spiketrain import SpikeTrain as NeoSpikeTrain
 from simple_plot import StandardStyleLinePlot, SpikeRasterPlot, \
                         SpikeHistogramPlot, ConductancesPlot, PixelMovie, \
                         ScatterPlotMovie, ScatterPlot, ConnectionPlot, SimplePlot, HistogramPlot
@@ -61,6 +62,7 @@ from plot_constructors import LinePlot, PerStimulusPlot, PerStimulusADSPlot
 
 import mozaik
 logger = mozaik.getMozaikLogger()
+
 
 
 class Plotting(ParametrizedObject):
@@ -180,6 +182,8 @@ class Plotting(ParametrizedObject):
     def update_animation_function(b,self):
         for auf,parent in self.animation_update_functions:
             auf(parent)
+
+
 
 class PlotTuningCurve(Plotting):
     """
@@ -419,6 +423,7 @@ class PlotTuningCurve(Plotting):
            
            return val,par 
         
+
     
 class RasterPlot(Plotting):
     """ 
@@ -440,13 +445,16 @@ class RasterPlot(Plotting):
     
     trial_averaged_histogram : bool
                              Should the plot show also the trial averaged histogram?
-            
+    
+    spontaneous : bool
+                Whether to also show the spontaneous activity the preceded the stimulus.
     """
     
     required_parameters = ParameterSet({
         'trial_averaged_histogram': bool,  # should the plot show also the trial averaged histogram
         'neurons': list,
         'sheet_name': str,
+        'spontaneous' : bool, # whether to also show the spontaneous activity the preceded the stimulus         
     })
 
     def subplot(self, subplotspec):
@@ -455,16 +463,37 @@ class RasterPlot(Plotting):
 
     def _ploter(self, dsv,gs):
         neurons = sorted(self.parameters.neurons)
-        sp = [[s.get_spiketrain(neurons) for s in dsv.get_segments()]]
+        sp = [s.get_spiketrain(self.parameters.neurons) for s in sorted(dsv.get_segments(),key = lambda x : MozaikParametrized.idd(x.annotations['stimulus']).trial)]             
+        
+        x_ticks = [0.0,float(sp[0][0].t_stop/2), float(sp[0][0].t_stop)]
+        print x_ticks
+        
+        if self.parameters.spontaneous:
+           spont_sp = [s.get_spiketrain(self.parameters.neurons) for s in sorted(dsv.get_segments(null=True),key = lambda x : MozaikParametrized.idd(x.annotations['stimulus']).trial)]             
+           sp = [RasterPlot.concat_spiketrains(sp1,sp2) for sp1,sp2 in zip(spont_sp,sp)]
+           x_ticks = [float(spont_sp[0][0].t_start),0.0,float(sp[0][0].t_stop/2), float(sp[0][0].t_stop)]
+
         d = {} 
         if self.parameters.trial_averaged_histogram:
             gs = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=gs)
             # first the raster
-            return [ ('SpikeRasterPlot',SpikeRasterPlot(sp),gs[:3, 0],{'x_axis': False , 'x_label' :  None}),
-                     ('SpikeHistogramPlot',SpikeHistogramPlot(sp),gs[3, 0],{})]
+            return [ ('SpikeRasterPlot',SpikeRasterPlot([sp]),gs[:3, 0],{'x_axis': False , 'x_label' :  None,"x_ticks": x_ticks}),
+                     ('SpikeHistogramPlot',SpikeHistogramPlot([sp]),gs[3, 0],{"x_ticks": x_ticks})]
         else:
-            return [('SpikeRasterPlot',SpikeRasterPlot(sp),gs,{})]
+            return [('SpikeRasterPlot',SpikeRasterPlot([sp]),gs,{"x_ticks": x_ticks})]
 
+
+    @staticmethod
+    def concat_spiketrains(ssp1,ssp2):
+        l = []
+        for sp1,sp2 in zip(ssp1,ssp2):
+            assert sp1.units == sp2.units
+            assert sp2.t_start == sp1.t_start == 0
+            assert sp1.units == sp1.t_stop.units == sp1.t_start.units
+            assert sp2.units == sp2.t_stop.units == sp2.t_start.units
+            
+            l.append(NeoSpikeTrain(numpy.concatenate((sp1.magnitude-sp1.t_stop.magnitude,sp2.magnitude)),t_start=-sp1.t_stop,t_stop=sp2.t_stop,units=sp1.units))
+        return l
         
 class VmPlot(Plotting):
     """
@@ -483,11 +512,15 @@ class VmPlot(Plotting):
                
     neuron : int
             Id of the neuron to plot.
+            
+    spontaneous : bool
+                Whether to also show the spontaneous activity the preceded the stimulus.
     """
 
     required_parameters = ParameterSet({
       'neuron': int,  # we can only plot one neuron - which one ?
       'sheet_name': str,
+      'spontaneous' : bool, # whether to also show the spontaneous activity the preceded the stimulus
     })
 
     def subplot(self, subplotspec):
@@ -496,27 +529,39 @@ class VmPlot(Plotting):
                                          ).make_line_plot(subplotspec)
 
     def _ploter(self, dsv,gs):
-        vms = [s.get_vm(self.parameters.neuron) for s in dsv.get_segments()]
-        sampling_period = vms[0].sampling_period
+        vms = [s.get_vm(self.parameters.neuron) for s in sorted(dsv.get_segments(),key = lambda x : MozaikParametrized.idd(x.annotations['stimulus']).trial)]
         time_axis = numpy.arange(0, len(vms[0]), 1) / float(len(vms[0])) * float(vms[0].t_stop) + float(vms[0].t_start)
-        t_stop = float(vms[0].t_stop - sampling_period)
-
+        t_stop = float(vms[0].t_stop - vms[0].sampling_period)
+        t_start = 0
+        x_ticks = [t_start, t_stop/2, t_stop]
+        
+        if self.parameters.spontaneous:
+           spont_vms = [s.get_vm(self.parameters.neuron) for s in sorted(dsv.get_segments(null=True),key = lambda x : MozaikParametrized.idd(x.annotations['stimulus']).trial)]             
+           t_start = - float(spont_vms[0].t_stop)
+           x_ticks = [t_start,0.0,t_stop/2, t_stop]
+           spont_time_axis = numpy.arange(0, len(spont_vms[0]), 1) / float(len(spont_vms[0])) * float(spont_vms[0].t_stop) - float(spont_vms[0].t_stop) + float(vms[0].t_start)
+           time_axis = numpy.concatenate((spont_time_axis,time_axis))
+           vms1 = [numpy.concatenate((svm.magnitude,vm.magnitude)) for vm,svm in zip(vms,spont_vms)]
+                    
         xs = []
         ys = []
         colors = []
-        for vm in vms:
+        for vm in vms1:
             xs.append(time_axis)
             ys.append(numpy.array(vm.tolist()))
             colors.append("#848484")
-
+        
+        print time_axis
+        
         return [('VmPlot',StandardStyleLinePlot(xs, ys),gs,{
                     "mean" : True,
                     "colors" : colors,
-                    "x_lim" : (0, t_stop), 
-                    "x_ticks": [0, t_stop/2, t_stop],
+                    "x_lim" : (t_start, t_stop), 
+                    "x_ticks": x_ticks,
                     "x_label": 'time(' + vms[0].t_stop.dimensionality.latex + ')',
                     "y_label": 'Vm(' + vms[0].dimensionality.latex + ')'
                })]
+
 
 
 class GSynPlot(Plotting):
@@ -536,22 +581,52 @@ class GSynPlot(Plotting):
                
     neuron : int
             Id of the neuron to plot.
+    
+    spontaneous : bool
+                Whether to also show the spontaneous activity the preceded the stimulus.
     """
     
     required_parameters = ParameterSet({
         'neuron': int,  # we can only plot one neuron - which one ?
         'sheet_name': str,
+        'spontaneous' : bool, # whether to also show the spontaneous activity the preceded the stimulus
     })
 
     def subplot(self, subplotspec):
         dsv = queries.param_filter_query(self.datastore,sheet_name=self.parameters.sheet_name)
         return PerStimulusPlot(dsv, function=self._ploter, title_style="Standard"
                                         ).make_line_plot(subplotspec)
+    
+    @staticmethod
+    def concat_asl(asl1,asl2):
+        assert asl1.sampling_period == asl2.sampling_period
+        assert asl1.units == asl2.units
+        
+        return NeoAnalogSignal(numpy.concatenate((asl1.magnitude,asl2.magnitude)),t_start=-asl1.t_stop,
+                            sampling_period=asl1.sampling_period,
+                            units=asl1.units)
+
 
     def _ploter(self, dsv,gs):
-        gsyn_es = [s.get_esyn(self.parameters.neuron) for s in dsv.get_segments()]
-        gsyn_is = [s.get_isyn(self.parameters.neuron) for s in dsv.get_segments()]
+        segs = sorted(dsv.get_segments(),key = lambda x : MozaikParametrized.idd(x.annotations['stimulus']).trial)
+        gsyn_es = [s.get_esyn(self.parameters.neuron) for s in segs]
+        gsyn_is = [s.get_isyn(self.parameters.neuron) for s in segs]
+
+        
+        if self.parameters.spontaneous:
+           segs = sorted(dsv.get_segments(null=True),key = lambda x : MozaikParametrized.idd(x.annotations['stimulus']).trial)
+           spont_gsyn_es = [s.get_esyn(self.parameters.neuron) for s in segs] 
+           spont_gsyn_is = [s.get_isyn(self.parameters.neuron) for s in segs] 
+           
+           gsyn_es = [GSynPlot.concat_asl(s,n) for n,s in zip(gsyn_es,spont_gsyn_es)] 
+           gsyn_is = [GSynPlot.concat_asl(s,n) for n,s in zip(gsyn_is,spont_gsyn_is)] 
+        
         return [("ConductancesPlot",ConductancesPlot(gsyn_es, gsyn_is),gs,{})]
+    
+        
+        
+        
+    
 
 
 class OverviewPlot(Plotting):
@@ -603,21 +678,22 @@ class OverviewPlot(Plotting):
         
         d.extend([ ("Spike_plot",RasterPlot(dsv,
                    ParameterSet({'sheet_name': self.parameters.sheet_name,
-                                 'trial_averaged_histogram': False,
+                                 'trial_averaged_histogram': False,'spontaneous' : True,
                                  'neurons': [self.parameters.neuron]})
                    ),gs[0 + offset, 0],params),
                 
                  ("Conductance_plot",GSynPlot(dsv,
-                   ParameterSet({'sheet_name': self.parameters.sheet_name,
+                   ParameterSet({'sheet_name': self.parameters.sheet_name,'spontaneous' : True,
                                'neuron': self.parameters.neuron})
                  ),gs[1 + offset, 0], {'x_label' : None, 'x_tick_style' : 'Custom' , 'x_tick_labels' : None, 'title' : None}),
 
                  ("Vm_plot",VmPlot(dsv,
-                   ParameterSet({'sheet_name': self.parameters.sheet_name,
+                   ParameterSet({'sheet_name': self.parameters.sheet_name,'spontaneous' : True,
                              'neuron': self.parameters.neuron})
                  ),gs[2 + offset, 0], {'title' : None})
               ])
         return d
+
 
 
 class AnalogSignalListPlot(Plotting):
@@ -671,6 +747,7 @@ class AnalogSignalListPlot(Plotting):
         return [("AnalogSignalPlot" ,StandardStyleLinePlot(xs, ys),subplotspec,params)]
 
 
+
 class AnalogSignalPlot(Plotting):
     """
     This plot shows a line of plots each showing the given AnalogSignal, one plot per each AnalogSignal instance present in the datastore.
@@ -707,6 +784,7 @@ class AnalogSignalPlot(Plotting):
         params["x_ticks"] = [a.t_start.magnitude, a.t_stop.magnitude]
         params["mean"] = True
         return [("AnalogSignalPlot" ,StandardStyleLinePlot([times], [a]),subplotspec,params)]
+
 
 
 class ConductanceSignalListPlot(Plotting):
@@ -755,6 +833,49 @@ class ConductanceSignalListPlot(Plotting):
         return [("ConductancePlot",ConductancesPlot(exc, inh),subplotspec,{})]
 
 
+
+class PerNeuronPairAnalogSignalListPlot(Plotting):
+    """
+    This plot shows a line of plots each showing analog signals for pairs of neurons (in the same plot), one plot per each AnalogSignalList instance
+    present in the datastore.
+    
+    It defines line of plots named: 'AnalogSignalPlot.Plot0' ... 'AnalogSignalPlot.PlotN'.
+    
+    Other parameters
+    ----------------
+    
+    sheet_name : str
+               From which layer to plot.
+            
+    """
+    required_parameters = ParameterSet({
+        'sheet_name': str,  # the name of the sheet for which to plot
+    })
+
+    def subplot(self, subplotspec):
+        dsv = queries.param_filter_query(self.datastore, sheet_name=self.parameters.sheet_name, identifier='AnalogSignalList')
+        return PerStimulusADSPlot(dsv, function=self._ploter, title_style="Clever").make_line_plot( subplotspec )
+
+    def _ploter(self, dsv, subplotspec):
+        self.analog_signal_list = dsv.get_analysis_result()
+        #print "self.analog_signal_list:",self.analog_signal_list
+        assert len(self.analog_signal_list) != 0, "ERROR, empty datastore"
+        assert len(self.analog_signal_list) == 1, "Currently only one AnalogSignalList per stimulus can be plotted"
+        self.analog_signal_list = self.analog_signal_list[0] # take only one, the first
+        # get the asl from the first tuple id pair
+        asl = self.analog_signal_list.get_asl_by_id_pair( (self.analog_signal_list.ids)[0] )
+        times = numpy.linspace(asl.t_start, asl.t_stop, len(asl))
+        params = {}
+        params["x_lim"] = (asl.t_start.magnitude, asl.t_stop.magnitude)
+        params["x_label"] = self.analog_signal_list.x_axis_name + '(' + asl.t_start.dimensionality.latex + ')'
+        params["y_label"] = self.analog_signal_list.y_axis_name
+        params["x_ticks"] = [asl.t_start.magnitude, asl.t_stop.magnitude]
+        params["mean"] = True
+        # generate the plot
+        return [ ("AnalogSignalPlot", StandardStyleLinePlot([times],[asl]), subplotspec, params) ]
+
+
+
 class RetinalInputMovie(Plotting):
     """
     This plots one plot showing the retinal input per each recording in the datastore. 
@@ -780,6 +901,7 @@ class RetinalInputMovie(Plotting):
         for pn, pv in stimulus.get_param_values():
                 title = title + pn + ' : ' + str(pv) + '\n'
         return [('PixelMovie',PixelMovie(self.retinal_input[idx]),gs,{'x_axis':False, 'y_axis':False, "title" : title})]
+
 
 
 class ActivityMovie(Plotting):
@@ -866,6 +988,7 @@ class ActivityMovie(Plotting):
             return [("ScatterPlot",ScatterPlotMovie(posx, posy, h.T),gs,{'x_axis':False, 'y_axis':False,'dot_size':40})]
 
 
+
 class PerNeuronValuePlot(Plotting):
     """
     Plots the values for all PerNeuronValue ADSs in the datastore, one for each sheet.
@@ -944,6 +1067,8 @@ class PerNeuronValuePlot(Plotting):
             params["title"] = self.pnvs[idx][0].value_name
             return [("HistogramPlot",HistogramPlot([self.pnvs[idx][0].values]),gs,params)]
 
+
+
 class PerNeuronValueScatterPlot(Plotting):
     """
     Takes each pair of PerNeuronValue ADSs in the datastore that have the same units and plots a scatter plot of each such pair.
@@ -1005,6 +1130,7 @@ class PerNeuronValueScatterPlot(Plotting):
         ids = list(set(pair[0].ids) & set(pair[1].ids))
         return [("ScatterPlot",ScatterPlot(pair[0].get_value_by_id(ids), pair[1].get_value_by_id(ids)),gs,params)]
         
+
 
 class ConnectivityPlot(Plotting):
     """

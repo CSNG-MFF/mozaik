@@ -220,8 +220,8 @@ def partition_by_stimulus_paramter_query(dsv, parameter_list):
 
     """
     assert 'name' not in parameter_list, "One cannot partition against <name> parameter"
-    st = dsv.get_stimuli()
-    values, st = colapse(dsv.block.segments,st,parameter_list=parameter_list,allow_non_identical_objects=True)
+    st = dsv.get_stimuli() + dsv.get_stimuli(null=True)
+    values, st = colapse(dsv.get_segments()+dsv.get_segments(null=True),st,parameter_list=parameter_list,allow_non_identical_objects=True)
     dsvs = []
     for vals in values:
         new_dsv = dsv.fromDataStoreView()
