@@ -2,6 +2,7 @@
 """
 Module containing the implementation of sheets - one of the basic building blocks of *mozaik* models.
 """
+
 import numpy
 import mozaik
 from mozaik.core import BaseComponent
@@ -97,13 +98,14 @@ class Sheet(BaseComponent):
         'recording_interval' : float,
     })
 
-    def __init__(self, model, parameters):
+    def __init__(self, model, size_x,size_y, parameters):
         BaseComponent.__init__(self, model, parameters)
         self.sim = self.model.sim
         self.name = parameters.name  # the name of the population
         self.model.register_sheet(self)
         self._pop = None
-        
+        self.size_x = size_x
+        self.size_y = size_y
         # We want to be able to define in cell.params the cell parameters as also PyNNDistributions so we can get variably parametrized populations
         # The problem is that the pyNN.Population can accept only scalar parameters. There fore we will remove from cell.params all parameters
         # that are PyNNDistributions, and will initialize them later just after the population is initialized (in property pop())
@@ -323,5 +325,3 @@ class Sheet(BaseComponent):
         self.pop.initialize(**self.parameters.cell.initial_values)
         # Variable cell parameters
         self.pop.set(**self.dist_params)
-        #for k,v in self.dist_params.iteritems():
-        #    self.pop.rset(k,v)

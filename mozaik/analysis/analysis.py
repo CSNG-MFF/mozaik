@@ -19,7 +19,7 @@ from parameters import ParameterSet
 from mozaik.storage import queries
 from neo.core.analogsignal import AnalogSignal as NeoAnalogSignal
 from mozaik.tools.circ_stat import circ_mean, circular_dist
-from mozaik.tools.neo_object_operations import neo_mean, neo_sum
+from mozaik.tools.neo_object_operations import neo_mean, neo_sum, down_sample_analog_signal_average_method
 import mozaik
 
 logger = mozaik.getMozaikLogger()
@@ -402,8 +402,6 @@ class TrialVariability(Analysis):
                adss = dsv.get_analysis_result()
                adss, stids = colapse(adss,[MozaikParametrized.idd(a.stimulus_id) for a in adss],parameter_list=['trial'],allow_non_identical_objects=False)
                
-               print segs
-               
                for ads,st in zip(adss,stids):
                    first = ads[0].asl[0]
                    vm = [NeoAnalogSignal(numpy.var(numpy.array([s.get_asl_by_id(i) for s in ads]),axis=0),t_start=first.t_start,sampling_period=first.sampling_period,units=first.units) for i in ads[0].ids]
@@ -594,30 +592,20 @@ class TemporalBinAverage(Analysis):
                 # First let's do recordings
                 for seg,st in zip(dsv.get_segments(),dsv.get_stimuli()):
                     if self.parameters.vm:
-                        vm = [_down_sample_analog_signal_list(seg.get_vm(i))  for i in seg.get_stored_vm_ids()]
+                        vm = [down_sample_analog_signal_average_method(seg.get_vm(i))  for i in seg.get_stored_vm_ids()]
                         self.datastore.full_datastore.add_analysis_result(AnalogSignalList(vm,seg.get_stored_vm_ids(),vm[0].units,y_axis_name = 'bin averaged vm',x_axis_name="time",sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                     if self.parameters.cond_exc:                        
-                        e_syn = [_down_sample_analog_signal_list(seg.get_esyn(i))  for i in seg.get_stored_esyn_ids()]
+                        e_syn = [down_sample_analog_signal_average_method(seg.get_esyn(i))  for i in seg.get_stored_esyn_ids()]
                         self.datastore.full_datastore.add_analysis_result(AnalogSignalList(e_syn,seg.get_stored_esyn_ids(),e_syn[0].units,y_axis_name = 'bin averaged exc. cond.',x_axis_name="time",sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                     if self.parameters.cond_inh:                                    
-                        i_syn = [_down_sample_analog_signal_list(seg.get_isyn(i))  for i in seg.get_stored_isyn_ids()]
+                        i_syn = [down_sample_analog_signal_average_method(seg.get_isyn(i))  for i in seg.get_stored_isyn_ids()]
                         self.datastore.full_datastore.add_analysis_result(AnalogSignalList(i_syn,seg.get_stored_isyn_ids(),i_syn[0].units,y_axis_name = 'bin averaged inh. cond.',x_axis_name="time",sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                 
                 # Next let's do AnalogSingalLists
                 dsv = queries.param_filter_query(self.datastore, sheet_name=sheet,identifier='AnalogSignalList')
                 for asl in dsv.get_analysis_results():
                     assert isinstance(asd,'AnalogSignalList')
-                    self.datastore.full_datastore.add_analysis_result(AnalogSignalList([down_sample_analog_signal_list(analog_signal,bin_length) for analog_signal in asl],asl.ids,asl.units,y_axis_name = 'bin averaged ' + asl.y_axis_name,x_axis_name="time",sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=asl.stimulus_id))
-                
-      def _down_sample_analog_signal_list(analog_signal,bin_length):
-          assert (analog_signal.t_stop.rescale(qt.ms) % bin_length)  < 0.00000001, "TemporalBinAverage: The analog signal length has to be divisible by bin_length"
-          div = round(analog_signal.t_stop.rescale(qt.ms) / bin_length)
-          return NeoAnalogSignal(numpy.mean(numpy.reshape(analog_signal,(div,)),axis=1).flatten(),
-                           t_start=0*qt.ms,
-                           sampling_period=bin_length*qt.ms,
-                           units=analog_signal.units)
-
-
+                    self.datastore.full_datastore.add_analysis_result(AnalogSignalList([down_sample_analog_signal_average_method(analog_signal,bin_length) for analog_signal in asl],asl.ids,asl.units,y_axis_name = 'bin averaged ' + asl.y_axis_name,x_axis_name="time",sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=asl.stimulus_id))
 
 
 
