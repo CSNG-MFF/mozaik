@@ -76,12 +76,12 @@ class DataStoreView(ParametrizedObject):
         self.full_datastore = full_datastore  # should be self if actually the
                                               # instance is actually DataStore
 
-    def get_segments(self):
+    def get_segments(self,null=False):
         """
         Returns list of all recordings (as neo segments) stored in the datastore.
         """
-        return self.block.segments
-
+        return [s for s in self.block.segments if s.null == null]
+        
     def sheets(self):
         """
         Returns the list of all sheets that are present in at least one of the
@@ -149,13 +149,16 @@ class DataStoreView(ParametrizedObject):
         """
         return self.full_datastore.block.annotations['neuron_annotations']
 
-    def get_stimuli(self):
+    def get_stimuli(self,null=False):
         """
         Returns a list of stimuli (as strings). The order of the stimuli
         corresponds to the order of segments returned by the get_segments()
         call.
+        
+        If *null* is true the order corresponds to the order of segments 
+        returned by get_segments(null=True).
         """
-        return [s.annotations['stimulus'] for s in self.block.segments]
+        return [s.annotations['stimulus'] for s in self.block.segments if s.null == null]
 
     def get_analysis_result(self, **kwargs):
         """
@@ -376,6 +379,16 @@ class DataStore(DataStoreView):
             self.block.segments.append(MozaikSegment(s))
         self.stimulus_dict[str(stimulus)] = True
 
+    def add_null_recording(self, segments,stimulus):
+        """
+        Add recordings due to the null stimuli presented between the standard stimuli.
+        """
+        # we get recordings as seg
+        for s in segments:
+            s.null = True
+            s.annotations['stimulus'] = str(stimulus)
+            self.block.segments.append(MozaikSegment(s,null=True))
+
     def add_stimulus(self, data, stimulus):
         """
         The DataStore interface function that adds a stimulus into the datastore.
@@ -453,13 +466,6 @@ class Hdf5DataStore(DataStore):
         cPickle.dump(self.analysis_results, f)
         f.close()
 
-    def add_recording(self, segments, stimulus):
-        # we get recordings as seg
-        for s in segments:
-            s.annotations['stimulus'] = str(stimulus)
-            self.block.segments.append(MozaikSegment(s))
-        self.stimulus_dict[str(stimulus)] = True
-
     def add_analysis_result(self, result):
         flag = True
         for i,ads in enumerate(self.analysis_results):
@@ -491,7 +497,6 @@ class PickledDataStore(Hdf5DataStore):
             self.block = cPickle.load(f)
             for s in self.block.segments:
                 s.full = False
-                self.stimulus_dict[s.annotations['stimulus']] = True
                 s.datastore_path = self.parameters.root_directory
 
         f = open(self.parameters.root_directory + '/datastore.analysis.pickle', 'rb')
@@ -526,3 +531,19 @@ class PickledDataStore(Hdf5DataStore):
             cPickle.dump(s, f)
 
         self.stimulus_dict[str(stimulus)] = True
+
+
+    def add_null_recording(self, segments,stimulus):
+        """
+        Add recordings due to the null stimuli presented between the standard stimuli.
+        """
+        # we get recordings as seg
+        for s in segments:
+            s.annotations['stimulus'] = str(stimulus)
+            self.block.segments.append(
+                PickledDataStoreNeoWrapper(s,
+                                           'Segment' + str(len(self.block.segments)),
+                                           self.parameters.root_directory,null=True))
+            f = open(self.parameters.root_directory + '/' + 'Segment'
+                     + str(len(self.block.segments) - 1) + ".pickle", 'wb')
+            cPickle.dump(s, f)
