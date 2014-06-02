@@ -9,9 +9,16 @@ import scipy
 import time
 import quantities as qt
 import mozaik.tools.units as munits
-from mozaik.tools.mozaik_parametrized import colapse, colapse_to_dictionary, MozaikParametrized
-from mozaik.analysis.data_structures import PerNeuronValue, \
-                                        ConductanceSignalList, AnalogSignalList, PerNeuronPairValue, SingleValue, AnalogSignal
+from mozaik.tools.mozaik_parametrized import colapse
+from mozaik.tools.mozaik_parametrized import colapse_to_dictionary
+from mozaik.tools.mozaik_parametrized import MozaikParametrized
+from mozaik.analysis.data_structures import ConductanceSignalList
+from mozaik.analysis.data_structures import SingleValue
+from mozaik.analysis.data_structures import AnalogSignal
+from mozaik.analysis.data_structures import AnalogSignalList
+from mozaik.analysis.data_structures import PerNeuronValue
+from mozaik.analysis.data_structures import PerNeuronPairValue
+from mozaik.analysis.data_structures import PerNeuronPairAnalogSignalList
                                         
 from mozaik.analysis.helper_functions import psth
 from mozaik.core import ParametrizedObject
@@ -348,6 +355,147 @@ class TrialToTrialCrossCorrelationOfAnalogSignalList(Analysis):
         return cc
 
 
+
+
+
+class TrialAveragedCorrectedCrossCorrelation(Analysis):
+      """
+      It computes the cross-correlation between different AnalogSignalList but shifted across trials, 
+      in order to avoid covariations introduced by simultaneous stimulation.
+
+      It takes all the responses in the datastore and for each AnalogSignalList ADSs listed in 'neurons' ids it will:
+      - compute, from one 'raw' trial, the cross-correlation between the analog signals corresponding to one reference and one target neuron
+      - compute, from two different trials, the cross-correlation between the same analog signals of reference and target neurons
+      - subtract cross-trial and raw cross-correlation vectors
+
+      For each couple (target & reference) it will create an AnalogSignalList containing the calculated cross-correlation vector.
+      
+      Other parameters
+      ---------------- 
+      bins : int 
+                  The number of bins around the 0 point
+      bin_length : float (ms)
+                  The bin length of the cross-correlation
+      """  
+      required_parameters = ParameterSet({
+        'bins' : int,  # the number of bins
+        'bin_length' : float,  # the bin length of the PSTH
+      })
+
+      def perform_analysis(self):
+          for sheet in self.datastore.sheets() :
+              # get a datastore view containing for each sheet
+              dsv = queries.param_filter_query(self.datastore, sheet_name=sheet)
+              # for this sheet, get AnalogSignalList
+              dsv = queries.param_filter_query(dsv, identifier="AnalogSignalList")
+              # tests whether DSV contains only ADS associated with the same stimulus type
+              assert queries.ads_with_equal_stimulus_type(dsv)
+              # tests whether DSV contains only ADS of the same kind and parametrization
+              assert queries.equal_ads_except(dsv,'stimulus_id')
+              # get a list of DSV each holding analog signals that have the same values of stimulus parameters in parameter_list
+              dsvs = queries.partition_by_stimulus_paramter_query( dsv, parameter_list=['trial'] )
+              # get spiketrains by trial
+              dsvs_spiketrains = {} 
+              neurons_ids = []
+              # dsvs_spiketrains will have keys labeled after trial number, containing each the spiketrains from each recorded neuron (source_id)
+              for dsv in dsvs :
+                  # get stimulus id name to label segments corresponding to a trial
+                  for stimid, seg in zip( [MozaikParametrized.idd(s) for s in dsv.get_stimuli()], dsv.get_segments() ) :
+                      #print stimid.trial, seg.name, seg.description
+                      neurons_ids = seg.get_stored_spike_train_ids()
+                      dsvs_spiketrains[stimid.trial] = seg.get_spiketrain( neurons_ids )
+              # RAW CROSS-CORRELATION
+              # raw_xcorr will have keys labeled after trial number, containing all combinations with no repetition (and considering that cross-correlation is simmetric)
+              # each raw_xcorr analogsignal will have an annotation 'xcorr_ids' with the list of target and source of the xcorr
+              raw_xcorr = {}
+              for trial in dsvs_spiketrains.keys() :
+                  xcorr = [] # local storage
+                  for ref in dsvs_spiketrains[trial] :
+                      for trg in dsvs_spiketrains[trial] :
+                          # optimization: cross-correlation is symmetric thus we consider only forward spiketrains
+                          if trg.annotations['source_id']<=ref.annotations['source_id'] :
+                              continue 
+                          xcorr.append(
+                              PerNeuronPairAnalogSignalList(
+                                  [self.cross_correlation( ref, trg, self.parameters.bins, self.parameters.bin_length )],
+                                  [ (ref.annotations['source_id'],trg.annotations['source_id']) ],
+                                  qt.dimensionless,
+                                  sheet_name = sheet,
+                                  tags = self.tags,
+                                  analysis_algorithm = self.__class__.__name__,
+                                  stimulus_id = str(stimid)
+                              )
+                          )
+                  raw_xcorr[trial] = xcorr
+              #print raw_xcorr
+              # SHIFT PREDICTOR CROSS-CORRELATION
+              # for each raw_xcorr analogsignal take the reference and change the target to the same source_id but different trial
+              shift_xcorr = {}
+              # the two dictionaries in the end must be identical by indexes in order to do a one-by-one subtraction
+              for trial in raw_xcorr.keys() :
+                  xcorr = [] # local storage
+                  # loop over raw_xcorr[trial] source_ids and anothertrial same source_ids
+                  anothertrial = (trial+1)%len(raw_xcorr.keys())
+                  #print trial, anothertrial
+                  for rcorr in raw_xcorr[trial] :
+                      # compute the xcorr if the references and targets of spiketrains of different trials corresponds to those of the raw_xcorr 
+                      #print rcorr.ids[0][0], rcorr.ids[0][1]
+                      for ref in dsvs_spiketrains[trial] :
+                          for trg in dsvs_spiketrains[anothertrial] :
+                              if ref.annotations['source_id']==rcorr.ids[0][0] and trg.annotations['source_id']==rcorr.ids[0][1] :
+                                  #print rcorr.get_asl_by_id_pair(rcorr.ids[0])
+                                  xcorr.append( 
+                                      PerNeuronPairAnalogSignalList(
+                                          [ rcorr.get_asl_by_id_pair(rcorr.ids[0]) - self.cross_correlation( ref, trg, self.parameters.bins, self.parameters.bin_length ) ],
+                                          rcorr.ids,
+                                          qt.dimensionless,
+                                          sheet_name = sheet,
+                                          tags = self.tags,
+                                          x_axis_name = 'Time from reference',
+                                          y_axis_name = 'Corrected cross-correlation (bin=' + str(self.parameters.bin_length) + ')',
+                                          analysis_algorithm = self.__class__.__name__,
+                                          stimulus_id = str(stimid)
+                                      )
+                                  )
+                  shift_xcorr[trial] = xcorr
+              # Save 
+              self.datastore.full_datastore.add_analysis_result( 
+                  numpy.sum([ xcorr for xcorr in shift_xcorr[trial] for trial in shift_xcorr.keys() ]).division_by_num(len(shift_xcorr.keys()))
+              )
+                
+      def cross_correlation( self, reference, target, bins, bin_length ):
+          """
+          The function returns the cross-correlation of the spiketrains with bin length bin_length.
+          
+          Parameters
+          ----------
+          reference, target : SpikeTrains
+                     Reference and target spike trains. They are assumed to start and end at the same time.
+
+          bin_length : float (ms) 
+                     Bin length.
+
+          Returns
+          -------
+          xcorr : AnalogSignalList
+                 The cross correlation of each spiketrain with each other (without auto-correlation). 
+          
+          Note
+          ----
+          The spiketrains are assumed to start and stop at the same time!
+          """
+          t_start = round( reference.t_start.rescale(qt.ms), 5 )
+          t_stop = round( reference.t_stop.rescale(qt.ms), 5 )
+          # initialize the correlation matrix
+          c = numpy.zeros(bins*2)
+          for spr in reference:
+              for spt in target:
+                  # take only the bins interval
+                  if abs(spr-spt) > bins*bin_length:
+                      continue
+                  #print "mod:", spr, spt, bins, (spr-spt)/bin_length, int(bins+int((spr-spt)/bin_length))
+                  c[int(bins+int((spr-spt)/bin_length))-1]+=1 
+          return NeoAnalogSignal( c, t_start=-(len(c)/2)*(bin_length*qt.ms), sampling_period=bin_length*qt.ms, units=munits.spike_per_sec )
 
 
 
