@@ -514,28 +514,78 @@ class MeasureOrientationContrastTuning(VisualExperiment):
         pass
 
 
-class MeasureFlashingSquares(VisualExperiment):
+class MeasureFeatureInducedCorrelation(VisualExperiment):
     """
-    ...
+    Measure feature-induced correlation between a couple of neurons (separated by some degrees in visual space) using square grating disk and flashing squares.
+    
+    Parameters
+    ----------
+    model : Model
+            The model on which to execute the experiment.
+                
+    temporal_frequencies : list(float)
+            Temporal frequency of the gratings.
+                      
+    contrasts : list(float)
+            List of contrasts (expressed as % : 0-100%) at which measure the tuning.
+
+    grating_duration : float
+            The duration of single presentation of a grating.
+    
+    spatial_frequencies : list(float) 
+            List of spatial frequencies of the gratings.
+
+    separation : float
+            The separation between the two neurons in degrees of visual space.
+    
+    num_trials : int
+            Number of trials each each stimulus is shown.
     """
 
-    def __init__(self, model, orientation, exp_duration, spatial_frequencies, temporal_frequency, contrast, num_trials):
+    def __init__(self, model, spatial_frequencies, temporal_frequency, separation, contrast, 
+                 exp_duration, num_trials, frame_duration=7):
         VisualExperiment.__init__(self, model)
+         # the orientation is fixed to horizontal
+        orientation = 0 #numpy.pi/2
+        # SQUARED GRATINGS       
         for sf in spatial_frequencies:
             for k in xrange(0, num_trials):
                 self.stimuli.append(
-                    topo.FlashingSquares(
-                        frame_duration=7,
+                    topo.FullfieldDriftingSquareGrating(
+                        frame_duration = frame_duration,
                         size_x=model.visual_field.size_x,
                         size_y=model.visual_field.size_y,
                         location_x=0.0,
                         location_y=0.0,
                         background_luminance=self.background_luminance,
                         contrast = contrast,
+                        duration=exp_duration,
+                        density=self.density,
+                        trial=k,
+                        orientation=orientation,
+                        spatial_frequency=sf,
+                        temporal_frequency=temporal_frequency
+                    )
+                )
+        # FLASHING SQUARES
+        # the spatial_frequencies matters because squares sizes is established using the spatial frequency as for the drifting grating
+        for sf in spatial_frequencies:
+            for k in xrange(0, num_trials):
+                self.stimuli.append(
+                    topo.FlashingSquares(
+                        frame_duration = frame_duration,
+                        size_x=model.visual_field.size_x,
+                        size_y=model.visual_field.size_y,
+                        location_x=0.0,
+                        location_y=0.0,
+                        background_luminance=self.background_luminance,
+                        contrast = contrast,
+                        separation = separation,
+                        separated = True,
                         density = self.density,
                         trial = k,
                         duration=exp_duration,
-                        orientation = orientation,
+                        orientation = orientation*2,
                         spatial_frequency = sf,
                         temporal_frequency = temporal_frequency
                     )

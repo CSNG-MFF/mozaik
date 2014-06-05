@@ -371,17 +371,58 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
                   The number of bins around the 0 point
       bin_length : float (ms)
                   The bin length of the cross-correlation
+      neurons : list
+                  The list of neuron ids for which to compute the crosscorrelation
+      size : float
+                  The size of a square in which the neurons will be searched at the opposite extremes of the sheet
       """  
       required_parameters = ParameterSet({
         'bins' : int,  # the number of bins
         'bin_length' : float,  # the bin length of the PSTH
+        'neurons': list,  # the list of neuron ids for which to compute the cross-correlation
+        'size': float, # The size of a square in which the neurons will be searched
       })
 
       def perform_analysis(self):
           for sheet in self.datastore.sheets() :
               # get a datastore view containing for each sheet
               dsv = queries.param_filter_query(self.datastore, sheet_name=sheet)
-              # for this sheet, get AnalogSignalList
+              # Locate a pair of neurons to be at furthest positions in the sheet:
+              # take neurons ids, get their indexes, get their positions in the sheet, 
+              # get sheet dimensions, search in one extreme area for a neuron, then search the other extreme.
+              # Get sheet params
+              sheet_params = dsv.get_sheet_parameters(sheet_name=sheet)
+              # print "sheet_params",sheet_params
+              # print "sheet_params.density",sheet_params['density']
+              # print "sheet_params.sx",sheet_params['sx']
+              lower_range = [ -(sheet_params['sx']/2), -(sheet_params['sx']/2)+self.parameters.size ]
+              higher_range = [ (sheet_params['sx']/2)-self.parameters.size, (sheet_params['sx']/2) ]
+              print "    lower extreme:",lower_range
+              print "    higher extreme:",higher_range
+              # Get sheet indexes from ids of recorded neurons
+              #print "neuron ids:",self.parameters.neurons
+              rec_idd_idx = zip( self.parameters.neurons, dsv.get_sheet_indexes(sheet_name=sheet,neuron_ids=self.parameters.neurons) )
+              #print "neuron indexes:",rec_idd_idx
+              # get positions in the sheet of the recorded neurons
+              positions = dsv.get_neuron_postions()
+              # initialize pair array to dummy ids, first and last recorded neurons ids
+              pair_ids_idx = [ (self.parameters.neurons[0],positions[sheet][0][0]), (self.parameters.neurons[-1],positions[sheet][0][-1]) ]
+              for idd,idx in rec_idd_idx:
+                  #print "neuron(",idd,idx,") position:", positions[sheet][0][ idx ], positions[sheet][1][ idx ]
+                  # search lowest id
+                  if lower_range[0]<=positions[sheet][0][idx] and positions[sheet][0][idx]<=lower_range[1]:
+                      if positions[sheet][0][idx] < positions[sheet][0][ pair_ids_idx[0][1] ]:
+                          pair_ids_idx[0] = (idd,idx)
+                  # search highest id
+                  if higher_range[0]<=positions[sheet][0][idx] and positions[sheet][0][idx]<=higher_range[1]:
+                      if positions[sheet][0][idx] > positions[sheet][0][ pair_ids_idx[1][1] ]:
+                          pair_ids_idx[1] = (idd,idx)
+                          #print "neuron(",idx,") position:", positions[sheet][0][ idx ], positions[sheet][1][ idx ]
+              # extract only ids
+              pair_ids = [ x[0] for x in pair_ids_idx ]
+              print "    lowest id (",pair_ids[0],") position:", positions[sheet][0][ pair_ids_idx[0][1] ], positions[sheet][1][ pair_ids_idx[0][1] ]
+              print "    highest id (",pair_ids[1],") position:", positions[sheet][0][ pair_ids_idx[1][1] ], positions[sheet][1][ pair_ids_idx[1][1] ]
+              # # for this sheet, get AnalogSignalList
               dsv = queries.param_filter_query(dsv, identifier="AnalogSignalList")
               # tests whether DSV contains only ADS associated with the same stimulus type
               assert queries.ads_with_equal_stimulus_type(dsv)
@@ -391,14 +432,13 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
               dsvs = queries.partition_by_stimulus_paramter_query( dsv, parameter_list=['trial'] )
               # get spiketrains by trial
               dsvs_spiketrains = {} 
-              neurons_ids = []
+              #neurons_ids = []
               # dsvs_spiketrains will have keys labeled after trial number, containing each the spiketrains from each recorded neuron (source_id)
               for dsv in dsvs :
                   # get stimulus id name to label segments corresponding to a trial
                   for stimid, seg in zip( [MozaikParametrized.idd(s) for s in dsv.get_stimuli()], dsv.get_segments() ) :
                       #print stimid.trial, seg.name, seg.description
-                      neurons_ids = seg.get_stored_spike_train_ids()
-                      dsvs_spiketrains[stimid.trial] = seg.get_spiketrain( neurons_ids )
+                      dsvs_spiketrains[stimid.trial] = seg.get_spiketrain( pair_ids ) #pair_ids self.parameters.neurons
               # RAW CROSS-CORRELATION
               # raw_xcorr will have keys labeled after trial number, containing all combinations with no repetition (and considering that cross-correlation is simmetric)
               # each raw_xcorr analogsignal will have an annotation 'xcorr_ids' with the list of target and source of the xcorr
@@ -453,6 +493,7 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
                                       )
                                   )
                   shift_xcorr[trial] = xcorr
+              #print shift_xcorr
               # Save 
               self.datastore.full_datastore.add_analysis_result( 
                   numpy.sum([ xcorr for xcorr in shift_xcorr[trial] for trial in shift_xcorr.keys() ]).division_by_num(len(shift_xcorr.keys()))
