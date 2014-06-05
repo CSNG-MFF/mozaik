@@ -100,6 +100,11 @@ class TrialAveragedFiringRate(Analysis):
             # transform spike trains due to stimuly to mean_rates
             mean_rates = [numpy.array(s.mean_rates()) for s in segs]
             # collapse against all parameters other then trial
+            print len(mean_rates)
+            print len(st)
+            #for s in st:
+            #    print st
+            
             (mean_rates, s) = colapse(mean_rates, st, parameter_list=['trial'])
             # take a sum of each
             mean_rates = [sum(a)/len(a) for a in mean_rates]

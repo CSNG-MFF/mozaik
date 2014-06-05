@@ -53,7 +53,7 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
     
     rows = math.ceil(1.0*len(value_names)/cols)
     
-    pylab.figure(figsize=(12*cols, 6*rows), dpi=2000, facecolor='w', edgecolor='k')
+    pylab.figure(figsize=(12*cols, 6*rows), dpi=1000, facecolor='w', edgecolor='k')
                 
 
     for i,value_name in enumerate(value_names): 
@@ -93,7 +93,11 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
                    pylab.imshow(gr,interpolation='none',vmin=vmin,vmax=vmax,aspect='auto',cmap=cm.gray,origin='lower',extent=[numpy.min(x),numpy.max(x),numpy.min(y),numpy.max(y)])
                else:     
                    pylab.scatter(x,y,marker='o',s=300,c=z,cmap=cm.jet,vmin=vmin,vmax=vmax)
+                   pylab.xlim(min(x)-0.1*(max(x)-min(x)),max(x)+0.1*(max(x)-min(x)))
+                   pylab.ylim(min(y)-0.1*(max(y)-min(y)),max(y)+0.1*(max(y)-min(y)))
                    pylab.colorbar()
+
+                   
                
                pylab.xlabel(parameters[sorted_parameter_indexes[0]]) 
                pylab.ylabel(parameters[sorted_parameter_indexes[1]]) 

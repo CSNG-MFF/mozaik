@@ -32,13 +32,6 @@ def disable_left_axis(ax):
     for tick in ax.yaxis.get_major_ticks():
         tick.tick1On = False
 
-
-def three_tick_axis1(axis):
-    import matplotlib.ticker as mticker
-    axis.set_major_locator(mticker.LinearLocator(3))
-    axis.set_major_formatter(mticker.FormatStrFormatter('%.2g'))
-
-
 def three_tick_axis(axis):
     import matplotlib.ticker as mticker
     axis.set_major_locator(mticker.LinearLocator(3))
@@ -51,6 +44,18 @@ def three_tick_axis(axis):
         
     a = FuncFormatter(millions)
     axis.set_major_formatter(a)
+
+def short_tick_labels_axis(axis):
+    def millions(x, pos):
+        s_g = '%.2g' % (x)
+        s_f = '%.2f' % (x)
+        if len(s_f) < len(s_g):
+            return s_f
+        return s_g
+        
+    a = FuncFormatter(millions)
+    axis.set_major_formatter(a)
+
     
 
 def disable_xticks(ax):
