@@ -360,9 +360,9 @@ class FlatDisk(TopographicaBasedVisualStimulus):
     
     Notes
     -----
-    size_x/2 is interpreted as the bounding box radius.
+    size_x/2 is interpreted as the bounding box.
     """
-    disk_luminance = SNumber(dimensionless,bounds=[0,100.0],doc="Luminance of the stimulus")
+    contrast = SNumber(dimensionless,bounds=[0,100.0],doc="Contrast of the stimulus")
     radius = SNumber(degrees, doc="The radius of the disk - in degrees of visual field")
 
     def frames(self):
@@ -370,8 +370,8 @@ class FlatDisk(TopographicaBasedVisualStimulus):
         while True:  
             d = imagen.Disk(smoothing=0.0,
                             size=self.radius*2,
-                            scale=self.disk_luminance,
                             offset = self.background_luminance,
+                            scale = self.background_luminance*(self.contrast/100.0),
                             bounds=BoundingBox(radius=self.size_x/2),
                             xdensity=self.density,
                             ydensity=self.density)()  

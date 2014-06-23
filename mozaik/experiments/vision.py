@@ -298,7 +298,7 @@ class MeasureSizeTuning(VisualExperiment):
                                     location_x=0.0,
                                     location_y=0.0,
                                     background_luminance=self.background_luminance,
-                                    disk_luminance = c/self.background_luminance,
+                                    contrast = c,
                                     duration=grating_duration,
                                     density=self.density,
                                     trial=k,
