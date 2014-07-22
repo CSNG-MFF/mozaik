@@ -10,7 +10,7 @@ allow None value, are instantiated and allow for definition of units and period.
 
 
 from param.parameterized import Parameterized
-from param import Number, Integer, String
+from param import Number, Integer, String, produce_value
 from sets import Set
 import logging
 import inspect
@@ -432,6 +432,7 @@ def identical_parametrized_object_params(parametrized_objects):
 def matching_parametrized_object_params(parametrized_objects,params=None,except_params=None):
     """
     Checks whether `parametrized_objects` have the same parameter values for parameters in `params` or not in `except_params`.
+    It is assumed all the parameterized_objects have the same parameters.
     
     Parameters
     ----------
@@ -472,13 +473,14 @@ def matching_parametrized_object_params(parametrized_objects,params=None,except_
     else:
         first =  parametrized_objects[0].params()
 
+    assert all([set(first.keys()) == set(p.params().keys()) for p in parametrized_objects])
+
+    if except_params != None:
+       params = list((set(first.keys())-set(except_params)))
+    
     for o in parametrized_objects:
-        if except_params == None:    
-           if set([first[k] for k in params]) != set([o.params()[k] for k in params]):
-                return False
-        else:
-           if set([first[k] for k in (set(first.keys())-set(except_params))]) != set([o.params()[k] for k in (set(o.params().keys())-set(except_params))]):
-                return False
+        if [getattr(parametrized_objects[0],k) for k in params] != [getattr(o,k) for k in params]:
+           return False
                     
     return True
     
