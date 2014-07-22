@@ -3,7 +3,7 @@ docstring goes here
 
 """
 import numpy
-from numpy import exp
+from numpy import exp, sqrt
 
 def meshgrid3D(x, y, z):
     """A slimmed-down version of http://www.scipy.org/scipy/numpy/attachment/ticket/966/meshgrid.py"""
@@ -47,8 +47,10 @@ def stRF_2d(x, y, t, p):
     fcm = F_2d(x, y, p.Ac, p.sigma_c)
     fsm = F_2d(x, y, p.As, p.sigma_s)
 
-    ##rf = (fcm*tmc - fsm*tms)/(fcm - fsm).max()
-    rf = fcm*tmc - fsm*tms
+    # Linear Receptive Field
+    #rf = (fcm*tmc - fsm*tms)/(fcm - fsm).max()
+    rf = (fcm*tmc - fsm*tms)
+
     x_res = x[1,0,0] - x[0,0,0]
     fcm_area = fcm[:,:,0].sum()*x_res*x_res
     center_area = 2*numpy.pi*p.sigma_c*p.sigma_c*p.Ac

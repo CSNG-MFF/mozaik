@@ -162,14 +162,24 @@ class FlashingSquares(TopographicaBasedVisualStimulus):
     """
     orientation = SNumber(rad, period=pi, bounds=[0,pi], doc="Orientation of the square axis")
     spatial_frequency = SNumber(cpd, doc="Spatial frequency created by the squares and the gap between them")
+    separation = SNumber(degrees, doc="The separation between the two squares")
     temporal_frequency = SNumber(Hz, doc="Temporal frequency of the flashing")
     contrast = SNumber(dimensionless,bounds=[0,100.0],doc="Contrast of the stimulus")
+    separated = SNumber(dimensionless, doc = "Boolean string to decide whether the separation is specified or not")
 
     def frames(self):
-        # the size length is given by half the period
+        # the size length of square edge is given by half the period
         size = 1./(2*self.spatial_frequency)
-        time = self.duration/self.frame_duration
+        # if a separation size is provided we use it, otherwise we use the same as size
+        if self.separated:
+            halfseparation = self.separation/2.
+        else:
+            halfseparation = size
+        # if the separation is less than the size of a square, the two squares will overlap and the luminance will be too much
+        if halfseparation < size/2.:
+            halfseparation = size/2.
         # flashing squares with a temporal frequency of 6Hz are happening every 1000/6=167ms
+        time = self.duration/self.frame_duration
         stim_period = time/self.temporal_frequency
         t = 0
         t0 = 0
@@ -178,24 +188,27 @@ class FlashingSquares(TopographicaBasedVisualStimulus):
             # frequency tick
             if (t-t0) >= stim_period:
                 t0 = t
-            # squares presence on screen is half of the period
+            # Squares presence on screen is half of the period.
+            # Since the two patterns will be added together, 
+            # the offset level is half it should be, to sum into the required level, 
+            # and the scale level is twice as much, in order to overcome the presence of the other pattern
             if t <= t0+(stim_period/2):
                 a = imagen.RawRectangle(
-                        x = -size, 
+                        x = -halfseparation, 
                         y = 0,
-                        orientation = 0, #self.orientation,
+                        orientation = self.orientation,
                         bounds = BoundingBox( radius=self.size_x/2 ),
-                        offset = self.background_luminance*(100.0 - self.contrast)/100.0,
+                        offset = 0.5*self.background_luminance*(100.0 - self.contrast)/100.0, 
                         scale = 2*self.background_luminance*self.contrast/100.0,
                         xdensity = self.density,
                         ydensity = self.density,
                         size = size)()
                 b = imagen.RawRectangle(
-                        x = size, 
+                        x = halfseparation, 
                         y = 0,
-                        orientation = 0, #self.orientation,
+                        orientation = self.orientation,
                         bounds = BoundingBox( radius=self.size_x/2 ),
-                        offset = self.background_luminance*(100.0 - self.contrast)/100.0,
+                        offset = 0.5*self.background_luminance*(100.0 - self.contrast)/100.0,
                         scale = 2*self.background_luminance*self.contrast/100.0,
                         xdensity = self.density,
                         ydensity = self.density,
@@ -203,7 +216,7 @@ class FlashingSquares(TopographicaBasedVisualStimulus):
                 yield (numpy.add(a,b),[t])
             else:
                 yield (imagen.Null(
-                        scale=self.background_luminance,
+                        scale=self.background_luminance*(100.0 - self.contrast)/100.0,
                         bounds=BoundingBox(radius=self.size_x/2),
                         xdensity=self.density,
                         ydensity=self.density)(),
@@ -347,9 +360,9 @@ class FlatDisk(TopographicaBasedVisualStimulus):
     
     Notes
     -----
-    size_x/2 is interpreted as the bounding box radius.
+    size_x/2 is interpreted as the bounding box.
     """
-    disk_luminance = SNumber(dimensionless,bounds=[0,100.0],doc="Luminance of the stimulus")
+    contrast = SNumber(dimensionless,bounds=[0,100.0],doc="Contrast of the stimulus")
     radius = SNumber(degrees, doc="The radius of the disk - in degrees of visual field")
 
     def frames(self):
@@ -357,8 +370,8 @@ class FlatDisk(TopographicaBasedVisualStimulus):
         while True:  
             d = imagen.Disk(smoothing=0.0,
                             size=self.radius*2,
-                            scale=self.disk_luminance,
                             offset = self.background_luminance,
+                            scale = self.background_luminance*(self.contrast/100.0),
                             bounds=BoundingBox(radius=self.size_x/2),
                             xdensity=self.density,
                             ydensity=self.density)()  

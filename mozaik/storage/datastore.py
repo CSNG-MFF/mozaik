@@ -133,7 +133,7 @@ class DataStoreView(ParametrizedObject):
         """
         Returns the *ParemterSet* instance corresponding to the given sheet.
         """
-        return self.full_datastore.block.annotations['sheet_parameters'][sheet_name]
+        return eval(self.full_datastore.block.annotations['sheet_parameters'])[sheet_name]
 
 
     def get_model_parameters(self):
