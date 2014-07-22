@@ -53,13 +53,13 @@ class SpatioTemporalReceptiveField(object):
     Coordinates x = 0 and y = 0 are at the centre of the spatial kernel.
     """
     
-    def __init__(self, func, func_params, width, height, duration, contrast_decay=10.0):
+    def __init__(self, func, func_params, width, height, duration, naka_rushton_output_function):
         self.func = func
         self.func_params = func_params
         self.width = float(width)
         self.height = float(height)
         self.duration = float(duration)
-        self.contrast_decay = float(contrast_decay)
+        self.naka_rushton_output_function = naka_rushton_output_function
         self.kernel = None
         self.spatial_resolution = numpy.inf
         self.temporal_resolution = numpy.inf
@@ -235,23 +235,6 @@ class CellWithReceptiveField(object):
         view_array = self.visual_space.view( self.visual_region, pixel_size=self.receptive_field.spatial_resolution )
         # convolution
         product = self.receptive_field.kernel * view_array[:, :, numpy.newaxis]
-        # Saturation
-        # Naka-Rushton
-        # Rmax = 9 * numpy.max(product)
-        # x0 = 4.1 #numpy.sqrt(Rmax)
-        # product = Rmax * (abs(product) / (abs(product)+x0)) * numpy.sign(product)
-        # Bonin-Mante-Carandini
-        # ...
-        # Guarino-Antolik
-        if self.receptive_field.contrast_decay:
-            # saturation is phenomenologically produced by weighting the RF*input by the variance of the input:
-            # The variance (standard deviation) in the view can be seen as a contrast measure: 
-            # multiply larger variance (larger contrast) in the image induces larger engagement of center and surround
-            view_std = numpy.std( view_array[:, :, numpy.newaxis] )
-            # the variance is too strong alone, add exponential decay of its influence 
-            decay = 1 + view_std * numpy.exp( -view_std / self.receptive_field.contrast_decay )
-            #print numpy.min(product), numpy.max(product), view_std, decay
-            product *= decay
 
         time_course = product.sum(axis=0).sum(axis=0)  # sum over the space axes, leaving a time signal.
         for j in range(self.i, self.i+self.update_factor):
@@ -272,7 +255,10 @@ class CellWithReceptiveField(object):
         kernel values are dimensionless) by the 'gain', to produce a current in
         nA. Returns a dictionary containing 'times' and 'amplitudes'.
         """
-
+        # Naka-Rushton
+        if self.receptive_field.naka_rushton_output_function != None:
+            self.response = self.receptive_field.naka_rushton_output_function.Rmax * ( abs(self.response) / (abs(self.response)+self.receptive_field.naka_rushton_output_function.c50) ) * numpy.sign(self.response)
+        # current response
         response = self.gain * self.response[:-self.receptive_field.kernel_duration]  # remove the extra padding at the end
         time_points = self.receptive_field.temporal_resolution * numpy.arange(0, len(response))
         return {'times': time_points, 'amplitudes': response}
@@ -334,7 +320,10 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
             'spatial_resolution': float,
             'temporal_resolution': float,
             'duration': float,
-            'contrast_decay': float,
+            'naka_rushton_output_function' : {
+                    'Rmax': float,
+                    'c50': float,
+                }
             }),
         'cell': ParameterSet({
             'model': str,
@@ -399,11 +388,13 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         rf_ON = SpatioTemporalReceptiveField(rf_function,
                                              P_rf.func_params,
                                              P_rf.width, P_rf.height,
-                                             P_rf.duration)
+                                             P_rf.duration,
+                                             P_rf.naka_rushton_output_function)
         rf_OFF = SpatioTemporalReceptiveField(lambda x, y, t, p: -1.0 * rf_function(x, y, t, p),
                                               P_rf.func_params,
                                               P_rf.width, P_rf.height,
-                                              P_rf.duration)
+                                              P_rf.duration,
+                                              P_rf.naka_rushton_output_function)
         dx = dy = P_rf.spatial_resolution
         dt = P_rf.temporal_resolution
         for rf in rf_ON, rf_OFF:
