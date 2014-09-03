@@ -29,6 +29,7 @@
 
                     },
                 'artificial_stimulators' : {},
+                'recording_interval' : 1.0,
                 'recorders' : url("param/exc_rec"),
     },
 
