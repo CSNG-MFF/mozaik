@@ -53,7 +53,7 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
     
     rows = math.ceil(1.0*len(value_names)/cols)
     
-    pylab.figure(figsize=(12*cols, 6*rows), dpi=1000, facecolor='w', edgecolor='k')
+    pylab.figure(figsize=(12*cols, 6*rows), dpi=300, facecolor='w', edgecolor='k')
                 
 
     for i,value_name in enumerate(value_names): 
