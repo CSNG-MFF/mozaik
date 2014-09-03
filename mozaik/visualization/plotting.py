@@ -1340,3 +1340,43 @@ class ConnectivityPlot(Plotting):
         return plots
         
 
+
+class PerNeuronAnalogSignalScatterPlot(Plotting):
+    """
+    This plot expects exactly two AnalogSignalList ADS in the datastore. It then for each neuron
+    specified in the parameters creates a scatter plot of the values occuring at the same time in the two
+    AnalogSignalList ADSs.
+    
+    It defines line of plots named: 'AnalogSignalScatterPlot.Plot0' ... 'AnalogSignalScatterPlot.PlotN'.
+    
+    Other parameters
+    ----------------
+    
+    neurons : list
+            List of neuron ids for which to plot the tuning curves.
+    """
+    
+    required_parameters = ParameterSet({
+        'neurons': list,
+    })
+    
+    def __init__(self, datastore, parameters, plot_file_name=None, fig_param=None, frame_duration=0):
+        Plotting.__init__(self, datastore, parameters, plot_file_name, fig_param, frame_duration)
+        self.asls = queries.param_filter_query(datastore, name='AnalogSignalList').get_analysis_result()
+        assert len(self.asls)==2 , "PerNeuronAnalogSignalScatterPlot expects exactly two AnalogSignalList ADS in the datastore, found %d" % len(self.asls)
+            
+    def subplot(self, subplotspec):
+        return LinePlot(function=self._ploter,
+                 length=len(self.parameters.neurons)
+                 ).make_line_plot(subplotspec)
+
+    def _ploter(self, idx, gs):
+        a = self.asls[0].get_asl_by_id(self.parameters.neurons[idx])
+        b = self.asls[1].get_asl_by_id(self.parameters.neurons[idx])
+        
+        assert a.t_start == b.t_start
+        assert a.t_stop == b.t_stop
+        assert a.sampling_rate == b.sampling_rate
+        
+        return [('AnalogSignalScatterPlot',ScatterPlot(a.magnitude,b.magnitude),gs,{'x_label': self.asls[0].y_axis_name, 'y_label': self.asls[1].y_axis_name, "title" : "Neuron id: %d" % self.parameters.neurons[idx]})]
+
