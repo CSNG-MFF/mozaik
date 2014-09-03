@@ -47,7 +47,12 @@ def load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir
         except IOError:
             number_of_unloadable_datastores = number_of_unloadable_datastores + 1
             print "Error loading datastore: " + rdn
-        
+        except ValueError:
+            number_of_unloadable_datastores = number_of_unloadable_datastores + 1
+            print "Error loading datastore: " + rdn
+        except EOFError:
+            number_of_unloadable_datastores = number_of_unloadable_datastores + 1
+            print "Error loading datastore: " + rdn            
     return (parameters,datastore,number_of_unloadable_datastores)
 
 def run_analysis_on_parameter_search(simulation_name,master_results_dir,analysis_function):

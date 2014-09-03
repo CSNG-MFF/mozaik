@@ -36,8 +36,8 @@ def three_tick_axis(axis):
     import matplotlib.ticker as mticker
     axis.set_major_locator(mticker.LinearLocator(3))
     def millions(x, pos):
-        s_g = '%.2g' % (x)
-        s_f = '%.2f' % (x)
+        s_g = '%.4g' % (x)
+        s_f = '%.4f' % (x)
         if len(s_f) < len(s_g):
             return s_f
         return s_g
@@ -47,8 +47,8 @@ def three_tick_axis(axis):
 
 def short_tick_labels_axis(axis):
     def millions(x, pos):
-        s_g = '%.2g' % (x)
-        s_f = '%.2f' % (x)
+        s_g = '%.4g' % (x)
+        s_f = '%.4f' % (x)
         if len(s_f) < len(s_g):
             return s_f
         return s_g
