@@ -11,7 +11,7 @@ from neo.core.analogsignalarray import AnalogSignal
 logger = mozaik.getMozaikLogger()
 
 
-def psth(spike_list, bin_length):
+def psth(spike_list, bin_length,normalize=True):
     """
     The function returns the psth of the spiketrains with bin length bin_length.
     
@@ -22,6 +22,9 @@ def psth(spike_list, bin_length):
 
     bin_length : float (ms) 
                Bin length.
+               
+    normalized : bool
+               If true the psth will return the instantenous firing rate, if False it will return spike count per bin. 
 
     Returns
     -------
@@ -39,7 +42,12 @@ def psth(spike_list, bin_length):
 
     for sp in spike_list:
         assert len(numpy.histogram(sp, bins=num_bins, range=r)[0]) == num_bins
-    h = [AnalogSignal(numpy.histogram(sp, bins=num_bins, range=r)[0] / (bin_length/1000),t_start=t_start*qt.ms,sampling_period=bin_length*qt.ms,units=munits.spike_per_sec) for sp in spike_list]
+        
+    normalizer = 1.0
+    if normalize:
+       normalizer = (bin_length/1000)
+       
+    h = [AnalogSignal(numpy.histogram(sp, bins=num_bins, range=r)[0] /normalizer ,t_start=t_start*qt.ms,sampling_period=bin_length*qt.ms,units=munits.spike_per_sec) for sp in spike_list]
     return  h
 
 

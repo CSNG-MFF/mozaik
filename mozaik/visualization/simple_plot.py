@@ -276,10 +276,6 @@ class StandardStyle(SimplePlot):
         if self.title != None:
             pylab.title(self.title, fontsize=self.fontsize)
         
-        if self.x_lim:
-            pylab.xlim(self.x_lim)
-        if self.y_lim:
-            pylab.ylim(self.y_lim)
         
         if self.x_scale:
             pylab.xscale(self.x_scale)
@@ -298,7 +294,13 @@ class StandardStyle(SimplePlot):
             phf.disable_yticks(self.axis)
             phf.remove_y_tick_labels()
 
+        if self.x_lim:
+            pylab.xlim(self.x_lim)
+        if self.y_lim:
+            pylab.ylim(self.y_lim)
+
         self._ticks()
+
 
         if self.y_label and self.y_axis:
             pylab.ylabel(self.y_label,multialignment='center',fontsize=self.fontsize)
@@ -426,7 +428,6 @@ class SpikeRasterPlot(StandardStyle):
                 else:
                     for i, spike_list in enumerate(sp):
                         spike_train = spike_list[n]
-                        print spike_train
                         self.axis.plot(spike_train,
                                        [j * (num_t + 1) + i + 1
                                           for x in xrange(0, len(spike_train))],
@@ -858,7 +859,7 @@ class StandardStyleLinePlot(StandardStyle):
         if self.legend:
             self.axis.legend()
 
-        self.xlim = (tmin, tmax)
+        self.x_lim = (tmin, tmax)
 
 class ConductancesPlot(StandardStyle):
     """
@@ -913,7 +914,7 @@ class ConductancesPlot(StandardStyle):
             self.axis.legend([p1, p2], ['exc', 'inh'])
 
         self.x_lim = (t_start, t_stop)
-        self.x_ticks = [t_start, (t_stop - t_start)/2, t_stop]
+        #self.x_ticks = [t_start, (t_stop - t_start)/2, t_stop]
         self.x_label = 'time(' + self.gsyn_es[0].t_start.dimensionality.latex + ')'
         self.y_label = 'g(' + mozaik.tools.units.nS.dimensionality.latex + ')'
 

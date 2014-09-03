@@ -49,11 +49,12 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
     # that they exist in each DataStore.
     for (param_values,datastore) in datastores:
         for v in value_names:
-            assert len(param_filter_query(datastore,identifier='SingleValue',value_name=v).get_analysis_result()) == 1, "Error, %d ADS with value_name %s found for parameter combination:" % (len(param_filter_query(datastore,identifier='SingleValue').get_analysis_result()), str([str(a) + ':' + str(b) + ', ' for (a,b) in zip(parameters,param_values)]))
+            print param_filter_query(datastore,identifier='SingleValue',value_name=v).print_content(full_ADS=True)
+            assert len(param_filter_query(datastore,identifier='SingleValue',value_name=v).get_analysis_result()) == 1, "Error, %d ADS with value_name %s found for parameter combination: %s" % (len(param_filter_query(datastore,identifier='SingleValue').get_analysis_result()),v, str([str(a) + ':' + str(b) for (a,b) in zip(parameters,param_values)]))
     
     rows = math.ceil(1.0*len(value_names)/cols)
     
-    pylab.figure(figsize=(12*cols, 6*rows), dpi=1000, facecolor='w', edgecolor='k')
+    pylab.figure(figsize=(12*cols, 6*rows), dpi=300, facecolor='w', edgecolor='k')
                 
 
     for i,value_name in enumerate(value_names): 
@@ -90,6 +91,7 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
                    xi = numpy.linspace(numpy.min(x),numpy.max(x),resolution)
                    yi = numpy.linspace(numpy.min(y),numpy.max(y),resolution)
                    gr = griddata((x,y),z,(xi[None, :], yi[:, None]),method='cubic')
+                   print gr
                    pylab.imshow(gr,interpolation='none',vmin=vmin,vmax=vmax,aspect='auto',cmap=cm.gray,origin='lower',extent=[numpy.min(x),numpy.max(x),numpy.min(y),numpy.max(y)])
                else:     
                    pylab.scatter(x,y,marker='o',s=300,c=z,cmap=cm.jet,vmin=vmin,vmax=vmax)

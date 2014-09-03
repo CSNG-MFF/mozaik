@@ -413,20 +413,32 @@ def equal_stimulus(dsv,except_params):
     This functions returns True if DSV contains only recordings associated
     with stimuli of identical parameter values, with the exception of parameters in *except_params*
     """
-    return matching_parametrized_object_params([MozaikParametrized.idd(s) for s in dsv.get_stimuli()],except_params=['name'])
+    return matching_parametrized_object_params([MozaikParametrized.idd(s) for s in dsv.get_stimuli()],except_params=['name']+except_params)
 ########################################################################
 
 
-
 ########################################################################
-def equal_ads_except(dsv,except_params):
+def equal_ads(dsv,params=None,except_params=None):
     """
     This functions returns true if DSV contains only ADS of the same kind
-    and parametrization with the exception of parameters listed in
-    except_params. Otherwise False.
+    and with the same values for parameters supplied in *params* or 
+    with the exception of parameters listed in *except_params*. 
+    Otherwise False.
     """
-    return matching_parametrized_object_params(dsv.analysis_results,except_params=except_params)
+    return matching_parametrized_object_params(dsv.analysis_results,params=params,except_params=except_params)
 ########################################################################
+
+########################################################################
+def ads_with_equal_stimuli(dsv,params=None,except_params=None):
+    """
+    This functions returns true if DSV contains only ADS associated with stimuli 
+    of the same kind and with the same values for parameters supplied in *params* or 
+    with the exception of parameters listed in *except_params*. 
+    Otherwise False.
+    """
+    return matching_parametrized_object_params([MozaikParametrized.idd(ads.stimulus_id) for ads in dsv.analysis_results],params=params,except_params=except_params)
+########################################################################
+
 
 ########################################################################
 def equal_ads_type(dsv):

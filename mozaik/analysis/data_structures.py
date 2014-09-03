@@ -90,6 +90,7 @@ class PerNeuronValue(AnalysisDataStructure):
             List (or single) of AnalogSignal objects corresponding to ids in `idd`.
         """
         if isinstance(idds,list) or isinstance(idds,numpy.ndarray):
+            print idds
             return [self.values[list(self.ids).index(i)] for i in idds]
         else:
             return numpy.array(self.values)[list(self.ids).index(idds)]
@@ -217,7 +218,7 @@ class AnalogSignalList(AnalysisDataStructure1D):
         self.ids = list(ids)
         assert len(asl) == len(ids)
     
-    def get_asl_by_id(self,idd):
+    def get_asl_by_id(self,idds):
         """
         Parameters
         ---------- 
@@ -225,11 +226,13 @@ class AnalogSignalList(AnalysisDataStructure1D):
         
         Returns
         -------
-        ids : AnalogSignal or list(AnalogSignal)
-            List (or single) of AnalogSignal objects corresponding to ids in `idd`.
+        asls : AnalogSignal or list(AnalogSignal)
+            List (or single) of AnalogSignal objects corresponding to ids in `idds`.
         """
-
-        return self.asl[list(self.ids).index(idd)]
+        if isinstance(idds,list) or isinstance(idds,numpy.ndarray):
+            return [self.asl[list(self.ids).index(i)] for i in idds]
+        else:
+            return self.asl[list(self.ids).index(idds)]
     
     def __add__(self, other):
         assert set(self.ids) <= set(other.ids) and set(self.ids) >= set(other.ids)  
