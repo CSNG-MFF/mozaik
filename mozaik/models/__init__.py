@@ -72,7 +72,9 @@ class Model(BaseComponent):
         BaseComponent.__init__(self, self, parameters)
         self.first_time = True
         self.sim = sim
-        self.node = sim.setup(timestep=self.parameters.time_step, min_delay=self.parameters.min_delay, max_delay=self.parameters.max_delay, threads=num_threads)  # should have some parameters here
+        d = self.parameters.as_dict()
+        d['timestep'] = d['time_step']
+        self.node = sim.setup(threads=num_threads, **d)  # should have some parameters here
         self.sheets = {}
         self.connectors = {}
 
