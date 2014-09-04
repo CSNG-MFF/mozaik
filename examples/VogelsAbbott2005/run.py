@@ -11,7 +11,6 @@ mpirun python run.py simulator_name number_processors parameters name_of_test
 For example:
 mpirun python run.py nest 2 param/defaults 'test'
 """
-from pyNN import nest
 import sys
 import mozaik
 from mozaik.controller import run_workflow, setup_logging

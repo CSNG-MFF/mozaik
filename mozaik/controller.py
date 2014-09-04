@@ -106,7 +106,6 @@ def run_workflow(simulation_name, model_class, create_experiments):
     """
     mozaik.setup_mpi()
         # Read parameters
-    exec "import pyNN.nest as sim" in  globals(), locals()
     
     if len(sys.argv) > 4 and len(sys.argv)%2 == 1:
         simulation_run_name = sys.argv[-1]    
@@ -116,7 +115,9 @@ def run_workflow(simulation_name, model_class, create_experiments):
         modified_parameters = { sys.argv[i*2+4] : eval(sys.argv[i*2+5])  for i in xrange(0,(len(sys.argv)-5)/2)}
     else:
         raise ValueError("Usage: runscript simulator_name num_threads parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n simulation_run_name")
-        p
+    
+    exec("import pyNN.%s as sim" % simulator_name) in  globals(), locals()
+    
     parameters = load_parameters(parameters_url,modified_parameters)
     
     # Create results directory
