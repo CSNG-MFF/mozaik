@@ -1,6 +1,6 @@
 {
-    'exc_layer': url("param/exc_layer"),
-    'inh_layer': url("param/inh_layer"),
+    'exc_layer': url("param/exc_layer_hardware"),
+    'inh_layer': url("param/inh_layer_hardware"),
     'results_dir': '',
     'name' : 'Vogels&Abbott',
     'reset' : False,
@@ -10,6 +10,10 @@
     'store_stimuli' : False,
     'min_delay' : 0.2,
     'max_delay' : 0.2,
-    'time_step' : 0.1
-
+    'time_step' : 0.1,
+    'maxNeuronLoss': 1.,
+    'maxSynapseLoss': 0.5,
+    'ignoreHWParameterRanges': True, 
+    'useSystemSim': True, 
+    'hardware': 'small'
 }

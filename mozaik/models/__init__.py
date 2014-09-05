@@ -73,7 +73,9 @@ class Model(BaseComponent):
         self.first_time = True
         self.sim = sim
         d = self.parameters.as_dict()
-        d['timestep'] = d['time_step']
+        d['timestep'] = d.pop('time_step')
+        if 'hardware' in d:
+            d['hardware'] = sim.hardwareSetup[d['hardware']]
         self.node = sim.setup(threads=num_threads, **d)  # should have some parameters here
         self.sheets = {}
         self.connectors = {}

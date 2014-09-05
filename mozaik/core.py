@@ -36,7 +36,7 @@ class ParametrizedObject(object):
         """
         
         def walk(tP, P, section=None):
-            if set(tP.keys()) != set(P.keys()):
+            if not set(tP.keys()).issubset(set(P.keys())):
                 raise KeyError("Invalid parameters for %s.%s Required: %s. Supplied: %s. Difference: %s" % (self.__class__.__name__, section or '', tP.keys(), P.keys(), set(tP.keys()) ^ set(P.keys())))
             for k, v in tP.items():
                 if isinstance(v, ParameterSet):
