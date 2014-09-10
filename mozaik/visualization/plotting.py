@@ -694,10 +694,10 @@ class OverviewPlot(Plotting):
                                  'neurons': [self.parameters.neuron]})
                    ),gs[0 + offset, 0],params),
                 
-                 ("Conductance_plot",GSynPlot(dsv,
-                   ParameterSet({'sheet_name': self.parameters.sheet_name,'spontaneous' : self.parameters.spontaneous,
-                               'neuron': self.parameters.neuron})
-                 ),gs[1 + offset, 0], {'x_label' : None, 'x_tick_style' : 'Custom' , 'x_tick_labels' : None, 'title' : None}),
+                 #("Conductance_plot",GSynPlot(dsv,
+                   #ParameterSet({'sheet_name': self.parameters.sheet_name,'spontaneous' : self.parameters.spontaneous,
+                               #'neuron': self.parameters.neuron})
+                 #),gs[1 + offset, 0], {'x_label' : None, 'x_tick_style' : 'Custom' , 'x_tick_labels' : None, 'title' : None}),
 
                  ("Vm_plot",VmPlot(dsv,
                    ParameterSet({'sheet_name': self.parameters.sheet_name,'spontaneous' : self.parameters.spontaneous,
