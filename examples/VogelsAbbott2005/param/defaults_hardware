@@ -15,6 +15,6 @@
     'maxSynapseLoss': 0.5,
     'ignoreHWParameterRanges': False, 
     'useSystemSim': True, 
-    'hardware': 'small',
+    'hardware': 'medium',
     'loglevel': 0
 }

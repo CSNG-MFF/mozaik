@@ -160,6 +160,7 @@ class NoStimulation(Experiment):
     
     def __init__(self,model,duration):
         Experiment.__init__(self, model)
+        
         self.stimuli.append(
                         InternalStimulus(   
                                             frame_duration=duration, 

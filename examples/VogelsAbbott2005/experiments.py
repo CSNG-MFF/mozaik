@@ -8,7 +8,9 @@ def create_experiments(model):
     
     return  [
                            #Lets kick the network up into activation
-                           #PoissonNetworkKick(model,duration=80*7,drive_period=8*7.0,sheet_list=["Exc_Layer","Inh_Layer"],stimulation_configuration={'component' : 'mozaik.sheets.population_selector.RCRandomPercentage','params' : {'percentage' : 20.0}},lambda_list=[100.0,100.0],weight_list=[0.02, 0.02]),
+                           PoissonNetworkKick(model,duration=80*7,drive_period=8*7.0,sheet_list=["Exc_Layer","Inh_Layer"],stimulation_configuration={'component' : 'mozaik.sheets.population_selector.RCRandomPercentage','params' : {'percentage' : 20.0}},lambda_list=[100.0,100.0],weight_list=[0.02, 0.02]),
                            #Spontaneous Activity 
-                           NoStimulation(model,duration=135.0*2),
+                           #PoissonNetworkKick(model,duration=80*7,drive_period=8*7.0,sheet_list=["Exc_Layer","Inh_Layer"],stimulation_configuration={'component' : 'mozaik.sheets.population_selector.RCRandomPercentage','params' : {'percentage' : 0.0}},lambda_list=[0.0,0.0],weight_list=[0.0, 0.0]),
+                           
+                           #NoStimulation(model,duration=135.0*2),
             ]

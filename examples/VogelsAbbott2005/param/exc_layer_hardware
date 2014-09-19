@@ -10,8 +10,18 @@
                 'magnification_factor': 1.0,
 
                 'cell': {
-                        'model': 'Hardware_IF_cond_exp',
+                        'model': 'IF_cond_exp',
                         'params': {
+                            'v_thresh':-45.0,
+                            'v_rest': -50.0,
+                            'v_reset': -60.0,
+                            'tau_refrac': 5.0,
+                            'tau_m': 20.0,
+                            'cm': 0.2,
+                            'e_rev_E': 0.0,
+                            'e_rev_I': -100.0,
+                            'tau_syn_E': 2.5,
+                            'tau_syn_I': 5.0, 
                         },
                        'initial_values': {
                                                 'v':  -55,#PyNNDistribution(name='uniform',params=(-60,-50)),
@@ -27,7 +37,7 @@
                 'target_synapses' : 'excitatory',             
                 'short_term_plasticity': None, 
                 'connection_probability': 0.02,  # probability of connection between two neurons from the two populations
-                'weights': 0.004,  # microS, the synapse strength
+                'weights': 0.02,  # microS, the synapse strength
                 'delay': 0.2,    # ms delay of the connections    
     },
 
