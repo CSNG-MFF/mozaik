@@ -13,7 +13,8 @@
     'time_step' : 0.1,
     'maxNeuronLoss': 1.,
     'maxSynapseLoss': 0.5,
-    'ignoreHWParameterRanges': True, 
+    'ignoreHWParameterRanges': False, 
     'useSystemSim': True, 
-    'hardware': 'small'
+    'hardware': 'small',
+    'loglevel': 3
 }

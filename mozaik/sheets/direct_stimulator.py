@@ -228,11 +228,28 @@ class Kick(DirectStimulator):
         
         exc_syn = self.sheet.sim.StaticSynapse(weight=self.parameters.exc_weight)
         if (self.parameters.exc_firing_rate != 0 or self.parameters.exc_weight != 0):
-            self.ssae = self.sheet.sim.Population(self.sheet.pop.size,self.sheet.sim.SpikeSourceArray())
             seeds=mozaik.get_seeds((self.sheet.pop.size,))
             self.stgene = [stgen.StGen(rng=numpy.random.RandomState(seed=seeds[i])) for i in self.local_and_to_stimulate_indexes]
+            a = self.prepare_stimulation_before_init()
+            self.ssae = self.sheet.sim.Population(self.sheet.pop.size,self.sheet.sim.SpikeSourceArray(spike_times=a))
             self.sheet.sim.Projection(self.ssae, self.sheet.pop,self.sheet.sim.OneToOneConnector(),synapse_type=exc_syn,receptor_type='excitatory') 
 
+    def prepare_stimulation_before_init(self,duration=80*7,offset=0):
+        p=[Sequence([])]*self.sheet.pop.size
+        if (self.parameters.exc_firing_rate != 0 and self.parameters.exc_weight != 0):
+           for j,i in enumerate(self.local_and_to_stimulate_indexes):
+               if self.parameters.drive_period < duration:
+                   z = numpy.arange(self.parameters.drive_period+0.001,duration-100,10)
+                   times = [0] + z.tolist() 
+                   rate = [self.parameters.exc_firing_rate] + ((1.0-numpy.linspace(0,1.0,len(z)))*self.parameters.exc_firing_rate).tolist()
+               else:
+                   times = [0]  
+                   rate = [self.parameters.exc_firing_rate] 
+               pp = self.stgene[j].inh_poisson_generator(numpy.array(rate),numpy.array(times),t_stop=duration).spike_times
+               a = offset + numpy.array(pp)
+               p[i] = Sequence(a.astype(float))
+        return p
+               
     def prepare_stimulation(self,duration,offset):
         if (self.parameters.exc_firing_rate != 0 and self.parameters.exc_weight != 0):
            for j,i in enumerate(self.local_and_to_stimulate_indexes):

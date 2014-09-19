@@ -5,23 +5,13 @@
                 'name':'Exc_Layer',
                 'sx':1000.0,
                 'sy':1000.0,
-                'density': 3200.0,
+                'density': 320.0,
                 'mpi_safe' : False,    
                 'magnification_factor': 1.0,
 
                 'cell': {
-                        'model': 'IF_cond_exp',
+                        'model': 'Hardware_IF_cond_exp',
                         'params': {
-                            'v_thresh':-50.0,
-                            'v_rest': -60.0,
-                            'v_reset': -60.0,
-                            'tau_refrac': 5.0,
-                            'tau_m': 20.0,
-                            'cm': 0.2,
-            	            'e_rev_E': 0.0,
-                            'e_rev_I': -80.0,
-                    	    'tau_syn_E': 5.0,
-                            'tau_syn_I': 10.0, 
                         },
                        'initial_values': {
                                                 'v':  -55,#PyNNDistribution(name='uniform',params=(-60,-50)),

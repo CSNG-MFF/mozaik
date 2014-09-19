@@ -5,7 +5,7 @@
                 'name':'Inh_Layer',
                 'sx': ref('exc_layer.params.sx'),
                 'sy': ref('exc_layer.params.sy'),
-                'density': 800.0,
+                'density': 80.0,
                 'mpi_safe' : False,
                 'magnification_factor': ref('exc_layer.params.magnification_factor'),
                 'cell': ref('exc_layer.params.cell'),
@@ -18,7 +18,7 @@
                 'target_synapses' : 'inhibitory',             
                 'short_term_plasticity': None, 
                 'connection_probability': 0.02,  # probability of connection between two neurons from the two populations
-                'weights': 0.051,  # microS, the synapse strength
+                'weights': 0.02,  # microS, the synapse strength
                 'delay': 0.2,    # ms delay of the connections    
     },
 
