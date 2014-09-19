@@ -16,5 +16,5 @@
     'ignoreHWParameterRanges': False, 
     'useSystemSim': True, 
     'hardware': 'small',
-    'loglevel': 3
+    'loglevel': 0
 }
