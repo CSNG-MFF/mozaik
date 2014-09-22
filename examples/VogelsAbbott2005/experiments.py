@@ -12,5 +12,5 @@ def create_experiments(model):
                            #Spontaneous Activity 
                            #PoissonNetworkKick(model,duration=80*7,drive_period=8*7.0,sheet_list=["Exc_Layer","Inh_Layer"],stimulation_configuration={'component' : 'mozaik.sheets.population_selector.RCRandomPercentage','params' : {'percentage' : 0.0}},lambda_list=[0.0,0.0],weight_list=[0.0, 0.0]),
                            
-                           #NoStimulation(model,duration=135.0*2),
+                           NoStimulation(model,duration=135.0*2),
             ]
