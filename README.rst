@@ -134,14 +134,14 @@ $ sudo pip install virtualenvwrapper
 To setup `virtualenvwrapper <http://virtualenvwrapper.readthedocs.org/en/latest//>`_ add the following lines at the top of ~/.bashrc ::
 
     # virtualenvwrapper
-    export WORKON_HOME=~/.virt_env
+    export WORKON_HOME=~/virt_env
     source /usr/local/bin/virtualenvwrapper.sh
     export PIP_VIRTUALENV_BASE=$WORKON_HOME
     export PIP_RESPECT_VIRTUALENV=true
 
-For the first time, run bash_profile (the next times it will be loaded by your terminal)::      
+For the first time, run .bashrc (the next times it will be loaded by your terminal)::      
 
-$ source .bash_profile
+$ source .bashrc
 
 To create a new managed virtualenv you just need to::
 
@@ -156,10 +156,6 @@ To produce a requirement file (it will list all the installed package in the vir
 Then you can use it to replicate installation::
 
 (mozaik)$> pip install -r requirements.txt
- 
-To exit the environment::
-
-(mozaik)$> deactivate
 
 
 Dependencies 
@@ -182,12 +178,12 @@ Now we can install *Nest* (always in the virtual environment):
         cd nest-2.2.2
     - then configure, choose if you want mpi. And, if you decide to have nest installed somewhere else from normal places add it with a prefix, then you also need to specify the pynest prefix. So if 'mozaik' is your virtual environment, and if the directory of all the virtual environments is virt_env, then the configure line should look like::
     
-       (mozaik)$ ./configure --with-mpi --prefix=$HOME/opt/nest --with-pynest-prefix=$HOME/virt_env/mozaik
+       (mozaik)$ ./configure --with-mpi --prefix=$HOME/virt_env/mozaik
     - finally, by launching make and install, it installs PyNest in ::
 
         (mozaik)$ make
         (mozaik)$ make install
-    - in the ./~nestrc, uncomment the lines regarding mpirun, and check that the mpirun executables are installed. Then::
+    - in the ~/.nestrc, uncomment the lines regarding mpirun, and check that the mpirun executables are installed. Then::
 
         make installcheck
     - nest will reside in $HOME/virt_env/mozaik/lib/python2.7/site-packages. Check that the package is seen by python using::
@@ -218,7 +214,7 @@ Install Parameters package::
 
 Install NeuroTools::
 
-    svn co https://neuralensemble.org/svn/NeuroTools/trunk NeuroTools
+    git clone https://github.com/NeuralEnsemble/NeuroTools.git NeuroTools
     cd NeuroTools/
     python setup.py install
 

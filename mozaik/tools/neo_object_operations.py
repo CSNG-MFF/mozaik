@@ -36,15 +36,18 @@ def down_sample_analog_signal_average_method(analog_signal,new_sampling_period):
     new_sampling_period : float(ms)
                         The desired new sampling period of the signal
     """ 
-    if abs(analog_signal.t_stop.rescale(qt.ms) -  new_sampling_period) > 0.000000001:
-        assert (analog_signal.t_stop.rescale(qt.ms) % new_sampling_period)  < 0.000000001, "TemporalBinAverage: The analog signal length has to be divisible by bin_length"
-        div = round(analog_signal.t_stop.rescale(qt.ms) / new_sampling_period)
-        return NeoAnalogSignal(numpy.mean(numpy.reshape(analog_signal,(div,)),axis=1).flatten(),
-                       t_start=0*qt.ms,
-                       sampling_period=bin_length*qt.ms,
-                       units=analog_signal.units)
+    length = analog_signal.t_stop.rescale(qt.ms) - analog_signal.t_start.rescale(qt.ms)
+    
+    assert (length.magnitude % new_sampling_period)  < 0.000000001, "TemporalBinAverage: The analog signal length has to be divisible by bin_length. length: %f, bin length: %f " % (length.magnitude,new_sampling_period)
+    div = int(round(length.magnitude / new_sampling_period))
+    print div
+    print analog_signal.magnitude.shape
+    return NeoAnalogSignal(numpy.mean(numpy.reshape(analog_signal.magnitude,(div,-1)),axis=1).flatten(),
+                   t_start=analog_signal.t_start,
+                   sampling_period=new_sampling_period*qt.ms,
+                   units=analog_signal.units)
 
-def down_sample_analog_signal(analog_signal,new_sampling_period):
+def down_sample_analog_signal2(analog_signal,new_sampling_period):
     """
     It down-samples the signal such that it picks each i-th element of the analog signal based on the desired new sampling period.
     
@@ -56,8 +59,8 @@ def down_sample_analog_signal(analog_signal,new_sampling_period):
     new_sampling_period : float(ms)
                         The desired new sampling period of the signal
     """ 
-    if abs(analog_signal.t_stop.rescale(qt.ms) -  new_sampling_period) > 0.000000001:
-       div = round(new_sampling_period / analog_signal.sampling_period.rescale(qt.ms))
+    if abs(analog_signal.t_stop.rescale(qt.ms).magnitude -  new_sampling_period) > 0.000000001:
+       div = round(new_sampling_period / analog_signal.sampling_period.rescale(qt.ms).magnitude)
        return NeoAnalogSignal(analog_signal[::div],
                        t_start=0*qt.ms,
                        sampling_period=new_sampling_period*qt.ms,

@@ -880,20 +880,22 @@ class TemporalBinAverage(Analysis):
                 # First let's do recordings
                 for seg,st in zip(dsv.get_segments(),dsv.get_stimuli()):
                     if self.parameters.vm:
+                        print "A"
                         vm = [down_sample_analog_signal_average_method(seg.get_vm(i))  for i in seg.get_stored_vm_ids()]
                         self.datastore.full_datastore.add_analysis_result(AnalogSignalList(vm,seg.get_stored_vm_ids(),vm[0].units,y_axis_name = 'bin averaged vm',x_axis_name="time",sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                     if self.parameters.cond_exc:                        
+                        print "B"
                         e_syn = [down_sample_analog_signal_average_method(seg.get_esyn(i))  for i in seg.get_stored_esyn_ids()]
                         self.datastore.full_datastore.add_analysis_result(AnalogSignalList(e_syn,seg.get_stored_esyn_ids(),e_syn[0].units,y_axis_name = 'bin averaged exc. cond.',x_axis_name="time",sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                     if self.parameters.cond_inh:                                    
+                        print "C"
                         i_syn = [down_sample_analog_signal_average_method(seg.get_isyn(i))  for i in seg.get_stored_isyn_ids()]
                         self.datastore.full_datastore.add_analysis_result(AnalogSignalList(i_syn,seg.get_stored_isyn_ids(),i_syn[0].units,y_axis_name = 'bin averaged inh. cond.',x_axis_name="time",sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                 
                 # Next let's do AnalogSingalLists
                 dsv = queries.param_filter_query(self.datastore, sheet_name=sheet,identifier='AnalogSignalList')
                 for asl in dsv.get_analysis_result():
-                    assert isinstance(asl,AnalogSignalList)
-                    self.datastore.full_datastore.add_analysis_result(AnalogSignalList([down_sample_analog_signal_average_method(analog_signal,self.parameters.bin_length) for analog_signal in asl.asl],asl.ids,asl.units,y_axis_name = 'bin averaged ' + asl.y_axis_name,x_axis_name="time",sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=asl.stimulus_id))
+                    self.datastore.full_datastore.add_analysis_result(AnalogSignalList([down_sample_analog_signal_average_method(analog_signal,self.parameters.bin_length) for analog_signal in asl.asl],asl.ids,asl.y_axis_units,y_axis_name = 'bin averaged ' + asl.y_axis_name,x_axis_name="time",sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=asl.stimulus_id))
 
 
 
@@ -1085,6 +1087,7 @@ class Analog_MeanSTDAndFanoFactor(Analysis):
 class TrialAveragedVarianceAndVarianceRatioOfConductances(Analysis):
       """
       Calculates the variance of the excitatory and inhibitory conductances and their ratios, and averages across trials, for all neurons and for all recordings in the datastore.
+      Also the ratio of the means is calculated.
       
       Notes
       -----
@@ -1103,11 +1106,15 @@ class TrialAveragedVarianceAndVarianceRatioOfConductances(Analysis):
                     # mean
                     esyn_var = numpy.mean(numpy.array([numpy.array([numpy.var(seg.get_esyn(idd)) for idd in esyn_ids]) for seg in segs]),axis=0)
                     isyn_var = numpy.mean(numpy.array([numpy.array([numpy.var(seg.get_isyn(idd)) for idd in isyn_ids]) for seg in segs]),axis=0)
+                    esyn_mean = numpy.mean(numpy.array([numpy.array([numpy.mean(seg.get_esyn(idd)) for idd in esyn_ids]) for seg in segs]),axis=0)
+                    isyn_mean = numpy.mean(numpy.array([numpy.array([numpy.mean(seg.get_isyn(idd)) for idd in isyn_ids]) for seg in segs]),axis=0)
                     variance_ratio = esyn_var / isyn_var
+                    mean_ratio = esyn_mean / isyn_mean
                     # save in datastore
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(esyn_var,esyn_ids,segs[0].get_esyn(esyn_ids[0]).units,value_name = 'Var(ECond)',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(isyn_var,isyn_ids,segs[0].get_isyn(isyn_ids[0]).units,value_name = 'Var(ICond)',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(variance_ratio,isyn_ids,segs[0].get_isyn(isyn_ids[0]).units,value_name = 'Var(ECond)/Var(ICond)',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+                    self.datastore.full_datastore.add_analysis_result(PerNeuronValue(mean_ratio,isyn_ids,segs[0].get_isyn(isyn_ids[0]).units,value_name = 'Mean(ECond)/Mean(ICond)',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                     
 
 class CrossCorrelationOfExcitatoryAndInhibitoryConductances(Analysis):
