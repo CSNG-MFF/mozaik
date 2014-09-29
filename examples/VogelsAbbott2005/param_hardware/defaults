@@ -1,6 +1,6 @@
 {
-    'exc_layer': url("param/exc_layer_hardware"),
-    'inh_layer': url("param/inh_layer_hardware"),
+    'exc_layer': url("param_hardware/exc_layer"),
+    'inh_layer': url("param_hardware/inh_layer"),
     'results_dir': '',
     'name' : 'Vogels&Abbott',
     'reset' : False,

@@ -11,7 +11,7 @@
                 'cell': ref('exc_layer.params.cell'),
                 'artificial_stimulators' : ref('exc_layer.params.artificial_stimulators'),
                 'recording_interval' : ref('exc_layer.params.recording_interval'),
-                'recorders' : url("param/inh_rec_hardware"),    
+                'recorders' : url("param_hardware/inh_rec"),    
     },
     
     'InhExcConnection': {
