@@ -26,7 +26,7 @@ mpi_comm = MPI.COMM_WORLD
 
 logger = mozaik.getMozaikLogger()
 
-if False:
+if True:
     logger = mozaik.getMozaikLogger()
     data_store,model = run_workflow('VogelsAbbott2005',VogelsAbbott,create_experiments)
 else: 

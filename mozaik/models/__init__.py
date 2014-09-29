@@ -118,7 +118,7 @@ class Model(BaseComponent):
         for sheet in self.sheets.values():
             if self.first_time:
                sheet.record()
-        null_segments,sim_run_time = self.reset()
+        null_segments,sim_run_time = self.reset(stimulus)
         for sheet in self.sheets.values():
             sheet.prepare_artificial_stimulation(stimulus.duration,self.simulator_time,artificial_stimulators.get(sheet.name,[]))
         if self.input_space:
@@ -127,7 +127,7 @@ class Model(BaseComponent):
                 self.input_space.add_object(str(stimulus), stimulus)
                 sensory_input = self.input_layer.process_input(self.input_space, stimulus, stimulus.duration, self.simulator_time)
             else:
-                self.input_layer.provide_null_input(self.input_space,stimulus.duration,self.simulator_time)
+                self.input_layer.provide_null_input(self.input_space,stimulus.duration,self.simulator_time,stimulus)
                 sensory_input = None                                                    
         else:
             sensory_input = None
@@ -175,7 +175,7 @@ class Model(BaseComponent):
         self.simulator_time += tstop
         return time.time()-t0
 
-    def reset(self):
+    def reset(self,stimulus):
         """
         Rests the network. Depending on the self.parameters.reset this is done either 
         by using the pyNN `reset` function or by presenting a blank stimulus for self.parameters.null_stimulus_period
@@ -195,7 +195,8 @@ class Model(BaseComponent):
                 if self.input_space:
                     self.input_layer.provide_null_input(self.input_space,
                                                         self.parameters.null_stimulus_period,
-                                                        self.simulator_time)
+                                                        self.simulator_time,
+                                                        stimulus)
                                                         
                 logger.info("Simulating the network for %s ms with blank stimulus" % self.parameters.null_stimulus_period)
                 self.sim.run(self.parameters.null_stimulus_period)

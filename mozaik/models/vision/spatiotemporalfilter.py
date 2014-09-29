@@ -13,6 +13,9 @@ from mozaik.core import SensoryInputComponent
 from mozaik.sheets.vision import RetinalUniformSheet
 from mozaik.tools.mozaik_parametrized import MozaikParametrized
 from parameters import ParameterSet
+from mozaik.storage.queries import param_filter_query
+from mozaik.storage.datastore import PickledDataStore
+from pyNN.parameters import Sequence
 
 logger = mozaik.getMozaikLogger()
 
@@ -459,8 +462,9 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
 
             self.cached_stimuli[str(stimulus_id)] = counter
 
-            logger.debug("Stored spikes to cache...")
-
+            #logger.debug("Stored spikes to cache...")
+            logger.debug("Stored input currents to cache...")
+            
             f1 = open(self.parameters.cache_path + '/' + 'stimuli.st', 'w')
             f = open(self.parameters.cache_path + '/' + str(counter) + '.st', 'wb')
             pickle.dump(self.cached_stimuli, f1)
@@ -641,3 +645,143 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
             input_currents[rf_type] = [cell.response_current()
                                        for cell in input_cells[rf_type]]
         return (input_currents, retinal_input)
+
+
+########################################
+# reading from file
+########################################
+
+
+class SpikeSourceLGN(SensoryInputComponent):
+    """
+    
+    """
+
+    required_parameters = ParameterSet({
+        'density': int,  # neurons per degree squared
+        'size': tuple,  # degrees of visual field
+        'recorders' : ParameterSet,
+        'recording_interval' : float,
+        'datastore_path': str      
+      })
+
+    def __init__(self, model, parameters):
+        SensoryInputComponent.__init__(self, model, parameters)
+        self.shape = (self.parameters.density,self.parameters.density)
+        self.sheets = {}
+        self._built = False
+        self.rf_types = ('X_ON', 'X_OFF')
+        sim = self.model.sim
+        self.pops = {}
+        self.scs = {}
+        self.ncs = {}
+        self.ncs_rng = {}
+        for rf_type in self.rf_types:
+            p = RetinalUniformSheet(model,
+                                    ParameterSet({'sx': self.parameters.size[0],
+                                                  'sy': self.parameters.size[1],
+                                                  'density': self.parameters.density,
+                                                  'cell': { 'model': 'SpikeSourceArray',
+                                                            'params': {},
+                                                            'initial_values': {}
+                                                            },
+                                                  'name': rf_type,
+                                                  'artificial_stimulators' : {},
+                                                  'recorders' : self.parameters.recorders,
+                                                  'recording_interval'  :  self.parameters.recording_interval,
+                                                  'mpi_safe': False}))
+            self.sheets[rf_type] = p
+            self.data_store = PickledDataStore(
+            load=True,
+            parameters=ParameterSet({
+                'root_directory':self.parameters.datastore_path, 
+                'store_stimuli' : False}),
+            replace=False)
+
+    def process_input(self, visual_space, stimulus, duration=None, offset=0):
+        """
+        Present a visual stimulus to the model, and create the LGN output
+        (relay) neurons.
+        
+        Parameters
+        ----------
+        visual_space : VisualSpace
+                     The visual space to which the stimuli are presented.
+                     
+        stimulus : VisualStimulus    
+                 The visual stimulus to be shown.
+        
+        duration : int (ms)
+                 The time for which we will simulate the stimulus
+        
+        offset : int(ms)
+               The time (in absolute time of the whole simulation) at which the stimulus starts.
+        
+        Returns
+        -------
+        retinal_input : list(ndarray)
+                      List of 2D arrays containing the frames of luminances that were presented to the retina.
+        """
+        logger.debug("Presenting visual stimulus from visual space %s" % visual_space)
+        
+        for rf_type in self.rf_types:
+            read_neuron_ids = sorted(
+                param_filter_query(
+                    self.data_store,
+                    sheet_name=rf_type).get_segments()[0].get_stored_spike_train_ids())
+           
+            dsv1 = param_filter_query(self.data_store, sheet_name=rf_type)
+            index = dsv1.get_stimuli().index(str(stimulus))
+            p = self.sheets[rf_type].pop #pass by reference
+            for id_new, index_read in zip(p, read_neuron_ids):
+                read_spike_times = dsv1.get_segments()[index].get_spiketrain(index_read)
+                id_new.set_parameters(spike_times=Sequence(read_spike_times.magnitude + offset))
+           
+        #restrict datastore to stimulus and sheets
+        #retrieve the spikes from the only remaining segments from the datastore
+        #use set_parameters to inject the read spikes into the neurons 
+        #self.sheets[rf_type].pop[index].set_parameters(spike_times=read_spike_times)
+
+    def provide_null_input(self, visual_space, duration=None, offset=0, stimulus=None):
+        """
+        This function exists for optimization purposes. It is the analog to 
+        :func:.`mozaik.retinal.SpatioTemporalFilterRetinaLGN.process_input` for the 
+        special case when blank stimulus is shown.
+        
+        Parameters
+        ----------
+        visual_space : VisualSpace
+                     The visual space to which the blank stimulus are presented.
+                     
+        duration : int (ms)
+                 The time for which we will simulate the blank stimulus
+        
+        offset : int(ms)
+               The time (in absolute time of the whole simulation) at which the stimulus starts.
+        
+        Returns
+        -------
+        retinal_input : list(ndarray)
+                      List of 2D arrays containing the frames of luminances that were presented to the retina.
+
+        """
+        
+        #dsv.get_segments(null=True) -> to get the period without stimulus before the actual stimulus
+
+        for rf_type in self.rf_types:
+            read_neuron_ids = sorted(
+                param_filter_query(
+                    self.data_store,
+                    sheet_name=rf_type).get_segments(null=True)[0].get_stored_spike_train_ids())
+           
+            dsv1 = param_filter_query(self.data_store, sheet_name=rf_type)
+            index = dsv1.get_stimuli().index(str(stimulus))
+            p = self.sheets[rf_type].pop #pass by reference
+            for id_new, index_read in zip(p, read_neuron_ids):
+                read_spike_times = dsv1.get_segments(null=True)[index].get_spiketrain(index_read)
+                id_new.set_parameters(spike_times=Sequence(read_spike_times.magnitude + offset))
+    
+
+
+
+

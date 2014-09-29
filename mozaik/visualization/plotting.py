@@ -168,7 +168,7 @@ class Plotting(ParametrizedObject):
         if self.plot_file_name:
             #if there were animations, save them
             if self.animation_update_functions != []:
-                self.animation.save(Global.root_directory+self.plot_file_name+'.gif', writer='imagemagick', fps=10) 
+                self.animation.save(Global.root_directory+self.plot_file_name+'.mp4', fps=10) 
             else:
                 # save the analysis plot
                 pylab.savefig(Global.root_directory+self.plot_file_name)              
