@@ -551,7 +551,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         self.write_cache(st, input_currents, retinal_input)
         return retinal_input
 
-    def provide_null_input(self, visual_space, duration=None, offset=0):
+    def provide_null_input(self, visual_space, duration=None, offset=0, stimulus=None):
         """
         This function exists for optimization purposes. It is the analog to 
         :func:.`mozaik.retinal.SpatioTemporalFilterRetinaLGN.process_input` for the 
