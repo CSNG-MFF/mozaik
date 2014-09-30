@@ -97,7 +97,7 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
                    pylab.scatter(x,y,marker='o',s=300,c=z,cmap=cm.jet,vmin=vmin,vmax=vmax)
                    pylab.xlim(min(x)-0.1*(max(x)-min(x)),max(x)+0.1*(max(x)-min(x)))
                    pylab.ylim(min(y)-0.1*(max(y)-min(y)),max(y)+0.1*(max(y)-min(y)))
-                   pylab.colorbar()
+                   #pylab.colorbar()
 
                    
                

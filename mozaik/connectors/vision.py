@@ -39,9 +39,12 @@ class MapDependentModularConnectorFunction(ModularConnectorFunction):
                                        mmap.flatten())    
         self.val_source=self.mmap(numpy.transpose(numpy.array([self.source.pop.positions[0],self.source.pop.positions[1]])))
         
-    def evaluate(self,index):
+        for (index, neuron2) in enumerate(target.pop.all()):
             val_target=self.mmap(self.target.pop.positions[0][index],self.target.pop.positions[1][index])
             self.target.add_neuron_annotation(index, 'LGNAfferentOrientation', val_target*numpy.pi, protected=False) 
+            
+    def evaluate(self,index):
+            val_target = self.target.get_neuron_annotation(index,'LGNAfferentOrientation')
             if self.parameters.periodic:
                 distance = circular_dist(self.val_source,val_target,1.0)
             else:

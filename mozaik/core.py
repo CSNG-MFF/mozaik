@@ -4,10 +4,12 @@ Definition of the component interfaces. These interfaces are not currently direc
 """
 
 from mozaik import __version__
-from parameters import ParameterSet
+from parameters import ParameterSet, ParameterDist
+from parameters.random import ParameterSet, UniformDist
 import mozaik
 from mozaik.tools.distribution_parametrization import PyNNDistribution
 from string import Template
+
 
 logger = mozaik.getMozaikLogger()
 
@@ -45,8 +47,15 @@ class ParametrizedObject(object):
                         walk(v, P[k], section=k)
                 elif isinstance(v, PyNNDistribution):
                      # We will allow for parameters requiring PyNN Distirbution to also fall back to single value - this is compatible with PyNN
-                     if isinstance(P[k],int) or isinstance(P[k],float):
+                     if not (isinstance(P[k],int) or isinstance(P[k],float)):
                         assert isinstance(P[k], PyNNDistribution), "Type mismatch for parameter %s: %s != %s " % (k, PyNNDistribution, P[k])
+                elif isinstance(v, ParameterDist):
+                     # We will allow for parameters requiring ParameterDist to also give a scalar value, in which case we will change it to UniformDist
+                     # with minimum and maximum equal to the scalar value.
+                     if not (isinstance(P[k],int) or isinstance(P[k],float)):
+                        assert isinstance(P[k], ParameterDist), "Type mismatch for parameter %s: %s != %s " % (k, ParameterDist, P[k])
+                     else:
+                        P[k] = UniformDist(min=P[k], max=P[k])
                 else:
                     assert isinstance(P[k], v) or (v == ParameterSet and P[k] == None) or (v == float and isinstance(P[k],int)) or (v == int and isinstance(P[k],float)), "Type mismatch for parameter %s: %s != %s " % (k, v, P[k])
         try:
