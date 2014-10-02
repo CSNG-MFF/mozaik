@@ -25,8 +25,7 @@ class Connector(BaseComponent):
             'short_term_plasticity': ParameterSet({
                     'U': float, 
                     'tau_rec': float, 
-                    'tau_fac': float,
-                    'tau_psc': float
+                    'tau_facil': float
             }),
     })
     
@@ -55,9 +54,9 @@ class Connector(BaseComponent):
         sm = self.sim.StaticSynapse(weight=weight,delay=delay)                   
       else:
         if weight != None:
-            sm = self.sim.native_synapse_type("tsodyks_synapse")(weight=weight,delay=delay,**self.parameters.short_term_plasticity)                   
+            sm = self.sim.TsodyksMarkramSynapse(weight=weight,delay=delay,**self.parameters.short_term_plasticity)                   
         else:
-            sm = self.sim.native_synapse_type("tsodyks_synapse")(**self.parameters.short_term_plasticity)                   
+            sm = self.sim.TsodyksMarkramSynapse(**self.parameters.short_term_plasticity)                   
       return sm
         
     def connect(self):

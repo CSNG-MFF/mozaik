@@ -93,7 +93,7 @@ class Model(BaseComponent):
         """
         This method is the core of the model execution control. It ensures that a `stimulus` is presented
         to the model, the simulation is ran for the duration of the stimulus, and all the data recorded during 
-        this period are retieved from the simulator. It also makes sure a blank stimulus preceds each stimulus presntation.
+        this period are retieved from the simulator. It also makes sure a blank stimulus preceeds each stimulus presntation.
         
         Parameters
         ----------
