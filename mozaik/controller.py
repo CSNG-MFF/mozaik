@@ -116,7 +116,7 @@ def run_workflow(simulation_name, model_class, create_experiments):
         modified_parameters = { sys.argv[i*2+4] : eval(sys.argv[i*2+5])  for i in xrange(0,(len(sys.argv)-5)/2)}
     else:
         raise ValueError("Usage: runscript simulator_name num_threads parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n simulation_run_name")
-        p
+        
     parameters = load_parameters(parameters_url,modified_parameters)
     
     # Create results directory

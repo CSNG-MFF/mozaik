@@ -6,7 +6,7 @@ Definition of the component interfaces. These interfaces are not currently direc
 from mozaik import __version__
 from parameters import ParameterSet, ParameterDist
 import parameters.random
-from parameters.random import  UniformDist
+from parameters.random import UniformDist
 import mozaik
 from mozaik.tools.distribution_parametrization import PyNNDistribution
 from string import Template

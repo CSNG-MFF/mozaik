@@ -36,6 +36,18 @@ class PyNNDistribution(RandomDistribution):
           assert isinstance(params,tuple) , "The boundries parameter of PyNNDistribution has to be tuple"
           RandomDistribution.__init__(self,parameters=params,boundaries=boundaries,constrain=constrain)  
 
+class LogNormalDistribution(ParameterDist):
+    """
+    We will add another kind of distirbution to the param package.
+    """
+
+    def __init__(self, mean=0.0, std=1.0):
+        ParameterDist.__init__(self, mean=mean, std=std)
+        self.dist_name = 'LogNormalDist'
+
+    def next(self, n=1):
+        return numpy.random.lognormal(mean=self.params['mean'], sigma=self.params['std'], size=n)
+    
           
 class MozaikExtendedParameterSet(ParameterSet):
     """
@@ -51,7 +63,8 @@ class MozaikExtendedParameterSet(ParameterSet):
                                 UniformDist=UniformDist,
                                 NormalDist=NormalDist,
                                 PyNNDistribution = PyNNDistribution,
-                                pi=numpy.pi))
+                                pi=numpy.pi,
+                                LogNormalDistribution=LogNormalDistribution))
         if update_namespace:
             global_dict.update(update_namespace)
         
