@@ -32,9 +32,12 @@ def disable_left_axis(ax):
     for tick in ax.yaxis.get_major_ticks():
         tick.tick1On = False
 
-def three_tick_axis(axis):
+def three_tick_axis(axis,log=False):
     import matplotlib.ticker as mticker
-    axis.set_major_locator(mticker.LinearLocator(3))
+    if log:
+        axis.set_major_locator(mticker.LogLocator(numticks=3))
+    else:
+        axis.set_major_locator(mticker.LinearLocator(3))
     def millions(x, pos):
         s_g = '%.4g' % (x)
         s_f = '%.4f' % (x)

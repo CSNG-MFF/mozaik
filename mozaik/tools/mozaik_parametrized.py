@@ -474,8 +474,6 @@ def matching_parametrized_object_params(parametrized_objects,params=None,except_
         first =  parametrized_objects[0].params()
 
     if not all([set(first.keys()) == set(p.params().keys()) for p in parametrized_objects]):
-       for p in parametrized_objects:
-           print p.params().keys()
        raise ValueError('all ADS in the data store do not have the same parameters')
 
     if except_params != None:

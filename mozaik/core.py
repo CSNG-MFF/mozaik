@@ -6,7 +6,7 @@ Definition of the component interfaces. These interfaces are not currently direc
 from mozaik import __version__
 from parameters import ParameterSet, ParameterDist
 import parameters.random
-from parameters.random import  UniformDist
+from parameters.random import UniformDist
 import mozaik
 from mozaik.tools.distribution_parametrization import PyNNDistribution
 from string import Template
@@ -42,7 +42,6 @@ class ParametrizedObject(object):
             if set(tP.keys()) != set(P.keys()):
                 raise KeyError("Invalid parameters for %s.%s Required: %s. Supplied: %s. Difference: %s" % (self.__class__.__name__, section or '', tP.keys(), P.keys(), set(tP.keys()) ^ set(P.keys())))
             for k, v in tP.items():
-                print k,v,P[k]
                 if isinstance(v,ParameterSet):
                     if P[k] != None:
                         assert isinstance(P[k], ParameterSet), "Type mismatch for parameter %s: %s !=  ParameterSet, for %s " % (k, type(P[k]), P[k])
@@ -52,14 +51,11 @@ class ParametrizedObject(object):
                      if not (isinstance(P[k],int) or isinstance(P[k],float)):
                         assert isinstance(P[k], PyNNDistribution), "Type mismatch for parameter %s: %s != %s " % (k, PyNNDistribution, P[k])
                 elif v == ParameterDist:
-                     print "A"
                      # We will allow for parameters requiring ParameterDist to also give a scalar value, in which case we will change it to UniformDist
                      # with minimum and maximum equal to the scalar value.
                      if not (isinstance(P[k],int) or isinstance(P[k],float)):
-                        print "Z"
                         assert isinstance(P[k], ParameterDist), "Type mismatch for parameter %s: %s != %s " % (k, ParameterDist, P[k])
                      else:
-                        print "Z1" 
                         P[k] = UniformDist(min=P[k], max=P[k])
                 else:
                     assert isinstance(P[k], v) or (v == ParameterSet and P[k] == None) or (v == float and isinstance(P[k],int)) or (v == int and isinstance(P[k],float)), "Type mismatch for parameter %s: %s != %s " % (k, v, P[k])

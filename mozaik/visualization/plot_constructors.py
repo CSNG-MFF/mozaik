@@ -5,9 +5,9 @@ A typical example is a class that helps with creating a line of plots with a com
 
 import param
 from param.parameterized import Parameterized
-from mozaik.storage.queries import partition_by_stimulus_paramter_query, partition_analysis_results_by_stimulus_parameters_query
+from mozaik.storage.queries import partition_by_stimulus_paramter_query, partition_analysis_results_by_stimulus_parameters_query,param_filter_query
 import matplotlib.gridspec as gridspec
-from mozaik.tools.mozaik_parametrized import MozaikParametrized, varying_parameters
+from mozaik.tools.mozaik_parametrized import MozaikParametrized, varying_parameters, parameter_value_list
 import mozaik
 import numpy
 
@@ -54,9 +54,6 @@ class LinePlot(Parameterized):
 
             Parameters
             ----------
-            funtion : func
-                    Is the function that plots the individual plots. Function has to accept idx
-
             subplotspec : subplotspec
                         Is the subplotspec into which the whole lineplot is to be plotted.
             """
@@ -237,11 +234,98 @@ class PerStimulusADSPlot(PerStimulusPlot):
 
 
 
-class GridPlot(Parameterized):
+class ADSGridPlot(Parameterized):
     """
     Set of plots that are placed on a grid, that vary in two parameters and can have shared x or y axis (only at the level of labels for now).
+    
+
+    Plot multiple plots with common x and y axis in a grid. 
+    
+    The user has to specify a plotting function (the function parameter) which has to return a list of tuples, each containing:
+        * a name of a plot
+        * a Plotting or SimplePlot instance
+        * the simple_plot parameters that should be passed on
+    
+    The ADSGridPlot, automaticall filters the datastore such that the function always receives a DSV where the two parameters are already fixed to the right values.
+    
+    Assuming each *function* returns a list of plots with names PlotA,...PlotX
+    The LinePlot will create a list of plots named:
+                PlotA.plot[0,0] ... PlotA.plot[n,m]
+                PlotX.plot[0,0] ... PlotX.plot[n,m]
+    where n,m is defined by the number of values the x and y _xis_parameter has in the datastore.
+    User can this way target the plots with parameters as desribed in the Plotting class.
     """
+    
+
     x_axis_parameter = param.String(default=None,instantiate=True,doc="The parameter whose values should be iterated along x-axis")
     y_axis_parameter = param.String(default=None,instantiate=True,doc="The parameter whose values should be iterated along y-axis")
     
+    function = param.Callable(doc="The function that should be called to plot individual plots. It should accept three parameters: self, DSV, gridspec object into which to plot the plot, the simple_plot parameters")
+
+    shared_axis = param.Boolean(default=True, instantiate=True,
+                                    doc="should the x axis or y axis (depending on the horizontal flag) considered shared")
+
+    shared_lim = param.Boolean(default=False, instantiate=True,
+                                   doc="should the limits of the x axis or y axis (depending on the horizontal flag) be considered shared")
+
+    extra_space_top = param.Number(default=0.0, instantiate=True,
+                                       doc="Space to be reserved on top of the subplot, defined as fraction of the subplot.")
+    extra_space_right = param.Number(default=0.0, instantiate=True,
+                                         doc="Space to be reserved on the right side of the subplot, defined as fraction of the subplot.")
+
+    def  __init__(self, datastore, **params):
+        Parameterized.__init__(self, **params)
+        self.datastore = datastore
+
+        ### lets first find the values of the two parameters in the datastore
+        self.x_axis_values = list(parameter_value_list(datastore.get_analysis_result(),self.x_axis_parameter))
+        self.y_axis_values = list(parameter_value_list(param_filter_query(datastore,**{self.x_axis_parameter:self.x_axis_values[0]}).get_analysis_result(),self.y_axis_parameter))
+        
+        ### and verify it forms a grid
+        for v in self.x_axis_values:
+            assert set(self.y_axis_values) == parameter_value_list(param_filter_query(datastore,**{self.x_axis_parameter:v}).get_analysis_result(),self.y_axis_parameter)
+
+        
     
+    def make_grid_plot(self, subplotspec):
+        """
+        Call to execute the grid plot.
+
+        Parameters
+        ----------
+        subplotspec : subplotspec
+                    Is the subplotspec into which the whole lineplot is to be plotted.
+        """
+        subplotspec = gridspec.GridSpecFromSubplotSpec(
+                                100, 100, subplot_spec=subplotspec
+                            )[int(100*self.extra_space_top):100, 0:int(100*(1-self.extra_space_right))]
+       
+        gs = gridspec.GridSpecFromSubplotSpec(len(self.y_axis_values),len(self.x_axis_values),subplot_spec=subplotspec)
+        
+        params = {}
+        d = {}
+        for i in xrange(0,len(self.x_axis_values)):
+            for j in xrange(0,len(self.y_axis_values)):
+                if i > 0 and self.shared_axis:
+                    params["y_label"]=None
+                    if self.shared_lim:
+                        params["y_axis"] = False
+                else:
+                    params["y_label"]=self.y_axis_values[j]
+                    
+                if j < len(self.y_axis_values)-1 and self.shared_axis:
+                    params["x_label"]=None
+                    if self.shared_lim:
+                        params["x_axis"] = False
+                else:
+                    params["x_label"]=self.x_axis_values[i]
+
+                dsv = param_filter_query(self.datastore,**{self.x_axis_parameter:self.x_axis_values[i],self.y_axis_parameter:self.y_axis_values[j]})
+                li = self._single_plot(dsv,gs[j,i])
+                for (name,plot,gss,par) in li:
+                    par.update(params)
+                    d[name + '.' + 'plot[' +str(i) + ',' +str(j) + ']'] = (plot,gss,par)
+        return d
+                
+    def _single_plot(self, dsv,gs):
+        return self.function(dsv,gs)

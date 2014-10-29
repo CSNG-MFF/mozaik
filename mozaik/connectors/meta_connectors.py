@@ -73,7 +73,7 @@ class GaborConnector(BaseComponent):
 
         'short_term_plasticity': ParameterSet,
         'base_weight' : float, # the weights of synapses
-        'num_samples' : int , # number of synapses per cortical neuron from each of the ON and OFF LGN populations (so effectively there will be 2 * num_samples LGN synapses)
+        'num_samples' : ParameterDist , # number of synapses per cortical neuron from each of the ON and OFF LGN populations (so effectively there will be 2 * num_samples LGN synapses)
 
         'or_map': bool,  # is a orientation map supplied?
         'or_map_location': str,  # if or_map is True where can one find the map. It has to be a file containing a single pickled 2d numpy array

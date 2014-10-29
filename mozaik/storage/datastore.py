@@ -12,6 +12,7 @@ from neo_neurotools_wrapper import MozaikSegment, PickledDataStoreNeoWrapper
 from mozaik.tools.mozaik_parametrized import  MozaikParametrized,filter_query
 import cPickle
 import collections
+import os.path
 
 logger = mozaik.getMozaikLogger()
 
@@ -492,16 +493,19 @@ class PickledDataStore(Hdf5DataStore):
     """
 
     def load(self):
-        if True:
-            f = open(self.parameters.root_directory + '/datastore.recordings.pickle',  'rb')
-            self.block = cPickle.load(f)
-            for s in self.block.segments:
-                s.full = False
-                s.datastore_path = self.parameters.root_directory
+        f = open(self.parameters.root_directory + '/datastore.recordings.pickle',  'rb')
+        self.block = cPickle.load(f)
+        for s in self.block.segments:
+            s.full = False
+            s.datastore_path = self.parameters.root_directory
 
-        f = open(self.parameters.root_directory + '/datastore.analysis.pickle', 'rb')
-        self.analysis_results = cPickle.load(f)
-        
+
+        if os.path.isfile(self.parameters.root_directory + '/datastore.analysis.pickle'):
+            f = open(self.parameters.root_directory + '/datastore.analysis.pickle', 'rb')
+            self.analysis_results = cPickle.load(f)
+        else:
+            self.analysis_results = []
+            
         #f = open(self.parameters.root_directory + '/datastore.sensory.stimulus.pickle', 'rb')
         #self.sensory_stimulus = cPickle.load(f)
 
