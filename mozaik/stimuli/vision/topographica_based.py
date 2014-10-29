@@ -255,12 +255,10 @@ class NaturalImageWithEyeMovement(TopographicaBasedVisualStimulus):
                                     size_normalization='fit_longest',
                                     whole_pattern_output_fns=[imagen.transferfn.MaximumDynamicRange()])
 
-        while True:
-            location = self.eye_path[int(numpy.floor(self.frame_duration * self.time / self.eye_movement_period))]
-            image = imagen.image.FileImage(
+        image = imagen.image.FileImage(         
                                     filename=self.image_location,
-                                    x=location[0],
-                                    y=location[1],
+                                    x=0,
+                                    y=0,
                                     orientation=0,
                                     xdensity=self.density,
                                     ydensity=self.density,
@@ -268,9 +266,13 @@ class NaturalImageWithEyeMovement(TopographicaBasedVisualStimulus):
                                     bounds=BoundingBox(points=((-self.size_x/2, -self.size_y/2),
                                                                (self.size_x/2, self.size_y/2))),
                                     scale=2*self.background_luminance,
-                                    pattern_sampler=self.pattern_sampler
-                                    )()
-            yield (image, [self.time])
+                                    pattern_sampler=self.pattern_sampler)
+
+        while True:
+            location = self.eye_path[int(numpy.floor(self.frame_duration * self.time / self.eye_movement_period))]
+            image.x = location[0]
+            image.y = location[1]
+            yield (image(), [self.time])
             self.time += 1
 
 
