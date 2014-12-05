@@ -210,12 +210,17 @@ class CellWithReceptiveField(object):
         # the image-dependent components will be added in view(), so we need to
         
         # initialize with the Sum[] k_j.B components
+        self.background_luminance = background_luminance
         self.response = numpy.zeros((self.response_length,))
+        self.std = numpy.zeros((self.response_length,))
         L = self.receptive_field.kernel_duration
         assert L <= self.response_length
         
         for i in range(L):
             self.response[i] += background_luminance * self.receptive_field.kernel[:, :, i+1:L].sum()
+        
+        for i in range(L):
+            self.response[-(i+1)] += background_luminance * self.receptive_field.kernel[:, :,0:L-i].sum()
         self.i = 0
         
     def view(self):
@@ -235,7 +240,7 @@ class CellWithReceptiveField(object):
         view_array = self.visual_space.view( self.visual_region, pixel_size=self.receptive_field.spatial_resolution )
         # convolution
         product = self.receptive_field.kernel * view_array[:, :, numpy.newaxis]
-
+        self.std[self.i] = numpy.std(view_array)
         time_course = product.sum(axis=0).sum(axis=0)  # sum over the space axes, leaving a time signal.
         for j in range(self.i, self.i+self.update_factor):
             #if self.response[j:j+self.receptive_field.kernel_duration].shape != time_course.shape:
@@ -255,9 +260,18 @@ class CellWithReceptiveField(object):
         kernel values are dimensionless) by the 'gain', to produce a current in
         nA. Returns a dictionary containing 'times' and 'amplitudes'.
         """
-        # Naka-Rushton
+        k = numpy.squeeze(numpy.mean(numpy.squeeze(numpy.mean(numpy.abs(self.receptive_field.kernel),axis=0)),axis=0))
+        k = k / numpy.sqrt(numpy.power(k,2).sum())
+        self.std = numpy.convolve(self.std,k[::-1],mode='same')
+        print numpy.max(self.response)
+        print numpy.max(self.receptive_field.naka_rushton_output_function.std_scaler*self.std)
+        print ('-')
         if self.receptive_field.naka_rushton_output_function != None:
-            self.response = self.receptive_field.naka_rushton_output_function.Rmax * ( abs(self.response) / (abs(self.response)+self.receptive_field.naka_rushton_output_function.c50) ) * numpy.sign(self.response)
+            #c = numpy.sum(self.receptive_field.kernel.flatten())*self.background_luminance
+            
+            #self.response = (self.response-c) / (self.receptive_field.naka_rushton_output_function.std_scaler*self.std+1.0) + c
+            self.response = (self.response) / (self.receptive_field.naka_rushton_output_function.std_scaler*self.std+self.receptive_field.naka_rushton_output_function.p50)
+        
         # current response
         response = self.gain * self.response[:-self.receptive_field.kernel_duration]  # remove the extra padding at the end
         time_points = self.receptive_field.temporal_resolution * numpy.arange(0, len(response))
@@ -321,8 +335,8 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
             'temporal_resolution': float,
             'duration': float,
             'naka_rushton_output_function' : {
-                    'Rmax': float,
-                    'c50': float,
+                    'std_scaler': float,
+                    'p50': float,
                 }
             }),
         'cell': ParameterSet({
@@ -492,6 +506,8 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         retinal_input : list(ndarray)
                       List of 2D arrays containing the frames of luminances that were presented to the retina.
         """
+        print stimulus
+        
         logger.debug("Presenting visual stimulus from visual space %s" % visual_space)
         visual_space.set_duration(duration)
         self.input = visual_space
@@ -509,8 +525,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
             (input_currents, retinal_input) = cached
 
         ts = self.model.sim.get_time_step()
-        #import pylab
-        #pylab.figure()
+
         for rf_type in self.rf_types:
             assert isinstance(input_currents[rf_type], list)
             for i, (lgn_cell, input_current, scs, ncs) in enumerate(
@@ -519,8 +534,6 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                                                                 self.scs[rf_type],
                                                                 self.ncs[rf_type])):
                 assert isinstance(input_current, dict)
-                #if i==0:
-                #    pylab.plot(self.parameters.linear_scaler * input_current['amplitudes'])
                 t = input_current['times'] + offset
                 a = self.parameters.linear_scaler * input_current['amplitudes']
                 scs.set_parameters(times=t, amplitudes=a)
@@ -570,20 +583,32 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                       List of 2D arrays containing the frames of luminances that were presented to the retina.
 
         """
-        
-        input_current = {}
-        input_current['times'] = numpy.arange(0, duration, visual_space.update_interval) + offset
-        input_current['amplitudes'] = numpy.zeros((len(input_current['times']),))
-        
+        times = numpy.arange(0, duration, visual_space.update_interval) + offset
+        zers = times*0
         ts = self.model.sim.get_time_step()
         
+        input_cells = {}
         for rf_type in self.rf_types:
-                for i, (lgn_cell, scs, ncs) in enumerate(
+            input_cells[rf_type] = []
+            for i in numpy.nonzero(self.sheets[rf_type].pop._mask_local)[0]:
+                cell = CellWithReceptiveField(self.sheets[rf_type].pop.positions[0][i],
+                                              self.sheets[rf_type].pop.positions[1][i],
+                                              self.rf[rf_type],
+                                              self.parameters.gain,visual_space)
+                cell.initialize(visual_space.background_luminance, duration)
+                input_cells[rf_type].append(cell)
+        
+        for rf_type in self.rf_types:
+                for i, (lgn_cell, scs, ncs, rf) in enumerate(
                                                   zip(self.sheets[rf_type].pop,
                                                       self.scs[rf_type],
-                                                      self.ncs[rf_type])):
-                    scs.set_parameters(times=input_current['times'],
-                                       amplitudes=input_current['amplitudes'])
+                                                      self.ncs[rf_type],input_cells[rf_type])):
+                    
+                    amplitude = self.parameters.linear_scaler * rf.gain * numpy.sum(rf.receptive_field.kernel.flatten())*visual_space.background_luminance
+                    if rf.receptive_field.naka_rushton_output_function != None:
+                       amplitude = amplitude 
+                    scs.set_parameters(times=times,
+                                       amplitudes=zers+amplitude)
                     if self.parameters.mpi_reproducible_noise:
                         t = numpy.arange(0, duration, ts) + offset
 

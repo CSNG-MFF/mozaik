@@ -625,25 +625,29 @@ class ScatterPlotMovie(StandardStyleAnimatedPlot):
         self.parameters["bottom_border"] = False
 
     def plot_next_frame(self):
+        #vmax = numpy.max(self.z)/2.0
+        #d= numpy.array([[1.0,1.0,1.0,x/vmax] for x in self.z[self.i, :].flatten()])
         self.scatter.set_array(self.z[self.i, :].flatten())
         self.i = self.i + 1
         if self.i == self.l:
             self.i = 0
+        print self.i
         return self.scatter
 
     def plot(self):
-        vmin = 0
-        vmax = numpy.max(self.z)
+        vmax = numpy.max(self.z)/4.0
+        #d= numpy.array([[1,1,1,x/vmax] for x in self.z[0, :].flatten()])
+        #print numpy.shape(d)
         self.scatter = self.axis.scatter(self.x.flatten(), self.y.flatten(),
                                          c=self.z[0, :].flatten(),
                                          s=self.parameters["dot_size"],
                                          marker=self.parameters["marker"],
-                                         lw=1,
-                                         cmap='gray',
-                                         vmin=vmin,
-                                         vmax=vmax)
+                                         lw=0,
+                                         vmax=vmax,
+                                         alpha=0.4,
+                                         cmap='gray')
         pylab.axis('equal')
-
+        pylab.gca().set_axis_bgcolor('black')
 
 class ScatterPlot(StandardStyle):
     """

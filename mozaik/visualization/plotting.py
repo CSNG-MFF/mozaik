@@ -151,7 +151,7 @@ class Plotting(ParametrizedObject):
         t1 = time.time()
         if params == None:
             params = {}
-        self.fig = pylab.figure(facecolor='w', **self.fig_param)
+        self.fig = pylab.figure(facecolor='k', **self.fig_param)
         gs = gridspec.GridSpec(1, 1)
         gs.update(left=0.05, right=0.95, top=0.95, bottom=0.05)
         self._handle_parameters_and_execute_plots({}, params,gs[0, 0])
@@ -161,14 +161,16 @@ class Plotting(ParametrizedObject):
           import matplotlib.animation as animation
           self.animation = animation.FuncAnimation(self.fig,
                                       Plotting.update_animation_function,
+                                      frames = 20,
+                                      repeat=False,
                                       fargs=(self,),
                                       interval=self.frame_duration,
-                                      blit=False)
+                                      blit=False,save_count=0)
         gs.tight_layout(self.fig)
         if self.plot_file_name:
             #if there were animations, save them
             if self.animation_update_functions != []:
-                self.animation.save(Global.root_directory+self.plot_file_name+'.mpeg', writer='ffmpeg', fps=10) 
+                self.animation.save(Global.root_directory+self.plot_file_name+'.mov', writer='ffmpeg', fps=10,bitrate=5000) 
             else:
                 # save the analysis plot
                 pylab.savefig(Global.root_directory+self.plot_file_name)              
@@ -949,7 +951,7 @@ class ActivityMovie(Plotting):
 
     def subplot(self, subplotspec):
         dsv = queries.param_filter_query(self.datastore,sheet_name=self.parameters.sheet_name)
-        return PerStimulusPlot(dsv, function=self._ploter, title_style="Standard").make_line_plot(subplotspec)
+        return PerStimulusPlot(dsv, function=self._ploter, title_style="Clever").make_line_plot(subplotspec)
 
     def _ploter(self, dsv, gs):
         sp = [s.spiketrains for s in dsv.get_segments()]
@@ -960,16 +962,20 @@ class ActivityMovie(Plotting):
         bw = self.parameters.bin_width * pq.ms
         bw = bw.rescale(units).magnitude
         bins = numpy.arange(start, stop, bw)
-
+        print bins
+        print len(bins)
 
         h = []
         for spike_trains in sp:
             hh = []
             for st in spike_trains:
                 hh.append(numpy.histogram(st.magnitude, bins, (start, stop))[0])
+                #lets make activity of each neuron relative to it's maximum activity
             h.append(numpy.array(hh))
         
-        h = numpy.sum(h, axis=0)
+        h = numpy.mean(h, axis=0)
+        
+        #lets normalize against the maximum response for given neuron
         
         pos = dsv.get_neuron_postions()[self.parameters.sheet_name]
 
