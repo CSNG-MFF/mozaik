@@ -2,8 +2,6 @@
 """
 Module containing vision specific analysis.
 """
-
-
 import mozaik
 import numpy
 import quantities as qt
@@ -16,7 +14,7 @@ from mozaik.storage import queries
 from mozaik.tools.circ_stat import circ_mean, circular_dist
 from mozaik.tools.neo_object_operations import neo_mean, neo_sum
 
-
+logger = mozaik.getMozaikLogger()
 
 class ModulationRatio(Analysis):
     """
@@ -34,12 +32,6 @@ class ModulationRatio(Analysis):
     with this selected orientation it calculates the modulation ratio for that neuron. This way for each
     group it will calculate modulation ratios for all recorded neurons, and will store them in datastore
     using the PerNeuronValue data structure.
-
-    Other parameters
-    ---------------- 
-    bin_length : float (ms)
-               the size of bin to construct the PSTH from
-
     """
 
     def perform_analysis(self):
@@ -50,7 +42,7 @@ class ModulationRatio(Analysis):
             self.datastore.print_content()
             dsv = queries.param_filter_query(self.datastore,identifier='AnalogSignalList',sheet_name=sheet,analysis_algorithm='PSTH',st_name='FullfieldDriftingSinusoidalGrating')
             dsv.print_content()
-            assert queries.equal_ads_except(dsv,['stimulus_id']) , "It seems PSTH of computed in different ways are present in datastore, ModulationRatio can accept only one"
+            assert queries.equal_ads(dsv,except_params=['stimulus_id']) , "It seems PSTH computed in different ways are present in datastore, ModulationRatio can accept only one"
             psths = dsv.get_analysis_result()
             st = [MozaikParametrized.idd(p.stimulus_id) for p in psths]
             # average across trials
@@ -118,7 +110,7 @@ class ModulationRatio(Analysis):
                 pylab.figure()
                 pylab.hist(modulation_ratio)
 
-    def _calculate_MR(signal, frequency):
+    def _calculate_MR(self,signal, frequency):
         """
         Calculates MR at frequency 1/period for each of the signals in the signal_list
 

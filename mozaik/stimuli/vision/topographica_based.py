@@ -115,7 +115,6 @@ class FullfieldDriftingSinusoidalGrating(TopographicaBasedVisualStimulus):
         i = 0
         while True:
             i += 1
-            #print i
             yield (imagen.SineGrating(orientation=self.orientation,
                                       frequency=self.spatial_frequency,
                                       phase=self.current_phase,
@@ -401,7 +400,7 @@ class DriftingSinusoidalGratingCenterSurroundStimulus(TopographicaBasedVisualSti
     def frames(self):
         self.current_phase = 0
         while True:
-            center = imagen.SineGrating(mask_shape=imagen.pattern.Disk(smoothing=0.0, size=self.center_radius*2),
+            center = imagen.SineGrating(mask_shape=imagen.Disk(smoothing=0.0, size=self.center_radius*2),
                                         orientation=self.center_orientation,
                                         frequency=self.spatial_frequency,
                                         phase=self.current_phase,
@@ -412,7 +411,7 @@ class DriftingSinusoidalGratingCenterSurroundStimulus(TopographicaBasedVisualSti
                                         ydensity=self.density)()
             r = (self.center_radius + self.surround_radius + self.gap)/2
             t = (self.surround_radius - self.surround_radius - self.gap)/2
-            surround = imagen.SineGrating(mask_shape=imagen.pattern.Ring(thickness=t, smoothing=0, size=r*2),
+            surround = imagen.SineGrating(mask_shape=imagen.Ring(thickness=t, smoothing=0, size=r*2),
                                           orientation=self.surround_orientation,
                                           frequency=self.spatial_frequency,
                                           phase=self.current_phase,

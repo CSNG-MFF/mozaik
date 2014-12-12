@@ -266,7 +266,7 @@ class MeasureSizeTuning(VisualExperiment):
                  contrasts, num_trials, log_spacing=False, with_flat=False):
         VisualExperiment.__init__(self, model)    
         # linear or logarithmic spaced sizes
-        sizes = xrange(0, num_sizes)                     
+        sizes = numpy.linspace(0, max_size,num_sizes)                     
         if log_spacing:
             # base2 log of max_size
             base2max = numpy.sqrt(max_size)

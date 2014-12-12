@@ -151,7 +151,7 @@ class Plotting(ParametrizedObject):
         t1 = time.time()
         if params == None:
             params = {}
-        self.fig = pylab.figure(facecolor='w', **self.fig_param)
+        self.fig = pylab.figure(facecolor='b', **self.fig_param)
         gs = gridspec.GridSpec(1, 1)
         gs.update(left=0.05, right=0.95, top=0.95, bottom=0.05)
         self._handle_parameters_and_execute_plots({}, params,gs[0, 0])
@@ -168,7 +168,7 @@ class Plotting(ParametrizedObject):
         if self.plot_file_name:
             #if there were animations, save them
             if self.animation_update_functions != []:
-                self.animation.save(Global.root_directory+self.plot_file_name+'.mpeg', writer='ffmpeg', fps=10) 
+                self.animation.save(Global.root_directory+self.plot_file_name+'.gif', writer='imagemagick_file', fps=10,facecolor='b') 
             else:
                 # save the analysis plot
                 pylab.savefig(Global.root_directory+self.plot_file_name)              
@@ -240,8 +240,8 @@ class PlotTuningCurve(Plotting):
         self.max_mean_response_indexes = []
         assert queries.ads_with_equal_stimulus_type(datastore)
         assert len(self.parameters.neurons) > 0 , "ERROR, empty list of neurons specified"
-        if self.parameters.mean:
-            assert self.parameters.centered , "Average tuning curve can be plotted only if the tuning curves are centerd"
+        #if self.parameters.mean:
+        #    assert self.parameters.centered , "Average tuning curve can be plotted only if the tuning curves are centerd"
         
         dsvs = queries.partition_analysis_results_by_parameters_query(self.datastore,parameter_list=['value_name'],excpt=True)
         for dsv in dsvs:
@@ -305,7 +305,11 @@ class PlotTuningCurve(Plotting):
                 if self.parameters.mean:
                     v = 0
                     for j in xrange(0,len(self.parameters.neurons)):
-                        vv,p = self.center_tc(val[:,j],par,period,self.max_mean_response_indexes[i][j])
+                        if self.parameters.centered:
+                            vv,p = self.center_tc(val[:,j],par,period,self.max_mean_response_indexes[i][j])
+                        else:
+                            vv = val[:,j]
+                            p = par
                         v = v + vv
                     val = v / len(self.parameters.neurons)
                     par = p
@@ -960,7 +964,10 @@ class ActivityMovie(Plotting):
         bw = self.parameters.bin_width * pq.ms
         bw = bw.rescale(units).magnitude
         bins = numpy.arange(start, stop, bw)
-
+        print bins
+        print len(bins)
+        
+        
 
         h = []
         for spike_trains in sp:
@@ -996,6 +1003,7 @@ class ActivityMovie(Plotting):
             
             return [("PixelMovie",PixelMovie(40000.0*numpy.array(movie)),gs,{'x_axis':False, 'y_axis':False})]
         else:
+            print numpy.shape(h)
             return [("ScatterPlot",ScatterPlotMovie(posx, posy, h.T),gs,{'x_axis':False, 'y_axis':False,'dot_size':40})]
 
 
@@ -1050,12 +1058,12 @@ class PerNeuronValuePlot(Plotting):
          pos = self.dsv.get_neuron_postions()[sheet_name]            
         
          if self.parameters.cortical_view:
-            posx = self.pos[0,self.datastore.get_sheet_indexes(sheet_name,pnv.ids)]
-            posy = self.pos[1,self.datastore.get_sheet_indexes(sheet_name,pnv.ids)]
+            posx = pos[0,self.datastore.get_sheet_indexes(sheet_name,pnv.ids)]
+            posy = pos[1,self.datastore.get_sheet_indexes(sheet_name,pnv.ids)]
             values = pnv.values
             if pnv.period != None:
                 periodic = True
-                period = pnvs.period
+                period = pnv.period
             else:
                 periodic = False
                 period = None
@@ -1200,8 +1208,9 @@ class ConnectivityPlot(Plotting):
             for dsv in z:
                 a = dsv.get_analysis_result(identifier='PerNeuronValue')
                 self.pnvs.append(a[0])
-        
+        print len(self.pnvs)
         for conn in _connections:
+            print conn
             if not self.parameters.reversed and conn.source_name == self.parameters.sheet_name:
                 # add outgoing projections from sheet_name
                 self.connecting_neurons_positions.append(

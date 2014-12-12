@@ -39,7 +39,7 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
     
     sorted_parameter_indexes = zip(*sorted(enumerate(parameters), key=lambda x: x[1]))[0]
     
-    # if value_names isNone lets set it to set of value_names in the first datastore
+    # if value_names is None lets set it to set of value_names in the first datastore
     if value_names == None:
         value_names = [ads.value_name for ads in param_filter_query(datastores[0][1],identifier='SingleValue').get_analysis_result()]
         value_names = set(sorted(value_names))
@@ -49,8 +49,10 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
     # that they exist in each DataStore.
     for (param_values,datastore) in datastores:
         for v in value_names:
-            print param_filter_query(datastore,identifier='SingleValue',value_name=v).print_content(full_ADS=True)
-            assert len(param_filter_query(datastore,identifier='SingleValue',value_name=v).get_analysis_result()) == 1, "Error, %d ADS with value_name %s found for parameter combination: %s" % (len(param_filter_query(datastore,identifier='SingleValue').get_analysis_result()),v, str([str(a) + ':' + str(b) for (a,b) in zip(parameters,param_values)]))
+			print "D"
+			print param_filter_query(datastore,identifier='SingleValue',value_name=v).print_content(full_ADS=True)
+			print param_filter_query(datastore,identifier='SingleValue',value_name=v).get_analysis_result()
+			assert len(param_filter_query(datastore,identifier='SingleValue',value_name=v).get_analysis_result()) == 1, "Error, %d ADS with value_name %s found for parameter combination: %s" % (len(param_filter_query(datastore,identifier='SingleValue').get_analysis_result()),v, str([str(a) + ':' + str(b) for (a,b) in zip(parameters,param_values)]))
     
     rows = math.ceil(1.0*len(value_names)/cols)
     
