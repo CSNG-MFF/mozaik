@@ -412,8 +412,8 @@ class DriftingSinusoidalGratingCenterSurroundStimulus(TopographicaBasedVisualSti
                                         xdensity=self.density,
                                         ydensity=self.density)()
             r = (self.center_radius + self.surround_radius + self.gap)/2
-            t = (self.surround_radius - self.surround_radius - self.gap)/2
-            surround = imagen.SineGrating(mask_shape=imagen.Ring(thickness=t, smoothing=0, size=r*2),
+            t = (self.surround_radius - self.center_radius - self.gap)/2
+            surround = imagen.SineGrating(mask_shape=imagen.Ring(thickness=t*2, smoothing=0.0, size=r*2),
                                           orientation=self.surround_orientation,
                                           frequency=self.spatial_frequency,
                                           phase=self.current_phase,
@@ -422,5 +422,24 @@ class DriftingSinusoidalGratingCenterSurroundStimulus(TopographicaBasedVisualSti
                                           scale=2*self.background_luminance*self.contrast/100.0,   
                                           xdensity=self.density,
                                           ydensity=self.density)()
+            
+            
+            
+            if False:
+                print t
+                print r
+                print self.size_x/2
+                import pylab
+                pylab.figure()
+                pylab.subplot(3,1,1)
+                pylab.imshow(imagen.Disk(smoothing=0.0, size=self.center_radius*2,bounds=BoundingBox(radius=self.size_x/2),xdensity=self.density,ydensity=self.density)()*self.background_luminance,vmin=0,vmax=2*self.background_luminance)
+                pylab.subplot(3,1,2)
+                pylab.imshow(imagen.Ring(thickness=t*2, smoothing=0.0, size=r*2,bounds=BoundingBox(radius=self.size_x/2),xdensity=self.density,ydensity=self.density)()*self.background_luminance,vmin=0,vmax=2*self.background_luminance)
+                pylab.subplot(3,1,3)
+                pylab.imshow(numpy.add.reduce([center, surround]))
+                pylab.colorbar()
+                
+                pylab.show()
+            
             yield (numpy.add.reduce([center, surround]), [self.current_phase])
             self.current_phase += 2*pi * (self.frame_duration/1000.0) * self.temporal_frequency

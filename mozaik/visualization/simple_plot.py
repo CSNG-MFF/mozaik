@@ -575,8 +575,9 @@ class PixelMovie(StandardStyleAnimatedPlot):
           
     """
     
-    def __init__(self, movie,**param):
+    def __init__(self, movie,background_luminance,**param):
         StandardStyleAnimatedPlot.__init__(self,**param)
+        self.background_luminance = background_luminance
         self.movie = movie
         self.l = len(movie)
         self.i = 0
@@ -591,7 +592,7 @@ class PixelMovie(StandardStyleAnimatedPlot):
         return self.im
 
     def plot(self):
-        self.im = self.axis.imshow(self.movie[0],interpolation='nearest',vmin=0,vmax=100,cmap='gray')
+        self.im = self.axis.imshow(self.movie[0],interpolation='nearest',vmin=0,vmax=self.background_luminance*2,cmap='gray')
 
 
 class ScatterPlotMovie(StandardStyleAnimatedPlot):

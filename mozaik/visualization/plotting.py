@@ -161,7 +161,7 @@ class Plotting(ParametrizedObject):
           import matplotlib.animation as animation
           self.animation = animation.FuncAnimation(self.fig,
                                       Plotting.update_animation_function,
-                                      frames = 20,
+                                      frames = 400,
                                       repeat=False,
                                       fargs=(self,),
                                       interval=self.frame_duration,
@@ -170,7 +170,7 @@ class Plotting(ParametrizedObject):
         if self.plot_file_name:
             #if there were animations, save them
             if self.animation_update_functions != []:
-                self.animation.save(Global.root_directory+self.plot_file_name+'.mov', writer='ffmpeg', fps=10,bitrate=5000) 
+                self.animation.save(Global.root_directory+self.plot_file_name+'.mov', writer='avconv', fps=10,bitrate=5000) 
             else:
                 # save the analysis plot
                 pylab.savefig(Global.root_directory+self.plot_file_name)              
@@ -906,6 +906,12 @@ class RetinalInputMovie(Plotting):
         self.retinal_input = datastore.get_sensory_stimulus()
         self.st = datastore.sensory_stimulus.keys()
         
+        # remove internal stimuli from the list 
+        self.retinal_input = [self.retinal_input[i] for i in xrange(0,len(self.st)) if MozaikParametrized.idd(self.st[i]).name != 'InternalStimulus']
+        self.st = [self.st[i]  for i in xrange(0,len(self.st)) if MozaikParametrized.idd(self.st[i]).name != 'InternalStimulus']
+        
+        
+        
     def subplot(self, subplotspec):
         return LinePlot(function=self._ploter,
                  length=len(self.retinal_input)
@@ -917,7 +923,7 @@ class RetinalInputMovie(Plotting):
         title = title + stimulus.name + '\n'
         for pn, pv in stimulus.get_param_values():
                 title = title + pn + ' : ' + str(pv) + '\n'
-        return [('PixelMovie',PixelMovie(self.retinal_input[idx]),gs,{'x_axis':False, 'y_axis':False, "title" : title})]
+        return [('PixelMovie',PixelMovie(self.retinal_input[idx],MozaikParametrized.idd(self.st[idx]).background_luminance),gs,{'x_axis':False, 'y_axis':False, "title" : title})]
 
 
 
