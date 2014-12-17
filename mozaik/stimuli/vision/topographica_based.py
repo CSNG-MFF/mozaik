@@ -407,7 +407,7 @@ class DriftingSinusoidalGratingCenterSurroundStimulus(TopographicaBasedVisualSti
                                         frequency=self.spatial_frequency,
                                         phase=self.current_phase,
                                         bounds=BoundingBox(radius=self.size_x/2),
-                                        offset = self.background_luminance*(100.0 - self.contrast)/100.0,
+                                        offset = 0,
                                         scale=2*self.background_luminance*self.contrast/100.0,  
                                         xdensity=self.density,
                                         ydensity=self.density)()
@@ -418,28 +418,22 @@ class DriftingSinusoidalGratingCenterSurroundStimulus(TopographicaBasedVisualSti
                                           frequency=self.spatial_frequency,
                                           phase=self.current_phase,
                                           bounds=BoundingBox(radius=self.size_x/2),
-                                          offset = self.background_luminance*(100.0 - self.contrast)/100.0,
+                                          offset = 0,
                                           scale=2*self.background_luminance*self.contrast/100.0,   
                                           xdensity=self.density,
                                           ydensity=self.density)()
             
+            offset = imagen.Constant(mask_shape=imagen.Disk(smoothing=0.0, size=self.surround_radius*2),
+                                 bounds=BoundingBox(radius=self.size_x/2),
+                                 scale=self.background_luminance*(100.0 - self.contrast)/100.0,
+                                 xdensity=self.density,
+                                 ydensity=self.density)()
+
+            background = (imagen.Disk(smoothing=0.0,
+                                     size=self.surround_radius*2, 
+                                     bounds=BoundingBox(radius=self.size_x/2),
+                                     xdensity=self.density,
+                                     ydensity=self.density)()-1)*-self.background_luminance
             
-            
-            if False:
-                print t
-                print r
-                print self.size_x/2
-                import pylab
-                pylab.figure()
-                pylab.subplot(3,1,1)
-                pylab.imshow(imagen.Disk(smoothing=0.0, size=self.center_radius*2,bounds=BoundingBox(radius=self.size_x/2),xdensity=self.density,ydensity=self.density)()*self.background_luminance,vmin=0,vmax=2*self.background_luminance)
-                pylab.subplot(3,1,2)
-                pylab.imshow(imagen.Ring(thickness=t*2, smoothing=0.0, size=r*2,bounds=BoundingBox(radius=self.size_x/2),xdensity=self.density,ydensity=self.density)()*self.background_luminance,vmin=0,vmax=2*self.background_luminance)
-                pylab.subplot(3,1,3)
-                pylab.imshow(numpy.add.reduce([center, surround]))
-                pylab.colorbar()
-                
-                pylab.show()
-            
-            yield (numpy.add.reduce([center, surround]), [self.current_phase])
+            yield (numpy.add.reduce([center, surround,offset,background]), [self.current_phase])
             self.current_phase += 2*pi * (self.frame_duration/1000.0) * self.temporal_frequency
