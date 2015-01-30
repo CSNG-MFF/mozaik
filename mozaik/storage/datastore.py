@@ -506,8 +506,8 @@ class PickledDataStore(Hdf5DataStore):
         else:
             self.analysis_results = []
             
-        f = open(self.parameters.root_directory + '/datastore.sensory.stimulus.pickle', 'rb')
-        self.sensory_stimulus = cPickle.load(f)
+        #f = open(self.parameters.root_directory + '/datastore.sensory.stimulus.pickle', 'rb')
+        #self.sensory_stimulus = cPickle.load(f)
 
     def save(self):
         f = open(self.parameters.root_directory + '/datastore.recordings.pickle', 'wb')
