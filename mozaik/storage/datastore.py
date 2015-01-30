@@ -505,7 +505,7 @@ class PickledDataStore(Hdf5DataStore):
             self.analysis_results = cPickle.load(f)
         else:
             self.analysis_results = []
-
+            
         #f = open(self.parameters.root_directory + '/datastore.sensory.stimulus.pickle', 'rb')
         #self.sensory_stimulus = cPickle.load(f)
 
