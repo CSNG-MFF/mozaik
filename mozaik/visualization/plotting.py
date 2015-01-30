@@ -405,7 +405,7 @@ class PlotTuningCurve(Plotting):
                params["x_tick_labels"]  = []
                params["y_tick_labels"]  = []
                params['grid'] = True
-               params['fill'] = True
+               params['fill'] = False
             
             if not bottom_row:
                 params["x_axis"] = None

@@ -41,7 +41,7 @@ class MapDependentModularConnectorFunction(ModularConnectorFunction):
         
         for (index, neuron2) in enumerate(target.pop.all()):
             val_target=self.mmap(self.target.pop.positions[0][index],self.target.pop.positions[1][index])
-            self.target.add_neuron_annotation(index, 'LGNAfferentOrientation', val_target*numpy.pi, protected=False) 
+            self.target.add_neuron_annotation(index,'LGNAfferentOrientation', val_target*numpy.pi, protected=False) 
             
     def evaluate(self,index):
             val_target = self.target.get_neuron_annotation(index,'LGNAfferentOrientation')

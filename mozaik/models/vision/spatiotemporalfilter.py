@@ -260,12 +260,9 @@ class CellWithReceptiveField(object):
         kernel values are dimensionless) by the 'gain', to produce a current in
         nA. Returns a dictionary containing 'times' and 'amplitudes'.
         """
-        k = numpy.squeeze(numpy.mean(numpy.squeeze(numpy.mean(numpy.abs(self.receptive_field.kernel),axis=0)),axis=0))
-        k = k / numpy.sqrt(numpy.power(k,2).sum())
-        self.std = numpy.convolve(self.std,k[::-1],mode='same')
-        print numpy.max(self.response)
-        print numpy.max(self.receptive_field.naka_rushton_output_function.std_scaler*self.std)
-        print ('-')
+        #k = numpy.squeeze(numpy.mean(numpy.squeeze(numpy.mean(numpy.abs(self.receptive_field.kernel),axis=0)),axis=0))
+        #k = k / numpy.sqrt(numpy.power(k,2).sum())
+        #self.std = numpy.convolve(self.std,k[::-1],mode='same')
         if self.receptive_field.naka_rushton_output_function != None:
             #c = numpy.sum(self.receptive_field.kernel.flatten())*self.background_luminance
             
