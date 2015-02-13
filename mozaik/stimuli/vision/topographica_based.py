@@ -402,38 +402,38 @@ class DriftingSinusoidalGratingCenterSurroundStimulus(TopographicaBasedVisualSti
     def frames(self):
         self.current_phase = 0
         while True:
-            center = imagen.SineGrating(mask_shape=imagen.Disk(smoothing=0.0, size=self.center_radius*2),
+            center = imagen.SineGrating(mask_shape=imagen.Disk(smoothing=0.0, size=self.center_radius*2.0),
                                         orientation=self.center_orientation,
                                         frequency=self.spatial_frequency,
                                         phase=self.current_phase,
-                                        bounds=BoundingBox(radius=self.size_x/2),
+                                        bounds=BoundingBox(radius=self.size_x/2.0),
                                         offset = 0,
                                         scale=2*self.background_luminance*self.contrast/100.0,  
                                         xdensity=self.density,
                                         ydensity=self.density)()
-            r = (self.center_radius + self.surround_radius + self.gap)/2
-            t = (self.surround_radius - self.center_radius - self.gap)/2
-            surround = imagen.SineGrating(mask_shape=imagen.Ring(thickness=t*2, smoothing=0.0, size=r*2),
+            r = (self.center_radius + self.surround_radius + self.gap)/2.0
+            t = (self.surround_radius - self.center_radius - self.gap)/2.0
+            surround = imagen.SineGrating(mask_shape=imagen.Ring(thickness=t*2.0, smoothing=0.0, size=r*2.0),
                                           orientation=self.surround_orientation,
                                           frequency=self.spatial_frequency,
                                           phase=self.current_phase,
-                                          bounds=BoundingBox(radius=self.size_x/2),
+                                          bounds=BoundingBox(radius=self.size_x/2.0),
                                           offset = 0,
                                           scale=2*self.background_luminance*self.contrast/100.0,   
                                           xdensity=self.density,
                                           ydensity=self.density)()
             
-            offset = imagen.Constant(mask_shape=imagen.Disk(smoothing=0.0, size=self.surround_radius*2),
-                                 bounds=BoundingBox(radius=self.size_x/2),
+            offset = imagen.Constant(mask_shape=imagen.Disk(smoothing=0.0, size=self.surround_radius*2.0),
+                                 bounds=BoundingBox(radius=self.size_x/2.0),
                                  scale=self.background_luminance*(100.0 - self.contrast)/100.0,
                                  xdensity=self.density,
                                  ydensity=self.density)()
 
             background = (imagen.Disk(smoothing=0.0,
-                                     size=self.surround_radius*2, 
-                                     bounds=BoundingBox(radius=self.size_x/2),
+                                     size=self.surround_radius*2.0, 
+                                     bounds=BoundingBox(radius=self.size_x/2.0),
                                      xdensity=self.density,
                                      ydensity=self.density)()-1)*-self.background_luminance
             
-            yield (numpy.add.reduce([center, surround,offset,background]), [self.current_phase])
+            yield (numpy.add.reduce([numpy.maximum(center, surround),offset,background]), [self.current_phase])
             self.current_phase += 2*pi * (self.frame_duration/1000.0) * self.temporal_frequency
