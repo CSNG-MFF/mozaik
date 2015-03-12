@@ -46,7 +46,7 @@ class Connector(BaseComponent):
                                  # This is because certain pyNN synaptic models interpret weights with different units and the Connector
                                  # function here corrects for these - ie. the Connectors in Mozaik will always assume the weights to be in nano-siemens 
         if self.parameters.short_term_plasticity != None:
-           self.weight_scaler = 1000.0
+           self.weight_scaler = 1.0 # Here it is 1.0 because wew use PyNN TsodyksMarkramSynapse !!!!!!!!!!!
 
     
     def init_synaptic_mechanisms(self,weight=None,delay=None):

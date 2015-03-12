@@ -181,3 +181,61 @@ class VisualCorticalUniformSheet(SheetWithMagnificationFactor):
                                        structure=rs,
                                        initial_values=self.parameters.cell.initial_values,
                                        label=self.name)
+
+
+class VisualCorticalUniformSheetHW(SheetWithMagnificationFactor):
+    """
+    Represents a visual cortical sheet of neurons, randomly uniformly distributed in cortical space.
+    
+    Other parameters
+    ----------------
+    density : float (neurons/mm^2)
+            The density of neurons per square milimeter.
+    """
+    
+    required_parameters = ParameterSet({
+        'density': float,  # neurons/(mm^2)
+    })
+
+    def __init__(self, model, parameters):
+        SheetWithMagnificationFactor.__init__(self, model, parameters)
+        dx, dy = self.cs_2_vf(parameters.sx, parameters.sy)
+        rs = space.RandomStructure(boundary=space.Cuboid(dx, dy, 0),
+                                   origin=(0.0, 0.0, 0.0),
+                                   rng=mozaik.pynn_rng)
+
+        import quantities as q        
+        hw_E_l = 800 * q.mV
+        acceleration = 1e4 * q.dimensionless
+        
+        from hmf_noise_model import get_maximal_rev_potentials,hw_LIF
+
+        
+        hw_rev_E, hw_rev_I = get_maximal_rev_potentials(
+            self.parameters.cell.params["e_rev_E"] * q.mV,
+            self.parameters.cell.params["e_rev_I"] * q.mV,
+            self.parameters.cell.params["v_rest"] * q.mV,
+            hw_E_l)
+        
+
+        pop_size = int(parameters.sx*parameters.sy/1000000*parameters.density)
+        self.parameters.cell.params["i_offset"] = 0
+        pars = {}
+        for k in self.parameters.cell.params.keys():
+            pars[k] = []
+
+        for i in xrange(0,pop_size):
+            par = hw_LIF(self.parameters.cell.params,
+                            hw_rev_I,
+                            hw_rev_E,
+                            acceleration)
+            for k in par.keys():
+                pars[k].append(par[k])
+                
+        a = numpy.array(pars['v_reset']) - numpy.array(pars['v_thresh'])
+        self.pop = self.sim.Population(pop_size,
+                                       getattr(self.model.sim, self.parameters.cell.model)(**pars),
+                                       #self.parameters.cell.params,
+                                       structure=rs,
+                                       initial_values=self.parameters.cell.initial_values,
+                                       label=self.name)
