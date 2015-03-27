@@ -52,7 +52,7 @@ class ModulationRatio(Analysis):
             pnvs = self.datastore.get_analysis_result(identifier='PerNeuronValue',
                                                       sheet_name=sheet,
                                                       value_name='orientation preference')
-
+            queries.param_filter_query(self.datastore,identifier='PerNeuronValue',sheet_name=sheet,value_name='orientation preference').print_content(full_ADS=True)
             if len(pnvs) != 1:
                 logger.error("ERROR: Expected only one PerNeuronValue per sheet "
                              "with value_name 'orientation preference' in datastore, got: "
