@@ -6,6 +6,7 @@ For more documentation refer to `mozaik.analysis`_
 """
 import numpy
 import scipy
+import scipy.signal
 import time
 import quantities as qt
 import mozaik.tools.units as munits
@@ -349,7 +350,11 @@ class TrialToTrialCrossCorrelationOfAnalogSignalList(Analysis):
         cc = 0
         for i in xrange(0,len(ass)):
             for j in xrange(i+1,len(ass)):
-                cc= cc + scipy.signal.fftconvolve(ass[i]-numpy.mean(ass[i]),ass[j][::-1]-numpy.mean(ass[j]),mode='full')/numpy.var(ass[i])/numpy.var(ass[j])/len(ass[i])
+                sta1 = numpy.std(ass[i])
+                sta2 = numpy.std(ass[j])
+                if sta1 != 0 and sta2 != 0:
+                    a = scipy.signal.fftconvolve(ass[i]-numpy.mean(ass[i]),ass[j][::-1]-numpy.mean(ass[j]),mode='full')/sta1/sta2/len(ass[i])
+                    cc= cc + a
                 
         cc = cc / (len(ass)*(len(ass)-1)/2)
         return cc
@@ -1035,7 +1040,7 @@ class PopulationMean(Analysis):
               self.datastore.full_datastore.add_analysis_result(AnalogSignal(nas,
                                                                 ads.y_axis_units,
                                                                 x_axis_name=ads.x_axis_name,
-                                                                y_axis_name=ads.y_axis_name,
+                                                                y_axis_name='Mean(' + ads.y_axis_name + ')',
                                                                 sheet_name=ads.sheet_name,
                                                                 tags=self.tags,
                                                                 analysis_algorithm=self.__class__.__name__,

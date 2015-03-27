@@ -21,7 +21,7 @@ class MapDependentModularConnectorFunction(ModularConnectorFunction):
         'sigma': float,  # How sharply does the wieght fall off with the increasing distance between the map values (exp(-0.5*(distance/sigma)*2)/(sigma*sqrt(2*pi)))
         'periodic' : bool, # if true, the values in map will be treated as periodic (and consequently the distance between two values will be computed as circular distance).
     })
-    
+
     def __init__(self, source,target, parameters):
         import pickle
         ModularConnectorFunction.__init__(self, source,target, parameters)
@@ -37,7 +37,7 @@ class MapDependentModularConnectorFunction(ModularConnectorFunction):
         X, Y = numpy.meshgrid(coords_x, coords_y)
         self.mmap = NearestNDInterpolator(zip(X.flatten(), Y.flatten()),
                                        mmap.flatten())    
-        self.val_source=self.mmap(numpy.transpose(numpy.array([self.source.pop.positions[0],self.source.pop.positions[1]])))
+        self.val_source=self.mmap(numpy.transpose(numpy.array([self.source.pop.positions[0],self.source.pop.positions[1]]))) * numpy.pi
         
         for (index, neuron2) in enumerate(target.pop.all()):
             val_target=self.mmap(self.target.pop.positions[0][index],self.target.pop.positions[1][index])
@@ -46,7 +46,7 @@ class MapDependentModularConnectorFunction(ModularConnectorFunction):
     def evaluate(self,index):
             val_target = self.target.get_neuron_annotation(index,'LGNAfferentOrientation')
             if self.parameters.periodic:
-                distance = circular_dist(self.val_source,val_target,1.0)
+                distance = circular_dist(self.val_source,val_target,pi)
             else:
                 distance = numpy.abs(self.val_source-val_target)
             return numpy.exp(-0.5*(distance/self.parameters.sigma)**2)/(self.parameters.sigma*numpy.sqrt(2*numpy.pi))
@@ -160,7 +160,7 @@ class GaborArborization(ModularConnectorFunction):
         w = gabor(self.source.pop.positions[0],self.source.pop.positions[1],
                                        target_posx,
                                        target_posy,
-                                       target_or + pi/2,
+                                       target_or+pi/2,
                                        target_freq,
                                        target_phase,
                                        target_size,

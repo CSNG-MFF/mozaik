@@ -63,7 +63,7 @@ class GaborConnector(BaseComponent):
     required_parameters = ParameterSet({
         'aspect_ratio': ParameterDist,  # aspect ratio of the gabor
         'size':         ParameterDist,  # the size of the gabor  RFs in degrees of visual field
-        'orientation_preference':  ParameterDist,  # the orientation preference of the gabor RFs (note this is the orientation of the gabor + pi/2)
+        'orientation_preference':  ParameterDist,  # the orientation preference of the gabor RFs
         'phase':        ParameterDist,  # the phase of the gabor RFs
         'frequency':    ParameterDist,  # the frequency of the gabor in degrees of visual field
 

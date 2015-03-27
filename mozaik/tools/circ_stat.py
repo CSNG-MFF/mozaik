@@ -62,7 +62,12 @@ def circ_mean(matrix, weights=None, axis=None, low=0, high=pi*2,
     (angle, length) : ndarray,ndarray
                     Where angle is the circular mean, and len is the length of the resulting mean vector.
     """
-
+    
+    logger.warning('CIRC')
+    idx = numpy.nonzero(weights!=0.0)[0]
+    logger.warning(len(idx))
+    logger.warning(str(matrix[idx]))
+    logger.warning(str(weights[idx]))
     # check whether matrix and weights are ndarrays
     if weights != None:
        assert matrix.shape == weights.shape 
@@ -88,5 +93,9 @@ def circ_mean(matrix, weights=None, axis=None, low=0, high=pi*2,
     else:
         z = numpy.multiply(m,weights)
         m = numpy.mean(z, axis=axis)
-
-    return ((angle_to_pi(m) / (pi*2))*(high-low) + low, abs(m))
+    logger.warning(m)
+    a,b = ((angle_to_pi(m) / (pi*2))*(high-low) + low, abs(m))
+    
+    logger.warning(a)
+    
+    return a,b
