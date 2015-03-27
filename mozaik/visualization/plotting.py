@@ -331,7 +331,24 @@ class PlotTuningCurve(Plotting):
                    # we have to map the interval (0,period)  to (0,2*pi)
                    par = [p/period*2*numpy.pi for p in par]
 
-              
+                # if we have a period of pi or 2*pi
+                if period==pi and self.parameters.centered==False:
+                   par = [(p-pi if p > pi/2 else p) for p in par]
+                   par,val = zip(*sorted(zip(numpy.array(par),val)))
+                   par = list(par)
+                   val = list(val)
+                   par.insert(0,-pi/2)
+                   val.insert(0,val[-1])
+                   
+                if period==2*pi and self.parameters.centered==False:
+                   par = [(p-2*pi if p > pi/2 else p) for p in par]
+                   par,val = zip(*sorted(zip(numpy.array(par),val)))
+                   par = list(par)
+                   val = list(val)
+                   par.insert(0,-pi)
+                   val.insert(0,val[-1])
+                    
+
                 xs.append(numpy.array(par))
                 ys.append(numpy.array(val))
                 
@@ -372,7 +389,6 @@ class PlotTuningCurve(Plotting):
                 params["title"] =  'Neuron ID: %d' % neuron_id
             
             if not polar:
-                if self.parameters.centered:        
                     if period == pi:
                         params["x_ticks"] = [-pi/2, 0, pi/2]
                         params["x_lim"] = (-pi/2, pi/2)
@@ -384,19 +400,6 @@ class PlotTuningCurve(Plotting):
                         params["x_lim"] = (-pi, pi)
                         params["x_tick_style"] = "Custom"
                         params["x_tick_labels"] = ["-$\\pi$","0", "$\\pi$"]
-                else:
-                    if period == pi:
-                        params["x_ticks"] = [0, pi/2, pi]
-                        params["x_lim"] = (0, pi)
-                        params["x_tick_style"] = "Custom"
-                        params["x_tick_labels"] = ["0", "$\\frac{\\pi}{2}$", "$\\pi$"]
-                   
-                    if period == 2*pi:
-                        params["x_ticks"] = [0, pi, 2*pi]
-                        params["x_lim"] = (0, 2*pi)
-                        params["x_tick_style"] = "Custom"
-                        params["x_tick_labels"] = ["0", "$\\pi$", "$2\\pi$"]
-            
             else:
                params["y_tick_style"] = "Custom"
                params["x_tick_style"] = "Custom"
@@ -1213,7 +1216,7 @@ class ConnectivityPlot(Plotting):
             for dsv in z:
                 a = dsv.get_analysis_result(identifier='PerNeuronValue')
                 self.pnvs.append(a[0])
-        print len(self.pnvs)
+        
         for conn in _connections:
             print conn
             if not self.parameters.reversed and conn.source_name == self.parameters.sheet_name:
@@ -1298,7 +1301,7 @@ class ConnectivityPlot(Plotting):
         if pnv != []:
             from mozaik.tools.circ_stat import circ_mean
             (angle, mag) = circ_mean(numpy.array(pnv.get_value_by_id(self.datastore.get_sheet_ids(pnv.sheet_name,ix))),
-                                     weights=w,
+                                     weights=numpy.abs(w),
                                      high=pnv.period)
             params["title"] = str(self.connections[idx].proj_name) + "\n Mean: " + str(angle)
             params["colorbar_label"] =  pnv.value_name

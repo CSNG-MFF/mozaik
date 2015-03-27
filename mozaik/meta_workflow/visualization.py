@@ -42,14 +42,16 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
     # if value_names is None lets set it to set of value_names in the first datastore
     if value_names == None:
         value_names = [ads.value_name for ads in param_filter_query(datastores[10][1],identifier='SingleValue').get_analysis_result()]
-        print value_names
         value_names = set(sorted(value_names))
 
     # Lets first make sure that the value_names uniqly identify a SingleValue ADS in each DataStore and 
     # that they exist in each DataStore.
     for (param_values,datastore) in datastores:
         for v in value_names:
-			assert len(param_filter_query(datastore,identifier='SingleValue',value_name=v).get_analysis_result()) == 1, "Error, %d ADS with value_name %s found for parameter combination: %s" % (len(param_filter_query(datastore,identifier='SingleValue').get_analysis_result()),v, str([str(a) + ':' + str(b) for (a,b) in zip(parameters,param_values)]))
+            if len(param_filter_query(datastore,identifier='SingleValue',value_name=v).get_analysis_result()) > 1:
+                param_filter_query(datastore,identifier='SingleValue',value_name=v).print_content(full_ADS=True)
+            
+            assert len(param_filter_query(datastore,identifier='SingleValue',value_name=v).get_analysis_result()) == 1, "Error, %d ADS with value_name %s found for parameter combination: %s" % (len(param_filter_query(datastore,identifier='SingleValue',value_name=v).get_analysis_result()),v, str([str(a) + ':' + str(b) for (a,b) in zip(parameters,param_values)]))
     
     rows = math.ceil(1.0*len(value_names)/cols)
     
@@ -84,6 +86,9 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
                if value_name in ranges:
                   vmin,vmax = ranges[value_name] 
                else:
+                  print z
+                  print min(z) 
+                  print max(z) 
                   vmin = min(z) 
                   vmax = max(z) 
 
@@ -91,7 +96,6 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
                    xi = numpy.linspace(numpy.min(x),numpy.max(x),resolution)
                    yi = numpy.linspace(numpy.min(y),numpy.max(y),resolution)
                    gr = griddata((x,y),z,(xi[None, :], yi[:, None]),method='cubic')
-                   print gr
                    pylab.imshow(gr,interpolation='none',vmin=vmin,vmax=vmax,aspect='auto',cmap=cm.gray,origin='lower',extent=[numpy.min(x),numpy.max(x),numpy.min(y),numpy.max(y)])
                else:     
                    pylab.scatter(x,y,marker='o',s=300,c=z,cmap=cm.jet,vmin=vmin,vmax=vmax)

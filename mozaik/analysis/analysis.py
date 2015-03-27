@@ -1040,7 +1040,7 @@ class PopulationMean(Analysis):
               self.datastore.full_datastore.add_analysis_result(AnalogSignal(nas,
                                                                 ads.y_axis_units,
                                                                 x_axis_name=ads.x_axis_name,
-                                                                y_axis_name=ads.y_axis_name,
+                                                                y_axis_name='Mean(' + ads.y_axis_name + ')',
                                                                 sheet_name=ads.sheet_name,
                                                                 tags=self.tags,
                                                                 analysis_algorithm=self.__class__.__name__,
