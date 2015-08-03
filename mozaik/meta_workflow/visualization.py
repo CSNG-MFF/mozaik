@@ -43,7 +43,9 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
     if value_names == None:
         value_names = [ads.value_name for ads in param_filter_query(datastores[10][1],identifier='SingleValue').get_analysis_result()]
         value_names = set(sorted(value_names))
-
+    
+    print value_names
+    
     # Lets first make sure that the value_names uniqly identify a SingleValue ADS in each DataStore and 
     # that they exist in each DataStore.
     for (param_values,datastore) in datastores:
@@ -286,9 +288,4 @@ def multi_curve_visualzition(simulation_name,master_results_dir,x_axis_parameter
        pylab.savefig(master_results_dir+'/'+filename)
     
     
-    
-    
-    
-    
-    
-    
+

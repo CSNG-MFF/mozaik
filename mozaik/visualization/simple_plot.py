@@ -1,7 +1,6 @@
 """
 See :mod:`mozaik.visualization` for more general documentation.
 """
-
 import mozaik.visualization.helper_functions as phf
 import pylab
 import numpy
@@ -344,7 +343,7 @@ class StandardStyle(SimplePlot):
                     raise ValueError('Unknown x tick style %s', self.x_tick_style)
 
         if self.y_axis:
-            if self.y_ticks != None and self.x_tick_style == 'Custom':
+            if self.y_ticks != None and self.y_tick_style == 'Custom':
                 if self.y_tick_labels != None:
                     assert len(self.y_ticks) == len(self.y_tick_labels)
                     pylab.yticks(self.y_ticks, self.y_tick_labels)
@@ -424,7 +423,7 @@ class SpikeRasterPlot(StandardStyle):
                    train = []
                    for i, spike_list in enumerate(sp):
                        train.extend(spike_list[n])
-                   self.axis.plot(train,[j for x in xrange(0, len(train))],'|',color=colors[k])
+                   self.axis.plot(train,[j for x in xrange(0, len(train))],'|',color=colors[k],mew=1)
                 else:
                     for i, spike_list in enumerate(sp):
                         spike_train = spike_list[n]
@@ -446,14 +445,12 @@ class SpikeRasterPlot(StandardStyle):
         self.x_tick_style = 'Custom'
         self.x_lim = (t_start, t_stop)
         self.x_label = 'time (ms)'
-        if not self.group_trials:
-            if num_n == 1:
-                self.y_label = 'Trial'
-            else:
-                self.y_label = 'Neuron/Trial'
-        else:
-            self.y_label = 'Neuron' 
+        self.y_label = None
+        
         self.y_ticks = []
+
+
+
 
 class SpikeHistogramPlot(SpikeRasterPlot):
     """
@@ -632,7 +629,6 @@ class ScatterPlotMovie(StandardStyleAnimatedPlot):
         self.i = self.i + 1
         if self.i == self.l:
             self.i = 0
-        print self.i
         return self.scatter
 
     def plot(self):
@@ -1068,14 +1064,9 @@ class HistogramPlot(StandardStyle):
     def plot(self):
         
         if self.parameters["log"]:
-            mmin  = numpy.floor(numpy.log10(numpy.min(numpy.array(self.values)[numpy.nonzero(self.values)])))
-            bins = numpy.logspace(mmin,numpy.ceil(numpy.log10(numpy.max(self.values))),self.num_bins)
-            
-            if numpy.min(self.values) == 0.0:
-               bins = numpy.concatenate([[0.0],bins])
+            self.axis.hist(numpy.log10(self.values),bins=self.num_bins,range=self.x_lim,edgecolor='none')
         else:
-            bins = self.num_bins   
-            
-        self.axis.hist(self.values,bins=bins,range=self.x_lim,edgecolor='none')
+            self.axis.hist(self.values,bins=self.num_bins,range=self.x_lim,edgecolor='none')
+        
         self.y_label = '#'
         
