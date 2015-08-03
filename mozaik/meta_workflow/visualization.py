@@ -288,9 +288,4 @@ def multi_curve_visualzition(simulation_name,master_results_dir,x_axis_parameter
        pylab.savefig(master_results_dir+'/'+filename)
     
     
-    
-    
-    
-    
-    
-    
+

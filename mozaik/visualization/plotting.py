@@ -151,7 +151,7 @@ class Plotting(ParametrizedObject):
         t1 = time.time()
         if params == None:
             params = {}
-        self.fig = pylab.figure(facecolor='b', **self.fig_param)
+        self.fig = pylab.figure(facecolor='w', **self.fig_param)
         gs = gridspec.GridSpec(1, 1)
         gs.update(left=0.05, right=0.95, top=0.95, bottom=0.05)
         self._handle_parameters_and_execute_plots({}, params,gs[0, 0])
@@ -302,7 +302,7 @@ class PlotTuningCurve(Plotting):
             if self.parameters.polar:
                assert period != None, "ERROR: You asked to plot the tuning curve on polar axis even though the domain over which it is measured is not periodic." 
                 
-            for k in dic.keys():    
+            for k in sorted(dic.keys()):    
                 (par, val) = dic[k]
                 if self.parameters.mean:
                     v = 0
@@ -430,7 +430,6 @@ class PlotTuningCurve(Plotting):
                par[-q:] = b
            
            return val,par 
-        
 
     
 class RasterPlot(Plotting):
@@ -1218,7 +1217,6 @@ class ConnectivityPlot(Plotting):
                 self.pnvs.append(a[0])
         
         for conn in _connections:
-            print conn
             if not self.parameters.reversed and conn.source_name == self.parameters.sheet_name:
                 # add outgoing projections from sheet_name
                 self.connecting_neurons_positions.append(

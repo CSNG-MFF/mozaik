@@ -121,7 +121,7 @@ class ModularConnector(Connector):
 class ModularSamplingProbabilisticConnector(ModularConnector):
     """
     ModularConnector that interprets the weights as proportional probabilities of connectivity
-    and for each neuron out connections it samples num_samples of
+    and for each neuron in connections it samples num_samples of
     connections that actually get realized according to these weights.
     Each such sample connections will have weight equal to
     base_weight but note that there can be multiple

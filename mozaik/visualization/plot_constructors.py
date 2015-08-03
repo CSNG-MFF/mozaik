@@ -137,7 +137,7 @@ class PerStimulusPlot(PerDSVPlot):
 
     The self.dsvs will contain the datastores you want to plot in each of the
     subplots - i.e. all recordings in the given datastore come from the same
-    stimulus of the same parameters except for the trial parameter.
+    stimulus of the same parameters (except for the trial parameter if `single_trial` is False).
 
     PerStimulusPlot provides several automatic titling of plots based on the
     stimulus name and parameters. The currently supported styles are:
@@ -160,7 +160,8 @@ class PerStimulusPlot(PerDSVPlot):
     title_style = param.String(default="Clever", instantiate=True,
                                doc="The style of the title")
 
-    def  __init__(self, datastore, **params):
+    def  __init__(self, datastore,single_trial=False, **params):
+        self.single_trial = single_trial
         PerDSVPlot.__init__(self, datastore, **params)
         ss = self._get_stimulus_ids()
         assert ss != [], "Error, empty datastore!"
@@ -176,7 +177,8 @@ class PerStimulusPlot(PerDSVPlot):
         # lets find parameter indexes that vary if we need 'Clever' title style
         if self.title_style == "Clever":
             self.varied = varying_parameters([MozaikParametrized.idd(s) for s in ss])
-            self.varied = [x for x in self.varied if x != 'trial']
+            if not self.single_trial:
+                self.varied = [x for x in self.varied if x != 'trial']
             
             
         if self.title_style == "Standard":
@@ -188,7 +190,10 @@ class PerStimulusPlot(PerDSVPlot):
         return self.datastore.get_stimuli()
          
     def partiotion_dsvs(self):
-        return partition_by_stimulus_paramter_query(self.datastore,['trial'])
+        if not self.single_trial:
+           return partition_by_stimulus_paramter_query(self.datastore,['trial'])
+        else:
+           return partition_by_stimulus_paramter_query(self.datastore,[]) 
 
     def _single_plot(self, idx,gs):
         title = self.title(idx)
