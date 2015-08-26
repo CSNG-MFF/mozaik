@@ -16,6 +16,9 @@ import logging
 import inspect
 import collections
 
+import param.parameterized
+param.parameterized.docstring_signature=False
+
 logger = logging.getLogger("mozaik")
 
 class SNumber(Number):
@@ -100,14 +103,15 @@ class MozaikParametrized(Parameterized):
     _module_cache = {}
     
     def __init__(self, **params):
+        print params
         Parameterized.__init__(self, **params)
         self.module_path = inspect.getmodule(self).__name__
         self.name = self.__class__.__name__
-        
+        print self.params()
         for name in self.params():
             o = self.params()[name]
             if not (isinstance(o,SNumber) or isinstance(o,SInteger) or isinstance(o,SString)):
-               raise ValueError("The parameter %s is not of type SNumber or SInteger or SString" % name)
+               raise ValueError("The parameter %s is not of type SNumber or SInteger or SString but of type %s." % (name,type(o)))
  
         for (name, value) in self.get_param_values():
             if value == None and self.params()[name].allow_None==False:                
@@ -151,7 +155,7 @@ class MozaikParametrized(Parameterized):
         In MozaikParametrized we hide parameters with precedence below 0 from
         users.
         """
-        d = super(MozaikParametrized, cls).params(parameter_name).copy()
+        d = super(MozaikParametrized,cls).params(parameter_name).copy()
         for k in d.keys():
             if d[k].precedence < 0 and d[k].precedence != None:
                 del d[k]
