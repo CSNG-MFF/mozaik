@@ -103,11 +103,10 @@ class MozaikParametrized(Parameterized):
     _module_cache = {}
     
     def __init__(self, **params):
-        print params
         Parameterized.__init__(self, **params)
         self.module_path = inspect.getmodule(self).__name__
         self.name = self.__class__.__name__
-        print self.params()
+
         for name in self.params():
             o = self.params()[name]
             if not (isinstance(o,SNumber) or isinstance(o,SInteger) or isinstance(o,SString)):
