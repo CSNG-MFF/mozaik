@@ -355,6 +355,10 @@ class TrialToTrialCrossCorrelationOfAnalogSignalList(Analysis):
                     cc= cc + a
                 
         cc = cc / (len(ass)*(len(ass)-1)/2)
+        
+        if type(cc) == int:
+           cc = numpy.array([0 for i in xrange(0,len(ass[0])*2-1)]) 
+        
         return cc
 
 
@@ -815,13 +819,14 @@ class PSTH(Analysis):
 
 class SpikeCount(Analysis):
       """
-      For each recording in the datastore view it creates an AnalogSignalList containing the PSTH of the neuron
-      using the bin length `required_parameters.bin_length`.
+      For each recording in the datastore view it creates an AnalogSignalList containing the spike count per bin of the neuron
+      using the bin length `required_parameters.bin_length`. This is the same as PSTH, except in PSTH the spike counts are re-normalized
+      to form instantaneous firing rate.
       
       Other parameters
       ------------------- 
       bin_length : float
-                 The bin length of the PSTH
+                 The bin length of the spike count
     
       """  
       required_parameters = ParameterSet({
@@ -1024,7 +1029,7 @@ class PopulationMean(Analysis):
               if ads.period == None:
                  m = numpy.mean(ads.values)
               else:
-                 m = circ_mean(ads.values.flatten(),high=ads.period) 
+                 m = circ_mean(ads.values.flatten(),high=ads.period)[0]
               self.datastore.full_datastore.add_analysis_result(SingleValue(value=m,period=ads.period,value_name = 'Mean(' +ads.value_name + ')',sheet_name=ads.sheet_name,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=ads.stimulus_id))        
 
           dsv = queries.param_filter_query(self.datastore,identifier=['AnalogSignalList'])
@@ -1058,7 +1063,7 @@ class Analog_MeanSTDAndFanoFactor(Analysis):
                     esyn_ids = segs[0].get_stored_esyn_ids()
                     isyn_ids = segs[0].get_stored_isyn_ids()
                     # mean
-                    vm_mean = abs(numpy.mean(numpy.array([numpy.array([numpy.mean(seg.get_vm(idd)) for idd in vm_ids]) for seg in segs]),axis=0))
+                    vm_mean = numpy.mean(numpy.array([numpy.array([numpy.mean(seg.get_vm(idd)) for idd in vm_ids]) for seg in segs]),axis=0)
                     esyn_mean = numpy.mean(numpy.array([numpy.array([numpy.mean(seg.get_esyn(idd)) for idd in esyn_ids]) for seg in segs]),axis=0)
                     isyn_mean = numpy.mean(numpy.array([numpy.array([numpy.mean(seg.get_isyn(idd)) for idd in isyn_ids]) for seg in segs]),axis=0)
                     # standard deviation
@@ -1224,6 +1229,23 @@ class SubtractPNVfromPNVS(Analysis):
                     assert set(p.ids) == set(self.pnv.ids)
                     sub = list(numpy.array(p.get_value_by_id(p.ids)) - numpy.array(self.pnv.get_value_by_id(p.ids)))
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(sub,p.ids,p.value_units,value_name = p.value_name + '-' + self.pnv.value_name,sheet_name=sheet,tags=self.tags+p.tags,period=p.period,analysis_algorithm=self.__class__.__name__,stimulus_id=p.stimulus_id))        
+
+class AddPNVfromPNVS(Analysis):
+      """
+      Takes datastore, and it adds to each PerNeuronValue in it a PerNeuronValue supplied in parameters, and saves the new PNVs into the datastore.
+      """
+
+      def __init__(self, pnv,datastore, parameters, tags=None):
+          Analysis.__init__(self, datastore, parameters, tags)
+          self.pnv = pnv
+
+      def perform_analysis(self):
+            for sheet in self.datastore.sheets():
+                dsv = queries.param_filter_query(self.datastore, sheet_name=sheet,identifier='PerNeuronValue')
+                for p in dsv.get_analysis_result():
+                    assert set(p.ids) == set(self.pnv.ids)
+                    sub = list(numpy.array(p.get_value_by_id(p.ids)) + numpy.array(self.pnv.get_value_by_id(p.ids)))
+                    self.datastore.full_datastore.add_analysis_result(PerNeuronValue(sub,p.ids,p.value_units,value_name = p.value_name + '+' + self.pnv.value_name,sheet_name=sheet,tags=self.tags+p.tags,period=p.period,analysis_algorithm=self.__class__.__name__,stimulus_id=p.stimulus_id))        
                 
 
 
@@ -1273,3 +1295,68 @@ class TrialToTrialFanoFactorOfAnalogSignal(Analysis):
                             
                             ff = [numpy.cov(var[i],mean[i])[0][1]/numpy.var(var[i]) for i in xrange(0,len(var))]
                             self.datastore.full_datastore.add_analysis_result(PerNeuronValue(ff,asls[0].ids,qt.dimensionless,value_name = 'Fano Factor (' + asls[0].y_axis_name + ')' ,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+
+
+class CircularVarianceOfTuningCurve(Analysis):
+      """
+      Calculates circular variance (see for example [1] for defintion) of each tuning curve present in DSV. 
+      
+      It takes a dsv containing some PerNeuronValues.
+      All PerNeuronValues have to belong to stimuli of the same type and
+      contain the same type of values (i.e. have the same `value_name`).
+
+      For each combination of parameters of the stimuli other than `parameter_name`
+      `CircularVarianceTuningCurve` it calculates the circular variance through the dimension defined by `parameter_name`.
+      The `parameter_name` needs to be associated with units with periodic value. The period of the value will be mapped onto 
+      the (0,2pi) interval over which circular variance is calculated in [1].
+      
+      It stores the circular variance in a PerNeuronValue - for each combination of parameters of the stimulus associated 
+      with the supplied PerNeuronValue with the exception of the stimulus parameter `parameter_name`. 
+    
+      [1] 1. Ringach DL, Shapley RM, Hawken MJ. Orientation selectivity in macaque V1: diversity and laminar dependence. J Neurosci [Internet]. 2002 Jul 1;22(13):5639–51. 
+    
+      Other parameters
+      ------------------- 
+      parameter_name : str
+                     The stimulus parameter name through which to fit the tuning curve.
+    
+      """   
+      required_parameters = ParameterSet({
+          'parameter_name': str  # the parameter_name through which to fit the tuning curve
+      })      
+      
+      def perform_analysis(self):
+            for sheet in self.datastore.sheets():
+                dsv = queries.param_filter_query(self.datastore,identifier='PerNeuronValue',sheet_name=sheet)
+                if len(dsv.get_analysis_result()) == 0: continue
+                assert queries.equal_ads(dsv,except_params=['stimulus_id'])
+                assert queries.ads_with_equal_stimulus_type(dsv)
+                self.pnvs = dsv.get_analysis_result()
+                
+                # get stimuli
+                self.st = [MozaikParametrized.idd(s.stimulus_id) for s in self.pnvs]
+                
+                
+                period = self.st[0].params()[self.parameters.parameter_name].period
+                
+                # check whether it is periodic 
+                assert period != None
+                
+                # transform the pnvs into a dictionary of tuning curves according along the parameter_name
+                # also make sure they are ordered according to the first pnv's idds 
+                
+                self.tc_dict = colapse_to_dictionary([z.get_value_by_id(self.pnvs[0].ids) for z in self.pnvs],self.st,self.parameters.parameter_name)
+                for k in self.tc_dict.keys():
+                        z=[]
+                        for i in xrange(0,len(self.pnvs[0].values)):
+                            angles = self.tc_dict[k][0]
+                            values = [a[i] for a in self.tc_dict[k][1]]
+                            
+                            # scale the values to radians 
+                            angles = numpy.array(angles) / period * 2*numpy.pi
+                            # calculate the CV for the given neurons and append the value to z which will hold values across all neurons
+                            z.append(1-abs(numpy.sum([x*numpy.exp(y*1j) for (x,y) in zip(values,angles)])/sum(values)))    
+                         
+                        res = numpy.array(z)
+                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(res,self.pnvs[0].ids,self.pnvs[0].value_units,value_name = self.parameters.parameter_name + ' CV(' + self.pnvs[0].value_name + ')' ,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
+                        

@@ -116,9 +116,9 @@ class DataStoreView(ParametrizedObject):
         """
         ids = self.full_datastore.block.annotations['neuron_ids'][sheet_name]
         if isinstance(neuron_ids,list) or isinstance(neuron_ids,numpy.ndarray):
-          return [numpy.where(ids == i)[0] for i in neuron_ids]
+          return [numpy.where(ids == i)[0][0] for i in neuron_ids]
         else:
-          return numpy.where(ids == neuron_ids)[0]
+          return numpy.where(ids == neuron_ids)[0][0]
 
     def get_sheet_ids(self, sheet_name,indexes=None):
         """

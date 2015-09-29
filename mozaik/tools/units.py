@@ -42,6 +42,13 @@ nS = nanosiemens = UnitQuantity(
     aliases=['nanosiemens']
 )
 
+uS = microsiemens = UnitQuantity(
+    'microsiemens',
+    1e-6*qt.S,
+    symbol='uS',
+    aliases=['microsiemens']
+)
+
 
 def periodic(unit):
     """

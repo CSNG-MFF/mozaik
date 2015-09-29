@@ -224,6 +224,8 @@ class StandardStyle(SimplePlot):
             "y_axis": True,
             "x_label": None,
             "y_label": None,
+            "x_label_pad": None,
+            "y_label_pad": None,
             "top_right_border": False,
             "left_border": True,
             "bottom_border": True,
@@ -302,9 +304,9 @@ class StandardStyle(SimplePlot):
 
 
         if self.y_label and self.y_axis:
-            pylab.ylabel(self.y_label,multialignment='center',fontsize=self.fontsize)
+            pylab.ylabel(self.y_label,multialignment='center',fontsize=self.fontsize,labelpad=self.y_label_pad)
         if self.x_label and self.x_axis:
-            pylab.xlabel(self.x_label,multialignment='center',fontsize=self.fontsize)
+            pylab.xlabel(self.x_label,multialignment='center',fontsize=self.fontsize,labelpad=self.x_label_pad)
         if not self.top_right_border:
             phf.disable_top_right_axis(self.axis)
         if not self.left_border:
@@ -725,6 +727,8 @@ class ScatterPlot(StandardStyle):
         else:
             vmax = self.period
             vmin = 0
+        logger.debug(str(self.x))
+        logger.debug(str(self.y))
         ax = self.axis.scatter(self.x, self.y, c=self.z,
                                s=self.dot_size,
                                marker=self.marker,
@@ -735,11 +739,10 @@ class ScatterPlot(StandardStyle):
                                vmax=vmax)
         if self.equal_aspect_ratio:
             self.axis.set_aspect(aspect=1.0, adjustable='box')
+        logger.debug(numpy.min(self.x))
+        logger.debug(numpy.max(self.x))
         self.x_lim = (numpy.min(self.x),numpy.max(self.x))
         self.y_lim = (numpy.min(self.y),numpy.max(self.y))
-
-        #self.x_ticks = [1.1*numpy.min(self.x), 1.1*numpy.max(self.x)]
-        #self.y_ticks = [1.1*numpy.min(self.y), 1.1*numpy.max(self.y)]
 
         if self.identity_line:
            pylab.plot([-1e10,1e10],[-1e10,1e10],'k',linewidth=2) 
@@ -822,26 +825,23 @@ class StandardStyleLinePlot(StandardStyle):
                     m = self.y[i]
                 else:
                     m = m + self.y[i]
-
-            if self.colors == None:
-                color = 'k'
-            elif type(self.colors) == list:
-                color = self.colors[i]
+            
+            p = {}
+            
+            if self.labels != None:
+                p['label'] =self.labels[i]
+            
+            if type(self.colors) == list:
+                p['color'] = self.colors[i]
             elif type(self.colors) == dict:
                 assert self.labels[i] in self.colors.keys(), "Cannot find curve named %s" % (self.labels[i])
-                color = self.colors[self.labels[i]]
-            else:
-                color = self.colors
+                p['color'] = self.colors[self.labels[i]]
+            elif self.colors != None:
+                p['color'] = self.colors
 
-            if self.labels != None:
-                self.axis.plot(self.x[i], self.y[i],
+            self.axis.plot(self.x[i], self.y[i],
                                linewidth=self.linewidth,
-                               label=self.labels[i],
-                               color=color)
-            else:
-                self.axis.plot(self.x[i], self.y[i],
-                               linewidth=self.linewidth,
-                               color=color)
+                               **p)
             
             if self.fill:
                d = numpy.zeros(len(self.y[i]))
@@ -1070,3 +1070,77 @@ class HistogramPlot(StandardStyle):
         
         self.y_label = '#'
         
+class CorticalColumnSpikeRasterPlot(StandardStyle):
+    """
+    This function plots the raster plot of spikes in the `spike_lists` argument. It assumes
+    each entry in the `spike_lists` corresponds to different cortical layer (or neural type within a layer)
+    and will plot them in that order in the typical 'spikes across layer' raster plot.
+
+    Parameters
+    ----------
+    spike_lists : list
+                The `spike_lists` argument is a list of SpikeList objects. The top
+                level list corresponds to different sets of spikes that are assumed to come
+                from different cortical layers (or cell types within layers). Each set
+                of spikes will be colored by the color on corresponding postion of the
+                colors parameter (matplotlib readable color formats accapted). If None all
+                colors will be set to '#848484' (gray). The second level list contains 
+                different trials of the populations responses stored in the individual SpikeList objects.
+
+    Other parameters
+    ----------------
+    colors : list
+           The colors to assign to the different sets of spikes. 
+    labels : list
+           The list of labels to be given to the different 'layers'. This list should have the same length as
+           `spike_lists`.
+           
+
+    Notes
+    -----
+    
+    All SpikeList objects must record over the same interval.
+    """
+    def __init__(self, spike_lists,**param):
+        StandardStyle.__init__(self,**param)
+        self.sps = spike_lists
+        self.parameters["colors"] = None
+        self.parameters["labels"] = None
+
+    def plot(self):
+        if self.parameters["colors"] == None:
+            colors = ['#000000' for i in xrange(0, len(self.sps))]
+        else:
+            colors = self.colors
+            
+        assert len(self.labels) == len(self.sps) 
+
+        t_start = float(self.sps[0][0].t_start)
+        t_stop = float(self.sps[0][0].t_stop)
+        
+        for l in self.sps:
+            for n in l:
+                assert n.t_start == t_start , "Not all SpikeLists have the same t_start"
+                assert n.t_stop == t_stop , "Not all SpikeLists have the same t_start"
+
+        y = 0
+        yticks = [0]
+        for k, sp in enumerate(self.sps):
+            yticks.append(yticks[-1]+len(sp))
+            for j, n in enumerate(sp):
+                #self.axis.plot(n,[y for x in xrange(0, len(n))],',',color=colors[k],mew=0)
+                self.axis.scatter(n,[y for x in xrange(0, len(n))],s=7, c=colors[k], marker='o',lw=0)
+                y += 1
+        
+        yticks = [yticks[j-1] + (yticks[j]-yticks[j-1])/2.0 for j in xrange(1,len(yticks))]
+        
+        #self.x_ticks = [t_start, (t_stop-t_start)/2, t_stop]
+        #self.x_tick_labels = [t_start, (t_stop-t_start)/2, t_stop]
+        #self.x_tick_style = 'Custom'
+        self.x_lim = (t_start, t_stop)
+        self.x_label = 'time (ms)'
+        
+        self.y_lim = (0,y)
+        self.y_tick_style = 'Custom'
+        self.y_ticks = yticks
+        self.y_tick_labels = self.labels
