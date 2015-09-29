@@ -85,9 +85,11 @@ Note that if the installation is done in your virtualenv environment, it doesn't
     cd python-neo
     python setup.py install
     
- * imagen::        
+ * imagen (for compatibility reasons get a fork of imagen package from this repository)::        
  
-      pip install --user imagen
+      git clone https://github.com/antolikjan/imagen.git
+      python setup.py install
+
  * parameters::
  
      git clone https://github.com/apdavison/parameters.git parameters
@@ -167,7 +169,7 @@ Now you can install in this protected environment all other dependencies::
   pip install --upgrade distribute
   pip install numpy mpi4py 
   pip install scipy matplotlib quantities lazyarray
-  pip install imagen interval PIL
+  pip install interval PIL
 
 Now we can install *Nest* (always in the virtual environment):
 
