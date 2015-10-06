@@ -130,8 +130,12 @@ class ModulationRatio(Analysis):
 
 class Analog_F0andF1(Analysis):
       """
-      Calculates the DC and first harmonic of trial averaged vm and conductances for each neuron
-      measured to FullfieldDriftingSinusoidalGrating. 
+      Calculates the DC and first harmonic of trial averaged vm and conductances for each neuron.
+      The data_store has to contain responses to the same stimulus type, and the stymulus type has to have
+      <temporal_frequency> parameter which is used as the first harmonic frequency.
+      
+      
+      
       It stores them in PerNeuronValue datastructures (one for exc. one for inh. conductances).
       
       Notes
@@ -140,9 +144,12 @@ class Analog_F0andF1(Analysis):
       """
 
       def perform_analysis(self):
-            dsv1 = queries.param_filter_query(self.datastore,st_name='FullfieldDriftingSinusoidalGrating')
-            for sheet in dsv1.sheets():
-                dsv = queries.param_filter_query(dsv1, sheet_name=sheet)
+            assert queries.equal_stimulus_type(self.datastore) , "Data store has to contain only recordings to the same stimulus type"
+            st = self.datastore.get_stimuli()[0]
+            assert MozaikParametrized.idd(st).params().has_key('temporal_frequency'), "The stimulus has to have parameter temporal_frequency which is used as first harmonic"
+            
+            for sheet in self.datastore.sheets():
+                dsv = queries.param_filter_query(self.datastore, sheet_name=sheet)
                 segs1, stids = colapse(dsv.get_segments(),dsv.get_stimuli(),parameter_list=['trial'],allow_non_identical_objects=True)
                 for segs,st in zip(segs1, stids):
                     first_analog_signal = segs[0].get_esyn(segs[0].get_stored_esyn_ids()[0])
