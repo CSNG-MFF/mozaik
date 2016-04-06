@@ -500,11 +500,11 @@ class PickledDataStore(Hdf5DataStore):
             s.full = False
             s.datastore_path = self.parameters.root_directory
 
-        #if os.path.isfile(self.parameters.root_directory + '/datastore.analysis.pickle'):
-        f = open(self.parameters.root_directory + '/datastore.analysis.pickle', 'rb')
-        self.analysis_results = cPickle.load(f)
-        #else:
-        #    self.analysis_results = []
+        if os.path.isfile(self.parameters.root_directory + '/datastore.analysis.pickle'):
+            f = open(self.parameters.root_directory + '/datastore.analysis.pickle', 'rb')
+            self.analysis_results = cPickle.load(f)
+        else:
+            self.analysis_results = []
             
         #f = open(self.parameters.root_directory + '/datastore.sensory.stimulus.pickle', 'rb')
         #self.sensory_stimulus = cPickle.load(f)

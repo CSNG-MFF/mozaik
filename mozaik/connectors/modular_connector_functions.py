@@ -4,6 +4,7 @@ from mozaik.core import ParametrizedObject
 from parameters import ParameterSet
 from mozaik.tools.distribution_parametrization import PyNNDistribution
 from mozaik.tools.misc import *
+from parameters import ParameterSet, ParameterDist
 
 class ModularConnectorFunction(ParametrizedObject):
     """
@@ -104,9 +105,22 @@ class LinearModularConnectorFunction(DistanceDependentModularConnectorFunction):
     def distance_dependent_function(self,distance):
         return self.parameters.linear_scaler*distance + self.parameters.constant_scaler
 
+class LinearModularConnectorFunction1(DistanceDependentModularConnectorFunction):
+    """
+    Corresponds to: distance*linear_scaler + constant_scaler, where distance is in micrometers
+    """
+    required_parameters = ParameterSet({
+        'constant_scaler': ParameterDist,    # the aditive constant of the decay
+        'linear_scaler': ParameterDist,    # the scaler of the linear decay
+    })
+    
+    def distance_dependent_function(self,distance):
+        return self.parameters.linear_scaler.next()[0]*distance + self.parameters.constant_scaler.next()[0]
+
+
 class HyperbolicModularConnectorFunction(DistanceDependentModularConnectorFunction):
     """
-    Corresponds to: exp(-alpha*distance*sqrt(\theta^2 + distance^2)) , where distance is in micrometers
+    Corresponds to: exp(-alpha*sqrt(\theta^2 + distance^2)) , where distance is in micrometers
     And is the best fit I could so far find to the data from: 
     Stepanyants, A., Hirsch, J. a, Martinez, L. M., Kisvárday, Z. F., Ferecskó, A. S., & Chklovskii, D. B. (2008). 
     Local potential connectivity in cat primary visual cortex. Cerebral cortex, 18(1), 13–28. doi:10.1093/cercor/bhm027

@@ -1018,9 +1018,12 @@ class NeuronToNeuronAnalogSignalCorrelations(Analysis):
 
 
 
-class PopulationMean(Analysis):
+class PopulationMeanAndVar(Analysis):
       """
       Calculates the mean value accross population of a quantity. Currently it can process PerNeuronValues , PerNeuronPairValue, and AnalogSignalList ADS.
+      
+      For periodic variables, the mean is correctly handled, but variance is not computed.
+      
       This list is likely to grow in future.
       """
       def perform_analysis(self):
@@ -1028,17 +1031,32 @@ class PopulationMean(Analysis):
           for ads in dsv.get_analysis_result():
               if ads.period == None:
                  m = numpy.mean(ads.values)
+                 v = numpy.var(ads.values)
               else:
                  m = circ_mean(ads.values.flatten(),high=ads.period)[0]
+                 v = None
               self.datastore.full_datastore.add_analysis_result(SingleValue(value=m,period=ads.period,value_name = 'Mean(' +ads.value_name + ')',sheet_name=ads.sheet_name,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=ads.stimulus_id))        
-
+              if v!=None:
+                    self.datastore.full_datastore.add_analysis_result(SingleValue(value=v,period=ads.period,value_name = 'Var(' +ads.value_name + ')',sheet_name=ads.sheet_name,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=ads.stimulus_id))        
+                    
           dsv = queries.param_filter_query(self.datastore,identifier=['AnalogSignalList'])
           for ads in dsv.get_analysis_result():
-              nas = NeoAnalogSignal(ads.mean(),t_start=ads.asl[0].t_start,sampling_period=ads.asl[0].sampling_period,units=ads.asl[0].units)
-              self.datastore.full_datastore.add_analysis_result(AnalogSignal(nas,
+              nas_m = NeoAnalogSignal(ads.mean(),t_start=ads.asl[0].t_start,sampling_period=ads.asl[0].sampling_period,units=ads.asl[0].units)
+              nas_v = NeoAnalogSignal(ads.var(),t_start=ads.asl[0].t_start,sampling_period=ads.asl[0].sampling_period,units=ads.asl[0].units)
+              
+              self.datastore.full_datastore.add_analysis_result(AnalogSignal(nas_m,
                                                                 ads.y_axis_units,
                                                                 x_axis_name=ads.x_axis_name,
                                                                 y_axis_name='Mean(' + ads.y_axis_name + ')',
+                                                                sheet_name=ads.sheet_name,
+                                                                tags=self.tags,
+                                                                analysis_algorithm=self.__class__.__name__,
+                                                                stimulus_id=ads.stimulus_id))
+
+              self.datastore.full_datastore.add_analysis_result(AnalogSignal(nas_v,
+                                                                ads.y_axis_units,
+                                                                x_axis_name=ads.x_axis_name,
+                                                                y_axis_name='Var(' + ads.y_axis_name + ')',
                                                                 sheet_name=ads.sheet_name,
                                                                 tags=self.tags,
                                                                 analysis_algorithm=self.__class__.__name__,

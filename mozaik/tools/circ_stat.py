@@ -90,3 +90,4 @@ def circ_mean(matrix, weights=None, axis=None, low=0, high=pi*2,
         m = numpy.mean(z, axis=axis)
     a,b = ((angle_to_pi(m) / (pi*2))*(high-low) + low, abs(m))
     return a,b
+    

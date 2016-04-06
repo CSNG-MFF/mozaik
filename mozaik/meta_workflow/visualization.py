@@ -195,7 +195,7 @@ def multi_curve_visualzition(simulation_name,master_results_dir,x_axis_parameter
     # if value_names isNone lets set it to set of value_names in the first datastore
     if value_name == None:
         value_name = set([ads.value_name for ads in param_filter_query(datastores[0][1],identifier='SingleValue').get_analysis_result()])
-        assert len(value_name) == 1
+        assert len(value_name) == 1, "the value_name contains:" + str(value_name)
         value_name = list(value_name)[0]
     
     # Lets first make sure that the value_names uniqly identify a SingleValue ADS in each DataStore and 

@@ -256,6 +256,17 @@ class AnalogSignalList(AnalysisDataStructure1D):
         
         return numpy.mean(self.asl,axis=0)
 
+    def var(self):
+        """
+        Calculates the mean analog signal from the ones in the list.
+        """
+        for asl in self.asl:
+            assert asl.units == self.asl[0].units, "AnalogSignalList.mean: units of AnalogSignal objects in the list do not match."
+            assert asl.sampling_rate == self.asl[0].sampling_rate, "AnalogSignalList.mean: sampling_rate of AnalogSignal objects in the list do not match"
+            assert asl.t_start == self.asl[0].t_start, "AnalogSignalList.mean: t_start of AnalogSignal objects in the list do not match."        
+        
+        return numpy.var(self.asl,axis=0)
+
 
 
 class PerNeuronPairAnalogSignalList(AnalysisDataStructure1D):
