@@ -187,11 +187,16 @@ class MozaikSegment(Segment):
                 self.load_full()
             return [s.annotations['source_id'] for s in self.spiketrains]
 
-        def mean_rates(self):
+        def mean_rates(self,start=None,end=None):
             """
             Returns the mean rates of the spiketrains in spikes/s.
             """
-            return [len(s)/(s.t_stop.rescale(qt.s).magnitude-s.t_start.rescale(qt.s).magnitude) for s in self.spiketrains]
+            if start != None:
+                start = start.rescale(qt.s)
+                end = end.rescale(qt.s)
+                return [len(s.time_slice(start,end))/(end.magnitude-start.magnitude) for s in self.spiketrains]
+            else:
+               return [len(s)/(s.t_stop.rescale(qt.s).magnitude-s.t_start.rescale(qt.s).magnitude) for s in self.spiketrains]
 
         def isi(self):
             """

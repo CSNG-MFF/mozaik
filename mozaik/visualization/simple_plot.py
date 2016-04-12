@@ -6,6 +6,7 @@ import pylab
 import numpy
 import mozaik
 import mozaik.tools.units 
+import quantities as pq
 
 logger = mozaik.getMozaikLogger()
 
@@ -260,7 +261,7 @@ class StandardStyle(SimplePlot):
         self.colormap = matplotlib.colors.LinearSegmentedColormap.from_list('CMcmSBVe',[self.color_cycle['SB'],self.color_cycle['Ve']])
 
     def pre_axis_plot(self):
-        pylab.rc('axes', linewidth=3)
+        pylab.rc('axes', linewidth=1)
         self.xtick_pad_backup = pylab.rcParams['xtick.major.pad']
         pylab.rcParams['xtick.major.pad'] = self.x_tick_pad
         self.ytick_pad_backup = pylab.rcParams['ytick.major.pad']
@@ -412,8 +413,8 @@ class SpikeRasterPlot(StandardStyle):
 
         neurons = [i for i in xrange(0, len(self.sps[0][0]))]
         
-        t_start = float(self.sps[0][0][0].t_start)
-        t_stop = float(self.sps[0][0][0].t_stop)
+        t_start = float(self.sps[0][0][0].t_start.rescale(pq.s))
+        t_stop = float(self.sps[0][0][0].t_stop.rescale(pq.s))
         
         
         num_n = len(neurons)  # number of neurons
@@ -424,11 +425,11 @@ class SpikeRasterPlot(StandardStyle):
                 if self.group_trials:
                    train = []
                    for i, spike_list in enumerate(sp):
-                       train.extend(spike_list[n])
+                       train.extend(spike_list[n].rescale(pq.s))
                    self.axis.plot(train,[j for x in xrange(0, len(train))],'|',color=colors[k],mew=1)
                 else:
                     for i, spike_list in enumerate(sp):
-                        spike_train = spike_list[n]
+                        spike_train = spike_list[n].rescale(pq.s)
                         self.axis.plot(spike_train,
                                        [j * (num_t + 1) + i + 1
                                           for x in xrange(0, len(spike_train))],
@@ -446,9 +447,8 @@ class SpikeRasterPlot(StandardStyle):
         self.x_ticks = [t_start, (t_stop-t_start)/2, t_stop]
         self.x_tick_style = 'Custom'
         self.x_lim = (t_start, t_stop)
-        self.x_label = 'time (ms)'
+        self.x_label = 'time (s)'
         self.y_label = None
-        
         self.y_ticks = []
 
 
@@ -489,20 +489,20 @@ class SpikeHistogramPlot(SpikeRasterPlot):
 
     def __init__(self, spike_lists,**param):
         SpikeRasterPlot.__init__(self, spike_lists,**param)
-        self.parameters["bin_width"] = 5.0
+        self.parameters["bin_width"] = 0.005
         self.parameters["colors"] = ['#000000' for i in xrange(0, len(self.sps))]
     def plot(self):
         self.neurons = [i for i in xrange(0, min(10, len(self.sps[0][0])))]
 
-        t_stop = float(self.sps[0][0][0].t_stop)
-        t_start = float(self.sps[0][0][0].t_start)
+        t_stop = float(self.sps[0][0][0].t_stop.rescale(pq.s))
+        t_start = float(self.sps[0][0][0].t_start.rescale(pq.s))
 
         all_spikes = []
         for k, sp in enumerate(self.sps):
             tmp = []
             for i, spike_list in enumerate(sp):
                 for j in self.neurons:
-                    spike_train = spike_list[j]
+                    spike_train = spike_list[j].rescale(pq.s)
                     tmp.extend(spike_train.magnitude)
             all_spikes.append(tmp)
 
@@ -512,11 +512,11 @@ class SpikeHistogramPlot(SpikeRasterPlot):
                            color=self.colors,
                            edgecolor='none')
 
-        self.y_label = '(spk/ms)'
+        self.y_label = '(spk/s)'
         self.x_tick_style = 'Custom'
         self.x_ticks = [t_start, (t_stop-t_start)/2, t_stop]
         self.x_lim = (t_start, t_stop)
-        self.x_label = 'time (ms)'
+        self.x_label = 'time (s)'
 
 
 
@@ -727,8 +727,6 @@ class ScatterPlot(StandardStyle):
         else:
             vmax = self.period
             vmin = 0
-        logger.debug(str(self.x))
-        logger.debug(str(self.y))
         ax = self.axis.scatter(self.x, self.y, c=self.z,
                                s=self.dot_size,
                                marker=self.marker,
@@ -897,8 +895,8 @@ class ConductancesPlot(StandardStyle):
         time_axis = numpy.arange(0, len(self.gsyn_es[0]), 1) / float(len(self.gsyn_es[0])) * abs(t_start-t_stop) + t_start
     
         for e, i in zip(self.gsyn_es, self.gsyn_is):
-            e = e.rescale(mozaik.tools.units.nS) #e=e*1000
-            i = i.rescale(mozaik.tools.units.nS) #i=i*1000
+            e = e.rescale(mozaik.tools.units.nS)
+            i = i.rescale(mozaik.tools.units.nS)
             self.axis.plot(time_axis, e.tolist(), color='#F5A9A9')
             self.axis.plot(time_axis, i.tolist(), color='#A9BCF5')
             mean_gsyn_e = mean_gsyn_e + numpy.array(e.tolist())
@@ -1055,20 +1053,51 @@ class HistogramPlot(StandardStyle):
            The colors to assign to the different sets of spikes. 
     """
 
-    def __init__(self, values,**param):
+    def __init__(self, values,labels=None,**param):
         StandardStyle.__init__(self,**param)
         self.values = values
         self.parameters["num_bins"] = 15.0
         self.parameters["log"] = False
+        self.parameters["labels"] = labels
+        self.parameters["colors"] = None
+        self.parameters["mark_mean"] = False
+        if labels != None:
+            assert len(values) == len(labels)
+        
 
     def plot(self):
         
-        if self.parameters["log"]:
-            self.axis.hist(numpy.log10(self.values),bins=self.num_bins,range=self.x_lim,edgecolor='none')
+        if self.colors != None:
+           colors = [self.colors[k] for k in self.labels]
         else:
-            self.axis.hist(self.values,bins=self.num_bins,range=self.x_lim,edgecolor='none')
+           colors = None
         
-        self.y_label = '#'
+        if self.parameters["log"]:
+            self.axis.hist(numpy.log10(self.values),bins=self.num_bins,range=self.x_lim,edgecolor='none',color=colors)
+        else:
+            self.axis.hist(self.values,bins=self.num_bins,range=self.x_lim,rwidth=1,edgecolor='none',color=colors)
+            
+        if self.mark_mean:
+           for i,a in enumerate(self.values):
+                if self.colors==None:
+                    c = self.color_cycle[sorted(self.color_cycle.keys())[i]]
+                elif type(self.colors) == list:
+                    c = self.colors[i]
+                elif type(self.colors) == dict:
+                    assert self.labels[i] in self.colors.keys(), "Cannot find curve named %s" % (self.labels[i])
+                    c = self.colors[self.labels[i]]
+                
+                #tform = mtrans.blended_transform_factory(self.axis.transData, self.axis.transAxes)      
+                print numpy.mean(a)
+                print (self.y_lim[1]-self.y_lim[0])*0.9
+                print self.y_lim[1]
+                self.axis.annotate("",
+                    xy=(numpy.mean(a), (self.y_lim[1]-self.y_lim[0])*0.9), xycoords='data',
+                    xytext=(numpy.mean(a), self.y_lim[1]), textcoords='data',
+                    arrowprops=dict(arrowstyle="->",
+                                    connectionstyle="arc3",linewidth=3.0,color=c),
+                        )
+        self.y_label = '#' 
         
 class CorticalColumnSpikeRasterPlot(StandardStyle):
     """
@@ -1115,30 +1144,26 @@ class CorticalColumnSpikeRasterPlot(StandardStyle):
             
         assert len(self.labels) == len(self.sps) 
 
-        t_start = float(self.sps[0][0].t_start)
-        t_stop = float(self.sps[0][0].t_stop)
+        t_start = float(self.sps[0][0].t_start.rescale(pq.s))
+        t_stop = float(self.sps[0][0].t_stop.rescale(pq.s))
         
         for l in self.sps:
             for n in l:
-                assert n.t_start == t_start , "Not all SpikeLists have the same t_start"
-                assert n.t_stop == t_stop , "Not all SpikeLists have the same t_start"
+                assert n.t_start.rescale(pq.s) == t_start , "Not all SpikeLists have the same t_start"
+                assert n.t_stop.rescale(pq.s) == t_stop , "Not all SpikeLists have the same t_start"
 
         y = 0
         yticks = [0]
         for k, sp in enumerate(self.sps):
             yticks.append(yticks[-1]+len(sp))
             for j, n in enumerate(sp):
-                #self.axis.plot(n,[y for x in xrange(0, len(n))],',',color=colors[k],mew=0)
-                self.axis.scatter(n,[y for x in xrange(0, len(n))],s=7, c=colors[k], marker='o',lw=0)
+                self.axis.scatter(n.rescale(pq.s),[y for x in xrange(0, len(n))],s=7, c=colors[k], marker='o',lw=0)
                 y += 1
         
         yticks = [yticks[j-1] + (yticks[j]-yticks[j-1])/2.0 for j in xrange(1,len(yticks))]
         
-        #self.x_ticks = [t_start, (t_stop-t_start)/2, t_stop]
-        #self.x_tick_labels = [t_start, (t_stop-t_start)/2, t_stop]
-        #self.x_tick_style = 'Custom'
         self.x_lim = (t_start, t_stop)
-        self.x_label = 'time (ms)'
+        self.x_label = 'time (s)'
         
         self.y_lim = (0,y)
         self.y_tick_style = 'Custom'

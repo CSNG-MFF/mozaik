@@ -48,6 +48,7 @@ from scipy.interpolate import griddata
 import mozaik.tools.units 
 from parameters import ParameterSet
 
+from mozaik.tools.circ_stat import *
 from mozaik.core import ParametrizedObject
 from mozaik.storage import queries
 from mozaik.controller import Global
@@ -496,21 +497,21 @@ class RasterPlot(Plotting):
     def _ploter(self, dsv,gs):
         sp = [s.get_spiketrain(self.parameters.neurons) for s in sorted(dsv.get_segments(),key = lambda x : MozaikParametrized.idd(x.annotations['stimulus']).trial)]             
         
-        x_ticks = [0.0,float(sp[0][0].t_stop/2), float(sp[0][0].t_stop)]
+        x_ticks = [0.0,float(sp[0][0].t_stop.rescale(pq.s)/2), float(sp[0][0].t_stop.rescale(pq.s))]
         
         if self.parameters.spontaneous:
            spont_sp = [s.get_spiketrain(self.parameters.neurons) for s in sorted(dsv.get_segments(null=True),key = lambda x : MozaikParametrized.idd(x.annotations['stimulus']).trial)]             
            sp = [RasterPlot.concat_spiketrains(sp1,sp2) for sp1,sp2 in zip(spont_sp,sp)]
-           x_ticks = [float(spont_sp[0][0].t_start),0.0,float(sp[0][0].t_stop/2), float(sp[0][0].t_stop)]
+           x_ticks = [float(spont_sp[0][0].t_start.rescale(pq.s)),0.0,float(sp[0][0].t_stop.rescale(pq.s)/2), float(sp[0][0].t_stop.rescale(pq.s))]
 
         d = {} 
         if self.parameters.trial_averaged_histogram:
             gs = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=gs)
             # first the raster
-            return [ ('SpikeRasterPlot',SpikeRasterPlot([sp]),gs[:3, 0],{'x_axis': False , 'x_label' :  None,"x_ticks": x_ticks}),
-                     ('SpikeHistogramPlot',SpikeHistogramPlot([sp]),gs[3, 0],{"x_ticks": x_ticks})]
+            return [ ('SpikeRasterPlot',SpikeRasterPlot([sp]),gs[:3, 0],{'x_axis': False , 'x_label' :  None,"x_ticks": x_ticks,'x_tick_style'  :'Custom'}),
+                     ('SpikeHistogramPlot',SpikeHistogramPlot([sp]),gs[3, 0],{"x_ticks": x_ticks,'x_tick_style'  :'Custom'})]
         else:
-            return [('SpikeRasterPlot',SpikeRasterPlot([sp]),gs,{"x_ticks": x_ticks})]
+            return [('SpikeRasterPlot',SpikeRasterPlot([sp]),gs,{"x_ticks": x_ticks,'x_tick_style'  :'Custom'})]
 
 
     @staticmethod
@@ -1081,17 +1082,16 @@ class PerNeuronValuePlot(Plotting):
         return ADSGridPlot(self.dsv,function=self._ploter,x_axis_parameter='value_name',y_axis_parameter='sheet_name').make_grid_plot(subplotspec)
 
     def _ploter(self, dsv, gs):
-         z = dsv.get_analysis_result(identifier='PerNeuronValue')
-         if len(z) > 1:
-            logger.error('Warning sheet name and value name does\'t seem to uniquely identify and PerNeuronValue ADS in the datastore, we cannot plot more than one!')
-        
-         pnv = z[0]
-         sheet_name = pnv.sheet_name
-         pos = self.dsv.get_neuron_postions()[sheet_name]            
+         assert queries.ads_with_equal_stimulus_type(dsv) , logger.error('Warning sheet name and value name does\'t seem to uniquely identify set of PerNeuronValue ADS with the same stimulus type')
+         pnvs = dsv.get_analysis_result(identifier='PerNeuronValue')            
+         
         
          if self.parameters.cortical_view:
-            posx = pos[0,self.datastore.get_sheet_indexes(sheet_name,pnv.ids)]
-            posy = pos[1,self.datastore.get_sheet_indexes(sheet_name,pnv.ids)]
+            assert len(pnvs) <= 1, logger.error("We can only display single stimulus parametrization in cortical view, but you have suplied multiple in datastore.")
+            pnv = pnvs[0]
+            pos = self.dsv.get_neuron_postions()[pnv.sheet_name]                            
+            posx = pos[0,self.datastore.get_sheet_indexes(pnv.sheet_name,pnv.ids)]
+            posy = pos[1,self.datastore.get_sheet_indexes(pnv.sheet_name,pnv.ids)]
             values = pnv.values
             if pnv.period != None:
                 periodic = True
@@ -1109,7 +1109,14 @@ class PerNeuronValuePlot(Plotting):
          else:
             params = {}
             params["y_label"] = '# neurons'
-            return [("HistogramPlot",HistogramPlot([pnv.values]),gs,params)]
+
+            varying_stim_parameters = sorted(varying_parameters([MozaikParametrized.idd(pnv.stimulus_id) for pnv in pnvs]))        
+            a = sorted([(','.join([p + ' : ' + str(getattr(MozaikParametrized.idd(pnv.stimulus_id),p)) for p in varying_stim_parameters]),pnv) for pnv in pnvs],key=lambda x: x[0])
+            
+            if len(a) > 1:
+                return [("HistogramPlot",HistogramPlot([z[1].values for z in a],labels=[z[0] for z in a]),gs,params)]
+            else:
+                return [("HistogramPlot",HistogramPlot([pnvs[0].values]),gs,params)]
 
 
 
