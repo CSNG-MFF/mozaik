@@ -122,7 +122,7 @@ fresh installation of Ubuntu (at the time of the writing the version was 12.04)
 
 First the list of ubuntu package dependencies::
 
-  sudo apt-get install python2.7 python-dev python-pip python-nose subversion git libopenmpi-dev g++ libjpeg8 libjpeg8-dev libfreetype6 libfreetype6-dev zlib1g-dev libpng++-dev libncurses5 libncurses5-dev libreadline-dev liblapack-dev libblas-dev gfortran libgsl0-dev openmpi-bin
+  sudo apt-get install python2.7 python-dev python-pip python-nose subversion git libopenmpi-dev g++ libjpeg8 libjpeg8-dev libfreetype6 libfreetype6-dev zlib1g-dev libpng++-dev libncurses5 libncurses5-dev libreadline-dev liblapack-dev libblas-dev gfortran libgsl0-dev openmpi-bin python-tk
 
 
 Virtual env
@@ -169,7 +169,7 @@ Now you can install in this protected environment all other dependencies::
   pip install --upgrade distribute
   pip install numpy mpi4py 
   pip install scipy matplotlib quantities lazyarray
-  pip install interval PIL
+  pip install interval Pillow
 
 Now we can install *Nest* (always in the virtual environment):
 
