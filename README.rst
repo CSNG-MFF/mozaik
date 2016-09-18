@@ -9,6 +9,7 @@ Dependencies
 * mpi4py
 * pyNN (neo_output branch)
 * imagen
+* param
 * parameters
 * quantities 
 * neo
@@ -207,6 +208,18 @@ Install NEO::
     git clone https://github.com/apdavison/python-neo python-neo
     cd python-neo/
     python setup.py install
+
+Install imagen (for compatibility reasons get a fork of imagen package from this repository)::        
+ 
+      git clone https://github.com/antolikjan/imagen.git
+      cd imagen/
+      python setup.py install
+
+Install param ::        
+ 
+      git clone https://github.com/ioam/param.git
+      cd param/
+      python setup.py install
 
 Install Parameters package::
 
