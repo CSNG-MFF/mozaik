@@ -339,6 +339,8 @@ class V1CorrelationBasedConnectivity(ModularConnectorFunction):
         
         corr = V1CorrelationBasedConnectivity.gabor_correlation_rescaled_parammeters(self.source_size,self.source_posx,self.source_posy,self.source_ar,self.source_or,self.source_freq,self.source_phase,
                                                                                      target_size,target_posx,target_posy,target_ar,target_or,target_freq,target_phase)
+                                                                                     
+        assert numpy.all(corr >= -1.0) and numpy.all(corr <= 1.0)                                                                            
         #import pylab   
         #pylab.figure()             
         #if self.flag:                                                                                     

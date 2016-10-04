@@ -224,18 +224,18 @@ class Kick(DirectStimulator):
         population_selector = load_component(self.parameters.population_selector.component)
         self.ids = population_selector(sheet,self.parameters.population_selector.params).generate_idd_list_of_neurons()
         d = dict((j,i) for i,j in enumerate(self.sheet.pop.all_cells))
-        self.local_and_to_stimulate_indexes = [d[i] for i in set(self.ids) & set(self.sheet.pop.local_cells)]
+        self.to_stimulate_indexes = [d[i] for i in self.ids]
         
         exc_syn = self.sheet.sim.StaticSynapse(weight=self.parameters.exc_weight)
         if (self.parameters.exc_firing_rate != 0 or self.parameters.exc_weight != 0):
             self.ssae = self.sheet.sim.Population(self.sheet.pop.size,self.sheet.sim.SpikeSourceArray())
             seeds=mozaik.get_seeds((self.sheet.pop.size,))
-            self.stgene = [stgen.StGen(rng=numpy.random.RandomState(seed=seeds[i])) for i in self.local_and_to_stimulate_indexes]
+            self.stgene = [stgen.StGen(rng=numpy.random.RandomState(seed=seeds[i])) for i in self.to_stimulate_indexes]
             self.sheet.sim.Projection(self.ssae, self.sheet.pop,self.sheet.sim.OneToOneConnector(),synapse_type=exc_syn,receptor_type='excitatory') 
 
     def prepare_stimulation(self,duration,offset):
         if (self.parameters.exc_firing_rate != 0 and self.parameters.exc_weight != 0):
-           for j,i in enumerate(self.local_and_to_stimulate_indexes):
+           for j,i in enumerate(self.to_stimulate_indexes):
                if self.parameters.drive_period < duration:
                    z = numpy.arange(self.parameters.drive_period+0.001,duration-100,10)
                    times = [0] + z.tolist() 
