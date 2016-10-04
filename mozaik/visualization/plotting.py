@@ -715,6 +715,7 @@ class OverviewPlot(Plotting):
         params['x_label']  = None
         params['x_tick_labels'] = None
         params['x_tick_style'] ='Custom'
+        params['y_label'] = 'trial'
         
         d.extend([ ("Spike_plot",RasterPlot(dsv,
                    ParameterSet({'sheet_name': self.parameters.sheet_name,
@@ -1082,7 +1083,6 @@ class PerNeuronValuePlot(Plotting):
         return ADSGridPlot(self.dsv,function=self._ploter,x_axis_parameter='value_name',y_axis_parameter='sheet_name').make_grid_plot(subplotspec)
 
     def _ploter(self, dsv, gs):
-         assert queries.ads_with_equal_stimulus_type(dsv) , logger.error('Warning sheet name and value name does\'t seem to uniquely identify set of PerNeuronValue ADS with the same stimulus type')
          pnvs = dsv.get_analysis_result(identifier='PerNeuronValue')            
          
         
@@ -1107,6 +1107,7 @@ class PerNeuronValuePlot(Plotting):
 
             return [("ScatterPlot",ScatterPlot(posx, posy, values, periodic=periodic,period=period),gs,params)]
          else:
+            assert queries.ads_with_equal_stimulus_type(dsv) , logger.error('Warning sheet name and value name does\'t seem to uniquely identify set of PerNeuronValue ADS with the same stimulus type')
             params = {}
             params["y_label"] = '# neurons'
 
@@ -1365,8 +1366,8 @@ class ConnectivityPlot(Plotting):
         params = {}
         params["x_lim"] = (-xs/2.0,xs/2.0)
         params["y_lim"] = (-ys/2.0,ys/2.0)
-        if idx == self.length-1:
-           params["colorbar"] = True
+        
+        params["colorbar"] = True
         
         params["title"]  = 'Delays: '+ self.connections[idx].proj_name
         if self.connections[idx].source_name == self.connections[idx].target_name:
@@ -1454,7 +1455,8 @@ class CorticalColumnRasterPlot(Plotting):
         'spontaneous' : bool, # whether to also show the spontaneous activity the preceded the stimulus     
         'sheet_names' : list, # the list and order in which the sheets should be plotted, empty list means all sheets in datastore will be taken
         'labels' : list, # the labels to give to the sheets in the plot, empty list means the names of the sheets will be used as labels
-        'colors' : list # the colors to give to the spikes in the sheets, empty list means all spikes will be given black color
+        'colors' : list, # the colors to give to the spikes in the sheets, empty list means all spikes will be given black color
+        'neurons' : list # list of list of neuron ids, one list per each sheet, which to display. If empty all recorded neurons are displayed
     })
 
     def subplot(self, subplotspec):
@@ -1474,17 +1476,24 @@ class CorticalColumnRasterPlot(Plotting):
         else:
             self.colors = self.parameters.colors
             
-        assert len(self.sheet_names ) == len(self.labels) == len(self.colors) , "Parameter <sheet_names> , <labels> and <colors> have to have the same length or be empty lists."
+        assert len(self.sheet_names) == len(self.labels) == len(self.colors) , "Parameter <sheet_names> , <labels> and <colors> have to have the same length or be empty lists."
+        
+        if len(self.parameters.neurons) != 0:
+                assert len(self.sheet_names) == len(self.parameters.neurons), "Parameter <sheet_names> , <neurons> have to have the same length"
+        
         
         return PerStimulusPlot(self.datastore,single_trial=True, function=self._ploter).make_line_plot(subplotspec)
 
     def _ploter(self, dsv,gs):
         
         sp = []
-        for sn in self.sheet_names:
+        for i,sn in enumerate(self.sheet_names):
             a = queries.param_filter_query(dsv,sheet_name=sn).get_segments()
             assert len(a) == 1
-            sp.append(a[0].get_spiketrains())
+            if len(self.parameters.neurons) != 0:
+                sp.append(a[0].get_spiketrains())
+            else:
+                sp.append(a[0].get_spiketrains(self.parameters.neurons[i]))
         
         #if self.parameters.spontaneous:
         #   spont_sp = [s.get_spiketrain(self.parameters.neurons) for s in sorted(dsv.get_segments(null=True),key = lambda x : MozaikParametrized.idd(x.annotations['stimulus']).trial)]             

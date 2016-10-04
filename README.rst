@@ -9,6 +9,7 @@ Dependencies
 * mpi4py
 * pyNN (neo_output branch)
 * imagen
+* param
 * parameters
 * quantities 
 * neo
@@ -122,7 +123,7 @@ fresh installation of Ubuntu (at the time of the writing the version was 12.04)
 
 First the list of ubuntu package dependencies::
 
-  sudo apt-get install python2.7 python-dev python-pip python-nose subversion git libopenmpi-dev g++ libjpeg8 libjpeg8-dev libfreetype6 libfreetype6-dev zlib1g-dev libpng++-dev libncurses5 libncurses5-dev libreadline-dev liblapack-dev libblas-dev gfortran libgsl0-dev openmpi-bin
+  sudo apt-get install python2.7 python-dev python-pip python-nose subversion git libopenmpi-dev g++ libjpeg8 libjpeg8-dev libfreetype6 libfreetype6-dev zlib1g-dev libpng++-dev libncurses5 libncurses5-dev libreadline-dev liblapack-dev libblas-dev gfortran libgsl0-dev openmpi-bin python-tk
 
 
 Virtual env
@@ -169,7 +170,7 @@ Now you can install in this protected environment all other dependencies::
   pip install --upgrade distribute
   pip install numpy mpi4py 
   pip install scipy matplotlib quantities lazyarray
-  pip install interval PIL
+  pip install interval Pillow
 
 Now we can install *Nest* (always in the virtual environment):
 
@@ -207,6 +208,18 @@ Install NEO::
     git clone https://github.com/apdavison/python-neo python-neo
     cd python-neo/
     python setup.py install
+
+Install imagen (for compatibility reasons get a fork of imagen package from this repository)::        
+ 
+      git clone https://github.com/antolikjan/imagen.git
+      cd imagen/
+      python setup.py install
+
+Install param ::        
+ 
+      git clone https://github.com/ioam/param.git
+      cd param/
+      python setup.py install
 
 Install Parameters package::
 

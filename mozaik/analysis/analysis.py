@@ -315,16 +315,19 @@ class TrialToTrialCrossCorrelationOfAnalogSignalList(Analysis):
     def perform_analysis(self):
         for sheet in self.datastore.sheets():
             dsv = queries.param_filter_query(self.datastore, sheet_name=sheet)
-            
             #AnalogSignalList
             dsv = queries.param_filter_query(self.datastore,identifier="AnalogSignalList")
+
             assert queries.ads_with_equal_stimulus_type(dsv)
             assert queries.equal_ads(dsv,except_params=['stimulus_id'])
-            dsvs = queries.partition_analysis_results_by_stimulus_parameters_query(dsv,parameter_list="trial",excpt=True)
+            dsvs = queries.partition_analysis_results_by_stimulus_parameters_query(dsv,parameter_list=["trial"])
+            
             for dsv in dsvs:
                 st = MozaikParametrized.idd(dsv.get_analysis_result()[0].stimulus_id)
                 setattr(st,'trial',None)
                 st = str(st)
+
+                logger.info("AAAAAAAAA"+str(len(dsv.get_analysis_result())))
 
                 asl_ass = []
                 for idd in self.parameters.neurons:
@@ -1264,6 +1267,28 @@ class AddPNVfromPNVS(Analysis):
                     assert set(p.ids) == set(self.pnv.ids)
                     sub = list(numpy.array(p.get_value_by_id(p.ids)) + numpy.array(self.pnv.get_value_by_id(p.ids)))
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(sub,p.ids,p.value_units,value_name = p.value_name + '+' + self.pnv.value_name,sheet_name=sheet,tags=self.tags+p.tags,period=p.period,analysis_algorithm=self.__class__.__name__,stimulus_id=p.stimulus_id))        
+
+
+class OperationPNVfromPNVS(Analysis):
+      """
+      Takes datastore, and for each PerNeuronValue A in it it peformes an operation with first argument A and second the PerNeuronValue supplied in parameters.
+      It saves the newly created PNVs into the datastore.
+      """
+
+      def __init__(self, pnv,operation,operation_descriptor, datastore, parameters, tags=None):
+          Analysis.__init__(self, datastore, parameters, tags)
+          self.pnv = pnv
+          self.operation = operation
+          self.operation_descriptor = operation_descriptor
+
+      def perform_analysis(self):
+            for sheet in self.datastore.sheets():
+                dsv = queries.param_filter_query(self.datastore, sheet_name=sheet,identifier='PerNeuronValue')
+                for p in dsv.get_analysis_result():
+                    assert set(p.ids) == set(self.pnv.ids)
+                    sub = list(self.operation(numpy.array(p.get_value_by_id(p.ids)), numpy.array(self.pnv.get_value_by_id(p.ids))))
+                    self.datastore.full_datastore.add_analysis_result(PerNeuronValue(sub,p.ids,p.value_units,value_name = self.operation_descriptor+'(' + p.value_name + ',' + self.pnv.value_name+')',sheet_name=sheet,tags=self.tags+p.tags,period=p.period,analysis_algorithm=self.__class__.__name__,stimulus_id=p.stimulus_id))        
+
                 
 
 
