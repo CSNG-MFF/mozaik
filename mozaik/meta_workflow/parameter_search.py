@@ -67,6 +67,7 @@ class SlurmSequentialBackend(object):
                   List of strings that will be passed to slurm sbatch command as options.  
     Note:
     -----
+    -----
     The most common usage of slurm_options is to let slurm know how many mpi processed to spawn per job, and how to allocates resources to them.
     """
     def __init__(self,num_threads,num_mpi,slurm_options=None):
@@ -114,6 +115,13 @@ class SlurmSequentialBackend(object):
          print p.communicate(input=data)[0]                  
          print data
          p.stdin.close()
+
+
+
+
+
+
+
 
 
 
@@ -278,4 +286,3 @@ def parameter_search_run_script_distributed_slurm(simulation_name,master_results
         print p.communicate(input=data)[0]                  
         print data
         p.stdin.close()
-

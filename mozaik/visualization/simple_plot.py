@@ -1020,7 +1020,10 @@ class ConnectionPlot(StandardStyle):
                                    lw=1, cmap=self.cmp,
                                    vmin=vmin, vmax=vmax)
             if self.colorbar:
-                cb = pylab.colorbar(ax, ticks=[vmin, vmax], use_gridspec=True)
+                if vmin != vmax:
+                    cb = pylab.colorbar(ax, ticks=[vmin, vmax], use_gridspec=True)
+                else:
+                    cb = pylab.colorbar(ax, ticks=[vmin-0.1, vmin+0.1], use_gridspec=True)
                 cb.set_label(self.colorbar_label)
                 cb.set_ticklabels(["%.3g" % vmin, "%.3g" % vmax])
 

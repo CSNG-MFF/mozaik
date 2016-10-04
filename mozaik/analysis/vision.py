@@ -85,12 +85,18 @@ class ModulationRatio(Analysis):
             for (st, vl) in d.items():
                 # here we will store the modulation ratios, one per each neuron
                 modulation_ratio = []
+                f0 = []
+                f1 = []
                 ids = []
                 frequency = MozaikParametrized.idd(st).temporal_frequency * MozaikParametrized.idd(st).params()['temporal_frequency'].units
                 for (orr, ppsth) in zip(vl[0], vl[1]):
                     for j in numpy.nonzero(orr == closest_presented_orientation)[0]:
                         if or_pref.ids[j] in ppsth.ids:
-                            modulation_ratio.append(self._calculate_MR(ppsth.get_asl_by_id(or_pref.ids[j]),frequency))
+                            a = or_pref.ids[j]
+                            mr,F0,F1 = self._calculate_MR(ppsth.get_asl_by_id(or_pref.ids[j]),frequency)
+                            modulation_ratio.append(mr)
+                            f0.append(F0)
+                            f1.append(F1)
                             ids.append(or_pref.ids[j])
                             
                 logger.debug('Adding PerNeuronValue:' + str(sheet))
@@ -104,6 +110,29 @@ class ModulationRatio(Analysis):
                                    period=None,
                                    analysis_algorithm=self.__class__.__name__,
                                    stimulus_id=str(st)))
+
+                self.datastore.full_datastore.add_analysis_result(
+                    PerNeuronValue(f0,
+                                   ids,
+                                   qt.dimensionless,
+                                   value_name='F0' + '(' + psths[0].x_axis_name + ')',
+                                   sheet_name=sheet,
+                                   tags=self.tags,
+                                   period=None,
+                                   analysis_algorithm=self.__class__.__name__,
+                                   stimulus_id=str(st)))
+                
+                self.datastore.full_datastore.add_analysis_result(
+                    PerNeuronValue(f1,
+                                   ids,
+                                   qt.dimensionless,
+                                   value_name='F1' + '(' + psths[0].x_axis_name + ')',
+                                   sheet_name=sheet,
+                                   tags=self.tags,
+                                   period=None,
+                                   analysis_algorithm=self.__class__.__name__,
+                                   stimulus_id=str(st)))
+
 
                 import pylab
                 pylab.figure()
@@ -124,9 +153,9 @@ class ModulationRatio(Analysis):
         fft = numpy.fft.fft(signal)
 
         if abs(fft[0]) != 0:
-            return 2*abs(fft[first_har])/abs(fft[0])
+            return 2*abs(fft[first_har])/abs(fft[0]),abs(fft[0]),2*abs(fft[first_har]),
         else:
-            return 0
+            return 10,abs(fft[0]),2*abs(fft[first_har]),
 
 class Analog_F0andF1(Analysis):
       """
@@ -159,12 +188,13 @@ class Analog_F0andF1(Analysis):
                     period = period.rescale(first_analog_signal.t_start.units)
                     cycles = duration / period
                     first_har = round(cycles)
+                    
                     e_f0 = [abs(numpy.fft.fft(numpy.mean([seg.get_esyn(idd) for seg in segs],axis=0).flatten())[0]/len(segs[0].get_esyn(idd))) for idd in segs[0].get_stored_esyn_ids()]
-                    i_f0 = [abs(numpy.fft.fft(numpy.mean([seg.get_isyn(idd) for seg in segs],axis=0).flatten())[0]/len(segs[0].get_esyn(idd))) for idd in segs[0].get_stored_isyn_ids()]
-                    v_f0 = [abs(numpy.fft.fft(numpy.mean([seg.get_vm(idd) for seg in segs],axis=0).flatten())[0]/len(segs[0].get_esyn(idd))) for idd in segs[0].get_stored_vm_ids()]
-                    e_f1 = [2*abs(numpy.fft.fft(numpy.mean([seg.get_esyn(idd) for seg in segs],axis=0).flatten()/len(segs[0].get_esyn(idd)))[first_har]) for idd in segs[0].get_stored_esyn_ids()]
-                    i_f1 = [2*abs(numpy.fft.fft(numpy.mean([seg.get_isyn(idd) for seg in segs],axis=0).flatten()/len(segs[0].get_esyn(idd)))[first_har]) for idd in segs[0].get_stored_isyn_ids()]
-                    v_f1 = [2*abs(numpy.fft.fft(numpy.mean([seg.get_vm(idd) for seg in segs],axis=0).flatten()/len(segs[0].get_esyn(idd)))[first_har]) for idd in segs[0].get_stored_vm_ids()]
+                    i_f0 = [abs(numpy.fft.fft(numpy.mean([seg.get_isyn(idd) for seg in segs],axis=0).flatten())[0]/len(segs[0].get_isyn(idd))) for idd in segs[0].get_stored_isyn_ids()]
+                    v_f0 = [abs(numpy.fft.fft(numpy.mean([seg.get_vm(idd) for seg in segs],axis=0).flatten())[0]/len(segs[0].get_vm(idd))) for idd in segs[0].get_stored_vm_ids()]
+                    e_f1 = [2*abs(numpy.fft.fft(numpy.mean([seg.get_esyn(idd) for seg in segs],axis=0).flatten())[first_har]/len(segs[0].get_esyn(idd))) for idd in segs[0].get_stored_esyn_ids()]
+                    i_f1 = [2*abs(numpy.fft.fft(numpy.mean([seg.get_isyn(idd) for seg in segs],axis=0).flatten())[first_har]/len(segs[0].get_isyn(idd))) for idd in segs[0].get_stored_isyn_ids()]
+                    v_f1 = [2*abs(numpy.fft.fft(numpy.mean([seg.get_vm(idd) for seg in segs],axis=0).flatten())[first_har]/len(segs[0].get_vm(idd))) for idd in segs[0].get_stored_vm_ids()]
                     
                     cond_units = segs[0].get_esyn(segs[0].get_stored_esyn_ids()[0]).units
                     vm_units = segs[0].get_vm(segs[0].get_stored_esyn_ids()[0]).units
@@ -245,34 +275,26 @@ class SizeTuningAnalysis(Analysis):
                         crf_sizes = []
                         supp_sizes= []
                         sis = []
+                        max_responses=[]
                         
                         # we will do the calculation neuron by neuron
                         for i in xrange(0,len(self.parameters.neurons)):
-                            
-                            logger.info(self.parameters.neurons[i])
                             
                             rads = self.tc_dict[k][0]
                             values = numpy.array([a[i] for a in self.tc_dict[k][1]])
                             
                             # sort them based on radiuses
                             rads , values = zip(*sorted(zip(rads,values)))
-                            
-                            logger.info(str(rads))
-                            logger.info(str(values))
-                            
+                                                        
+                            max_response = numpy.max(values)
                             crf_index  = numpy.argmax(values)
                             crf_size = rads[crf_index]
-                            
-                            logger.info(crf_index)
                             
                             if crf_index < len(values)-1:
                                 supp_index = crf_index+numpy.argmax(values[crf_index+1:])+1
                             else:
                                 supp_index = len(values)-1
-                            
-                            
-                            logger.info(str(supp_index))
-                            
+                                                        
                             supp_size = rads[supp_index]                                
                             
                             if values[crf_index] != 0:
@@ -280,17 +302,13 @@ class SizeTuningAnalysis(Analysis):
                             else:
                                 si = 0
                             
-                               
-                            logger.info(str(values[crf_index]))
-                            logger.info(str(values[supp_index]))
-                            logger.info(str(si))
-                            
-                            
                             crf_sizes.append(crf_size)
                             supp_sizes.append(supp_size)
                             sis.append(si)
+                            max_responses.append(max_response)
                             
-
+                            
+                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(max_responses,self.parameters.neurons,self.st[0].params()["radius"].units,value_name = 'Max. response of ' + self.pnvs[0].value_name ,sheet_name=self.parameters.sheet_name,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
                         self.datastore.full_datastore.add_analysis_result(PerNeuronValue(crf_sizes,self.parameters.neurons,self.st[0].params()["radius"].units,value_name = 'Max. facilitation radius of ' + self.pnvs[0].value_name ,sheet_name=self.parameters.sheet_name,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
                         self.datastore.full_datastore.add_analysis_result(PerNeuronValue(supp_sizes,self.parameters.neurons,self.st[0].params()["radius"].units,value_name = 'Max. suppressive radius of ' + self.pnvs[0].value_name ,sheet_name=self.parameters.sheet_name,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
                         self.datastore.full_datastore.add_analysis_result(PerNeuronValue(sis,self.parameters.neurons,None,value_name = 'Suppression index of ' + self.pnvs[0].value_name ,sheet_name=self.parameters.sheet_name,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))

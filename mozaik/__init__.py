@@ -49,8 +49,8 @@ def setup_mpi():
     global mpi_comm
     from pyNN.random import NumpyRNG
     pynn_rng = NumpyRNG(seed=1023)
-    rng = numpy.random.RandomState()
-    rng.seed(513)
+    rng = numpy.random.RandomState(513)
+
     try:
         from mpi4py import MPI
     except ImportError:

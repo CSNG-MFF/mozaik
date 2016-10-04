@@ -1,11 +1,11 @@
 # encoding: utf-8
 import pickle
 import numpy
-from scipy.interpolate import NearestNDInterpolator
+from scipy.interpolate import NearestNDInterpolator, CloughTocher2DInterpolator
 from mozaik.core import BaseComponent
 from mozaik import load_component
 from parameters import ParameterSet, ParameterDist
-from mozaik.connectors.modular import ModularSamplingProbabilisticConnector
+from mozaik.connectors.modular import ModularSamplingProbabilisticConnector, ModularSamplingProbabilisticConnectorAnnotationSamplesCount
 
 """
 This file contains meta-connectors. These are classes that represent some higher-level 
@@ -94,6 +94,9 @@ class GaborConnector(BaseComponent):
 
             f = open(self.parameters.or_map_location, 'r')
             or_map = pickle.load(f)*numpy.pi
+            #or_map = pickle.load(f)*numpy.pi*2
+            #or_map = numpy.cos(or_map) + 1j*numpy.sin(or_map)
+            
             coords_x = numpy.linspace(-t_size[0]/2.0,
                                       t_size[0]/2.0,
                                       numpy.shape(or_map)[0])
@@ -107,6 +110,9 @@ class GaborConnector(BaseComponent):
             
             or_map = NearestNDInterpolator(zip(X.flatten(), Y.flatten()),
                                            or_map.flatten())
+            #or_map = CloughTocher2DInterpolator(zip(X.flatten(), Y.flatten()),
+            #                               or_map.flatten())
+
 
         phase_map = None
         if self.parameters.phase_map:
@@ -128,6 +134,10 @@ class GaborConnector(BaseComponent):
             if or_map:
                 orientation = or_map(target.pop.positions[0][j],
                                      target.pop.positions[1][j])
+                                     
+                #orientation = (numpy.angle(or_map(target.pop.positions[0][j],
+                #                     target.pop.positions[1][j]))+numpy.pi)/2.0
+                                     
             else:
                 orientation = parameters.orientation_preference.next()[0]
 
@@ -148,6 +158,8 @@ class GaborConnector(BaseComponent):
             target.add_neuron_annotation(j, 'LGNAfferentFrequency', frequency, protected=True)
             target.add_neuron_annotation(j, 'LGNAfferentSize', size, protected=True)
             target.add_neuron_annotation(j, 'LGNAfferentPhase', phase, protected=True)
+            target.add_neuron_annotation(j, 'aff_samples', self.parameters.num_samples.next(), protected=True)
+            
             
             if self.parameters.topological:
                 target.add_neuron_annotation(j, 'LGNAfferentX', target.pop.positions[0][j], protected=True)
@@ -155,7 +167,8 @@ class GaborConnector(BaseComponent):
             else:
                 target.add_neuron_annotation(j, 'LGNAfferentX', 0, protected=True)
                 target.add_neuron_annotation(j, 'LGNAfferentY', 0, protected=True)
-                
+        
+        
 
         ps = ParameterSet({   'target_synapses' : 'excitatory',               
                               'weight_functions' : {  'f1' : {
@@ -170,11 +183,13 @@ class GaborConnector(BaseComponent):
                              'delay_expression' : str(self.parameters.delay),
                              'short_term_plasticity' : self.parameters.short_term_plasticity,
                              'base_weight' : self.parameters.base_weight,
-                             'num_samples' : self.parameters.num_samples,
+                             'num_samples' : 0,
+                             'annotation_reference_name' : 'aff_samples',
                           })
-        ModularSamplingProbabilisticConnector(network,name+'On',lgn_on,target,ps).connect()
+                          
+        ModularSamplingProbabilisticConnectorAnnotationSamplesCount(network,name+'On',lgn_on,target,ps).connect()
         ps['weight_functions.f1.params.ON']=False
-        ModularSamplingProbabilisticConnector(network,name+'Off',lgn_off,target,ps).connect()
+        ModularSamplingProbabilisticConnectorAnnotationSamplesCount(network,name+'Off',lgn_off,target,ps).connect()
            
            
            
