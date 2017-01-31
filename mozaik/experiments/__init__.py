@@ -6,14 +6,16 @@ import resource
 import mozaik
 from mozaik.stimuli import InternalStimulus
 from parameters import ParameterSet
+from mozaik.core import ParametrizedObject
 
 logger = mozaik.getMozaikLogger()
 
 
-class Experiment(object):
+class Experiment(ParametrizedObject):
     """
-    The abastract class for an experiment. The experiment defines the list of 
-    stimuli that it needs to present to the brain.These stimuli presentations have to be independent - e.g. should not
+    The abastract class for an experiment. 
+    
+    The experiment defines the list of stimuli that it needs to present to the brain.These stimuli presentations have to be independent - e.g. should not
     temporarily depend on each other. Experiment should also specify the analysis of the
     recorded results that it performs. This can be left empty if analysis will
     be done later.
@@ -28,6 +30,13 @@ class Experiment(object):
     ----------
     model : Model
           The model on which to execute the experiment.
+          
+    Other parameters
+    ----------------
+
+    duration : float (ms)
+             The duration of single presentation of the stimulus.
+
 
     NOTE
     ----
@@ -36,7 +45,8 @@ class Experiment(object):
     at the end. 
     """
     
-    def __init__(self, model):
+    def __init__(self, model,parameters):
+        ParametrizedObject.__init__(self, parameters)
         self.model = model
         self.stimuli = []
         self.direct_stimulation = None
@@ -95,8 +105,10 @@ class Experiment(object):
 
 class PoissonNetworkKick(Experiment):
     """
+    This experiment injects Poisson spike trains into the target popullation.
+    
     This experiment does not show any stimulus.
-    Importantly for the duration of the experiment it will stimulate neurons 
+    For the duration of the experiment it will stimulate neurons 
     definded by the recording configurations in recording_configuration_list
     in the sheets specified in the sheet_list with Poisson spike train of mean 
     frequency determined by the corresponding values in lambda_list.
@@ -106,10 +118,9 @@ class PoissonNetworkKick(Experiment):
     model : Model
           The model on which to execute the experiment.
 
-
-    duration : str
-             The duration of single presentation of the stimulus.
-    
+    Other parameters
+    ----------------
+  
     sheet_list : int
                The list of sheets in which to do stimulation
 
@@ -126,24 +137,33 @@ class PoissonNetworkKick(Experiment):
                 List of spike sizes of the Poisson spike train to be injected into the neurons specified in stimulation_configuration (one per each sheet).
     """
     
-    def __init__(self,model,duration,sheet_list,drive_period,stimulation_configuration,lambda_list,weight_list):
-            Experiment.__init__(self, model)
+    required_parameters = ParameterSet({
+            'duration': float,
+            'sheet_list' : list,
+            'drive_period' : float,
+            'stimulation_configuration' : ParameterSet,
+            'lambda_list' : list,
+            'weight_list' : list,
+    })
+
+    
+    def __init__(self,model,parameters):
+            Experiment.__init__(self, model,parameters)
             from mozaik.sheets.direct_stimulator import Kick
             
             d  = {}
-            for i,sheet in enumerate(sheet_list):
-                d[sheet] = [Kick(model.sheets[sheet],ParameterSet({'exc_firing_rate' : lambda_list[i],
-                                                      'exc_weight' : weight_list[i],
-                                                      'drive_period' : drive_period,
-                                                      'population_selector' : stimulation_configuration})
+            for i,sheet in enumerate(self.parameters.sheet_list):
+                d[sheet] = [Kick(model.sheets[sheet],ParameterSet({'exc_firing_rate' : self.parameters.lambda_list[i],
+                                                      'exc_weight' : self.parameters.weight_list[i],
+                                                      'drive_period' : self.parameters.drive_period,
+                                                      'population_selector' : self.parameters.stimulation_configuration})
                                 )]
             
             self.direct_stimulation = [d]
-
             self.stimuli.append(
                         InternalStimulus(   
-                                            frame_duration=duration, 
-                                            duration=duration,
+                                            frame_duration=self.parameters.duration, 
+                                            duration=self.parameters.duration,
                                             trial=0,
                                             direct_stimulation_name='Kick'
                                          )
@@ -157,13 +177,16 @@ class NoStimulation(Experiment):
     -----
     Unlike :class:`.MeasureSpontaneousActivity` this can be used in model with no sensory input sheet.
     """
-    
-    def __init__(self,model,duration):
-        Experiment.__init__(self, model)
+    required_parameters = ParameterSet({
+                                        'duration': float,
+                                       })
+
+    def __init__(self,model,parameters):
+        Experiment.__init__(self, model,parameters)
         self.stimuli.append(
                         InternalStimulus(   
-                                            frame_duration=duration, 
-                                            duration=duration,
+                                            frame_duration=self.parameters.duration, 
+                                            duration=self.parameters.duration,
                                             trial=0,
                                             direct_stimulation_name='None'
                                          )

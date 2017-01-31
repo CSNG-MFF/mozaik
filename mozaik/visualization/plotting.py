@@ -175,7 +175,14 @@ class Plotting(ParametrizedObject):
                 self.animation.save(Global.root_directory+self.plot_file_name+'.mov', writer='avconv', fps=10,bitrate=5000) 
             else:
                 # save the analysis plot
-                pylab.savefig(Global.root_directory+self.plot_file_name)              
+                pylab.savefig(Global.root_directory+self.plot_file_name)       
+            
+            # and store the record
+            with open(Global.root_directory+'results','a+') as f:
+                 entry = {'parameters' : self.parameters, 'file_name' : self.plot_file_name, 'class_name' : str(self.__class__)}
+                 f.write(str(entry)+'\n')
+                 f.close()
+            
         t2 = time.time()
         logger.warning(self.__class__.__name__ + ' plotting took: ' + str(t2 - t1) + 'seconds')
 
@@ -1192,8 +1199,6 @@ class PerNeuronValueScatterPlot(Plotting):
             x = numpy.array(x)[idxs]
             y = numpy.array(y)[idxs]
         return [("ScatterPlot",ScatterPlot(x,y),gs,params)]
-        
-
 
 class ConnectivityPlot(Plotting):
     """

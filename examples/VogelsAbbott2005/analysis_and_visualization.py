@@ -40,8 +40,3 @@ def perform_analysis_and_visualization(data_store):
             RasterPlot(dsv,ParameterSet({'sheet_name' : 'Exc_Layer', 'neurons' : spike_ids,'trial_averaged_histogram': False, 'spontaneous': False}),fig_param={'dpi' : 100,'figsize': (17,5)},plot_file_name='ExcRaster.png').plot({'SpikeRasterPlot.group_trials':True})
             RasterPlot(dsv,ParameterSet({'sheet_name' : 'Inh_Layer', 'neurons' : spike_ids_inh,'trial_averaged_histogram': False, 'spontaneous': False}),fig_param={'dpi' : 100,'figsize': (17,5)},plot_file_name='InhRaster.png').plot({'SpikeRasterPlot.group_trials':True})
 
-            import pylab
-            pylab.show()
-            
-            
-    

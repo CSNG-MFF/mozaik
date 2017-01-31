@@ -3,14 +3,14 @@
     'component': 'mozaik.sheets.vision.VisualCorticalUniformSheet',
     'params':{
                 'name':'Inh_Layer',
-                'sx': ref('exc_layer.params.sx'),
-                'sy': ref('exc_layer.params.sy'),
+                'sx': ref('sheets.exc_layer.params.sx'),
+                'sy': ref('sheets.exc_layer.params.sy'),
                 'density': 800.0,
                 'mpi_safe' : False,
-                'magnification_factor': ref('exc_layer.params.magnification_factor'),
-                'cell': ref('exc_layer.params.cell'),
-                'artificial_stimulators' : ref('exc_layer.params.artificial_stimulators'),
-                'recording_interval' : ref('exc_layer.params.recording_interval'),
+                'magnification_factor': ref('sheets.exc_layer.params.magnification_factor'),
+                'cell': ref('sheets.exc_layer.params.cell'),
+                'artificial_stimulators' : ref('sheets.exc_layer.params.artificial_stimulators'),
+                'recording_interval' : ref('sheets.exc_layer.params.recording_interval'),
                 'recorders' : url("param/inh_rec"),    
     },
     
@@ -22,5 +22,5 @@
                 'delay': 0.2,    # ms delay of the connections    
     },
 
-    'InhInhConnection': ref('inh_layer.InhExcConnection'),
+    'InhInhConnection': ref('sheets.inh_layer.InhExcConnection'),
 }
