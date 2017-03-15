@@ -294,7 +294,6 @@ class SizeTuningAnalysis(Analysis):
                                 supp_index = crf_index+numpy.argmax(values[crf_index+1:])+1
                             else:
                                 supp_index = len(values)-1
-                                                        
                             supp_size = rads[supp_index]                                
                             
                             if values[crf_index] != 0:
@@ -312,9 +311,7 @@ class SizeTuningAnalysis(Analysis):
                         self.datastore.full_datastore.add_analysis_result(PerNeuronValue(crf_sizes,self.parameters.neurons,self.st[0].params()["radius"].units,value_name = 'Max. facilitation radius of ' + self.pnvs[0].value_name ,sheet_name=self.parameters.sheet_name,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
                         self.datastore.full_datastore.add_analysis_result(PerNeuronValue(supp_sizes,self.parameters.neurons,self.st[0].params()["radius"].units,value_name = 'Max. suppressive radius of ' + self.pnvs[0].value_name ,sheet_name=self.parameters.sheet_name,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
                         self.datastore.full_datastore.add_analysis_result(PerNeuronValue(sis,self.parameters.neurons,None,value_name = 'Suppression index of ' + self.pnvs[0].value_name ,sheet_name=self.parameters.sheet_name,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
-
-
-
+                        
 
 class OCTCTuningAnalysis(Analysis):
       """

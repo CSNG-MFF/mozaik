@@ -21,8 +21,8 @@ class VisualExperiment(Experiment):
           The model on which to execute the experiment.
     """
     
-    def __init__(self, model):
-        Experiment.__init__(self, model)
+    def __init__(self,model,parameters):
+        Experiment.__init__(self, model,parameters)
         self.background_luminance = model.input_space.background_luminance
       
         #JAHACK: This is kind of a hack now. There needs to be generally defined interface of what is the resolution of a visual input layer
@@ -38,22 +38,32 @@ class MeasureFlatLuminanceSensitivity(VisualExperiment):
     ----------
     model : Model
           The model on which to execute the experiment.
+
+    Other parameters
+    ----------------
         
     luminances : list(float) 
               List of luminance (expressed as cd/m^2) at which to measure the response.
     
     step_duration : float
-                      The duration of single presentation of a luminance step.
+                      The duration in miliseconds of single presentation of a luminance step.
     
     num_trials : int
                Number of trials each stimulus is shown.
     """
-
-    def __init__(self, model, luminances, step_duration, num_trials):
-        VisualExperiment.__init__(self, model)    
+    
+    required_parameters = ParameterSet({
+            'luminances': list, 
+            'step_duration' : float, 
+            'num_trials' : int,
+    })
+    
+    def __init__(self,model,parameters):
+        VisualExperiment.__init__(self, model,parameters)
+        
         # stimuli creation        
-        for l in luminances:
-            for k in xrange(0, num_trials):
+        for l in self.parameters.luminances:
+            for k in xrange(0, self.parameters.num_trials):
                 self.stimuli.append( topo.Null(
                     frame_duration=7,
                     size_x=model.visual_field.size_x,
@@ -62,7 +72,7 @@ class MeasureFlatLuminanceSensitivity(VisualExperiment):
                     location_y=0.0,
                     density=self.density,
                     background_luminance=l,
-                    duration=step_duration,
+                    duration=self.parameters.step_duration,
                     trial=k))
 
     def do_analysis(self, data_store):
@@ -70,13 +80,16 @@ class MeasureFlatLuminanceSensitivity(VisualExperiment):
     
 class MeasureSparse(VisualExperiment):
     """
-    Basic Sparse Stimulation Experiment
+    Basic sparse dots stimulation experiments.
     
     Parameters
     ----------
     model : Model
         The model on which to execute the experiment.
-          
+
+    Other parameters
+    ----------------
+
     time_per_image : float
         The time it takes for the experiment to change single images 
         Every time_per_image a new instance of sparse noise will be 
@@ -88,26 +101,35 @@ class MeasureSparse(VisualExperiment):
     num_trials : int
            Number of trials each each stimulus is shown.
            
-    grid_size: dimensionless
+    grid_size: int
            the grid will have grid_size x grid_size spots
            
-    experiment_seed :  
+    experiment_seed : int
      sets a particular seed at the beginning of each experiment
      
-     grid: 
+    grid: bool
      If true makes the patterns stick to a grid, otherwise the 
      center of the pattern is distribuited randomly
     """
     
+    required_parameters = ParameterSet({
+            'time_per_image': float, 
+            'total_number_of_images' : int, 
+            'num_trials' : int,
+            'experiment_seed' : int,
+            'grid_size' : int,
+            'grid' : bool
+    })
     
-    def __init__(self, model,time_per_image, total_number_of_images, num_trials, seed, grid_size, grid = True):
-        VisualExperiment.__init__(self, model)
-        for k in xrange(0, num_trials):
+    def __init__(self,model,parameters):
+        VisualExperiment.__init__(self, model,parameters)
+    
+        for k in xrange(0, self.parameters.num_trials):
            
             self.stimuli.append(topo.SparseNoise(
                             frame_duration=7,
-                            time_per_image = time_per_image,
-                            duration = total_number_of_images * time_per_image,  
+                            time_per_image = self.parameters.time_per_image,
+                            duration = self.parameters.total_number_of_images * self.parameters.time_per_image,  
                             size_x=model.visual_field.size_x,
                             size_y=model.visual_field.size_y,
                             location_x=0.0,
@@ -115,9 +137,9 @@ class MeasureSparse(VisualExperiment):
                             background_luminance=self.background_luminance,
                             density=self.density,
                             trial = k,
-                            experiment_seed = seed,
-                            grid_size = grid_size,
-                            grid = grid
+                            experiment_seed = self.parameters.experiment_seed,
+                            grid_size = self.parameters.grid_size,
+                            grid = self.parameters.grid
                           ))
    
     def do_analysis(self, data_store):
@@ -125,33 +147,50 @@ class MeasureSparse(VisualExperiment):
 
 class MeasureDense(VisualExperiment):
     """
-    Basic Sparse Stimulation Experiment
+    Basic dense dots stimulation experiments.
     
     Parameters
     ----------
     model : Model
           The model on which to execute the experiment.
 
-    duration: How long will the experiment take
+    Other parameters
+    ----------------
+
+    time_per_image : float
+        The time it takes for the experiment to change single images 
+        Every time_per_image a new instance of sparse noise will be 
+        presented
+
+    total_number_images : int
+        The total number of images that will be presented
     
     num_trials : int
-               Number of trials each each stimulus is shown.
-               
-     grid_size: dimensionless
-        the grid will have grid_size x grid_size spots     
-            
-    experiment_seed :  
-     sets a particular seed at the begining of each experiment
+           Number of trials each each stimulus is shown.
+           
+    grid_size: int
+           the grid will have grid_size x grid_size spots
+           
+    experiment_seed : int
+     sets a particular seed at the beginning of each experiment
     """
+
+    required_parameters = ParameterSet({
+            'time_per_image': float, 
+            'total_number_of_images' : int, 
+            'num_trials' : int,
+            'experiment_seed' : int,
+            'grid_size' : int,
+    })    
     
-    
-    def __init__(self, model, time_per_image, total_number_of_images, num_trials, seed, grid_size):
-        VisualExperiment.__init__(self, model)
-        for k in xrange(0, num_trials):
+    def __init__(self,model,parameters):
+        VisualExperiment.__init__(self, model,parameters)
+
+        for k in xrange(0, self.parameters.num_trials):
             self.stimuli.append(topo.DenseNoise(
                             frame_duration=7,
-                            time_per_image = time_per_image,
-                            duration = total_number_of_images * time_per_image, 
+                            time_per_image = self.parameters.time_per_image,
+                            duration = self.parameters.total_number_of_images * self.parameters.time_per_image, 
                             size_x=model.visual_field.size_x,
                             size_y=model.visual_field.size_y,
                             location_x=0.0,
@@ -159,8 +198,8 @@ class MeasureDense(VisualExperiment):
                             background_luminance=self.background_luminance,
                             density=self.density,
                             trial = k,
-                            experiment_seed = seed,
-                            grid_size = grid_size
+                            experiment_seed = self.parameters.experiment_seed,
+                            grid_size = self.parameters.grid_size
                           ))
          
     def do_analysis(self, data_store):
@@ -175,6 +214,9 @@ class MeasureOrientationTuningFullfield(VisualExperiment):
     ----------
     model : Model
           The model on which to execute the experiment.
+
+    Other parameters
+    ----------------
 
     num_orientations : int
           Number of orientation to present.
@@ -195,13 +237,20 @@ class MeasureOrientationTuningFullfield(VisualExperiment):
                Number of trials each each stimulus is shown.
     """
     
+    required_parameters = ParameterSet({
+            'num_orientations': int, 
+            'spatial_frequency' : float, 
+            'temporal_frequency' : float,
+            'grating_duration' : float,
+            'contrasts' : list,
+            'num_trials' : int,
+    })  
     
-    def __init__(self, model, num_orientations, spatial_frequency,
-                 temporal_frequency, grating_duration, contrasts, num_trials):
-        VisualExperiment.__init__(self, model)
-        for c in contrasts:
-            for i in xrange(0, num_orientations):
-                for k in xrange(0, num_trials):
+    def __init__(self,model,parameters):
+        VisualExperiment.__init__(self, model,parameters)
+        for c in self.parameters.contrasts:
+            for i in xrange(0, self.parameters.num_orientations):
+                for k in xrange(0, self.parameters.num_trials):
                     self.stimuli.append(topo.FullfieldDriftingSinusoidalGrating(
                                     frame_duration=7,
                                     size_x=model.visual_field.size_x,
@@ -210,12 +259,12 @@ class MeasureOrientationTuningFullfield(VisualExperiment):
                                     location_y=0.0,
                                     background_luminance=self.background_luminance,
                                     contrast = c,
-                                    duration=grating_duration,
+                                    duration=self.parameters.grating_duration,
                                     density=self.density,
                                     trial=k,
-                                    orientation=numpy.pi/num_orientations*i,
-                                    spatial_frequency=spatial_frequency,
-                                    temporal_frequency=temporal_frequency))
+                                    orientation=numpy.pi/self.parameters.num_orientations*i,
+                                    spatial_frequency=self.parameters.spatial_frequency,
+                                    temporal_frequency=self.parameters.temporal_frequency))
 
     def do_analysis(self, data_store):
         pass
@@ -223,12 +272,15 @@ class MeasureOrientationTuningFullfield(VisualExperiment):
 
 class MeasureSizeTuning(VisualExperiment):
     """
-    Measure size tuning using expanding flat luminance disks and sinusoidal grating disks.
+    Measure size tuning using expanding sinusoidal grating disks or flat luminance disks.
     
     Parameters
     ----------
     model : Model
           The model on which to execute the experiment.
+
+    Other parameters
+    ----------------
 
     num_sizes : int
               Number of sizes to present.
@@ -258,28 +310,36 @@ class MeasureSizeTuning(VisualExperiment):
                Whether use logarithmic spaced sizes. By default False, meaning linear spacing 
     
     with_flat : bool
-               Whether use also flat luminance disks as stimuli. By default False 
+               Whether use flat luminance disks as stimuli. If not it is the standard grating stimulus.
     """
 
-    def __init__(self, model, num_sizes, max_size, orientation,
-                 spatial_frequency, temporal_frequency, grating_duration,
-                 contrasts, num_trials, log_spacing=False, with_flat=False):
-        VisualExperiment.__init__(self, model)    
-        # linear or logarithmic spaced sizes
-        if type(num_sizes) != list:
+    required_parameters = ParameterSet({
+            'num_sizes' : int,
+            'max_size' : float,
+            'orientation' : float,
+            'spatial_frequency' : float, 
+            'temporal_frequency' : float,
+            'grating_duration' : float,
+            'contrasts' : list,
+            'num_trials' : int,
+            'log_spacing' : bool,
+            'with_flat' : bool
+    })  
+
+    def __init__(self,model,parameters):
+        VisualExperiment.__init__(self, model,parameters)
             
-            sizes = numpy.linspace(0, max_size,num_sizes)                     
-            if log_spacing:
-                # base2 log of max_size
-                base2max = numpy.log2(max_size)
-                sizes = numpy.logspace(start=-3.0, stop=base2max, num=num_sizes, base=2.0) 
+        # linear or logarithmic spaced sizes
+        if self.parameters.log_spacing:
+            base2max = numpy.log2(self.parameters.max_size)
+            sizes = numpy.logspace(start=-3.0, stop=base2max, num=self.parameters.num_sizes, base=2.0) 
         else:
-            sizes =   num_sizes  
-                
+            sizes = numpy.linspace(0, self.parameters.max_size,self.parameters.num_sizes)                     
+            
         # stimuli creation        
-        for c in contrasts:
-            for s in sizes:
-                for k in xrange(0, num_trials):
+        for c in self.parameters.contrasts:
+            for s in self.parameters.sizes:
+                for k in xrange(0, self.parameters.num_trials):
                     self.stimuli.append(topo.DriftingSinusoidalGratingDisk(
                                     frame_duration=7,
                                     size_x=model.visual_field.size_x,
@@ -288,13 +348,13 @@ class MeasureSizeTuning(VisualExperiment):
                                     location_y=0.0,
                                     background_luminance=self.background_luminance,
                                     contrast = c,
-                                    duration=grating_duration,
+                                    duration=self.parameters.grating_duration,
                                     density=self.density,
                                     trial=k,
-                                    orientation=orientation,
+                                    orientation=self.parameters.orientation,
                                     radius=s,
-                                    spatial_frequency=spatial_frequency,
-                                    temporal_frequency=temporal_frequency))
+                                    spatial_frequency=self.parameters.spatial_frequency,
+                                    temporal_frequency=self.parameters.temporal_frequency))
                     if with_flat:
                         self.stimuli.append(topo.FlatDisk(
                                     frame_duration=7,
@@ -304,7 +364,7 @@ class MeasureSizeTuning(VisualExperiment):
                                     location_y=0.0,
                                     background_luminance=self.background_luminance,
                                     contrast = c,
-                                    duration=grating_duration,
+                                    duration=self.parameters.grating_duration,
                                     density=self.density,
                                     trial=k,
                                     radius=s))
@@ -321,6 +381,9 @@ class MeasureContrastSensitivity(VisualExperiment):
     ----------
     model : Model
           The model on which to execute the experiment.
+
+    Other parameters
+    ----------------
         
     orientation : float
                 The orientation (in radians) at which to measure the contrast. (in future this will become automated)
@@ -341,19 +404,21 @@ class MeasureContrastSensitivity(VisualExperiment):
                Number of trials each each stimulus is shown.
     """
 
-    def __init__(self, 
-                 model, 
-                 size,
-                 orientation,
-                 spatial_frequency, 
-                 temporal_frequency, 
-                 grating_duration,
-                 contrasts, 
-                 num_trials):
-        VisualExperiment.__init__(self, model)    
+    required_parameters = ParameterSet({
+            'orientation': float, 
+            'spatial_frequency' : float, 
+            'temporal_frequency' : float,
+            'grating_duration' : float,
+            'contrasts' : list,
+            'num_trials' : int,
+    })  
+    
+    def __init__(self,model,parameters):
+        VisualExperiment.__init__(self, model,parameters)
+            
         # stimuli creation        
-        for c in contrasts:
-            for k in xrange(0, num_trials):
+        for c in self.parameters.contrasts:
+            for k in xrange(0, self.parameters.num_trials):
                 self.stimuli.append(topo.FullfieldDriftingSinusoidalGrating(
                     frame_duration=7,
                     size_x=model.visual_field.size_x,
@@ -362,12 +427,12 @@ class MeasureContrastSensitivity(VisualExperiment):
                     location_y=0.0,
                     background_luminance=self.background_luminance,
                     contrast = c,
-                    duration=grating_duration,
+                    duration=self.parameters.grating_duration,
                     density=self.density,
                     trial=k,
-                    orientation=orientation,
-                    spatial_frequency=spatial_frequency,
-                    temporal_frequency=temporal_frequency))
+                    orientation=self.parameters.orientation,
+                    spatial_frequency=self.parameters.spatial_frequency,
+                    temporal_frequency=self.parameters.temporal_frequency))
 
     def do_analysis(self, data_store):
         pass
@@ -381,6 +446,9 @@ class MeasureFrequencySensitivity(VisualExperiment):
     ----------
     model : Model
           The model on which to execute the experiment.
+
+    Other parameters
+    ----------------
         
     orientation : float
                 The orientation (in radians) at which to measure the size tuning. (in future this will become automated)
@@ -404,28 +472,38 @@ class MeasureFrequencySensitivity(VisualExperiment):
                 Whether the stimulus shoul be sinusoidal or square grating
     """
 
-    def __init__(self, model, orientation,
-                 spatial_frequencies, temporal_frequencies, contrasts, 
-                 grating_duration, num_trials, frame_duration=7, square=False):
-        VisualExperiment.__init__(self, model)    
+    required_parameters = ParameterSet({
+            'orientation': float, 
+            'spatial_frequency' : list, 
+            'temporal_frequency' : list,
+            'grating_duration' : float,
+            'contrasts' : list,
+            'num_trials' : int,
+            'square' : bool,
+    })  
+    
+
+    def __init__(self,model,parameters):
+        VisualExperiment.__init__(self, model,parameters)
+            
         # stimuli creation        
-        for tf in temporal_frequencies:
-            for sf in spatial_frequencies:
-                for c in contrasts:
-                    for k in xrange(0, num_trials):
-                        if square:
+        for tf in self.parameters.temporal_frequencies:
+            for sf in self.parameters.spatial_frequencies:
+                for c in self.parameters.contrasts:
+                    for k in xrange(0, self.parameters.num_trials):
+                        if self.parameters.square:
                             self.stimuli.append(topo.FullfieldDriftingSquareGrating(
-                                frame_duration=frame_duration,
+                                frame_duration=7,
                                 size_x=model.visual_field.size_x,
                                 size_y=model.visual_field.size_y,
                                 location_x=0.0,
                                 location_y=0.0,
                                 background_luminance=self.background_luminance,
                                 contrast = c,
-                                duration=grating_duration,
+                                duration=self.parameters.grating_duration,
                                 density=self.density,
                                 trial=k,
-                                orientation=orientation,
+                                orientation=self.parameters.orientation,
                                 spatial_frequency=sf,
                                 temporal_frequency=tf))
                         else:
@@ -437,10 +515,10 @@ class MeasureFrequencySensitivity(VisualExperiment):
                                 location_y=0.0,
                                 background_luminance=self.background_luminance,
                                 contrast = c,
-                                duration=grating_duration,
+                                duration=self.parameters.grating_duration,
                                 density=self.density,
                                 trial=k,
-                                orientation=orientation,
+                                orientation=self.parameters.orientation,
                                 spatial_frequency=sf,
                                 temporal_frequency=tf))
 
@@ -458,6 +536,9 @@ class MeasureOrientationContrastTuning(VisualExperiment):
     ----------
     model : Model
           The model on which to execute the experiment.
+
+    Other parameters
+    ----------------
 
     num_orientations : int
           Number of orientation of the surround to present.
@@ -488,13 +569,24 @@ class MeasureOrientationContrastTuning(VisualExperiment):
                Number of trials each each stimulus is shown.
     """
 
-    def __init__(self, model, num_orientations, orientation, center_radius,
-                 surround_radius, spatial_frequency, temporal_frequency,
-                 grating_duration, contrasts, num_trials):
-        VisualExperiment.__init__(self, model)
-        for c in contrasts:
-            for i in xrange(0, num_orientations):
-                for k in xrange(0, num_trials):
+    required_parameters = ParameterSet({
+            'num_orientations': int, 
+            'orientation' : float,
+            'center_radius' : float,
+            'surround_radius' : float,
+            'spatial_frequency' : float, 
+            'temporal_frequency' : float,
+            'grating_duration' : float,
+            'contrasts' : list,
+            'num_trials' : int,
+    })  
+
+    def __init__(self,model,parameters):
+        VisualExperiment.__init__(self, model,parameters)
+        
+        for c in self.parameters.contrasts:
+            for i in xrange(0, self.parameters.num_orientations):
+                for k in xrange(0, self.parameters.num_trials):
                     self.stimuli.append(
                         topo.DriftingSinusoidalGratingCenterSurroundStimulus(
                                     frame_duration=7,
@@ -504,16 +596,16 @@ class MeasureOrientationContrastTuning(VisualExperiment):
                                     location_y=0.0,
                                     background_luminance=self.background_luminance,
                                     contrast = c,
-                                    duration=grating_duration,
+                                    duration=self.parameters.grating_duration,
                                     density=self.density,
                                     trial=k,
-                                    center_orientation=orientation,
-                                    surround_orientation=numpy.pi/num_orientations*i,
+                                    center_orientation=self.parameters.orientation,
+                                    surround_orientation=numpy.pi/self.parameters.num_orientations*i,
                                     gap=0,
-                                    center_radius=center_radius,
-                                    surround_radius=surround_radius,
-                                    spatial_frequency=spatial_frequency,
-                                    temporal_frequency=temporal_frequency))
+                                    center_radius=self.parameters.center_radius,
+                                    surround_radius=self.parameters.surround_radius,
+                                    spatial_frequency=self.parameters.spatial_frequency,
+                                    temporal_frequency=self.parameters.temporal_frequency))
 
     def do_analysis(self, data_store):
         pass
@@ -527,12 +619,15 @@ class MeasureFeatureInducedCorrelation(VisualExperiment):
     ----------
     model : Model
             The model on which to execute the experiment.
+
+    Other parameters
+    ----------------
                 
     temporal_frequencies : list(float)
             Temporal frequency of the gratings.
                       
-    contrasts : list(float)
-            List of contrasts (expressed as % : 0-100%) at which measure the tuning.
+    contrast : float
+            Contrast (expressed as % : 0-100%) at which to performe measurument.
 
     grating_duration : float
             The duration of single presentation of a grating.
@@ -547,52 +642,61 @@ class MeasureFeatureInducedCorrelation(VisualExperiment):
             Number of trials each each stimulus is shown.
     """
 
-    def __init__(self, model, spatial_frequencies, temporal_frequency, separation, contrast, 
-                 exp_duration, num_trials, frame_duration=7):
-        VisualExperiment.__init__(self, model)
+    required_parameters = ParameterSet({
+            'spatial_frequencies' : list, 
+            'temporal_frequencies' : list,
+            'grating_duration' : float,
+            'contrasts' : list,
+            'separation' : float,
+            'num_trials' : int,
+    })  
+
+    def __init__(self,model,parameters):
+        VisualExperiment.__init__(self, model,parameters)
+        
          # the orientation is fixed to horizontal
         orientation = 0 #numpy.pi/2
         # SQUARED GRATINGS       
-        for sf in spatial_frequencies:
-            for k in xrange(0, num_trials):
+        for sf in self.parameters.spatial_frequencies:
+            for k in xrange(0, self.parameters.num_trials):
                 self.stimuli.append(
                     topo.FullfieldDriftingSquareGrating(
-                        frame_duration = frame_duration,
+                        frame_duration = 7,
                         size_x=model.visual_field.size_x,
                         size_y=model.visual_field.size_y,
                         location_x=0.0,
                         location_y=0.0,
                         background_luminance=self.background_luminance,
-                        contrast = contrast,
-                        duration=exp_duration,
+                        contrast = self.parameters.contrast,
+                        duration=self.parameters.grating_duration,
                         density=self.density,
                         trial=k,
                         orientation=orientation,
-                        spatial_frequency=sf,
-                        temporal_frequency=temporal_frequency
+                        spatial_frequency=self.parameters.sf,
+                        temporal_frequency=self.parameters.temporal_frequency
                     )
                 )
         # FLASHING SQUARES
         # the spatial_frequencies matters because squares sizes is established using the spatial frequency as for the drifting grating
-        for sf in spatial_frequencies:
-            for k in xrange(0, num_trials):
+        for sf in self.parameters.spatial_frequencies:
+            for k in xrange(0, self.parameters.num_trials):
                 self.stimuli.append(
                     topo.FlashingSquares(
-                        frame_duration = frame_duration,
+                        frame_duration = 7,
                         size_x=model.visual_field.size_x,
                         size_y=model.visual_field.size_y,
                         location_x=0.0,
                         location_y=0.0,
                         background_luminance=self.background_luminance,
-                        contrast = contrast,
-                        separation = separation,
+                        contrast = self.parameters.contrast,
+                        separation = self.parameters.separation,
                         separated = True,
                         density = self.density,
                         trial = k,
-                        duration=exp_duration,
+                        duration=self.parameters.grating_duration,
                         orientation = orientation*2,
                         spatial_frequency = sf,
-                        temporal_frequency = temporal_frequency
+                        temporal_frequency = self.parameters.temporal_frequency
                     )
                 )
 
@@ -610,6 +714,9 @@ class MeasureNaturalImagesWithEyeMovement(VisualExperiment):
           The model on which to execute the experiment.
 
 
+    Other parameters
+    ----------------
+    
     stimulus_duration : str
                       The duration of single presentation of the stimulus.
     
@@ -621,9 +728,17 @@ class MeasureNaturalImagesWithEyeMovement(VisualExperiment):
     Currently this implementation bound to have the image and the eye path saved in in files *./image_naturelle_HIGH.bmp* and *./eye_path.pickle*.
     In future we need to make this more general.
     """
-    def __init__(self, model, stimulus_duration, num_trials):
-        VisualExperiment.__init__(self, model)
-        for k in xrange(0, num_trials):
+    
+    required_parameters = ParameterSet({
+            'stimulus_duration' : float,
+            'num_trials' : int,
+    })  
+
+    
+    def __init__(self,model,parameters):
+        VisualExperiment.__init__(self, model,parameters)
+        
+        for k in xrange(0, self.parameters.num_trials):
             self.stimuli.append(
                 topo.NaturalImageWithEyeMovement(
                             frame_duration=7,
@@ -632,7 +747,7 @@ class MeasureNaturalImagesWithEyeMovement(VisualExperiment):
                             location_x=0.0,
                             location_y=0.0,
                             background_luminance=self.background_luminance,
-                            duration=stimulus_duration,
+                            duration=self.parameters.stimulus_duration,
                             density=self.density,
                             trial=k,
                             size=60,  # x size of image
@@ -653,13 +768,16 @@ class MeasureDriftingSineGratingWithEyeMovement(VisualExperiment):
     model : Model
           The model on which to execute the experiment.
 
+    Other parameters
+    ----------------
+
     spatial_frequency : float
                       Spatial frequency of the center and surround grating.
                       
     temporal_frequency : float
                       Temporal frequency of the center and surround the grating.
 
-    duration : float
+    grating_duration : float
              The duration of single presentation of the stimulus.
     
     contrast : float 
@@ -668,9 +786,20 @@ class MeasureDriftingSineGratingWithEyeMovement(VisualExperiment):
     num_trials : int
                Number of trials each each stimulus is shown.
     """
-    def __init__(self, model, stimulus_duration, num_trials,spatial_frequency,temporal_frequency,contrast):
-        VisualExperiment.__init__(self, model)
-        for k in xrange(0, num_trials):
+    
+    required_parameters = ParameterSet({
+           
+            'spatial_frequency' : float, 
+            'temporal_frequency' : float,
+            'grating_duration' : float,
+            'contrast' : float,
+            'num_trials' : int,
+    })  
+    
+    def __init__(self,model,parameters):
+        VisualExperiment.__init__(self, model,parameters)
+        
+        for k in xrange(0, self.parameters.num_trials):
             self.stimuli.append(
                 topo.DriftingGratingWithEyeMovement(
                             frame_duration=7,
@@ -679,15 +808,15 @@ class MeasureDriftingSineGratingWithEyeMovement(VisualExperiment):
                             location_x=0.0,
                             location_y=0.0,
                             background_luminance=self.background_luminance,
-                            duration=stimulus_duration,
+                            duration=self.parameters.grating_duration,
                             density=self.density,
                             trial=k,
-                            contrast = contrast,
+                            contrast = self.parameters.contrast,
                             eye_movement_period=6.66,  # eye movement period
                             eye_path_location='./eye_path.pickle',
                             orientation=0,
-                            spatial_frequency=spatial_frequency,
-                            temporal_frequency=temporal_frequency))
+                            spatial_frequency=self.parameters.spatial_frequency,
+                            temporal_frequency=self.parameters.temporal_frequency))
 
     def do_analysis(self, data_store):
         pass
@@ -701,6 +830,8 @@ class MeasureSpontaneousActivity(VisualExperiment):
     model : Model
           The model on which to execute the experiment.
 
+    Other parameters
+    ----------------
 
     duration : str
              The duration of single presentation of the stimulus.
@@ -709,9 +840,15 @@ class MeasureSpontaneousActivity(VisualExperiment):
                Number of trials each each stimulus is shown.
     """
 
-    def __init__(self,model,duration,num_trials):
-            VisualExperiment.__init__(self, model)
-            for k in xrange(0,num_trials):
+    required_parameters = ParameterSet({
+            'duration' : float,
+            'num_trials' : int,
+    })  
+    
+    def __init__(self,model,parameters):
+            VisualExperiment.__init__(self, model,parameters)
+            
+            for k in xrange(0,self.parameters.num_trials):
                 self.stimuli.append(
                             topo.Null(   
                                 frame_duration=7, 
@@ -720,7 +857,7 @@ class MeasureSpontaneousActivity(VisualExperiment):
                                 location_x=0.0,
                                 location_y=0.0,
                                 background_luminance=self.background_luminance,
-                                duration=duration,
+                                duration=self.parameters.duration,
                                 density=self.density,
                                 trial=k))    
     def do_analysis(self, data_store):

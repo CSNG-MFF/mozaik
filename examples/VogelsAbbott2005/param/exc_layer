@@ -41,5 +41,5 @@
                 'delay': 0.2,    # ms delay of the connections    
     },
 
-    'ExcInhConnection': ref('exc_layer.ExcExcConnection'),
+    'ExcInhConnection': ref('sheets.exc_layer.ExcExcConnection'),
 }

@@ -41,6 +41,9 @@ class Model(BaseComponent):
     
     input_space : ParameterSet
                 The parameters for the InputSpace object that will become the sensory input space for the model.
+    
+    sheets : ParameterSet
+                The list of sheets and their parameters from which the model is constructed. 
                 
     input_space_type : str
                      The python class of the InputSpace object to use.
@@ -65,7 +68,8 @@ class Model(BaseComponent):
         'input_space_type': str,  # defining the type of input space, visual/auditory/... it is the class path to the class representing it
         'min_delay' : float,
         'max_delay' : float,
-        'time_step' : float
+        'time_step' : float,
+        'sheets' : ParameterSet, # can be none - in which case input_space_type is ignored
     })
 
     def __init__(self, sim, num_threads, parameters):

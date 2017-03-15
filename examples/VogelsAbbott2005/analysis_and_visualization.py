@@ -26,7 +26,7 @@ def perform_analysis_and_visualization(data_store):
             TrialAveragedFiringRate(param_filter_query(data_store,st_direct_stimulation_name="None"),ParameterSet({})).analyse()
             Irregularity(param_filter_query(data_store,st_direct_stimulation_name="None"),ParameterSet({})).analyse()
             NeuronToNeuronAnalogSignalCorrelations(param_filter_query(data_store,analysis_algorithm='PSTH'),ParameterSet({'convert_nan_to_zero' : True})).analyse()
-            PopulationMean(data_store,ParameterSet({})).analyse()
+            PopulationMeanAndVar(data_store,ParameterSet({})).analyse()
             
             data_store.print_content(full_ADS=True)
             
@@ -40,8 +40,3 @@ def perform_analysis_and_visualization(data_store):
             RasterPlot(dsv,ParameterSet({'sheet_name' : 'Exc_Layer', 'neurons' : spike_ids,'trial_averaged_histogram': False, 'spontaneous': False}),fig_param={'dpi' : 100,'figsize': (17,5)},plot_file_name='ExcRaster.png').plot({'SpikeRasterPlot.group_trials':True})
             RasterPlot(dsv,ParameterSet({'sheet_name' : 'Inh_Layer', 'neurons' : spike_ids_inh,'trial_averaged_histogram': False, 'spontaneous': False}),fig_param={'dpi' : 100,'figsize': (17,5)},plot_file_name='InhRaster.png').plot({'SpikeRasterPlot.group_trials':True})
 
-            import pylab
-            pylab.show()
-            
-            
-    

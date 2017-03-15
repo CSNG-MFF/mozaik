@@ -99,8 +99,8 @@ class InternalStimulus(BaseStimulus):
     consistently, and will be useful in that it will record the duration of the experiment, the possible information about multiple trials,
     and the identity of the artificialy stimulation used. Note that in that case the frame_duration should be set to duration time.
     """
-    def __init__(self, **params):
-        BaseStimulus.__init__(self, **params)
+    def __init__(self,**params):
+        BaseStimulus.__init__(self,**params)
         assert self.frame_duration == self.duration , "Mozaik requires that frame_duration and duration for InternalStimulus are set to equal values"
     
     def frames(self):

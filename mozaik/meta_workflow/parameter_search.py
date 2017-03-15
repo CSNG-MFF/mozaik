@@ -48,7 +48,7 @@ class LocalSequentialBackend(object):
              modified_parameters.append(k)
              modified_parameters.append(str(parameters[k]))
          
-         subprocess.call(' '.join(["python", run_script, simulator_name, parameters_url]+modified_parameters+['ParameterSearch']),shell=True)
+         subprocess.call(' '.join(["python", run_script, simulator_name, '1', parameters_url]+modified_parameters+['ParameterSearch']),shell=True)
 
 
 class SlurmSequentialBackend(object):

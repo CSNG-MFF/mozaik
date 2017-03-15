@@ -135,13 +135,19 @@ def run_workflow(simulation_name, model_class, create_experiments):
     if mozaik.mpi_comm and mozaik.mpi_comm.rank == 0:
         mozaik.mpi_comm.barrier()
     
-    #let's store the full and modified parameters, if we are the 0 rank process
+    
     if mozaik.mpi_comm.rank == 0:
+        #let's store the full and modified parameters, if we are the 0 rank process
         parameters.save(Global.root_directory + "parameters", expand_urls=True)        
         import pickle
         f = open(Global.root_directory+"modified_parameters","w")
         pickle.dump(modified_parameters,f)
         f.close()
+        #let's store some basic info about the datastore
+        f = open(Global.root_directory+"info","w")
+        f.write(str({'simulation_run_name' : simulation_run_name, 'model_name' : simulation_name, 'creation_data' : datetime.now().strftime('%d/%m/%Y-%H:%M:%S')}))
+        f.close()
+        
 
     setup_logging()
     
@@ -203,6 +209,7 @@ def run_experiments(model,experiment_list,parameters,load_from=None):
     data_store.set_neuron_annotations(model.neuron_annotations())
     data_store.set_model_parameters(str(parameters))
     data_store.set_sheet_parameters(str(model.sheet_parameters()))
+    data_store.set_experiment_parametrization_list([(str(exp.__class__),str(exp.parameters)) for exp in experiment_list])
     
     t0 = time.time()
     simulation_run_time=0

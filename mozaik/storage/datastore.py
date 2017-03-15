@@ -183,6 +183,17 @@ class DataStoreView(ParametrizedObject):
         else:
             return [self.sensory_stimulus[s] for s in stimuli]
 
+    def get_experiment_parametrization_list(self):
+        
+        """
+        Return the list of parameters of all experiments performed (in the order they were performed).
+        
+        The returned data are in the following format:  a list of tuples (experimenta_class,parameter_set) where
+        *experiment_class* is the class of the experiment, and parameter_set is a ParameterSet instance converted to string
+        that corresponds to the parameters of the given experiment.
+        """
+        return self.block.annotations['experiment_parameters'];
+
     def sensory_stimulus_copy(self):
         """
         Utility function that makes a shallow copy of the dictionary holding sensory stimuli.
@@ -341,6 +352,14 @@ class DataStore(DataStoreView):
 
     def set_sheet_parameters(self,parameters):
         self.block.annotations['sheet_parameters'] = parameters
+        
+    def set_experiment_parametrization_list(self,experiment_parameter_list):
+        """
+        The experiment_parameter_list is epected to be a list of tuples (experimenta_class,parameter_set) where
+        *experiment_class* is the class of the experiment, and parameter_set is a ParameterSet instance converted to string 
+        that corresponds to the parameters of the given experiment.
+        """
+        self.block.annotations['experiment_parameters'] = experiment_parameter_list
         
     def identify_unpresented_stimuli(self, stimuli):
         """
@@ -505,8 +524,8 @@ class PickledDataStore(Hdf5DataStore):
             self.analysis_results = cPickle.load(f)
         else:
             self.analysis_results = []
-            
-        if os.path.isfile(self.parameters.root_directory + '/datastore.sensory.stimulus.pickle'):            
+        
+        if os.path.isfile(self.parameters.root_directory + '/datastore.sensory.stimulus.pickle'):    
             f = open(self.parameters.root_directory + '/datastore.sensory.stimulus.pickle', 'rb')
             self.sensory_stimulus = cPickle.load(f)
         else:
