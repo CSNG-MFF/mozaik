@@ -376,9 +376,48 @@ class FlatDisk(TopographicaBasedVisualStimulus):
                             bounds=BoundingBox(radius=self.size_x/2),
                             xdensity=self.density,
                             ydensity=self.density)()  
+         
             yield (d,[self.current_phase])
 
-
+class FlashedBar(TopographicaBasedVisualStimulus):
+    """
+    A flashed bar at a position. Allows to specify how long the bar should be flashed (the parameter *flash_duration*).
+    """
+    contrast = SNumber(dimensionless,bounds=[0,100.0],doc="Contrast of the stimulus")
+    orientation = SNumber(rad, period=pi, bounds=[0,pi], doc="Grating orientation")
+    width = SNumber(cpd, doc="Spatial frequency of the grating")
+    length = SNumber(Hz, doc="Temporal frequency of the grating")
+    flash_duration = SNumber(ms, doc="The duration of the bar presentation.")
+    x = SNumber(degrees, doc="The x location of the center of the bar.")
+    y = SNumber(degrees, doc="The y location of the center of the bar.")
+    
+    def frames(self):
+        num_frames = 0
+        while True:
+    
+            d = imagen.RawRectangle(offset = self.background_luminance,
+                                    scale = self.background_luminance*(self.contrast/100.0),
+                                    bounds=BoundingBox(radius=self.size_x/2),
+                                    xdensity=self.density,
+                                    ydensity=self.density,
+                                    x = self.x,
+                                    y = self.y,
+                                    orientation=self.orientation,
+                                    size = length,
+                                    aspect_ratio = self.width / self.length)()  
+                                    
+            b = imagen.Null(scale=self.background_luminance,
+                    bounds=BoundingBox(radius=self.size_x/2),
+                    xdensity=self.density,
+                    ydensity=self.density)()
+                    
+            num_frames += 1;
+            if (num_frames-1) * self.frame_duration < self.flash_duration: 
+                yield (d,[1])
+            else:
+                yield (b,[0])
+            
+            
 class DriftingSinusoidalGratingCenterSurroundStimulus(TopographicaBasedVisualStimulus):
     """
     A standard stimulus to probe orientation specific surround modulation:

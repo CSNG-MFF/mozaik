@@ -315,3 +315,50 @@ class SizeTuningAnalysis(Analysis):
 
 
 
+
+class OCTCTuningAnalysis(Analysis):
+      """
+      Calculates the Orientation Contrast tuning properties.
+      """   
+        
+      required_parameters = ParameterSet({
+          'neurons': list,  # list of neurons for which to compute this (normally this analysis will only makes sense for neurons for which the sine grating disk stimulus has been optimally oriented)
+          'sheet_name' : str
+      })      
+        
+      
+      def perform_analysis(self):
+                dsv = queries.param_filter_query(self.datastore,identifier='PerNeuronValue',sheet_name=self.parameters.sheet_name,st_name='DriftingSinusoidalGratingCenterSurroundStimulus')
+                
+                if len(dsv.get_analysis_result()) == 0: return
+                assert queries.ads_with_equal_stimulus_type(dsv)
+                assert queries.equal_ads(dsv,except_params=['stimulus_id'])
+                self.pnvs = dsv.get_analysis_result()
+                
+                # get stimuli
+                self.st = [MozaikParametrized.idd(s.stimulus_id) for s in self.pnvs]
+                
+                
+                # transform the pnvs into a dictionary of tuning curves according along the 'surround_orientation' parameter
+                # also make sure they are ordered according to the first pnv's idds 
+                
+                self.tc_dict = colapse_to_dictionary([z.get_value_by_id(self.parameters.neurons) for z in self.pnvs],self.st,"surround_orientation")
+                for k in self.tc_dict.keys():
+                        sis = []
+                        surround_tuning=[]
+                        
+                        # we will do the calculation neuron by neuron
+                        for i in xrange(0,len(self.parameters.neurons)):
+                            
+                            ors = self.tc_dict[k][0]
+                            values = numpy.array([a[i] for a in self.tc_dict[k][1]])
+                            d={}
+                            for o,v in zip(ors,values):
+                                d[o] = v
+                            sis.append(d[0] / d[numpy.pi/2])
+                            
+                            
+                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(sis,self.parameters.neurons,None,value_name = 'Suppression index of ' + self.pnvs[0].value_name ,sheet_name=self.parameters.sheet_name,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
+
+
+

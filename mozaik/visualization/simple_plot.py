@@ -491,6 +491,7 @@ class SpikeHistogramPlot(SpikeRasterPlot):
         SpikeRasterPlot.__init__(self, spike_lists,**param)
         self.parameters["bin_width"] = 0.005
         self.parameters["colors"] = ['#000000' for i in xrange(0, len(self.sps))]
+        
     def plot(self):
         self.neurons = [i for i in xrange(0, min(10, len(self.sps[0][0])))]
 
@@ -505,7 +506,8 @@ class SpikeHistogramPlot(SpikeRasterPlot):
                     spike_train = spike_list[j].rescale(pq.s)
                     tmp.extend(spike_train.magnitude)
             all_spikes.append(tmp)
-
+        logger.info(str(t_stop))
+        logger.info(str(self.bin_width))
         if all_spikes != []:
             self.axis.hist(all_spikes,
                            bins=numpy.arange(0, t_stop, self.bin_width),
@@ -767,7 +769,12 @@ class StandardStyleLinePlot(StandardStyle):
          be plotted.
 
     labels : list, optional
-           Can contain the labels to be given to the individual line plots.
+             Can contain the labels to be given to the individual line plots.
+           
+    error : list, optional
+            Can contain the error bars associated with y. Has to have the same shape as y.
+           
+    
 
     
     Other parameters
@@ -777,7 +784,12 @@ class StandardStyleLinePlot(StandardStyle):
            The colors of the plots. If it is one color all plots will have that same color. If it is a list its
            length should correspond to length of x and y and the corresponding colors will be assigned to the individual graphs.
            If dict, the keys should be labels, and values will be the colors that will be assigned to the lines that correspond to the labels.
-
+           
+    linestyles : str or list of str
+           The linestyles of the plots. If it is scalar all plots will have that same linestyle. If it is a list its
+           length should correspond to length of x and y and the corresponding linestyles will be assigned to the individual graphs.
+           If dict, the keys should be labels, and values will be the linestyles that will be assigned to the lines that correspond to the labels.
+    
     mean : bool
          If the mean of the vectors should be plotted as well.
          
@@ -789,16 +801,22 @@ class StandardStyleLinePlot(StandardStyle):
 
     """
 
-    def __init__(self, x, y, labels=None,**param):
+    def __init__(self, x, y, labels=None,error=None,**param):
         StandardStyle.__init__(self,**param)
         self.x = x
         self.y = y
+        self.error = error
+        
         self.parameters["labels"] = labels
         self.parameters["colors"] = None
+        self.parameters["linestyles"] = None
         self.parameters["mean"] = False
         self.parameters["fill"] = False
         self.parameters["legend"] = False
         self.parameters["linewidth"] = 1
+    
+        if error != None:
+           assert numpy.shape(error) == numpy.shape(y)
 
         assert len(x) == len(y)
         if labels != None:
@@ -815,6 +833,11 @@ class StandardStyleLinePlot(StandardStyle):
            assert self.labels != None
            assert len(self.colors.keys()) == len(self.labels)
         
+        if type(self.linestyles) == dict:
+           assert self.labels != None
+           assert len(self.linestyles.keys()) == len(self.labels)
+                
+        
         tmin = 10**10
         tmax = -10**10
         for i in xrange(0, len(self.x)):
@@ -828,24 +851,41 @@ class StandardStyleLinePlot(StandardStyle):
             
             if self.labels != None:
                 p['label'] =self.labels[i]
-            
             if type(self.colors) == list:
                 p['color'] = self.colors[i]
             elif type(self.colors) == dict:
-                assert self.labels[i] in self.colors.keys(), "Cannot find curve named %s" % (self.labels[i])
+                assert self.labels[i] in self.colors.keys(), "Cannot find curve named %s %s %s" % (self.labels[i],self.colors.keys(),self.colors[self.labels[i]])
                 p['color'] = self.colors[self.labels[i]]
             elif self.colors != None:
                 p['color'] = self.colors
-
+            elif self.colors == None:
+                p['color'] = self.axis._get_lines.color_cycle.next()
+            
+            if type(self.linestyles) == list:
+                p['linestyle'] = self.linestyles[i]
+            elif type(self.colors) == dict:
+                assert self.labels[i] in self.linestyles.keys(), "Cannot find curve named %s %s %s" % (self.labels[i],self.linestyles.keys(),self.linestyles[self.labels[i]])
+                p['linestyle'] = self.linestyles[self.labels[i]]
+            elif self.linestyles != None:
+                p['linestyle'] = self.linestyles
+            elif self.linestyles == None:
+                p['linestyle'] = '-'
+            
+            
             self.axis.plot(self.x[i], self.y[i],
                                linewidth=self.linewidth,
                                **p)
             
             if self.fill:
                d = numpy.zeros(len(self.y[i]))
-               self.axis.fill_between(self.x[i],self.y[i],where=self.y[i]>=d, color=color, alpha=0.2,linewidth=0)
-               self.axis.fill_between(self.x[i],self.y[i],where=self.y[i]<=d, color=color, alpha=0.2,linewidth=0)
-                
+               self.axis.fill_between(self.x[i],self.y[i],where=self.y[i]>=d, color=p['color'], alpha=0.2,linewidth=0)
+               self.axis.fill_between(self.x[i],self.y[i],where=self.y[i]<=d, color=p['color'], alpha=0.2,linewidth=0)
+            
+            if self.error:
+                ymin = self.y[i] - self.error[i]
+                ymax = self.y[i] + self.error[i]
+                self.axis.fill_between(self.x[i], ymax, ymin, color=p['color'], alpha=0.2)
+            
             pylab.hold('on')
 
             tmin = min(tmin, self.x[i][0])
@@ -913,8 +953,8 @@ class ConductancesPlot(StandardStyle):
 
         self.x_lim = (t_start, t_stop)
         #self.x_ticks = [t_start, (t_stop - t_start)/2, t_stop]
-        self.x_label = 'time(' + self.gsyn_es[0].t_start.dimensionality.latex + ')'
-        self.y_label = 'g(' + mozaik.tools.units.nS.dimensionality.latex + ')'
+        self.x_label = 'time (' + self.gsyn_es[0].t_start.dimensionality.latex + ')'
+        self.y_label = 'g (' + mozaik.tools.units.nS.dimensionality.latex + ')'
 
 
 class ConnectionPlot(StandardStyle):

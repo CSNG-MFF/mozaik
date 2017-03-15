@@ -725,3 +725,72 @@ class MeasureSpontaneousActivity(VisualExperiment):
                                 trial=k))    
     def do_analysis(self, data_store):
         pass
+
+
+class MapPhaseResponseWithBarStimulus(VisualExperiment):
+    """
+    Flash bar at range of positions displaced prependicular to its elongated axis.
+    
+    Parameters
+    ----------
+    model : Model
+          The model on which to execute the experiment.
+    
+    x : float
+      The x corrdinates (of center) of the area in which the mapping will be done.
+
+    y : float
+      The y corrdinates (of center) of the area in which the mapping will be done.
+        
+    length : float
+          The length of the bar.
+    
+    width : float
+          The width of the bar.
+             
+    orientation : float
+                The orientation of the bar.
+
+    max_offset : float
+               The maximum offset from the central position (defined by x and y) prependicular to the length of the bar at which the bars will be flashed.
+
+    steps : int
+         The number of steps in which the bars will be flashed between the two extreme positions defined by the max_offset parameter, along the axis prependicular to the length of the bar.
+    
+    duration : float
+             The duration of single presentation of the stimulus.
+    
+    flash_duration : float
+             The duration of the presence of the bar.
+    
+    contrast : float 
+              Contrast (expressed as % : 0-100%) of the grating.
+    
+    num_trials : int
+               Number of trials each each stimulus is shown.
+    """
+    def __init__(self, model,x,y,length, width, orientation, max_offset, steps, duration, flash_duration, contrast, num_trials):
+        VisualExperiment.__init__(self, model)
+        for k in xrange(0, num_trials):
+            for s in xrange(0, steps):
+                self.stimuli.append(
+                    topo.FlashedBar(
+                                frame_duration=7,
+                                size_x=model.visual_field.size_x,
+                                size_y=model.visual_field.size_y,
+                                location_x=0.0,
+                                location_y=0.0,
+                                background_luminance=self.background_luminance,
+                                duration=duration,
+                                density=self.density,
+                                contrast = contrast,
+                                orientation = orientation,
+                                width = width,
+                                length = length,
+                                flash_duration = flash_durationflash_duration,
+                                x = x,
+                                y = y - max_offset + (2*max_offset)/ (steps-1) * s,
+                                trial=k))
+
+    def do_analysis(self, data_store):
+        pass

@@ -98,7 +98,7 @@ class SlurmSequentialBackend(object):
         
      
          from subprocess import Popen, PIPE, STDOUT
-        
+         #'--exclude=node[01-04]',
          p = Popen(['sbatch'] + self.slurm_options +  ['-o',parameters['results_dir'][2:-2]+"/slurm-%j.out"],stdin=PIPE,stdout=PIPE,stderr=PIPE)
          
          # THIS IS A BIT OF A HACK, have to add customization for other people ...            
@@ -115,15 +115,6 @@ class SlurmSequentialBackend(object):
          print p.communicate(input=data)[0]                  
          print data
          p.stdin.close()
-
-
-
-
-
-
-
-
-
 
 class ParameterSearch(object):
     """

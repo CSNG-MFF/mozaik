@@ -105,19 +105,19 @@ class Plotting(ParametrizedObject):
         raise NotImplementedError
 
     
-    def _nip_parameters(self,n,p):
-        d = {}
-        fd = {}
-        for (k,v) in p.iteritems():
+    def _nip_parameters(self,plot_name,user_params):
+        new_user_params = {}
+        params_to_update = {}
+        for (k,v) in user_params.iteritems():
             l = k.split('.')
             assert len(l) > 1, "Parameter %s not matching the simple plot" % (k)
-            if l[0] == n or l[0] == '*':
+            if l[0] == plot_name or l[0] == '*':
                 if len(l[1:]) >1: 
-                   d['.'.join(l[1:])] = v
+                   new_user_params['.'.join(l[1:])] = v
                 else:
-                   fd[l[1]] = v
+                   params_to_update[l[1]] = v
                 
-        return d,fd
+        return new_user_params,params_to_update
     
     def _handle_parameters_and_execute_plots(self,parameters,user_parameters,gs):
         d = self.subplot(gs)
@@ -242,12 +242,13 @@ class PlotTuningCurve(Plotting):
       'polar' : bool # if True polar coordinates will be used
     })
 
-    def __init__(self, datastore, parameters, plot_file_name=None,fig_param=None,frame_duration=0,centering_pnv=None):
+    def __init__(self, datastore, parameters, plot_file_name=None,fig_param=None,frame_duration=0,centering_pnv=None,spont_level_pnv=None):
         Plotting.__init__(self, datastore, parameters, plot_file_name, fig_param,frame_duration)
         
         self.st = []
         self.tc_dict = []
         self.pnvs = []
+        self.spont_level_pnv = spont_level_pnv
         self.max_mean_response_indexes = []
         assert queries.ads_with_equal_stimulus_type(datastore)
         assert len(self.parameters.neurons) > 0 , "ERROR, empty list of neurons specified"
@@ -305,6 +306,7 @@ class PlotTuningCurve(Plotting):
         xs = []
         labels=[]
         ys = []
+        errors = [] 
         
         po = None if not self.parameters.polar else {'projection':'polar'}
         
@@ -316,6 +318,7 @@ class PlotTuningCurve(Plotting):
                xs = [] 
                ys = []
                labels = []
+               errors = []
                             
             period = st[0].params()[self.parameters.parameter_name].period
             if self.parameters.centered:        
@@ -326,16 +329,20 @@ class PlotTuningCurve(Plotting):
                 
             for k in sorted(dic.keys()):    
                 (par, val) = dic[k]
+                error = None
                 if self.parameters.mean:
-                    v = 0
+                    v = []
                     for j in xrange(0,len(self.parameters.neurons)):
                         if self.parameters.centered:
                             vv,p = self.center_tc(val[:,j],par,period,self.max_mean_response_indexes[i][j])
                         else:
                             vv = val[:,j]
                             p = par
-                        v = v + vv
-                    val = v / len(self.parameters.neurons)
+                        #v = v + vv
+                        v.append(vv)
+                    error = numpy.std(v,axis=0) / numpy.sqrt(len(self.parameters.neurons))  
+                    val = numpy.mean(v,axis=0)    
+                    #val = v / len(self.parameters.neurons)
                     par = p
                 elif self.parameters.centered:
                     val,par = self.center_tc(val[:,idx],par,period,self.max_mean_response_indexes[i][idx])
@@ -353,6 +360,9 @@ class PlotTuningCurve(Plotting):
                    val = list(val)
                    par.insert(0,-pi/2)
                    val.insert(0,val[-1])
+                   if error != None:
+                        error = list(error)
+                        error.insert(0,error[-1])
                 elif period==2*pi and self.parameters.centered==False:
                    par = [(p-2*pi if p > pi/2 else p) for p in par]
                    par,val = zip(*sorted(zip(numpy.array(par),val)))
@@ -360,11 +370,17 @@ class PlotTuningCurve(Plotting):
                    val = list(val)
                    par.insert(0,-pi)
                    val.insert(0,val[-1])
+                   if error != None:
+                        error = list(error)
+                        error.insert(0,error[-1])
                 elif period != None:
                     par = list(par)
                     val = list(val)
                     par.append(par[0] + period)
                     val.append(val[0])
+                    if error != None:
+                        error = list(error)
+                        error.append(error[0])
                    
 
                 if self.parameters.polar:
@@ -374,26 +390,49 @@ class PlotTuningCurve(Plotting):
 
                 xs.append(numpy.array(par))
                 ys.append(numpy.array(val))
+                errors.append(numpy.array(error))
                 
                 l = ""
                 
                 if self.parameters.pool:
-                   l = pnv[0].value_name + " "
-                
+                   if len(varying_parameters([MozaikParametrized.idd(e) for e in dic.keys()]))>0:
+                        l = pnv[0].value_name + " "
+                   else:
+                        l = pnv[0].value_name
+
+                                
                 for p in varying_parameters([MozaikParametrized.idd(e) for e in dic.keys()]):
                     l = l + str(p) + " : " + str(getattr(MozaikParametrized.idd(k),p))
                 labels.append(l)
 
+            # add the spontaneous level
+            if self.spont_level_pnv != None:
+                if not self.parameters.mean:
+                   sp_level = self.spont_level_pnv.get_value_by_id(self.parameters.neurons)[idx]
+                else:
+                   sp_level = numpy.mean(self.spont_level_pnv.get_value_by_id(self.parameters.neurons))
+                xs.insert(0,numpy.array([min(xs[-1]),max(xs[-1])]))
+                ys.insert(0,numpy.array([sp_level,sp_level]))
+                labels.insert(0,'spont.')
+                errors.insert(0,numpy.array([0,0]))
+                
             if not self.parameters.pool:
+                if not self.parameters.mean:
+                    errors = None 
                 params = self.create_params(pnv[0].value_name,pnv[0].value_units,i==0,i==(len(self.pnvs)-1),period,self.parameters.neurons[idx],len(xs),self.parameters.polar,labels,idx)
-                plots.append(("TuningCurve_" + pnv[0].value_name,StandardStyleLinePlot(xs, ys,subplot_kw=po),gs[i],params))   
+                plots.append(("TuningCurve_" + pnv[0].value_name,StandardStyleLinePlot(xs, ys,error=errors,subplot_kw=po),gs[i],params))   
+        
+        
+        
+        if not self.parameters.mean:
+           errors = None 
 
         if self.parameters.pool:
            params = self.create_params('mix',self.pnvs[0][0].value_units,True,True,period,self.parameters.neurons[idx],len(xs),self.parameters.polar,labels,idx)
            if not self.parameters.polar:
-              plots.append(("TuningCurve_Stacked",StandardStyleLinePlot(xs, ys),gs,params))
+              plots.append(("TuningCurve_Stacked",StandardStyleLinePlot(xs, ys,error=errors),gs,params))
            else:
-              plots.append(("TuningCurve_Stacked",StandardStyleLinePlot(xs, ys,subplot_kw=po),gs,params)) 
+              plots.append(("TuningCurve_Stacked",StandardStyleLinePlot(xs, ys,error=errors,subplot_kw=po),gs,params)) 
                 
         return plots
 
@@ -591,8 +630,8 @@ class VmPlot(Plotting):
                     "x_lim" : (t_start, t_stop), 
                     "y_lim" : (-80.0, -40.0), 
                     "x_ticks": x_ticks,
-                    "x_label": 'time(' + vms[0].t_stop.dimensionality.latex + ')',
-                    "y_label": 'Vm(' + vms[0].dimensionality.latex + ')'
+                    "x_label": 'time (' + vms[0].t_stop.dimensionality.latex + ')',
+                    "y_label": 'Vm (' + vms[0].dimensionality.latex + ')'
                })]
 
 
@@ -719,7 +758,7 @@ class OverviewPlot(Plotting):
         
         d.extend([ ("Spike_plot",RasterPlot(dsv,
                    ParameterSet({'sheet_name': self.parameters.sheet_name,
-                                 'trial_averaged_histogram': False,'spontaneous' : self.parameters.spontaneous,
+                                 'trial_averaged_histogram': True,'spontaneous' : self.parameters.spontaneous,
                                  'neurons': [self.parameters.neuron]})
                    ),gs[0 + offset, 0],params),
                 
@@ -1298,7 +1337,10 @@ class ConnectivityPlot(Plotting):
             index = self.datastore.get_sheet_indexes(self.connections[idx].target_name,self.parameters.neuron)
             ix = numpy.flatnonzero(numpy.array(self.connections[idx].weights)[:,1]==index)
             ix = numpy.array(self.connections[idx].weights)[:,0][ix].astype(int)
-            
+        
+        assert all(numpy.array(self.connections[idx].weights)[:,0] == numpy.array(self.connections[idx].delays)[:,0])
+        assert all(numpy.array(self.connections[idx].weights)[:,1] == numpy.array(self.connections[idx].delays)[:,1])
+        
         sx = self.connecting_neurons_positions[idx][0][ix]
         sy = self.connecting_neurons_positions[idx][1][ix]
         w = numpy.array(self.connections[idx].weights)[ix,2]
@@ -1340,25 +1382,25 @@ class ConnectivityPlot(Plotting):
             (angle, mag) = circ_mean(numpy.array(pnv.get_value_by_id(self.datastore.get_sheet_ids(pnv.sheet_name,ix))),
                                      weights=numpy.abs(w),
                                      high=pnv.period)
-            params["title"] = str(self.connections[idx].proj_name) + "\n Mean: " + str(angle)
+            params["title"] = str(self.connections[idx].proj_name) + "\n Mean: " + str(angle) + '\nNum conn/mean weight/total weight:' +str(len(w)) + '/' + str(numpy.mean(w)) + '/' + str(numpy.sum(w)) + '\n' + str(w[:10 ])
             params["colorbar_label"] =  pnv.value_name
             params["colorbar"] = True
 
             if self.connections[idx].source_name == self.connections[idx].target_name:
                 params["line"] = False
-                plots = [("ConnectionsPlot",ConnectionPlot(sx, sy, tx, ty, w,colors=pnv.get_value_by_id(self.datastore.get_sheet_ids(pnv.sheet_name,ix)),period=pnv.period),gs,params)]
+                plots = [("ConnectionsPlot",ConnectionPlot(sx, sy, tx, ty, numpy.abs(w),colors=pnv.get_value_by_id(self.datastore.get_sheet_ids(pnv.sheet_name,ix)),period=pnv.period),gs,params)]
             else:
                 params["line"] = True
-                plots = [("ConnectionsPlot",ConnectionPlot(sx, sy, numpy.min(sx)*1.2, numpy.min(sy)*1.2, w,colors=pnv.get_value_by_id(self.datastore.get_sheet_ids(pnv.sheet_name,ix)),period=pnv.period),gs,params)]
+                plots = [("ConnectionsPlot",ConnectionPlot(sx, sy, numpy.min(sx)*1.2, numpy.min(sy)*1.2, numpy.abs(w),colors=pnv.get_value_by_id(self.datastore.get_sheet_ids(pnv.sheet_name,ix)),period=pnv.period),gs,params)]
         else:
             params["title"] = 'Weights: '+ self.connections[idx].proj_name
             
             if self.connections[idx].source_name == self.connections[idx].target_name:
                 params["line"] = False
-                plots = [("ConnectionsPlot",ConnectionPlot(sx, sy, tx, ty, w),gs,params)]
+                plots = [("ConnectionsPlot",ConnectionPlot(sx, sy, tx, ty, numpy.abs(w)),gs,params)]
             else:
                 params["line"] = True
-                plots = [("ConnectionsPlot",ConnectionPlot(sx, sy, numpy.min(sx)*1.2, numpy.min(sy)*1.2,w),gs,params)]
+                plots = [("ConnectionsPlot",ConnectionPlot(sx, sy, numpy.min(sx)*1.2, numpy.min(sy)*1.2,numpy.abs(w)),gs,params)]
 
 
         # Plot the delays
@@ -1491,9 +1533,9 @@ class CorticalColumnRasterPlot(Plotting):
             a = queries.param_filter_query(dsv,sheet_name=sn).get_segments()
             assert len(a) == 1
             if len(self.parameters.neurons) != 0:
-                sp.append(a[0].get_spiketrains())
+                sp.append(a[0].get_spiketrain(self.parameters.neurons[i]))
             else:
-                sp.append(a[0].get_spiketrains(self.parameters.neurons[i]))
+                sp.append(a[0].get_spiketrains())
         
         #if self.parameters.spontaneous:
         #   spont_sp = [s.get_spiketrain(self.parameters.neurons) for s in sorted(dsv.get_segments(null=True),key = lambda x : MozaikParametrized.idd(x.annotations['stimulus']).trial)]             

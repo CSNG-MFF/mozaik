@@ -154,9 +154,7 @@ class SimilarAnnotationSelector(PopulationSelector):
         'num_of_cells': int,  # The number of cells to be selected
         'period' :  float, # if the value is periodic this should be set to the period, oterwise it should be set to 0.
       })  
-
-      
-      def generate_idd_list_of_neurons(self):
+      def pick_close_to_annotation(self):
           picked = []
           z = self.sheet.pop.all_cells.astype(int)
           vals = [self.sheet.get_neuron_annotation(i,self.parameters.annotation) for i in xrange(0,len(z))]
@@ -165,9 +163,44 @@ class SimilarAnnotationSelector(PopulationSelector):
           else:
             picked = numpy.array([i for i in xrange(0,len(z)) if circular_dist(vals[i],self.parameters.value,self.parameters.period) < self.parameters.distance])  
           
+          return picked
+      
+      def generate_idd_list_of_neurons(self):
+          picked = self.pick_close_to_annotation()
           mozaik.rng.shuffle(picked)
           return z[picked[:self.parameters.num_of_cells]]
           
           
           
-          
+class SimilarAnnotationSelectorRegion(SimilarAnnotationSelector):
+      """
+      This PopulationSelector picks random n neurons whose *annotation* value is closer than *distance* from specified *value* (based on euclidian norm).
+      
+      Other parameters
+      ----------------
+      annotation : str
+                 The name of the annotation value. It has to be defined in the given population for all neurons.
+      
+      distance : The the upper limit on distance between the given neurons annotation value and the specified value that permits inclusion.
+      
+      value : The value from which to calculate distance.
+      
+      num_of_cells : int
+                   The number of cells to be selected.
+      """
+      
+      required_parameters = ParameterSet({
+        'size': float,  # the size of the grid (it is assumed to be square) - it has to be multiple of spacing (micro meters)
+        'offset_x' : float, # the x axis offset from the center of the sheet (micro meters)
+        'offset_y' : float, # the y axis offset from the center of the sheet (micro meters)
+      })  
+
+      
+      def generate_idd_list_of_neurons(self):
+          picked_or = set(self.pick_close_to_annotation())
+          picked_region = set(numpy.arange(0,len(self.sheet.pop.positions[0]))[abs(self.sheet.pop.positions[0] - offset_x) < size/2.0 and abs(self.sheet.pop.positions[1] - offset_y) < size/2.0])
+          picked = list(picked_or & picked_region)  
+          mozaik.rng.shuffle(picked)
+          z = self.sheet.pop.all_cells.astype(int)
+          return z[picked[:self.parameters.num_of_cells]]
+           

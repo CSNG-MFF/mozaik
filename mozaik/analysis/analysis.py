@@ -751,9 +751,9 @@ class GaussianTuningCurveFit(Analysis):
        
       def _fitgaussian(self,X,Y,period):
           if period != None:
-            fitfunc = lambda p,x:  p[0] + p[1]*numpy.exp(-circular_dist(p[3],x,period)**2/(2*p[2]**2))
+            fitfunc = lambda p,x: p[0] + p[1]*numpy.exp(-circular_dist(p[3],x,period)**2/(2*p[2]**2))
           else:
-            fitfunc = lambda p,x:  p[0] + p[1]*numpy.exp(-numpy.abs(p[3]-x)**2/(2*p[2]**2))  
+            fitfunc = lambda p,x: p[0] + p[1]*numpy.exp(-numpy.abs(p[3]-x)**2/(2*p[2]**2))  
           errfunc = lambda p, x, y: fitfunc(p,x) - y # Distance to the target function
           
           p0 = [0, 1.0, 0.5,0.0] # Initial guess for the parameters
@@ -767,10 +767,10 @@ class GaussianTuningCurveFit(Analysis):
           p1, success = scipy.optimize.leastsq(errfunc, p0[:], args=(X,Y))      
           p1[2]  = abs(p1[2])
           
-          # if the fit is very bad - error greater than 30% of the Y magnitude
-          #if numpy.linalg.norm(fitfunc(p1,X)-Y)/numpy.linalg.norm(Y) > 0.4:
-          #   #p1 = numpy.array([0,0,0,0])
-          #   p1=p0
+          #if the fit is very bad - error greater than 30% of the Y magnitude
+          if numpy.linalg.norm(fitfunc(p1,X)-Y,2)/numpy.linalg.norm(Y-numpy.mean(Y),2) > 0.2:
+             p1 = numpy.array([-1,-1,-1,-1])
+          #    p1=p0
 
           if False:
               import pylab
@@ -1106,6 +1106,27 @@ class Analog_MeanSTDAndFanoFactor(Analysis):
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(esyn_fano_factor,esyn_ids,qt.dimensionless,value_name = 'FanoFactor(ECond)',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(isyn_fano_factor,isyn_ids,qt.dimensionless,value_name = 'FanoFactor(ICond)',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(vm_fano_factor,vm_ids,qt.dimensionless,value_name = 'FanoFactor(VM)',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+
+class AnalogSignal_PerNeuronMeanVar(Analysis):
+      """
+      Calculates the mean, and variance of AnalogSignal for each neuron. 
+      It stores them in PerNeuronValue datastructures, one for mean one for variance.
+      
+      Notes
+      -----
+      Only neurons for which the AnalogSignal exists were measured will be included in the PerNeuronValue data structures.
+      """
+
+      def perform_analysis(self):
+            for sheet in self.datastore.sheets():
+                dsv = queries.param_filter_query(self.datastore, sheet_name=sheet,identifier='AnalogSignalList')
+                for ads in dsv.get_analysis_result():
+                    mmean = numpy.mean(ads.asl,axis=1)
+                    vvar = numpy.var(ads.asl,axis=1)
+                    # save in datastore
+                    self.datastore.full_datastore.add_analysis_result(PerNeuronValue(mmean,ads.ids,ads.y_axis_units,value_name = 'PerNeuronMean(' + ads.y_axis_name + ')',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=ads.stimulus_id))        
+                    self.datastore.full_datastore.add_analysis_result(PerNeuronValue(vvar,ads.ids,ads.y_axis_units,value_name = 'PerNeuronVar(' + ads.y_axis_name + ')',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=ads.stimulus_id))        
+                    
 
 
 class TrialAveragedVarianceAndVarianceRatioOfConductances(Analysis):
