@@ -906,10 +906,25 @@ class MapPhaseResponseWithBarStimulus(VisualExperiment):
     num_trials : int
                Number of trials each each stimulus is shown.
     """
-    def __init__(self, model,x,y,length, width, orientation, max_offset, steps, duration, flash_duration, contrast, num_trials):
-        VisualExperiment.__init__(self, model)
-        for k in xrange(0, num_trials):
-            for s in xrange(0, steps):
+    
+    required_parameters = ParameterSet({
+            'x' : float,
+            'y' : float,
+            'length' : float,
+            'width' : float,
+            'orientation' : float,
+            'max_offset' : float,
+            'steps' : int,
+            'duration' : float,
+            'flash_duration' : float, 
+            'contrast' : float,
+            'num_trials' : int,
+    })  
+    
+    def __init__(self, model,parameters):
+        VisualExperiment.__init__(self, model,parameters)
+        for k in xrange(0, self.parameters.num_trials):
+            for s in xrange(0, self.parameters.steps):
                 self.stimuli.append(
                     topo.FlashedBar(
                                 frame_duration=7,
@@ -918,15 +933,15 @@ class MapPhaseResponseWithBarStimulus(VisualExperiment):
                                 location_x=0.0,
                                 location_y=0.0,
                                 background_luminance=self.background_luminance,
-                                duration=duration,
+                                duration=self.parameters.duration,
                                 density=self.density,
-                                contrast = contrast,
-                                orientation = orientation,
-                                width = width,
-                                length = length,
-                                flash_duration = flash_durationflash_duration,
-                                x = x,
-                                y = y - max_offset + (2*max_offset)/ (steps-1) * s,
+                                contrast = self.parameters.contrast,
+                                orientation = self.parameters.orientation,
+                                width = self.parameters.width,
+                                length = self.parameters.length,
+                                flash_duration = self.parameters.flash_duration,
+                                x = self.parameters.x + numpy.cos(self.parameters.orientation+numpy.pi/2) * (-self.parameters.max_offset + (2*self.parameters.max_offset)/ (self.parameters.steps-1) * s),
+                                y = self.parameters.y + numpy.sin(self.parameters.orientation+numpy.pi/2) * (-self.parameters.max_offset + (2*self.parameters.max_offset)/ (self.parameters.steps-1) * s),
                                 trial=k))
 
     def do_analysis(self, data_store):

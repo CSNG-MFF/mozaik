@@ -403,8 +403,9 @@ class FlashedBar(TopographicaBasedVisualStimulus):
                                     x = self.x,
                                     y = self.y,
                                     orientation=self.orientation,
-                                    size = length,
-                                    aspect_ratio = self.width / self.length)()  
+                                    size = self.width,
+                                    aspect_ratio = self.length/ self.width)()  
+
                                     
             b = imagen.Null(scale=self.background_luminance,
                     bounds=BoundingBox(radius=self.size_x/2),
