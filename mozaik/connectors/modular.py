@@ -230,8 +230,8 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(ModularConnect
             if self.parameters.num_samples == 0:
                 co = Counter(sample_from_bin_distribution(weights, int(samples)))
             else:
-                #assert self.parameters.num_samples > 2*int(samples), ("%s: %d %d" % (self.name,self.parameters.num_samples,2*int(samples)))
-                co = Counter(sample_from_bin_distribution(weights, self.parameters.num_samples + 2*int(samples)))
+                assert self.parameters.num_samples > 2*int(samples), ("%s: %d %d" % (self.name,self.parameters.num_samples,2*int(samples)))
+                co = Counter(sample_from_bin_distribution(weights, self.parameters.num_samples - 2*int(samples)))
             v = v + numpy.sum(co.values())
             cl.extend([(k,i,self.weight_scaler*self.parameters.base_weight.next()*co[k],delays[k]) for k in co.keys()])
         method = self.sim.FromListConnector(cl)
