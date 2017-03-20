@@ -195,10 +195,11 @@ class SimilarAnnotationSelectorRegion(SimilarAnnotationSelector):
         'offset_y' : float, # the y axis offset from the center of the sheet (micro meters)
       })  
 
+
       
       def generate_idd_list_of_neurons(self):
           picked_or = set(self.pick_close_to_annotation())
-          picked_region = set(numpy.arange(0,len(self.sheet.pop.positions[0]))[abs(self.sheet.pop.positions[0] - offset_x) < size/2.0 and abs(self.sheet.pop.positions[1] - offset_y) < size/2.0])
+          picked_region = set(numpy.arange(0,len(self.sheet.pop.positions[0]))[numpy.logical_and((abs(numpy.array(self.sheet.pop.positions[0]) - self.parameters.offset_x) < self.parameters.size/2.0) , (abs(numpy.array(self.sheet.pop.positions[1]) - self.parameters.offset_y) < self.parameters.size/2.0))])
           picked = list(picked_or & picked_region)  
           mozaik.rng.shuffle(picked)
           z = self.sheet.pop.all_cells.astype(int)

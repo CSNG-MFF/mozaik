@@ -765,7 +765,7 @@ class OverviewPlot(Plotting):
         
         d.extend([ ("Spike_plot",RasterPlot(dsv,
                    ParameterSet({'sheet_name': self.parameters.sheet_name,
-                                 'trial_averaged_histogram': True,'spontaneous' : self.parameters.spontaneous,
+                                 'trial_averaged_histogram': False,'spontaneous' : self.parameters.spontaneous,
                                  'neurons': [self.parameters.neuron]})
                    ),gs[0 + offset, 0],params),
                 
