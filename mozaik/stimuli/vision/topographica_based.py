@@ -383,7 +383,7 @@ class FlashedBar(TopographicaBasedVisualStimulus):
     """
     A flashed bar at a position. Allows to specify how long the bar should be flashed (the parameter *flash_duration*).
     """
-    contrast = SNumber(dimensionless,bounds=[0,100.0],doc="Contrast of the stimulus")
+    relative_luminance = SNumber(dimensionless,bounds=[0,1.0],doc="The scale of the stimulus. 0 is dark, 1.0 is double the background luminance")
     orientation = SNumber(rad, period=pi, bounds=[0,pi], doc="Grating orientation")
     width = SNumber(cpd, doc="Spatial frequency of the grating")
     length = SNumber(Hz, doc="Temporal frequency of the grating")
@@ -396,7 +396,7 @@ class FlashedBar(TopographicaBasedVisualStimulus):
         while True:
     
             d = imagen.RawRectangle(offset = self.background_luminance,
-                                    scale = self.background_luminance*(self.contrast/100.0),
+                                    scale = self.background_luminance*(self.relative_luminance-0.5),
                                     bounds=BoundingBox(radius=self.size_x/2),
                                     xdensity=self.density,
                                     ydensity=self.density,

@@ -900,8 +900,8 @@ class MapPhaseResponseWithBarStimulus(VisualExperiment):
     flash_duration : float
              The duration of the presence of the bar.
     
-    contrast : float 
-              Contrast (expressed as % : 0-100%) of the grating.
+    relative_luminance : float 
+              Luminance of the bar relative to background luminance. 0 is dark, 1.0 is double the background luminance.
     
     num_trials : int
                Number of trials each each stimulus is shown.
@@ -917,7 +917,7 @@ class MapPhaseResponseWithBarStimulus(VisualExperiment):
             'steps' : int,
             'duration' : float,
             'flash_duration' : float, 
-            'contrast' : float,
+            'relative_luminance' : float,
             'num_trials' : int,
     })  
     
@@ -935,7 +935,7 @@ class MapPhaseResponseWithBarStimulus(VisualExperiment):
                                 background_luminance=self.background_luminance,
                                 duration=self.parameters.duration,
                                 density=self.density,
-                                contrast = self.parameters.contrast,
+                                relative_luminance = self.parameters.relative_luminance,
                                 orientation = self.parameters.orientation,
                                 width = self.parameters.width,
                                 length = self.parameters.length,
