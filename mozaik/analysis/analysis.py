@@ -932,13 +932,13 @@ class ActionPotentialRemoval(Analysis):
           for spike_time in spike_train:
               spike_time_in_vm = int(spike_time / vm.sampling_period)
               # we assume spike_time and sampling rates are in ms
-              window_end = spike_time_in_vm+round(window_length/vm.sampling_period.rescale(qt.ms).magnitude)
+              window_end = spike_time_in_vm+int(round(window_length/vm.sampling_period.rescale(qt.ms).magnitude))
               if window_end >= len(vm):
                  window_end = len(vm)-1
               if spike_time_in_vm != 0:
-                new_vm[spike_time_in_vm:window_end] = vm[spike_time_in_vm-1] + (vm[window_end]-vm[spike_time_in_vm-1])*numpy.linspace(0,1.0,(window_end-spike_time_in_vm)+2)[1:-1]
+                new_vm[spike_time_in_vm:window_end] = vm[spike_time_in_vm-1] + (vm[window_end]-vm[spike_time_in_vm-1])*numpy.linspace(0,1.0,(window_end-spike_time_in_vm)+2)[1:-1,numpy.newaxis]
               else:
-                new_vm[spike_time_in_vm:window_end] = vm[spike_time_in_vm] + (vm[window_end]-vm[spike_time_in_vm])*numpy.linspace(0,1.0,(window_end-spike_time_in_vm)+2)[1:-1]
+                new_vm[spike_time_in_vm:window_end] = vm[spike_time_in_vm] + (vm[window_end]-vm[spike_time_in_vm])*numpy.linspace(0,1.0,(window_end-spike_time_in_vm)+2)[1:-1,numpy.newaxis]
           return new_vm
             
       def perform_analysis(self):
@@ -1014,7 +1014,8 @@ class NeuronToNeuronAnalogSignalCorrelations(Analysis):
                 # transform spike trains into psth
                 dsv = queries.param_filter_query(self.datastore, sheet_name=sheet,identifier='AnalogSignalList')
                 for asl in dsv.get_analysis_result():
-                    corrs = numpy.nan_to_num(numpy.corrcoef(asl.asl))
+			
+                    corrs = numpy.nan_to_num(numpy.corrcoef(numpy.squeeze(asl.asl)))
                     self.datastore.full_datastore.add_analysis_result(PerNeuronPairValue(corrs,asl.ids,qt.dimensionless,value_name = 'Correlation coefficient(' +asl.y_axis_name + ')',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=asl.stimulus_id))        
 
 

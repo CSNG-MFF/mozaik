@@ -187,7 +187,7 @@ class Analog_F0andF1(Analysis):
                     period = 1/frequency
                     period = period.rescale(first_analog_signal.t_start.units)
                     cycles = duration / period
-                    first_har = round(cycles)
+                    first_har = int(round(cycles))
                     
                     e_f0 = [abs(numpy.fft.fft(numpy.mean([seg.get_esyn(idd) for seg in segs],axis=0).flatten())[0]/len(segs[0].get_esyn(idd))) for idd in segs[0].get_stored_esyn_ids()]
                     i_f0 = [abs(numpy.fft.fft(numpy.mean([seg.get_isyn(idd) for seg in segs],axis=0).flatten())[0]/len(segs[0].get_isyn(idd))) for idd in segs[0].get_stored_isyn_ids()]

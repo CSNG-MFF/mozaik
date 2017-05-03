@@ -7,7 +7,7 @@ Dependencies
 * scipy/numpy
 * nest (latest release, compiled with mpi)
 * mpi4py
-* pyNN (neo_output branch)
+* pyNN 
 * imagen
 * param
 * parameters
@@ -33,10 +33,6 @@ Please see below:
 Detailed instructions
 ---------------------
 
-Mozaik requires currently some "non-standard" branches of software like the
-pyNN which will be resolved in the future. Therefore more detailed installation
-instructions follow.
-
 .. _ref-virtual-env:
 
 Virtual env
@@ -59,20 +55,18 @@ Your shell should look now something like::
 
 (virt_env_mozaik)Username@Machinename:~$
 
-You can use pip to view the installed packages::
-
-  pip freeze
-
 Dependencies 
 ____________
 
-Note that if the installation is done in your virtualenv environment, it doesn't require any root privilege.
+Note that if the installation is done in your virtualenv environment, it doesn't require any root privilege. Unless specified otherwise
+all dependencies should be installed via pip.
 
  * scipy
  * numpy
  * mpi4py
  * matplotlib (1.1 and higher)
  * quantities
+ * imagen
  * PyNN::
      
        git clone https://github.com/NeuralEnsemble/PyNN.git
@@ -86,19 +80,11 @@ Note that if the installation is done in your virtualenv environment, it doesn't
     cd python-neo
     python setup.py install
     
- * imagen (for compatibility reasons get a fork of imagen package from this repository)::        
- 
-      git clone https://github.com/antolikjan/imagen.git
-      python setup.py install
 
  * parameters::
  
      git clone https://github.com/apdavison/parameters.git parameters
      cd parameters
-     python setup.py install
- * NeuroTools::
- 
-     svn co https://neuralensemble.org/svn/NeuroTools/trunk NeuroTools
      python setup.py install
  
 For mozaik itself, you need to clone with the help of git::
@@ -152,14 +138,6 @@ To create a new managed virtualenv you just need to::
     $ workon mozaik
     (mozaik)$>
  
-To produce a requirement file (it will list all the installed package in the virtual environment, so that pip can reinstall the same set of packages)::
-
-(mozaik)$> pip freeze > requirements.txt
- 
-Then you can use it to replicate installation::
-
-(mozaik)$> pip install -r requirements.txt
-
 
 Dependencies 
 ____________
@@ -168,76 +146,35 @@ ____________
 Now you can install in this protected environment all other dependencies::
 
   pip install --upgrade distribute
-  pip install numpy mpi4py 
-  pip install scipy matplotlib quantities lazyarray
-  pip install interval Pillow
+  pip install numpy mpi4py scipy matplotlib quantities lazyarray interval Pillow imagen param parameters neo
 
 Now we can install *Nest* (always in the virtual environment):
 
     - download the latest version from their `website <http://www.nest-initiative.org/index.php/Software:Download>`_
     - untar and cd into it::
 
-        tar xvfz nest-2.2.2.tar.gz
-        cd nest-2.2.2
-    - then configure, choose if you want mpi. And, if you decide to have nest installed somewhere else from normal places add it with a prefix, then you also need to specify the pynest prefix. So if 'mozaik' is your virtual environment, and if the directory of all the virtual environments is virt_env, then the configure line should look like::
+        tar xvfz nest-2.12.0.tar.gz
+        cd nest-2.12.0
+    - then configure, choose if you want mpi. ::
     
-       (mozaik)$ ./configure --with-mpi --prefix=$HOME/virt_env/mozaik
-    - finally, by launching make and install, it installs PyNest in ::
-
+       (mozaik)$ cmake -Dwith-mpi=ON -DCMAKE_INSTALL_PREFIX:PATH=$HOME/virt_env/mozaik
+    - finally, by launching make and install, it installs PyNest in the activated virtual environment mozaik::
         (mozaik)$ make
         (mozaik)$ make install
-    - in the ~/.nestrc, uncomment the lines regarding mpirun, and check that the mpirun executables are installed. Then::
-
+    - Then::
         make installcheck
     - nest will reside in $HOME/virt_env/mozaik/lib/python2.7/site-packages. Check that the package is seen by python using::
-     
         python -c 'import nest'
 
 Install PyNN::
+    
+    pip install pynn
 
-    git clone https://github.com/NeuralEnsemble/PyNN.git
-    cd PyNN/
-    python setup.py install
 
 that will reside in $HOME/virt_env/mozaik/lib/python2.7/site-packages/PyNN-0.8dev-py2.7.egg-info. Check::
 
     python -c 'import pyNN'
 
-Install NEO::
-
-    git clone https://github.com/apdavison/python-neo python-neo
-    cd python-neo/
-    python setup.py install
-
-Install imagen (for compatibility reasons get a fork of imagen package from this repository)::        
- 
-      git clone https://github.com/antolikjan/imagen.git
-      cd imagen/
-      python setup.py install
-
-Install param ::        
- 
-      git clone https://github.com/ioam/param.git
-      cd param/
-      python setup.py install
-
-Install Parameters package::
-
-    git clone https://github.com/apdavison/parameters.git parameters
-    cd parameters/
-    python setup.py install
-
-Install NeuroTools::
-
-    git clone https://github.com/NeuralEnsemble/NeuroTools.git NeuroTools
-    cd NeuroTools/
-    python setup.py install
-
-Install TableIO (not always necessary). Download it from http://kochanski.org/gpk/misc/TableIO.html::
-
-    tar xvzf TableIO-1.2.tgz
-    python setup.py install
-    
 And, finally, Mozaik::
     
     git clone https://github.com/antolikjan/mozaik.git

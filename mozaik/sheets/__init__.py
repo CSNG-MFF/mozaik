@@ -283,8 +283,8 @@ class Sheet(BaseComponent):
                s.spiketrains[i] -= s.spiketrains[i].t_start
                s.spiketrains[i].t_stop -= s.spiketrains[i].t_start
                s.spiketrains[i].t_start = 0 * pq.ms
-           for i in xrange(0, len(s.analogsignalarrays)):
-               s.analogsignalarrays[i].t_start = 0 * pq.ms
+           for i in xrange(0, len(s.analogsignals)):
+               s.analogsignals[i].t_start = 0 * pq.ms
        
         return s
 

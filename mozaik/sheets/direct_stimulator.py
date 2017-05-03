@@ -11,9 +11,13 @@ from parameters import ParameterSet
 import numpy
 import numpy.random
 import mozaik
+#from mozaik.tootls.stgen import stgen
 from NeuroTools import stgen
 from mozaik import load_component
 from pyNN.parameters import Sequence
+
+
+logger = mozaik.getMozaikLogger()
 
 class DirectStimulator(ParametrizedObject):
       """
@@ -120,8 +124,8 @@ class BackgroundActivityBombardment(DirectStimulator):
     def __init__(self, sheet, parameters):
         DirectStimulator.__init__(self, sheet,parameters)
         
-        exc_syn = self.sheet.sim.StaticSynapse(weight=self.parameters.exc_weight)
-        inh_syn = self.sheet.sim.StaticSynapse(weight=self.parameters.inh_weight)
+        exc_syn = self.sheet.sim.StaticSynapse(weight=self.parameters.exc_weight,delay=self.sheet.model.parameters.min_delay)
+        inh_syn = self.sheet.sim.StaticSynapse(weight=self.parameters.inh_weight,delay=self.sheet.model.parameters.min_delay)
         
         if not self.sheet.parameters.mpi_safe:
             from pyNN.nest import native_cell_type        
@@ -226,7 +230,7 @@ class Kick(DirectStimulator):
         d = dict((j,i) for i,j in enumerate(self.sheet.pop.all_cells))
         self.to_stimulate_indexes = [d[i] for i in self.ids]
         
-        exc_syn = self.sheet.sim.StaticSynapse(weight=self.parameters.exc_weight)
+        exc_syn = self.sheet.sim.StaticSynapse(weight=self.parameters.exc_weight,delay=self.sheet.model.parameters.min_delay)
         if (self.parameters.exc_firing_rate != 0 or self.parameters.exc_weight != 0):
             self.ssae = self.sheet.sim.Population(self.sheet.pop.size,self.sheet.sim.SpikeSourceArray())
             seeds=mozaik.get_seeds((self.sheet.pop.size,))

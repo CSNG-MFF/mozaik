@@ -143,11 +143,11 @@ class ModularSamplingProbabilisticConnector(ModularConnector):
             delays = self._obtain_delays(i)
             co = Counter(sample_from_bin_distribution(weights, int(self.parameters.num_samples.next())))
             v = v + numpy.sum(co.values())
-            cl.extend([(k,i,self.weight_scaler*self.parameters.base_weight.next()*co[k],delays[k]) for k in co.keys()])
+            cl.extend([(k,i,self.weight_scaler*self.parameters.base_weight.next()[0]*co[k],delays[k]) for k in co.keys()])
         method = self.sim.FromListConnector(cl)
         
         logger.warning("%s(%s): %g connections were created, %g per target neuron [%g]" % (self.name,self.__class__.__name__,len(cl),len(cl)/len(numpy.nonzero(self.target.pop._mask_local)[0]),v/len(numpy.nonzero(self.target.pop._mask_local)[0])))
-        
+	
         if len(cl) > 0:
             self.proj = self.sim.Projection(
                                 self.source.pop,
@@ -233,7 +233,7 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(ModularConnect
                 assert self.parameters.num_samples > 2*int(samples), ("%s: %d %d" % (self.name,self.parameters.num_samples,2*int(samples)))
                 co = Counter(sample_from_bin_distribution(weights, self.parameters.num_samples - 2*int(samples)))
             v = v + numpy.sum(co.values())
-            cl.extend([(k,i,self.weight_scaler*self.parameters.base_weight.next()*co[k],delays[k]) for k in co.keys()])
+            cl.extend([(int(k),int(i),self.weight_scaler*self.parameters.base_weight.next()[0]*co[k],delays[k]) for k in co.keys()])
         method = self.sim.FromListConnector(cl)
         
         logger.warning("%s(%s): %g connections were created, %g per target neuron [%g]" % (self.name,self.__class__.__name__,len(cl),len(cl)/len(numpy.nonzero(self.target.pop._mask_local)[0]),v/len(numpy.nonzero(self.target.pop._mask_local)[0])))

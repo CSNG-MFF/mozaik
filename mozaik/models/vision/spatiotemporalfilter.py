@@ -201,8 +201,8 @@ class CellWithReceptiveField(object):
             
         """
         # we add some extra padding to avoid having to check for index out-of-bounds in view()
-        self.response_length = numpy.ceil(stimulus_duration / self.receptive_field.temporal_resolution) \
-                                    + self.receptive_field.kernel_duration
+        self.response_length = int(numpy.ceil(stimulus_duration / self.receptive_field.temporal_resolution) \
+                                    + self.receptive_field.kernel_duration)
         # we should initialize based on multiplying the kernel by the background activity
         # R0 = K_0.I_0 + Sum[j=1,L-1] K_j.B
         # R1 = K_0.I_1 + K_1.I_0 + Sum[j=2,L-1] K_j.B

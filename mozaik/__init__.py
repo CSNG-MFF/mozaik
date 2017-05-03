@@ -75,7 +75,7 @@ def get_seeds(size=None):
     important that the same number of seeds are requested in each MPI process to ensure 
     reproducability of simulations!
     """
-    return rng.randint(9223372036854775807,size=size)
+    return rng.randint(2**32-1,size=size)
 
 def getMozaikLogger():
     """

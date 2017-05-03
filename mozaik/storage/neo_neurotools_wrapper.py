@@ -94,7 +94,7 @@ class MozaikSegment(Segment):
             if not self.full:
                 self.load_full()
 
-            for a in self.analogsignalarrays:
+            for a in self.analogsignals:
                 if a.name == 'v':
                     return a[:, a.annotations['source_ids'].tolist().index(neuron_id)]
 
@@ -114,7 +114,7 @@ class MozaikSegment(Segment):
             """
             if not self.full:
                 self.load_full()
-            for a in self.analogsignalarrays:
+            for a in self.analogsignals:
                 if a.name == 'gsyn_exc':
                     return a[:, a.annotations['source_ids'].tolist().index(neuron_id)]
 
@@ -135,7 +135,7 @@ class MozaikSegment(Segment):
 
             if not self.full:
                 self.load_full()
-            for a in self.analogsignalarrays:
+            for a in self.analogsignals:
                 if a.name == 'gsyn_inh':
                     return a[:, a.annotations['source_ids'].tolist().index(neuron_id)]
 
@@ -154,7 +154,7 @@ class MozaikSegment(Segment):
             """
             if not self.full:
                 self.load_full()
-            for a in self.analogsignalarrays:
+            for a in self.analogsignals:
                 if a.name == 'gsyn_inh':
                    return a.annotations['source_ids']
         
@@ -164,7 +164,7 @@ class MozaikSegment(Segment):
             """
             if not self.full:
                 self.load_full()
-            for a in self.analogsignalarrays:
+            for a in self.analogsignals:
                 if a.name == 'gsyn_exc':
                    return a.annotations['source_ids']
 
@@ -174,7 +174,7 @@ class MozaikSegment(Segment):
             """
             if not self.full:
                 self.load_full()
-            for a in self.analogsignalarrays:
+            for a in self.analogsignals:
                 if a.name == 'v':
                    return a.annotations['source_ids']
 
@@ -243,17 +243,17 @@ class PickledDataStoreNeoWrapper(MozaikSegment):
             s = cPickle.load(f)
             f.close()
             self._spiketrains = s.spiketrains
-            self.analogsignalarrays = s.analogsignalarrays
+            self.analogsignals = s.analogsignals
             self.full = True
 
         def __getstate__(self):
             result = self.__dict__.copy()
             if self.full:
                 del result['_spiketrains']
-                del result['analogsignalarrays']
+                del result['analogsignals']
             return result
         
         def release(self):
             self.full = False
             del self._spiketrains
-            del self.analogsignalarrays
+            del self.analogsignals
