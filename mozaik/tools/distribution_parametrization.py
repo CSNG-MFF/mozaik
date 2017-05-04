@@ -29,12 +29,8 @@ class PyNNDistribution(RandomDistribution):
       The params is a tuple of parameters of the corresponding numpy distribution (see pyNN.random.RandomDistribution)
       For the rest of the parameters see pyNN.random.RandomDistribution
       """
-      def __init__(self,name,params=(),boundaries=None,constrain='clip'):
-          if boundaries != None:
-            assert isinstance(boundaries,tuple) , "The boundries parameter of PyNNDistribution has to be tuple, while it is: %s" % type(boundaries)
-          assert constrain == 'clip' or constrain == 'redraw', "The parameter constrain has to be either \'clip\' or \'redraw\'"
-          assert isinstance(params,tuple) , "The boundries parameter of PyNNDistribution has to be tuple"
-          RandomDistribution.__init__(self,parameters=params,boundaries=boundaries,constrain=constrain)  
+      def __init__(self,name,**params):
+          RandomDistribution.__init__(self,name,**params)  
 
 class LogNormalDistribution(ParameterDist):
     """

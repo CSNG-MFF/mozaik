@@ -67,26 +67,11 @@ all dependencies should be installed via pip.
  * matplotlib (1.1 and higher)
  * quantities
  * imagen
- * PyNN::
-     
-       git clone https://github.com/NeuralEnsemble/PyNN.git
-     
-   * Then, in your virtual environment:: 
-   
-       python setup.py install
- * Neo::
- 
-    git clone https://github.com/apdavison/python-neo python-neo
-    cd python-neo
-    python setup.py install
-    
+ * PyNN
+ * Neo
+ * parameters
+ * param
 
- * parameters::
- 
-     git clone https://github.com/apdavison/parameters.git parameters
-     cd parameters
-     python setup.py install
- 
 For mozaik itself, you need to clone with the help of git::
 
   git clone https://github.com/antolikjan/mozaik.git
@@ -105,7 +90,7 @@ Ubuntu
 ------
 
 Following these instruction should give you a working copy of mozaik on a 
-fresh installation of Ubuntu (at the time of the writing the version was 12.04)
+fresh installation of Ubuntu (at the time of the writing the version was 16.04)
 
 First the list of ubuntu package dependencies::
 
@@ -157,7 +142,7 @@ Now we can install *Nest* (always in the virtual environment):
         cd nest-2.12.0
     - then configure, choose if you want mpi. ::
     
-       (mozaik)$ cmake -Dwith-mpi=ON -DCMAKE_INSTALL_PREFIX:PATH=$HOME/virt_env/mozaik
+       (mozaik)$ cmake -Dwith-mpi=ON -DCMAKE_INSTALL_PREFIX:PATH=$HOME/virt_env/mozaik -Dwith-optimize='-O3' ./
     - finally, by launching make and install, it installs PyNest in the activated virtual environment mozaik::
         (mozaik)$ make
         (mozaik)$ make install
@@ -166,14 +151,6 @@ Now we can install *Nest* (always in the virtual environment):
     - nest will reside in $HOME/virt_env/mozaik/lib/python2.7/site-packages. Check that the package is seen by python using::
         python -c 'import nest'
 
-Install PyNN::
-    
-    pip install pynn
-
-
-that will reside in $HOME/virt_env/mozaik/lib/python2.7/site-packages/PyNN-0.8dev-py2.7.egg-info. Check::
-
-    python -c 'import pyNN'
 
 And, finally, Mozaik::
     
@@ -186,17 +163,13 @@ And, finally, Mozaik::
 Running examples
 ----------------
 
-If you use mpi and mpirun, you should install first the mpi executables if not already done::
-
-  sudo apt-get install openmpi-bin
-  
-Then, you go to the examples directory in the mozaik loaded from github (see above) and launch the model VogelsAbbott2005::
+Go to the examples directory in the mozaik cloned from github (see above) and launch the model VogelsAbbott2005::
 
   cd examples
   cd VogelsAbbott2005
-  mpirun python run.py nest 2 param/defaults 'test'
+  mpirun -np 2 python run.py nest 2 param/defaults 'test'
   
-This will launch the example with the nest simulator, on 2 nodes, using the parameter param/defaults. Last, 'test' is the name of this run.
+This will launch the example with the nest simulator, on 2 nodes with each node using 2 threads, using the parameter param/defaults. Last, 'test' is the name of this run.
 
 :copyright: Copyright 2011-2013 by the *mozaik* team, see AUTHORS.
 :license: `CECILL <http://www.cecill.info/>`_, see LICENSE for details.
