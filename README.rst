@@ -131,7 +131,7 @@ ____________
 Now you can install in this protected environment all other dependencies::
 
   pip install --upgrade distribute
-  pip install numpy mpi4py scipy matplotlib quantities lazyarray interval Pillow imagen param parameters neo
+  pip install numpy scipy mpi4py matplotlib quantities lazyarray interval Pillow imagen param parameters neo pynn
 
 Now we can install *Nest* (always in the virtual environment):
 

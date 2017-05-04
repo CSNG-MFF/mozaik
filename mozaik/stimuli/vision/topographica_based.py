@@ -214,7 +214,7 @@ class FlashingSquares(TopographicaBasedVisualStimulus):
                         size = size)()
                 yield (numpy.add(a,b),[t])
             else:
-                yield (imagen.Null(
+                yield (imagen.Constant(
                         scale=self.background_luminance*(100.0 - self.contrast)/100.0,
                         bounds=BoundingBox(radius=self.size_x/2),
                         xdensity=self.density,
@@ -338,7 +338,7 @@ class DriftingSinusoidalGratingDisk(TopographicaBasedVisualStimulus):
                                    xdensity=self.density,
                                    ydensity=self.density)()
             
-            b = imagen.Null(scale=self.background_luminance,
+            b = imagen.Constant(scale=self.background_luminance,
                             bounds=BoundingBox(radius=self.size_x/2),
                             xdensity=self.density,
                             ydensity=self.density)()
@@ -407,7 +407,7 @@ class FlashedBar(TopographicaBasedVisualStimulus):
                                     aspect_ratio = self.length/ self.width)()  
 
                                     
-            b = imagen.Null(scale=self.background_luminance,
+            b = imagen.Constant(scale=self.background_luminance,
                     bounds=BoundingBox(radius=self.size_x/2),
                     xdensity=self.density,
                     ydensity=self.density)()
