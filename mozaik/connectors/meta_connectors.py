@@ -6,6 +6,7 @@ from mozaik.core import BaseComponent
 from mozaik import load_component
 from parameters import ParameterSet, ParameterDist
 from mozaik.connectors.modular import ModularSamplingProbabilisticConnector, ModularSamplingProbabilisticConnectorAnnotationSamplesCount
+from mozaik.tools.distribution_parametrization import PyNNDistribution
 
 """
 This file contains meta-connectors. These are classes that represent some higher-level 

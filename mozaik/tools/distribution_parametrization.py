@@ -6,7 +6,7 @@ in which case this code should become obsolete and mozaik should fully switch to
 """
 
 from parameters import ParameterSet, ParameterRange, ParameterTable, ParameterReference
-from pyNN.random import RandomDistribution
+from pyNN.random import RandomDistribution, NumpyRNG
 import urllib, copy, warnings, numpy, numpy.random  # to be replaced with srblib
 from urlparse import urlparse
 from parameters.random import ParameterDist, GammaDist, UniformDist, NormalDist
@@ -59,6 +59,8 @@ class MozaikExtendedParameterSet(ParameterSet):
                                 UniformDist=UniformDist,
                                 NormalDist=NormalDist,
                                 PyNNDistribution = PyNNDistribution,
+                                RandomDistribution = RandomDistribution,
+                                NumpyRNG=NumpyRNG,
                                 pi=numpy.pi,
                                 LogNormalDistribution=LogNormalDistribution))
         if update_namespace:

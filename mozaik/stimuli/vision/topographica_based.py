@@ -6,7 +6,8 @@ The file contains stimuli that use topographica to generate the stimulus
 from visual_stimulus import VisualStimulus
 import imagen
 import imagen.random
-import imagen.transferfn
+from imagen.transferfn import TransferFn
+import param
 from imagen.image import BoundingBox
 import pickle
 import numpy
@@ -237,6 +238,20 @@ class Null(TopographicaBasedVisualStimulus):
                    [self.frame_duration])
 
 
+class MaximumDynamicRange(TransferFn):
+    """
+    It linearly maps 0 to the minimum of the image and 1.0 to the maximum in the image.
+    """
+    norm_value = param.Number(default=1.0)
+    
+    def __call__(self,x):
+        mi = numpy.min(x)
+        ma = numpy.max(x)
+
+        if ma-mi != 0:
+                x -= mi
+                x *= 1/(ma-mi)
+
 class NaturalImageWithEyeMovement(TopographicaBasedVisualStimulus):
     """
     A visual stimulus that simulates an eye movement over a static image.
@@ -252,7 +267,7 @@ class NaturalImageWithEyeMovement(TopographicaBasedVisualStimulus):
         self.eye_path = pickle.load(f)
         self.pattern_sampler = imagen.image.PatternSampler(
                                     size_normalization='fit_longest',
-                                    whole_pattern_output_fns=[imagen.transferfn.MaximumDynamicRange()])
+                                    whole_pattern_output_fns=[MaximumDynamicRange()])
 
         image = imagen.image.FileImage(         
                                     filename=self.image_location,
