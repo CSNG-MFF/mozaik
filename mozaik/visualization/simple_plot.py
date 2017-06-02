@@ -734,7 +734,7 @@ class ScatterPlot(StandardStyle):
                                marker=self.marker,
                                lw=0,
                                cmap=self.cmp,
-                               color='k',
+                               #color='k',
                                vmin=vmin,
                                vmax=vmax)
         if self.equal_aspect_ratio:
