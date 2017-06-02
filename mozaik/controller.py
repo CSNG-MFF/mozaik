@@ -152,6 +152,10 @@ def run_workflow(simulation_name, model_class, create_experiments):
     setup_logging()
     
     model = model_class(sim,num_threads,parameters)
+
+    #import cProfile
+    #cProfile.run('run_experiments(model,create_experiments(model),parameters)','stats_new')
+
     data_store = run_experiments(model,create_experiments(model),parameters)
 
     if mozaik.mpi_comm.rank == 0:

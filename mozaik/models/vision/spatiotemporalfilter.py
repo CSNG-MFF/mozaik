@@ -242,7 +242,9 @@ class CellWithReceptiveField(object):
         product = self.receptive_field.kernel * view_array[:, :, numpy.newaxis]
         self.std[self.i] = numpy.std(view_array)
         self.mean[self.i] = numpy.mean(view_array)
-        time_course = product.sum(axis=0).sum(axis=0)  # sum over the space axes, leaving a time signal.
+        #time_course = product.sum(axis=0).sum(axis=0)  # sum over the space axes, leaving a time signal.
+	time_course = product.sum(axis=(0,1))  # sum over the space axes, leaving a time signal.
+
         for j in range(self.i, self.i+self.update_factor):
             #if self.response[j:j+self.receptive_field.kernel_duration].shape != time_course.shape:
             #    logger.error("Shape mismatch: %s != %s (j=%d, len(response)=%d, self.update_factor=%d, time_course=%s)" % \
@@ -279,6 +281,18 @@ class CellWithReceptiveField(object):
         else:
             response = self.gain_control.gain * self.response[:-self.receptive_field.kernel_duration]  # remove the extra padding at the end
         time_points = self.receptive_field.temporal_resolution * numpy.arange(0, len(response))
+
+
+        #import pylab
+        #pylab.subplot(311)
+        #pylab.plot(response)
+        #pylab.subplot(312)
+        #pylab.plot(self.std)
+        #pylab.subplot(313)
+        #pylab.plot(self.mean)
+        #pylab.savefig("a.png")
+        #0/0
+
         return {'times': time_points, 'amplitudes': response}
 
 
@@ -662,11 +676,14 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
             for rf_type in self.rf_types:
                 for cell in input_cells[rf_type]:
                     cell.view()
-            visual_region = VisualRegion(location_x=0, location_y=0,
+
+	    if self.model.parameters.store_stimuli == True:
+                visual_region = VisualRegion(location_x=0, location_y=0,
                                          size_x=self.model.visual_field.size_x,
                                          size_y=self.model.visual_field.size_y)
-            im = visual_space.view(visual_region,
-                                   pixel_size=self.rf["X_ON"].spatial_resolution)
+	        im = visual_space.view(visual_region,pixel_size=self.rf["X_ON"].spatial_resolution)
+	    else:
+		im = None
             retinal_input.append(im)
 
         input_currents = {}
