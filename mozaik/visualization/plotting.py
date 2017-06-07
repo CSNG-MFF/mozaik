@@ -1547,3 +1547,218 @@ class CorticalColumnRasterPlot(Plotting):
         #   sp = [RasterPlot.concat_spiketrains(sp1,sp2) for sp1,sp2 in zip(spont_sp,sp)]
         #   x_ticks = [float(spont_sp[0][0].t_start),0.0,float(sp[0][0].t_stop/2), float(sp[0][0].t_stop)]
         return [('CorticalColumnRasterPlot',CorticalColumnSpikeRasterPlot(sp),gs,{"labels": self.labels, "colors" : self.colors})]
+
+
+class PlotTemporalTuningCurve(Plotting):
+    """
+    Plots tuning curves, one plot in line per each neuron. This plotting function assumes a set of AnalogSignalList 
+    ADSs in the datastore associated with certain stimulus type. It will plot
+    the values stored in these  AnalogSignalList instances (corresponding to neurons in `neurons`) across the 
+    varying parameter `parameter_name` of thier associated stimuli. 
+
+    Parameters
+    ----------
+    centering_pnv : PerNeuronValue 
+                  If not none, centered has to be true. The centering_pnv has to be a PerNeuronValue containing values in the domain corresponding to 
+                  parameter `parameter_name`. The tuning curves of each neuron will be cenetered around the value in this pnv corresponding to the given neuron.
+                  This will be applied also if mean is True (so the tuning curves will be centered based on the values in centering_pnv and than averaged).
+    
+    Other parameters
+    ----------------
+    neurons : list
+            List of neuron ids for which to plot the tuning curves.
+            
+    sheet_name : str
+            From which layer to plot the tuning curves.
+               
+    parameter_name : str
+                   The parameter_name through which to plot the tuning curve.
+
+    mean : bool 
+         If True it will plot the mean tuning curve over all neurons (in case centered=True it will first center the TCs before computing the mean)
+    
+            
+    Defines 'TuningCurve_' + value_name +  '.Plot0' ... 'TuningCurve_' + value_name +  '.Plotn'
+    where n goes through number of neurons, and value_name creates one row for each value_name found in the different PerNeuron found
+    """
+
+    required_parameters = ParameterSet({
+      'neurons':  list,  # which neurons to plot
+      'sheet_name': str,  # from which layer to plot the tuning curves
+      'parameter_name': str,  # the parameter_name through which to plot the tuning curve
+      'mean' : bool, # if True it will plot the mean tuning curve over the neurons (in case centered=True it will first center the TCs before computing the mean)
+    })
+
+    def __init__(self, datastore, parameters, plot_file_name=None,fig_param=None,frame_duration=0,centering_pnv=None):
+        Plotting.__init__(self, datastore, parameters, plot_file_name, fig_param,frame_duration)
+        
+        self.st = []
+        self.tc_dict = []
+        self.asls = []
+        self.center_response_indexes = None
+        assert queries.ads_with_equal_stimulus_type(datastore)
+        assert len(self.parameters.neurons) > 0 , "ERROR, empty list of neurons specified"
+        
+        dsvs = queries.partition_analysis_results_by_parameters_query(self.datastore,parameter_list=['y_axis_name'],excpt=True)
+        for dsv in dsvs:
+            dsv = queries.param_filter_query(dsv,identifier='AnalogSignalList',sheet_name=self.parameters.sheet_name)
+            assert matching_parametrized_object_params(dsv.get_analysis_result(), params=['y_axis_name'])
+            self.asls.append(dsv.get_analysis_result())
+            # get stimuli
+            st = [MozaikParametrized.idd(s.stimulus_id) for s in self.asls[-1]]
+            self.st.append(st)
+            dic = colapse_to_dictionary([z.get_asl_by_id(self.parameters.neurons) for z in self.asls[-1]],st,self.parameters.parameter_name)
+
+            #sort the entries in dict according to the parameter parameter_name values 
+            for k in  dic:
+                (b, a) = dic[k]
+                if self.asls[-1][0].y_axis_units == mozaik.tools.units.uS:
+                   a = [[d * 1000.0 for d in c] for c in a]
+                
+                par, val = zip(
+                             *sorted(
+                                zip(b,
+                                    numpy.array(a))))
+                dic[k] = (par,numpy.array(val))
+            self.tc_dict.append(dic)
+            
+        if centering_pnv!=None:
+               # if centering_pnv was supplied we are centering on maximum values  
+               period = st[0].params()[self.parameters.parameter_name].period
+               assert period != None, "ERROR: You asked for centering of tuning curves even though the domain over which it is measured is not periodic." 
+               centers = centering_pnv.get_value_by_id(self.parameters.neurons)
+               self.center_response_indexes.append(numpy.array([numpy.argmin(circular_dist(par,centers[i],period)) for i in xrange(0,len(centers))]))
+            
+    def subplot(self, subplotspec):
+        if self.parameters.mean:
+            return LinePlot(function=self._ploter, length=1).make_line_plot(subplotspec)
+        else:
+            return LinePlot(function=self._ploter, length=len(self.parameters.neurons)).make_line_plot(subplotspec)
+
+    def _ploter(self, idx, gs):
+        plots  = []
+        xs = []
+        ys = []
+        errors = [] 
+        
+        gs = gridspec.GridSpecFromSubplotSpec(len(self.st), 1, subplot_spec=gs)
+        
+        for i,(dic, st, asl) in enumerate(zip(self.tc_dict,self.st,self.asls)):
+            xs = [] 
+            ys = []
+            period = st[0].params()[self.parameters.parameter_name].period
+                
+            for k in sorted(dic.keys()):    
+                (par, val) = dic[k]
+                error = None
+                if self.parameters.mean:
+                    v = []
+                    for j in xrange(0,len(self.parameters.neurons)):
+                        if self.centered_response_indexes != None:
+                            vv,p = self.center_tc(val[:,j],par,period,self.centered_response_indexes[i][j])
+                        else:
+                            vv = val[:,j]
+                            p = par
+                        v.append(vv)
+                    error = numpy.std(v,axis=0) / numpy.sqrt(len(self.parameters.neurons))  
+                    val = numpy.mean(v,axis=0)    
+                    par = p
+                else:
+                    val = val[:,idx]
+
+                # if we have a period of pi or 2*pi
+                if period==pi and self.centered_response_indexes==None:
+                   par = [(p-pi if p > pi/2 else p) for p in par]
+                   par,val = zip(*sorted(zip(numpy.array(par),val)))
+                   par = list(par)
+                   val = list(val)
+                   par.insert(0,-pi/2)
+                   val.insert(0,val[-1])
+                   if error != None:
+                        error = list(error)
+                        error.insert(0,error[-1])
+                elif period==2*pi and self.centered_response_indexes==None:
+                   par = [(p-2*pi if p > pi/2 else p) for p in par]
+                   par,val = zip(*sorted(zip(numpy.array(par),val)))
+                   par = list(par)
+                   val = list(val)
+                   par.insert(0,-pi)
+                   val.insert(0,val[-1])
+                   if error != None:
+                        error = list(error)
+                        error.insert(0,error[-1])
+                elif period != None:
+                    par = list(par)
+                    val = list(val)
+                    par.append(par[0] + period)
+                    val.append(val[0])
+                    if error != None:
+                        error = list(error)
+                        error.append(error[0])
+                   
+                xs.append(numpy.squeeze(numpy.array(par)))
+                ys.append(numpy.squeeze(numpy.array(val)))
+            
+            if not self.parameters.mean:
+                errors = None 
+            params = self.create_params(asl[0].y_axis_name,asl[0].y_axis_units,i==0,i==(len(self.asls)-1),period,self.parameters.neurons[idx],numpy.squeeze(xs),idx)
+            plots.append(("TuningCurve_" + asl[0].y_axis_name,AnalogSignalListPlot(numpy.squeeze(ys), numpy.squeeze(xs)),gs[i],params))   
+        
+        return plots
+
+    def create_params(self,y_axis_name,units,top_row,bottom_row,period,neuron_id,signal_labels,idx):
+            params={}
+            
+            if idx==0:
+                params["y_label"] = self.parameters.parameter_name
+            
+            params["colorbar"] = True
+            params["x_label"] = "time (ms)"
+            
+            if units == mozaik.tools.units.uS:
+                params["colorbar_label"] = y_axis_name + ' (nS)'
+            else:
+                params["colorbar_label"] = y_axis_name + ' (' + units.dimensionality.latex + ')'
+
+            if top_row:
+                params["title"] =  'Neuron ID: %d' % neuron_id
+            
+            if period == pi:
+                params["y_ticks"] = [-pi/2, 0, pi/2]
+                params["y_lim"] = (--pi/2, pi/2)
+                params["y_tick_style"] = "Custom"
+                params["y_tick_labels"] = ["-$\\frac{\\pi}{2}$", "0", "$\\frac{\\pi}{2}$"]
+            elif period == 2*pi:
+                params["y_ticks"] = [-pi, 0, pi]
+                params["y_lim"] = (-pi, pi)
+                params["y_tick_style"] = "Custom"
+                params["y_tick_labels"] = ["-$\\pi$","0", "$\\pi$"]
+            else:
+                params["y_ticks"] = [0, len(signal_labels),len(signal_labels)-1]
+                #params["y_lim"] = (-pi, pi)
+                params["y_tick_style"] = "Custom"
+                params["y_tick_labels"] = [signal_labels[0],signal_labels[-1]]
+            
+            if not bottom_row:
+                params["x_axis"] = None
+
+            if not idx==0:
+                params["y_axis"] = None
+
+            return params
+            
+    def center_tc(self,val,par,period,center_index):
+           # first lets make the maximum to be at zero                   
+           q = center_index+len(val)/2 if center_index < len(val)/2 else center_index-len(val)/2
+           z = par[center_index]
+           c =  period/2.0
+           par = numpy.array([(p - z + c) % period for p in par])  - c
+           if q != 0:
+               a = val[:q].copy()[:] 
+               b = par[:q].copy()[:] 
+               val[:-q] = val[q:].copy()[:]   
+               par[:-q] = par[q:].copy()[:]   
+               val[-q:] = a
+               par[-q:] = b
+           
+           return val,par 

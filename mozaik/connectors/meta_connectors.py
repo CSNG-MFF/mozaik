@@ -70,7 +70,10 @@ class GaborConnector(BaseComponent):
 
         'topological': bool,  # should the receptive field centers vary with the position of the given neurons
                               # (note positions of neurons are always stored in visual field coordinates)
-        'delay': float,         # ms/μm the delay on the projections
+        
+        'delay_functions' : ParameterSet,  # the delay functions for ModularSamplingProbabilisticConnectorAnnotationSamplesCount (see its documentation for details)
+        'delay_expression': str,           # the delay expression for ModularSamplingProbabilisticConnectorAnnotationSamplesCount (see its documentation for details)
+        
 
         'short_term_plasticity': ParameterSet,
         'base_weight' : float, # the weights of synapses
@@ -179,9 +182,9 @@ class GaborConnector(BaseComponent):
                                                                             }
                                                              }                                                                              
                                                    },
-                             'delay_functions' : {},
+                             'delay_functions' : self.parameters.delay_functions,
                              'weight_expression' : 'f1', # a python expression that can use variables f1..fn where n is the number of functions in weight_functions, and fi corresponds to the name given to a ModularConnectorFunction in weight_function ParameterSet. It determines how are the weight functions combined to obtain the weights
-                             'delay_expression' : str(self.parameters.delay),
+                             'delay_expression' : self.parameters.delay_expression,
                              'short_term_plasticity' : self.parameters.short_term_plasticity,
                              'base_weight' : self.parameters.base_weight,
                              'num_samples' : 0,
