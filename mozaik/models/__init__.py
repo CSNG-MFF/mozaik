@@ -131,6 +131,7 @@ class Model(BaseComponent):
                 sensory_input = None                                                    
         else:
             sensory_input = None
+
         sim_run_time += self.run(stimulus.duration)
         segments = []
         
@@ -198,6 +199,7 @@ class Model(BaseComponent):
                                                         self.simulator_time)
                                                         
                 logger.info("Simulating the network for %s ms with blank stimulus" % self.parameters.null_stimulus_period)
+        
                 self.sim.run(self.parameters.null_stimulus_period)
                 self.simulator_time+=self.parameters.null_stimulus_period
                 for sheet in self.sheets.values():    

@@ -384,7 +384,7 @@ class LocalStimulatorArray(DirectStimulator):
         axis_coors = numpy.arange(0,self.parameters.size,self.parameters.spacing) - self.parameters.size/2.0 + self.parameters.spacing/2.0
         stimulator_coordinates = numpy.meshgrid(axis_coors,axis_coors)
 
-        pylab.figure(figsize=(12,3))
+        pylab.figure(figsize=(24,6))
       
         # now let's calculate mixing weights, this will be a matrix nxm where n is 
         # the number of neurons in the population and m is the number of stimulators
@@ -394,8 +394,7 @@ class LocalStimulatorArray(DirectStimulator):
         for i in xrange(0,self.sheet.pop.size):
             xx,yy = self.sheet.pop.positions[0][i],self.sheet.pop.positions[1][i]
             xx,yy = self.sheet.vf_2_cs(xx,yy)
-            mixing_weights.append(numpy.exp(-0.5  * (numpy.power(x - xx,2)  + numpy.power(y-yy,2)) / numpy.power(self.parameters.itensity_fallof,2)) / (numpy.sqrt(2*numpy.pi)*self.parameters.itensity_fallof))
-
+            mixing_weights.append(numpy.exp(-0.5  * (numpy.power(x - xx,2)  + numpy.power(y-yy,2)) / numpy.power(self.parameters.itensity_fallof,2)))
         assert numpy.shape(mixing_weights) == (self.sheet.pop.size,int(self.parameters.size/self.parameters.spacing) * int(self.parameters.size/self.parameters.spacing))
 
         signal_function = load_component(self.parameters.stimulating_signal)
@@ -404,7 +403,8 @@ class LocalStimulatorArray(DirectStimulator):
 
         self.mixed_signals = numpy.dot(mixing_weights,stimulator_signals)
         pylab.subplot(144)
-        pylab.scatter(self.sheet.pop.positions[0],self.sheet.pop.positions[1],c=numpy.squeeze(numpy.sum(self.mixed_signals,axis=1)),cmap='gray',vmin=0)
+        pylab.scatter(self.sheet.pop.positions[0],self.sheet.pop.positions[1],c=numpy.squeeze(numpy.mean(self.mixed_signals,axis=1)),cmap='gray',vmin=0)
+        pylab.colorbar()
         pylab.savefig('LocalStimulatorArrayTest.png')
         assert numpy.shape(self.mixed_signals) == (self.sheet.pop.size,numpy.shape(stimulator_signals)[1]), "ERROR: mixed_signals doesn't have the desired size:" + str(numpy.shape(self.mixed_signals)) + " vs " +str((self.sheet.pop.size,numpy.shape(stimulator_signals)[1]))
         
@@ -417,13 +417,15 @@ class LocalStimulatorArray(DirectStimulator):
     def prepare_stimulation(self,duration,offset):
         assert self.stimulation_duration == duration, "stimulation_duration != duration :"  + str(self.stimulation_duration) + " " + str(duration)
         times = numpy.arange(0,self.stimulation_duration,self.parameters.current_update_interval) + offset
-        times[0] = times[0] + self.sheet.sim.state.dt*2
+        times[0] = times[0] + 3*self.sheet.sim.state.dt
         for i in xrange(0,len(self.scs)):
             self.scs[i].set_parameters(times=Sequence(times), amplitudes=Sequence(self.mixed_signals[i,:].flatten()))
+            #HAAAAAAAAAAAAACK
+            #self.scs[i].set_parameters(times=Sequence([times[0]]), amplitudes=Sequence([self.mixed_signals[i,:].flatten()[0]]))
         
     def inactivate(self,offset):
         for scs in self.scs:
-            scs.set_parameters(times=[offset+self.sheet.sim.state.dt*2], amplitudes=[0.0])
+            scs.set_parameters(times=[offset+3*self.sheet.sim.state.dt], amplitudes=[0.0])
 
 
 def test_stimulating_function(sheet,coordinates,current_update_interval,parameters):
@@ -442,12 +444,9 @@ def test_stimulating_function(sheet,coordinates,current_update_interval,paramete
              lhi_current_c=numpy.sum(numpy.exp(-((sx-px)*(sx-px)+(sy-py)*(sy-py))/(two_sigma_squared))*numpy.cos(2*vals))
              lhi_current_s=numpy.sum(numpy.exp(-((sx-px)*(sx-px)+(sy-py)*(sy-py))/(two_sigma_squared))*numpy.sin(2*vals))
              mean_orientations.append(circ_mean(vals,weights=numpy.exp(-((sx-px)*(sx-px)+(sy-py)*(sy-py))/(two_sigma_squared)),high=numpy.pi)[0])
-              #numpy.angle(lhi_current_c+lhi_current_s * 1j,deg=True))
-
 
     pylab.subplot(142)
     pylab.scatter([a[0] for a in coordinates],[a[1] for a in coordinates],c=numpy.array(mean_orientations),cmap='hsv')
-
 
     signals = []
 
@@ -456,5 +455,5 @@ def test_stimulating_function(sheet,coordinates,current_update_interval,paramete
 
     pylab.subplot(143)
     pylab.scatter([a[0] for a in coordinates],[a[1] for a in coordinates],c=numpy.squeeze(numpy.mean(signals,axis=1)),cmap='gray')
-
+    pylab.colorbar()
     return  signals
