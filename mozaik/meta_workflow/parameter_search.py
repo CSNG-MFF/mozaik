@@ -116,6 +116,71 @@ class SlurmSequentialBackend(object):
          print data
          p.stdin.close()
 
+
+
+class SlurmSequentialBackendIoV(object):
+    """
+    This is a back end that runs each simulation run as a slurm job. 
+    
+    Parameters
+    ----------
+    num_threads : int
+                  Number of threads per mpi process.
+
+    num_mpi : int
+                  Number of mpi processes to spawn per job.
+                  
+    slurm_options : list(string), optional 
+                  List of strings that will be passed to slurm sbatch command as options.  
+    Note:
+    -----
+    -----
+    The most common usage of slurm_options is to let slurm know how many mpi processed to spawn per job, and how to allocates resources to them.
+    """
+    def __init__(self,num_threads,num_mpi,slurm_options=None):
+        self.num_threads = num_threads
+        self.num_mpi = num_mpi
+        if slurm_options==None:
+           self.slurm_options=[]
+        else:
+           self.slurm_options=slurm_options 
+        
+        
+        
+        
+    def execute_job(self,run_script,simulator_name,parameters_url,parameters,simulation_run_name):
+         """
+         This function recevies the list of parameters to modify and their values, and has to 
+         execute the corresponding mozaik simulation.
+         
+         Parameters
+         ----------
+         parameters : dict
+                    The dictionary holding the names of parameters to be modified as keys, and the values to set them to as the corresponding values. 
+         """
+         modified_parameters = []
+         for k in parameters.keys():
+             modified_parameters.append(k)
+             modified_parameters.append(str(parameters[k]))
+        
+     
+         from subprocess import Popen, PIPE, STDOUT
+         p = Popen(['sbatch'] + self.slurm_options +  ['-o',parameters['results_dir'][2:-2]+"/slurm-%j.out"],stdin=PIPE,stdout=PIPE,stderr=PIPE)
+         
+         # THIS IS A BIT OF A HACK, have to add customization for other people ...            
+         data = '\n'.join([
+                            '#!/bin/bash',
+                            '#SBATCH -J MozaikParamSearch',
+                            #'#SBATCH -n ' + str(self.num_mpi),
+                            '#SBATCH -c ' + str(self.num_threads),
+                            'source /home/jantolik/virt_env/mozaik/bin/activate',
+                            'cd ' + os.getcwd(),
+                            ' '.join(["python",run_script, simulator_name, str(self.num_threads) ,parameters_url]+modified_parameters+[simulation_run_name]+['>']  + [parameters['results_dir'][1:-1] +'/OUTFILE'+str(time.time())]),
+                        ]) 
+         print p.communicate(input=data)[0]                  
+         print data
+         p.stdin.close()
+
 class ParameterSearch(object):
     """
     This class defines the interface of parameter search.
@@ -273,6 +338,50 @@ def parameter_search_run_script_distributed_slurm(simulation_name,master_results
                             'cd ' + os.getcwd(),
                             'echo "DSADSA"',                            
                             ' '.join(["mpirun"," --mca mtl ^psm python",run_script,"'"+rdn+"'"]  +['>']  + ["'"+rdn +'/OUTFILE_analysis'+str(time.time()) + "'"]),
+                        ]) 
+        print p.communicate(input=data)[0]                  
+        print data
+        p.stdin.close()
+
+
+def parameter_search_run_script_distributed_slurm_IoV(simulation_name,master_results_dir,run_script,core_number):
+    """
+    Scheadules the execution of *run_script*, one per each parameter combination of an existing parameter search run.
+    Each execution receives as the first commandline argument the directory in which the results for the given
+    parameter combination were stored.
+    
+    Parameters
+    ----------
+    simulation_name : str
+                    The name of the simulation.
+    master_results_dir : str
+                    The directory where the parameter search results are stored.
+    run_script : str
+                    The name of the script to be run. The directory name of the given parameter combination datastore will be passed to it as the first command line argument.
+    core_number : int
+                How many cores to reserve per process.
+    """
+    f = open(master_results_dir+'/parameter_combinations','rb')
+    combinations = pickle.load(f)
+    f.close()
+    
+    # first check whether all parameter combinations contain the same parameter names
+    assert len(set([tuple(set(comb.keys())) for comb in combinations])) == 1 , "The parameter search didn't occur over a fixed set of parameters"
+    
+    from subprocess import Popen, PIPE, STDOUT
+    for i,combination in enumerate(combinations):
+        rdn = master_results_dir+'/'+result_directory_name('ParameterSearch',simulation_name,combination)    
+        p = Popen(['sbatch'] +  ['-o',master_results_dir+"/slurm_analysis-%j.out" ],stdin=PIPE,stdout=PIPE,stderr=PIPE)
+         
+        # THIS IS A BIT OF A HACK, have to add customization for other people ...            
+        data = '\n'.join([
+                            '#!/bin/bash',
+                            '#SBATCH -J MozaikParamSearchAnalysis',
+                            '#SBATCH -c ' + str(core_number),
+                            'source /home/jantolik/env/mozaik/bin/activate',
+                            'cd ' + os.getcwd(),
+                            'echo "DSADSA"',                            
+                            ' '.join(["python",run_script,"'"+rdn+"'"]  +['>']  + ["'"+rdn +'/OUTFILE_analysis'+str(time.time()) + "'"]),
                         ]) 
         print p.communicate(input=data)[0]                  
         print data
