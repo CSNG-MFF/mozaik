@@ -248,8 +248,7 @@ class CellWithReceptiveField(object):
                 self.response[j: j+self.receptive_field.kernel_duration] += time_course[:len(self.response[j: j+self.receptive_field.kernel_duration])] #/ self.update_factor
         else:
             self.response[self.i: self.i+self.receptive_field.kernel_duration] += time_course[:len(self.response[self.i: self.i+self.receptive_field.kernel_duration])]
-        
- 
+
         self.i += self.update_factor  # we assume there is only ever 1 visual space used between initializations
 
 
@@ -672,11 +671,14 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
             for rf_type in self.rf_types:
                 for cell in input_cells[rf_type]:
                     cell.view()
-            visual_region = VisualRegion(location_x=0, location_y=0,
+
+	    if self.model.parameters.store_stimuli == True:
+                visual_region = VisualRegion(location_x=0, location_y=0,
                                          size_x=self.model.visual_field.size_x,
                                          size_y=self.model.visual_field.size_y)
-            im = visual_space.view(visual_region,
-                                   pixel_size=self.rf["X_ON"].spatial_resolution)
+	        im = visual_space.view(visual_region,pixel_size=self.rf["X_ON"].spatial_resolution)
+	    else:
+		im = None
             retinal_input.append(im)
 
         input_currents = {}
