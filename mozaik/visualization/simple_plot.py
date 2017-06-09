@@ -859,7 +859,7 @@ class StandardStyleLinePlot(StandardStyle):
             elif self.colors != None:
                 p['color'] = self.colors
             elif self.colors == None:
-                p['color'] = self.axis._get_lines.color_cycle.next()
+                p['color'] = self.axis._get_lines.prop_cycler.next()['color']
             
             if type(self.linestyles) == list:
                 p['linestyle'] = self.linestyles[i]
@@ -1116,9 +1116,9 @@ class HistogramPlot(StandardStyle):
            colors = None
         
         if self.parameters["log"]:
-            self.axis.hist(numpy.log10(self.values),bins=self.num_bins,range=self.x_lim,edgecolor='none',color=colors)
+            self.axis.hist(numpy.log10(self.values),bins=int(self.num_bins),range=self.x_lim,edgecolor='none',color=colors)
         else:
-            self.axis.hist(self.values,bins=self.num_bins,range=self.x_lim,rwidth=1,edgecolor='none',color=colors)
+            self.axis.hist(self.values,bins=int(self.num_bins),range=self.x_lim,rwidth=1,edgecolor='none',color=colors)
             
         if self.mark_mean:
            for i,a in enumerate(self.values):
@@ -1213,9 +1213,9 @@ class CorticalColumnSpikeRasterPlot(StandardStyle):
         self.y_ticks = yticks
         self.y_tick_labels = self.labels
 
-class AnalogSignalListPlot(StandardStyle):
+class OrderedAnalogSignalListPlot(StandardStyle):
     """
-    This plots a set of signals, each associated with a value. 
+    This plots a set of signals, each associated with a value that can be ordered. 
     
     Parameters
     ----------

@@ -58,7 +58,7 @@ from neo.core.analogsignal import AnalogSignal as NeoAnalogSignal
 from neo.core.spiketrain import SpikeTrain as NeoSpikeTrain
 from simple_plot import StandardStyleLinePlot, SpikeRasterPlot, \
                         SpikeHistogramPlot, ConductancesPlot, PixelMovie, \
-                        ScatterPlotMovie, ScatterPlot, ConnectionPlot, SimplePlot, HistogramPlot, CorticalColumnSpikeRasterPlot
+                        ScatterPlotMovie, ScatterPlot, ConnectionPlot, SimplePlot, HistogramPlot, CorticalColumnSpikeRasterPlot, OrderedAnalogSignalListPlot
 from plot_constructors import LinePlot, PerStimulusPlot, PerStimulusADSPlot, ADSGridPlot
 
 import mozaik
@@ -1702,7 +1702,7 @@ class PlotTemporalTuningCurve(Plotting):
             if not self.parameters.mean:
                 errors = None 
             params = self.create_params(asl[0].y_axis_name,asl[0].y_axis_units,i==0,i==(len(self.asls)-1),period,self.parameters.neurons[idx],numpy.squeeze(xs),idx)
-            plots.append(("TuningCurve_" + asl[0].y_axis_name,AnalogSignalListPlot(numpy.squeeze(ys), numpy.squeeze(xs)),gs[i],params))   
+            plots.append(("TuningCurve_" + asl[0].y_axis_name,OrderedAnalogSignalListPlot(numpy.squeeze(ys), numpy.squeeze(xs)),gs[i],params))   
         
         return plots
 
