@@ -378,7 +378,7 @@ def parameter_search_run_script_distributed_slurm_IoV(simulation_name,master_res
                             '#!/bin/bash',
                             '#SBATCH -J MozaikParamSearchAnalysis',
                             '#SBATCH -c ' + str(core_number),
-                            'source /home/jantolik/env/mozaik/bin/activate',
+                            'source /home/jantolik/virt_env/mozaik/bin/activate',
                             'cd ' + os.getcwd(),
                             'echo "DSADSA"',                            
                             ' '.join(["python",run_script,"'"+rdn+"'"]  +['>']  + ["'"+rdn +'/OUTFILE_analysis'+str(time.time()) + "'"]),
