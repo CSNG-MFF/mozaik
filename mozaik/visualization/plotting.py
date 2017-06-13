@@ -1517,7 +1517,7 @@ class CorticalColumnRasterPlot(Plotting):
             self.labels = self.sheet_names
         else:
             self.labels = self.parameters.labels
-        
+      
         if self.parameters.colors == []:
             self.colors =  ['#000000' for i in self.sheets]
         else:
@@ -1734,7 +1734,7 @@ class PlotTemporalTuningCurve(Plotting):
                 params["y_tick_style"] = "Custom"
                 params["y_tick_labels"] = ["-$\\pi$","0", "$\\pi$"]
             else:
-                params["y_ticks"] = [0, len(signal_labels),len(signal_labels)-1]
+                params["y_ticks"] = [0, len(signal_labels)-1]
                 #params["y_lim"] = (-pi, pi)
                 params["y_tick_style"] = "Custom"
                 params["y_tick_labels"] = [signal_labels[0],signal_labels[-1]]
