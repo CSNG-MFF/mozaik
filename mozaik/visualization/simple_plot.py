@@ -1245,7 +1245,7 @@ class OrderedAnalogSignalListPlot(StandardStyle):
         StandardStyle.__init__(self,**param)
         self.signals = signals
         self.values = values
-        self.parameters["cmap"] = 'hsv'
+        self.parameters["cmap"] = 'jet'
         self.parameters["interpolation"] = 'bilinear'
         self.parameters["colorbar"] = False
         self.parameters["colorbar_label"] = None
