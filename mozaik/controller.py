@@ -104,9 +104,6 @@ def run_workflow(simulation_name, model_class, create_experiments):
     
     >>> python userscript simulator_name num_threads parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n simulation_run_name
     """
-    mozaik.setup_mpi()
-        # Read parameters
-    exec "import pyNN.nest as sim" in  globals(), locals()
     
     if len(sys.argv) > 4 and len(sys.argv)%2 == 1:
         simulation_run_name = sys.argv[-1]    
@@ -118,6 +115,14 @@ def run_workflow(simulation_name, model_class, create_experiments):
         raise ValueError("Usage: runscript simulator_name num_threads parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n simulation_run_name")
         
     parameters = load_parameters(parameters_url,modified_parameters)
+
+    p={}
+    if parameters.has_key('mozaik_seed') : p['mozaik_seed'] = parameters['mozaik_seed']
+    if parameters.has_key('pynn_seed') : p['pynn_seed'] = parameters['pynn_seed']
+
+    mozaik.setup_mpi(**p)
+    # Read parameters
+    exec "import pyNN.nest as sim" in  globals(), locals()
     
     # Create results directory
     timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')

@@ -927,7 +927,7 @@ class MapPhaseResponseWithBarStimulus(VisualExperiment):
             for s in xrange(0, self.parameters.steps):
                 self.stimuli.append(
                     topo.FlashedBar(
-				frame_duration = self.frame_duration,
+				                frame_duration = self.frame_duration,
                                 size_x=model.visual_field.size_x,
                                 size_y=model.visual_field.size_y,
                                 location_x=0.0,

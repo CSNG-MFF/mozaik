@@ -823,7 +823,7 @@ class AnalogSignalListPlot(Plotting):
        
         for idd in self.parameters.neurons:
             a = self.analog_signal_list.get_asl_by_id(idd)
-            times = numpy.linspace(a.t_start, a.t_stop, len(a))
+            times = numpy.linspace(a.t_start.magnitude, a.t_stop.magnitude, len(a))
             xs.append(times)
             ys.append(a)
         
