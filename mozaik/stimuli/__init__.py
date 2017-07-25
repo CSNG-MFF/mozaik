@@ -91,13 +91,15 @@ class BaseStimulus(MozaikParametrized):
 
 class InternalStimulus(BaseStimulus):
     """
-    This is a very specific case of stimulus. It is used exclusively in the case when the model receives any sensory stimulus. 
-    In such case it is still possible to stimulate the network 'artifically' via the Experiment's direct stimulation 
+    Technical stimulus corresponding to no sensory stimulation.
+
+    It is used exclusively in the case when the model receives no sensory stimulus. 
+    In such case it is still possible to stimulate the network 'artificially' via the Experiment's direct stimulation 
     facilities (see exc_spike_stimulators etc. in Experiment class).
     
     In such case this stimulus should be associated with the experiment, as it will allow for all the other parts of mozaik to work
     consistently, and will be useful in that it will record the duration of the experiment, the possible information about multiple trials,
-    and the identity of the artificialy stimulation used. Note that in that case the frame_duration should be set to duration time.
+    and the identity of the artificial stimulation used. Note that in that case the frame_duration should be set to duration time.
     """
     def __init__(self,**params):
         BaseStimulus.__init__(self,**params)

@@ -54,8 +54,10 @@ class RCAll(PopulationSelector):
 
 class RCRandomN(PopulationSelector):
       """
-      This PopulationSelector selects random specified number of neurons.
-      
+      Select random neurons.  
+
+      This PopulationSelector selects *num_of_cells* random neurons from the given population.
+
       Other parameters
       ----------------
       num_of_cells : int
@@ -73,8 +75,11 @@ class RCRandomN(PopulationSelector):
 
 class RCRandomPercentage(PopulationSelector):
       """
-      This PopulationSelector select random percentage of the population.
-      
+      Select random neurons.
+
+      This PopulationSelector selects *percentage* of randomly chosen neurons from the given population.
+
+
       Other parameters
       ----------------
       percentage : float
@@ -93,7 +98,12 @@ class RCRandomPercentage(PopulationSelector):
           
 class RCGrid(PopulationSelector):
       """
-      This PopulationSelector assumes a grid of points ('electrodes') and includes the closest neuron to each point to the selected list.
+      Select neurons on a grid.
+
+      This PopulationSelector assumes a grid of points ('electrodes') with a 
+      given *spacing* and *size*, centered on (*offset_x*,*offset_x*) coordinates.
+      It then finds the closest neuron to each point in the grid to be
+      inserted into the list of selected neurons .
       
       Other parameters
       ----------------
@@ -132,7 +142,11 @@ class RCGrid(PopulationSelector):
 
 class SimilarAnnotationSelector(PopulationSelector):
       """
-      This PopulationSelector picks random n neurons whose *annotation* value is closer than *distance* from specified *value* (based on euclidian norm).
+      Choose neurons based on annotations info.
+
+      This PopulationSelector picks random *num_of_cells* neurons whose 
+      *annotation* value is closer than *distance* from pre-specified *value* 
+      (based on Euclidian norm).
       
       Other parameters
       ----------------
@@ -174,8 +188,14 @@ class SimilarAnnotationSelector(PopulationSelector):
           
 class SimilarAnnotationSelectorRegion(SimilarAnnotationSelector):
       """
-      This PopulationSelector picks random n neurons whose *annotation* value is closer than *distance* from specified *value* (based on euclidian norm).
-      
+      Choose neurons based on annotations info.
+
+      This PopulationSelector picks random *num_of_cells* neurons whose 
+      *annotation* value is closer than *distance* from pre-specified *value* 
+      (based on Euclidian norm). Furthermore, all selected neurons have to
+      sit within a region defined by *size* centered  on (*offset_x*,*offset_x*) coordinates
+      (in degrees of visual field).
+
       Other parameters
       ----------------
       annotation : str
@@ -187,6 +207,15 @@ class SimilarAnnotationSelectorRegion(SimilarAnnotationSelector):
       
       num_of_cells : int
                    The number of cells to be selected.
+
+      size : float (micro meters of cortical space)
+           The size of the grid (it is assumed to be square) - it has to be multiple of spacing 
+      
+      offset_x : float (micro meters of cortical space)
+           The x axis offset from the center of the sheet.
+
+      offset_y : float (micro meters of cortical space)
+           The y axis offset from the center of the sheet.
       """
       
       required_parameters = ParameterSet({

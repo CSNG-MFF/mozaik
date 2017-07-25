@@ -170,8 +170,11 @@ class PoissonNetworkKick(Experiment):
                                 )
         
 class NoStimulation(Experiment):
-    """
-    This experiment does not show any stimulus for the duration of the experiment.
+    """ 
+    This is a special experiment that does not show any stimulus for the duration of the experiment. 
+
+    This experiment is universal, in that it is not dependent on what sensory modality/model is used in the
+    given simulation. It will ensure that no sensory stimulation will be performed.  
     
     Notes
     -----
