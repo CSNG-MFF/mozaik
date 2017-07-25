@@ -70,6 +70,8 @@ class Model(BaseComponent):
         'max_delay' : float,
         'time_step' : float,
         'sheets' : ParameterSet, # can be none - in which case input_space_type is ignored
+        'mpi_seed' : int,
+        'pynn_seed' : int
     })
 
     def __init__(self, sim, num_threads, parameters):
