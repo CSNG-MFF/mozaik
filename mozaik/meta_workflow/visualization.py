@@ -33,6 +33,20 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
                
     """
     (parameters,datastores,n) = load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir,filter=ParamFilterQuery(ParameterSet({'ads_unique' : False, 'rec_unique' : False, 'params' : ParameterSet({'identifier' : 'SingleValue'})})))
+    print parameters
+
+    # Lets first filter out parameters that do not vary
+    todelete=[];
+    for i in xrange(0,len(parameters)):
+	vals = set([v[0][i] for v in datastores])
+	print vals
+	if len(vals) == 1:
+	    todelete.append(i)
+    print todelete
+    for k in xrange(0,len(datastores)):
+	datastores[k] = ([i for j, i in enumerate(datastores[k][0]) if j not in todelete],datastores[k][1])
+    parameters = [i for j, i in enumerate(parameters) if j not in todelete]
+    print parameters
 
     # Lets first filter out stuff we were asked by user
     datastores = [(a,query.query(b)) for a,b in datastores]
@@ -53,7 +67,7 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
             if len(param_filter_query(datastore,identifier='SingleValue',value_name=v).get_analysis_result()) > 1:
                 param_filter_query(datastore,identifier='SingleValue',value_name=v).print_content(full_ADS=True)
             
-            assert len(param_filter_query(datastore,identifier='SingleValue',value_name=v).get_analysis_result()) == 1, "Error, %d ADS with value_name %s found for parameter combination: %s" % (len(param_filter_query(datastore,identifier='SingleValue',value_name=v).get_analysis_result()),v, str([str(a) + ':' + str(b) for (a,b) in zip(parameters,param_values)]))
+            #assert len(param_filter_query(datastore,identifier='SingleValue',value_name=v).get_analysis_result()) == 1, "Error, %d ADS with value_name %s found for parameter combination: %s" % (len(param_filter_query(datastore,identifier='SingleValue',value_name=v).get_analysis_result()),v, str([str(a) + ':' + str(b) for (a,b) in zip(parameters,param_values)]))
     
     rows = math.ceil(1.0*len(value_names)/cols)
     
