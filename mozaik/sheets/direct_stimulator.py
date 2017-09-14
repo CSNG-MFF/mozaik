@@ -19,6 +19,7 @@ from mozaik import load_component
 import math
 from mozaik.tools.circ_stat import circular_dist ,circ_mean
 import pylab
+from scipy.integrate import odeint
 
 logger = mozaik.getMozaikLogger()
 
@@ -402,9 +403,11 @@ class LocalStimulatorArray(DirectStimulator):
         assert numpy.shape(stimulator_signals)[0] == numpy.shape(mixing_weights)[1] , "ERROR: stimulator_signals and mixing_weights do not have matching sizes:" + str(numpy.shape(stimulator_signals)) + " " +str(numpy.shape(mixing_weights))
 
         self.mixed_signals = numpy.dot(mixing_weights,stimulator_signals)
-        pylab.subplot(144)
+        pylab.subplot(154)
+        pylab.gca().set_aspect('equal')
+        pylab.title('Activation magnitude (neurons)')
         pylab.scatter(self.sheet.pop.positions[0],self.sheet.pop.positions[1],c=numpy.squeeze(numpy.mean(self.mixed_signals,axis=1)),cmap='gray',vmin=0)
-        pylab.colorbar()
+        #pylab.colorbar()
         pylab.savefig('LocalStimulatorArrayTest.png')
         assert numpy.shape(self.mixed_signals) == (self.sheet.pop.size,numpy.shape(stimulator_signals)[1]), "ERROR: mixed_signals doesn't have the desired size:" + str(numpy.shape(self.mixed_signals)) + " vs " +str((self.sheet.pop.size,numpy.shape(stimulator_signals)[1]))
         
@@ -428,6 +431,63 @@ class LocalStimulatorArray(DirectStimulator):
             scs.set_parameters(times=[offset+3*self.sheet.sim.state.dt], amplitudes=[0.0])
 
 
+class LocalStimulatorArrayChR(LocalStimulatorArray):
+      """
+      Like *LocalStimulatorArray* but the signal calculated to impinge on a neuron is interpreted as light (photons/s/cm^2)
+      impinging on the neuron and the signal is transformed via a model of Channelrhodopsin (courtesy of Quentin Sabatier)
+      to give the final injected current. 
+      
+      Note that we approximate the current by ignoring the voltage dependence of the channels, as it is very expensive 
+      to inject conductance in PyNN. The Channelrhodopsin has reverse potential of ~0, and we assume that our neurons 
+      sits on average at -60mV to calculate the current. 
+      """
+
+      def ChRsystem(y,time,X,sampling_period):
+          PhoC1toO1 = 1.6e-19
+          PhoC2toO2 = 4e-20
+          PhoC1toC2 = 3e-20
+          PhoC2toC1 = 4e-20
+
+          O1toC1 = 0.125
+          O2toC2 = 0.015
+          O2toS  = 0.0001
+          C2toC1 = 1e-7
+          StoC1  = 3e-6
+
+          a = int(numpy.floor(time/sampling_period))
+          b = time/sampling_period - a
+
+          if a < len(X)-1:
+            I = X[a]*(1-b) + b * X[a+1];
+          else:
+            I = 0
+
+          O1,O2,C1,C2,S = y
+
+          _O1 = - O1toC1 * O1                    + PhoC1toO1 * I * C1
+          _O2 = - O2toC2 * O2                    + PhoC2toO2 * I * C2            - O2toS * O2
+
+          _S  = - StoC1 * S + O2toS * O2
+
+          _C1 = O1toC1 * O1    - PhoC1toO1 * I * C1       - PhoC1toC2 * I * C1    + C2toC1 * C2             + PhoC2toC1 * I * C2            + StoC1 * S
+          _C2 = O2toC2 * O2    - C2toC1 * C2              - PhoC2toC1 * I * C2    + PhoC1toC2 * I * C1      - PhoC2toO2 * I * C2
+
+          return (_O1,_O2,_C1,_C2,_S)
+
+      def __init__(self, sheet, parameters):
+          LocalStimulatorArray.__init__(self, sheet,parameters)
+          times = numpy.arange(0,self.stimulation_duration,self.parameters.current_update_interval)
+
+          for i in xrange(0,len(self.scs)):
+              res = odeint(LocalStimulatorArrayChR.ChRsystem,[0,0,0.8,0.2,0],times,args=(self.mixed_signals[i,:],self.parameters.current_update_interval))
+              self.mixed_signals[i,:] = 60 * (17*res[:,0] + 2.9 * res[:,1]); # the 60 corresponds to the 60mV difference between ChR reverse potential of 0mV and our expected mean Vm of about 60mV. This happens to end up being in nA which is what pyNN expect for current injection.
+
+          pylab.subplot(155)
+          pylab.gca().set_aspect('equal')
+          pylab.title('Single neuron current injection profile')
+          pylab.plot(times,self.mixed_signals[0,:])
+
+
 def test_stimulating_function(sheet,coordinates,current_update_interval,parameters):
     z = sheet.pop.all_cells.astype(int)
     vals = numpy.array([sheet.get_neuron_annotation(i,'LGNAfferentOrientation') for i in xrange(0,len(z))])
@@ -437,7 +497,9 @@ def test_stimulating_function(sheet,coordinates,current_update_interval,paramete
 
     px,py = sheet.vf_2_cs(sheet.pop.positions[0],sheet.pop.positions[1])
 
-    pylab.subplot(141)
+    pylab.subplot(151)
+    pylab.gca().set_aspect('equal')
+    pylab.title('Orientatin preference (neurons)')
     pylab.scatter(px,py,c=vals/numpy.pi,cmap='hsv')
     for sx,sy in coordinates:
 
@@ -445,7 +507,9 @@ def test_stimulating_function(sheet,coordinates,current_update_interval,paramete
              lhi_current_s=numpy.sum(numpy.exp(-((sx-px)*(sx-px)+(sy-py)*(sy-py))/(two_sigma_squared))*numpy.sin(2*vals))
              mean_orientations.append(circ_mean(vals,weights=numpy.exp(-((sx-px)*(sx-px)+(sy-py)*(sy-py))/(two_sigma_squared)),high=numpy.pi)[0])
 
-    pylab.subplot(142)
+    pylab.subplot(152)
+    pylab.title('Orientatin preference (stimulators)')
+    pylab.gca().set_aspect('equal')
     pylab.scatter([a[0] for a in coordinates],[a[1] for a in coordinates],c=numpy.array(mean_orientations),cmap='hsv')
 
     signals = []
@@ -453,7 +517,9 @@ def test_stimulating_function(sheet,coordinates,current_update_interval,paramete
     for i in xrange(0,len(coordinates)):
         signals.append(parameters.scale*numpy.array([numpy.exp(-numpy.power(circular_dist(parameters.orientation,mean_orientations[i],numpy.pi),2)/parameters.sharpness) for tmp in xrange(parameters.duration/current_update_interval)]))
 
-    pylab.subplot(143)
+    pylab.subplot(153)
+    pylab.gca().set_aspect('equal')
+    pylab.title('Activation magnitude (stimulators)')
     pylab.scatter([a[0] for a in coordinates],[a[1] for a in coordinates],c=numpy.squeeze(numpy.mean(signals,axis=1)),cmap='gray')
-    pylab.colorbar()
+    #pylab.colorbar()
     return  signals

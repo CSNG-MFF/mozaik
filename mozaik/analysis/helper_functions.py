@@ -45,7 +45,7 @@ def psth(spike_list, bin_length,normalize=True):
         
     normalizer = 1.0
     if normalize:
-       normalizer = (bin_length/1000)
+       normalizer = (bin_length/1000.0)
        
     h = [AnalogSignal(numpy.histogram(sp, bins=num_bins, range=r)[0] /normalizer ,t_start=t_start*qt.ms,sampling_period=bin_length*qt.ms,units=munits.spike_per_sec) for sp in spike_list]
     return  h

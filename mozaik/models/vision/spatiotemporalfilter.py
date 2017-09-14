@@ -241,6 +241,7 @@ class CellWithReceptiveField(object):
         self.mean[self.i:self.i+self.update_factor] = numpy.mean(view_array)
         time_course = numpy.dot(self.receptive_field.reshaped_kernel,view_array.reshape(-1)[:numpy.newaxis])
 
+        self.va = view_array
 
 
         if self.update_factor != 1.0:
@@ -261,6 +262,7 @@ class CellWithReceptiveField(object):
         k = numpy.squeeze(numpy.mean(numpy.squeeze(numpy.mean(numpy.abs(self.receptive_field.kernel),axis=0)),axis=0))
         #self.std = numpy.convolve(self.std,k[::-1]/numpy.sqrt(numpy.power(k,2).sum()),mode='same')
         self.std = numpy.convolve(self.std,k[::-1],mode='same')
+        
         if self.gain_control.non_linear_gain != None:
             c = numpy.sum(self.receptive_field.kernel.flatten())*self.mean
             L = self.receptive_field.kernel_duration
@@ -277,6 +279,19 @@ class CellWithReceptiveField(object):
         else:
             response = self.gain_control.gain * self.response[:-self.receptive_field.kernel_duration]  # remove the extra padding at the end
         time_points = self.receptive_field.temporal_resolution * numpy.arange(0, len(response))
+
+        #ylab.figure()
+        #ylab.title(str(numpy.shape(self.receptive_field.kernel)))
+        #ylab.subplot(3,1,1)
+        #ylab.imshow(numpy.mean(self.receptive_field.kernel,axis=0))
+        #ylab.title(str(numpy.shape(self.receptive_field.kernel)))
+        #ylab.colorbar()
+        #ylab.subplot(3,1,2)
+        #ylab.imshow(self.va)
+        #ylab.colorbar()
+        #ylab.subplot(3,1,3)
+        #ylab.plot(time_points,response)
+
 
         return {'times': time_points, 'amplitudes': response}
 

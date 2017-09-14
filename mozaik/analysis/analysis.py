@@ -768,17 +768,17 @@ class GaussianTuningCurveFit(Analysis):
           p1[2]  = abs(p1[2])
           
           #if the fit is very bad - error greater than 30% of the Y magnitude
-          if numpy.linalg.norm(fitfunc(p1,X)-Y,2)/numpy.linalg.norm(Y-numpy.mean(Y),2) > 0.2:
-             p1 = numpy.array([-1,-1,-1,-1])
+          #if numpy.linalg.norm(fitfunc(p1,X)-Y,2)/numpy.linalg.norm(Y-numpy.mean(Y),2) > 0.4:
+          #   p1 = numpy.array([-1,-1,-1,-1])
           #    p1=p0
 
-          if False:
+          if True:
               import pylab
               pylab.figure()
-              pylab.plot(fitfunc(p1,X),'x')
+              pylab.plot(X,fitfunc(p1,X),'x')
               pylab.hold('on')          
-              pylab.plot(Y,'-')
-              pylab.title(str(numpy.linalg.norm(fitfunc(p1,X)-Y)/numpy.linalg.norm(Y)))
+              pylab.plot(X,Y,'o')
+              pylab.title(str(numpy.linalg.norm(fitfunc(p1,X)-Y)/numpy.linalg.norm(Y))+ "  " + str(numpy.max(Y)))
           if success:
             return p1
           else :

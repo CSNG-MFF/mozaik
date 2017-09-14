@@ -15,7 +15,7 @@ logger = mozaik.getMozaikLogger()
 
 class RetinalUniformSheet(Sheet):
     """
-    Retinal sheet corresponds to a grid of retinal cells (retinal ganglion cells or photoreceptors). 
+    Retinal sheet corresponds to a sheet of retinal cells (retinal ganglion cells or photoreceptors). 
     It implicitly assumes the coordinate systems is in degress in visual field.
     
     Other parameters
@@ -173,6 +173,54 @@ class VisualCorticalUniformSheet(SheetWithMagnificationFactor):
         dx, dy = self.cs_2_vf(parameters.sx, parameters.sy)
         rs = space.RandomStructure(boundary=space.Cuboid(dx, dy, 0),
                                    origin=(0.0, 0.0, 0.0),
+                                   rng=mozaik.pynn_rng)
+
+        self.pop = self.sim.Population(int(parameters.sx*parameters.sy/1000000*parameters.density),
+                                       getattr(self.model.sim, self.parameters.cell.model),
+                                       self.parameters.cell.params,
+                                       structure=rs,
+                                       initial_values=self.parameters.cell.initial_values,
+                                       label=self.name)
+
+
+class VisualCorticalUniformSheet3D(VisualCorticalUniformSheet):
+    """
+    Represents a visual cortical sheet of neurons, randomly uniformly distributed in cortical space.
+    In addition to the VisualCorticalUniformSheet it adds 3rd dimension to the neurons that corresponds their depth 
+    within cortical sheet (prepandicular to the cortical surface). 
+    In the third dimensions, the neurons will be uniformly distributed between the *min_depth* and *max_depth* parameters.
+    
+    Notes
+    -----
+    Manny existing Mozaik components that take neural position into consideration will 
+    ignore this 3rd dimension. Also unlike the first to dimensions, corresponding to the axis along
+    the cortical surface, the third depth dimension is in μm!
+
+    Also note the density is still calculated only per surface unit.
+    
+    Other parameters
+    ----------------
+    min_depth : float (μm)
+            The mininmum depth of neurons.
+    max_depth : float (μm)
+            The maxinmum depth of neurons.
+
+    """
+    
+    required_parameters = ParameterSet({
+        'min_depth': float,  # μm
+        'max_depth': float,  # μm
+    })
+
+    def __init__(self, model, parameters):
+        SheetWithMagnificationFactor.__init__(self, model, parameters)
+        dx, dy = self.cs_2_vf(parameters.sx, parameters.sy)
+
+        origin_z = (self.parameters.min_depth + self.parameters.max_depth)/2.0
+        width_z = (self.parameters.max_depth - self.parameters.min_depth)
+
+        rs = space.RandomStructure(boundary=space.Cuboid(dx, dy, width_z),
+                                   origin=(0.0, 0.0, origin_z),
                                    rng=mozaik.pynn_rng)
 
         self.pop = self.sim.Population(int(parameters.sx*parameters.sy/1000000*parameters.density),

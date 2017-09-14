@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from parameters import ParameterSet
 from mozaik.models import Model
 from mozaik.connectors.fast import UniformProbabilisticArborization

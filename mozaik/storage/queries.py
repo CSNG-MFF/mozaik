@@ -96,8 +96,11 @@ def param_filter_query(dsv,ads_unique=False,rec_unique=False,**kwargs):
        else:
            seg_filtered = set([]) 
     else:
+        if len(kwargs) == 0:
            seg_filtered = set(dsv.block.segments)
-    
+        else:
+           seg_filtered = set([])  
+        
     ads_filtered= set(filter_query(dsv.analysis_results,**kwargs))
     
     if st_kwargs != {}:

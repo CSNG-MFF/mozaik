@@ -357,7 +357,7 @@ class PlotTuningCurve(Plotting):
                     val = val[:,idx]
                     
                     
-                
+                par,val = zip(*sorted(zip(numpy.array(par),val)))
 
                 # if we have a period of pi or 2*pi
                 if period==pi and self.parameters.centered==False:
@@ -548,6 +548,7 @@ class RasterPlot(Plotting):
         if self.parameters.spontaneous:
            spont_sp = [s.get_spiketrain(self.parameters.neurons) for s in sorted(dsv.get_segments(null=True),key = lambda x : MozaikParametrized.idd(x.annotations['stimulus']).trial)]             
            sp = [RasterPlot.concat_spiketrains(sp1,sp2) for sp1,sp2 in zip(spont_sp,sp)]
+           logger.info(numpy.shape(spont_sp))
            x_ticks = [float(spont_sp[0][0].t_start.rescale(pq.s)),0.0,float(sp[0][0].t_stop.rescale(pq.s)/2), float(sp[0][0].t_stop.rescale(pq.s))]
 
         d = {} 
@@ -1013,7 +1014,7 @@ class ActivityMovie(Plotting):
     Other parameters
     ----------------
     
-    bin_width : float
+    bin_width : float (ms)
               In ms the width of the bins into which to sample spikes.
     
     scatter :  bool   
@@ -1024,15 +1025,24 @@ class ActivityMovie(Plotting):
                
     sheet_name: str
               The sheet for which to display the actvity movie.
-    
-    """
+
+    exp_time_constant: float (ms)
+              Spiking can be very irregular and bursty which makes it difficult to visualize. 
+              This parameter is the time-constant of the exponential with which the convolve psth, 0 means no convolution.
+    """     
     
     required_parameters = ParameterSet({
           'bin_width': float,  # in ms the width of the bins into which to sample spikes
           'scatter':  bool,   # whether to plot neurons activity into a scatter plot (if True) or as an interpolated pixel image
           'resolution': int,  # the number of pixels into which the activity will be interpolated in case scatter = False
           'sheet_name': str,  # the sheet for which to display the actvity movie
+          'exp_time_constant' : float, # the time-constant of the exponential with which the convolve psth, 0 means no convolution
     })
+
+    def __init__(self, datastore, parameters, plot_file_name=None,fig_param=None,frame_duration=0,spont_level_pnv=None):
+        Plotting.__init__(self, datastore, parameters, plot_file_name, fig_param,frame_duration)
+        self.spont_level_pnv = spont_level_pnv
+
 
     def subplot(self, subplotspec):
         dsv = queries.param_filter_query(self.datastore,sheet_name=self.parameters.sheet_name)
@@ -1045,20 +1055,39 @@ class ActivityMovie(Plotting):
         stop = sp[0][0].t_stop.magnitude
         units = sp[0][0].t_start.units
         bw = self.parameters.bin_width * pq.ms
-        bw = bw.rescale(units).magnitude
-        bins = numpy.arange(start, stop, bw)
+        bw = bw.rescale(units)
+        bins = numpy.arange(start, stop, bw.magnitude)
         h = []
+
+        if self.parameters.exp_time_constant != 0:
+          etc = self.parameters.exp_time_constant*pq.ms
+          etc = etc.rescale(units).magnitude
+          print numpy.floor(3*etc/bw)
+          exp_kernel = numpy.flip(numpy.exp(-(bins[:numpy.int(numpy.floor(3*etc/bw))]-start)/etc),axis=0);
+
         for spike_trains in sp:
             hh = []
             for st in spike_trains:
-                hh.append(numpy.histogram(st.magnitude, bins, (start, stop))[0])
+                tmp = numpy.histogram(st.magnitude, bins, (start, stop))[0]/(bw.rescale(pq.s).magnitude)
+                if self.parameters.exp_time_constant != 0:
+                  tmp = numpy.convolve(tmp,exp_kernel,mode='valid')
+                hh.append(tmp)
+
                 #lets make activity of each neuron relative to it's maximum activity
             h.append(numpy.array(hh))
-        
+
         h = numpy.mean(h, axis=0)
-        
+
+        ids = dsv.get_segments()[0].get_stored_spike_train_ids()
+        if self.spont_level_pnv != None:
+           sl = numpy.array(self.spont_level_pnv.get_value_by_id(ids))
+           h = h - 5*sl[:,numpy.newaxis]
+        h[h < 0]=0   
+        #h[h < 0.2*numpy.mean(numpy.mean(h))]=0
+
         #lets normalize against the maximum response for given neuron
         
+
         pos = dsv.get_neuron_postions()[self.parameters.sheet_name]
 
         posx = pos[0,self.datastore.get_sheet_indexes(self.parameters.sheet_name,dsv.get_segments()[0].get_stored_spike_train_ids())]
@@ -1647,7 +1676,7 @@ class PlotTemporalTuningCurve(Plotting):
             xs = [] 
             ys = []
             period = st[0].params()[self.parameters.parameter_name].period
-                
+            print dic.keys()
             for k in sorted(dic.keys()):    
                 (par, val) = dic[k]
                 error = None
@@ -1665,6 +1694,11 @@ class PlotTemporalTuningCurve(Plotting):
                     par = p
                 else:
                     val = val[:,idx]
+
+                par,val = zip(*sorted(zip(numpy.array(par),val)))
+                print "OOO"
+                print par,val
+                print "OOO"
 
                 # if we have a period of pi or 2*pi
                 if period==pi and self.centered_response_indexes==None:
@@ -1702,6 +1736,8 @@ class PlotTemporalTuningCurve(Plotting):
             if not self.parameters.mean:
                 errors = None 
             params = self.create_params(asl[0].y_axis_name,asl[0].y_axis_units,i==0,i==(len(self.asls)-1),period,self.parameters.neurons[idx],numpy.squeeze(xs),idx)
+            print "RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR"
+            print numpy.squeeze(xs)
             plots.append(("TuningCurve_" + asl[0].y_axis_name,OrderedAnalogSignalListPlot(numpy.squeeze(ys), numpy.squeeze(xs)),gs[i],params))   
         
         return plots

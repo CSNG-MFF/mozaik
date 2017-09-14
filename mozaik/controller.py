@@ -157,7 +157,7 @@ def run_workflow(simulation_name, model_class, create_experiments):
     if mozaik.mpi_comm.rank == 0:
         #let's store some basic info about the simulation run
         f = open(Global.root_directory+"info","w")
-        f.write(str({'model_class' : model_class, 'model_docstring' : model_class.__doc__,'simulation_run_name' : simulation_run_name, 'model_name' : simulation_name, 'creation_data' : datetime.now().strftime('%d/%m/%Y-%H:%M:%S')}))
+        f.write(str({'model_class' : str(model_class), 'model_docstring' : model_class.__doc__,'simulation_run_name' : simulation_run_name, 'model_name' : simulation_name, 'creation_data' : datetime.now().strftime('%d/%m/%Y-%H:%M:%S')}))
         f.close()
 
 

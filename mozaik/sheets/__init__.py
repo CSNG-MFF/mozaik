@@ -20,21 +20,11 @@ logger = mozaik.getMozaikLogger()
 
 class Sheet(BaseComponent):
     """
-    Sheet is an abstraction of a 2D continuouse sheet of neurons, roughly
-    corresponding to the PyNN Population class with the added spatial structure.
+    Sheet is an abstraction of a volume of neurons positioned in a physical space.
 
-    The spatial position of all cells is kept within the PyNN Population object.
-    Each sheet is assumed to be centered around (0,0) origin, corresponding to
-    whatever excentricity the model is looking at. The internal representation
-    of space is degrees of visual field. Thus x,y coordinates of a cell in all
-    sheets correspond to the degrees of visual field this cell is away from the
-    origin. However, the sheet and derived classes/methods are supposed to
-    accept parameters in units that are most natural for the given parameter and
-    recalculate these into the internal degrees of visual field representation.
-
-    As a rule of thumb in mozaik:
-       * the units in visual space should be in degrees.
-       * the units for cortical space should be in μm.
+    It roughly corresponding to the PyNN Sheet class with the added spatial structure 
+    and various helper functions specific to the mozaik integration. The spatial position 
+    of all cells is kept within the PyNN Sheet object and are assumed to be in μm.
        
     Other parameters
     ----------------
