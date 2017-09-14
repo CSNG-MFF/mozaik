@@ -33,6 +33,12 @@ class VisualExperiment(Experiment):
 class MeasureFlatLuminanceSensitivity(VisualExperiment):
     """
     Measure luminance sensitivity using flat luminance screen.
+
+    This experiment will measure luminance sensitivity by presenting a series of full-field 
+    constant stimulations (i.e. all pixels of the virtual visual space will be set to a 
+    constant value) of different magnitudes. The user can specify the luminance levels that
+    should be presented (see the *luminances*) parameter, the length  of presentation of 
+    individual steps (*step_duration* parameter), and number of trials (*num_trials* parameter).
     
     Parameters
     ----------
@@ -80,9 +86,12 @@ class MeasureFlatLuminanceSensitivity(VisualExperiment):
     
 class MeasureSparse(VisualExperiment):
     """
-    Basic sparse dots stimulation experiments.
+    Sparse noise stimulation experiments.
+
+    This experiment will show a series of images formed by a single 
+    circle (dot) which will be presented in a random position in each trial.
     
-    Parameters
+    Parameter
     ----------
     model : Model
         The model on which to execute the experiment.
@@ -147,8 +156,12 @@ class MeasureSparse(VisualExperiment):
 
 class MeasureDense(VisualExperiment):
     """
-    Basic dense dots stimulation experiments.
+    Dense noise stimulation experiments.
     
+    This experiment will show a series of images formed by a grid
+    of 'pixels', in each trial randomly set to 0 or maximum luminance.
+
+
     Parameters
     ----------
     model : Model
@@ -209,6 +222,9 @@ class MeasureDense(VisualExperiment):
 class MeasureOrientationTuningFullfield(VisualExperiment):
     """
     Measure orientation tuning using a fullfiled sinusoidal grating.
+
+    This experiment will show a series of full-field sinusoidal gratings
+    that vary in orientation, while the other parameters remain constant.
     
     Parameters
     ----------
@@ -272,7 +288,11 @@ class MeasureOrientationTuningFullfield(VisualExperiment):
 
 class MeasureSizeTuning(VisualExperiment):
     """
-    Measure size tuning using expanding sinusoidal grating disks or flat luminance disks.
+    Size tuning experiment.
+
+    This experiment will show a series of sinusoidal gratings or constant flat stimuli 
+    (see *with_flat* parameter) confined to an apparature whose radius will vary.
+
     
     Parameters
     ----------
@@ -375,7 +395,11 @@ class MeasureSizeTuning(VisualExperiment):
 
 class MeasureContrastSensitivity(VisualExperiment):
     """
-    Measure contrast sensitivity using sinusoidal grating disk.
+    Measure contrast sensitivity using sinusoidal gratings.
+
+    This experiment shows a series of full-field sinusoidal gratings of varying 
+    contrast. Using the responses to these stimuli one can construct the contrast
+    sensitivity tuning curve for the measured neurons.
     
     Parameters
     ----------
@@ -442,6 +466,13 @@ class MeasureFrequencySensitivity(VisualExperiment):
     """
     Measure frequency sensitivity using sinusoidal grating disk.
     
+    This experiment shows a series of full-field drifting sinusoidal gratings 
+    of varying spatial and temporal frequencies. Using the responses to these 
+    stimuli one can construct the spatial and/or temporal frequency tuning 
+    curve for the measured neurons.
+
+    
+
     Parameters
     ----------
     model : Model
@@ -528,9 +559,13 @@ class MeasureFrequencySensitivity(VisualExperiment):
 
 class MeasureOrientationContrastTuning(VisualExperiment):
     """
-    Measure orientation contrast tuning using. This measures the orientation dependence of the surround of 
-    a visual neuron. This is done by stimulating the center of the RF with optimal (spatial,temporal frequency and orientation) 
-    sine grating, surrounded by another sinusoidal grating ring whose orientation is varied.
+    Measure orientation contrast tuning using. 
+
+    This measures the orientation dependence of the RF surround 
+    of a neuron. This is done by stimulating the center of the RF 
+    with optimal (spatial,temporal frequency and orientation) 
+    sine grating, surrounded by another sinusoidal grating 
+    ring whose orientation is varied.
     
     Parameters
     ----------
@@ -613,7 +648,13 @@ class MeasureOrientationContrastTuning(VisualExperiment):
 
 class MeasureFeatureInducedCorrelation(VisualExperiment):
     """
-    Measure feature-induced correlation between a couple of neurons (separated by some degrees in visual space) using square grating disk and flashing squares.
+    Feature-induced inter-neurons correlations.
+
+    This experiment shows a sequence of two square grating disks followed by 
+    a sequence of flashing squares (see parameter **) that are separated in 
+    visual space by a constant distance. The spatial and temporal frequency 
+    will be varied.
+
     
     Parameters
     ----------
@@ -707,6 +748,10 @@ class MeasureFeatureInducedCorrelation(VisualExperiment):
 class MeasureNaturalImagesWithEyeMovement(VisualExperiment):
     """
     Stimulate the model with a natural image with simulated eye movement.
+
+    This experiment presents a movie that is generated by translating a 
+    static image along a pre-specified path (presumably containing path
+    that corresponds to eye-movements).
         
     Parameters
     ----------
@@ -761,7 +806,12 @@ class MeasureNaturalImagesWithEyeMovement(VisualExperiment):
 
 class MeasureDriftingSineGratingWithEyeMovement(VisualExperiment):
     """
-    Stimulate the model with a drifting sine grating with simulated eye movement.
+    Present drifting sine grating with simulated eye movement.
+
+    This experiment presents a movie that is generated by translating a 
+    full-field drifting sinusoidal grating movie along a pre-specified path 
+    (presumably containing path that corresponds to eye-movements).
+    
     
     Parameters
     ----------
@@ -823,7 +873,9 @@ class MeasureDriftingSineGratingWithEyeMovement(VisualExperiment):
 
 class MeasureSpontaneousActivity(VisualExperiment):
     """
-    Measure spontaneous activity while presenting blank stimulus (all pixels set to background luminance).
+    Measure spontaneous activity.
+
+    This experiment presents a blank stimulus (all pixels set to background luminance).
         
     Parameters
     ----------
@@ -866,10 +918,21 @@ class MeasureSpontaneousActivity(VisualExperiment):
 
 class MapPhaseResponseWithBarStimulus(VisualExperiment):
     """
-    Flash bar at range of positions displaced prependicular to its elongated axis.
+    Map RF with a bar stimuli.
+
+    This experiment presents a series of flashed bars at pre-specified range of 
+    displacements from the center along the line that is  perpendicularly to 
+    the elongated axis of the bars. This is an experiment commonly used to obtain
+    1D approximation of the 2D receptive field of orientation selective cortical
+    cells.
     
     Parameters
     ----------
+    model : Model
+          The model on which to execute the experiment.
+
+    Other parameters
+    ----------------
     model : Model
           The model on which to execute the experiment.
     
@@ -951,11 +1014,15 @@ class MapPhaseResponseWithBarStimulus(VisualExperiment):
 
 class CorticalStimulationWithStimulatorArrayAndHomogeneousOrientedStimulus(Experiment):
     """
-    This experiment creates a array of stimulators covering an area of cortex, and than stimulates 
-    the array based on the orientation preference of neurons around the given stimulator, such that
-    the stimulation resambles presentation uniformly oriented image, e.g. sinusoidal grating.
+    Stimulation with artificial stimulator array simulating homogeneously
+    oriented visual stimulus.  
+
+    This experiment creates a array of artificial stimulators covering an area of 
+    cortex, and than stimulates the array based on the orientation preference of 
+    neurons around the given stimulator, such that the stimulation resambles 
+    presentation uniformly oriented stimulus, e.g. sinusoidal grating.
     
-    This experiment does not show any stimulus.
+    This experiment does not show any actual visual stimulus.
     
     Parameters
     ----------

@@ -147,16 +147,19 @@ def run_workflow(simulation_name, model_class, create_experiments):
         import pickle
         f = open(Global.root_directory+"modified_parameters","w")
         pickle.dump(modified_parameters,f)
-        f.close()
-        #let's store some basic info about the datastore
-        f = open(Global.root_directory+"info","w")
-        f.write(str({'simulation_run_name' : simulation_run_name, 'model_name' : simulation_name, 'creation_data' : datetime.now().strftime('%d/%m/%Y-%H:%M:%S')}))
-        f.close()
-        
+        f.close()        
 
     setup_logging()
     
     model = model_class(sim,num_threads,parameters)
+
+
+    if mozaik.mpi_comm.rank == 0:
+        #let's store some basic info about the simulation run
+        f = open(Global.root_directory+"info","w")
+        f.write(str({'model_class' : model_class, 'model_docstring' : model_class.__doc__,'simulation_run_name' : simulation_run_name, 'model_name' : simulation_name, 'creation_data' : datetime.now().strftime('%d/%m/%Y-%H:%M:%S')}))
+        f.close()
+
 
     #import cProfile
     #cProfile.run('run_experiments(model,create_experiments(model),parameters)','stats_new')
