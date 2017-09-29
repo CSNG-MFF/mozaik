@@ -1045,11 +1045,11 @@ class CorticalStimulationWithStimulatorArrayAndHomogeneousOrientedStimulus(Exper
     
     def __init__(self,model,parameters):
             Experiment.__init__(self, model,parameters)
-            from mozaik.sheets.direct_stimulator import LocalStimulatorArray
+            from mozaik.sheets.direct_stimulator import LocalStimulatorArrayChR
             
             d  = {}
             for sheet in self.parameters.sheet_list:
-                d[sheet] = [LocalStimulatorArray(model.sheets[sheet],self.parameters.localstimulationarray_parameters)]
+                d[sheet] = [LocalStimulatorArrayChR(model.sheets[sheet],self.parameters.localstimulationarray_parameters)]
             
             self.direct_stimulation = []
 

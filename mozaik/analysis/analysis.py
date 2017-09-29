@@ -730,16 +730,24 @@ class GaussianTuningCurveFit(Analysis):
                            logger.debug('Failed to fit tuning curve, not enough points supplied: %d' % len(self.tc_dict[k][0]))
                            return
                         z = []
+			u = []
+			m = []
                         for i in xrange(0,len(self.pnvs[0].values)):
-                            res = self._fitgaussian(self.tc_dict[k][0],[a[i] for a in self.tc_dict[k][1]],period)
+			    Y = [a[i] for a in self.tc_dict[k][1]]
+                            res,err = self._fitgaussian(self.tc_dict[k][0],Y,period)
                             if res == None:
                                logger.debug('Failed to fit tuning curve %s for neuron %d' % (k,i))
                                return
                             z.append(res)    
-                         
+			    u.append(err)
+                            m.append(max(Y))
                         res = numpy.array(z)
+			err = numpy.array(u)
+			m = numpy.array(m)
                             
                         if res != None:
+                           self.datastore.full_datastore.add_analysis_result(PerNeuronValue(m,self.pnvs[0].ids,self.pnvs[0].value_units,value_name = self.parameters.parameter_name + ' real max  of ' + self.pnvs[0].value_name ,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
+                           self.datastore.full_datastore.add_analysis_result(PerNeuronValue(err,self.pnvs[0].ids,self.pnvs[0].value_units,value_name = self.parameters.parameter_name + ' fitting error of ' + self.pnvs[0].value_name ,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
                            self.datastore.full_datastore.add_analysis_result(PerNeuronValue(res[:,0],self.pnvs[0].ids,self.pnvs[0].value_units,value_name = self.parameters.parameter_name + ' baseline of ' + self.pnvs[0].value_name ,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
                            self.datastore.full_datastore.add_analysis_result(PerNeuronValue(res[:,1],self.pnvs[0].ids,self.pnvs[0].value_units,value_name = self.parameters.parameter_name + ' max of ' + self.pnvs[0].value_name,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))        
                            self.datastore.full_datastore.add_analysis_result(PerNeuronValue(res[:,2],self.pnvs[0].ids,MozaikParametrized.idd(self.st[0]).params()[self.parameters.parameter_name].units,value_name = self.parameters.parameter_name + ' selectivity of '+ self.pnvs[0].value_name,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))        
@@ -766,10 +774,13 @@ class GaussianTuningCurveFit(Analysis):
             
           p1, success = scipy.optimize.leastsq(errfunc, p0[:], args=(X,Y))      
           p1[2]  = abs(p1[2])
-          
+
+	  err = numpy.linalg.norm(fitfunc(p1,X)-Y,2)/numpy.linalg.norm(Y-numpy.mean(Y),2)          
+
           #if the fit is very bad - error greater than 30% of the Y magnitude
-          #if numpy.linalg.norm(fitfunc(p1,X)-Y,2)/numpy.linalg.norm(Y-numpy.mean(Y),2) > 0.4:
-          #   p1 = numpy.array([-1,-1,-1,-1])
+          #if err > 0.2:
+          #    p1 = numpy.array([-1,-1,-1,-1])
+
           #    p1=p0
 
           if True:
@@ -780,9 +791,9 @@ class GaussianTuningCurveFit(Analysis):
               pylab.plot(X,Y,'o')
               pylab.title(str(numpy.linalg.norm(fitfunc(p1,X)-Y)/numpy.linalg.norm(Y))+ "  " + str(numpy.max(Y)))
           if success:
-            return p1
+            return p1,err
           else :
-            return [0,0,0,0]
+            return [-1,-1,-1,-1],1000000000
 
 
 

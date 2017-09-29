@@ -20,6 +20,9 @@ import math
 from mozaik.tools.circ_stat import circular_dist ,circ_mean
 import pylab
 from scipy.integrate import odeint
+import pickle
+import scipy.interpolate
+from mpl_toolkits.mplot3d import Axes3D
 
 logger = mozaik.getMozaikLogger()
 
@@ -385,17 +388,31 @@ class LocalStimulatorArray(DirectStimulator):
         axis_coors = numpy.arange(0,self.parameters.size,self.parameters.spacing) - self.parameters.size/2.0 + self.parameters.spacing/2.0
         stimulator_coordinates = numpy.meshgrid(axis_coors,axis_coors)
 
-        pylab.figure(figsize=(24,6))
-      
+        pylab.figure(figsize=(42,12))
+
+        #let's load up disperssion data and setup interpolation
+        f = open('light_scattering_radial_profiles.pickle','r')
+        radprofs = pickle.load(f)
+        light_flux_lookup =  scipy.interpolate.RegularGridInterpolator((numpy.arange(0,320,20),numpy.arange(354)*0.598804), radprofs, method='linear',bounds_error=False,fill_value=0)
+        #light_flux_lookup =  scipy.interpolate.RectBivariateSpline(numpy.arange(0,320,20),numpy.arange(354)*0.598804, numpy.array(radprofs))
+        
+        # the constant translating the data in radprofs to photons/s/cm^2
+        K = 2.97e26
+        W = 3.9e-10
+
         # now let's calculate mixing weights, this will be a matrix nxm where n is 
         # the number of neurons in the population and m is the number of stimulators
         mixing_weights = []
         x =  stimulator_coordinates[0].flatten()
         y =  stimulator_coordinates[1].flatten()
+        xx,yy = self.sheet.vf_2_cs(self.sheet.pop.positions[0],self.sheet.pop.positions[1])
+
         for i in xrange(0,self.sheet.pop.size):
-            xx,yy = self.sheet.pop.positions[0][i],self.sheet.pop.positions[1][i]
+            xx,yy,zz = self.sheet.pop.positions[0][i],self.sheet.pop.positions[1][i],self.sheet.pop.positions[2][i]
             xx,yy = self.sheet.vf_2_cs(xx,yy)
-            mixing_weights.append(numpy.exp(-0.5  * (numpy.power(x - xx,2)  + numpy.power(y-yy,2)) / numpy.power(self.parameters.itensity_fallof,2)))
+            a = numpy.zeros(len(x))+zz
+            mixing_weights.append(10*K*W*light_flux_lookup(zip(numpy.zeros(len(x))+zz,numpy.sqrt(numpy.power(x - xx,2)  + numpy.power(y-yy,2)))))
+            #mixing_weights.append(numpy.exp(-0.5  * (numpy.power(x - xx,2)  + numpy.power(y-yy,2)) / numpy.power(self.parameters.itensity_fallof,2)))
         assert numpy.shape(mixing_weights) == (self.sheet.pop.size,int(self.parameters.size/self.parameters.spacing) * int(self.parameters.size/self.parameters.spacing))
 
         signal_function = load_component(self.parameters.stimulating_signal)
@@ -403,12 +420,17 @@ class LocalStimulatorArray(DirectStimulator):
         assert numpy.shape(stimulator_signals)[0] == numpy.shape(mixing_weights)[1] , "ERROR: stimulator_signals and mixing_weights do not have matching sizes:" + str(numpy.shape(stimulator_signals)) + " " +str(numpy.shape(mixing_weights))
 
         self.mixed_signals = numpy.dot(mixing_weights,stimulator_signals)
-        pylab.subplot(154)
+        ax = pylab.subplot(154, projection='3d')
         pylab.gca().set_aspect('equal')
         pylab.title('Activation magnitude (neurons)')
-        pylab.scatter(self.sheet.pop.positions[0],self.sheet.pop.positions[1],c=numpy.squeeze(numpy.mean(self.mixed_signals,axis=1)),cmap='gray',vmin=0)
-        #pylab.colorbar()
-        pylab.savefig('LocalStimulatorArrayTest.png')
+        ax.scatter(self.sheet.pop.positions[0],self.sheet.pop.positions[1],self.sheet.pop.positions[2],s=10,c=numpy.squeeze(numpy.mean(self.mixed_signals,axis=1)),cmap='gray',vmin=0)
+        ax = pylab.gca()
+        ax.set_zlim(ax.get_zlim()[::-1])
+
+        logger.info("MMMMMMMMMMMMMMMMM")
+        logger.info(numpy.max(self.mixed_signals))
+        logger.info("MMMMMMMMMMMMMMMMM")
+        
         assert numpy.shape(self.mixed_signals) == (self.sheet.pop.size,numpy.shape(stimulator_signals)[1]), "ERROR: mixed_signals doesn't have the desired size:" + str(numpy.shape(self.mixed_signals)) + " vs " +str((self.sheet.pop.size,numpy.shape(stimulator_signals)[1]))
         
         self.stimulation_duration = numpy.shape(self.mixed_signals)[1] * self.parameters.current_update_interval
@@ -423,26 +445,13 @@ class LocalStimulatorArray(DirectStimulator):
         times[0] = times[0] + 3*self.sheet.sim.state.dt
         for i in xrange(0,len(self.scs)):
             self.scs[i].set_parameters(times=Sequence(times), amplitudes=Sequence(self.mixed_signals[i,:].flatten()))
-            #HAAAAAAAAAAAAACK
-            #self.scs[i].set_parameters(times=Sequence([times[0]]), amplitudes=Sequence([self.mixed_signals[i,:].flatten()[0]]))
         
     def inactivate(self,offset):
         for scs in self.scs:
             scs.set_parameters(times=[offset+3*self.sheet.sim.state.dt], amplitudes=[0.0])
 
 
-class LocalStimulatorArrayChR(LocalStimulatorArray):
-      """
-      Like *LocalStimulatorArray* but the signal calculated to impinge on a neuron is interpreted as light (photons/s/cm^2)
-      impinging on the neuron and the signal is transformed via a model of Channelrhodopsin (courtesy of Quentin Sabatier)
-      to give the final injected current. 
-      
-      Note that we approximate the current by ignoring the voltage dependence of the channels, as it is very expensive 
-      to inject conductance in PyNN. The Channelrhodopsin has reverse potential of ~0, and we assume that our neurons 
-      sits on average at -60mV to calculate the current. 
-      """
-
-      def ChRsystem(y,time,X,sampling_period):
+def ChRsystem(y,time,X,sampling_period):
           PhoC1toO1 = 1.6e-19
           PhoC2toO2 = 4e-20
           PhoC1toC2 = 3e-20
@@ -474,18 +483,34 @@ class LocalStimulatorArrayChR(LocalStimulatorArray):
 
           return (_O1,_O2,_C1,_C2,_S)
 
+
+class LocalStimulatorArrayChR(LocalStimulatorArray):
+      """
+      Like *LocalStimulatorArray* but the signal calculated to impinge on a neuron is interpreted as light (photons/s/cm^2)
+      impinging on the neuron and the signal is transformed via a model of Channelrhodopsin (courtesy of Quentin Sabatier)
+      to give the final injected current. 
+      
+      Note that we approximate the current by ignoring the voltage dependence of the channels, as it is very expensive 
+      to inject conductance in PyNN. The Channelrhodopsin has reverse potential of ~0, and we assume that our neurons 
+      sits on average at -60mV to calculate the current. 
+      """
+
       def __init__(self, sheet, parameters):
           LocalStimulatorArray.__init__(self, sheet,parameters)
           times = numpy.arange(0,self.stimulation_duration,self.parameters.current_update_interval)
-
           for i in xrange(0,len(self.scs)):
-              res = odeint(LocalStimulatorArrayChR.ChRsystem,[0,0,0.8,0.2,0],times,args=(self.mixed_signals[i,:],self.parameters.current_update_interval))
+              res = odeint(ChRsystem,[0,0,0.8,0.2,0],times,args=(self.mixed_signals[i,:].flatten(),self.parameters.current_update_interval))
               self.mixed_signals[i,:] = 60 * (17*res[:,0] + 2.9 * res[:,1]); # the 60 corresponds to the 60mV difference between ChR reverse potential of 0mV and our expected mean Vm of about 60mV. This happens to end up being in nA which is what pyNN expect for current injection.
+        
+          logger.info("NNNNNNNNNNNNNNNNN")
+          logger.info(numpy.max(self.mixed_signals))
+          logger.info("NNNNNNNNNNNNNNNNN")
+
 
           pylab.subplot(155)
-          pylab.gca().set_aspect('equal')
           pylab.title('Single neuron current injection profile')
-          pylab.plot(times,self.mixed_signals[0,:])
+          pylab.plot(times,self.mixed_signals[100,:])
+          pylab.savefig('LocalStimulatorArrayTest.png')
 
 
 def test_stimulating_function(sheet,coordinates,current_update_interval,parameters):
@@ -515,7 +540,9 @@ def test_stimulating_function(sheet,coordinates,current_update_interval,paramete
     signals = []
 
     for i in xrange(0,len(coordinates)):
-        signals.append(parameters.scale*numpy.array([numpy.exp(-numpy.power(circular_dist(parameters.orientation,mean_orientations[i],numpy.pi),2)/parameters.sharpness) for tmp in xrange(parameters.duration/current_update_interval)]))
+        tmp = numpy.zeros(parameters.duration/current_update_interval)
+        tmp[parameters.onset_time/current_update_interval:parameters.offset_time/current_update_interval] = numpy.exp(-numpy.power(circular_dist(parameters.orientation,mean_orientations[i],numpy.pi),2)/parameters.sharpness)
+        signals.append(parameters.scale*tmp)
 
     pylab.subplot(153)
     pylab.gca().set_aspect('equal')

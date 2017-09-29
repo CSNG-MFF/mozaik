@@ -1062,7 +1062,6 @@ class ActivityMovie(Plotting):
         if self.parameters.exp_time_constant != 0:
           etc = self.parameters.exp_time_constant*pq.ms
           etc = etc.rescale(units).magnitude
-          print numpy.floor(3*etc/bw)
           exp_kernel = numpy.flip(numpy.exp(-(bins[:numpy.int(numpy.floor(3*etc/bw))]-start)/etc),axis=0);
 
         for spike_trains in sp:
@@ -1676,7 +1675,7 @@ class PlotTemporalTuningCurve(Plotting):
             xs = [] 
             ys = []
             period = st[0].params()[self.parameters.parameter_name].period
-            print dic.keys()
+
             for k in sorted(dic.keys()):    
                 (par, val) = dic[k]
                 error = None
@@ -1696,9 +1695,6 @@ class PlotTemporalTuningCurve(Plotting):
                     val = val[:,idx]
 
                 par,val = zip(*sorted(zip(numpy.array(par),val)))
-                print "OOO"
-                print par,val
-                print "OOO"
 
                 # if we have a period of pi or 2*pi
                 if period==pi and self.centered_response_indexes==None:
@@ -1736,8 +1732,6 @@ class PlotTemporalTuningCurve(Plotting):
             if not self.parameters.mean:
                 errors = None 
             params = self.create_params(asl[0].y_axis_name,asl[0].y_axis_units,i==0,i==(len(self.asls)-1),period,self.parameters.neurons[idx],numpy.squeeze(xs),idx)
-            print "RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR"
-            print numpy.squeeze(xs)
             plots.append(("TuningCurve_" + asl[0].y_axis_name,OrderedAnalogSignalListPlot(numpy.squeeze(ys), numpy.squeeze(xs)),gs[i],params))   
         
         return plots
