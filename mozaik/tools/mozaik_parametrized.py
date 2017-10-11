@@ -10,11 +10,14 @@ allow None value, are instantiated and allow for definition of units and period.
 
 
 from param.parameterized import Parameterized
-from param import Number, Integer, String, produce_value
+from param import Number, Integer, String, produce_value, ClassSelector
 from sets import Set
+from parameters import ParameterSet
 import logging
 import inspect
 import collections
+from mozaik.tools.distribution_parametrization import ParameterWithUnitsAndPeriod, MozaikExtendedParameterSet
+
 
 import param.parameterized
 param.parameterized.docstring_signature=False
@@ -45,7 +48,7 @@ class SInteger(Integer):
     A mozaik parameter that can hold an integer. For the full range of options the 
     parameter offers reffer to the `Integer` class in `param <http://ioam.github.io/param/>`_ package.
     
-    On top of the Integer class it adds the ability to specify units in constructor. The units should be `quantities.units`.
+    On top of the Integer class it adds the ability to specify period in constructor. The units should be `quantities.units`.
     """    
     __slots__ = ['units','period']
 
@@ -75,11 +78,38 @@ class SString(String):
         self.period = None
 
 
+class SNumber(Number):
+    """
+    A mozaik parameter that can hold a number. For the full range of options the 
+    parameter offers reffer to the `Number` class in `param <http://ioam.github.io/param/>`_ package.
+    
+    On top of the Number class it adds the ability to specify units and period in constructor.
+    The units should be `quantities.units`.
+    """
+    __slots__ = ['units','period']
+
+    def __init__(self, units, period=None, **params):
+        params.setdefault('default',None)
+        super(SNumber, self).__init__(allow_None=True,
+                                      instantiate=True, **params)
+        self.units = units
+        self.period = period
+
+class SParameterSet(ClassSelector):
+    """
+    A mozaik parameter that can hold a ParameterSet. Such parameter is treated in a special way: see MozaikParametrized for more details.
+    """
+    def __init__(self, **params):
+        params.setdefault('default',None)
+        super(SParameterSet, self).__init__(MozaikExtendedParameterSet,allow_None=True,
+                                      instantiate=True, **params)
+
+
 
 class MozaikParametrized(Parameterized):
     """
     We extend the topographica Parametrized package to constrain the parametrization.
-    We allow only three parameter types (SNumber or SInteger or SString) that we have 
+    We allow only four parameter types (SNumber or SInteger or SString or SParameterSet) that we have 
     extended with further information. 
     
     This allows us to define several useful operations over such parametrized objects that
@@ -103,20 +133,97 @@ class MozaikParametrized(Parameterized):
     _module_cache = {}
     
     def __init__(self, **params):
+        self.cached_get_param_values = None
         Parameterized.__init__(self, **params)
         self.module_path = inspect.getmodule(self).__name__
         self.name = self.__class__.__name__
+        
 
         for name in self.params():
             o = self.params()[name]
-            if not (isinstance(o,SNumber) or isinstance(o,SInteger) or isinstance(o,SString)):
-               raise ValueError("The parameter %s is not of type SNumber or SInteger or SString but of type %s." % (name,type(o)))
+            if not (isinstance(o,SNumber) or isinstance(o,SInteger) or isinstance(o,SString) or isinstance(o,SParameterSet)):
+               raise ValueError("The parameter %s is not of type SNumber or SInteger or SString or SParameterSet but of type %s." % (name,type(o)))
  
         for (name, value) in self.get_param_values():
             if value == None and self.params()[name].allow_None==False:                
                 logger.error("The parameter %s was not initialized" % name)
                 raise ValueError("The parameter %s was not initialized" % name)
 
+        def _expand_parameter_set(ps):
+            """
+            Helper function that expands parameter set.
+            """
+            ret = []
+            for k in ps.keys():
+                if isinstance(ps[k],MozaikExtendedParameterSet):
+                   ret += [(k + '_' + p,v)  for p,v in  _expand_parameter_set(ps[k])]
+                else:
+                   ret.append((k,ps[k]))       
+            return ret
+
+        # find out which params are SParameterSet
+        self.paramset_params_names =  [ps for ps in self.params().keys() if isinstance(self.params()[ps],SParameterSet)]
+
+        # store expanded SParameterSet parameters
+        self.expanded_paramset_params = []
+        for ps in self.paramset_params_names:
+                if getattr(self,ps) != None:
+                    self.expanded_paramset_params+=_expand_parameter_set(getattr(self,ps))
+        self.expanded_paramset_params.sort(key=lambda tup: tup[0])
+
+        if self.expanded_paramset_params != []:
+            self.expanded_params_names = zip(*self.expanded_paramset_params)[0]
+        else:
+            self.expanded_params_names= []
+
+        assert ((set([t[0] for t in self.expanded_paramset_params]) & set(self.params().keys())) == set([])) , ("Conflict between MozaikParametrized and expanded ParameterSet parameters. Intersection: %s " % str(set([t[0] for t in self.expanded_paramset_params]) & set(self.params().keys())))
+
+        # and lets also have a dictionary version of the parameters
+        self.expanded_paramset_params_dict = self.params().copy()
+
+        # remove SParemeterSet parameters 
+        for key in self.expanded_paramset_params_dict.keys():
+            if isinstance(self.expanded_paramset_params_dict[key],SParameterSet):
+               del self.expanded_paramset_params_dict[key]
+        
+        self.expanded_paramset_params_dict.update(dict(self.expanded_paramset_params))
+
+
+    def set_in_dict(path, dt,value):
+        keys = path.split('_')
+        for key in keys[-1]:
+            dt = dt[key]
+        dt[keys[-1]]=value
+    
+
+    def __setattr__(self,attribute_name,value):
+        """
+        We need to override the Parametrized __setattr__ to handle setting of SParameterSet parameters.
+        """
+        try:
+            Parameterized.__setattr__(self,attribute_name,value)
+            Parameterized.__setattr__(self,'cached_get_param_values',None)
+        except AttributeError: 
+            if attribute_name in self.expanded_paramset_params_dict.keys():
+                
+                self.expanded_paramset_params_dict[attribute_name] = value;
+
+                for z in self.expanded_paramset_params:
+                    if z[0] == attribute_name:
+                       z[1] =value
+                       break;
+
+                path = attribute_name.split('_')
+                set_in_dict(path[1:,],mcs.params()[path[0]],value)
+            else:
+                raise    
+    
+
+    def get_param_values(self,onlychanged=False):
+        if self.cached_get_param_values == None:
+           Parameterized.__setattr__(self,'cached_get_param_values',Parameterized.get_param_values(self,onlychanged))
+        return self.cached_get_param_values
+        
     def equalParams(self, other):
         """
         Returns True if self and other have the same parameters and all their
@@ -125,54 +232,45 @@ class MozaikParametrized(Parameterized):
         JACOMMENT: This seems to work only because get_param_values sorts the
         list by names which is undocumented!
         """
-        return self.get_param_values() == other.get_param_values()
+        return (self.get_param_values() == other.get_param_values()) and (self.expanded_paramset_params == other.expanded_paramset_params)
 
-    def equalParamsExcept(self, other, exceptt):
+    def getParams(self):
         """
-        Returns True if self and other have the same parameters and all their
-        values match with the exception of the parameter in except.
-        False otherwise.
+        This is the function that MozaikParametrized objects should use. It returns all the MozaikParametrized, + the expanded parameters from SParameterSet parameters, - the SParameterSet.
+        In Mozaik all comparison and filtering operations should always be done based on this.
         """
-        a = self.get_param_values()
-        b = self.get_param_values()
-        for k in exceptt:
-            for i, (key, value) in enumerate(a):
-                if key == k:
-                    break
-            a.pop(i)
+        return self.expanded_paramset_params_dict
 
-            for i, (key, value) in enumerate(b):
-                if key == k:
-                    break
-            b.pop(i)
-
-        return a == b
-
-    @classmethod
-    def params(cls, parameter_name=None):
+    def getParamValue(self,name):
         """
-        In MozaikParametrized we hide parameters with precedence below 0 from
-        users.
+        This is the function that MozaikParametrized objects should use to retrieve a value of a parameter.
         """
-        d = super(MozaikParametrized,cls).params(parameter_name).copy()
-        for k in d.keys():
-            if d[k].precedence < 0 and d[k].precedence != None:
-                del d[k]
-
-        return d
+        if name in self.expanded_params_names:
+            if isinstance(self.expanded_paramset_params_dict[name],ParameterWithUnitsAndPeriod):
+                return  self.expanded_paramset_params_dict[name].value
+            else: 
+                return self.expanded_paramset_params_dict[name]
+        else:
+            return getattr(self,name)
 
     def __str__(self):
         """
         Turn the MozaikParametrized instance into string - this stores ONLY the names and values of each parameter and the module path from which this instance class came from.
         """
-        settings = ['\"%s\":%s' % (name, repr(val)) for name, val in self.get_param_values()]
+        settings =[]
+
+        for name, val in self.get_param_values():
+            if isinstance(val,MozaikExtendedParameterSet):
+                settings.append('\"%s\":MozaikExtendedParameterSet(%s)' % (name, repr(val)))
+            else:
+                settings.append('\"%s\":%s' % (name, repr(val)))
+        
         r = "{\"module_path\" :" + "\"" + self.module_path + "\"" +',' + ", ".join(settings) + "}"
         return r
 
     def __repr__(self):
         """
-        Returns the description of the ASD - its class name and the list of its
-        parameters and their values.
+        Returns the description of the MozaikParametrized instance - its class name and the list of its parameters and their values.
         """
         param_str = "\n".join(['   \"%s\":%s' % (name, repr(val))
                                for name, val in self.get_param_values()])
@@ -222,9 +320,7 @@ class MozaikParametrized(Parameterized):
         z = __import__(module_path, globals(), locals(), name)
         
         cls = getattr(z,name)
-	return cls(**params)        
-
-    
+        return cls(**params)        
     
 """
 Helper functions that allow querying lists of MozaikParametrized objects.
@@ -269,14 +365,14 @@ def filter_query(object_list, extra_data_list=None,allow_non_existent_parameters
     
     def fl(x,kwargs,allow): 
         x = x[0]
-        if not allow and not (set(kwargs.keys()) <= set(x.params().keys())):
+        if not allow and not (set(kwargs.keys()) <= set(x.getParams().keys())):
            return False 
-        keys = set(kwargs.keys()) & set(x.params().keys())
+        keys = set(kwargs.keys()) & set(x.getParams().keys())
         for k in keys:
             if not isinstance(kwargs[k],list): 
-                if kwargs[k] != getattr(x,k):
+                if kwargs[k] != x.getParamValue(k):
                    return False
-            elif not (getattr(x,k) in kwargs[k]):
+            elif not (x.getParamValue(k) in kwargs[k]):
                return False
         return True
     
@@ -299,7 +395,7 @@ def _colapse(dd, param):
     for s in dd:
         s1 = MozaikParametrized.idd(s)
 
-        if param not in s1.params().keys():
+        if param not in s1.getParams().keys():
             raise KeyError('colapse: MozaikParametrized object ' + str(s1) + ' does not contain parameter [%s]' % (param))
 
         setattr(s1,param,None)
@@ -391,11 +487,13 @@ def varying_parameters(parametrized_objects):
         raise ValueError("varying_parameters: accepts only MozaikParametrized lists with the same parameters")
 
     varying_params = collections.OrderedDict()
-    for n in parametrized_objects[0].params().keys():
+    for n in parametrized_objects[0].getParams().keys():
         for o in parametrized_objects:
-            if getattr(o,n) != getattr(parametrized_objects[0],n):
+            logger.info(o.getParams().keys())
+            if o.getParamValue(n) != parametrized_objects[0].getParamValue(n):
                 varying_params[n] = True
                 break
+
     return varying_params.keys()
 
 def parameter_value_list(parametrized_objects,param):
@@ -415,7 +513,7 @@ def parameter_value_list(parametrized_objects,param):
     
     A list of different values that the parameter param has across the `MozaikParametrized` objects in `parametrized_objects` list.
     """
-    return set([getattr(obj,param) for obj in parametrized_objects])
+    return set([obj.getParamValue(param) for obj in parametrized_objects])
     
 def identical_parametrized_object_params(parametrized_objects):
     """
@@ -428,7 +526,7 @@ def identical_parametrized_object_params(parametrized_objects):
     Otherwise returns False.
     """
     for o in parametrized_objects:
-        if set(o.params().keys()) != set(parametrized_objects[0].params().keys()):
+        if set(o.getParams().keys()) != set(parametrized_objects[0].getParams().keys()):
                 return False
     return True
                 
@@ -469,21 +567,21 @@ def matching_parametrized_object_params(parametrized_objects,params=None,except_
         raise ValueError('identical_parametrized_object_params cannot be called with both params and except_params equal to None')
     
     if except_params == None and params == None:
-        params = parametrized_objects[0].params().keys()
+        params = parametrized_objects[0].getParams().keys()
     
     if len(parametrized_objects) == 0:
         return True
     else:
-        first =  parametrized_objects[0].params()
+        first =  parametrized_objects[0].getParams()
 
-    if not all([set(first.keys()) == set(p.params().keys()) for p in parametrized_objects]):
+    if not all([set(first.keys()) == set(p.getParams().keys()) for p in parametrized_objects]):
        raise ValueError('all ADS in the data store do not have the same parameters')
 
     if except_params != None:
        params = list((set(first.keys())-set(except_params)))
     
     for o in parametrized_objects:
-        if [getattr(parametrized_objects[0],k) for k in params] != [getattr(o,k) for k in params]:
+        if [parametrized_objects[0].getParamValue(k) for k in params] != [o.getParamValue(k) for k in params]:
            return False
                     
     return True
@@ -515,12 +613,13 @@ def colapse_to_dictionary(value_list, parametrized_objects, parameter_name):
       values that the parameter_name had in the parametrized_objects, and the values are the
       values from value_list that correspond to the keys.          
     """
+    logger.info(parameter_name)
     assert(len(value_list) == len(parametrized_objects))
     d = collections.OrderedDict()
 
     for (v, s) in zip(value_list, parametrized_objects):
         s = MozaikParametrized.idd(s)
-        val = getattr(s,parameter_name)
+        val = s.getParamValue(parameter_name)
         setattr(s,parameter_name,None)
         if str(s) in d:
             (a, b) = d[str(s)]
@@ -532,6 +631,9 @@ def colapse_to_dictionary(value_list, parametrized_objects, parameter_name):
     for k in d:
         (a, b) = d[k]
         dd[k] = (a, b)
+
+    logger.info(str(dd))
+    logger.info('RRRRR')
     return dd
 
 

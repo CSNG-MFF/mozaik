@@ -286,7 +286,7 @@ def partition_analysis_results_by_parameters_query(dsv,parameter_list=None,excpt
         assert parameter_list != None , "parameter_list has to be given"
         if excpt:
             assert equal_ads_type(dsv), "If excpt==True you have to provide a dsv containing the same ADS type"
-            parameter_list = set(dsv.analysis_results[0].params().keys()) - (set(parameter_list) | set(['name']))
+            parameter_list = set(dsv.analysis_results[0].getParams().keys()) - (set(parameter_list) | set(['name']))
             
         values, st = colapse(dsv.analysis_results,dsv.analysis_results,parameter_list=parameter_list,allow_non_identical_objects=True)
         dsvs = []
@@ -360,7 +360,7 @@ def partition_analysis_results_by_stimulus_parameters_query(dsv,parameter_list=N
         
         if excpt:
             assert matching_parametrized_object_params(st,params=['name']), "If excpt==True you have to provide a dsv containing the same ADS type"
-            parameter_list = set(st[0].params().keys()) - (set(parameter_list) | set(['name']))
+            parameter_list = set(st[0].getParams().keys()) - (set(parameter_list) | set(['name']))
         
         
         

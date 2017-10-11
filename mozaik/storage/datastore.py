@@ -440,8 +440,8 @@ class DataStore(DataStoreView):
                logger.info("Warning: ADS with the same parametrization already added in the datastore.: %s" % (str(result))) 
                self.analysis_results[i] = result
                return
-            logger.error("Analysis Data Structure with the same parametrization already added in the datastore. Currently uniqueness is required. The ADS was not added. User should modify analysis specification to avoid this!: %s" % (str(result)))
-            raise ValueError("Analysis Data Structure with the same parametrization already added in the datastore. Currently uniqueness is required. The ADS was not added. User should modify analysis specification to avoid this!: %s" % (str(result)))
+            logger.error("Analysis Data Structure with the same parametrization already added in the datastore. Currently uniqueness is required. The ADS was not added. User should modify analysis specification to avoid this!: \n %s \n %s " % (str(result),str(ads)))
+            raise ValueError("Analysis Data Structure with the same parametrization already added in the datastore. Currently uniqueness is required. The ADS was not added. User should modify analysis specification to avoid this!: %s \n %s" % (str(result),str(ads)))
 
 class Hdf5DataStore(DataStore):
     """
@@ -501,8 +501,8 @@ class Hdf5DataStore(DataStore):
                logger.info("Warning: ADS with the same parametrization already added in the datastore.: %s" % (str(result))) 
                self.analysis_results[i] = result
                return
-            logger.error("Analysis Data Structure with the same parametrization already added in the datastore. Currently uniqueness is required. The ADS was not added. User should modify analysis specification to avoid this!: %s" % (str(result)))
-            raise ValueError("Analysis Data Structure with the same parametrization already added in the datastore. Currently uniqueness is required. The ADS was not added. User should modify analysis specification to avoid this!: %s" % (str(result)))
+            logger.error("Analysis Data Structure with the same parametrization already added in the datastore. Currently uniqueness is required. The ADS was not added. User should modify analysis specification to avoid this!: \n %s \n %s " % (str(result),str(ads)))
+            raise ValueError("Analysis Data Structure with the same parametrization already added in the datastore. Currently uniqueness is required. The ADS was not added. User should modify analysis specification to avoid this!: %s \n %s" % (str(result),str(ads)))
 
 
 

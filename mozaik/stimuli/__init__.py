@@ -20,7 +20,7 @@ import quantities as qt
 import numpy
 import mozaik
 from operator import itemgetter
-from mozaik.tools.mozaik_parametrized import MozaikParametrized, SNumber, SInteger, SString
+from mozaik.tools.mozaik_parametrized import MozaikParametrized, SNumber, SInteger, SString, SParameterSet
 import collections
 
 
@@ -34,7 +34,8 @@ class BaseStimulus(MozaikParametrized):
     frame_duration = SNumber(qt.ms, doc="The duration of single frame")
     duration = SNumber(qt.ms, doc="The duration of stimulus")
     trial = SInteger(doc="The trial of the stimulus")
-    direct_stimulation_name = SString(default="None",doc="The name of the artifical stimulation protocol")
+    direct_stimulation_name = SString(default=None,doc="The name of the artifical stimulation protocol")
+    direct_stimulation_parameters = SParameterSet(default=None,doc="The parameters with which the direct stimulation protocol has been initialized")
     
     def __init__(self, **params):
         MozaikParametrized.__init__(self, **params)
@@ -52,7 +53,7 @@ class BaseStimulus(MozaikParametrized):
         """
         Returns number of parameters of the stimulus.
         """
-        return len(self.get_param_values())
+        return len(self.getParams().keys())
 
     def frames(self):
         """
