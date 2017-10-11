@@ -55,18 +55,20 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
     
     # if value_names is None lets set it to set of value_names in the first datastore
     if value_names == None:
-        value_names = [ads.value_name for ads in param_filter_query(datastores[10][1],identifier='SingleValue').get_analysis_result()]
-        value_names = set(sorted(value_names))
-    
+	value_names = set([])
+	for d in datastores:
+    	    value_names.update(set([ads.value_name for ads in param_filter_query(d[1],identifier='SingleValue').get_analysis_result()]))
+        
+	value_names = set(sorted(value_names))
+    print "Value names:"    
     print value_names
     
     # Lets first make sure that the value_names uniqly identify a SingleValue ADS in each DataStore and 
     # that they exist in each DataStore.
-    for (param_values,datastore) in datastores:
+    for (param_values,datastore) in datastores: 
         for v in value_names:
             if len(param_filter_query(datastore,identifier='SingleValue',value_name=v).get_analysis_result()) > 1:
                 param_filter_query(datastore,identifier='SingleValue',value_name=v).print_content(full_ADS=True)
-            
             #assert len(param_filter_query(datastore,identifier='SingleValue',value_name=v).get_analysis_result()) == 1, "Error, %d ADS with value_name %s found for parameter combination: %s" % (len(param_filter_query(datastore,identifier='SingleValue',value_name=v).get_analysis_result()),v, str([str(a) + ':' + str(b) for (a,b) in zip(parameters,param_values)]))
     
     rows = math.ceil(1.0*len(value_names)/cols)
@@ -75,27 +77,31 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
                 
     print rows
     print cols
+    print "Plotting"
     for i,value_name in enumerate(value_names): 
         pylab.subplot(rows,cols,i+1)
         if len(parameters) == 1:
                x = []
                y = []
                for (param_values,datastore) in datastores: 
-                   x.append(param_values[0]) 
-                   y.append(float(param_filter_query(datastore,identifier='SingleValue',value_name=value_name).get_analysis_result()[0].value))
+                       x.append(param_values[0]) 
+	               y.append(float(adss[0].value))
                pylab.plot(x,y)
                pylab.plot(x,y,marker='o')
                pylab.xlabel(parameters[sorted_parameter_indexes[0]]) 
                pylab.ylabel(value_name) 
                
         elif len(parameters) == 2:
+	       print i
                x = []
                y = []
                z = []
                for (param_values,datastore) in datastores: 
-                   x.append(param_values[sorted_parameter_indexes[0]]) 
-                   y.append(param_values[sorted_parameter_indexes[1]]) 
-                   z.append(float(param_filter_query(datastore,identifier='SingleValue',value_name=value_name).get_analysis_result()[0].value))
+		   adss = param_filter_query(datastore,identifier='SingleValue',value_name=value_name).get_analysis_result()
+		   if len(adss)>0:
+			x.append(param_values[sorted_parameter_indexes[0]]) 
+			y.append(param_values[sorted_parameter_indexes[1]]) 
+			z.append(float(adss[0].value))
                if treat_nan_as_zero: 
                   z = numpy.nan_to_num(z)
                
