@@ -87,7 +87,7 @@ class Experiment(ParametrizedObject):
             if self.direct_stimulation == None:
                ds = {}
             else:
-               ds = self.direct_stimulation[self.stimuli.index(s)]
+               ds = self.direct_stimulation[i]
             (segments,null_segments,input_stimulus,simulator_run_time) = self.model.present_stimulus_and_record(s,ds)
             srtsum += simulator_run_time
             data_store.add_recording(segments,s)
@@ -150,14 +150,14 @@ class PoissonNetworkKick(Experiment):
     def __init__(self,model,parameters):
             Experiment.__init__(self, model,parameters)
             from mozaik.sheets.direct_stimulator import Kick
-            
-            d  = {}
-            for i,sheet in enumerate(self.parameters.sheet_list):
-                d[sheet] = [Kick(model.sheets[sheet],ParameterSet({'exc_firing_rate' : self.parameters.lambda_list[i],
+
+            p = ParameterSet({'exc_firing_rate' : self.parameters.lambda_list[i],
                                                       'exc_weight' : self.parameters.weight_list[i],
                                                       'drive_period' : self.parameters.drive_period,
                                                       'population_selector' : self.parameters.stimulation_configuration})
-                                )]
+            d  = {}
+            for i,sheet in enumerate(self.parameters.sheet_list):
+                d[sheet] = [Kick(model.sheets[sheet],p)]
             
             self.direct_stimulation = [d]
             self.stimuli.append(
@@ -165,7 +165,8 @@ class PoissonNetworkKick(Experiment):
                                             frame_duration=self.parameters.duration, 
                                             duration=self.parameters.duration,
                                             trial=0,
-                                            direct_stimulation_name='Kick'
+                                            direct_stimulation_name='Kick',
+                                            direct_stimulation_parameters = p
                                          )
                                 )
         

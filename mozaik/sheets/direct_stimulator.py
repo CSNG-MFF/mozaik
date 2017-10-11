@@ -541,7 +541,7 @@ def test_stimulating_function(sheet,coordinates,current_update_interval,paramete
 
     for i in xrange(0,len(coordinates)):
         tmp = numpy.zeros(parameters.duration/current_update_interval)
-        tmp[parameters.onset_time/current_update_interval:parameters.offset_time/current_update_interval] = numpy.exp(-numpy.power(circular_dist(parameters.orientation,mean_orientations[i],numpy.pi),2)/parameters.sharpness)
+        tmp[parameters.onset_time/current_update_interval:parameters.offset_time/current_update_interval] = numpy.exp(-numpy.power(circular_dist(parameters.orientation.value,mean_orientations[i],numpy.pi),2)/parameters.sharpness)
         signals.append(parameters.scale*tmp)
 
     pylab.subplot(153)

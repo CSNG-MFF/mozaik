@@ -4,6 +4,7 @@ from parameters import ParameterSet
 import mozaik.stimuli.vision.topographica_based as topo
 import numpy
 from mozaik.stimuli import InternalStimulus
+from mozaik.tools.distribution_parametrization import ParameterWithUnitsAndPeriod, MozaikExtendedParameterSet
 
 logger = mozaik.getMozaikLogger()
 
@@ -1060,6 +1061,65 @@ class CorticalStimulationWithStimulatorArrayAndHomogeneousOrientedStimulus(Exper
                                                 frame_duration=self.parameters.localstimulationarray_parameters.stimulating_signal_parameters.duration, 
                                                 duration=self.parameters.localstimulationarray_parameters.stimulating_signal_parameters.duration,
                                                 trial=i,
-                                                direct_stimulation_name='LocalStimulatorArray'
+                                                direct_stimulation_name='LocalStimulatorArray',
+                                                direct_stimulation_parameters=self.parameters.localstimulationarray_parameters
                                              )
                                     )
+
+
+class CorticalStimulationWithStimulatorArrayAndOrientationTuningProtocol(Experiment):
+    """
+    Stimulation with artificial stimulator array simulating homogeneously
+    oriented visual stimulus.  
+
+    This experiment creates a array of artificial stimulators covering an area of 
+    cortex, and than stimulates the array based on the orientation preference of 
+    neurons around the given stimulator, such that the stimulation resambles 
+    presentation uniformly oriented stimulus, e.g. sinusoidal grating.
+    
+    This experiment does not show any actual visual stimulus.
+    
+    Parameters
+    ----------
+    model : Model
+          The model on which to execute the experiment.
+
+    Other parameters
+    ----------------
+  
+    sheet_list : int
+               The list of sheets in which to do stimulation.
+    """
+    
+    required_parameters = ParameterSet({
+            'sheet_list' : list,
+            'num_trials' : int,
+            'num_orientations' : int,
+            'localstimulationarray_parameters' : ParameterSet,
+    })
+
+    
+    def __init__(self,model,parameters):
+            Experiment.__init__(self, model,parameters)
+            from mozaik.sheets.direct_stimulator import LocalStimulatorArrayChR
+            
+            self.direct_stimulation = []
+            
+            for i in xrange(self.parameters.num_orientations):
+                p = MozaikExtendedParameterSet(self.parameters.localstimulationarray_parameters.tree_copy().as_dict())
+                p.stimulating_signal_parameters.orientation = ParameterWithUnitsAndPeriod(numpy.pi/self.parameters.num_orientations * i,period=numpy.pi)
+                d  = {}
+                for sheet in self.parameters.sheet_list:
+                    d[sheet] = [LocalStimulatorArrayChR(model.sheets[sheet],p)]
+
+                for i in xrange(0,self.parameters.num_trials):
+                    self.direct_stimulation.append(d)
+                    self.stimuli.append(
+                                InternalStimulus(   
+                                                    frame_duration=self.parameters.localstimulationarray_parameters.stimulating_signal_parameters.duration, 
+                                                    duration=self.parameters.localstimulationarray_parameters.stimulating_signal_parameters.duration,
+                                                    trial=i,
+                                                    direct_stimulation_name='LocalStimulatorArray',
+                                                    direct_stimulation_parameters=p
+                                                 )
+                                        )                

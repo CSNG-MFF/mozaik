@@ -85,7 +85,7 @@ class ModulationRatio(Analysis):
                 f0 = []
                 f1 = []
                 ids = []
-                frequency = MozaikParametrized.idd(st).temporal_frequency * MozaikParametrized.idd(st).params()['temporal_frequency'].units
+                frequency = MozaikParametrized.idd(st).temporal_frequency * MozaikParametrized.idd(st).getParams()['temporal_frequency'].units
                 for (orr, ppsth) in zip(vl[0], vl[1]):
                     for j in numpy.nonzero(orr == closest_presented_orientation)[0]:
                         if or_pref.ids[j] in ppsth.ids:
@@ -176,13 +176,13 @@ class Analog_F0andF1(Analysis):
                 if len(dsv.get_segments()) != 0:
                   assert queries.equal_stimulus_type(self.datastore) , "Data store has to contain only recordings to the same stimulus type"
                   st = self.datastore.get_stimuli()[0]
-                  assert MozaikParametrized.idd(st).params().has_key('temporal_frequency'), "The stimulus has to have parameter temporal_frequency which is used as first harmonic"
+                  assert MozaikParametrized.idd(st).getParams().has_key('temporal_frequency'), "The stimulus has to have parameter temporal_frequency which is used as first harmonic"
 
                   segs1, stids = colapse(dsv.get_segments(),dsv.get_stimuli(),parameter_list=['trial'],allow_non_identical_objects=True)
                   for segs,st in zip(segs1, stids):
                       first_analog_signal = segs[0].get_esyn(segs[0].get_stored_esyn_ids()[0])
                       duration = first_analog_signal.t_stop - first_analog_signal.t_start
-                      frequency = MozaikParametrized.idd(st).temporal_frequency * MozaikParametrized.idd(st).params()['temporal_frequency'].units
+                      frequency = MozaikParametrized.idd(st).temporal_frequency * MozaikParametrized.idd(st).getParams()['temporal_frequency'].units
                       period = 1/frequency
                       period = period.rescale(first_analog_signal.t_start.units)
                       cycles = duration / period
@@ -208,12 +208,12 @@ class Analog_F0andF1(Analysis):
                 # AnalogSignalList part 
                 dsv = queries.param_filter_query(dsv, sheet_name=sheet,name='AnalogSignalList')
                 for asl in dsv.get_analysis_result():
-                    assert MozaikParametrized.idd(asl.stimulus_id).params().has_key('temporal_frequency'), "The stimulus has to have parameter temporal_frequency which is used as first harmonic"
+                    assert MozaikParametrized.idd(asl.stimulus_id).getParams().has_key('temporal_frequency'), "The stimulus has to have parameter temporal_frequency which is used as first harmonic"
 
                     signals = asl.asl
                     first_analog_signal = signals[0]
                     duration = first_analog_signal.t_stop - first_analog_signal.t_start
-                    frequency = MozaikParametrized.idd(asl.stimulus_id).temporal_frequency * MozaikParametrized.idd(asl.stimulus_id).params()['temporal_frequency'].units
+                    frequency = MozaikParametrized.idd(asl.stimulus_id).temporal_frequency * MozaikParametrized.idd(asl.stimulus_id).getParams()['temporal_frequency'].units
                     period = 1/frequency
                     period = period.rescale(first_analog_signal.t_start.units)
                     cycles = duration / period
@@ -328,9 +328,9 @@ class SizeTuningAnalysis(Analysis):
                             max_responses.append(max_response)
                             
                             
-                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(max_responses,self.parameters.neurons,self.st[0].params()["radius"].units,value_name = 'Max. response of ' + self.pnvs[0].value_name ,sheet_name=self.parameters.sheet_name,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
-                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(crf_sizes,self.parameters.neurons,self.st[0].params()["radius"].units,value_name = 'Max. facilitation radius of ' + self.pnvs[0].value_name ,sheet_name=self.parameters.sheet_name,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
-                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(supp_sizes,self.parameters.neurons,self.st[0].params()["radius"].units,value_name = 'Max. suppressive radius of ' + self.pnvs[0].value_name ,sheet_name=self.parameters.sheet_name,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
+                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(max_responses,self.parameters.neurons,self.st[0].getParams()["radius"].units,value_name = 'Max. response of ' + self.pnvs[0].value_name ,sheet_name=self.parameters.sheet_name,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
+                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(crf_sizes,self.parameters.neurons,self.st[0].getParams()["radius"].units,value_name = 'Max. facilitation radius of ' + self.pnvs[0].value_name ,sheet_name=self.parameters.sheet_name,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
+                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(supp_sizes,self.parameters.neurons,self.st[0].getParams()["radius"].units,value_name = 'Max. suppressive radius of ' + self.pnvs[0].value_name ,sheet_name=self.parameters.sheet_name,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
                         self.datastore.full_datastore.add_analysis_result(PerNeuronValue(sis,self.parameters.neurons,None,value_name = 'Suppression index of ' + self.pnvs[0].value_name ,sheet_name=self.parameters.sheet_name,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
                         
 

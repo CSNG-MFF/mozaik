@@ -178,24 +178,24 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
                                       weights=numpy.array(y),
                                       axis=0,
                                       low=0,
-                                      high=st[0].params()[self.parameters.parameter_name].period,
+                                      high=st[0].getParams()[self.parameters.parameter_name].period,
                                       normalize=True)
 
                 logger.debug('PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage: Adding PerNeuronValue to datastore')
                 self.datastore.full_datastore.add_analysis_result(
                     PerNeuronValue(pref,
                                    self.pnvs[0].ids, 
-                                   st[0].params()[self.parameters.parameter_name].units,
+                                   st[0].getParams()[self.parameters.parameter_name].units,
                                    value_name=self.parameters.parameter_name + ' preference',
                                    sheet_name=sheet,
                                    tags=self.tags,
-                                   period=st[0].params()[self.parameters.parameter_name].period,
+                                   period=st[0].getParams()[self.parameters.parameter_name].period,
                                    analysis_algorithm=self.__class__.__name__,
                                    stimulus_id=str(k)))
                 self.datastore.full_datastore.add_analysis_result(
                     PerNeuronValue(sel,
                                    self.pnvs[0].ids,
-                                   st[0].params()[self.parameters.parameter_name].units,
+                                   st[0].getParams()[self.parameters.parameter_name].units,
                                    value_name=self.parameters.parameter_name + ' selectivity',
                                    sheet_name=sheet,
                                    tags=self.tags,
@@ -326,9 +326,6 @@ class TrialToTrialCrossCorrelationOfAnalogSignalList(Analysis):
                 st = MozaikParametrized.idd(dsv.get_analysis_result()[0].stimulus_id)
                 setattr(st,'trial',None)
                 st = str(st)
-
-                logger.info("AAAAAAAAA"+str(len(dsv.get_analysis_result())))
-
                 asl_ass = []
                 for idd in self.parameters.neurons:
                     asl_cross = self.cross_correlation([ads.get_asl_by_id(idd).magnitude for ads in dsv.get_analysis_result()])                                         
@@ -363,10 +360,6 @@ class TrialToTrialCrossCorrelationOfAnalogSignalList(Analysis):
            cc = numpy.array([0 for i in xrange(0,len(ass[0])*2-1)]) 
         
         return cc
-
-
-
-
 
 class TrialAveragedCorrectedCrossCorrelation(Analysis):
       """
@@ -719,7 +712,7 @@ class GaussianTuningCurveFit(Analysis):
                 self.st = [MozaikParametrized.idd(s.stimulus_id) for s in self.pnvs]
                 
                 # check whether it is periodic 
-                period = self.st[0].params()[self.parameters.parameter_name].period
+                period = self.st[0].getParams()[self.parameters.parameter_name].period
                 
                 # transform the pnvs into a dictionary of tuning curves according along the parameter_name
                 # also make sure they are ordered according to the first pnv's idds 
@@ -750,9 +743,9 @@ class GaussianTuningCurveFit(Analysis):
                            self.datastore.full_datastore.add_analysis_result(PerNeuronValue(err,self.pnvs[0].ids,self.pnvs[0].value_units,value_name = self.parameters.parameter_name + ' fitting error of ' + self.pnvs[0].value_name ,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
                            self.datastore.full_datastore.add_analysis_result(PerNeuronValue(res[:,0],self.pnvs[0].ids,self.pnvs[0].value_units,value_name = self.parameters.parameter_name + ' baseline of ' + self.pnvs[0].value_name ,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
                            self.datastore.full_datastore.add_analysis_result(PerNeuronValue(res[:,1],self.pnvs[0].ids,self.pnvs[0].value_units,value_name = self.parameters.parameter_name + ' max of ' + self.pnvs[0].value_name,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))        
-                           self.datastore.full_datastore.add_analysis_result(PerNeuronValue(res[:,2],self.pnvs[0].ids,MozaikParametrized.idd(self.st[0]).params()[self.parameters.parameter_name].units,value_name = self.parameters.parameter_name + ' selectivity of '+ self.pnvs[0].value_name,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))        
-                           self.datastore.full_datastore.add_analysis_result(PerNeuronValue(res[:,3],self.pnvs[0].ids,MozaikParametrized.idd(self.st[0]).params()[self.parameters.parameter_name].units,value_name = self.parameters.parameter_name + ' preference of ' + self.pnvs[0].value_name,sheet_name=sheet,tags=self.tags,period=period,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))        
-                           self.datastore.full_datastore.add_analysis_result(PerNeuronValue(180*res[:,2]/numpy.pi*2.35482/2,self.pnvs[0].ids,MozaikParametrized.idd(self.st[0]).params()[self.parameters.parameter_name].units,value_name = self.parameters.parameter_name + ' HWHH of ' + self.pnvs[0].value_name,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))        
+                           self.datastore.full_datastore.add_analysis_result(PerNeuronValue(res[:,2],self.pnvs[0].ids,MozaikParametrized.idd(self.st[0]).getParams()[self.parameters.parameter_name].units,value_name = self.parameters.parameter_name + ' selectivity of '+ self.pnvs[0].value_name,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))        
+                           self.datastore.full_datastore.add_analysis_result(PerNeuronValue(res[:,3],self.pnvs[0].ids,MozaikParametrized.idd(self.st[0]).getParams()[self.parameters.parameter_name].units,value_name = self.parameters.parameter_name + ' preference of ' + self.pnvs[0].value_name,sheet_name=sheet,tags=self.tags,period=period,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))        
+                           self.datastore.full_datastore.add_analysis_result(PerNeuronValue(180*res[:,2]/numpy.pi*2.35482/2,self.pnvs[0].ids,MozaikParametrized.idd(self.st[0]).getParams()[self.parameters.parameter_name].units,value_name = self.parameters.parameter_name + ' HWHH of ' + self.pnvs[0].value_name,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))        
                         else:
                            logger.debug('Failed to fit tuning curve %s for neuron %d' % (k,i))
                     
@@ -1221,6 +1214,42 @@ class CrossCorrelationOfExcitatoryAndInhibitoryConductances(Analysis):
                                          analysis_algorithm=self.__class__.__name__,
                                          stimulus_id=str(st)))
 
+class AnalogSignal_PerNeuronBetweenSignalCorrelation(Analysis):
+      """
+      Calculates the correlation between two signals (defined by the names of the two values) for each two AnalogSignalList
+      that contain those value names, and otherwise match in parameters.
+      """
+
+      required_parameters = ParameterSet({
+        'valune_name1': str,  # the first value name 
+        'valune_name2': str,  # the second value name 
+      })
+
+      def perform_analysis(self):
+            for sheet in self.datastore.sheets():
+                dsv = queries.param_filter_query(self.datastore, sheet_name=sheet,name='AnalogSignalList',value_name=[self.parameters.valune_name1,self.parameters.valune_name2])
+                dsvs_by_valuename = queries.partition_analysis_results_by_parameters_query(dsv,parameter_list=["value_name"])
+
+                for dsv1 in dsvs_by_valuename:
+                   asls1 = dsv1.get_analysis_result(value_name='self.parameters.valune_name1')[0]
+                   asls2 = dsv1.get_analysis_result(value_name='self.parameters.valune_name2')[0]
+                   vs =[]
+                   for (a1,a2) in zip(asls1.get_asl_by_id(asls1.ids),asls2.get_asl_by_id(asls1.ids)):
+                       vs.append(numpy.corrcoef(a1.magnitude,a2.rescale(a1.units).magnitude)[0][1])
+
+                   self.datastore.full_datastore.add_analysis_result(
+                          PerNeuronValue(vs, asls1.ids, qt.dimensionless,
+                                           stimulus_id=asls1.stimulus_id,
+                                           value_name='corrcoef('+ self.parameters.valune_name1+ ','+ self.parameters.valune_name2 +  ')',
+                                           sheet_name=sheet,
+                                           tags=self.tags,
+                                           analysis_algorithm=self.__class__.__name__,
+                                           period=None))
+
+
+            
+
+
 class TrialAveragedSparseness(Analysis):
     """
     Sparseness measure for one-sided distributions
@@ -1413,7 +1442,7 @@ class CircularVarianceOfTuningCurve(Analysis):
                 self.st = [MozaikParametrized.idd(s.stimulus_id) for s in self.pnvs]
                 
                 
-                period = self.st[0].params()[self.parameters.parameter_name].period
+                period = self.st[0].getParams()[self.parameters.parameter_name].period
                 
                 # check whether it is periodic 
                 assert period != None

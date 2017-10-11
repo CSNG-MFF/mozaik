@@ -293,7 +293,7 @@ class PlotTuningCurve(Plotting):
                self.max_mean_response_indexes.append(numpy.argmax(numpy.sum([a[1] for a in dic.values()],axis=0),axis=0))
             elif self.parameters.centered and centering_pnv!=None:
                # if centering_pnv was supplied we are centering on maximum values  
-               period = st[0].params()[self.parameters.parameter_name].period
+               period = st[0].getParams()[self.parameters.parameter_name].period
                assert period != None, "ERROR: You asked for centering of tuning curves even though the domain over which it is measured is not periodic." 
                centers = centering_pnv.get_value_by_id(self.parameters.neurons)
                self.max_mean_response_indexes.append(numpy.array([numpy.argmin(circular_dist(par,centers[i],period)) for i in xrange(0,len(centers))]))
@@ -327,7 +327,7 @@ class PlotTuningCurve(Plotting):
                labels = []
                errors = []
                             
-            period = st[0].params()[self.parameters.parameter_name].period
+            period = st[0].getParams()[self.parameters.parameter_name].period
             if self.parameters.centered:        
                assert period != None, "ERROR: You asked for centering of tuning curves even though the domain over which it is measured is not periodic." 
             
@@ -409,7 +409,7 @@ class PlotTuningCurve(Plotting):
 
                                 
                 for p in varying_parameters([MozaikParametrized.idd(e) for e in dic.keys()]):
-                    l = l + str(p) + " : " + str(getattr(MozaikParametrized.idd(k),p))
+                    l = l + str(p) + " : " + str(MozaikParametrized.idd(k).getParamValue(p))
                 labels.append(l)
 
             # add the spontaneous level
@@ -997,7 +997,7 @@ class RetinalInputMovie(Plotting):
         stimulus = MozaikParametrized.idd(self.st[idx])
         title = ''
         title = title + stimulus.name + '\n'
-        for pn, pv in stimulus.get_param_values():
+        for pn, pv in stimulus.getParams().items():
                 title = title + pn + ' : ' + str(pv) + '\n'
         return [('PixelMovie',PixelMovie(self.retinal_input[idx],MozaikParametrized.idd(self.st[idx]).background_luminance),gs,{'x_axis':False, 'y_axis':False, "title" : title})]
 
@@ -1186,7 +1186,7 @@ class PerNeuronValuePlot(Plotting):
             params["y_label"] = '# neurons'
 
             varying_stim_parameters = sorted(varying_parameters([MozaikParametrized.idd(pnv.stimulus_id) for pnv in pnvs]))        
-            a = sorted([(','.join([p + ' : ' + str(getattr(MozaikParametrized.idd(pnv.stimulus_id),p)) for p in varying_stim_parameters]),pnv) for pnv in pnvs],key=lambda x: x[0])
+            a = sorted([(','.join([p + ' : ' + str(MozaikParametrized.idd(k).getParamValue(p)) for p in varying_stim_parameters]),pnv) for pnv in pnvs],key=lambda x: x[0])
             
             if len(a) > 1:
                 return [("HistogramPlot",HistogramPlot([z[1].values for z in a],labels=[z[0] for z in a]),gs,params)]
@@ -1244,12 +1244,12 @@ class PerNeuronValueScatterPlot(Plotting):
         y_label = pair[1].value_name + '(' + pair[1].value_units.dimensionality.latex + ')'
 
         for p in p1:
-            x_label += '\n' + str(p) + " = " + str(getattr(pair[0],p))
-            y_label += '\n' + str(p) + " = " + str(getattr(pair[1],p))
+            x_label += '\n' + str(p) + " = " + str(pair[0].getParamValue(p))
+            y_label += '\n' + str(p) + " = " + str(pair[1].getParamValue(p))
         
         for p in p2:
-            x_label += '\n' + str(p) + " = " + str(getattr(MozaikParametrized.idd(pair[0].stimulus_id),p))
-            y_label += '\n' + str(p) + " = " + str(getattr(MozaikParametrized.idd(pair[1].stimulus_id),p))
+            x_label += '\n' + str(p) + " = " + str(MozaikParametrized.idd(pair[0].stimulus_id).getParamValue(p))
+            y_label += '\n' + str(p) + " = " + str(MozaikParametrized.idd(pair[1].stimulus_id).getParamValue(p))
         
         params = {}
         params["x_label"] = x_label
@@ -1652,7 +1652,7 @@ class PlotTemporalTuningCurve(Plotting):
             
         if centering_pnv!=None:
                # if centering_pnv was supplied we are centering on maximum values  
-               period = st[0].params()[self.parameters.parameter_name].period
+               period = st[0].getParams()[self.parameters.parameter_name].period
                assert period != None, "ERROR: You asked for centering of tuning curves even though the domain over which it is measured is not periodic." 
                centers = centering_pnv.get_value_by_id(self.parameters.neurons)
                self.center_response_indexes.append(numpy.array([numpy.argmin(circular_dist(par,centers[i],period)) for i in xrange(0,len(centers))]))
@@ -1674,7 +1674,7 @@ class PlotTemporalTuningCurve(Plotting):
         for i,(dic, st, asl) in enumerate(zip(self.tc_dict,self.st,self.asls)):
             xs = [] 
             ys = []
-            period = st[0].params()[self.parameters.parameter_name].period
+            period = st[0].getParams()[self.parameters.parameter_name].period
 
             for k in sorted(dic.keys()):    
                 (par, val) = dic[k]
