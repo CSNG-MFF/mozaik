@@ -1186,7 +1186,7 @@ class PerNeuronValuePlot(Plotting):
             params["y_label"] = '# neurons'
 
             varying_stim_parameters = sorted(varying_parameters([MozaikParametrized.idd(pnv.stimulus_id) for pnv in pnvs]))        
-            a = sorted([(','.join([p + ' : ' + str(MozaikParametrized.idd(k).getParamValue(p)) for p in varying_stim_parameters]),pnv) for pnv in pnvs],key=lambda x: x[0])
+            a = sorted([(','.join([p + ' : ' + str(MozaikParametrized.idd(pnv.stimulus_id).getParamValue(p)) for p in varying_stim_parameters]),pnv) for pnv in pnvs],key=lambda x: x[0])
             
             if len(a) > 1:
                 return [("HistogramPlot",HistogramPlot([z[1].values for z in a],labels=[z[0] for z in a]),gs,params)]
