@@ -1221,26 +1221,35 @@ class AnalogSignal_PerNeuronBetweenSignalCorrelation(Analysis):
       """
 
       required_parameters = ParameterSet({
-        'valune_name1': str,  # the first value name 
-        'valune_name2': str,  # the second value name 
+        'value_name1': str,  # the first value name 
+        'value_name2': str,  # the second value name 
       })
 
       def perform_analysis(self):
             for sheet in self.datastore.sheets():
-                dsv = queries.param_filter_query(self.datastore, sheet_name=sheet,name='AnalogSignalList',value_name=[self.parameters.valune_name1,self.parameters.valune_name2])
-                dsvs_by_valuename = queries.partition_analysis_results_by_parameters_query(dsv,parameter_list=["value_name"])
-
+                dsv = queries.param_filter_query(self.datastore, sheet_name=sheet,name='AnalogSignalList',y_axis_name=[self.parameters.value_name1,self.parameters.value_name2])
+                dsvs_by_valuename = queries.partition_analysis_results_by_parameters_query(dsv,parameter_list=["y_axis_name"])
+                logger.info(len(dsvs_by_valuename))
                 for dsv1 in dsvs_by_valuename:
-                   asls1 = dsv1.get_analysis_result(value_name='self.parameters.valune_name1')[0]
-                   asls2 = dsv1.get_analysis_result(value_name='self.parameters.valune_name2')[0]
+                   dsv1.print_content(full_ADS=True) 
+                   asl1 = dsv1.get_analysis_result(y_axis_name=self.parameters.value_name1)[0]
+                   asl2 = dsv1.get_analysis_result(y_axis_name=self.parameters.value_name2)[0]
                    vs =[]
-                   for (a1,a2) in zip(asls1.get_asl_by_id(asls1.ids),asls2.get_asl_by_id(asls1.ids)):
-                       vs.append(numpy.corrcoef(a1.magnitude,a2.rescale(a1.units).magnitude)[0][1])
+                   for i,(a1,a2) in enumerate(zip(asl1.get_asl_by_id(asl1.ids),asl2.get_asl_by_id(asl1.ids))):
+                       from scipy.signal import savgol_filter
+                       if i == 2:
+                         import pylab
+                         pylab.figure()
+                         pylab.plot(savgol_filter(a1.magnitude.flatten()[100:],151,2),'b',savgol_filter(a2.rescale(a1.units).magnitude.flatten()[100:],151,2),'r')
+                         #pylab.title(str(numpy.corrcoef([savgol_filter(a1.magnitude.flatten()[100:],151,2),savgol_filter(a2.rescale(a1.units).magnitude.flatten()[100:],151,2)])))
+                         pylab.savefig("smoothed.eps")
+
+                       vs.append(numpy.corrcoef([savgol_filter(a1.magnitude.flatten()[100:],151,2),savgol_filter(a2.rescale(a1.units).magnitude.flatten()[100:],151,2)])[0][1])
 
                    self.datastore.full_datastore.add_analysis_result(
-                          PerNeuronValue(vs, asls1.ids, qt.dimensionless,
-                                           stimulus_id=asls1.stimulus_id,
-                                           value_name='corrcoef('+ self.parameters.valune_name1+ ','+ self.parameters.valune_name2 +  ')',
+                          PerNeuronValue(vs, asl1.ids, qt.dimensionless,
+                                           stimulus_id=asl1.stimulus_id,
+                                           value_name='corrcoef('+ self.parameters.value_name1+ ','+ self.parameters.value_name2 +  ')',
                                            sheet_name=sheet,
                                            tags=self.tags,
                                            analysis_algorithm=self.__class__.__name__,

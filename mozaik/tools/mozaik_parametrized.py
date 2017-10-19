@@ -133,6 +133,7 @@ class MozaikParametrized(Parameterized):
     _module_cache = {}
     
     def __init__(self, **params):
+        
         self.cached_get_param_values = None
         Parameterized.__init__(self, **params)
         self.module_path = inspect.getmodule(self).__name__
@@ -171,6 +172,8 @@ class MozaikParametrized(Parameterized):
                     self.expanded_paramset_params+=_expand_parameter_set(getattr(self,ps))
         self.expanded_paramset_params.sort(key=lambda tup: tup[0])
 
+
+
         if self.expanded_paramset_params != []:
             self.expanded_params_names = zip(*self.expanded_paramset_params)[0]
         else:
@@ -189,34 +192,41 @@ class MozaikParametrized(Parameterized):
         self.expanded_paramset_params_dict.update(dict(self.expanded_paramset_params))
 
 
-    def set_in_dict(path, dt,value):
-        keys = path.split('_')
-        for key in keys[-1]:
-            dt = dt[key]
-        dt[keys[-1]]=value
     
 
     def __setattr__(self,attribute_name,value):
         """
         We need to override the Parametrized __setattr__ to handle setting of SParameterSet parameters.
         """
-        try:
-            Parameterized.__setattr__(self,attribute_name,value)
-            Parameterized.__setattr__(self,'cached_get_param_values',None)
-        except AttributeError: 
-            if attribute_name in self.expanded_paramset_params_dict.keys():
-                
+        def set_in_dict(path, dt,value):
+            keys = path.split('_')
+            logger.info(keys)
+            for key in keys[:-1]:
+                dt = dt[key]
+            dt[keys[-1]]=value
+
+        if hasattr(self, 'expanded_params_names'):
+            if attribute_name in self.expanded_params_names:
+                logger.info('RRRRRRRRRRRRRRRR')
+                logger.info(attribute_name)
+                logger.info(value)
                 self.expanded_paramset_params_dict[attribute_name] = value;
 
+                n =[]
                 for z in self.expanded_paramset_params:
                     if z[0] == attribute_name:
-                       z[1] =value
-                       break;
+                       n.append((z[0],value)) 
+                    else:
+                       n.append(z)   
+                self.expanded_paramset_params = n
 
-                path = attribute_name.split('_')
-                set_in_dict(path[1:,],mcs.params()[path[0]],value)
-            else:
-                raise    
+                #HAAAAAAAAAAAAACK
+                getattr(self,'direct_stimulation_parameters')['stimulating_signal_parameters']['orientation']=value
+                #set_in_dict(attribute_name,getattr(self,'direct_stimulation_parameters'),value)
+                #set_in_dict(path[1:,],self.params()[path[0]],value)
+                return
+        Parameterized.__setattr__(self,attribute_name,value)
+        Parameterized.__setattr__(self,'cached_get_param_values',None)
     
 
     def get_param_values(self,onlychanged=False):
@@ -489,7 +499,6 @@ def varying_parameters(parametrized_objects):
     varying_params = collections.OrderedDict()
     for n in parametrized_objects[0].getParams().keys():
         for o in parametrized_objects:
-            logger.info(o.getParams().keys())
             if o.getParamValue(n) != parametrized_objects[0].getParamValue(n):
                 varying_params[n] = True
                 break
@@ -613,27 +622,29 @@ def colapse_to_dictionary(value_list, parametrized_objects, parameter_name):
       values that the parameter_name had in the parametrized_objects, and the values are the
       values from value_list that correspond to the keys.          
     """
-    logger.info(parameter_name)
     assert(len(value_list) == len(parametrized_objects))
     d = collections.OrderedDict()
 
     for (v, s) in zip(value_list, parametrized_objects):
         s = MozaikParametrized.idd(s)
+        logger.info(str(s)+'\n')
         val = s.getParamValue(parameter_name)
+        logger.info(str(s.paramset_params_names)+'\n')
+        logger.info(str(parameter_name) + str(val)+'\n')
         setattr(s,parameter_name,None)
+        logger.info(str(s)  +'\n')
         if str(s) in d:
             (a, b) = d[str(s)]
             a.append(val)
             b.append(v)
         else:
             d[str(s)] = ([val], [v])
+
     dd = {}
     for k in d:
         (a, b) = d[k]
         dd[k] = (a, b)
 
-    logger.info(str(dd))
-    logger.info('RRRRR')
     return dd
 
 

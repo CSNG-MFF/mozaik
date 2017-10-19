@@ -172,7 +172,7 @@ class Plotting(ParametrizedObject):
         if self.plot_file_name:
             #if there were animations, save them
             if self.animation_update_functions != []:
-                self.animation.save(Global.root_directory+self.plot_file_name+'.mov', writer='avconv', fps=10,bitrate=5000) 
+                self.animation.save(Global.root_directory+self.plot_file_name+'.mov', writer='avconv_file', fps=10,bitrate=5000) 
             else:
                 # save the analysis plot
                 pylab.savefig(Global.root_directory+self.plot_file_name)       
@@ -265,6 +265,7 @@ class PlotTuningCurve(Plotting):
         assert not (centering_pnv!=None and self.parameters.centered==False) , "Supplied centering_pnv but did not set centered to True."
         
         dsvs = queries.partition_analysis_results_by_parameters_query(self.datastore,parameter_list=['value_name'],excpt=True)
+
         for dsv in dsvs:
             dsv = queries.param_filter_query(dsv,identifier='PerNeuronValue',sheet_name=self.parameters.sheet_name)
             assert matching_parametrized_object_params(dsv.get_analysis_result(), params=['value_name'])
@@ -273,6 +274,7 @@ class PlotTuningCurve(Plotting):
             st = [MozaikParametrized.idd(s.stimulus_id) for s in self.pnvs[-1]]
             self.st.append(st)
             dic = colapse_to_dictionary([z.get_value_by_id(self.parameters.neurons) for z in self.pnvs[-1]],st,self.parameters.parameter_name)
+            logger.info(dic.keys())
             #sort the entries in dict according to the parameter parameter_name values 
             for k in  dic:
                 (b, a) = dic[k]
@@ -321,6 +323,7 @@ class PlotTuningCurve(Plotting):
             gs = gridspec.GridSpecFromSubplotSpec(len(self.st), 1, subplot_spec=gs)
         
         for i,(dic, st, pnv) in enumerate(zip(self.tc_dict,self.st,self.pnvs)):
+            logger.info('A' + str(i))
             if not self.parameters.pool:
                xs = [] 
                ys = []
@@ -336,6 +339,9 @@ class PlotTuningCurve(Plotting):
                 
             for k in sorted(dic.keys()):    
                 (par, val) = dic[k]
+                #logger.info(str(k))
+                #logger.info(str(par))
+                #logger.info(str(val))
                 error = None
                 if self.parameters.mean:
                     v = []
