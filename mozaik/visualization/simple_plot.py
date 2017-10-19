@@ -946,15 +946,10 @@ class ConductancesPlot(StandardStyle):
         mean_gsyn_i = mean_gsyn_i / len(self.gsyn_is)
         mean_gsyn_e = mean_gsyn_e / len(self.gsyn_es)
         from scipy.signal import savgol_filter
-        logger.info('DSADA1')
-        logger.info(numpy.shape(mean_gsyn_e.tolist()))
-        logger.info('DSADA2')
-        logger.info(numpy.shape(savgol_filter(numpy.transpose(mean_gsyn_e).tolist(),11,2)))
-        logger.info('DSADA3')
-        logger.info(time_axis)
-        p1, = self.axis.plot(numpy.transpose(time_axis).flatten(), savgol_filter(numpy.transpose(mean_gsyn_e).tolist(),151,2).flatten(), color='r', linewidth=3)
-        p2, = self.axis.plot(numpy.transpose(time_axis).flatten(), savgol_filter(numpy.transpose(mean_gsyn_i).tolist(),151,2).flatten(), color='b', linewidth=3)
-
+        #p1, = self.axis.plot(numpy.transpose(time_axis).flatten(), savgol_filter(numpy.transpose(mean_gsyn_e).tolist(),151,2).flatten(), color='r', linewidth=3)
+        #p2, = self.axis.plot(numpy.transpose(time_axis).flatten(), savgol_filter(numpy.transpose(mean_gsyn_i).tolist(),151,2).flatten(), color='b', linewidth=3)
+        p1, = self.axis.plot(time_axis, mean_gsyn_e.tolist(), color='r', linewidth=1)
+        p2, = self.axis.plot(time_axis, mean_gsyn_i.tolist(), color='b', linewidth=1)
         if self.legend:
             self.axis.legend([p1, p2], ['exc', 'inh'])
 
