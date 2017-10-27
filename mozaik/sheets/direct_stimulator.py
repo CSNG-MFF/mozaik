@@ -522,6 +522,9 @@ def test_stimulating_function(sheet,coordinates,current_update_interval,paramete
     pylab.gca().set_aspect('equal')
     pylab.title('Orientatin preference (neurons)')
     pylab.scatter(px,py,c=vals/numpy.pi,cmap='hsv')
+    pylab.hold(True)
+    pylab.scatter([a[0] for a in coordinates],[a[1] for a in coordinates],c='k',cmap='hsv')
+
     for sx,sy in coordinates:
              lhi_current_c=numpy.sum(numpy.exp(-((sx-px)*(sx-px)+(sy-py)*(sy-py))/(two_sigma_squared))*numpy.cos(2*vals))
              lhi_current_s=numpy.sum(numpy.exp(-((sx-px)*(sx-px)+(sy-py)*(sy-py))/(two_sigma_squared))*numpy.sin(2*vals))
