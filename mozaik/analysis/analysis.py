@@ -1237,7 +1237,7 @@ class AnalogSignal_PerNeuronBetweenSignalCorrelation(Analysis):
                    vs =[]
                    for i,(a1,a2) in enumerate(zip(asl1.get_asl_by_id(asl1.ids),asl2.get_asl_by_id(asl1.ids))):
                        from scipy.signal import savgol_filter
-                       if i == 2:
+                       if i == 13:
                          import pylab
                          pylab.figure()
                          pylab.plot(savgol_filter(a1.magnitude.flatten()[100:],151,2),'b',savgol_filter(a2.rescale(a1.units).magnitude.flatten()[100:],151,2),'r')

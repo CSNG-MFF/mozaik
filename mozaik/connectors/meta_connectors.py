@@ -44,7 +44,7 @@ class GaborConnector(BaseComponent):
                               (note positions of neurons are always stored in
                               visual field coordinates)
     
-    `delay`                -  (ms/μm) the delay on the projections
+    `delay`                -  (ms) the delay on the projections
 
     `short_term_plasticity` - short term plasticity configuration (see basic connector)
     

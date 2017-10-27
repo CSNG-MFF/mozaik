@@ -420,16 +420,17 @@ class LocalStimulatorArray(DirectStimulator):
         assert numpy.shape(stimulator_signals)[0] == numpy.shape(mixing_weights)[1] , "ERROR: stimulator_signals and mixing_weights do not have matching sizes:" + str(numpy.shape(stimulator_signals)) + " " +str(numpy.shape(mixing_weights))
 
         self.mixed_signals = numpy.dot(mixing_weights,stimulator_signals)
+
+        lam=numpy.squeeze(numpy.mean(self.mixed_signals,axis=1))
+        for i in xrange(0,self.sheet.pop.size):
+            self.sheet.add_neuron_annotation(i, 'Light activation magnitude', lam[i], protected=True)
+
         ax = pylab.subplot(154, projection='3d')
         pylab.gca().set_aspect('equal')
         pylab.title('Activation magnitude (neurons)')
-        ax.scatter(self.sheet.pop.positions[0],self.sheet.pop.positions[1],self.sheet.pop.positions[2],s=10,c=numpy.squeeze(numpy.mean(self.mixed_signals,axis=1)),cmap='gray',vmin=0)
+        ax.scatter(self.sheet.pop.positions[0],self.sheet.pop.positions[1],self.sheet.pop.positions[2],s=10,c=lam,cmap='gray',vmin=0)
         ax = pylab.gca()
         ax.set_zlim(ax.get_zlim()[::-1])
-
-        logger.info("MMMMMMMMMMMMMMMMM")
-        logger.info(numpy.max(self.mixed_signals))
-        logger.info("MMMMMMMMMMMMMMMMM")
         
         assert numpy.shape(self.mixed_signals) == (self.sheet.pop.size,numpy.shape(stimulator_signals)[1]), "ERROR: mixed_signals doesn't have the desired size:" + str(numpy.shape(self.mixed_signals)) + " vs " +str((self.sheet.pop.size,numpy.shape(stimulator_signals)[1]))
         
@@ -501,16 +502,11 @@ class LocalStimulatorArrayChR(LocalStimulatorArray):
           for i in xrange(0,len(self.scs)):
               res = odeint(ChRsystem,[0,0,0.8,0.2,0],times,args=(self.mixed_signals[i,:].flatten(),self.parameters.current_update_interval))
               self.mixed_signals[i,:] = 60 * (17*res[:,0] + 2.9 * res[:,1]); # the 60 corresponds to the 60mV difference between ChR reverse potential of 0mV and our expected mean Vm of about 60mV. This happens to end up being in nA which is what pyNN expect for current injection.
-        
-          logger.info("NNNNNNNNNNNNNNNNN")
-          logger.info(numpy.max(self.mixed_signals))
-          logger.info("NNNNNNNNNNNNNNNNN")
-
 
           pylab.subplot(155)
           pylab.title('Single neuron current injection profile')
           pylab.plot(times,self.mixed_signals[100,:])
-          pylab.savefig('LocalStimulatorArrayTest.png')
+          pylab.savefig(self.sheet.model.parameters.root_directory +'/LocalStimulatorArrayTest_' + self.sheet.name + '.png')
 
 
 def test_stimulating_function(sheet,coordinates,current_update_interval,parameters):
@@ -527,7 +523,6 @@ def test_stimulating_function(sheet,coordinates,current_update_interval,paramete
     pylab.title('Orientatin preference (neurons)')
     pylab.scatter(px,py,c=vals/numpy.pi,cmap='hsv')
     for sx,sy in coordinates:
-
              lhi_current_c=numpy.sum(numpy.exp(-((sx-px)*(sx-px)+(sy-py)*(sy-py))/(two_sigma_squared))*numpy.cos(2*vals))
              lhi_current_s=numpy.sum(numpy.exp(-((sx-px)*(sx-px)+(sy-py)*(sy-py))/(two_sigma_squared))*numpy.sin(2*vals))
              mean_orientations.append(circ_mean(vals,weights=numpy.exp(-((sx-px)*(sx-px)+(sy-py)*(sy-py))/(two_sigma_squared)),high=numpy.pi)[0])

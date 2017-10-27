@@ -192,7 +192,6 @@ class NoStimulation(Experiment):
                                             frame_duration=self.parameters.duration, 
                                             duration=self.parameters.duration,
                                             trial=0,
-                                            direct_stimulation_name='None'
                                          )
                                 )
 
