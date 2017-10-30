@@ -141,7 +141,7 @@ def export_SingleValues_as_matricies(simulation_name,master_results_dir,query):
     dimensions = numpy.array([len(x) for x in param_values])
     
     # lets check that the dataset has the same number of entries as the number of all combinations of parameter values
-    assert len(datastores)+n == dimensions.prod()
+    #assert len(datastores)+n == dimensions.prod()
     
     for v in value_names:
         matrix = numpy.zeros(dimensions)
