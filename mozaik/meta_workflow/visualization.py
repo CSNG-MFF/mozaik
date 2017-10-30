@@ -38,11 +38,11 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
     # Lets first filter out parameters that do not vary
     todelete=[];
     for i in xrange(0,len(parameters)):
-	vals = set([v[0][i] for v in datastores])
-	print vals
-	if len(vals) == 1:
-	    todelete.append(i)
-    print todelete
+        vals = set([v[0][i] for v in datastores])
+        print vals
+        if len(vals) == 1:
+            todelete.append(i)
+            print todelete
     for k in xrange(0,len(datastores)):
 	datastores[k] = ([i for j, i in enumerate(datastores[k][0]) if j not in todelete],datastores[k][1])
     parameters = [i for j, i in enumerate(parameters) if j not in todelete]
