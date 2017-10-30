@@ -23,7 +23,7 @@ from scipy.integrate import odeint
 import pickle
 import scipy.interpolate
 from mpl_toolkits.mplot3d import Axes3D
-from mozaik.controler import Global
+from mozaik.controller import Global
 
 logger = mozaik.getMozaikLogger()
 
