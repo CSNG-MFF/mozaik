@@ -25,6 +25,7 @@ import scipy.interpolate
 from mpl_toolkits.mplot3d import Axes3D
 from mozaik.controller import Global
 
+
 logger = mozaik.getMozaikLogger()
 
 class DirectStimulator(ParametrizedObject):
@@ -507,7 +508,7 @@ class LocalStimulatorArrayChR(LocalStimulatorArray):
           pylab.subplot(155)
           pylab.title('Single neuron current injection profile')
           pylab.plot(times,self.mixed_signals[100,:])
-          pylab.savefig(Global.root_directory +'/LocalStimulatorArrayTest_' + self.sheet.name + '.png')
+          pylab.savefig(Global.root_directory +'/LocalStimulatorArrayTest_' + self.sheet.name.replace('/','_') + '.png')
 
 
 def test_stimulating_function(sheet,coordinates,current_update_interval,parameters):
