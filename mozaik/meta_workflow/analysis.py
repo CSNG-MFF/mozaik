@@ -126,11 +126,12 @@ def export_SingleValues_as_matricies(simulation_name,master_results_dir,query):
     
     # Lets first make sure that the value_names uniqly identify a SingleValue ADS in each DataStore and 
     # that they exist in each DataStore.
-    for (param_values,datastore) in datastores:
-        dsv = query.query(datastore)
-        for v in value_names:
-            param_filter_query(dsv,identifier='SingleValue',value_name=v).print_content(full_ADS=True)
-            assert len(param_filter_query(dsv,identifier='SingleValue',value_name=v).get_analysis_result()) == 1, "Error, %d ADS with value_name %s found for parameter combination:" % (len(param_filter_query(datastore,identifier='SingleValue',value_name=v).get_analysis_result()), str([str(a) + ':' + str(b) + ', ' for (a,b) in zip(parameters,param_values)]))
+    if False:
+        for (param_values,datastore) in datastores:
+            dsv = query.query(datastore)
+            for v in value_names:
+                print param_filter_query(dsv,identifier='SingleValue',value_name=v).get_analysis_result()
+                #assert len(param_filter_query(dsv,identifier='SingleValue',value_name=v).get_analysis_result()) == 1, "Error, %d ADS with value_name %s found for parameter combination:" % (len(param_filter_query(datastore,identifier='SingleValue',value_name=v).get_analysis_result()), str([str(a) + ':' + str(b) + ', ' for (a,b) in zip(parameters,param_values)]))
         
     params = numpy.array([p for p,ds in datastores])
     num_params = numpy.shape(params)[1]
