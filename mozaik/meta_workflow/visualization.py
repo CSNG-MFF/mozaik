@@ -4,6 +4,7 @@ import math
 from scipy.interpolate import griddata
 import matplotlib.cm as cm
 from analysis import load_fixed_parameter_set_parameter_search
+import pickle
         
 def single_value_visualization(simulation_name,master_results_dir,query,value_names=None,filename=None,resolution=None,treat_nan_as_zero=False,ranges={},cols=4):
     """
@@ -125,6 +126,9 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
                    pylab.ylim(min(y)-0.1*(max(y)-min(y)),max(y)+0.1*(max(y)-min(y)))
                    pylab.colorbar()
 
+                   f = open(v+'.pickle','w')
+                   pickle.dump((value_name,parameters[sorted_parameter_indexes[0]],parameters[sorted_parameter_indexes[1]],x,y,z),f)
+        
                    
                
                pylab.xlabel(parameters[sorted_parameter_indexes[0]]) 
