@@ -149,7 +149,8 @@ def export_SingleValues_as_matricies(simulation_name,master_results_dir,query):
         for (pv,datastore) in datastores:
             index = [param_values[i].index(pv[i]) for i in xrange(0,len(param_values))]
             dsv = query.query(datastore)
-            vv = param_filter_query(dsv,identifier='SingleValue',value_name=v).get_analysis_result()[0].value
+            if len(param_filter_query(dsv,identifier='SingleValue',value_name=v).get_analysis_result()) == 1:
+                vv = param_filter_query(dsv,identifier='SingleValue',value_name=v).get_analysis_result()[0].value
             matrix[tuple(index)] = vv
         f = open(v+'.txt','w')
         pickle.dump((parameters,param_values,matrix),f)
