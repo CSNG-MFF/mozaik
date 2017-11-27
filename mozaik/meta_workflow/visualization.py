@@ -79,6 +79,7 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
     print rows
     print cols
     print "Plotting"
+    res = {}
     for i,value_name in enumerate(value_names): 
         pylab.subplot(rows,cols,i+1)
         if len(parameters) == 1:
@@ -126,16 +127,18 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
                    pylab.ylim(min(y)-0.1*(max(y)-min(y)),max(y)+0.1*(max(y)-min(y)))
                    pylab.colorbar()
 
-                   f = open(v+'.pickle','w')
-                   pickle.dump((value_name,parameters[sorted_parameter_indexes[0]],parameters[sorted_parameter_indexes[1]],x,y,z),f)
-        
-                   
+                   res[value_name]=(parameters[sorted_parameter_indexes[0]],parameters[sorted_parameter_indexes[1]],x,y,z)
                
                pylab.xlabel(parameters[sorted_parameter_indexes[0]]) 
                pylab.ylabel(parameters[sorted_parameter_indexes[1]]) 
         else:
             raise ValueError("Currently cannot handle more than 2D data")
         pylab.title(value_name)    
+
+
+        f = open('ps_res.pickle','w')
+        pickle.dump(res,f)
+        f.close()
 
     if filename != None:
        pylab.savefig(master_results_dir+'/'+filename, bbox_inches='tight')
