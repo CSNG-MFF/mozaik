@@ -25,7 +25,6 @@ import scipy.interpolate
 from mpl_toolkits.mplot3d import Axes3D
 from mozaik.controller import Global
 
-
 logger = mozaik.getMozaikLogger()
 
 class DirectStimulator(ParametrizedObject):
@@ -381,7 +380,7 @@ class LocalStimulatorArray(DirectStimulator):
             'stimulating_signal_parameters' : ParameterSet,
             'current_update_interval' : float,
     })
-        
+
     def __init__(self, sheet, parameters):
         DirectStimulator.__init__(self, sheet,parameters)
 
@@ -409,19 +408,20 @@ class LocalStimulatorArray(DirectStimulator):
         y =  stimulator_coordinates[1].flatten()
         xx,yy = self.sheet.vf_2_cs(self.sheet.pop.positions[0],self.sheet.pop.positions[1])
 
+        signal_function = load_component(self.parameters.stimulating_signal)
+        stimulator_signals = signal_function(sheet,zip(x,y),self.parameters.current_update_interval,self.parameters.stimulating_signal_parameters)
+
+        self.mixed_signals = numpy.zeros((self.sheet.pop.size,numpy.shape(stimulator_signals)[1]),dtype=numpy.float64)
+
+        #mixing_weights = numpy.zeros((self.sheet.pop.size,int(self.parameters.size/self.parameters.spacing) * int(self.parameters.size/self.parameters.spacing)),dtype=numpy.float64)
+
         for i in xrange(0,self.sheet.pop.size):
             xx,yy,zz = self.sheet.pop.positions[0][i],self.sheet.pop.positions[1][i],self.sheet.pop.positions[2][i]
             xx,yy = self.sheet.vf_2_cs(xx,yy)
-            a = numpy.zeros(len(x))+zz
-            mixing_weights.append(10*K*W*light_flux_lookup(zip(numpy.zeros(len(x))+zz,numpy.sqrt(numpy.power(x - xx,2)  + numpy.power(y-yy,2)))))
+            self.mixed_signals[i,:] = numpy.dot(10*K*W*light_flux_lookup(numpy.transpose([numpy.zeros(len(x))+zz,numpy.sqrt(numpy.power(x-xx,2)  + numpy.power(y-yy,2))])),stimulator_signals)
             #mixing_weights.append(numpy.exp(-0.5  * (numpy.power(x - xx,2)  + numpy.power(y-yy,2)) / numpy.power(self.parameters.itensity_fallof,2)))
-        assert numpy.shape(mixing_weights) == (self.sheet.pop.size,int(self.parameters.size/self.parameters.spacing) * int(self.parameters.size/self.parameters.spacing))
-
-        signal_function = load_component(self.parameters.stimulating_signal)
-        stimulator_signals = signal_function(sheet,zip(x,y),self.parameters.current_update_interval,self.parameters.stimulating_signal_parameters)
-        assert numpy.shape(stimulator_signals)[0] == numpy.shape(mixing_weights)[1] , "ERROR: stimulator_signals and mixing_weights do not have matching sizes:" + str(numpy.shape(stimulator_signals)) + " " +str(numpy.shape(mixing_weights))
-
-        self.mixed_signals = numpy.dot(mixing_weights,stimulator_signals)
+        
+        #self.mixed_signals = numpy.dot(mixing_weights,stimulator_signals)
 
         lam=numpy.squeeze(numpy.mean(self.mixed_signals,axis=1))
         for i in xrange(0,self.sheet.pop.size):
@@ -437,10 +437,12 @@ class LocalStimulatorArray(DirectStimulator):
         assert numpy.shape(self.mixed_signals) == (self.sheet.pop.size,numpy.shape(stimulator_signals)[1]), "ERROR: mixed_signals doesn't have the desired size:" + str(numpy.shape(self.mixed_signals)) + " vs " +str((self.sheet.pop.size,numpy.shape(stimulator_signals)[1]))
         
         self.stimulation_duration = numpy.shape(self.mixed_signals)[1] * self.parameters.current_update_interval
-
+        
+       
         self.scs = [self.sheet.sim.StepCurrentSource(times=[0.0], amplitudes=[0.0]) for cell in self.sheet.pop.all_cells] 
         for cell,scs in zip(self.sheet.pop.all_cells,self.scs):
             cell.inject(scs)
+
 
     def prepare_stimulation(self,duration,offset):
         assert self.stimulation_duration == duration, "stimulation_duration != duration :"  + str(self.stimulation_duration) + " " + str(duration)
@@ -452,7 +454,6 @@ class LocalStimulatorArray(DirectStimulator):
     def inactivate(self,offset):
         for scs in self.scs:
             scs.set_parameters(times=[offset+3*self.sheet.sim.state.dt], amplitudes=[0.0])
-
 
 def ChRsystem(y,time,X,sampling_period):
           PhoC1toO1 = 1.6e-19
@@ -497,19 +498,16 @@ class LocalStimulatorArrayChR(LocalStimulatorArray):
       to inject conductance in PyNN. The Channelrhodopsin has reverse potential of ~0, and we assume that our neurons 
       sits on average at -60mV to calculate the current. 
       """
-
       def __init__(self, sheet, parameters):
           LocalStimulatorArray.__init__(self, sheet,parameters)
           times = numpy.arange(0,self.stimulation_duration,self.parameters.current_update_interval)
           for i in xrange(0,len(self.scs)):
               res = odeint(ChRsystem,[0,0,0.8,0.2,0],times,args=(self.mixed_signals[i,:].flatten(),self.parameters.current_update_interval))
-              self.mixed_signals[i,:] = 60 * (17*res[:,0] + 2.9 * res[:,1]); # the 60 corresponds to the 60mV difference between ChR reverse potential of 0mV and our expected mean Vm of about 60mV. This happens to end up being in nA which is what pyNN expect for current injection.
-
+              self.mixed_signals[i,:] = 60 * (0.0313*res[:,0] + 0.0088 * res[:,1]); # the 60 corresponds to the 60mV difference between ChR reverse potential of 0mV and our expected mean Vm of about 60mV. This happens to end up being in nA which is what pyNN expect for current injection.
           pylab.subplot(155)
           pylab.title('Single neuron current injection profile')
           pylab.plot(times,self.mixed_signals[100,:])
           pylab.savefig(Global.root_directory +'/LocalStimulatorArrayTest_' + self.sheet.name.replace('/','_') + '.png')
-
 
 def test_stimulating_function(sheet,coordinates,current_update_interval,parameters):
     z = sheet.pop.all_cells.astype(int)
@@ -538,11 +536,9 @@ def test_stimulating_function(sheet,coordinates,current_update_interval,paramete
     pylab.scatter([a[0] for a in coordinates],[a[1] for a in coordinates],c=numpy.array(mean_orientations),cmap='hsv')
 
     signals = []
-
+    signals = numpy.zeros((len(coordinates),int(parameters.duration/current_update_interval)))
     for i in xrange(0,len(coordinates)):
-        tmp = numpy.zeros(parameters.duration/current_update_interval)
-        tmp[parameters.onset_time/current_update_interval:parameters.offset_time/current_update_interval] = numpy.exp(-numpy.power(circular_dist(parameters.orientation.value,mean_orientations[i],numpy.pi),2)/parameters.sharpness)
-        signals.append(parameters.scale*tmp)
+        signals[i,parameters.onset_time/current_update_interval:parameters.offset_time/current_update_interval] =parameters.scale*numpy.exp(-numpy.power(circular_dist(parameters.orientation.value,mean_orientations[i],numpy.pi),2)/parameters.sharpness)
 
     pylab.subplot(153)
     pylab.gca().set_aspect('equal')

@@ -10,6 +10,7 @@ from mozaik.tools.misc import sample_from_bin_distribution, normal_function
 from mozaik import load_component
 
 
+
 logger = mozaik.getMozaikLogger()
 
 class ExpVisitor(ast.NodeVisitor):

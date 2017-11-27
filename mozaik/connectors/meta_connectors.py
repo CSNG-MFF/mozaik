@@ -8,6 +8,8 @@ from parameters import ParameterSet, ParameterDist
 from mozaik.connectors.modular import ModularSamplingProbabilisticConnector, ModularSamplingProbabilisticConnectorAnnotationSamplesCount
 from mozaik.tools.distribution_parametrization import PyNNDistribution
 
+
+
 """
 This file contains meta-connectors. These are classes that represent some higher-level 
 algorithms for connecting neurons in mozaik.

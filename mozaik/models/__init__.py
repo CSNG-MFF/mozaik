@@ -14,6 +14,7 @@ import numpy
 
 logger = mozaik.getMozaikLogger()
 
+from memory_profiler import profile
 
 class Model(BaseComponent):
     """
@@ -81,6 +82,7 @@ class Model(BaseComponent):
         self.node = sim.setup(timestep=self.parameters.time_step, min_delay=self.parameters.min_delay, max_delay=self.parameters.max_delay, threads=num_threads)  # should have some parameters here
         self.sheets = {}
         self.connectors = {}
+        self.num_threads = num_threads
 
         # Set-up the input space
         if self.parameters.input_space != None:
@@ -90,7 +92,7 @@ class Model(BaseComponent):
             self.input_space = None
             
         self.simulator_time = 0
-
+    @profile
     def present_stimulus_and_record(self, stimulus,artificial_stimulators):
         """
         This method is the core of the model execution control. It ensures that a `stimulus` is presented
