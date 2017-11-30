@@ -11,7 +11,7 @@ from pyNN.errors import NothingToWriteError
 from mozaik.sheets import Sheet
         
 logger = mozaik.getMozaikLogger()
-from memory_profiler import profile
+
 
 class RetinalUniformSheet(Sheet):
     """

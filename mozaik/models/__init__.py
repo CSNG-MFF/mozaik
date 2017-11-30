@@ -14,7 +14,7 @@ import numpy
 
 logger = mozaik.getMozaikLogger()
 
-from memory_profiler import profile
+
 
 class Model(BaseComponent):
     """
@@ -92,7 +92,7 @@ class Model(BaseComponent):
             self.input_space = None
             
         self.simulator_time = 0
-    @profile
+
     def present_stimulus_and_record(self, stimulus,artificial_stimulators):
         """
         This method is the core of the model execution control. It ensures that a `stimulus` is presented
@@ -211,6 +211,7 @@ class Model(BaseComponent):
                        s = sheet.get_data(self.parameters.null_stimulus_period)
                        if (not mozaik.mpi_comm) or (mozaik.mpi_comm.rank == mozaik.MPI_ROOT):
                            segments.append(s)
+
         return segments,time.time()-t0    
     
 

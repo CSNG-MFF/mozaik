@@ -364,6 +364,9 @@ class LocalStimulatorArray(DirectStimulator):
     current_update_interval : float
                      The interval at which the current is updated. Thus the length of the stimulation is current_update_interval times
                      the number of current values returned by the function specified in the `stimulating_signal` parameter.
+    
+    depth_sampling_step : float (μm)
+                     For optimization reasons we will assume that neurons lie at descrete range of depth spaced at `depth_sampling_step`
 
     Notes
     -----
@@ -379,6 +382,7 @@ class LocalStimulatorArray(DirectStimulator):
             'stimulating_signal' : str,
             'stimulating_signal_parameters' : ParameterSet,
             'current_update_interval' : float,
+            'depth_sampling_step' : float,
     })
 
     def __init__(self, sheet, parameters):
@@ -386,55 +390,78 @@ class LocalStimulatorArray(DirectStimulator):
 
         assert math.fmod(self.parameters.size,self.parameters.spacing) < 0.000000001 , "Error the size has to be multiple of spacing!"
         
-        axis_coors = numpy.arange(0,self.parameters.size,self.parameters.spacing) - self.parameters.size/2.0 + self.parameters.spacing/2.0
+        axis_coors = numpy.arange(0,self.parameters.size+self.parameters.spacing,self.parameters.spacing) - self.parameters.size/2.0 
+        n = int((len(axis_coors)-1) / 2)
         stimulator_coordinates = numpy.meshgrid(axis_coors,axis_coors)
+
 
         pylab.figure(figsize=(42,12))
 
         #let's load up disperssion data and setup interpolation
         f = open('light_scattering_radial_profiles.pickle','r')
         radprofs = pickle.load(f)
-        light_flux_lookup =  scipy.interpolate.RegularGridInterpolator((numpy.arange(0,320,20),numpy.arange(354)*0.598804), radprofs, method='linear',bounds_error=False,fill_value=0)
-        #light_flux_lookup =  scipy.interpolate.RectBivariateSpline(numpy.arange(0,320,20),numpy.arange(354)*0.598804, numpy.array(radprofs))
-        
+        light_flux_lookup =  scipy.interpolate.RegularGridInterpolator((numpy.arange(0,1080,60),numpy.linspace(0,1,354)*149.701*numpy.sqrt(2)), radprofs, method='linear',bounds_error=False,fill_value=0)
+
         # the constant translating the data in radprofs to photons/s/cm^2
         K = 2.97e26
         W = 3.9e-10
 
         # now let's calculate mixing weights, this will be a matrix nxm where n is 
         # the number of neurons in the population and m is the number of stimulators
-        mixing_weights = []
         x =  stimulator_coordinates[0].flatten()
         y =  stimulator_coordinates[1].flatten()
         xx,yy = self.sheet.vf_2_cs(self.sheet.pop.positions[0],self.sheet.pop.positions[1])
+        zeros = numpy.zeros(len(x))
+
+        mixing_templates=[]
+        for depth in numpy.arange(sheet.parameters.min_depth,sheet.parameters.max_depth+self.parameters.depth_sampling_step,self.parameters.depth_sampling_step):
+            temp = numpy.reshape(light_flux_lookup(numpy.transpose([zeros+depth,numpy.sqrt(numpy.power(x,2)  + numpy.power(y,2))])),(2*n+1,2*n+1))
+            a  = temp[n,n:]
+            cutof = numpy.argmax((numpy.sum(a)-numpy.cumsum(a))/numpy.sum(a) < 0.01)
+            assert numpy.shape(temp[n-cutof:n+cutof+1,n-cutof:n+cutof+1]) == (2*cutof+1,2*cutof+1), str(numpy.shape(temp[n-cutof:n+cutof,n-cutof:n+cutof])) + 'vs' + str((2*cutof+1,2*cutof+1))
+            mixing_templates.append((temp[n-cutof:n+cutof+1,n-cutof:n+cutof+1],cutof))
 
         signal_function = load_component(self.parameters.stimulating_signal)
-        stimulator_signals = signal_function(sheet,zip(x,y),self.parameters.current_update_interval,self.parameters.stimulating_signal_parameters)
+        stimulator_signals = signal_function(sheet,stimulator_coordinates[0],stimulator_coordinates[1],self.parameters.current_update_interval,self.parameters.stimulating_signal_parameters)
 
-        self.mixed_signals = numpy.zeros((self.sheet.pop.size,numpy.shape(stimulator_signals)[1]),dtype=numpy.float64)
+        #stimulator_signals = numpy.reshape(stimulator_signals,((2*n+1)*(2*n+1),-1))
+        
+        self.mixed_signals = numpy.zeros((self.sheet.pop.size,numpy.shape(stimulator_signals)[2]),dtype=numpy.float64)
+        
+        # find coordinates given spacing and shift by half the array size
+        nearest_ix = numpy.rint(yy/self.parameters.spacing)+n
+        nearest_iy = numpy.rint(xx/self.parameters.spacing)+n
+        nearest_iz = numpy.rint((numpy.array(self.sheet.pop.positions[2])-sheet.parameters.min_depth)/self.parameters.depth_sampling_step)
 
-        #mixing_weights = numpy.zeros((self.sheet.pop.size,int(self.parameters.size/self.parameters.spacing) * int(self.parameters.size/self.parameters.spacing)),dtype=numpy.float64)
+        nearest_ix[nearest_ix<0] = 0
+        nearest_iy[nearest_iy<0] = 0
+        nearest_ix[nearest_ix>2*n] = 2*n
+        nearest_iy[nearest_iy>2*n] = 2*n
+
 
         for i in xrange(0,self.sheet.pop.size):
-            xx,yy,zz = self.sheet.pop.positions[0][i],self.sheet.pop.positions[1][i],self.sheet.pop.positions[2][i]
-            xx,yy = self.sheet.vf_2_cs(xx,yy)
-            self.mixed_signals[i,:] = numpy.dot(10*K*W*light_flux_lookup(numpy.transpose([numpy.zeros(len(x))+zz,numpy.sqrt(numpy.power(x-xx,2)  + numpy.power(y-yy,2))])),stimulator_signals)
-            #mixing_weights.append(numpy.exp(-0.5  * (numpy.power(x - xx,2)  + numpy.power(y-yy,2)) / numpy.power(self.parameters.itensity_fallof,2)))
-        
-        #self.mixed_signals = numpy.dot(mixing_weights,stimulator_signals)
+            temp,cutof = mixing_templates[int(nearest_iz[i])]
+
+            ss = stimulator_signals[int(nearest_ix[i]-cutof):int(nearest_ix[i]+cutof+1),int(nearest_iy[i]-cutof):int(nearest_iy[i]+cutof+1),:]
+            if ss != numpy.array([]):
+               temp = temp[int(cutof-nearest_ix[i]):int(2*n+1+cutof-nearest_ix[i])][int(cutof-nearest_iy[i]):int(2*n+1+cutof-nearest_iy[i])]
+               self.mixed_signals[i,:] = K*W*numpy.dot(temp.flatten(),numpy.reshape(ss,(len(temp.flatten()),-1)))
+
 
         lam=numpy.squeeze(numpy.mean(self.mixed_signals,axis=1))
         for i in xrange(0,self.sheet.pop.size):
             self.sheet.add_neuron_annotation(i, 'Light activation magnitude', lam[i], protected=True)
 
-        ax = pylab.subplot(154, projection='3d')
+        #ax = pylab.subplot(154, projection='3d')
+        ax = pylab.subplot(154)
         pylab.gca().set_aspect('equal')
         pylab.title('Activation magnitude (neurons)')
-        ax.scatter(self.sheet.pop.positions[0],self.sheet.pop.positions[1],self.sheet.pop.positions[2],s=10,c=lam,cmap='gray',vmin=0)
+        #ax.scatter(self.sheet.pop.positions[0],self.sheet.pop.positions[1],self.sheet.pop.positions[2],s=10,c=lam,cmap='gray',vmin=0)
+        ax.scatter(self.sheet.pop.positions[0],self.sheet.pop.positions[1],s=10,c=lam,cmap='gray',vmin=0)
         ax = pylab.gca()
-        ax.set_zlim(ax.get_zlim()[::-1])
+        #ax.set_zlim(ax.get_zlim()[::-1])
         
-        assert numpy.shape(self.mixed_signals) == (self.sheet.pop.size,numpy.shape(stimulator_signals)[1]), "ERROR: mixed_signals doesn't have the desired size:" + str(numpy.shape(self.mixed_signals)) + " vs " +str((self.sheet.pop.size,numpy.shape(stimulator_signals)[1]))
+        assert numpy.shape(self.mixed_signals) == (self.sheet.pop.size,numpy.shape(stimulator_signals)[2]), "ERROR: mixed_signals doesn't have the desired size:" + str(numpy.shape(self.mixed_signals)) + " vs " +str((self.sheet.pop.size,numpy.shape(stimulator_signals)[1]))
         
         self.stimulation_duration = numpy.shape(self.mixed_signals)[1] * self.parameters.current_update_interval
         
@@ -509,7 +536,8 @@ class LocalStimulatorArrayChR(LocalStimulatorArray):
           pylab.plot(times,self.mixed_signals[100,:])
           pylab.savefig(Global.root_directory +'/LocalStimulatorArrayTest_' + self.sheet.name.replace('/','_') + '.png')
 
-def test_stimulating_function(sheet,coordinates,current_update_interval,parameters):
+
+def test_stimulating_function(sheet,coor_x,coor_y,current_update_interval,parameters):
     z = sheet.pop.all_cells.astype(int)
     vals = numpy.array([sheet.get_neuron_annotation(i,'LGNAfferentOrientation') for i in xrange(0,len(z))])
     two_sigma_squared = 2*parameters.sigma * parameters.sigma 
@@ -523,26 +551,24 @@ def test_stimulating_function(sheet,coordinates,current_update_interval,paramete
     pylab.title('Orientatin preference (neurons)')
     pylab.scatter(px,py,c=vals/numpy.pi,cmap='hsv')
     pylab.hold(True)
-    pylab.scatter([a[0] for a in coordinates],[a[1] for a in coordinates],c='k',cmap='hsv')
+    #pylab.scatter(coor_x.flatten(),coor_y.flatten(),c='k',cmap='hsv')
 
-    for sx,sy in coordinates:
-             lhi_current_c=numpy.sum(numpy.exp(-((sx-px)*(sx-px)+(sy-py)*(sy-py))/(two_sigma_squared))*numpy.cos(2*vals))
-             lhi_current_s=numpy.sum(numpy.exp(-((sx-px)*(sx-px)+(sy-py)*(sy-py))/(two_sigma_squared))*numpy.sin(2*vals))
-             mean_orientations.append(circ_mean(vals,weights=numpy.exp(-((sx-px)*(sx-px)+(sy-py)*(sy-py))/(two_sigma_squared)),high=numpy.pi)[0])
+    ors = scipy.interpolate.griddata(zip(px,py), vals, (coor_x, coor_y), method='nearest')
 
     pylab.subplot(152)
     pylab.title('Orientatin preference (stimulators)')
     pylab.gca().set_aspect('equal')
-    pylab.scatter([a[0] for a in coordinates],[a[1] for a in coordinates],c=numpy.array(mean_orientations),cmap='hsv')
-
-    signals = []
-    signals = numpy.zeros((len(coordinates),int(parameters.duration/current_update_interval)))
-    for i in xrange(0,len(coordinates)):
-        signals[i,parameters.onset_time/current_update_interval:parameters.offset_time/current_update_interval] =parameters.scale*numpy.exp(-numpy.power(circular_dist(parameters.orientation.value,mean_orientations[i],numpy.pi),2)/parameters.sharpness)
+    pylab.scatter(coor_x.flatten(),coor_y.flatten(),c=ors.flatten(),cmap='hsv')
+    signals = numpy.zeros((numpy.shape(coor_x)[0],numpy.shape(coor_x)[1],int(parameters.duration/current_update_interval)))
+        
+    for i in xrange(0,numpy.shape(coor_x)[0]):
+        for j in xrange(0,numpy.shape(coor_x)[0]):
+            signals[i,j,int(numpy.floor(parameters.onset_time/current_update_interval)):int(numpy.floor(parameters.offset_time/current_update_interval))] = parameters.scale*numpy.exp(-numpy.power(circular_dist(parameters.orientation.value,ors[i][j],numpy.pi),2)/parameters.sharpness)
 
     pylab.subplot(153)
     pylab.gca().set_aspect('equal')
     pylab.title('Activation magnitude (stimulators)')
-    pylab.scatter([a[0] for a in coordinates],[a[1] for a in coordinates],c=numpy.squeeze(numpy.mean(signals,axis=1)),cmap='gray')
+    pylab.scatter(coor_x.flatten(),coor_y.flatten(),c=numpy.squeeze(numpy.mean(signals,axis=2)).flatten(),cmap='gray')
+    pylab.title(str(parameters.orientation.value))
     #pylab.colorbar()
-    return  signals
+    return numpy.array(signals)
