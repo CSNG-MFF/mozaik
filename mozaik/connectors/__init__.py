@@ -36,7 +36,7 @@ class Connector(BaseComponent):
                                                        target.__class__.__name__))
         BaseComponent.__init__(self, model, parameters)
         self.name = name
-        self.model.register_connector(self)
+        #self.model.register_connector(self)
         self.sim = self.model.sim
         self.source = source
         self.target = target

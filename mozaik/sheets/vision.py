@@ -12,7 +12,6 @@ from mozaik.sheets import Sheet
         
 logger = mozaik.getMozaikLogger()
 
-
 class RetinalUniformSheet(Sheet):
     """
     Retinal sheet corresponds to a sheet of retinal cells (retinal ganglion cells or photoreceptors). 
@@ -35,7 +34,7 @@ class RetinalUniformSheet(Sheet):
         'sy': float,  # degrees, y size of the region
         'density': int,  # neurons along each axis
     })
-
+    
     def __init__(self, model, parameters):
         Sheet.__init__(self, model,parameters.sx, parameters.sy, parameters)
         logger.info("Creating %s with %d neurons." % (self.__class__.__name__, int(parameters.sx * parameters.sy * parameters.density)))
@@ -44,13 +43,13 @@ class RetinalUniformSheet(Sheet):
                                    rng=mozaik.pynn_rng)
         
         #rs = space.Grid2D(aspect_ratio=1, dx=parameters.sx/parameters.density, dy=parameters.sy/parameters.density, x0=-parameters.sx/2,y0=-parameters.sy/2,z=0.0)
-        
+        print parameters.sx * parameters.sy * parameters.density
         self.pop = self.sim.Population(int(parameters.sx * parameters.sy * parameters.density),
-                                       getattr(self.model.sim, self.parameters.cell.model),
-                                       self.parameters.cell.params,
-                                       structure=rs,
-                                       initial_values=self.parameters.cell.initial_values,
-                                       label=self.name)
+                                           getattr(self.model.sim, self.parameters.cell.model),
+                                           self.parameters.cell.params,
+                                           structure=rs,
+                                           initial_values=self.parameters.cell.initial_values,
+                                           label=self.name)
 
     def size_in_degrees(self):
         return (self.parameters.sx, self.parameters.sy)

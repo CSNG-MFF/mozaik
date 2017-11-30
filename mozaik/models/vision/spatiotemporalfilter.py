@@ -17,6 +17,8 @@ from parameters import ParameterSet
 logger = mozaik.getMozaikLogger()
 
 
+
+
 def meshgrid3D(x, y, z):
     """A slimmed-down version of http://www.scipy.org/scipy/numpy/attachment/ticket/966/meshgrid.py"""
     x = numpy.asarray(x)
@@ -374,6 +376,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         }),
     })
 
+
     def __init__(self, model, parameters):
         SensoryInputComponent.__init__(self, model, parameters)
         self.shape = (self.parameters.density,self.parameters.density)
@@ -398,7 +401,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                                                   'recording_interval'  :  self.parameters.recording_interval,
                                                   'mpi_safe': False}))
             self.sheets[rf_type] = p
-        
+            
         for rf_type in self.rf_types:
             self.scs[rf_type] = []
             self.ncs[rf_type] = []
@@ -411,14 +414,14 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                     ncs = sim.NoisyCurrentSource(**self.parameters.noise)
                 else:
                     ncs = sim.StepCurrentSource(times=[0.0], amplitudes=[0.0])
-        
-		if self.sheets[rf_type].pop._mask_local[i]:
-			self.ncs_rng[rf_type].append(numpy.random.RandomState(seed=seeds[i]))
-        	        self.scs[rf_type].append(scs)
-	                self.ncs[rf_type].append(ncs)
+                
+                if self.sheets[rf_type].pop._mask_local[i]:
+                       self.ncs_rng[rf_type].append(numpy.random.RandomState(seed=seeds[i]))
+                       self.scs[rf_type].append(scs)
+                       self.ncs[rf_type].append(ncs)
                 lgn_cell.inject(scs)
                 lgn_cell.inject(ncs)
-                
+                    
         
         P_rf = self.parameters.receptive_field
         rf_function = eval(P_rf.func)

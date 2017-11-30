@@ -14,7 +14,6 @@ import numpy
 
 logger = mozaik.getMozaikLogger()
 
-
 class Model(BaseComponent):
     """
     Model encapsulates a mozaik model.
@@ -81,6 +80,7 @@ class Model(BaseComponent):
         self.node = sim.setup(timestep=self.parameters.time_step, min_delay=self.parameters.min_delay, max_delay=self.parameters.max_delay, threads=num_threads)  # should have some parameters here
         self.sheets = {}
         self.connectors = {}
+        self.num_threads = num_threads
 
         # Set-up the input space
         if self.parameters.input_space != None:

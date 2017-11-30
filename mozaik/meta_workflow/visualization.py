@@ -128,6 +128,10 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
                    pylab.colorbar()
 
                    res[value_name]=(parameters[sorted_parameter_indexes[0]],parameters[sorted_parameter_indexes[1]],x,y,z)
+
+                   f = open(v+'.pickle','w')
+                   pickle.dump((value_name,parameters[sorted_parameter_indexes[0]],parameters[sorted_parameter_indexes[1]],x,y,z),f)
+                   f.close()
                
                pylab.xlabel(parameters[sorted_parameter_indexes[0]]) 
                pylab.ylabel(parameters[sorted_parameter_indexes[1]]) 
