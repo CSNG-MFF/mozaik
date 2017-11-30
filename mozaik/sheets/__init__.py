@@ -236,6 +236,7 @@ class Sheet(BaseComponent):
                 else:
                     self.pop.record(variable,sampling_interval=self.parameters.recording_interval)
 
+
     def get_data(self, stimulus_duration=None):
         """
         Retrieve data recorded in this sheet from pyNN in response to the last presented stimulus.
@@ -252,8 +253,7 @@ class Sheet(BaseComponent):
         """
 
         try:
-            block = self.pop.get_data(['spikes', 'v', 'gsyn_exc', 'gsyn_inh'],
-                                      clear=True)
+            block = self.pop.get_data(['spikes', 'v', 'gsyn_exc', 'gsyn_inh'],clear=True)
         except NothingToWriteError, errmsg:
             logger.debug(errmsg)
         

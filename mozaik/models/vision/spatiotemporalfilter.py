@@ -617,32 +617,26 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                       List of 2D arrays containing the frames of luminances that were presented to the retina.
 
         """
-        times = numpy.arange(0, duration, visual_space.update_interval) + offset
+        times = numpy.array([offset,duration-visual_space.update_interval+offset])#numpy.arange(0, duration, visual_space.update_interval) + offset
         zers = times*0
         ts = self.model.sim.get_time_step()
         
         input_cells = {}
         for rf_type in self.rf_types:
-            input_cells[rf_type] = []
-            for i in numpy.nonzero(self.sheets[rf_type].pop._mask_local)[0]:
-                cell = CellWithReceptiveField(self.sheets[rf_type].pop.positions[0][i],
-                                              self.sheets[rf_type].pop.positions[1][i],
+            input_cells[rf_type] = CellWithReceptiveField(self.sheets[rf_type].pop.positions[0][0],
+                                              self.sheets[rf_type].pop.positions[1][0],
                                               self.rf[rf_type],
                                               self.parameters.gain_control,visual_space)
-                cell.initialize(visual_space.background_luminance, duration)
-                input_cells[rf_type].append(cell)
+            input_cells[rf_type].initialize(visual_space.background_luminance, duration)
         
         for rf_type in self.rf_types:
-                for i, (lgn_cell, scs, ncs, rf) in enumerate(
-                                                  zip(self.sheets[rf_type].pop,
-                                                      self.scs[rf_type],
-                                                      self.ncs[rf_type],input_cells[rf_type])):
-                    
-                    if self.parameters.gain_control.non_linear_gain != None:
-                        amplitude = self.parameters.linear_scaler * self.parameters.gain_control.non_linear_gain.luminance_gain * numpy.sum(rf.receptive_field.kernel.flatten())*visual_space.background_luminance / (self.parameters.gain_control.non_linear_gain.luminance_scaler*visual_space.background_luminance+1.0)   
-                    else:
-                        amplitude = self.parameters.linear_scaler * self.parameters.gain_control.gain * numpy.sum(rf.receptive_field.kernel.flatten())*visual_space.background_luminance
-                        
+
+                if self.parameters.gain_control.non_linear_gain != None:
+                        amplitude = self.parameters.linear_scaler * self.parameters.gain_control.non_linear_gain.luminance_gain * numpy.sum(input_cells[rf_type].receptive_field.kernel.flatten())*visual_space.background_luminance / (self.parameters.gain_control.non_linear_gain.luminance_scaler*visual_space.background_luminance+1.0)   
+                else:
+                        amplitude = self.parameters.linear_scaler * self.parameters.gain_control.gain * numpy.sum(input_cells[rf_type].receptive_field.kernel.flatten())*visual_space.background_luminance
+
+                for i, (scs, ncs) in enumerate(zip(self.scs[rf_type],self.ncs[rf_type])):
                     scs.set_parameters(times=times,amplitudes=zers+amplitude)
                     if self.parameters.mpi_reproducible_noise:
                         t = numpy.arange(0, duration, ts) + offset

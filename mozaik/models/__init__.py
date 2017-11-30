@@ -209,6 +209,7 @@ class Model(BaseComponent):
                        s = sheet.get_data(self.parameters.null_stimulus_period)
                        if (not mozaik.mpi_comm) or (mozaik.mpi_comm.rank == mozaik.MPI_ROOT):
                            segments.append(s)
+
         return segments,time.time()-t0    
     
 
