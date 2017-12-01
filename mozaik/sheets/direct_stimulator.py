@@ -442,9 +442,23 @@ class LocalStimulatorArray(DirectStimulator):
         for i in xrange(0,self.sheet.pop.size):
             temp,cutof = mixing_templates[int(nearest_iz[i])]
 
-            ss = stimulator_signals[int(nearest_ix[i]-cutof):int(nearest_ix[i]+cutof+1),int(nearest_iy[i]-cutof):int(nearest_iy[i]+cutof+1),:]
+            ss = stimulator_signals[max(int(nearest_ix[i]-cutof),0):int(nearest_ix[i]+cutof+1),max(int(nearest_iy[i]-cutof),0):int(nearest_iy[i]+cutof+1),:]
+            logger.info(cutof)
+            logger.info(n)
+            logger.info(nearest_ix[i])
+            logger.info(nearest_iy[i])
+            logger.info(int(nearest_iy[i]-cutof))
+            logger.info(int(nearest_iy[i]+cutof+1))
+            logger.info(numpy.shape(ss))
+            logger.info(numpy.shape(stimulator_signals))
             if ss != numpy.array([]):
-               temp = temp[int(cutof-nearest_ix[i]):int(2*n+1+cutof-nearest_ix[i])][int(cutof-nearest_iy[i]):int(2*n+1+cutof-nearest_iy[i])]
+               temp = temp[max(int(cutof-nearest_ix[i]),0):max(int(2*n+1+cutof-nearest_ix[i]),0),max(int(cutof-nearest_iy[i]),0):max(int(2*n+1+cutof-nearest_iy[i]),0)]
+               logger.info(max(int(cutof-nearest_ix[i]),0))
+               logger.info(max(int(2*n+1+cutof-nearest_ix[i]),0))
+               logger.info(max(int(cutof-nearest_iy[i]),0))
+               logger.info(max(int(2*n+1+cutof-nearest_iy[i]),0))
+
+               logger.info(numpy.shape(temp))
                self.mixed_signals[i,:] = K*W*numpy.dot(temp.flatten(),numpy.reshape(ss,(len(temp.flatten()),-1)))
 
 
