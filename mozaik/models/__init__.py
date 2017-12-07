@@ -93,6 +93,7 @@ class Model(BaseComponent):
             
         self.simulator_time = 0
 
+    @profile
     def present_stimulus_and_record(self, stimulus,artificial_stimulators):
         """
         This method is the core of the model execution control. It ensures that a `stimulus` is presented
@@ -119,6 +120,7 @@ class Model(BaseComponent):
                      The biological time of the simulation up to this point (including blank presentations).
                                           
         """
+        t0 = time.time()
         for sheet in self.sheets.values():
             if self.first_time:
                sheet.record()
@@ -157,6 +159,8 @@ class Model(BaseComponent):
             for ds in artificial_stimulators.get(sheet.name,[]):
                 ds.inactivate(self.simulator_time)
         
+        logger.info("Stimulus presentation took %.0f, of which %.0f was simulation time"  % (time.time() - t0,sim_run_time))
+
         return (segments, null_segments,sensory_input,sim_run_time)
         
     def run(self, tstop):
@@ -180,6 +184,7 @@ class Model(BaseComponent):
         self.simulator_time += tstop
         return time.time()-t0
 
+    @profile
     def reset(self):
         """
         Rests the network. Depending on the self.parameters.reset this is done either 

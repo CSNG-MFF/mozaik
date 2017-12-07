@@ -224,7 +224,8 @@ class CellWithReceptiveField(object):
         for i in range(L):
             self.response[-(i+1)] += background_luminance * self.receptive_field.kernel[:, :,0:L-i].sum()
         self.i = 0
-        
+    
+    @profile        
     def view(self):
         """
         Look at the visual space and update t
@@ -238,7 +239,7 @@ class CellWithReceptiveField(object):
              remainder)
         To avoid loading the entire image sequence into memory, we build up the response array one frame at a time.
         """
-        view_array = self.visual_space.view(self.visual_region, pixel_size=self.receptive_field.spatial_resolution )
+        view_array = self.visual_space.view(self.visual_region, pixel_size=self.receptive_field.spatial_resolution)
         self.std[self.i:self.i+self.update_factor] = numpy.std(view_array)
         self.mean[self.i:self.i+self.update_factor] = numpy.mean(view_array)
         time_course = numpy.dot(self.receptive_field.reshaped_kernel,view_array.reshape(-1)[:numpy.newaxis])
@@ -507,6 +508,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
             f.close()
             f1.close()
 
+    @profile
     def process_input(self, visual_space, stimulus, duration=None, offset=0):
         """
         Present a visual stimulus to the model, and create the LGN output
@@ -646,6 +648,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                                            * self.ncs_rng[rf_type][i].randn(len(t)))
                         ncs.set_parameters(times=t, amplitudes=amplitudes)
 
+    @profile
     def _calculate_input_currents(self, visual_space, duration):
         """
         Calculate the input currents for all cells.
@@ -678,11 +681,31 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         t = 0
         retinal_input = []
 
+        #import threading
+        #def view_cell(cell):
+        #    cell.view()
+
+
+        if False:
+            while t < duration:
+                t = visual_space.update()
+                for rf_type in self.rf_types:
+                    threads=[]
+                    for cell in input_cells[rf_type]:
+                        thread = threading.Thread(target=cell.view())
+                        thread.start()
+                        threads.append(thread)
+                        #cell.view()
+                    for t in threads:
+                        t.join()
+
+
         while t < duration:
             t = visual_space.update()
             for rf_type in self.rf_types:
                 for cell in input_cells[rf_type]:
                     cell.view()
+
 
 	    if self.model.parameters.store_stimuli == True:
                 visual_region = VisualRegion(location_x=0, location_y=0,
