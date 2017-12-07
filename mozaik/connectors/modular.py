@@ -136,7 +136,6 @@ class ModularSamplingProbabilisticConnector(ModularConnector):
         'base_weight' : ParameterDist
     })
 
-    @profile
     def _connect(self):
         cl = []
         v = 0
@@ -222,7 +221,6 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(ModularConnect
         'base_weight' : ParameterDist,
     })
 
-    @profile
     def _connect(self):
         cl = []
         v = 0

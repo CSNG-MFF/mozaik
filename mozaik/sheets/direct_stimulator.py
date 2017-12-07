@@ -384,8 +384,7 @@ class LocalStimulatorArray(DirectStimulator):
             'current_update_interval' : float,
             'depth_sampling_step' : float,
     })
-    
-    @profile
+
     def __init__(self, sheet, parameters):
         DirectStimulator.__init__(self, sheet,parameters)
 

@@ -93,7 +93,6 @@ class Model(BaseComponent):
             
         self.simulator_time = 0
 
-    @profile
     def present_stimulus_and_record(self, stimulus,artificial_stimulators):
         """
         This method is the core of the model execution control. It ensures that a `stimulus` is presented
@@ -184,7 +183,6 @@ class Model(BaseComponent):
         self.simulator_time += tstop
         return time.time()-t0
 
-    @profile
     def reset(self):
         """
         Rests the network. Depending on the self.parameters.reset this is done either 

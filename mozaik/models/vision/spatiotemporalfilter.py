@@ -225,7 +225,7 @@ class CellWithReceptiveField(object):
             self.response[-(i+1)] += background_luminance * self.receptive_field.kernel[:, :,0:L-i].sum()
         self.i = 0
     
-    @profile        
+
     def view(self):
         """
         Look at the visual space and update t
@@ -508,7 +508,6 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
             f.close()
             f1.close()
 
-    @profile
     def process_input(self, visual_space, stimulus, duration=None, offset=0):
         """
         Present a visual stimulus to the model, and create the LGN output
@@ -648,7 +647,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                                            * self.ncs_rng[rf_type][i].randn(len(t)))
                         ncs.set_parameters(times=t, amplitudes=amplitudes)
 
-    @profile
+    
     def _calculate_input_currents(self, visual_space, duration):
         """
         Calculate the input currents for all cells.
