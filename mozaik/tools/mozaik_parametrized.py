@@ -200,16 +200,12 @@ class MozaikParametrized(Parameterized):
         """
         def set_in_dict(path, dt,value):
             keys = path.split('_')
-            logger.info(keys)
             for key in keys[:-1]:
                 dt = dt[key]
             dt[keys[-1]]=value
 
         if hasattr(self, 'expanded_params_names'):
             if attribute_name in self.expanded_params_names:
-                logger.info('RRRRRRRRRRRRRRRR')
-                logger.info(attribute_name)
-                logger.info(value)
                 self.expanded_paramset_params_dict[attribute_name] = value;
 
                 n =[]
@@ -627,12 +623,8 @@ def colapse_to_dictionary(value_list, parametrized_objects, parameter_name):
 
     for (v, s) in zip(value_list, parametrized_objects):
         s = MozaikParametrized.idd(s)
-        logger.info(str(s)+'\n')
         val = s.getParamValue(parameter_name)
-        logger.info(str(s.paramset_params_names)+'\n')
-        logger.info(str(parameter_name) + str(val)+'\n')
         setattr(s,parameter_name,None)
-        logger.info(str(s)  +'\n')
         if str(s) in d:
             (a, b) = d[str(s)]
             a.append(val)

@@ -176,10 +176,7 @@ class PerStimulusPlot(PerDSVPlot):
 
         # lets find parameter indexes that vary if we need 'Clever' title style
         if self.title_style == "Clever":
-            logger.info('AAAAAAA')
-            logger.info(str([MozaikParametrized.idd(s) for s in ss]))
             self.varied = varying_parameters([MozaikParametrized.idd(s) for s in ss])
-            logger.info(str(self.varied))
             
             if not self.single_trial:
                 self.varied = [x for x in self.varied if x != 'trial']
@@ -195,10 +192,6 @@ class PerStimulusPlot(PerDSVPlot):
          
     def partiotion_dsvs(self):
         if not self.single_trial:
-           logger.info('DSADA')
-           res = partition_by_stimulus_paramter_query(self.datastore,['trial'])
-           logger.info(str(res))
-#           0/0
            return partition_by_stimulus_paramter_query(self.datastore,['trial'])
         else:
            return partition_by_stimulus_paramter_query(self.datastore,[]) 
@@ -215,7 +208,6 @@ class PerStimulusPlot(PerDSVPlot):
         return self._title(MozaikParametrized.idd(self.dsvs[idx].get_stimuli()[0]))
     
     def _title(self,stimulus):
-        logger.info(self.title_style)
         if self.title_style == "None":
             return None
 
@@ -228,7 +220,6 @@ class PerStimulusPlot(PerDSVPlot):
 
         if self.title_style == "Clever":
            title = ''
-           logger.info(str(self.varied))
            for pn in self.varied:
                title = title + str(pn) + ' : ' + str(stimulus.getParamValue(pn)) + '\n' 
            return title

@@ -74,7 +74,6 @@ def setup_logging():
         init_logging(Global.root_directory + "log", file_level=logging.INFO,
 	             console_level=logging.INFO)  
 
-
 def run_workflow(simulation_name, model_class, create_experiments):
     """
     This is the main function that executes a workflow. 

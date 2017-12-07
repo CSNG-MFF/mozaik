@@ -117,6 +117,7 @@ class Model(BaseComponent):
                      The biological time of the simulation up to this point (including blank presentations).
                                           
         """
+        t0 = time.time()
         for sheet in self.sheets.values():
             if self.first_time:
                sheet.record()
@@ -155,6 +156,8 @@ class Model(BaseComponent):
             for ds in artificial_stimulators.get(sheet.name,[]):
                 ds.inactivate(self.simulator_time)
         
+        logger.info("Stimulus presentation took %.0f, of which %.0f was simulation time"  % (time.time() - t0,sim_run_time))
+
         return (segments, null_segments,sensory_input,sim_run_time)
         
     def run(self, tstop):
