@@ -158,7 +158,7 @@ class Model(BaseComponent):
             for ds in artificial_stimulators.get(sheet.name,[]):
                 ds.inactivate(self.simulator_time)
         
-        logger.info("Stimulus presentation took %.0f, of which %.0f was simulation time"  % (time.time() - t0,sim_run_time))
+        logger.info("Stimulus presentation took %.0f s, of which %.0f s was simulation time"  % (time.time() - t0,sim_run_time))
 
         return (segments, null_segments,sensory_input,sim_run_time)
         

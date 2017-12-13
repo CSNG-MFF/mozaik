@@ -566,13 +566,13 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                 assert isinstance(input_current, dict)
                 t = input_current['times'] + offset
                 a = self.parameters.linear_scaler * input_current['amplitudes']
-                scs.set_parameters(times=t, amplitudes=a)
+                scs.set_parameters(times=t, amplitudes=a,copy=False)
                 if self.parameters.mpi_reproducible_noise:
                     t = numpy.arange(0, duration, ts) + offset
                     amplitudes = (self.parameters.noise.mean
                                    + self.parameters.noise.stdev
                                        * self.ncs_rng[rf_type][i].randn(len(t)))
-                    ncs.set_parameters(times=t, amplitudes=amplitudes)
+                    ncs.set_parameters(times=t, amplitudes=amplitudes,copy=False)
 
 
         # for debugging/testing, doesn't work with MPI !!!!!!!!!!!!
@@ -638,14 +638,14 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                         amplitude = self.parameters.linear_scaler * self.parameters.gain_control.gain * numpy.sum(input_cells[rf_type].receptive_field.kernel.flatten())*visual_space.background_luminance
 
                 for i, (scs, ncs) in enumerate(zip(self.scs[rf_type],self.ncs[rf_type])):
-                    scs.set_parameters(times=times,amplitudes=zers+amplitude)
+                    scs.set_parameters(times=times,amplitudes=zers+amplitude,copy=False)
                     if self.parameters.mpi_reproducible_noise:
                         t = numpy.arange(0, duration, ts) + offset
 
                         amplitudes = (self.parameters.noise.mean
                                         + self.parameters.noise.stdev
                                            * self.ncs_rng[rf_type][i].randn(len(t)))
-                        ncs.set_parameters(times=t, amplitudes=amplitudes)
+                        ncs.set_parameters(times=t, amplitudes=amplitudes,copy=False)
 
     
     def _calculate_input_currents(self, visual_space, duration):

@@ -24,6 +24,7 @@ import pickle
 import scipy.interpolate
 from mpl_toolkits.mplot3d import Axes3D
 from mozaik.controller import Global
+import pickle
 
 logger = mozaik.getMozaikLogger()
 
@@ -167,13 +168,13 @@ class BackgroundActivityBombardment(DirectStimulator):
                 for j,i in enumerate(numpy.nonzero(self.sheet.pop._mask_local)[0]):
                     pp = self.stgene[j].poisson_generator(rate=self.parameters.exc_firing_rate,t_start=0,t_stop=duration).spike_times
                     a = offset + numpy.array(pp)
-                    self.ssae[i].set_parameters(spike_times=Sequence(a.astype(float)))
+                    self.ssae[i].set_parameters(spike_times=Sequence(a.astype(float)),copy=False)
                
            if (self.parameters.inh_firing_rate != 0 or self.parameters.inh_weight != 0):
                 for j,i in enumerate(numpy.nonzero(self.sheet.pop._mask_local)[0]):
                     pp = self.stgene[j].poisson_generator(rate=self.parameters.inh_firing_rate,t_start=0,t_stop=duration).spike_times
                     a = offset + numpy.array(pp)
-                    self.ssai[i].set_parameters(spike_times=Sequence(a.astype(float)))
+                    self.ssai[i].set_parameters(spike_times=Sequence(a.astype(float)),copy=False)
         
 
         
@@ -257,7 +258,7 @@ class Kick(DirectStimulator):
                    rate = [self.parameters.exc_firing_rate] 
                pp = self.stgene[j].inh_poisson_generator(numpy.array(rate),numpy.array(times),t_stop=duration).spike_times
                a = offset + numpy.array(pp)
-               self.ssae[i].set_parameters(spike_times=Sequence(a.astype(float)))
+               self.ssae[i].set_parameters(spike_times=Sequence(a.astype(float)),copy=False)
 
     def inactivate(self,offset):        
         pass
@@ -312,10 +313,10 @@ class Depolarization(DirectStimulator):
             cell.inject(self.scs)
 
     def prepare_stimulation(self,duration,offset):
-        self.scs.set_parameters(times=[offset+self.sheet.sim.state.dt*2], amplitudes=[self.parameters.current])
+        self.scs.set_parameters(times=[offset+self.sheet.dt*2], amplitudes=[self.parameters.current])
         
     def inactivate(self,offset):
-        self.scs.set_parameters(times=[offset+self.sheet.sim.state.dt*2], amplitudes=[0.0])
+        self.scs.set_parameters(times=[offset+self.sheet.dt*2], amplitudes=[0.0])
 
 
 class LocalStimulatorArray(DirectStimulator):
@@ -384,7 +385,7 @@ class LocalStimulatorArray(DirectStimulator):
             'current_update_interval' : float,
             'depth_sampling_step' : float,
     })
-
+    
     def __init__(self, sheet, parameters):
         DirectStimulator.__init__(self, sheet,parameters)
 
@@ -412,7 +413,9 @@ class LocalStimulatorArray(DirectStimulator):
         y =  stimulator_coordinates[1].flatten()
         xx,yy = self.sheet.vf_2_cs(self.sheet.pop.positions[0],self.sheet.pop.positions[1])
         zeros = numpy.zeros(len(x))
-
+        f = open('./' + Global.root_directory +'positions' + self.sheet.name.replace('/','_') + '.pickle','w')
+        pickle.dump((xx,yy),f)
+          
         mixing_templates=[]
         for depth in numpy.arange(sheet.parameters.min_depth,sheet.parameters.max_depth+self.parameters.depth_sampling_step,self.parameters.depth_sampling_step):
             temp = numpy.reshape(light_flux_lookup(numpy.transpose([zeros+depth,numpy.sqrt(numpy.power(x,2)  + numpy.power(y,2))])),(2*n+1,2*n+1))
@@ -470,23 +473,22 @@ class LocalStimulatorArray(DirectStimulator):
         for cell,scs in zip(self.sheet.pop.all_cells,self.scs):
             cell.inject(scs)
 
-
     def prepare_stimulation(self,duration,offset):
         assert self.stimulation_duration == duration, "stimulation_duration != duration :"  + str(self.stimulation_duration) + " " + str(duration)
         times = numpy.arange(0,self.stimulation_duration,self.parameters.current_update_interval) + offset
-        times[0] = times[0] + 3*self.sheet.sim.state.dt
+        times[0] = times[0] + 3*self.sheet.dt
         for i in xrange(0,len(self.scs)):
-            self.scs[i].set_parameters(times=Sequence(times), amplitudes=Sequence(self.mixed_signals[i,:].flatten()))
-        
+            self.scs[i].set_parameters(times=Sequence(times), amplitudes=Sequence(self.mixed_signals[i,:].flatten()),copy=False)
+
     def inactivate(self,offset):
         for scs in self.scs:
-            scs.set_parameters(times=[offset+3*self.sheet.sim.state.dt], amplitudes=[0.0])
+            scs.set_parameters(times=[offset+3*self.sheet.dt], amplitudes=[0.0],copy=False)
 
 def ChRsystem(y,time,X,sampling_period):
-          PhoC1toO1 = 1.6e-19
-          PhoC2toO2 = 4e-20
-          PhoC1toC2 = 3e-20
-          PhoC2toC1 = 4e-20
+          PhoC1toO1 = 1.0993e-19 * 50
+          PhoC2toO2 = 7.1973e-20 * 50
+          PhoC1toC2 = 1.936e-21 * 50
+          PhoC2toC1 = 1.438e-20 * 50
 
           O1toC1 = 0.125
           O2toC2 = 0.015
@@ -528,13 +530,22 @@ class LocalStimulatorArrayChR(LocalStimulatorArray):
       def __init__(self, sheet, parameters):
           LocalStimulatorArray.__init__(self, sheet,parameters)
           times = numpy.arange(0,self.stimulation_duration,self.parameters.current_update_interval)
+          ax = pylab.subplot(155)
+          ax.set_title('Single neuron current injection profile')
+          
+          ax.plot(times,self.mixed_signals[100,:],'k')
+          ax.set_ylabel('photons/cm2/s', color='k')
+
           for i in xrange(0,len(self.scs)):
               res = odeint(ChRsystem,[0,0,0.8,0.2,0],times,args=(self.mixed_signals[i,:].flatten(),self.parameters.current_update_interval))
-              self.mixed_signals[i,:] = 60 * (0.0313*res[:,0] + 0.0088 * res[:,1]); # the 60 corresponds to the 60mV difference between ChR reverse potential of 0mV and our expected mean Vm of about 60mV. This happens to end up being in nA which is what pyNN expect for current injection.
-          pylab.subplot(155)
-          pylab.title('Single neuron current injection profile')
-          pylab.plot(times,self.mixed_signals[100,:])
-          pylab.savefig(Global.root_directory +'/LocalStimulatorArrayTest_' + self.sheet.name.replace('/','_') + '.png')
+              self.mixed_signals[i,:] =  60 * (17.2*res[:,0] + 2.9 * res[:,1])  / 2500 ; # the 60 corresponds to the 60mV difference between ChR reverse potential of 0mV and our expected mean Vm of about 60mV. This happens to end up being in nA which is what pyNN expect for current injection.
+          ax2 = ax.twinx()
+          ax2.plot(times,self.mixed_signals[100,:],'g')
+          ax2.set_ylabel('nA', color='g')
+          f = open(Global.root_directory +'mixed_signals' + self.sheet.name.replace('/','_') + '.pickle','w')
+          pickle.dump(self.mixed_signals,f)
+          f.close()
+          pylab.savefig('./' + Global.root_directory +'LocalStimulatorArrayTest_' + self.sheet.name.replace('/','_') + '.png')
 
 
 def test_stimulating_function(sheet,coor_x,coor_y,current_update_interval,parameters):
