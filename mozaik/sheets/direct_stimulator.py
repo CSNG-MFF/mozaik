@@ -470,14 +470,14 @@ class LocalStimulatorArray(DirectStimulator):
         for cell,scs in zip(self.sheet.pop.all_cells,self.scs):
             cell.inject(scs)
 
-
     def prepare_stimulation(self,duration,offset):
         assert self.stimulation_duration == duration, "stimulation_duration != duration :"  + str(self.stimulation_duration) + " " + str(duration)
         times = numpy.arange(0,self.stimulation_duration,self.parameters.current_update_interval) + offset
         times[0] = times[0] + 3*self.sheet.sim.state.dt
         for i in xrange(0,len(self.scs)):
-            self.scs[i].set_parameters(times=Sequence(times), amplitudes=Sequence(self.mixed_signals[i,:].flatten()))
-        
+	    a = Sequence(self.mixed_signals[i,:].flatten())
+            self.scs[i].set_parameters(times=Sequence(times), amplitudes=a)
+
     def inactivate(self,offset):
         for scs in self.scs:
             scs.set_parameters(times=[offset+3*self.sheet.sim.state.dt], amplitudes=[0.0])
