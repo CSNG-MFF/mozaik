@@ -76,9 +76,10 @@ class GaussianDecayModularConnectorFunction(DistanceDependentModularConnectorFun
         'arborization_scaler': float,    # the scaler of the gaussian decay
     })
     
+
     def distance_dependent_function(self,distance):
         return self.parameters.arborization_scaler*numpy.exp(-0.5*(distance/self.parameters.arborization_constant)**2)/(self.parameters.arborization_constant*numpy.sqrt(2*numpy.pi))
-        
+
 
 class ExponentialDecayModularConnectorFunction(DistanceDependentModularConnectorFunction):
     """
@@ -90,8 +91,10 @@ class ExponentialDecayModularConnectorFunction(DistanceDependentModularConnector
         'arborization_scaler': float,    # the scaler of the exponential decay
     })
     
+
     def distance_dependent_function(self,distance):
         return self.parameters.arborization_scaler*numpy.exp(-distance/self.parameters.arborization_constant)
+
 
 class LinearModularConnectorFunction(DistanceDependentModularConnectorFunction):
     """
@@ -104,6 +107,7 @@ class LinearModularConnectorFunction(DistanceDependentModularConnectorFunction):
     
     def distance_dependent_function(self,distance):
         return self.parameters.linear_scaler*distance + self.parameters.constant_scaler
+
 
 class LinearModularConnectorFunction1(DistanceDependentModularConnectorFunction):
     """

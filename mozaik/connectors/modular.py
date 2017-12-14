@@ -144,8 +144,12 @@ class ModularSamplingProbabilisticConnector(ModularConnector):
             delays = self._obtain_delays(i)
             co = Counter(sample_from_bin_distribution(weights, int(self.parameters.num_samples.next())))
             v = v + numpy.sum(co.values())
-            cl.extend([(k,i,self.weight_scaler*self.parameters.base_weight.next()[0]*co[k],delays[k]) for k in co.keys()])
-        method = self.sim.FromListConnector(cl)
+            k = co.keys()
+            a = numpy.array([k,numpy.zeros(len(k))+i,self.weight_scaler*numpy.multiply(self.parameters.base_weight.next(len(k)),co.values()),numpy.array(delays)[k]])
+            cl.append(a)
+
+        cl = numpy.hstack(cl)
+        method = self.sim.FromListConnector(cl.T)
         
         logger.warning("%s(%s): %g connections were created, %g per target neuron [%g]" % (self.name,self.__class__.__name__,len(cl),len(cl)/len(numpy.nonzero(self.target.pop._mask_local)[0]),v/len(numpy.nonzero(self.target.pop._mask_local)[0])))
 	
@@ -221,6 +225,21 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(ModularConnect
         'base_weight' : ParameterDist,
     })
 
+    def worker(ref,idxs):
+        for i in idxs:
+            samples = self.target.get_neuron_annotation(i,self.parameters.annotation_reference_name)
+            weights = self._obtain_weights(i)
+            delays = self._obtain_delays(i)
+            if self.parameters.num_samples == 0:
+                co = Counter(sample_from_bin_distribution(weights, int(samples)))
+            else:
+                assert self.parameters.num_samples > 2*int(samples), ("%s: %d %d" % (self.name,self.parameters.num_samples,2*int(samples)))
+                a = sample_from_bin_distribution(weights, int(self.parameters.num_samples - 2*int(samples)))
+                co = Counter(a)
+            v = v + numpy.sum(co.values())
+            cl.extend([(int(k),int(i),self.weight_scaler*self.parameters.base_weight.next()[0]*co[k],delays[k]) for k in co.keys()])
+        return cl
+
     def _connect(self):
         cl = []
         v = 0
@@ -234,8 +253,12 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(ModularConnect
                 assert self.parameters.num_samples > 2*int(samples), ("%s: %d %d" % (self.name,self.parameters.num_samples,2*int(samples)))
                 co = Counter(sample_from_bin_distribution(weights, int(self.parameters.num_samples - 2*int(samples))))
             v = v + numpy.sum(co.values())
-            cl.extend([(int(k),int(i),self.weight_scaler*self.parameters.base_weight.next()[0]*co[k],delays[k]) for k in co.keys()])
-        method = self.sim.FromListConnector(cl)
+            k = co.keys()
+            a = numpy.array([k,numpy.zeros(len(k))+i,self.weight_scaler*numpy.multiply(self.parameters.base_weight.next(len(k)),co.values()),numpy.array(delays)[k]])
+            cl.append(a)
+
+        cl = numpy.hstack(cl)
+        method = self.sim.FromListConnector(cl.T)
         
         logger.warning("%s(%s): %g connections were created, %g per target neuron [%g]" % (self.name,self.__class__.__name__,len(cl),len(cl)/len(numpy.nonzero(self.target.pop._mask_local)[0]),v/len(numpy.nonzero(self.target.pop._mask_local)[0])))
         

@@ -1038,12 +1038,12 @@ class ConnectionPlot(StandardStyle):
         self.pos_y = self.pos_y[numpy.nonzero(self.weights)[0]]
 
         
-        if self.colors != None:
+        if isinstance(self.colors,numpy.ndarray) or isinstance(self.colors,list):
             self.colors = numpy.array(self.colors)
             self.colors = self.colors[numpy.nonzero(self.weights)[0]] 
         self.weights = self.weights[numpy.nonzero(self.weights)[0]]
 
-        if self.colors == None:
+        if not isinstance(self.colors,numpy.ndarray)  and self.colors==None:
             if numpy.max(self.weights) > 0:
                 s = self.weights / numpy.max(self.weights) * 200
             else:
