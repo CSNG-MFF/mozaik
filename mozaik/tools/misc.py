@@ -3,6 +3,7 @@ Various helper functions.
 """
 
 import numpy                                                                             
+import numpy.random                                                                             
 from numpy import pi, sqrt, exp, power
 
 def sample_from_bin_distribution(bins, number_of_samples):
@@ -24,13 +25,7 @@ def sample_from_bin_distribution(bins, number_of_samples):
         return []
 
     bins = bins / numpy.sum(bins)
-    
-    # create the cumulative sum
-    cs = numpy.cumsum(bins)
-    samples = numpy.random.rand(number_of_samples)
-    si = []
-    for s in samples:
-        si.append(numpy.nonzero(s < cs)[0][0])
+    si = numpy.random.choice(range(len(bins)),size=number_of_samples,p=bins)
 
     return si
 

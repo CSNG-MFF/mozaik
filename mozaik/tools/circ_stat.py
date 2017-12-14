@@ -64,7 +64,7 @@ def circ_mean(matrix, weights=None, axis=None, low=0, high=pi*2,
     """
     idx = numpy.nonzero(weights!=0.0)[0]
     # check whether matrix and weights are ndarrays
-    if weights != None:
+    if isinstance(weights,numpy.ndarray):
        assert matrix.shape == weights.shape 
     
     if axis == None:
@@ -83,11 +83,12 @@ def circ_mean(matrix, weights=None, axis=None, low=0, high=pi*2,
             weights = numpy.transpose(weights) / row_sums[:, numpy.newaxis]
             weights = weights.T
             
-    if weights == None:
-        m = numpy.mean(m, axis=axis)
-    else:
+    if isinstance(weights,numpy.ndarray):
         z = numpy.multiply(m,weights)
         m = numpy.mean(z, axis=axis)
+    else:
+        m = numpy.mean(m, axis=axis)
+    
     a,b = ((angle_to_pi(m) / (pi*2))*(high-low) + low, abs(m))
     return a,b
     

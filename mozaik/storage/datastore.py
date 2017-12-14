@@ -125,11 +125,12 @@ class DataStoreView(ParametrizedObject):
         Returns the idds of neurons in the sheet given the indexes (this should be primarily used with annotations data such as positions etc.)
         """
         # find first segment from sheet sheet_name
-        if indexes == None:
+        if isinstance(indexes,list) or isinstance(indexes,numpy.ndarray):
+            return self.full_datastore.block.annotations['neuron_ids'][sheet_name][indexes]
+        elif indexes  == None:
             return self.full_datastore.block.annotations['neuron_ids'][sheet_name]
         else:
-            return self.full_datastore.block.annotations['neuron_ids'][sheet_name][indexes]
-
+            raise ValueError("indexes can be aither None or list or ndarray, %s was supplied instead" % (str(type(indexes))))
     def get_sheet_parameters(self,sheet_name):
         """
         Returns the *ParemterSet* instance corresponding to the given sheet.
