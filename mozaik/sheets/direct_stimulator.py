@@ -413,7 +413,7 @@ class LocalStimulatorArray(DirectStimulator):
         y =  stimulator_coordinates[1].flatten()
         xx,yy = self.sheet.vf_2_cs(self.sheet.pop.positions[0],self.sheet.pop.positions[1])
         zeros = numpy.zeros(len(x))
-        f = open('./' + Global.root_directory +'positions' + self.sheet.name.replace('/','_') + '.pickle','w')
+        f = open(Global.root_directory +'positions' + self.sheet.name.replace('/','_') + '.pickle','w')
         pickle.dump((xx,yy),f)
           
         mixing_templates=[]
@@ -545,7 +545,7 @@ class LocalStimulatorArrayChR(LocalStimulatorArray):
           f = open(Global.root_directory +'mixed_signals' + self.sheet.name.replace('/','_') + '.pickle','w')
           pickle.dump(self.mixed_signals,f)
           f.close()
-          pylab.savefig('./' + Global.root_directory +'LocalStimulatorArrayTest_' + self.sheet.name.replace('/','_') + '.png')
+          pylab.savefig(Global.root_directory +'LocalStimulatorArrayTest_' + self.sheet.name.replace('/','_') + '.png')
 
 
 def test_stimulating_function(sheet,coor_x,coor_y,current_update_interval,parameters):
