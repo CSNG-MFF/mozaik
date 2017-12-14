@@ -91,6 +91,7 @@ class Sheet(BaseComponent):
     def __init__(self, model, size_x,size_y, parameters):
         BaseComponent.__init__(self, model, parameters)
         self.sim = self.model.sim
+        self.dt = self.sim.state.dt
         self.name = parameters.name  # the name of the population
         self.model.register_sheet(self)
         self._pop = None
@@ -268,10 +269,11 @@ class Sheet(BaseComponent):
 
         s.spiketrains = sorted(s.spiketrains, compare)
         if stimulus_duration != None:        
-           for i in xrange(0, len(s.spiketrains)):
-               s.spiketrains[i] -= s.spiketrains[i].t_start
-               s.spiketrains[i].t_stop -= s.spiketrains[i].t_start
-               s.spiketrains[i].t_start = 0 * pq.ms
+           for st in s.spiketrains:
+               tstart = st.t_start
+               st -= tstart
+               st.t_stop -= tstart
+               st.t_start = 0 * pq.ms
            for i in xrange(0, len(s.analogsignals)):
                s.analogsignals[i].t_start = 0 * pq.ms
        
