@@ -1095,6 +1095,7 @@ class CorticalStimulationWithStimulatorArrayAndOrientationTuningProtocol(Experim
             'sheet_list' : list,
             'num_trials' : int,
             'num_orientations' : int,
+            'intensities' : list,
             'localstimulationarray_parameters' : ParameterSet,
     })
 
@@ -1104,22 +1105,30 @@ class CorticalStimulationWithStimulatorArrayAndOrientationTuningProtocol(Experim
             from mozaik.sheets.direct_stimulator import LocalStimulatorArrayChR
             
             self.direct_stimulation = []
-            
-            for i in xrange(self.parameters.num_orientations):
-                p = MozaikExtendedParameterSet(self.parameters.localstimulationarray_parameters.tree_copy().as_dict())
-                p.stimulating_signal_parameters.orientation = ParameterWithUnitsAndPeriod(numpy.pi/self.parameters.num_orientations * i,period=numpy.pi)
-                d  = {}
-                for sheet in self.parameters.sheet_list:
-                    d[sheet] = [LocalStimulatorArrayChR(model.sheets[sheet],p)]
+            first = True
 
-                for i in xrange(0,self.parameters.num_trials):
-                    self.direct_stimulation.append(d)
-                    self.stimuli.append(
-                                InternalStimulus(   
-                                                    frame_duration=self.parameters.localstimulationarray_parameters.stimulating_signal_parameters.duration, 
-                                                    duration=self.parameters.localstimulationarray_parameters.stimulating_signal_parameters.duration,
-                                                    trial=i,
-                                                    direct_stimulation_name='LocalStimulatorArray',
-                                                    direct_stimulation_parameters=p
-                                                 )
-                                        )                
+            for s in self.parameters.intensities:
+                for i in xrange(self.parameters.num_orientations):
+                    p = MozaikExtendedParameterSet(self.parameters.localstimulationarray_parameters.tree_copy().as_dict())
+                    p.stimulating_signal_parameters.orientation = ParameterWithUnitsAndPeriod(numpy.pi/self.parameters.num_orientations * i,period=numpy.pi)
+                    p.stimulating_signal_parameters.scale =       ParameterWithUnitsAndPeriod(float(s),period=None)
+                    d  = {}
+                    if first:
+                        for sheet in self.parameters.sheet_list:
+                            d[sheet] = [LocalStimulatorArrayChR(model.sheets[sheet],p)]
+                        first = False
+                    else:
+                        for sheet in self.parameters.sheet_list:
+                            d[sheet] = [LocalStimulatorArrayChR(model.sheets[sheet],p,shared_scs=self.direct_stimulation[0][sheet][0].scs)]
+
+                    for i in xrange(0,self.parameters.num_trials):
+                        self.direct_stimulation.append(d)
+                        self.stimuli.append(
+                                    InternalStimulus(   
+                                                        frame_duration=self.parameters.localstimulationarray_parameters.stimulating_signal_parameters.duration, 
+                                                        duration=self.parameters.localstimulationarray_parameters.stimulating_signal_parameters.duration,
+                                                        trial=i,
+                                                        direct_stimulation_name='LocalStimulatorArray',
+                                                        direct_stimulation_parameters=p
+                                                     )
+                                            )                

@@ -386,7 +386,7 @@ class LocalStimulatorArray(DirectStimulator):
             'depth_sampling_step' : float,
     })
     
-    def __init__(self, sheet, parameters):
+    def __init__(self, sheet,parameters,shared_scs=None):
         DirectStimulator.__init__(self, sheet,parameters)
 
         assert math.fmod(self.parameters.size,self.parameters.spacing) < 0.000000001 , "Error the size has to be multiple of spacing!"
@@ -468,8 +468,10 @@ class LocalStimulatorArray(DirectStimulator):
         
         self.stimulation_duration = numpy.shape(self.mixed_signals)[1] * self.parameters.current_update_interval
         
-       
-        self.scs = [self.sheet.sim.StepCurrentSource(times=[0.0], amplitudes=[0.0]) for cell in self.sheet.pop.all_cells] 
+        if shared_scs != None:
+           self.scs = shared_scs
+        else:
+           self.scs = [self.sheet.sim.StepCurrentSource(times=[0.0], amplitudes=[0.0]) for cell in self.sheet.pop.all_cells] 
         for cell,scs in zip(self.sheet.pop.all_cells,self.scs):
             cell.inject(scs)
 
@@ -527,8 +529,8 @@ class LocalStimulatorArrayChR(LocalStimulatorArray):
       to inject conductance in PyNN. The Channelrhodopsin has reverse potential of ~0, and we assume that our neurons 
       sits on average at -60mV to calculate the current. 
       """
-      def __init__(self, sheet, parameters):
-          LocalStimulatorArray.__init__(self, sheet,parameters)
+      def __init__(self, sheet, parameters,shared_scs=None):
+          LocalStimulatorArray.__init__(self, sheet,parameters,shared_scs)
           times = numpy.arange(0,self.stimulation_duration,self.parameters.current_update_interval)
           ax = pylab.subplot(155)
           ax.set_title('Single neuron current injection profile')
@@ -574,7 +576,7 @@ def test_stimulating_function(sheet,coor_x,coor_y,current_update_interval,parame
         
     for i in xrange(0,numpy.shape(coor_x)[0]):
         for j in xrange(0,numpy.shape(coor_x)[0]):
-            signals[i,j,int(numpy.floor(parameters.onset_time/current_update_interval)):int(numpy.floor(parameters.offset_time/current_update_interval))] = parameters.scale*numpy.exp(-numpy.power(circular_dist(parameters.orientation.value,ors[i][j],numpy.pi),2)/parameters.sharpness)
+            signals[i,j,int(numpy.floor(parameters.onset_time/current_update_interval)):int(numpy.floor(parameters.offset_time/current_update_interval))] = parameters.scale.value*numpy.exp(-numpy.power(circular_dist(parameters.orientation.value,ors[i][j],numpy.pi),2)/parameters.sharpness)
 
     pylab.subplot(153)
     pylab.gca().set_aspect('equal')
