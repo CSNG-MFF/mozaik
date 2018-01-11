@@ -164,6 +164,48 @@ class FullfieldDriftingSquareGrating(TopographicaBasedVisualStimulus):
                     ydensity = self.density)(),
                 [self.current_phase])
             self.current_phase += 2*pi * (self.frame_duration/1000.0) * self.temporal_frequency
+
+class FullfieldDriftingSinusoidalGratingA(TopographicaBasedVisualStimulus):
+    """
+    A full field square grating stimulus.
+
+    A movies composed of interlaced dark and bright bars spanning the width  
+    the visual space. The bars are moving a direction perpendicular to their
+    long axis. The speed is dictated by the *temporal_freuquency* parameter
+    the width of the bars by *spatial_frequency* parameter.
+    """
+
+    orientation = SNumber(rad, period=pi, bounds=[0,pi], doc="Grating orientation")
+    spatial_frequency = SNumber(cpd, doc="Spatial frequency of grating")
+    temporal_frequency = SNumber(Hz, doc="Temporal frequency of grating")
+    contrast = SNumber(dimensionless,bounds=[0,100.0],doc="Contrast of the stimulus")
+    offset_time = SNumber(dimensionless,bounds=[0,None],doc="")
+    onset_time = SNumber(dimensionless,bounds=[0,None],doc="")
+
+    def frames(self):
+        self.current_phase=0
+        i = 0
+        t = 0
+        while True:
+            i += 1
+            st = imagen.SineGrating(
+                    orientation = self.orientation,
+                    frequency = self.spatial_frequency,
+                    phase = self.current_phase,
+                    bounds = BoundingBox( radius=self.size_x/2 ),
+                    offset = self.background_luminance*(100.0 - self.contrast)/100.0,
+                    scale = 2*self.background_luminance*self.contrast/100.0,
+                    xdensity = self.density,
+                    ydensity = self.density)()
+            if t > self.offset_time:
+                st = st * 0 + self.background_luminance
+            if t < self.onset_time:
+                st = st * 0 + self.background_luminance
+            
+            yield (st,[self.current_phase])
+            self.current_phase += 2*pi * (self.frame_duration/1000.0) * self.temporal_frequency
+            t=t+self.frame_duration
+
  
 
 class FlashingSquares(TopographicaBasedVisualStimulus):

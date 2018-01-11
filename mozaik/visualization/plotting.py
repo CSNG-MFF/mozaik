@@ -274,7 +274,6 @@ class PlotTuningCurve(Plotting):
             st = [MozaikParametrized.idd(s.stimulus_id) for s in self.pnvs[-1]]
             self.st.append(st)
             dic = colapse_to_dictionary([z.get_value_by_id(self.parameters.neurons) for z in self.pnvs[-1]],st,self.parameters.parameter_name)
-            logger.info(dic.keys())
             #sort the entries in dict according to the parameter parameter_name values 
             for k in  dic:
                 (b, a) = dic[k]
@@ -323,7 +322,7 @@ class PlotTuningCurve(Plotting):
             gs = gridspec.GridSpecFromSubplotSpec(len(self.st), 1, subplot_spec=gs)
         
         for i,(dic, st, pnv) in enumerate(zip(self.tc_dict,self.st,self.pnvs)):
-            logger.info('A' + str(i))
+            
             if not self.parameters.pool:
                xs = [] 
                ys = []
@@ -331,6 +330,7 @@ class PlotTuningCurve(Plotting):
                errors = []
                             
             period = st[0].getParams()[self.parameters.parameter_name].period
+            
             if self.parameters.centered:        
                assert period != None, "ERROR: You asked for centering of tuning curves even though the domain over which it is measured is not periodic." 
             
@@ -339,9 +339,6 @@ class PlotTuningCurve(Plotting):
                 
             for k in sorted(dic.keys()):    
                 (par, val) = dic[k]
-                #logger.info(str(k))
-                #logger.info(str(par))
-                #logger.info(str(val))
                 error = None
                 if self.parameters.mean:
                     v = []
@@ -366,7 +363,7 @@ class PlotTuningCurve(Plotting):
                 par,val = zip(*sorted(zip(numpy.array(par),val)))
 
                 # if we have a period of pi or 2*pi
-                if period==pi and self.parameters.centered==False:
+                if numpy.isclose(period,pi) and self.parameters.centered==False:
                    par = [(p-pi if p > pi/2 else p) for p in par]
                    par,val = zip(*sorted(zip(numpy.array(par),val)))
                    par = list(par)
@@ -376,7 +373,7 @@ class PlotTuningCurve(Plotting):
                    if error != None:
                         error = list(error)
                         error.insert(0,error[-1])
-                elif period==2*pi and self.parameters.centered==False:
+                elif numpy.isclose(period,2*pi) and self.parameters.centered==False:
                    par = [(p-2*pi if p > pi/2 else p) for p in par]
                    par,val = zip(*sorted(zip(numpy.array(par),val)))
                    par = list(par)
@@ -386,12 +383,30 @@ class PlotTuningCurve(Plotting):
                    if error != None:
                         error = list(error)
                         error.insert(0,error[-1])
+                elif self.parameters.centered==True:                        
+                     par = list(par)
+                     val = list(val)
+                     if numpy.isclose(par[0],-period/2):
+                        par.append(period/2)
+                        val.append(val[0])
+                        if isinstance(error,numpy.ndarray) or isinstance(error,list):
+                            error = list(error)
+                            error.append(error[0])
+
+                     if numpy.isclose(par[-1],period/2):
+                        par.insert(0,-period/2)
+                        val.insert(0,val[-1])
+                        if isinstance(error,numpy.ndarray) or isinstance(error,list):
+                            error = list(error)
+                            error.append(error[0])
+
+
                 elif period != None:
                     par = list(par)
                     val = list(val)
                     par.append(par[0] + period)
                     val.append(val[0])
-                    if error != None:
+                    if isinstance(error,numpy.ndarray) or isinstance(error,list):
                         error = list(error)
                         error.append(error[0])
                    
@@ -433,6 +448,7 @@ class PlotTuningCurve(Plotting):
                 if not self.parameters.mean:
                     errors = None 
                 params = self.create_params(pnv[0].value_name,pnv[0].value_units,i==0,i==(len(self.pnvs)-1),period,self.parameters.neurons[idx],len(xs),self.parameters.polar,labels,idx)
+
                 plots.append(("TuningCurve_" + pnv[0].value_name,StandardStyleLinePlot(xs, ys,error=errors,subplot_kw=po),gs[i],params))   
         
         
@@ -466,14 +482,15 @@ class PlotTuningCurve(Plotting):
             if top_row:
                 params["title"] =  'Neuron ID: %d' % neuron_id
             
+
             if not polar:
-                    if period == pi:
+                    if numpy.isclose(period,pi):
                         params["x_ticks"] = [-pi/2, 0, pi/2]
                         params["x_lim"] = (-pi/2, pi/2)
                         params["x_tick_style"] = "Custom"
                         params["x_tick_labels"] = ["-$\\frac{\\pi}{2}$", "0", "$\\frac{\\pi}{2}$"]
                    
-                    if period == 2*pi:
+                    if numpy.isclose(period,2*pi):
                         params["x_ticks"] = [-pi, 0, pi]
                         params["x_lim"] = (-pi, pi)
                         params["x_tick_style"] = "Custom"
@@ -494,7 +511,7 @@ class PlotTuningCurve(Plotting):
             return params
             
     def center_tc(self,val,par,period,center_index):
-           # first lets make the maximum to be at zero                   
+           # first lets make the maximum to be at zero  
            q = center_index+len(val)/2 if center_index < len(val)/2 else center_index-len(val)/2
            z = par[center_index]
            c =  period/2.0
@@ -506,7 +523,6 @@ class PlotTuningCurve(Plotting):
                par[:-q] = par[q:].copy()[:]   
                val[-q:] = a
                par[-q:] = b
-           
            return val,par 
 
     
@@ -554,7 +570,6 @@ class RasterPlot(Plotting):
         if self.parameters.spontaneous:
            spont_sp = [s.get_spiketrain(self.parameters.neurons) for s in sorted(dsv.get_segments(null=True),key = lambda x : MozaikParametrized.idd(x.annotations['stimulus']).trial)]             
            sp = [RasterPlot.concat_spiketrains(sp1,sp2) for sp1,sp2 in zip(spont_sp,sp)]
-           logger.info(numpy.shape(spont_sp))
            x_ticks = [float(spont_sp[0][0].t_start.rescale(pq.s)),0.0,float(sp[0][0].t_stop.rescale(pq.s)/2), float(sp[0][0].t_stop.rescale(pq.s))]
 
         d = {} 
@@ -1681,7 +1696,6 @@ class PlotTemporalTuningCurve(Plotting):
             xs = [] 
             ys = []
             period = st[0].getParams()[self.parameters.parameter_name].period
-
             for k in sorted(dic.keys()):    
                 (par, val) = dic[k]
                 error = None
