@@ -127,7 +127,7 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
                    pylab.ylim(min(y)-0.1*(max(y)-min(y)),max(y)+0.1*(max(y)-min(y)))
                    pylab.colorbar()
 
-                   res[value_name]=(parameters[sorted_parameter_indexes[0]],parameters[sorted_parameter_indexes[1]],x,y,z)
+                   res[value_name]=((parameters[sorted_parameter_indexes[0]],parameters[sorted_parameter_indexes[1]]),x,y,z)
 
                    f = open(v+'.pickle','w')
                    pickle.dump((value_name,parameters[sorted_parameter_indexes[0]],parameters[sorted_parameter_indexes[1]],x,y,z),f)
@@ -142,6 +142,7 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
 
         f = open('ps_res.pickle','w')
         pickle.dump(res,f)
+	scipy.io.savemat('ps_res.mat', res)
         f.close()
 
     if filename != None:

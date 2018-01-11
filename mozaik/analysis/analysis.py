@@ -1240,11 +1240,11 @@ class AnalogSignal_PerNeuronBetweenSignalCorrelation(Analysis):
                        if i == 13:
                          import pylab
                          pylab.figure()
-                         pylab.plot(savgol_filter(a1.magnitude.flatten()[100:],151,2),'b',savgol_filter(a2.rescale(a1.units).magnitude.flatten()[100:],151,2),'r')
+                         pylab.plot(savgol_filter(a1.magnitude.flatten()[100:],501,2),'b',savgol_filter(a2.rescale(a1.units).magnitude.flatten()[100:],501,2),'r')
                          #pylab.title(str(numpy.corrcoef([savgol_filter(a1.magnitude.flatten()[100:],151,2),savgol_filter(a2.rescale(a1.units).magnitude.flatten()[100:],151,2)])))
                          pylab.savefig("smoothed.eps")
 
-                       vs.append(numpy.corrcoef([savgol_filter(a1.magnitude.flatten()[100:],151,2),savgol_filter(a2.rescale(a1.units).magnitude.flatten()[100:],151,2)])[0][1])
+                       vs.append(numpy.corrcoef([savgol_filter(a1.magnitude.flatten()[100:],501,2),savgol_filter(a2.rescale(a1.units).magnitude.flatten()[100:],501,2)])[0][1])
 
                    self.datastore.full_datastore.add_analysis_result(
                           PerNeuronValue(vs, asl1.ids, qt.dimensionless,

@@ -625,6 +625,7 @@ class ScatterPlotMovie(StandardStyleAnimatedPlot):
         self.parameters["marker"] = 'o'
         self.parameters["left_border"] = False
         self.parameters["bottom_border"] = False
+        self.parameters["colors"] = False
 
     def plot_next_frame(self):
         #vmax = numpy.max(self.z)/2.0
@@ -637,9 +638,19 @@ class ScatterPlotMovie(StandardStyleAnimatedPlot):
 
     def plot(self):
         vmax = numpy.max(self.z)/4.0
-        #d= numpy.array([[1,1,1,x/vmax] for x in self.z[0, :].flatten()])
-        #print numpy.shape(d)
-        self.scatter = self.axis.scatter(self.x.flatten(), self.y.flatten(),
+        
+        if self.parameters['colors'] != False:
+            HSV = numpy.dstack((numpy.repeat(self.parameters['colors'], len(self.z), axis=1),numpy.ones_like(self.z),self.z))
+            self.z = hsv_to_rgb(HSV)   
+            self.scatter = self.axis.scatter(self.x.flatten(), self.y.flatten(),
+                                         c=self.z[0, :].flatten(),
+                                         s=self.parameters["dot_size"],
+                                         marker=self.parameters["marker"],
+                                         lw=0,
+                                         vmax=vmax,
+                                         alpha=0.4)
+        else:
+            self.scatter = self.axis.scatter(self.x.flatten(), self.y.flatten(),
                                          c=self.z[0, :].flatten(),
                                          s=self.parameters["dot_size"],
                                          marker=self.parameters["marker"],
