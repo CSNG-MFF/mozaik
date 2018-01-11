@@ -425,7 +425,7 @@ class LocalStimulatorArray(DirectStimulator):
             mixing_templates.append((temp[n-cutof:n+cutof+1,n-cutof:n+cutof+1],cutof))
 
         signal_function = load_component(self.parameters.stimulating_signal)
-        stimulator_signals = signal_function(sheet,stimulator_coordinates[0],stimulator_coordinates[1],self.parameters.current_update_interval,self.parameters.stimulating_signal_parameters)
+        stimulator_signals = signal_function(sheet,stimulator_coordinates[0],stimulator_coordinates[1],self.parameters.current_update_interval,self.parameters.stimulating_signal_parameters )
 
         #stimulator_signals = numpy.reshape(stimulator_signals,((2*n+1)*(2*n+1),-1))
         
@@ -553,7 +553,6 @@ class LocalStimulatorArrayChR(LocalStimulatorArray):
 def test_stimulating_function(sheet,coor_x,coor_y,current_update_interval,parameters):
     z = sheet.pop.all_cells.astype(int)
     vals = numpy.array([sheet.get_neuron_annotation(i,'LGNAfferentOrientation') for i in xrange(0,len(z))])
-    two_sigma_squared = 2*parameters.sigma * parameters.sigma 
 
     mean_orientations = []
 

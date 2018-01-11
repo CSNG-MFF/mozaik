@@ -287,6 +287,76 @@ class MeasureOrientationTuningFullfield(VisualExperiment):
         pass
 
 
+class MeasureOrientationTuningFullfieldA(VisualExperiment):
+    """
+    Measure orientation tuning using a fullfiled sinusoidal grating.
+
+    This experiment will show a series of full-field sinusoidal gratings
+    that vary in orientation, while the other parameters remain constant.
+    
+    Parameters
+    ----------
+    model : Model
+          The model on which to execute the experiment.
+
+    Other parameters
+    ----------------
+
+    num_orientations : int
+          Number of orientation to present.
+    
+    spatial_frequency : float
+                      Spatial frequency of the grating.
+                      
+    temporal_frequency : float
+                      Temporal frequency of the grating.
+
+    grating_duration : float
+                      The duration of single presentation of a grating.
+    
+    contrasts : list(float) 
+              List of contrasts (expressed as % : 0-100%) at which to measure the orientation tuning.
+    
+    num_trials : int
+               Number of trials each each stimulus is shown.
+    """
+    
+    required_parameters = ParameterSet({
+            'num_orientations': int, 
+            'spatial_frequency' : float, 
+            'temporal_frequency' : float,
+            'grating_duration' : float,
+            'contrasts' : list,
+            'num_trials' : int,
+            'offset_time' : float,
+            'onset_time' : float,
+    })  
+    
+    def __init__(self,model,parameters):
+        VisualExperiment.__init__(self, model,parameters)
+        for c in self.parameters.contrasts:
+            for i in xrange(0, self.parameters.num_orientations):
+                for k in xrange(0, self.parameters.num_trials):
+                    self.stimuli.append(topo.FullfieldDriftingSinusoidalGratingA(
+                    frame_duration = self.frame_duration,
+                                    size_x=model.visual_field.size_x,
+                                    size_y=model.visual_field.size_y,
+                                    offset_time=self.parameters.offset_time,
+                                    onset_time=self.parameters.onset_time,
+                                    location_x=0.0,
+                                    location_y=0.0,
+                                    background_luminance=self.background_luminance,
+                                    contrast = c,
+                                    duration=self.parameters.grating_duration,
+                                    density=self.density,
+                                    trial=k,
+                                    orientation=numpy.pi/self.parameters.num_orientations*i,
+                                    spatial_frequency=self.parameters.spatial_frequency,
+                                    temporal_frequency=self.parameters.temporal_frequency))
+
+    def do_analysis(self, data_store):
+        pass
+
 class MeasureSizeTuning(VisualExperiment):
     """
     Size tuning experiment.
