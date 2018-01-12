@@ -7,6 +7,7 @@ import numpy
 import mozaik
 import mozaik.tools.units 
 import quantities as pq
+from matplotlib.colors import hsv_to_rgb
 
 logger = mozaik.getMozaikLogger()
 
@@ -630,7 +631,10 @@ class ScatterPlotMovie(StandardStyleAnimatedPlot):
     def plot_next_frame(self):
         #vmax = numpy.max(self.z)/2.0
         #d= numpy.array([[1.0,1.0,1.0,x/vmax] for x in self.z[self.i, :].flatten()])
-        self.scatter.set_array(self.z[self.i, :].flatten())
+        if isinstance(self.parameters['colors'],numpy.ndarray):
+            self.scatter.set_color(self.z[self.i, :])
+        else:
+            self.scatter.set_array(self.z[self.i, :])
         self.i = self.i + 1
         if self.i == self.l:
             self.i = 0
@@ -639,11 +643,17 @@ class ScatterPlotMovie(StandardStyleAnimatedPlot):
     def plot(self):
         vmax = numpy.max(self.z)/4.0
         
-        if self.parameters['colors'] != False:
-            HSV = numpy.dstack((numpy.repeat(self.parameters['colors'], len(self.z), axis=1),numpy.ones_like(self.z),self.z))
+        if isinstance(self.parameters['colors'],numpy.ndarray):
+            logger.info(numpy.shape(numpy.tile(self.parameters['colors'],(len(self.z),1))))
+            logger.info(numpy.shape(numpy.ones_like(self.z)))
+            logger.info(numpy.shape(self.z))
+            HSV = numpy.dstack((numpy.tile(self.parameters['colors'],(len(self.z),1)),numpy.ones_like(self.z),self.z))
+            logger.info(numpy.shape(HSV))
             self.z = hsv_to_rgb(HSV)   
+            logger.info(numpy.shape(self.z))
             self.scatter = self.axis.scatter(self.x.flatten(), self.y.flatten(),
-                                         c=self.z[0, :].flatten(),
+                                         #c=self.z[0, :].T,
+                                         facecolors=self.z[0, :],
                                          s=self.parameters["dot_size"],
                                          marker=self.parameters["marker"],
                                          lw=0,
