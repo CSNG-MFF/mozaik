@@ -163,7 +163,7 @@ class Plotting(ParametrizedObject):
           import matplotlib.animation as animation
           self.animation = animation.FuncAnimation(self.fig,
                                       Plotting.update_animation_function,
-                                      frames = 400,
+                                      frames = 300,
                                       repeat=False,
                                       fargs=(self,),
                                       interval=self.frame_duration,
@@ -172,7 +172,7 @@ class Plotting(ParametrizedObject):
         if self.plot_file_name:
             #if there were animations, save them
             if self.animation_update_functions != []:
-                self.animation.save(Global.root_directory+self.plot_file_name+'.mov', writer='avconv_file', fps=10,bitrate=5000) 
+                self.animation.save(Global.root_directory+self.plot_file_name+'.mov', writer='avconv_file', fps=30,bitrate=5000) 
             else:
                 # save the analysis plot
                 pylab.savefig(Global.root_directory+self.plot_file_name)       
