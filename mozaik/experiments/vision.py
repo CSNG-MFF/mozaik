@@ -429,7 +429,7 @@ class MeasureSizeTuning(VisualExperiment):
             
         # stimuli creation        
         for c in self.parameters.contrasts:
-            for s in self.parameters.sizes:
+            for s in sizes:
                 for k in xrange(0, self.parameters.num_trials):
                     self.stimuli.append(topo.DriftingSinusoidalGratingDisk(
 				    frame_duration = self.frame_duration,

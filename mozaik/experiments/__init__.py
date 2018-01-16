@@ -7,6 +7,7 @@ import mozaik
 from mozaik.stimuli import InternalStimulus
 from parameters import ParameterSet
 from mozaik.core import ParametrizedObject
+from mozaik.tools.distribution_parametrization import ParameterWithUnitsAndPeriod, MozaikExtendedParameterSet
 
 logger = mozaik.getMozaikLogger()
 
@@ -87,6 +88,7 @@ class Experiment(ParametrizedObject):
             if self.direct_stimulation == None:
                ds = {}
             else:
+               logger.info(i)
                ds = self.direct_stimulation[i]
             (segments,null_segments,input_stimulus,simulator_run_time) = self.model.present_stimulus_and_record(s,ds)
             srtsum += simulator_run_time
@@ -151,16 +153,17 @@ class PoissonNetworkKick(Experiment):
             Experiment.__init__(self, model,parameters)
             from mozaik.sheets.direct_stimulator import Kick
 
-            p = ParameterSet({'exc_firing_rate' : self.parameters.lambda_list[i],
+            d  = {}
+            for i,sheet in enumerate(self.parameters.sheet_list):
+                p = MozaikExtendedParameterSet({'exc_firing_rate' : self.parameters.lambda_list[i],
                                                       'exc_weight' : self.parameters.weight_list[i],
                                                       'drive_period' : self.parameters.drive_period,
                                                       'population_selector' : self.parameters.stimulation_configuration})
-            d  = {}
-            for i,sheet in enumerate(self.parameters.sheet_list):
+
                 d[sheet] = [Kick(model.sheets[sheet],p)]
             
             self.direct_stimulation = [d]
-            self.stimuli.append(
+	    self.stimuli.append(
                         InternalStimulus(   
                                             frame_duration=self.parameters.duration, 
                                             duration=self.parameters.duration,
