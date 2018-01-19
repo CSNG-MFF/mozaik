@@ -414,7 +414,6 @@ class MeasureSizeTuning(VisualExperiment):
             'contrasts' : list,
             'num_trials' : int,
             'log_spacing' : bool,
-            'with_flat' : bool
     })  
 
     def __init__(self,model,parameters):
@@ -446,19 +445,6 @@ class MeasureSizeTuning(VisualExperiment):
                                     radius=s,
                                     spatial_frequency=self.parameters.spatial_frequency,
                                     temporal_frequency=self.parameters.temporal_frequency))
-                    if with_flat:
-                        self.stimuli.append(topo.FlatDisk(
-				    frame_duration = self.frame_duration,
-                                    size_x=model.visual_field.size_x,
-                                    size_y=model.visual_field.size_y,
-                                    location_x=0.0,
-                                    location_y=0.0,
-                                    background_luminance=self.background_luminance,
-                                    contrast = c,
-                                    duration=self.parameters.grating_duration,
-                                    density=self.density,
-                                    trial=k,
-                                    radius=s))
 
     def do_analysis(self, data_store):
         pass
