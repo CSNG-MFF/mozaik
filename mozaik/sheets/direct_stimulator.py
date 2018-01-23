@@ -451,9 +451,9 @@ class LocalStimulatorArray(DirectStimulator):
                self.mixed_signals[i,:] = K*W*numpy.dot(temp.flatten(),numpy.reshape(ss,(len(temp.flatten()),-1)))
 
 
-        lam=numpy.squeeze(numpy.mean(self.mixed_signals,axis=1))
+        lam=numpy.squeeze(numpy.max(self.mixed_signals,axis=1))
         for i in xrange(0,self.sheet.pop.size):
-            self.sheet.add_neuron_annotation(i, 'Light activation magnitude', lam[i], protected=True)
+            self.sheet.add_neuron_annotation(i, 'Light activation magnitude(' +self.sheet.name + ',' +  str(self.parameters.stimulating_signal_parameters.scale.value) + ',' +  str(self.parameters.stimulating_signal_parameters.orientation.value) + ')', lam[i], protected=True)
 
         #ax = pylab.subplot(154, projection='3d')
         ax = pylab.subplot(154)
@@ -541,10 +541,14 @@ class LocalStimulatorArrayChR(LocalStimulatorArray):
           for i in xrange(0,len(self.scs)):
               res = odeint(ChRsystem,[0,0,0.8,0.2,0],times,args=(self.mixed_signals[i,:].flatten(),self.parameters.current_update_interval))
               self.mixed_signals[i,:] =  60 * (17.2*res[:,0] + 2.9 * res[:,1])  / 2500 ; # the 60 corresponds to the 60mV difference between ChR reverse potential of 0mV and our expected mean Vm of about 60mV. This happens to end up being in nA which is what pyNN expect for current injection.
+
+          for i in xrange(0,self.sheet.pop.size):
+              self.sheet.add_neuron_annotation(i, 'Light activation magnitude ChR(' +self.sheet.name + ',' +  str(self.parameters.stimulating_signal_parameters.scale.value) + ',' +  str(self.parameters.stimulating_signal_parameters.orientation.value) + ')', numpy.max(self.mixed_signals[i,:]), protected=True)
+
           ax2 = ax.twinx()
           ax2.plot(times,self.mixed_signals[100,:],'g')
           ax2.set_ylabel('nA', color='g')
-          f = open(Global.root_directory +'mixed_signals' + self.sheet.name.replace('/','_') + '.pickle','w')
+          f = open(Global.root_directory +'mixed_signals' + self.sheet.name.replace('/','_') + '_' +  str(self.parameters.stimulating_signal_parameters.scale.value) + '_' +  str(self.parameters.stimulating_signal_parameters.orientation.value) + '.pickle','w')
           pickle.dump(self.mixed_signals,f)
           f.close()
           pylab.savefig(Global.root_directory +'LocalStimulatorArrayTest_' + self.sheet.name.replace('/','_') + '.png')
@@ -552,8 +556,8 @@ class LocalStimulatorArrayChR(LocalStimulatorArray):
 
 def test_stimulating_function(sheet,coor_x,coor_y,current_update_interval,parameters):
     z = sheet.pop.all_cells.astype(int)
-    vals = numpy.array([sheet.get_neuron_annotation(i,'LGNAfferentOrientation') for i in xrange(0,len(z))])
-
+    vals = numpy.array([sheet.get_neuron_annotation(i,'LGNAfferentOrientation') for i in xrange(0,len(z))]
+)
     mean_orientations = []
 
     px,py = sheet.vf_2_cs(sheet.pop.positions[0],sheet.pop.positions[1])

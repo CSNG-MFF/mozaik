@@ -494,7 +494,7 @@ class SpikeHistogramPlot(SpikeRasterPlot):
         self.parameters["colors"] = ['#000000' for i in xrange(0, len(self.sps))]
         
     def plot(self):
-        self.neurons = [i for i in xrange(0, min(10, len(self.sps[0][0])))]
+        self.neurons = [i for i in xrange(0, len(self.sps[0][0]))]
 
         t_stop = float(self.sps[0][0][0].t_stop.rescale(pq.s))
         t_start = float(self.sps[0][0][0].t_start.rescale(pq.s))
@@ -503,12 +503,11 @@ class SpikeHistogramPlot(SpikeRasterPlot):
         for k, sp in enumerate(self.sps):
             tmp = []
             for i, spike_list in enumerate(sp):
-                for j in self.neurons:
-                    spike_train = spike_list[j].rescale(pq.s)
+                for st in spike_list:
+                    spike_train = st.rescale(pq.s)
                     tmp.extend(spike_train.magnitude)
             all_spikes.append(tmp)
-        logger.info(str(t_stop))
-        logger.info(str(self.bin_width))
+
         if all_spikes != []:
             self.axis.hist(all_spikes,
                            bins=numpy.arange(0, t_stop, self.bin_width),
