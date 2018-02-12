@@ -139,7 +139,7 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
             raise ValueError("Currently cannot handle more than 2D data")
         pylab.title(value_name)    
 
-
+	import scipy
         f = open('ps_res.pickle','w')
         pickle.dump(res,f)
 	scipy.io.savemat('ps_res.mat', res)

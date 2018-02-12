@@ -728,9 +728,6 @@ class GaussianTuningCurveFit(Analysis):
                         for i in xrange(0,len(self.pnvs[0].values)):
 			    Y = [a[i] for a in self.tc_dict[k][1]]
                             res,err = self._fitgaussian(self.tc_dict[k][0],Y,period)
-                            if res == None:
-                               logger.debug('Failed to fit tuning curve %s for neuron %d' % (k,i))
-                               return
                             z.append(res)    
 			    u.append(err)
                             m.append(max(Y))
@@ -738,7 +735,7 @@ class GaussianTuningCurveFit(Analysis):
 			err = numpy.array(u)
 			m = numpy.array(m)
                             
-                        if res != None:
+                        if True:
                            self.datastore.full_datastore.add_analysis_result(PerNeuronValue(m,self.pnvs[0].ids,self.pnvs[0].value_units,value_name = self.parameters.parameter_name + ' real max  of ' + self.pnvs[0].value_name ,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
                            self.datastore.full_datastore.add_analysis_result(PerNeuronValue(err,self.pnvs[0].ids,self.pnvs[0].value_units,value_name = self.parameters.parameter_name + ' fitting error of ' + self.pnvs[0].value_name ,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
                            self.datastore.full_datastore.add_analysis_result(PerNeuronValue(res[:,0],self.pnvs[0].ids,self.pnvs[0].value_units,value_name = self.parameters.parameter_name + ' baseline of ' + self.pnvs[0].value_name ,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
@@ -1069,6 +1066,21 @@ class PopulationMeanAndVar(Analysis):
                                                                 tags=self.tags,
                                                                 analysis_algorithm=self.__class__.__name__,
                                                                 stimulus_id=ads.stimulus_id))
+
+class PopulationMedian(Analysis):
+      """
+      Calculates the meddian value accross population of a quantity. Currently it can process PerNeuronValues , PerNeuronPairValue.
+
+      Periodic variables are not supported.
+
+      This list is likely to grow in future.
+      """
+      def perform_analysis(self):
+          dsv = queries.param_filter_query(self.datastore,identifier=['PerNeuronPairValue','PerNeuronValue'])
+          for ads in dsv.get_analysis_result():
+	      assert ads.period == None ,  "PopulationMedian can only handle non-periodic quantitities"
+              m = numpy.median(ads.values)
+              self.datastore.full_datastore.add_analysis_result(SingleValue(value=m,period=ads.period,value_name = 'Median(' + ads.value_name + ')',sheet_name=ads.sheet_name,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=ads.stimulus_id))
 
 class Analog_MeanSTDAndFanoFactor(Analysis):
       """
