@@ -565,6 +565,8 @@ class RasterPlot(Plotting):
     def _ploter(self, dsv,gs):
         sp = [s.get_spiketrain(self.parameters.neurons) for s in sorted(dsv.get_segments(),key = lambda x : MozaikParametrized.idd(x.annotations['stimulus']).trial)]             
         
+        num_trials = numpy.max([MozaikParametrized.idd(s.annotations['stimulus']).trial for s in dsv.get_segments()])+1
+
         x_ticks = [0.0,float(sp[0][0].t_stop.rescale(pq.s)/2), float(sp[0][0].t_stop.rescale(pq.s))]
         
         if self.parameters.spontaneous:
@@ -576,8 +578,8 @@ class RasterPlot(Plotting):
         if self.parameters.trial_averaged_histogram:
             gs = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=gs)
             # first the raster
-            return [ ('SpikeRasterPlot',SpikeRasterPlot([sp]),gs[:3, 0],{'x_axis': False , 'x_label' :  None,"x_ticks": x_ticks,'x_tick_style'  :'Custom'}),
-                     ('SpikeHistogramPlot',SpikeHistogramPlot([sp]),gs[3, 0],{"x_ticks": x_ticks,'x_tick_style'  :'Custom'})]
+            return [ ('SpikeRasterPlot',SpikeRasterPlot([sp]),gs[:3,0],{'x_axis': False , 'x_label' :  None}),
+                     ('SpikeHistogramPlot',SpikeHistogramPlot([sp],num_trials),gs[3,0],{"x_ticks": x_ticks})]
         else:
             return [('SpikeRasterPlot',SpikeRasterPlot([sp]),gs,{"x_ticks": x_ticks,'x_tick_style'  :'Custom'})]
 

@@ -367,11 +367,11 @@ class DataStore(DataStoreView):
         This method filters out from a list of stimuli all those which have already been
         presented.
         """
-        unpresented_stimuli = []
-        for s in stimuli:
+        unpresented_stimuli_indexes = []
+        for i,s in enumerate(stimuli):
             if not str(s) in self.stimulus_dict:
-                unpresented_stimuli.append(s)
-        return unpresented_stimuli
+                unpresented_stimuli_indexes.append(i)
+        return unpresented_stimuli_indexes
 
     def load(self):
         """

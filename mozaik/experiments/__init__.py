@@ -58,7 +58,7 @@ class Experiment(ParametrizedObject):
         """
         return self.stimuli
         
-    def run(self,data_store,stimuli):
+    def run(self,data_store,stimulus_indexes):
         """
         This function is called to execute the experiment.
         
@@ -83,7 +83,8 @@ class Experiment(ParametrizedObject):
         the list of stimuli which to present to prevent repetitions, and lets this function know via the stimuli argument which stimuli to actually present.
         """
         srtsum = 0
-        for i,s in enumerate(stimuli):
+        for i in stimulus_indexes:
+            s = self.stimuli[i]
             logger.debug('Presenting stimulus: ' + str(s) + '\n')
             if self.direct_stimulation == None:
                ds = {}
@@ -98,7 +99,7 @@ class Experiment(ParametrizedObject):
             if null_segments != []:
                data_store.add_null_recording(null_segments,s) 
             
-            logger.info('Stimulus %d/%d finished. Memory usage: %iMB' % (i+1,len(stimuli),resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/1024))
+            logger.info('Stimulus %d/%d finished. Memory usage: %iMB' % (i+1,len(stimulus_indexes),resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/1024))
         return srtsum
         
     def do_analysis(self):

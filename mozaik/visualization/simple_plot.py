@@ -446,7 +446,6 @@ class SpikeRasterPlot(StandardStyle):
             self.y_lim = (0, num_n)
         
         self.x_ticks = [t_start, (t_stop-t_start)/2, t_stop]
-        self.x_tick_style = 'Custom'
         self.x_lim = (t_start, t_stop)
         self.x_label = 'time (s)'
         self.y_label = None
@@ -488,10 +487,11 @@ class SpikeHistogramPlot(SpikeRasterPlot):
     plotted. If neurons are None, the first neuron will be plotted. 
     """
 
-    def __init__(self, spike_lists,**param):
+    def __init__(self, spike_lists,num_trials,**param):
         SpikeRasterPlot.__init__(self, spike_lists,**param)
         self.parameters["bin_width"] = 0.005
         self.parameters["colors"] = ['#000000' for i in xrange(0, len(self.sps))]
+        self.num_trials = num_trials
         
     def plot(self):
         self.neurons = [i for i in xrange(0, len(self.sps[0][0]))]
@@ -509,13 +509,16 @@ class SpikeHistogramPlot(SpikeRasterPlot):
             all_spikes.append(tmp)
 
         if all_spikes != []:
-            self.axis.hist(all_spikes,
+            n,_,_ = self.axis.hist(all_spikes,
                            bins=numpy.arange(0, t_stop, self.bin_width),
                            color=self.colors,
                            edgecolor='none')
 
+        self.y_tick_style = 'Custom'
+        self.y_ticks = [0,numpy.max(n)]
+        self.y_tick_labels = [0,numpy.max(n)/len(self.neurons)/self.bin_width/self.num_trials]
+
         self.y_label = '(spk/s)'
-        self.x_tick_style = 'Custom'
         self.x_ticks = [t_start, (t_stop-t_start)/2, t_stop]
         self.x_lim = (t_start, t_stop)
         self.x_label = 'time (s)'
