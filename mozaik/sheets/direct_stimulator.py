@@ -472,8 +472,8 @@ class LocalStimulatorArray(DirectStimulator):
            self.scs = shared_scs
         else:
            self.scs = [self.sheet.sim.StepCurrentSource(times=[0.0], amplitudes=[0.0]) for cell in self.sheet.pop.all_cells] 
-        for cell,scs in zip(self.sheet.pop.all_cells,self.scs):
-            cell.inject(scs)
+           for cell,scs in zip(self.sheet.pop.all_cells,self.scs):
+               cell.inject(scs)
 
     def prepare_stimulation(self,duration,offset):
         assert self.stimulation_duration == duration, "stimulation_duration != duration :"  + str(self.stimulation_duration) + " " + str(duration)
@@ -549,7 +549,7 @@ class LocalStimulatorArrayChR(LocalStimulatorArray):
           ax2.plot(times,self.mixed_signals[100,:],'g')
           ax2.set_ylabel('nA', color='g')
           f = open(Global.root_directory +'mixed_signals' + self.sheet.name.replace('/','_') + '_' +  str(self.parameters.stimulating_signal_parameters.scale.value) + '_' +  str(self.parameters.stimulating_signal_parameters.orientation.value) + '.pickle','w')
-          pickle.dump(self.mixed_signals,f)
+          pickle.dump(self.mixed_signals  ,f)
           f.close()
           pylab.savefig(Global.root_directory +'LocalStimulatorArrayTest_' + self.sheet.name.replace('/','_') + '.png')
 

@@ -148,8 +148,8 @@ class ModularSamplingProbabilisticConnector(ModularConnector):
             a = numpy.array([k,numpy.zeros(len(k))+i,self.weight_scaler*numpy.multiply(self.parameters.base_weight.next(len(k)),co.values()),numpy.array(delays)[k]])
             cl.append(a)
 
-        cl = numpy.hstack(cl)
-        method = self.sim.FromListConnector(cl.T)
+        cl = numpy.hstack(cl).T
+        method = self.sim.FromListConnector(cl)
         
         logger.warning("%s(%s): %g connections were created, %g per target neuron [%g]" % (self.name,self.__class__.__name__,len(cl),len(cl)/len(numpy.nonzero(self.target.pop._mask_local)[0]),v/len(numpy.nonzero(self.target.pop._mask_local)[0])))
 	
@@ -257,8 +257,8 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(ModularConnect
             a = numpy.array([k,numpy.zeros(len(k))+i,self.weight_scaler*numpy.multiply(self.parameters.base_weight.next(len(k)),co.values()),numpy.array(delays)[k]])
             cl.append(a)
 
-        cl = numpy.hstack(cl)
-        method = self.sim.FromListConnector(cl.T)
+        cl = numpy.hstack(cl).T
+        method = self.sim.FromListConnector(cl)
         
         logger.warning("%s(%s): %g connections were created, %g per target neuron [%g]" % (self.name,self.__class__.__name__,len(cl),len(cl)/len(numpy.nonzero(self.target.pop._mask_local)[0]),v/len(numpy.nonzero(self.target.pop._mask_local)[0])))
         

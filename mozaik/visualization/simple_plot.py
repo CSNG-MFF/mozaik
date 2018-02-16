@@ -510,7 +510,7 @@ class SpikeHistogramPlot(SpikeRasterPlot):
             all_spikes.append(tmp)
 
         if all_spikes != []:
-           n,_,_ =  self.axis.hist(all_spikes,
+            n,_,_ = self.axis.hist(all_spikes,
                            bins=numpy.arange(0, t_stop, self.bin_width),
                            color=self.colors,
                            edgecolor='none')
@@ -518,6 +518,10 @@ class SpikeHistogramPlot(SpikeRasterPlot):
         self.y_tick_style = 'Custom'
         self.y_ticks = [0,numpy.max(n)]
         self.y_tick_labels = [0,int(math.ceil(numpy.max(n)/len(self.neurons)/self.bin_width/self.num_trials))]
+
+        self.y_tick_style = 'Custom'
+        self.y_ticks = [0,numpy.max(n)]
+        self.y_tick_labels = [0,numpy.max(n)/len(self.neurons)/self.bin_width/self.num_trials]
 
         self.y_label = '(spk/s)'
         self.x_ticks = [t_start, (t_stop-t_start)/2, t_stop]

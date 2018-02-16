@@ -175,7 +175,7 @@ class SlurmSequentialBackendIoV(object):
                             '#SBATCH -c ' + str(self.num_threads),
                             'source /home/jantolik/virt_env/mozaik/bin/activate',
                             'cd ' + os.getcwd(),
-                            ' '.join(["python",run_script, simulator_name, str(self.num_threads) ,parameters_url]+modified_parameters+[simulation_run_name]+['>']  + [parameters['results_dir'][1:-1] +'/OUTFILE'+str(time.time())]),
+                            ' '.join(["mpirun python",run_script, simulator_name, str(self.num_threads) ,parameters_url]+modified_parameters+[simulation_run_name]+['>']  + [parameters['results_dir'][1:-1] +'/OUTFILE'+str(time.time())]),
                         ]) 
          print p.communicate(input=data)[0]                  
          print data

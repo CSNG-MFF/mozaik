@@ -548,7 +548,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
             if self.internal_stimulus_cache.has_key(str(st)):
                (input_currents, retinal_input) =  self.internal_stimulus_cache[str(st)]
             else:
-                (input_currents, retinal_input) = self._calculate_input_currents(visual_space,
+               (input_currents, retinal_input) = self._calculate_input_currents(visual_space,
                                                                                  duration)
         else:
             logger.debug("Retrieved spikes from cache...")
