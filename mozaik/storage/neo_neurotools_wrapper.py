@@ -222,7 +222,7 @@ class MozaikSegment(Segment):
             isi = self.isi()
             cv_isi = []
             for _isi in isi:
-                if len(_isi) > 0:
+                if len(_isi) > 4:
                     cv_isi.append(numpy.std(_isi)/numpy.mean(_isi))
                 else:
                     cv_isi.append(None)

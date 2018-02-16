@@ -718,15 +718,19 @@ class GaussianTuningCurveFit(Analysis):
                 # also make sure they are ordered according to the first pnv's idds 
                 
                 self.tc_dict = colapse_to_dictionary([z.get_value_by_id(self.pnvs[0].ids) for z in self.pnvs],self.st,self.parameters.parameter_name)
+                print self.tc_dict
                 for k in self.tc_dict.keys():
                         if len(self.tc_dict[k][0]) < 4:
-                           logger.debug('Failed to fit tuning curve, not enough points supplied: %d' % len(self.tc_dict[k][0]))
+                           logger.info('Failed to fit tuning curve, not enough points supplied: %d' % len(self.tc_dict[k][0]))
                            return
                         z = []
 			u = []
 			m = []
                         for i in xrange(0,len(self.pnvs[0].values)):
 			    Y = [a[i] for a in self.tc_dict[k][1]]
+                            print self.tc_dict[k][0]
+                            print Y
+
                             res,err = self._fitgaussian(self.tc_dict[k][0],Y,period)
                             if res == None:
                                logger.debug('Failed to fit tuning curve %s for neuron %d' % (k,i))
@@ -984,13 +988,15 @@ class Irregularity(Analysis):
           for sheet in self.datastore.sheets():
                 # Load up spike trains for the right sheet and the corresponding stimuli, and
                 # transform spike trains into psth
+
+                logger.info('NEW')
                 dsv = queries.param_filter_query(self.datastore, sheet_name=sheet)
                 for seg,st in zip(dsv.get_segments(),dsv.get_stimuli()):
                     cv_isi=seg.cv_isi()
                     # Lets get rid of neurons for which ISI it was not possible to compute cv
-                    to_delete = [i for i, x in enumerate(cv_isi) if x == None]
+                    to_delete = [i for i, x in enumerate(cv_isi) if (x == None or x.magnitude == 0.0)]
                     ids=numpy.delete(seg.get_stored_spike_train_ids(),to_delete)
-                    cv_isi=numpy.power(numpy.delete(cv_isi,to_delete),2)
+                    cv_isi=numpy.delete(cv_isi,to_delete)
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(cv_isi,ids,qt.dimensionless,value_name = 'CV of ISI squared',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))
            
 
