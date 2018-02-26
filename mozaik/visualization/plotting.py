@@ -175,7 +175,7 @@ class Plotting(ParametrizedObject):
                 self.animation.save(Global.root_directory+self.plot_file_name+'.mov', writer='avconv_file', fps=30,bitrate=5000) 
             else:
                 # save the analysis plot
-                pylab.savefig(Global.root_directory+self.plot_file_name)       
+                pylab.savefig(Global.root_directory+self.plot_file_name,transparent=True)       
             
             # and store the record
             with open(Global.root_directory+'results','a+') as f:

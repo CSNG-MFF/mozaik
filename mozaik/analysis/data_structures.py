@@ -126,16 +126,19 @@ class PerNeuronPairValue(AnalysisDataStructure):
         """
         Parameters
         ---------- 
-        idd : int or list(int)
-            The ids for which the return the values.
+        idds1 : int or list(int)
+            The ids for which the return the values along first dimension.
+        
+        idds2 : int or list(int)
+            The ids for which the return the values along first dimension.
         
         Returns
         -------
-        ids : AnalogSignal or list(AnalogSignal)
-            List (or single) of AnalogSignal objects corresponding to ids in `idd`.
+        ids : scaler or array
+            Array or scalar of values corresponding to `idds`.
         """
         if (isinstance(idds1,list) or isinstance(idds1,numpy.ndarray)) and (isinstance(idds2,list) or isinstance(idds2,numpy.ndarray)):
-            return self.values[[list(self.ids).index(i) for i in idds1]][[list(self.ids).index(i) for i in idds2]]
+            return numpy.array(self.values)[[list(self.ids).index(i) for i in idds1],:][:,[list(self.ids).index(i) for i in idds2]]
         else:
             return self.values[list(self.ids).index(idds1),list(self.ids).index(idds2)]
 
