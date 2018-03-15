@@ -575,38 +575,55 @@ class TrialVariability(Analysis):
       def perform_analysis(self):
             for sheet in self.datastore.sheets():
                dsv = queries.param_filter_query(self.datastore, sheet_name=sheet)
-                
-               # RECORDINGS PART
-               segs, stids = colapse(dsv.get_segments(),dsv.get_stimuli(),parameter_list=['trial'],allow_non_identical_objects=True)
-               for segs,st in zip(segs,stids):
-                    if self.parameters.vm:
-                        first_vm = segs[0].get_vm(segs[0].get_stored_vm_ids()[0])
-                        vm = [NeoAnalogSignal(numpy.var(numpy.array([s.get_vm(i) for s in segs]),axis=0,ddof=1),t_start=first_vm.t_start,sampling_period=first_vm.sampling_period,units=first_vm.units) for i in segs[0].get_stored_vm_ids()]
-                        self.datastore.full_datastore.add_analysis_result(AnalogSignalList(vm,segs[0].get_stored_vm_ids(),segs[0].get_vm(segs[0].get_stored_vm_ids()[0]).units,y_axis_name = 'vm trial-to-trial variance',x_axis_name="time",sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
-                    if self.parameters.cond_exc:                        
-                        first_cond = segs[0].get_esyn(segs[0].get_stored_esyn_ids()[0])
-                        cond_exc = [NeoAnalogSignal(numpy.var(numpy.array([s.get_esyn(i) for s in segs]),axis=0,ddof=1),t_start=first_cond.t_start,sampling_period=first_cond.sampling_period,units=first_cond.units) for i in segs[0].get_stored_esyn_ids()]
-                        self.datastore.full_datastore.add_analysis_result(AnalogSignalList(cond_exc,segs[0].get_stored_esyn_ids(),segs[0].get_esyn(segs[0].get_stored_esyn_ids()[0]).units,y_axis_name = 'exc. conductance trial-to-trial variance',x_axis_name="time",sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
-                    if self.parameters.cond_inh:                                    
-                        first_cond = segs[0].get_isyn(segs[0].get_stored_isyn_ids()[0])            
-                        cond_inh = [NeoAnalogSignal(numpy.var(numpy.array([s.get_isyn(i) for s in segs]),axis=0,ddof=1),t_start=first_cond.t_start,sampling_period=first_cond.sampling_period,units=first_cond.units) for i in segs[0].get_stored_isyn_ids()]
-                        self.datastore.full_datastore.add_analysis_result(AnalogSignalList(cond_inh,segs[0].get_stored_isyn_ids(),segs[0].get_isyn(segs[0].get_stored_isyn_ids()[0]).units,y_axis_name = 'inh. conductance trial-to-trial variance',x_axis_name="time",sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                
-               
-               # AnalogSignalList part 
-               dsv1 = queries.param_filter_query(dsv, sheet_name=sheet,name='AnalogSignalList')
-               dsvs_by_stimulus = queries.partition_analysis_results_by_parameters_query(dsv1,parameter_list=["stimulus_id"])
+               if self.parameters.vm or self.parameters.cond_exc or self.parameters.cond_inh: 
+                 # RECORDINGS PART
+                 segs, stids = colapse(dsv.get_segments(),dsv.get_stimuli(),parameter_list=['trial'],allow_non_identical_objects=True)
+                 for segs,st in zip(segs,stids):
+                      if self.parameters.vm:
+                          first_vm = segs[0].get_vm(segs[0].get_stored_vm_ids()[0])
+                          vm = [NeoAnalogSignal(numpy.var(numpy.array([s.get_vm(i) for s in segs]),axis=0,ddof=1),t_start=first_vm.t_start,sampling_period=first_vm.sampling_period,units=first_vm.units) for i in segs[0].get_stored_vm_ids()]
+                          self.datastore.full_datastore.add_analysis_result(AnalogSignalList(vm,segs[0].get_stored_vm_ids(),segs[0].get_vm(segs[0].get_stored_vm_ids()[0]).units,y_axis_name = 'vm trial-to-trial variance',x_axis_name="time",sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+                      if self.parameters.cond_exc:                        
+                          first_cond = segs[0].get_esyn(segs[0].get_stored_esyn_ids()[0])
+                          cond_exc = [NeoAnalogSignal(numpy.var(numpy.array([s.get_esyn(i) for s in segs]),axis=0,ddof=1),t_start=first_cond.t_start,sampling_period=first_cond.sampling_period,units=first_cond.units) for i in segs[0].get_stored_esyn_ids()]
+                          self.datastore.full_datastore.add_analysis_result(AnalogSignalList(cond_exc,segs[0].get_stored_esyn_ids(),segs[0].get_esyn(segs[0].get_stored_esyn_ids()[0]).units,y_axis_name = 'exc. conductance trial-to-trial variance',x_axis_name="time",sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+                      if self.parameters.cond_inh:                                    
+                          first_cond = segs[0].get_isyn(segs[0].get_stored_isyn_ids()[0])            
+                          cond_inh = [NeoAnalogSignal(numpy.var(numpy.array([s.get_isyn(i) for s in segs]),axis=0,ddof=1),t_start=first_cond.t_start,sampling_period=first_cond.sampling_period,units=first_cond.units) for i in segs[0].get_stored_isyn_ids()]
+                          self.datastore.full_datastore.add_analysis_result(AnalogSignalList(cond_inh,segs[0].get_stored_isyn_ids(),segs[0].get_isyn(segs[0].get_stored_isyn_ids()[0]).units,y_axis_name = 'inh. conductance trial-to-trial variance',x_axis_name="time",sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+                 
+               else:  
+                 # AnalogSignalList part 
+                 dsv1 = queries.param_filter_query(dsv, sheet_name=sheet,name='AnalogSignalList')
+                 dsvs_by_stimulus = queries.partition_analysis_results_by_parameters_query(dsv1,parameter_list=["stimulus_id"])
 
-               for dsv2 in dsvs_by_stimulus:
-                   if len(dsv2.get_analysis_result()) == 0: continue
-                   assert queries.equal_ads(dsv2,except_params=['stimulus_id'])
-                   adss = dsv2.get_analysis_result()
-                   adss, stids = colapse(adss,[MozaikParametrized.idd(a.stimulus_id) for a in adss],parameter_list=['trial'],allow_non_identical_objects=True)
-                   
-                   for ads,st in zip(adss,stids):
-                       first = ads[0].asl[0]
-                       asi = [NeoAnalogSignal(numpy.var(numpy.array([s.get_asl_by_id(i) for s in ads]),axis=0,ddof=1),t_start=first.t_start,sampling_period=first.sampling_period,units=first.units) for i in ads[0].ids]
-                       self.datastore.full_datastore.add_analysis_result(AnalogSignalList(asi,ads[0].ids,first.units,y_axis_name = ads[0].y_axis_name + ' trial-to-trial variance',x_axis_name=ads[0].x_axis_name,sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+                 for dsv2 in dsvs_by_stimulus:
+                     if len(dsv2.get_analysis_result()) == 0: continue
+                     assert queries.equal_ads(dsv2,except_params=['stimulus_id'])
+                     adss = dsv2.get_analysis_result()
+                     adss, stids = colapse(adss,[MozaikParametrized.idd(a.stimulus_id) for a in adss],parameter_list=['trial'],allow_non_identical_objects=True)
+                     
+                     for ads,st in zip(adss,stids):
+                         first = ads[0].asl[0]
+                         asi = [NeoAnalogSignal(numpy.var(numpy.array([s.get_asl_by_id(i) for s in ads]),axis=0,ddof=1),t_start=first.t_start,sampling_period=first.sampling_period,units=first.units) for i in ads[0].ids]
+                         self.datastore.full_datastore.add_analysis_result(AnalogSignalList(asi,ads[0].ids,first.units,y_axis_name = ads[0].y_axis_name + ' trial-to-trial variance',x_axis_name=ads[0].x_axis_name,sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+
+                 # for PerNeuronValue
+                 dsv1 = queries.param_filter_query(dsv, sheet_name=sheet,name=['PerNeuronValue'])
+                 dsvs_by_stimulus = queries.partition_analysis_results_by_parameters_query(dsv1,parameter_list=["stimulus_id"])
+
+                 for dsv2 in dsvs_by_stimulus:
+                     if len(dsv2.get_analysis_result()) == 0: continue
+                     assert queries.equal_ads(dsv2,except_params=['stimulus_id'])
+                     pnvs = dsv2.get_analysis_result()
+                     pnvss, stids = colapse([pnv.get_value_by_id(pnvs[0].ids) for pnv in pnvs],[MozaikParametrized.idd(a.stimulus_id) for a in pnvs],parameter_list=['trial'],allow_non_identical_objects=True)
+                     
+                     for pnvs1,st in zip(pnvss,stids):
+                         self.datastore.full_datastore.add_analysis_result(PerNeuronValue(numpy.var(numpy.array(pnvs1),axis=0),pnvs[0].ids,pnvs[0].value_units,value_name = 'Trial-to-trial variance(' + pnvs[0].value_name + ')',period=pnvs[0].period,sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+
+
+
 
 class TrialMean(Analysis):
       """
@@ -659,51 +676,51 @@ class TrialMean(Analysis):
                           self.datastore.full_datastore.add_analysis_result(AnalogSignalList(cond_inh,segs[0].get_stored_isyn_ids(),segs[0].get_isyn(segs[0].get_stored_isyn_ids()[0]).units,y_axis_name = 'inh. conductance trial-to-trial mean',x_axis_name="time",sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                
                 
-               
-               # for AnalogSignalList
-               dsv1 = queries.param_filter_query(dsv, sheet_name=sheet,name=['AnalogSignalList'])
-               dsvs_by_stimulus = queries.partition_analysis_results_by_parameters_query(dsv1,parameter_list=["stimulus_id"])
+               else:
+                 # for AnalogSignalList
+                 dsv1 = queries.param_filter_query(dsv, sheet_name=sheet,name=['AnalogSignalList'])
+                 dsvs_by_stimulus = queries.partition_analysis_results_by_parameters_query(dsv1,parameter_list=["stimulus_id"])
 
-               for dsv2 in dsvs_by_stimulus:
-                   if len(dsv2.get_analysis_result()) == 0: continue
-                   assert queries.equal_ads(dsv2,except_params=['stimulus_id'])
-                   adss = dsv2.get_analysis_result()
-                   adss, stids = colapse(adss,[MozaikParametrized.idd(a.stimulus_id) for a in adss],parameter_list=['trial'],allow_non_identical_objects=True)
-                   
-                   for ads,st in zip(adss,stids):
-                       first = ads[0].asl[0]
-                       asi = [NeoAnalogSignal(numpy.mean(numpy.array([s.get_asl_by_id(i) for s in ads]),axis=0),t_start=first.t_start,sampling_period=first.sampling_period,units=first.units) for i in ads[0].ids]
-                       self.datastore.full_datastore.add_analysis_result(AnalogSignalList(asi,ads[0].ids,first.units,y_axis_name = ads[0].y_axis_name + ' trial-to-trial mean',x_axis_name=ads[0].x_axis_name,sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
-
-
-               # for PerNeuronValue
-               dsv1 = queries.param_filter_query(dsv, sheet_name=sheet,name=['PerNeuronValue'])
-               dsvs_by_stimulus = queries.partition_analysis_results_by_parameters_query(dsv1,parameter_list=["stimulus_id"])
-
-               for dsv2 in dsvs_by_stimulus:
-                   if len(dsv2.get_analysis_result()) == 0: continue
-                   assert queries.equal_ads(dsv2,except_params=['stimulus_id'])
-                   pnvs = dsv2.get_analysis_result()
-                   pnvss, stids = colapse([pnv.get_value_by_id(pnvs[0].ids) for pnv in pnvs],[MozaikParametrized.idd(a.stimulus_id) for a in pnvs],parameter_list=['trial'],allow_non_identical_objects=True)
-                   
-                   for pnvs1,st in zip(pnvss,stids):
-                       self.datastore.full_datastore.add_analysis_result(PerNeuronValue(numpy.mean(numpy.array(pnvs1),axis=0),pnvs[0].ids,pnvs[0].value_units,value_name = 'Trial-to-trial-mean(' + pnvs[0].value_name + ')',period=pnvs[0].period,sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+                 for dsv2 in dsvs_by_stimulus:
+                     if len(dsv2.get_analysis_result()) == 0: continue
+                     assert queries.equal_ads(dsv2,except_params=['stimulus_id'])
+                     adss = dsv2.get_analysis_result()
+                     adss, stids = colapse(adss,[MozaikParametrized.idd(a.stimulus_id) for a in adss],parameter_list=['trial'],allow_non_identical_objects=True)
+                     
+                     for ads,st in zip(adss,stids):
+                         first = ads[0].asl[0]
+                         asi = [NeoAnalogSignal(numpy.mean(numpy.array([s.get_asl_by_id(i) for s in ads]),axis=0),t_start=first.t_start,sampling_period=first.sampling_period,units=first.units) for i in ads[0].ids]
+                         self.datastore.full_datastore.add_analysis_result(AnalogSignalList(asi,ads[0].ids,first.units,y_axis_name = ads[0].y_axis_name + ' trial-to-trial mean',x_axis_name=ads[0].x_axis_name,sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
 
 
-               # for PerNeuronPairValue
-               dsv1 = queries.param_filter_query(dsv, sheet_name=sheet,name=['PerNeuronPairValue'])
-               dsvs_by_stimulus = queries.partition_analysis_results_by_parameters_query(dsv1,parameter_list=["stimulus_id"])
+                 # for PerNeuronValue
+                 dsv1 = queries.param_filter_query(dsv, sheet_name=sheet,name=['PerNeuronValue'])
+                 dsvs_by_stimulus = queries.partition_analysis_results_by_parameters_query(dsv1,parameter_list=["stimulus_id"])
 
-               for dsv2 in dsvs_by_stimulus:
-                   if len(dsv2.get_analysis_result()) == 0: continue
-                   assert queries.equal_ads(dsv2,except_params=['stimulus_id'])
-                   pnvs = dsv2.get_analysis_result()
-                   for pnv in pnvs:
-                       assert pnv.ids == pnvs[0].ids
-                   pnvss, stids = colapse([pnv.values for pnv in pnvs],[MozaikParametrized.idd(a.stimulus_id) for a in pnvs],parameter_list=['trial'],allow_non_identical_objects=True)
-                   
-                   for pnvs1,st in zip(pnvss,stids):
-                       self.datastore.full_datastore.add_analysis_result(PerNeuronPairValue(numpy.mean(numpy.array(pnvs1),axis=0),pnvs[0].ids,pnvs[0].value_units,value_name = 'Trial-to-trial-mean(' + pnvs[0].value_name + ')',period=pnvs[0].period,sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+                 for dsv2 in dsvs_by_stimulus:
+                     if len(dsv2.get_analysis_result()) == 0: continue
+                     assert queries.equal_ads(dsv2,except_params=['stimulus_id'])
+                     pnvs = dsv2.get_analysis_result()
+                     pnvss, stids = colapse([pnv.get_value_by_id(pnvs[0].ids) for pnv in pnvs],[MozaikParametrized.idd(a.stimulus_id) for a in pnvs],parameter_list=['trial'],allow_non_identical_objects=True)
+                     
+                     for pnvs1,st in zip(pnvss,stids):
+                         self.datastore.full_datastore.add_analysis_result(PerNeuronValue(numpy.mean(numpy.array(pnvs1),axis=0),pnvs[0].ids,pnvs[0].value_units,value_name = 'Trial-to-trial-mean(' + pnvs[0].value_name + ')',period=pnvs[0].period,sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+
+
+                 # for PerNeuronPairValue
+                 dsv1 = queries.param_filter_query(dsv, sheet_name=sheet,name=['PerNeuronPairValue'])
+                 dsvs_by_stimulus = queries.partition_analysis_results_by_parameters_query(dsv1,parameter_list=["stimulus_id"])
+
+                 for dsv2 in dsvs_by_stimulus:
+                     if len(dsv2.get_analysis_result()) == 0: continue
+                     assert queries.equal_ads(dsv2,except_params=['stimulus_id'])
+                     pnvs = dsv2.get_analysis_result()
+                     for pnv in pnvs:
+                         assert pnv.ids == pnvs[0].ids
+                     pnvss, stids = colapse([pnv.values for pnv in pnvs],[MozaikParametrized.idd(a.stimulus_id) for a in pnvs],parameter_list=['trial'],allow_non_identical_objects=True)
+                     
+                     for pnvs1,st in zip(pnvss,stids):
+                         self.datastore.full_datastore.add_analysis_result(PerNeuronPairValue(numpy.mean(numpy.array(pnvs1),axis=0),pnvs[0].ids,pnvs[0].value_units,value_name = 'Trial-to-trial-mean(' + pnvs[0].value_name + ')',period=pnvs[0].period,sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
 
 
 class GaussianTuningCurveFit(Analysis):
