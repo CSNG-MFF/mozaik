@@ -94,7 +94,9 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
                pylab.ylabel(value_name) 
                
         elif len(parameters) == 2:
+	       print '*****************************'
 	       print i
+	       print len(datastores)
                x = []
                y = []
                z = []
@@ -110,6 +112,7 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
                if value_name in ranges:
                   vmin,vmax = ranges[value_name] 
                else:
+		  print value_name
                   print z
                   print min(z) 
                   print max(z) 

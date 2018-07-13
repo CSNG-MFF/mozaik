@@ -519,6 +519,80 @@ class MeasureContrastSensitivity(VisualExperiment):
         pass
 
 
+class MeasureContrastSensitivityA(VisualExperiment):
+    """
+    Measure contrast sensitivity using sinusoidal gratings.
+
+    This experiment shows a series of full-field sinusoidal gratings of varying 
+    contrast. Using the responses to these stimuli one can construct the contrast
+    sensitivity tuning curve for the measured neurons.
+    
+    Parameters
+    ----------
+    model : Model
+          The model on which to execute the experiment.
+
+    Other parameters
+    ----------------
+        
+    orientation : float
+                The orientation (in radians) at which to measure the contrast. (in future this will become automated)
+                
+    spatial_frequency : float
+                      Spatial frequency of the grating.
+                      
+    temporal_frequency : float
+                      Temporal frequency of the grating.
+
+    grating_duration : float
+                      The duration of single presentation of a grating.
+    
+    contrasts : list(float) 
+              List of contrasts (expressed as % : 0-100%) at which to measure the orientation tuning.
+    
+    num_trials : int
+               Number of trials each each stimulus is shown.
+    """
+
+    required_parameters = ParameterSet({
+            'orientation': float, 
+            'spatial_frequency' : float, 
+            'temporal_frequency' : float,
+            'grating_duration' : float,
+            'contrasts' : list,
+            'num_trials' : int,
+            'offset_time' : float,
+            'onset_time' : float,
+
+    })  
+    
+    def __init__(self,model,parameters):
+        VisualExperiment.__init__(self, model,parameters)
+            
+        # stimuli creation        
+        for c in self.parameters.contrasts:
+            for k in xrange(0, self.parameters.num_trials):
+                self.stimuli.append(topo.FullfieldDriftingSinusoidalGratingA(
+		    frame_duration = self.frame_duration,
+                    size_x=model.visual_field.size_x,
+                    size_y=model.visual_field.size_y,
+                    location_x=0.0,
+                    location_y=0.0,
+                    background_luminance=self.background_luminance,
+                    contrast = c,
+                    duration=self.parameters.grating_duration,
+                    density=self.density,
+                    trial=k,
+                    offset_time=self.parameters.offset_time,
+                    onset_time=self.parameters.onset_time,
+                    orientation=self.parameters.orientation,
+                    spatial_frequency=self.parameters.spatial_frequency,
+                    temporal_frequency=self.parameters.temporal_frequency))
+
+    def do_analysis(self, data_store):
+        pass
+
+
 class MeasureFrequencySensitivity(VisualExperiment):
     """
     Measure frequency sensitivity using sinusoidal grating disk.
@@ -1168,6 +1242,74 @@ class CorticalStimulationWithStimulatorArrayAndOrientationTuningProtocol(Experim
                     p = MozaikExtendedParameterSet(self.parameters.localstimulationarray_parameters.tree_copy().as_dict())
                     p.stimulating_signal_parameters.orientation = ParameterWithUnitsAndPeriod(numpy.pi/self.parameters.num_orientations * i,period=numpy.pi)
                     p.stimulating_signal_parameters.scale =       ParameterWithUnitsAndPeriod(float(s),period=None)
+                    d  = {}
+                    if first:
+                        for sheet in self.parameters.sheet_list:
+                            d[sheet] = [LocalStimulatorArrayChR(model.sheets[sheet],p)]
+                        first = False
+                    else:
+                        for sheet in self.parameters.sheet_list:
+                            d[sheet] = [LocalStimulatorArrayChR(model.sheets[sheet],p,shared_scs=self.direct_stimulation[0][sheet][0].scs)]
+
+                    for i in xrange(0,self.parameters.num_trials):
+                        self.direct_stimulation.append(d)
+                        self.stimuli.append(
+                                    InternalStimulus(   
+                                                        frame_duration=self.parameters.localstimulationarray_parameters.stimulating_signal_parameters.duration, 
+                                                        duration=self.parameters.localstimulationarray_parameters.stimulating_signal_parameters.duration,
+                                                        trial=i,
+                                                        direct_stimulation_name='LocalStimulatorArray',
+                                                        direct_stimulation_parameters=p
+                                                     )
+                                            )                
+
+
+
+class CorticalStimulationWithStimulatorArrayAndOrientationTuningProtocol_ContrastBased(Experiment):
+    """
+    Stimulation with artificial stimulator array simulating homogeneously
+    oriented visual stimulus.  
+
+    This experiment creates a array of artificial stimulators covering an area of 
+    cortex, and than stimulates the array based on the orientation preference of 
+    neurons around the given stimulator, such that the stimulation resambles 
+    presentation uniformly oriented stimulus, e.g. sinusoidal grating.
+    
+    This experiment does not show any actual visual stimulus.
+    
+    Parameters
+    ----------
+    model : Model
+          The model on which to execute the experiment.
+
+    Other parameters
+    ----------------
+  
+    sheet_list : int
+               The list of sheets in which to do stimulation.
+    """
+    
+    required_parameters = ParameterSet({
+            'sheet_list' : list,
+            'num_trials' : int,
+            'num_orientations' : int,
+            'contrasts' : list,
+            'localstimulationarray_parameters' : ParameterSet,
+    })
+
+    
+    def __init__(self,model,parameters):
+            Experiment.__init__(self, model,parameters)
+            from mozaik.sheets.direct_stimulator import LocalStimulatorArrayChR
+            
+            self.direct_stimulation = []
+            first = True
+
+            for c in self.parameters.contrasts:
+                for i in xrange(self.parameters.num_orientations):
+                    p = MozaikExtendedParameterSet(self.parameters.localstimulationarray_parameters.tree_copy().as_dict())
+                    p.stimulating_signal_parameters.orientation = ParameterWithUnitsAndPeriod(numpy.pi/self.parameters.num_orientations * i,period=numpy.pi)
+                    p.stimulating_signal_parameters.contrast =       ParameterWithUnitsAndPeriod(float(c),period=None)
                     d  = {}
                     if first:
                         for sheet in self.parameters.sheet_list:

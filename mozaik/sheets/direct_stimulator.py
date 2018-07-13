@@ -384,24 +384,28 @@ class LocalStimulatorArray(DirectStimulator):
             'stimulating_signal_parameters' : ParameterSet,
             'current_update_interval' : float,
             'depth_sampling_step' : float,
+            'light_source_light_propagation_data' : str,
     })
     
     def __init__(self, sheet,parameters,shared_scs=None):
         DirectStimulator.__init__(self, sheet,parameters)
 
         assert math.fmod(self.parameters.size,self.parameters.spacing) < 0.000000001 , "Error the size has to be multiple of spacing!"
+        assert math.fmod(self.parameters.size / self.parameters.spacing /2,2) < 0.000000001 , "Error the size and spacing have to be such that they give odd number of elements!"
+
         
         axis_coors = numpy.arange(0,self.parameters.size+self.parameters.spacing,self.parameters.spacing) - self.parameters.size/2.0 
-        n = int((len(axis_coors)-1) / 2)
-        stimulator_coordinates = numpy.meshgrid(axis_coors,axis_coors)
 
+        n = int(numpy.floor(len(axis_coors)/2.0))
+        stimulator_coordinates = numpy.meshgrid(axis_coors,axis_coors)
 
         pylab.figure(figsize=(42,12))
 
         #let's load up disperssion data and setup interpolation
-        f = open('light_scattering_radial_profiles.pickle','r')
+        f = open(self.parameters.light_source_light_propagation_data,'r')
         radprofs = pickle.load(f)
-        light_flux_lookup =  scipy.interpolate.RegularGridInterpolator((numpy.arange(0,1080,60),numpy.linspace(0,1,354)*149.701*numpy.sqrt(2)), radprofs, method='linear',bounds_error=False,fill_value=0)
+        #light_flux_lookup =  scipy.interpolate.RegularGridInterpolator((numpy.arange(0,1080,60),numpy.linspace(0,1,354)*149.701*numpy.sqrt(2)), radprofs, method='linear',bounds_error=False,fill_value=0)
+        light_flux_lookup =  scipy.interpolate.RegularGridInterpolator((numpy.arange(0,1080,60),numpy.linspace(0,1,708)*299.7*numpy.sqrt(2)), radprofs, method='linear',bounds_error=False,fill_value=0)
 
         # the constant translating the data in radprofs to photons/s/cm^2
         K = 2.97e26
@@ -425,7 +429,7 @@ class LocalStimulatorArray(DirectStimulator):
             mixing_templates.append((temp[n-cutof:n+cutof+1,n-cutof:n+cutof+1],cutof))
 
         signal_function = load_component(self.parameters.stimulating_signal)
-        stimulator_signals = signal_function(sheet,stimulator_coordinates[0],stimulator_coordinates[1],self.parameters.current_update_interval,self.parameters.stimulating_signal_parameters )
+        stimulator_signals,self.scale = signal_function(sheet,stimulator_coordinates[0],stimulator_coordinates[1],self.parameters.current_update_interval,self.parameters.stimulating_signal_parameters )
 
         #stimulator_signals = numpy.reshape(stimulator_signals,((2*n+1)*(2*n+1),-1))
         
@@ -453,7 +457,7 @@ class LocalStimulatorArray(DirectStimulator):
 
         lam=numpy.squeeze(numpy.max(self.mixed_signals,axis=1))
         for i in xrange(0,self.sheet.pop.size):
-            self.sheet.add_neuron_annotation(i, 'Light activation magnitude(' +self.sheet.name + ',' +  str(self.parameters.stimulating_signal_parameters.scale.value) + ',' +  str(self.parameters.stimulating_signal_parameters.orientation.value) + ')', lam[i], protected=True)
+              self.sheet.add_neuron_annotation(i, 'Light activation magnitude(' +self.sheet.name + ',' +  str(self.scale) + ',' +  str(self.parameters.stimulating_signal_parameters.orientation.value)  + ',' +  str(self.parameters.stimulating_signal_parameters.sharpness) + ',' +  str(self.parameters.spacing) + ')', lam[i], protected=True)
 
         #ax = pylab.subplot(154, projection='3d')
         ax = pylab.subplot(154)
@@ -541,23 +545,24 @@ class LocalStimulatorArrayChR(LocalStimulatorArray):
           for i in xrange(0,len(self.scs)):
               res = odeint(ChRsystem,[0,0,0.8,0.2,0],times,args=(self.mixed_signals[i,:].flatten(),self.parameters.current_update_interval))
               self.mixed_signals[i,:] =  60 * (17.2*res[:,0] + 2.9 * res[:,1])  / 2500 ; # the 60 corresponds to the 60mV difference between ChR reverse potential of 0mV and our expected mean Vm of about 60mV. This happens to end up being in nA which is what pyNN expect for current injection.
-
+          
           for i in xrange(0,self.sheet.pop.size):
-              self.sheet.add_neuron_annotation(i, 'Light activation magnitude ChR(' +self.sheet.name + ',' +  str(self.parameters.stimulating_signal_parameters.scale.value) + ',' +  str(self.parameters.stimulating_signal_parameters.orientation.value) + ')', numpy.max(self.mixed_signals[i,:]), protected=True)
+                  self.sheet.add_neuron_annotation(i, 'Light activation magnitude ChR(' +  str(self.scale) + ',' +  str(self.parameters.stimulating_signal_parameters.orientation.value) + '_' +  str(self.parameters.stimulating_signal_parameters.sharpness) + '_' +  str(self.parameters.spacing) + ')', numpy.max(self.mixed_signals[i,:]), protected=True)
 
           ax2 = ax.twinx()
           ax2.plot(times,self.mixed_signals[100,:],'g')
           ax2.set_ylabel('nA', color='g')
-          f = open(Global.root_directory +'mixed_signals' + self.sheet.name.replace('/','_') + '_' +  str(self.parameters.stimulating_signal_parameters.scale.value) + '_' +  str(self.parameters.stimulating_signal_parameters.orientation.value) + '.pickle','w')
+
+          f = open(Global.root_directory +'mixed_signals' + self.sheet.name.replace('/','_') + '_' +  str(self.scale) + '_' +  str(self.parameters.stimulating_signal_parameters.orientation.value) + '_' +  str(self.parameters.stimulating_signal_parameters.sharpness) + '_' +  str(self.parameters.spacing) + '.pickle','w')
           pickle.dump(self.mixed_signals  ,f)
           f.close()
+
           pylab.savefig(Global.root_directory +'LocalStimulatorArrayTest_' + self.sheet.name.replace('/','_') + '.png')
 
 
 def test_stimulating_function(sheet,coor_x,coor_y,current_update_interval,parameters):
     z = sheet.pop.all_cells.astype(int)
-    vals = numpy.array([sheet.get_neuron_annotation(i,'LGNAfferentOrientation') for i in xrange(0,len(z))]
-)
+    vals = numpy.array([sheet.get_neuron_annotation(i,'LGNAfferentOrientation') for i in xrange(0,len(z))])
     mean_orientations = []
 
     px,py = sheet.vf_2_cs(sheet.pop.positions[0],sheet.pop.positions[1])
@@ -587,4 +592,43 @@ def test_stimulating_function(sheet,coor_x,coor_y,current_update_interval,parame
     pylab.scatter(coor_x.flatten(),coor_y.flatten(),c=numpy.squeeze(numpy.mean(signals,axis=2)).flatten(),cmap='gray')
     pylab.title(str(parameters.orientation.value))
     #pylab.colorbar()
-    return numpy.array(signals)
+    return numpy.array(signals),parameters.scale.value
+
+def test_stimulating_function_Naka(sheet,coor_x,coor_y,current_update_interval,parameters):
+    z = sheet.pop.all_cells.astype(int)
+    vals = numpy.array([sheet.get_neuron_annotation(i,'LGNAfferentOrientation') for i in xrange(0,len(z))])
+    mean_orientations = []
+
+    px,py = sheet.vf_2_cs(sheet.pop.positions[0],sheet.pop.positions[1])
+
+    pylab.subplot(151)
+    pylab.gca().set_aspect('equal')
+    pylab.title('Orientatin preference (neurons)')
+    pylab.scatter(px,py,c=vals/numpy.pi,cmap='hsv')
+    pylab.hold(True)
+
+    ors = scipy.interpolate.griddata(zip(px,py), vals, (coor_x, coor_y), method='nearest')
+
+    pylab.subplot(152)
+    pylab.title('Orientatin preference (stimulators)')
+    pylab.gca().set_aspect('equal')
+    pylab.scatter(coor_x.flatten(),coor_y.flatten(),c=ors.flatten(),cmap='hsv')
+    signals = numpy.zeros((numpy.shape(coor_x)[0],numpy.shape(coor_x)[1],int(parameters.duration/current_update_interval)))
+        
+    # figure out the light scale 
+    rate = parameters.nv_r_max * parameters.contrast.value / (parameters.contrast.value + parameters.nv_c50)
+    scale = numpy.power(rate * parameters.cs_c50  / (parameters.cs_r_max - rate), 1/ parameters.cs_exponent)
+
+    for i in xrange(0,numpy.shape(coor_x)[0]):
+
+      
+        for j in xrange(0,numpy.shape(coor_x)[0]):
+            signals[i,j,int(numpy.floor(parameters.onset_time/current_update_interval)):int(numpy.floor(parameters.offset_time/current_update_interval))] = scale*numpy.exp(-numpy.power(circular_dist(parameters.orientation.value,ors[i][j],numpy.pi),2)/parameters.sharpness)
+
+    pylab.subplot(153)
+    pylab.gca().set_aspect('equal')
+    pylab.title('Activation magnitude (stimulators)')
+    pylab.scatter(coor_x.flatten(),coor_y.flatten(),c=numpy.squeeze(numpy.mean(signals,axis=2)).flatten(),cmap='gray')
+    pylab.title(str(parameters.orientation.value))
+
+    return numpy.array(signals),scale

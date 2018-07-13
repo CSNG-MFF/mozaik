@@ -365,7 +365,7 @@ class PlotTuningCurve(Plotting):
                 par,val = zip(*sorted(zip(numpy.array(par),val)))
 
                 # if we have a period of pi or 2*pi
-                if numpy.isclose(period,pi) and self.parameters.centered==False:
+                if period != None and numpy.isclose(period,pi) and self.parameters.centered==False:
                    par = [(p-pi if p > pi/2 else p) for p in par]
                    par,val = zip(*sorted(zip(numpy.array(par),val)))
                    par = list(par)
@@ -375,7 +375,7 @@ class PlotTuningCurve(Plotting):
                    if error != None:
                         error = list(error)
                         error.insert(0,error[-1])
-                elif numpy.isclose(period,2*pi) and self.parameters.centered==False:
+                elif period != None and numpy.isclose(period,2*pi) and self.parameters.centered==False:
                    par = [(p-2*pi if p > pi/2 else p) for p in par]
                    par,val = zip(*sorted(zip(numpy.array(par),val)))
                    par = list(par)

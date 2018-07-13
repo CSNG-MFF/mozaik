@@ -35,6 +35,7 @@ def load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir
     
     datastore = []
     number_of_unloadable_datastores = 0
+    print "Number of combinations: " + str(len(combinations))
     for i,combination in enumerate(combinations):
         print i, ' ', combination
         rdn = result_directory_name('ParameterSearch',simulation_name,combination)
@@ -45,13 +46,19 @@ def load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir
             datastore.append(([combination[k] for k in parameters],data_store))
         except IOError:
             number_of_unloadable_datastores = number_of_unloadable_datastores + 1
-            print "Error loading datastore: " + rdn
+            print "IOError: loading datastore: " + rdn
         except ValueError:
+	    raise ValueError
             number_of_unloadable_datastores = number_of_unloadable_datastores + 1
-            print "Error loading datastore: " + rdn
+            print "ValueError: loading datastore: " + str(ValueError)+ " : " + rdn
         except EOFError:
             number_of_unloadable_datastores = number_of_unloadable_datastores + 1
-            print "Error loading datastore: " + rdn            
+            print "EOError: loading datastore: " + rdn            
+
+    print len(datastore)
+    print number_of_unloadable_datastores
+    print "Finished loading parameter search"
+
     return (parameters,datastore,number_of_unloadable_datastores)
 
 def run_analysis_on_parameter_search(simulation_name,master_results_dir,analysis_function):

@@ -2,17 +2,17 @@
 This module contains special analysis functions that relate to some tehnical mozaik architecture aspects and thus 
 do not represent a standard analysis
 """
-
 from mozaik.analysis.data_structures import PerNeuronValue
 from mozaik.analysis.analysis import Analysis
 from mozaik.storage import queries
+from parameters import ParameterSet
 from sets import Set
 import quantities as qt
 import numpy
 import mozaik
 
 logger = mozaik.getMozaikLogger()
-
+from mozaik.controller import Global
 
 class NeuronAnnotationsToPerNeuronValues(Analysis):
     """
@@ -27,6 +27,7 @@ class NeuronAnnotationsToPerNeuronValues(Analysis):
     It is assumed that in future the handling of parameters around Mozaik
     might be enhanced and unified further to avoid extension of this class.
     """
+
 
     def perform_analysis(self):
         logger.info('Starting NeuronAnnotationsToPerNeuronValues Analysis')
@@ -68,3 +69,22 @@ class NeuronAnnotationsToPerNeuronValues(Analysis):
                                        sheet_name=sheet,
                                        tags=self.tags,
                                        analysis_algorithm=self.__class__.__name__))
+
+
+class SummarizeSingleValues(Analysis):
+
+
+    required_parameters = ParameterSet({
+        'file_name': str,  # the first value name 
+    })
+
+
+    def perform_analysis(self):
+
+        dsv = queries.param_filter_query(self.datastore,identifier='SingleValue')
+
+        f = open(Global.root_directory+self.parameters.file_name,'w')
+
+        for a in dsv.get_analysis_result():
+            f.write("%s %s %s %s %s\n" % (a.sheet_name, a.value_name, str(a.value), a.analysis_algorithm, a.stimulus_id))
+        f.close()

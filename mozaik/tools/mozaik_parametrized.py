@@ -217,7 +217,19 @@ class MozaikParametrized(Parameterized):
                 self.expanded_paramset_params = n
 
                 #HAAAAAAAAAAAAACK
-                getattr(self,'direct_stimulation_parameters')['stimulating_signal_parameters']['orientation']=value
+                if attribute_name == 'stimulating_signal_parameters_orientation':
+                    getattr(self,'direct_stimulation_parameters')['stimulating_signal_parameters']['orientation']=value
+
+                if attribute_name == 'stimulating_signal_parameters_scale':
+                    getattr(self,'direct_stimulation_parameters')['stimulating_signal_parameters']['scale']=value
+
+                if attribute_name == 'stimulating_signal_parameters_contrast':
+                    getattr(self,'direct_stimulation_parameters')['stimulating_signal_parameters']['contrast']=value
+
+                if attribute_name == 'stimulating_signal_parameters_size':
+                    getattr(self,'direct_stimulation_parameters')['stimulating_signal_parameters']['size']=value
+
+
                 #set_in_dict(attribute_name,getattr(self,'direct_stimulation_parameters'),value)
                 #set_in_dict(path[1:,],self.params()[path[0]],value)
                 return

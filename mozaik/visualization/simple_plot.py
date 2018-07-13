@@ -1128,6 +1128,7 @@ class HistogramPlot(StandardStyle):
         self.parameters["labels"] = labels
         self.parameters["colors"] = None
         self.parameters["mark_mean"] = False
+        self.parameters["mark_value"] = False
         if labels != None:
             assert len(values) == len(labels)
         
@@ -1154,16 +1155,20 @@ class HistogramPlot(StandardStyle):
                     assert self.labels[i] in self.colors.keys(), "Cannot find curve named %s" % (self.labels[i])
                     c = self.colors[self.labels[i]]
                 
-                #tform = mtrans.blended_transform_factory(self.axis.transData, self.axis.transAxes)      
-                print numpy.mean(a)
-                print (self.y_lim[1]-self.y_lim[0])*0.9
-                print self.y_lim[1]
                 self.axis.annotate("",
-                    xy=(numpy.mean(a), (self.y_lim[1]-self.y_lim[0])*0.9), xycoords='data',
+                    xy=(numpy.mean(a), (self.y_lim[1]-self.y_lim[0])*0.8), xycoords='data',
                     xytext=(numpy.mean(a), self.y_lim[1]), textcoords='data',
                     arrowprops=dict(arrowstyle="->",
                                     connectionstyle="arc3",linewidth=3.0,color=c),
                         )
+        if self.mark_value != False:
+           self.axis.annotate("",
+                    xy=(self.mark_value, (self.y_lim[1]-self.y_lim[0])*0.8), xycoords='data',
+                    xytext=(self.mark_value, self.y_lim[1]), textcoords='data',
+                    arrowprops=dict(arrowstyle="->",
+                                    connectionstyle="arc3",linewidth=3.0,color='r'),
+                        )
+
         self.y_label = '#' 
         
 class CorticalColumnSpikeRasterPlot(StandardStyle):

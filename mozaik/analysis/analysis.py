@@ -106,16 +106,26 @@ class TrialAveragedFiringRate(Analysis):
             
             (mean_rates, s) = colapse(mean_rates, st, parameter_list=['trial'])
             # take a sum of each
-            mean_rates = [sum(a)/len(a) for a in mean_rates]
-
+            _mean_rates = [numpy.squeeze(numpy.mean(a,axis=0)) for a in mean_rates]
+            _var_rates = [numpy.squeeze(numpy.var(a,axis=0)) for a in mean_rates]
+            logger.info(numpy.shape(_mean_rates))
+            logger.info(numpy.shape(_var_rates))
             #JAHACK make sure that mean_rates() return spikes per second
             units = munits.spike / qt.s
             logger.debug('Adding PerNeuronValue containing trial averaged firing rates to datastore')
-            for mr, st in zip(mean_rates, s):
+            for mr, vr, st in zip(_mean_rates,_var_rates, s):
                 self.datastore.full_datastore.add_analysis_result(
                     PerNeuronValue(mr,segs[0].get_stored_spike_train_ids(),units,
                                    stimulus_id=str(st),
                                    value_name='Firing rate',
+                                   sheet_name=sheet,
+                                   tags=self.tags,
+                                   analysis_algorithm=self.__class__.__name__,
+                                   period=None))
+                self.datastore.full_datastore.add_analysis_result(
+                    PerNeuronValue(vr,segs[0].get_stored_spike_train_ids(),units,
+                                   stimulus_id=str(st),
+                                   value_name='Tria-to-trial Var of Firing rate',
                                    sheet_name=sheet,
                                    tags=self.tags,
                                    analysis_algorithm=self.__class__.__name__,
@@ -768,26 +778,24 @@ class GaussianTuningCurveFit(Analysis):
                 # also make sure they are ordered according to the first pnv's idds 
                 
                 self.tc_dict = colapse_to_dictionary([z.get_value_by_id(self.pnvs[0].ids) for z in self.pnvs],self.st,self.parameters.parameter_name)
-                print len(self.tc_dict.keys())
+                logger.info(str(self.tc_dict.keys()))
                 for k in self.tc_dict.keys():
+                        print k
                         if len(self.tc_dict[k][0]) < 4:
                            logger.info('Failed to fit tuning curve, not enough points supplied: %d' % len(self.tc_dict[k][0]))
                            return
                         z = []
-			u = []
-			m = []
+                        u = []
+                        m = []
                         for i in xrange(0,len(self.pnvs[0].values)):
-			    Y = [a[i] for a in self.tc_dict[k][1]]
-                            print self.tc_dict[k][0]
-                            print Y
-
+                            Y = [a[i] for a in self.tc_dict[k][1]]
                             res,err = self._fitgaussian(self.tc_dict[k][0],Y,period)
                             z.append(res)    
-			    u.append(err)
+                            u.append(err)
                             m.append(max(Y))
                         res = numpy.array(z)
-			err = numpy.array(u)
-			m = numpy.array(m)
+                        err = numpy.array(u)
+                        m = numpy.array(m)
                             
                         if True:
                            self.datastore.full_datastore.add_analysis_result(PerNeuronValue(m,self.pnvs[0].ids,self.pnvs[0].value_units,value_name = self.parameters.parameter_name + ' real max  of ' + self.pnvs[0].value_name ,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
@@ -818,8 +826,11 @@ class GaussianTuningCurveFit(Analysis):
             
           p1, success = scipy.optimize.leastsq(errfunc, p0[:], args=(X,Y))      
           p1[2]  = abs(p1[2])
-
-	  err = numpy.linalg.norm(fitfunc(p1,X)-Y,2)/numpy.linalg.norm(Y-numpy.mean(Y),2)          
+	    
+	  if numpy.linalg.norm(Y-numpy.mean(Y),2) != 0:
+	    err = numpy.linalg.norm(fitfunc(p1,X)-Y,2)/numpy.linalg.norm(Y-numpy.mean(Y),2)          
+	  else:
+	    err = 0
 
           #if the fit is very bad - error greater than 30% of the Y magnitude
           #if err > 0.2:
@@ -827,7 +838,7 @@ class GaussianTuningCurveFit(Analysis):
 
           #    p1=p0
 
-          if True:
+          if False:
               import pylab
               pylab.figure()
               pylab.plot(X,fitfunc(p1,X),'x')
@@ -1540,3 +1551,104 @@ class CircularVarianceOfTuningCurve(Analysis):
                         res = numpy.array(z)
                         self.datastore.full_datastore.add_analysis_result(PerNeuronValue(res,self.pnvs[0].ids,self.pnvs[0].value_units,value_name = self.parameters.parameter_name + ' CV(' + self.pnvs[0].value_name + ')' ,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
                         
+
+class NakaRushtonTuningCurveFit(Analysis):
+      """
+      Fits each tuning curve with a gaussian.
+      
+      It takes a dsv containing some PerNeuronValues.
+      All PerNeuronValues have to belong to stimuli of the same type and
+      contain the same type of values (i.e. have the same `value_name`).
+
+      For each combination of parameters of the stimuli other than `parameter_name`
+      `NakaRushtonTuningCurveFit` fits a Naka-Rushton curve to the values in the PerNeuronValues
+      that span the parameter values of the `parameter_name` stimulus parameter.
+      
+      It stores the parameters of the fitted Naka-Rushton curve in a PerNeuronValue - for each combination of parameters of the stimulus associated 
+      with the supplied PerNeuronValue with the exception of the stimulus parameter `parameter_name`. 
+    
+      Other parameters
+      ------------------- 
+      parameter_name : str
+                     The stimulus parameter name through which to fit the tuning curve.
+    
+      """   
+      required_parameters = ParameterSet({
+          'parameter_name': str,  # the parameter_name through which to fit the tuning curve
+	  'neurons' : list,
+      })      
+      
+      def perform_analysis(self):
+            for sheet in self.datastore.sheets():
+                dsv = queries.param_filter_query(self.datastore,identifier='PerNeuronValue',sheet_name=sheet)
+                if len(dsv.get_analysis_result()) == 0: continue
+                assert queries.equal_ads(dsv,except_params=['stimulus_id'])
+                assert queries.ads_with_equal_stimulus_type(dsv)
+                self.pnvs = dsv.get_analysis_result()
+                
+                # get stimuli
+                self.st = [MozaikParametrized.idd(s.stimulus_id) for s in self.pnvs]
+                
+               
+                # transform the pnvs into a dictionary of tuning curves according along the parameter_name
+                # also make sure they are ordered according to the first pnv's idds 
+                
+                self.tc_dict = colapse_to_dictionary([z.get_value_by_id(self.parameters.neurons) for z in self.pnvs],self.st,self.parameters.parameter_name)
+                for k in self.tc_dict.keys():
+                        if len(self.tc_dict[k][0]) < 4:
+                           logger.info('Failed to fit tuning curve, not enough points supplied: %d' % len(self.tc_dict[k][0]))
+                           return
+                        z = []
+                        u = []
+                        for i in xrange(0,len(self.parameters.neurons)):
+                            Y = [a[i] for a in self.tc_dict[k][1]]
+                            res,err = self._fitnakarushton(self.tc_dict[k][0],Y)
+                            z.append(res)    
+                            u.append(err)
+                        res = numpy.array(z)
+                        err = numpy.array(u)
+                            
+                        if True:
+                           self.datastore.full_datastore.add_analysis_result(PerNeuronValue(err,self.parameters.neurons,self.pnvs[0].value_units,value_name = self.parameters.parameter_name + ' Naka-Rushton fitting error of ' + self.pnvs[0].value_name ,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
+                           self.datastore.full_datastore.add_analysis_result(PerNeuronValue(res[:,0],self.parameters.neurons,self.pnvs[0].value_units,value_name = self.parameters.parameter_name + ' Naka-Rushton exponent of ' + self.pnvs[0].value_name ,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
+                           self.datastore.full_datastore.add_analysis_result(PerNeuronValue(res[:,1],self.parameters.neurons,self.pnvs[0].value_units,value_name = self.parameters.parameter_name + ' Naka-Rushton scaler of ' + self.pnvs[0].value_name ,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
+                           self.datastore.full_datastore.add_analysis_result(PerNeuronValue(res[:,2],self.parameters.neurons,None,value_name = self.parameters.parameter_name + ' Naka-Rushton c50 of ' + self.pnvs[0].value_name ,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
+                        else:
+                           logger.debug('Failed to fit tuning curve %s for neuron %d' % (k,i))
+
+
+                        # we will also fit the mean tuning curve
+                        Y = numpy.squeeze(numpy.mean([a for a in self.tc_dict[k][1]],axis=1))
+
+                        res,err = self._fitnakarushton(self.tc_dict[k][0],Y,flag=True)
+                        self.datastore.full_datastore.add_analysis_result(SingleValue(value=err,value_name = self.parameters.parameter_name + ' Mean Naka-Rushton fitting error of ' + self.pnvs[0].value_name ,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
+                        self.datastore.full_datastore.add_analysis_result(SingleValue(value=res[0],value_name = self.parameters.parameter_name + ' Mean Naka-Rushton exponent of ' + self.pnvs[0].value_name ,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
+                        self.datastore.full_datastore.add_analysis_result(SingleValue(value=res[1],value_name = self.parameters.parameter_name + ' Mean Naka-Rushton scaler of ' + self.pnvs[0].value_name ,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
+                        self.datastore.full_datastore.add_analysis_result(SingleValue(value=res[2],value_name = self.parameters.parameter_name + ' Mean Naka-Rushton c50 of ' + self.pnvs[0].value_name ,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
+
+      def _fitnakarushton(self,X,Y,flag=False):
+          fitfunc = lambda p,x: p[1]*numpy.power(x,p[0])/(numpy.power(x,p[0])+p[2])
+          errfunc = lambda p, x, y: fitfunc(p,x) - y # Distance to the target function
+          
+          p0 = [1, 1.0, 100] # Initial guess for the parameters
+          p0[1] = numpy.max(Y)
+          p0[2] = X[numpy.argmax(Y)]/2
+
+          p1, success = scipy.optimize.leastsq(errfunc, p0[:], args=(X,Y))      
+
+          err = numpy.linalg.norm(fitfunc(p1,X)-Y,2)/numpy.linalg.norm(Y-numpy.mean(Y),2)          
+
+          if flag:
+              import pylab
+              pylab.figure()
+              logger.info("a:" + str(p1))
+              pylab.plot(X,fitfunc(p1,X),'x')
+              pylab.hold('on')          
+              pylab.plot(X,Y,'o')
+              pylab.title(str(numpy.linalg.norm(fitfunc(p1,X)-Y)/numpy.linalg.norm(Y))+ "  " + str(numpy.max(Y)))
+
+          if success:
+            return p1,err
+          else :
+            return [-1,-1,-1],1000000000
+
