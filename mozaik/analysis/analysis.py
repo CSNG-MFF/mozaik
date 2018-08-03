@@ -320,6 +320,9 @@ class TrialToTrialCrossCorrelationOfAnalogSignalList(Analysis):
 
     required_parameters = ParameterSet({
         'neurons': list,  # the list of neuron ids for which to compute the
+        'window_min' : int,
+        'window_max' : int,
+
     })
 
     def perform_analysis(self):
@@ -338,7 +341,7 @@ class TrialToTrialCrossCorrelationOfAnalogSignalList(Analysis):
                 st = str(st)
                 asl_ass = []
                 for idd in self.parameters.neurons:
-                    asl_cross = self.cross_correlation([ads.get_asl_by_id(idd).magnitude for ads in dsv.get_analysis_result()])                                         
+                    asl_cross = self.cross_correlation([ads.get_asl_by_id(idd).magnitude[self.parameters.window_min:self.parameters.window_min] for ads in dsv.get_analysis_result()])                                         
                     asl_ass.append(NeoAnalogSignal(asl_cross,t_start=-dsv.get_analysis_result()[0].get_asl_by_id(idd).duration,
                                          sampling_period=dsv.get_analysis_result()[0].get_asl_by_id(idd).sampling_period,
                                          units=qt.dimensionless))        
@@ -1575,7 +1578,7 @@ class NakaRushtonTuningCurveFit(Analysis):
       """   
       required_parameters = ParameterSet({
           'parameter_name': str,  # the parameter_name through which to fit the tuning curve
-	  'neurons' : list,
+	        'neurons' : list,
       })      
       
       def perform_analysis(self):
@@ -1629,14 +1632,16 @@ class NakaRushtonTuningCurveFit(Analysis):
       def _fitnakarushton(self,X,Y,flag=False):
           fitfunc = lambda p,x: p[1]*numpy.power(x,p[0])/(numpy.power(x,p[0])+p[2])
           errfunc = lambda p, x, y: fitfunc(p,x) - y # Distance to the target function
-          
-          p0 = [1, 1.0, 100] # Initial guess for the parameters
-          p0[1] = numpy.max(Y)
-          p0[2] = X[numpy.argmax(Y)]/2
 
-          p1, success = scipy.optimize.leastsq(errfunc, p0[:], args=(X,Y))      
+          res = []
 
-          err = numpy.linalg.norm(fitfunc(p1,X)-Y,2)/numpy.linalg.norm(Y-numpy.mean(Y),2)          
+          for p0 in [1,2,3]:
+              for p2 in [0.02,0.05,0.1,0.2]:
+                  p, success = scipy.optimize.leastsq(errfunc, [p0,numpy.max(Y),p2], args=(X,Y))      
+                  err = numpy.linalg.norm(fitfunc(p,X)-Y,2)/numpy.linalg.norm(Y-numpy.mean(Y),2)          
+                  res.append([p,success,err])
+
+          p1,success,err = res[numpy.argmin(numpy.array(res)[:,2].tolist())]
 
           if flag:
               import pylab
@@ -1651,4 +1656,3 @@ class NakaRushtonTuningCurveFit(Analysis):
             return p1,err
           else :
             return [-1,-1,-1],1000000000
-
