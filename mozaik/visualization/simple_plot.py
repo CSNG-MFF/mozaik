@@ -9,6 +9,7 @@ import mozaik
 import mozaik.tools.units 
 import quantities as pq
 from matplotlib.colors import *
+from cycler import cycler
 
 logger = mozaik.getMozaikLogger()
 
@@ -268,8 +269,8 @@ class StandardStyle(SimplePlot):
         pylab.rcParams['xtick.major.pad'] = self.x_tick_pad
         self.ytick_pad_backup = pylab.rcParams['ytick.major.pad']
         pylab.rcParams['ytick.major.pad'] = self.y_tick_pad
-        self.colormap_backup = pylab.rcParams['axes.color_cycle']
-        pylab.rcParams['axes.color_cycle'] = [self.color_cycle[c] for c in sorted(self.color_cycle.keys())]
+        self.colormap_backup = pylab.rcParams['axes.prop_cycle']
+        pylab.rcParams['axes.prop_cycle'] = cycler('color',[self.color_cycle[c] for c in sorted(self.color_cycle.keys())])
 
 
     def pre_plot(self):
@@ -324,7 +325,7 @@ class StandardStyle(SimplePlot):
         pylab.rc('axes', linewidth=1)
         pylab.rcParams['xtick.major.pad'] = self.xtick_pad_backup
         pylab.rcParams['ytick.major.pad'] = self.ytick_pad_backup
-        pylab.rcParams['axes.color_cycle'] =self.colormap_backup
+        pylab.rcParams['axes.prop_cycle'] =self.colormap_backup
 
     def _ticks(self):
         if self.x_axis:

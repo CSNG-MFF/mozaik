@@ -96,6 +96,7 @@ class Plotting(ParametrizedObject):
         self.animation_update_functions = []
         self.frame_duration = frame_duration
         self.fig_param = fig_param if fig_param != None else {}
+        self.caption = "Caption not specified."
 
     def subplot(self, subplotspec):
         """
@@ -257,6 +258,11 @@ class PlotTuningCurve(Plotting):
         self.pnvs = []
         self.spont_level_pnv = spont_level_pnv
         self.max_mean_response_indexes = []
+
+        self.caption = """
+                       Each column contains a tuning curve plot.
+                       """
+
         assert queries.ads_with_equal_stimulus_type(datastore)
         assert len(self.parameters.neurons) > 0 , "ERROR, empty list of neurons specified"
         #if self.parameters.mean:

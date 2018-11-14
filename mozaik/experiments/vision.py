@@ -224,7 +224,7 @@ class MeasureOrientationTuningFullfield(VisualExperiment):
     """
     Measure orientation tuning using a fullfiled sinusoidal grating.
 
-    This experiment will show a series of full-field sinusoidal gratings
+    This experiment will show a series of full-field sinusoidal gratings 
     that vary in orientation, while the other parameters remain constant.
     
     Parameters
