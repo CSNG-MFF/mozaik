@@ -153,12 +153,17 @@ class SimilarAnnotationSelector(PopulationSelector):
       annotation : str
                  The name of the annotation value. It has to be defined in the given population for all neurons.
       
-      distance : The the upper limit on distance between the given neurons annotation value and the specified value that permits inclusion.
+      distance : float 
+		 The the upper limit on distance between the given neurons annotation value and the specified value that permits inclusion.
       
-      value : The value from which to calculate distance.
+      value : float
+	    The value from which to calculate distance.
       
       num_of_cells : int
                    The number of cells to be selected.
+
+      period : float
+		The period of the annotation value (0 if none)
       """
       
       required_parameters = ParameterSet({
