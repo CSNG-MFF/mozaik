@@ -11,6 +11,7 @@ and may not be the current affiliation of a contributor.
 * Domenico Guarino [1] 
 * Ramón Heberto Martínez [1]
 * Bernhard Kaplan [2]
+* Vit Fojtik
 
 
 1. Unité de Neuroscience, Information et Complexité, CNRS UPR 3293, Gif-sur-Yvette, France 
