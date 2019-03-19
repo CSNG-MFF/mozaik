@@ -1,0 +1,26 @@
+{
+    'input_space_type' : 'mozaik.space.VisualSpace',
+    'input_space': {
+        'update_interval': 7.0, # ms
+        'background_luminance': 50.0, # cd/m²
+    },
+    'sheets' : {
+        'l4_cortex_exc': url("param/l4_cortex_exc"),
+	'l4_cortex_inh': url("param/l4_cortex_inh"),
+        'retina_lgn': url("param/SpatioTemporalFilterRetinaLGN_defaults"),
+    },
+    'visual_field': {
+        'centre': (0.0, 0.0), # degrees (x,y)
+        'size': (12.0, 12.0), # degrees (width, height)
+    },
+    'results_dir': '',
+    'name' : 'Jens Model',
+    'reset' : False,
+    'null_stimulus_period' : 140.0,
+    'store_stimuli' : True,
+    'min_delay' : 0.1,
+    'max_delay' : 100,
+    'time_step' : 0.1,
+    'pynn_seed' : 513,
+    'mpi_seed' : 1023,
+}

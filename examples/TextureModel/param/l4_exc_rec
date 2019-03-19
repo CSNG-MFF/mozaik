@@ -1,0 +1,16 @@
+{
+    "1" : {
+      'component' :  'mozaik.sheets.population_selector.RCRandomN',
+      'variables' : ("spikes"),
+      'params' :  {
+                    'num_of_cells' : 200,
+                  }
+    },
+    "2" : {
+      'component' :  'mozaik.sheets.population_selector.RCRandomN',
+      'variables' : ("spikes","v","gsyn_exc" , "gsyn_inh"),
+      'params' :  {
+                    'num_of_cells' : 21,
+                  }
+    },
+}
