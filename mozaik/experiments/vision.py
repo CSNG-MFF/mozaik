@@ -2,6 +2,7 @@ import mozaik
 from mozaik.experiments import Experiment
 from parameters import ParameterSet
 import mozaik.stimuli.vision.topographica_based as topo
+import mozaik.stimuli.vision.texture_based as textu #vf
 import numpy
 from mozaik.stimuli import InternalStimulus
 from mozaik.tools.distribution_parametrization import ParameterWithUnitsAndPeriod, MozaikExtendedParameterSet
@@ -1416,3 +1417,69 @@ class VonDerHeydtIllusoryBarProtocol(VisualExperiment):
 
     def do_analysis(self, data_store):
         pass
+
+
+class MeasureTextureSensitivityFullfield(VisualExperiment):
+    """
+    Measure sensitivity to second order image correlations using stimuli
+    based on a texture image.
+    This experiment will show a series of texture based images
+    that vary in matched statistics.
+    
+    Parameters
+    ----------
+    model : Model
+          The model on which to execute the experiment.
+    Other parameters
+    ----------------
+    num_images : int
+          Number of images of each type to present.
+    
+    image_path : string
+                      Path to initial image.
+    image_duration : float
+                      The duration of single presentation of an image.
+    
+    types : list(int) 
+              List of types indicating which statistics to match:
+                0 - original image
+                1 - naturalistic texture image (matched higher order statistics)
+                2 - spectrally matched noise (matched marginal statistics only).
+    
+    num_trials : int
+               Number of trials each each stimulus is shown.
+    """
+
+    required_parameters = ParameterSet({
+            'num_images': int, #n. of images of each type, different synthesized instances
+            'image_path' : str,
+            'image_duration' : float,
+            'types' : list,
+            'num_trials' : int, #n. of same instance
+            #'offset_time' : float,
+            #'onset_time' : float,
+    })  
+
+    def __init__(self,model,parameters):
+        VisualExperiment.__init__(self, model,parameters)
+        for ty, t in enumerate(self.parameters.types):
+            for i in xrange(0, self.parameters.num_images):                
+                for k in xrange(0, self.parameters.num_trials):
+                    print("TRIAL vision NUMBER " + str(k))
+                    im = textu.PSTextureStimulus(
+                            frame_duration = self.frame_duration,
+                            duration=self.parameters.image_duration,
+                            trial=k,
+                            background_luminance=self.background_luminance,
+                            density=self.density,
+                            location_x=0.0,
+                            location_y=0.0,
+                            size_x=model.visual_field.size_x,
+                            size_y=model.visual_field.size_y,
+                            texture_path = self.parameters.image_path,
+                            stats_type = t,
+                            seed = 523*(i+1)+5113*(ty+1))
+                    self.stimuli.append(im)
+
+    def do_analysis(self, data_store):
+        pass 
