@@ -12,6 +12,8 @@ from numpy import sin, cos, pi, exp
 
 logger = mozaik.getMozaikLogger()
 
+import pylab
+
 class MapDependentModularConnectorFunction(ModularConnectorFunction):
     """
     Corresponds to: distance*linear_scaler + constant_scaler
@@ -356,3 +358,78 @@ class V1CorrelationBasedConnectivity(ModularConnectorFunction):
         
         return corr_gauss
 
+
+
+class CoCircularModularConnectorFunction(ModularConnectorFunction):
+    """
+    This connector function implements the situation where the probability of connection between pre-synaptic neuron preN and post synaptic neuron postN
+    depends on their orientation and distance in following the co-circularity rule. The law was adopted from:
+    Hunt, J. J., Bosking, W. H., & Goodhill, G. J. (2011). Statistical structure of lateral connections in the primary visual cortex. Neural Systems & Circuits, 1(1), 3. https://doi.org/10.1186/2042-1001-1-3
+    """
+    required_parameters = ParameterSet({
+        'or_map_location': str,  # It has to point to a file containing a single pickled 2d numpy array, containing values in the interval [0..1].
+        'sigma': float,  # How sharply does the probability of connection fall off with the distance from idealized co-circular connectivity
+    })
+
+    def __init__(self, source,target, parameters):
+        import pickle
+        ModularConnectorFunction.__init__(self, source,target, parameters)
+        t_size = target.size_in_degrees()
+        f = open(self.parameters.or_map_location, 'r')
+        mmap = pickle.load(f)
+        coords_x = numpy.linspace(-t_size[0]/2.0,
+                                  t_size[0]/2.0,
+                                  numpy.shape(mmap)[0])
+        coords_y = numpy.linspace(-t_size[1]/2.0,
+                                  t_size[1]/2.0,
+                                  numpy.shape(mmap)[1])
+        X, Y = numpy.meshgrid(coords_x, coords_y)
+        self.mmap = NearestNDInterpolator(zip(X.flatten(), Y.flatten()),
+                                       mmap.flatten())    
+        self.or_source=self.mmap(numpy.transpose(numpy.array([self.source.pop.positions[0],self.source.pop.positions[1]]))) * numpy.pi
+
+        
+        for (index, neuron2) in enumerate(target.pop.all()):
+            val_target=self.mmap(self.target.pop.positions[0][index],self.target.pop.positions[1][index])
+            self.target.add_neuron_annotation(index,'LGNAfferentOrientation', val_target*numpy.pi, protected=False) 
+            
+    def evaluate(self,index):
+            or_target = self.target.get_neuron_annotation(index,'LGNAfferentOrientation')
+            x_target = self.target.pop.positions[0][index]
+            y_target = self.target.pop.positions[1][index]
+
+            phi = numpy.arctan2(self.source.pop.positions[1]-y_target,self.source.pop.positions[0]-x_target)
+            distance = circular_dist(self.or_source,2*phi-or_target,pi)
+            prob = numpy.exp(-0.5*(distance/self.parameters.sigma)**2)/(self.parameters.sigma*numpy.sqrt(2*numpy.pi))
+
+	    if False:
+                pylab.figure()
+                pylab.subplot(131)
+                s_size = self.source.size_in_degrees()
+                pylab.xlim(-s_size[0]/2.0*1.5,s_size[0]/2.0*1.5)
+                pylab.ylim(-s_size[0]/2.0*1.5,s_size[0]/2.0*1.5)
+            
+                def plot_or(x,y,phi,color):
+                    d=0.06
+                    dx = numpy.cos(phi)*d
+                    dy = numpy.sin(phi)*d   
+                    pylab.plot([x+dx,x-dx],[y+dy,y-dy],c=color)
+
+                for i in xrange(0,len(phi)):
+	               plot_or(self.source.pop.positions[0][i],self.source.pop.positions[1][i],2*phi[i]-or_target,'k')
+
+                plot_or(x_target,y_target,or_target,'r')
+    
+                pylab.subplot(132)
+                pylab.scatter(self.source.pop.positions[0],self.source.pop.positions[1],c=distance)
+                pylab.colorbar()
+
+                pylab.subplot(133)
+                pylab.scatter(self.source.pop.positions[0],self.source.pop.positions[1],c=self.or_source,cmap='hsv')
+
+                #pylab.subplot(412)
+                #pylab.scatter(self.source.pop.positions[0],self.source.pop.positions[1],c=prob)
+            
+                pylab.show()
+
+            return prob

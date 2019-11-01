@@ -491,7 +491,7 @@ class PlotTuningCurve(Plotting):
                 params["title"] =  'Neuron ID: %d' % neuron_id
             
 
-            if not polar:
+            if (not polar) and (period != None):
                     if numpy.isclose(period,pi):
                         params["x_ticks"] = [-pi/2, 0, pi/2]
                         params["x_lim"] = (-pi/2, pi/2)

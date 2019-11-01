@@ -179,6 +179,10 @@ class Model(BaseComponent):
         self.sim.run(tstop)
         logger.info("Finished simulating the network for %s ms" % tstop)
         self.simulator_time += tstop
+
+	for sheet in self.sheets.values():
+	    logger.info("Sheet %s average rate: %f" % (sheet.name,sheet.mean_spike_count()))
+
         return time.time()-t0
 
     def reset(self):

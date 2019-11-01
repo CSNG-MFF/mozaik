@@ -1330,3 +1330,89 @@ class CorticalStimulationWithStimulatorArrayAndOrientationTuningProtocol_Contras
                                                         direct_stimulation_parameters=p
                                                      )
                                             )                
+
+
+class VonDerHeydtIllusoryBarProtocol(VisualExperiment):
+    """
+    An illusory bar from Von Der Heydt et al. 1989.
+
+    Von Der Heydt, R., & Peterhans, E. (1989). Mechanisms of contour perception in monkey visual cortex. I. Lines of pattern discontinuity. Journal of Neuroscience, 9(5), 1731–1748. Retrieved from https://www.jneurosci.org/content/jneuro/9/5/1731.full.pdf
+    
+    Parameters
+    ----------
+    model : Model
+          The model on which to execute the experiment.
+
+    Other parameters
+    ----------------
+    model : Model
+          The model on which to execute the experiment.
+    
+    x : float
+      The x corrdinates (of center) of the area in which the mapping will be done.
+
+    y : float
+      The y corrdinates (of center) of the area in which the mapping will be done.
+        
+    length : float
+          The length of the bar.
+    
+    background_bar_width : float
+                         Width of the background bar
+
+    occlusion_bar_width : float
+                         Width of the occlusion bar
+    bar_width : float
+              Width of the bar
+             
+    orientation : float
+                The orientation of the bar.
+
+    duration : float
+             The duration of single presentation of the stimulus.
+    
+    flash_duration : float
+             The duration of the presence of the bar.
+     
+    num_trials : int
+               Number of trials each each stimulus is shown.
+    """
+    
+    required_parameters = ParameterSet({
+            'x' : float,
+            'y' : float,
+            'length' : float,
+            'bar_width' : float,
+            'orientation' : float,
+            'background_bar_width' : float,
+            'occlusion_bar_width' : list,
+            'duration' : float,
+            'flash_duration' : float, 
+            'num_trials' : int,
+    })  
+    
+    def __init__(self, model,parameters):
+        VisualExperiment.__init__(self, model,parameters)
+        for k in xrange(0, self.parameters.num_trials):
+              for obw in self.parameters.occlusion_bar_width:  
+                            self.stimuli.append(
+                                topo.FlashedInterruptedBar(
+                                            frame_duration = 7,
+                                            size_x=model.visual_field.size_x,
+                                            size_y=model.visual_field.size_y,
+                                            location_x=0.0,
+                                            location_y=0.0,
+                                            background_luminance=self.background_luminance,
+                                            duration=self.parameters.duration,
+                                            bar_width=self.parameters.bar_width,
+                                            background_bar_width=self.parameters.background_bar_width,
+                                            occlusion_bar_width=self.parameters.occlusion_bar_width,
+                                            density=self.density,
+                                            orientation = self.parameters.orientation,
+                                            flash_duration = self.parameters.flash_duration,
+                                            x = self.parameters.x,
+                                            y = self.parameters.y,
+                                            trial=k))
+
+    def do_analysis(self, data_store):
+        pass
