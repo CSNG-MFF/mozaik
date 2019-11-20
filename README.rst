@@ -136,7 +136,7 @@ Now you can install in this protected environment all other dependencies::
 Now we will manually install several packages. It is probably the best if you create a separate directory in an appropriate
 place, where you will download and install from the packages.
 
-First we will install *imagen* package:
+First we will install *imagen* package::
 
   git clone https://github.com/antolikjan/imagen.git
   cd imagen
