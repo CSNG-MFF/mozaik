@@ -150,11 +150,12 @@ Now we can install *Nest* (always in the virtual environment):
         tar xvfz nest-2.12.0.tar.gz
         cd nest-2.12.0
     
-    - then configure, choose if you want mpi. ::
+    - then configure, choose if you want mpi::
     
         (mozaik)$ cmake -Dwith-mpi=ON -DCMAKE_INSTALL_PREFIX:PATH=$HOME/virt_env/mozaik -Dwith-optimize='-O3' ./
        
     - finally, by launching make and install, it installs PyNest in the activated virtual environment mozaik::
+    
         (mozaik)$ make
         (mozaik)$ make install
         
