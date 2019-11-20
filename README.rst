@@ -131,7 +131,16 @@ ____________
 Now you can install in this protected environment all other dependencies::
 
   pip install --upgrade distribute
-  pip install numpy scipy mpi4py matplotlib quantities lazyarray interval Pillow imagen param==1.5.1 parameters neo cython pynn
+  pip install numpy scipy mpi4py matplotlib quantities lazyarray interval Pillow param==1.5.1 parameters neo cython pynn
+
+Now we will manually install several packages. It is probably the best if you create a separate directory in an appropriate
+place, where you will download and install from the packages.
+
+First we will install *imagen* package:
+
+  git clone https://github.com/antolikjan/imagen.git
+  cd imagen
+  python setup install
 
 Now we can install *Nest* (always in the virtual environment):
 
@@ -155,7 +164,7 @@ Now we can install *Nest* (always in the virtual environment):
 And, finally, Mozaik::
     
     git clone https://github.com/antolikjan/mozaik.git
-    cd mozaik/
+    cd mozaik
     python setup.py install
     
 .. _ref-run:
