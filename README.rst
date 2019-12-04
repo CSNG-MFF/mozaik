@@ -131,7 +131,16 @@ ____________
 Now you can install in this protected environment all other dependencies::
 
   pip install --upgrade distribute
-  pip install numpy scipy mpi4py matplotlib quantities lazyarray interval Pillow imagen param==1.5.1 parameters neo cython pynn
+  pip install numpy==1.8.2 scipy mpi4py matplotlib quantities lazyarray interval Pillow param==1.5.1 parameters neo cython pynn
+
+Now we will manually install several packages. It is probably the best if you create a separate directory in an appropriate
+place, where you will download and install from the packages.
+
+First we will install *imagen* package::
+
+  git clone https://github.com/antolikjan/imagen.git
+  cd imagen
+  python setup install
 
 Now we can install *Nest* (always in the virtual environment):
 
@@ -140,14 +149,20 @@ Now we can install *Nest* (always in the virtual environment):
 
         tar xvfz nest-2.12.0.tar.gz
         cd nest-2.12.0
-    - then configure, choose if you want mpi. ::
     
-       (mozaik)$ cmake -Dwith-mpi=ON -DCMAKE_INSTALL_PREFIX:PATH=$HOME/virt_env/mozaik -Dwith-optimize='-O3' ./
+    - then configure, choose if you want mpi::
+    
+        (mozaik)$ cmake -Dwith-mpi=ON -DCMAKE_INSTALL_PREFIX:PATH=$HOME/virt_env/mozaik -Dwith-optimize='-O3' ./
+       
     - finally, by launching make and install, it installs PyNest in the activated virtual environment mozaik::
+    
         (mozaik)$ make
         (mozaik)$ make install
+        
     - Then::
+        
         make installcheck
+    
     - nest will reside in $HOME/virt_env/mozaik/lib/python2.7/site-packages. Check that the package is seen by python using::
         python -c 'import nest'
 
@@ -155,7 +170,7 @@ Now we can install *Nest* (always in the virtual environment):
 And, finally, Mozaik::
     
     git clone https://github.com/antolikjan/mozaik.git
-    cd mozaik/
+    cd mozaik
     python setup.py install
     
 .. _ref-run:
