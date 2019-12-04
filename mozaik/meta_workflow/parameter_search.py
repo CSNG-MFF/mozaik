@@ -173,7 +173,7 @@ class SlurmSequentialBackendIoV(object):
                             '#SBATCH -J MozaikParamSearch',
                             '#SBATCH -n ' + str(self.num_mpi),
                             '#SBATCH -c ' + str(self.num_threads),
-                            'source /home/jantolik/virt_env/mozaik/bin/activate',
+                            'source /home/jantolik/virt_env/mozaiknew/bin/activate',
                             'cd ' + os.getcwd(),
                             ' '.join(["mpirun python",run_script, simulator_name, str(self.num_threads) ,parameters_url]+modified_parameters+[simulation_run_name]+['>']  + [parameters['results_dir'][1:-1] +'/OUTFILE'+str(time.time())]),
                         ]) 
@@ -378,7 +378,7 @@ def parameter_search_run_script_distributed_slurm_IoV(simulation_name,master_res
                             '#!/bin/bash',
                             '#SBATCH -J MozaikParamSearchAnalysis',
                             '#SBATCH -c ' + str(core_number),
-                            'source /home/jantolik/virt_env/mozaik/bin/activate',
+                            'source /home/jantolik/virt_env/mozaiknew/bin/activate',
                             'cd ' + os.getcwd(),
                             'echo "DSADSA"',                            
                             ' '.join(["python",run_script,"'"+rdn+"'"]  +['>']  + ["'"+rdn +'/OUTFILE_analysis'+str(time.time()) + "'"]),
