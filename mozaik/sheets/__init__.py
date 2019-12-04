@@ -266,7 +266,9 @@ class Sheet(BaseComponent):
         # population indexes
         def compare(a, b):
             return cmp(a.annotations['source_id'], b.annotations['source_id'])
+	
 
+	self.msc = numpy.mean([numpy.sum(st) for st in s.spiketrains])
         s.spiketrains = sorted(s.spiketrains, compare)
         if stimulus_duration != None:        
            for st in s.spiketrains:
@@ -278,6 +280,10 @@ class Sheet(BaseComponent):
                s.analogsignals[i].t_start = 0 * pq.ms
        
         return s
+
+    def mean_spike_count(self):
+	logger.info(self.msc)
+	return self.msc
 
     def prepare_artificial_stimulation(self, duration, offset,additional_stimulators):
         """

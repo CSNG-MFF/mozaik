@@ -15,6 +15,8 @@ from sets import Set
 from parameters import ParameterSet
 import logging
 import inspect
+import numbers
+import numpy
 import collections
 from mozaik.tools.distribution_parametrization import ParameterWithUnitsAndPeriod, MozaikExtendedParameterSet
 
@@ -490,7 +492,7 @@ def colapse(data_list, object_list, func=None, parameter_list=[],
         return ([func(v) for v in values], st)
     else:
         return (values, st)
-        
+
 def varying_parameters(parametrized_objects):
     """
     Find the varying list of params. Can be only applied
@@ -507,11 +509,17 @@ def varying_parameters(parametrized_objects):
     varying_params = collections.OrderedDict()
     for n in parametrized_objects[0].getParams().keys():
         for o in parametrized_objects:
-            if o.getParamValue(n) != parametrized_objects[0].getParamValue(n):
-                varying_params[n] = True
-                break
+            if isinstance(getattr(o,n),numbers.Number):
+                    if not numpy.isclose(o.getParamValue(n),parametrized_objects[0].getParamValue(n)):
+                        varying_params[n] = True
+                        break
+            else:
+                    if o.getParamValue(n) != parametrized_objects[0].getParamValue(n):
+	                varying_params[n] = True
+    	                break
 
     return varying_params.keys()
+
 
 def parameter_value_list(parametrized_objects,param):
     """

@@ -11,16 +11,8 @@ def circular_dist(a, b, period):
     """
     Returns the distance between a and b (scalars) in a domain with `period` period.
     """
-    return  numpy.minimum(numpy.abs(a - b), period - numpy.abs(a - b))
-
-
-#def circular_dist(a, b, period):
-#    """
-#    Returns the distance between a and b (scalars) in a domain with `period` period.
-#    """
-#    r = numpy.abs(a % period - b % period)
-#    return  numpy.minimum(r, period - r)
-
+    r = numpy.abs(numpy.mod(a,period) - numpy.mod(b,period))
+    return  numpy.minimum(r, period - r)
 
 def rad_to_complex(vector):
     """

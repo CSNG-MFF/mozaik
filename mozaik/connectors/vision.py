@@ -388,23 +388,25 @@ class CoCircularModularConnectorFunction(ModularConnectorFunction):
                                        mmap.flatten())    
         self.or_source=self.mmap(numpy.transpose(numpy.array([self.source.pop.positions[0],self.source.pop.positions[1]]))) * numpy.pi
 
-        
         for (index, neuron2) in enumerate(target.pop.all()):
             val_target=self.mmap(self.target.pop.positions[0][index],self.target.pop.positions[1][index])
-            self.target.add_neuron_annotation(index,'LGNAfferentOrientation', val_target*numpy.pi, protected=False) 
+            self.target.add_neuron_annotation(index,'ORMapOrientation', val_target*numpy.pi, protected=False) 
             
     def evaluate(self,index):
-            or_target = self.target.get_neuron_annotation(index,'LGNAfferentOrientation')
+            logger.error('EVALUATE *********************************************')
+            or_target = self.target.get_neuron_annotation(index,'ORMapOrientation')
             x_target = self.target.pop.positions[0][index]
             y_target = self.target.pop.positions[1][index]
 
             phi = numpy.arctan2(self.source.pop.positions[1]-y_target,self.source.pop.positions[0]-x_target)
             distance = circular_dist(self.or_source,2*phi-or_target,pi)
             prob = numpy.exp(-0.5*(distance/self.parameters.sigma)**2)/(self.parameters.sigma*numpy.sqrt(2*numpy.pi))
-
-	    if False:
+ 
+            if index in [1000]:
+                import pylab
                 pylab.figure()
                 pylab.subplot(131)
+                pylab.gca().set_aspect('equal', 'box')
                 s_size = self.source.size_in_degrees()
                 pylab.xlim(-s_size[0]/2.0*1.5,s_size[0]/2.0*1.5)
                 pylab.ylim(-s_size[0]/2.0*1.5,s_size[0]/2.0*1.5)
@@ -414,22 +416,30 @@ class CoCircularModularConnectorFunction(ModularConnectorFunction):
                     dx = numpy.cos(phi)*d
                     dy = numpy.sin(phi)*d   
                     pylab.plot([x+dx,x-dx],[y+dy,y-dy],c=color)
-
-                for i in xrange(0,len(phi)):
-	               plot_or(self.source.pop.positions[0][i],self.source.pop.positions[1][i],2*phi[i]-or_target,'k')
+	
+                idx = numpy.random.choice(numpy.arange(len(phi)),size=500)
+                for i in idx:
+                   plot_or(self.source.pop.positions[0][i],self.source.pop.positions[1][i],2*phi[i]-or_target,'k')
 
                 plot_or(x_target,y_target,or_target,'r')
     
                 pylab.subplot(132)
-                pylab.scatter(self.source.pop.positions[0],self.source.pop.positions[1],c=distance)
+                pylab.gca().set_aspect('equal', 'box')
+                logger.error(str(numpy.shape(self.source.pop.positions[1][idx])))
+                logger.error(str(numpy.max(distance)))
+                logger.error(str(numpy.max(prob)))
+                pylab.scatter(self.source.pop.positions[0],self.source.pop.positions[1],c=self.or_source,alpha=0.5,edgecolors='none',s=numpy.array(prob/numpy.max(prob))*20,cmap='hsv')
                 pylab.colorbar()
 
                 pylab.subplot(133)
-                pylab.scatter(self.source.pop.positions[0],self.source.pop.positions[1],c=self.or_source,cmap='hsv')
+                pylab.gca().set_aspect('equal', 'box')
+                pylab.scatter(self.source.pop.positions[0],self.source.pop.positions[1],c=self.or_source,alpha=0.5,edgecolors='none',s=(1-numpy.array(distance/numpy.max(distance)))*20,cmap='hsv')
 
                 #pylab.subplot(412)
                 #pylab.scatter(self.source.pop.positions[0],self.source.pop.positions[1],c=prob)
-            
-                pylab.show()
+        
+                pylab.savefig(Global.root_directory+'aaa'+str(index)+'.png')
 
             return prob
+
+

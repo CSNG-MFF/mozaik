@@ -503,7 +503,7 @@ class PlotTuningCurve(Plotting):
                         params["x_lim"] = (-pi, pi)
                         params["x_tick_style"] = "Custom"
                         params["x_tick_labels"] = ["-$\\pi$","0", "$\\pi$"]
-            else:
+            elif polar:
                params["y_tick_style"] = "Custom"
                params["x_tick_style"] = "Custom"
                params["x_ticks"]  = []
@@ -512,7 +512,9 @@ class PlotTuningCurve(Plotting):
                params["y_tick_labels"]  = []
                params['grid'] = True
                params['fill'] = False
-            
+            else:
+               pass
+
             if not bottom_row:
                 params["x_axis"] = None
                 

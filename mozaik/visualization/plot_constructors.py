@@ -215,7 +215,7 @@ class PerStimulusPlot(PerDSVPlot):
             title = ''
             title = title + stimulus.name + '\n'
             for pn, pv in stimulus.getParams().items():
-                title = title + pn + ' : ' + str(pv) + '\n'
+                title = title + pn + ' : ' + str(stimulus.getParamValue(pn)) + '\n'
             return title
 
         if self.title_style == "Clever":

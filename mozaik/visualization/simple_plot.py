@@ -922,6 +922,7 @@ class StandardStyleLinePlot(StandardStyle):
         if self.legend:
             self.axis.legend()
         self.x_lim = (tmin, tmax)
+        logger.info(str(self.parameters))
 
 class ConductancesPlot(StandardStyle):
     """

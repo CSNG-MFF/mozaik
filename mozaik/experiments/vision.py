@@ -2,7 +2,6 @@ import mozaik
 from mozaik.experiments import Experiment
 from parameters import ParameterSet
 import mozaik.stimuli.vision.topographica_based as topo
-import mozaik.stimuli.vision.texture_based as textu #vf
 import numpy
 from mozaik.stimuli import InternalStimulus
 from mozaik.tools.distribution_parametrization import ParameterWithUnitsAndPeriod, MozaikExtendedParameterSet
@@ -1461,6 +1460,9 @@ class MeasureTextureSensitivityFullfield(VisualExperiment):
     })  
 
     def __init__(self,model,parameters):
+	# we place this import here to avoid the need for octave dependency unless this experiment is actually used.
+        import mozaik.stimuli.vision.texture_based as textu #vf
+
         VisualExperiment.__init__(self, model,parameters)
         for ty, t in enumerate(self.parameters.types):
             for i in xrange(0, self.parameters.num_images):                

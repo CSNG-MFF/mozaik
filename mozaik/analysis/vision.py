@@ -38,7 +38,10 @@ class ModulationRatio(Analysis):
         for sheet in self.datastore.sheets():
             # Load up spike trains for the right sheet and the corresponding
             # stimuli, and transform spike trains into psth
+            print sheet
+            self.datastore.print_content()
             dsv = queries.param_filter_query(self.datastore,identifier='AnalogSignalList',sheet_name=sheet,analysis_algorithm='PSTH',st_name='FullfieldDriftingSinusoidalGrating')
+            dsv.print_content()
             assert queries.equal_ads(dsv,except_params=['stimulus_id']) , "It seems PSTH computed in different ways are present in datastore, ModulationRatio can accept only one"
             psths = dsv.get_analysis_result()
             st = [MozaikParametrized.idd(p.stimulus_id) for p in psths]
@@ -145,7 +148,8 @@ class ModulationRatio(Analysis):
         period = 1/frequency
         period = period.rescale(signal.t_start.units)
         cycles = duration / period
-        first_har = int(round(cycles))
+        first_har = round(cycles)
+
         fft = numpy.fft.fft(signal)
 
         if abs(fft[0]) != 0:
@@ -219,12 +223,11 @@ class Analog_F0andF1(Analysis):
                     cycles = duration / period
                     first_har = int(round(cycles))
 
-                    f0 = [abs(numpy.fft.fft(signal)[0]) for signal in signals]
-                    f1 = [2*abs(numpy.fft.fft(signal)[first_har]) for signal in signals]
+                    f0 = [abs(numpy.fft.fft(signal)[0])/len(signal) for signal in signals]
+                    f1 = [2*abs(numpy.fft.fft(signal)[first_har])/len(signal) for signal in signals]
                     
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(f0,asl.ids,asl.y_axis_units,value_name = 'F0('+ asl.y_axis_name + ')',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=asl.stimulus_id))                            
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(f1,asl.ids,asl.y_axis_units,value_name = 'F1('+ asl.y_axis_name + ')',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=asl.stimulus_id))                                                
-    
 
 
 class LocalHomogeneityIndex(Analysis):      
@@ -297,6 +300,7 @@ class SizeTuningAnalysis(Analysis):
                         supp_sizes= []
                         sis = []
                         max_responses=[]
+                        csis = []
                         
                         # we will do the calculation neuron by neuron
                         for i in xrange(0,len(self.parameters.neurons)):
@@ -312,26 +316,39 @@ class SizeTuningAnalysis(Analysis):
                             crf_size = rads[crf_index]
                             
                             if crf_index < len(values)-1:
-                                supp_index = crf_index+numpy.argmax(values[crf_index+1:])+1
+                                supp_index = crf_index+numpy.argmin(values[crf_index+1:])+1
                             else:
                                 supp_index = len(values)-1
                             supp_size = rads[supp_index]                                
+
+                            if supp_index < len(values)-1:
+                                cs_index = supp_index+numpy.argmax(values[supp_index+1:])+1
+                            else:
+                                cs_index = len(values)-1
+
                             
                             if values[crf_index] != 0:
                                 si = (values[crf_index]-values[supp_index])/values[crf_index]
                             else:
                                 si = 0
-                            
+
+                            if values[cs_index] != 0:
+                                csi = (values[cs_index]-values[supp_index])/values[crf_index]
+                            else:
+                                csi = 0
+
                             crf_sizes.append(crf_size)
                             supp_sizes.append(supp_size)
                             sis.append(si)
                             max_responses.append(max_response)
+                            csis.append(csi)
                             
                             
                         self.datastore.full_datastore.add_analysis_result(PerNeuronValue(max_responses,self.parameters.neurons,self.st[0].getParams()["radius"].units,value_name = 'Max. response of ' + self.pnvs[0].value_name ,sheet_name=self.parameters.sheet_name,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
                         self.datastore.full_datastore.add_analysis_result(PerNeuronValue(crf_sizes,self.parameters.neurons,self.st[0].getParams()["radius"].units,value_name = 'Max. facilitation radius of ' + self.pnvs[0].value_name ,sheet_name=self.parameters.sheet_name,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
                         self.datastore.full_datastore.add_analysis_result(PerNeuronValue(supp_sizes,self.parameters.neurons,self.st[0].getParams()["radius"].units,value_name = 'Max. suppressive radius of ' + self.pnvs[0].value_name ,sheet_name=self.parameters.sheet_name,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
                         self.datastore.full_datastore.add_analysis_result(PerNeuronValue(sis,self.parameters.neurons,None,value_name = 'Suppression index of ' + self.pnvs[0].value_name ,sheet_name=self.parameters.sheet_name,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
+                        self.datastore.full_datastore.add_analysis_result(PerNeuronValue(csis,self.parameters.neurons,None,value_name = 'Counter-suppression index of ' + self.pnvs[0].value_name ,sheet_name=self.parameters.sheet_name,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
                         
 
 class OCTCTuningAnalysis(Analysis):
