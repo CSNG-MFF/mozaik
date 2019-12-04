@@ -131,7 +131,7 @@ ____________
 Now you can install in this protected environment all other dependencies::
 
   pip install --upgrade distribute
-  pip install numpy scipy mpi4py matplotlib quantities lazyarray interval Pillow param==1.5.1 parameters neo cython pynn
+  pip install numpy scipy mpi4py matplotlib==2.1.1 quantities lazyarray interval Pillow param==1.5.1 parameters neo cython pynn
 
 Now we will manually install several packages. It is probably the best if you create a separate directory in an appropriate
 place, where you will download and install from the packages.
