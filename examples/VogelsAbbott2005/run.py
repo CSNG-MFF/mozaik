@@ -11,6 +11,9 @@ mpirun python run.py simulator_name number_processors parameters name_of_test
 For example:
 mpirun python run.py nest 2 param/defaults 'test'
 """
+import matplotlib
+matplotlib.use('Agg')
+
 from mpi4py import MPI 
 from pyNN import nest
 import sys
