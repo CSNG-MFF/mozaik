@@ -358,6 +358,7 @@ class TrialToTrialCrossCorrelationOfAnalogSignalList(Analysis):
                                          stimulus_id=str(st)))           
                 
     def cross_correlation(self,ass):
+	logger.info("TTC: " + str(numpy.shape(ass)))
         cc = 0
         for i in xrange(0,len(ass)):
             for j in xrange(i+1,len(ass)):
@@ -368,6 +369,7 @@ class TrialToTrialCrossCorrelationOfAnalogSignalList(Analysis):
                     cc= cc + a
                 
         cc = cc / (len(ass)*(len(ass)-1)/2)
+	logger.info("TTC: " + str(numpy.shape(ass)))
         
         if type(cc) == int:
            cc = numpy.array([0 for i in xrange(0,len(ass[0])*2-1)]) 

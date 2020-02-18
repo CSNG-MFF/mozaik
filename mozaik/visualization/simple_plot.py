@@ -887,7 +887,7 @@ class StandardStyleLinePlot(StandardStyle):
             
             if type(self.linestyles) == list:
                 p['linestyle'] = self.linestyles[i]
-            elif type(self.colors) == dict:
+            elif type(self.linestyles) == dict:
                 assert self.labels[i] in self.linestyles.keys(), "Cannot find curve named %s %s %s" % (self.labels[i],self.linestyles.keys(),self.linestyles[self.labels[i]])
                 p['linestyle'] = self.linestyles[self.labels[i]]
             elif self.linestyles != None:

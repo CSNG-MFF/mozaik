@@ -134,6 +134,11 @@ def gabor(x1, y1, x2, y2, orientation, frequency, phase, size, aspect_ratio):
     ker = - (X*X + Y*Y*(aspect_ratio**2)) / (2*(size**2))
     return numpy.exp(ker)*numpy.cos(2*numpy.pi*X*frequency + phase)
 
+def gauss(x1, y1, x2, y2, orientation, size,aspect_ratio):
+     X = (x1 - x2) * numpy.cos(orientation) + (y1 - y2) * numpy.sin(orientation)
+     Y = -(x1 - x2) * numpy.sin(orientation) + (y1 - y2) * numpy.cos(orientation)
+     ker = - (X*X + Y*Y*(aspect_ratio**2)) / (2*(size**2))
+     return numpy.exp(ker)
 
 class GaborArborization(ModularConnectorFunction):
     """
@@ -169,9 +174,9 @@ class GaborArborization(ModularConnectorFunction):
                                        target_ar)
                                        
         if self.parameters.ON:
-           return numpy.maximum(0,w) 
+           return numpy.maximum(0,w) #+ 0.03 * g
         else:
-           return -numpy.minimum(0,w) 
+           return -numpy.minimum(0,w) #+ 0.03 * g
  
 
 

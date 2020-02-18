@@ -148,13 +148,19 @@ class ModulationRatio(Analysis):
         period = 1/frequency
         period = period.rescale(signal.t_start.units)
         cycles = duration / period
-        first_har = round(cycles)
+        first_har = int(round(cycles.magnitude))
 
         fft = numpy.fft.fft(signal)
+	logger.info("MR: " + str(cycles))
+	logger.info("MR: " + str(first_har))
+	logger.info("MR: " + str(type(first_har)))
+	logger.info("MR: " + str(duration) + " " +  str(period))
+	logger.info("MR: " + str(fft[0]) + " " + str(fft[first_har]))
 
         if abs(fft[0]) != 0:
             return 2*abs(fft[first_har])/abs(fft[0]),abs(fft[0]),2*abs(fft[first_har]),
         else:
+	    logger.info("MR: ARGH: " + str(fft[0]) +"  " +  str(numpy.mean(signal)))
             return 10,abs(fft[0]),2*abs(fft[first_har]),
 
 class Analog_F0andF1(Analysis):
@@ -265,8 +271,7 @@ class LocalHomogeneityIndex(Analysis):
                                    sheet_name=sheet,
                                    tags=self.tags,
                                    period=None,
-                                   analysis_algorithm=self.__class__.__name__,
-                                   stimulus_id=str(pnv.stimulus_id)))
+                                   analysis_algorithm=self.__class__.__name__))
 
 class SizeTuningAnalysis(Analysis):
       """
