@@ -131,7 +131,7 @@ ____________
 Now you can install in this protected environment all other dependencies::
 
   pip install --upgrade distribute
-  pip install numpy==1.8.2 scipy mpi4py matplotlib==2.1.1 quantities lazyarray interval Pillow param==1.5.1 parameters neo cython pynn
+  pip install numpy scipy mpi4py matplotlib==2.1.1 quantities lazyarray interval Pillow param==1.5.1 parameters neo cython pynn
 
 Now we will manually install several packages. It is probably the best if you create a separate directory in an appropriate
 place, where you will download and install from the packages.
@@ -145,10 +145,13 @@ First we will install *imagen* package::
 Now we can install *Nest* (always in the virtual environment):
 
     - download the latest version from their `website <http://www.nest-initiative.org/index.php/Software:Download>`_
+        
+        wget https://github.com/nest/nest-simulator/archive/v2.18.0.tar.gz
+        
     - untar and cd into it::
 
-        tar xvfz nest-2.12.0.tar.gz
-        cd nest-2.12.0
+        tar xvfz v2.18.0.tar.gz
+        cd nest-simulator-2.18.0
     
     - then configure, choose if you want mpi::
     
