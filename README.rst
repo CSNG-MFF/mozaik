@@ -140,7 +140,7 @@ First we will install *imagen* package::
 
   git clone https://github.com/antolikjan/imagen.git
   cd imagen
-  python setup install
+  python setup.py install
 
 Now we can install *Nest* (always in the virtual environment):
 
@@ -155,7 +155,7 @@ Now we can install *Nest* (always in the virtual environment):
     
     - then configure, choose if you want mpi::
     
-        (mozaik)$ cmake -Dwith-mpi=ON -DCMAKE_INSTALL_PREFIX:PATH=$HOME/virt_env/mozaik -Dwith-optimize='-O3' ./
+        (mozaik)$ cmake -Dwith-mpi=OFF -DCMAKE_INSTALL_PREFIX:PATH=$HOME/virt_env/mozaik -Dwith-optimize='-O3' ./
        
     - finally, by launching make and install, it installs PyNest in the activated virtual environment mozaik::
     
@@ -185,7 +185,7 @@ Go to the examples directory in the mozaik cloned from github (see above) and la
 
   cd examples
   cd VogelsAbbott2005
-  mpirun -np 2 python run.py nest 2 param/defaults 'test'
+  python run.py nest 2 param/defaults 'test'
   
 This will launch the example with the nest simulator, on 2 nodes with each node using 2 threads, using the parameter param/defaults. Last, 'test' is the name of this run.
 
