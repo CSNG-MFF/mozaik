@@ -356,3 +356,43 @@ class V1CorrelationBasedConnectivity(ModularConnectorFunction):
         
         return corr_gauss
 
+class CoCircularModularConnectorFunction(ModularConnectorFunction):
+    """
+    This connector function implements the situation where the probability of connection between pre-synaptic neuron preN and post synaptic neuron postN
+    depends on their orientation and distance in following the co-circularity rule. The law was adopted from:
+    Hunt, J. J., Bosking, W. H., & Goodhill, G. J. (2011). Statistical structure of lateral connections in the primary visual cortex. Neural Systems & Circuits, 1(1), 3. https://doi.org/10.1186/2042-1001-1-3
+    """
+    required_parameters = ParameterSet({
+        'map_location': str,  # It has to point to a file containing a single pickled 2d numpy array, containing values in the interval [0..1].
+        'sigma': float,  # How sharply does the probability of connection fall off with the distance from idealized co-circular connectivity
+        'periodic' : bool, # if true, the values in map will be treated as periodic (and consequently the distance between two values will be computed as circular distance).
+    })
+
+    def __init__(self, source,target, parameters):
+        import pickle
+        ModularConnectorFunction.__init__(self, source,target, parameters)
+        t_size = target.size_in_degrees()
+        f = open(self.parameters.map_location, 'r')
+        mmap = pickle.load(f)
+        coords_x = numpy.linspace(-t_size[0]/2.0,
+                                  t_size[0]/2.0,
+                                  numpy.shape(mmap)[0])
+        coords_y = numpy.linspace(-t_size[1]/2.0,
+                                  t_size[1]/2.0,
+                                  numpy.shape(mmap)[1])
+        X, Y = numpy.meshgrid(coords_x, coords_y)
+        self.mmap = NearestNDInterpolator(zip(X.flatten(), Y.flatten()),
+                                       mmap.flatten())    
+        self.val_source=self.mmap(numpy.transpose(numpy.array([self.source.pop.positions[0],self.source.pop.positions[1]]))) * numpy.pi
+        
+        for (index, neuron2) in enumerate(target.pop.all()):
+            val_target=self.mmap(self.target.pop.positions[0][index],self.target.pop.positions[1][index])
+            self.target.add_neuron_annotation(index,'LGNAfferentOrientation', val_target*numpy.pi, protected=False) 
+            
+    def evaluate(self,index):
+            val_target = self.target.get_neuron_annotation(index,'LGNAfferentOrientation')
+            if self.parameters.periodic:
+                distance = circular_dist(self.val_source,val_target,pi)
+            else:
+                distance = numpy.abs(self.val_source-val_target)
+            return numpy.exp(-0.5*(distance/self.parameters.sigma)**2)/(self.parameters.sigma*numpy.sqrt(2*numpy.pi))

@@ -2,7 +2,7 @@ import mozaik
 from mozaik.experiments import Experiment
 from parameters import ParameterSet
 import mozaik.stimuli.vision.topographica_based as topo
-import mozaik.stimuli.vision.texture_based as textu #vf
+#import mozaik.stimuli.vision.texture_based as textu #vf
 import numpy
 from mozaik.stimuli import InternalStimulus
 from mozaik.tools.distribution_parametrization import ParameterWithUnitsAndPeriod, MozaikExtendedParameterSet
@@ -1399,3 +1399,240 @@ class MeasureTextureSensitivityFullfield(VisualExperiment):
 
     def do_analysis(self, data_store):
         pass         
+
+
+
+
+class MapResponseToInterruptedBarStimulus(VisualExperiment):
+    """
+    Map response to interrupted bar stimuli. 
+
+    The experiments is intended as the simplest test for line-completion.
+    This experiment presents a series of flashed interrupted  bars at 
+    pre-specified range of displacements from the center along the line 
+    that is  perpendicularly to the elongated axis of the bars, and at 
+    range of different gaps in the middle of the bar.
+    
+    Parameters
+    ----------
+    model : Model
+          The model on which to execute the experiment.
+
+    Other parameters
+    ----------------
+    model : Model
+          The model on which to execute the experiment.
+    
+    x : float
+      The x corrdinates (of center) of the area in which the mapping will be done.
+
+    y : float
+      The y corrdinates (of center) of the area in which the mapping will be done.
+        
+    length : float
+          The length of the bar.
+    
+    width : float
+          The width of the bar.
+             
+    orientation : float
+                The orientation of the bar.
+
+    max_offset : float
+               The maximum offset from the central position (defined by x and y) prependicular to the length of the bar at which the bars will be flashed.
+
+    steps : int
+         The number of steps in which the bars will be flashed between the two extreme positions defined by the max_offset parameter, along the axis prependicular to the length of the bar.
+    
+    duration : float
+             The duration of single presentation of the stimulus.
+    
+    flash_duration : float
+             The duration of the presence of the bar.
+    
+    relative_luminances : list(float) 
+              List of luminance of the bar relative to background luminance at which the bar's will be presented. 0 is dark, 1.0 is double the background luminance.
+
+    gap_lengths : list(float)
+                List of length of the gap that the bar will have in the middle.
+
+    
+    num_trials : int
+               Number of trials each each stimulus is shown.
+    """
+    
+    required_parameters = ParameterSet({
+            'x' : float,
+            'y' : float,
+            'length' : float,
+            'width' : float,
+            'orientation' : float,
+            'max_offset' : float,
+            'steps' : int,
+            'duration' : float,
+            'flash_duration' : float, 
+            'relative_luminances' : list,
+            'gap_lengths' : list,
+            'num_trials' : int,
+    })  
+    
+    def __init__(self, model,parameters):
+        VisualExperiment.__init__(self, model,parameters)
+        for k in xrange(0, self.parameters.num_trials):
+            for s in xrange(0, self.parameters.steps):
+                for r in self.parameters.relative_luminances:
+                    for l in self.parameters.gap_lengths:  
+                            if self.parameters.steps>1:
+                                z = s*(2*self.parameters.max_offset)/ (self.parameters.steps-1)
+                            else:
+                                z = self.parameters.max_offset   
+                            self.stimuli.append(
+                                topo.FlashedInterruptedBar(
+                                            frame_duration = self.frame_duration,
+                                            size_x=model.visual_field.size_x,
+                                            size_y=model.visual_field.size_y,
+                                            location_x=0.0,
+                                            location_y=0.0,
+                                            background_luminance=self.background_luminance,
+                                            duration=self.parameters.duration,
+                                            density=self.density,
+                                            relative_luminance = r,
+                                            orientation = self.parameters.orientation,
+                                            width = self.parameters.width,
+                                            length = self.parameters.length,
+                                            flash_duration = self.parameters.flash_duration,
+                                            gap_length = l,
+                                            x = self.parameters.x + numpy.cos(self.parameters.orientation+numpy.pi/2) * (-self.parameters.max_offset + z),
+                                            y = self.parameters.y + numpy.sin(self.parameters.orientation+numpy.pi/2) * (-self.parameters.max_offset + z),
+                                            trial=k))
+
+    def do_analysis(self, data_store):
+        pass
+
+
+class MapResponseToInterruptedCornerStimulus(VisualExperiment):
+    """
+    Map response with interrupted corner stimuli. 
+
+    Parameters
+    ----------
+    model : Model
+          The model on which to execute the experiment.
+
+    Other parameters
+    ----------------
+    model : Model
+          The model on which to execute the experiment.
+    
+    x : float
+      The x corrdinates (of center) of the area in which the mapping will be done.
+
+    y : float
+      The y corrdinates (of center) of the area in which the mapping will be done.
+        
+    length : float
+          The length of the corner stimulus if unfolded ().
+    
+    width : float
+          The width of the bar.
+             
+    orientation : float
+                The orientation of the bar.
+
+    max_offset : float
+               The maximum offset from the central position (defined by x and y) prependicular to the length of the bar at which the bars will be flashed.
+
+    steps : int
+         The number of steps in which the bars will be flashed between the two extreme positions defined by the max_offset parameter, along the axis prependicular to the length of the bar.
+    
+    duration : float
+             The duration of single presentation of the stimulus.
+    
+    flash_duration : float
+             The duration of the presence of the bar.
+    
+    relative_luminances : list(float) 
+              List of luminance of the bar relative to background luminance at which the bar's will be presented. 0 is dark, 1.0 is double the background luminance.
+
+    gap_length : float
+                List of length of the gap that the bar will have in the middle.
+    
+    angels    : list(float)
+                List of angles (rad) in which both left and right (first left then right) will be angled at.
+    
+    num_trials : int
+               Number of trials each each stimulus is shown.
+    """
+    
+    required_parameters = ParameterSet({
+            'x' : float,
+            'y' : float,
+            'length' : float,
+            'width' : float,
+            'orientation' : float,
+            'max_offset' : float,
+            'steps' : int,
+            'duration' : float,
+            'flash_duration' : float, 
+            'relative_luminances' : list,
+            'gap_length' : float,
+            'num_trials' : int,
+            'angles' : list
+    })  
+    
+    def __init__(self, model,parameters):
+        VisualExperiment.__init__(self, model,parameters)
+        for k in xrange(0, self.parameters.num_trials):
+            for s in xrange(0, self.parameters.steps):
+                for r in self.parameters.relative_luminances:
+                    for a in self.parameters.angles:
+                            if self.parameters.steps>1:
+                                z = s*(2*self.parameters.max_offset)/ (self.parameters.steps-1)
+                            else:
+                                z = self.parameters.max_offset   
+                            self.stimuli.append(
+                                topo.FlashedInterruptedBar(
+                                            frame_duration = self.frame_duration,
+                                            size_x=model.visual_field.size_x,
+                                            size_y=model.visual_field.size_y,
+                                            location_x=0.0,
+                                            location_y=0.0,
+                                            background_luminance=self.background_luminance,
+                                            duration=self.parameters.duration,
+                                            density=self.density,
+                                            relative_luminance = r,
+                                            orientation = self.parameters.orientation,
+                                            width = self.parameters.width,
+                                            length = self.parameters.length,
+                                            flash_duration = self.parameters.flash_duration,
+                                            gap_length = self.parameters.gap_length,
+                                            left_angle = a,
+                                            right_angle=0,
+                                            x = self.parameters.x + numpy.cos(self.parameters.orientation+numpy.pi/2) * (-self.parameters.max_offset + z),
+                                            y = self.parameters.y + numpy.sin(self.parameters.orientation+numpy.pi/2) * (-self.parameters.max_offset + z),
+                                            trial=k))
+
+                            self.stimuli.append(
+                                topo.FlashedInterruptedBar(
+                                            frame_duration = self.frame_duration,
+                                            size_x=model.visual_field.size_x,
+                                            size_y=model.visual_field.size_y,
+                                            location_x=0.0,
+                                            location_y=0.0,
+                                            background_luminance=self.background_luminance,
+                                            duration=self.parameters.duration,
+                                            density=self.density,
+                                            relative_luminance = r,
+                                            orientation = self.parameters.orientation,
+                                            width = self.parameters.width,
+                                            length = self.parameters.length,
+                                            flash_duration = self.parameters.flash_duration,
+                                            gap_length = self.parameters.gap_length,
+                                            left_angle = a,
+                                            right_angle = a,
+                                            x = self.parameters.x + numpy.cos(self.parameters.orientation+numpy.pi/2) * (-self.parameters.max_offset + z),
+                                            y = self.parameters.y + numpy.sin(self.parameters.orientation+numpy.pi/2) * (-self.parameters.max_offset + z),
+                                            trial=k))
+
+    def do_analysis(self, data_store):
+        pass

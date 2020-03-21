@@ -43,7 +43,6 @@ class RetinalUniformSheet(Sheet):
                                    rng=mozaik.pynn_rng)
         
         #rs = space.Grid2D(aspect_ratio=1, dx=parameters.sx/parameters.density, dy=parameters.sy/parameters.density, x0=-parameters.sx/2,y0=-parameters.sy/2,z=0.0)
-        print parameters.sx * parameters.sy * parameters.density
         self.pop = self.sim.Population(int(parameters.sx * parameters.sy * parameters.density),
                                            getattr(self.model.sim, self.parameters.cell.model),
                                            self.parameters.cell.params,
