@@ -97,6 +97,7 @@ class Sheet(BaseComponent):
         self._pop = None
         self.size_x = size_x
         self.size_y = size_y
+	self.msc=0
         # We want to be able to define in cell.params the cell parameters as also PyNNDistributions so we can get variably parametrized populations
         # The problem is that the pyNN.Population can accept only scalar parameters. There fore we will remove from cell.params all parameters
         # that are PyNNDistributions, and will initialize them later just after the population is initialized (in property pop())
@@ -266,7 +267,9 @@ class Sheet(BaseComponent):
         # population indexes
         def compare(a, b):
             return cmp(a.annotations['source_id'], b.annotations['source_id'])
+	
 
+	self.msc = numpy.mean([numpy.sum(st) for st in s.spiketrains])
         s.spiketrains = sorted(s.spiketrains, compare)
         if stimulus_duration != None:        
            for st in s.spiketrains:
@@ -278,6 +281,10 @@ class Sheet(BaseComponent):
                s.analogsignals[i].t_start = 0 * pq.ms
        
         return s
+
+    def mean_spike_count(self):
+	logger.info(self.msc)
+	return self.msc
 
     def prepare_artificial_stimulation(self, duration, offset,additional_stimulators):
         """

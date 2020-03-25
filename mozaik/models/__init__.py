@@ -150,6 +150,10 @@ class Model(BaseComponent):
                         segments.append(s)
 
         self.first_time = False
+
+	for sheet in self.sheets.values():
+	    logger.info("Sheet %s average rate: %f" % (sheet.name,sheet.mean_spike_count()))
+
         
         #remove any artificial stimulators 
         for sheet in self.sheets.values():
@@ -179,6 +183,7 @@ class Model(BaseComponent):
         self.sim.run(tstop)
         logger.info("Finished simulating the network for %s ms" % tstop)
         self.simulator_time += tstop
+
         return time.time()-t0
 
     def reset(self):

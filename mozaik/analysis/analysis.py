@@ -108,8 +108,6 @@ class TrialAveragedFiringRate(Analysis):
             # take a sum of each
             _mean_rates = [numpy.squeeze(numpy.mean(a,axis=0)) for a in mean_rates]
             _var_rates = [numpy.squeeze(numpy.var(a,axis=0)) for a in mean_rates]
-            logger.info(numpy.shape(_mean_rates))
-            logger.info(numpy.shape(_var_rates))
             #JAHACK make sure that mean_rates() return spikes per second
             units = munits.spike / qt.s
             logger.debug('Adding PerNeuronValue containing trial averaged firing rates to datastore')
@@ -341,7 +339,7 @@ class TrialToTrialCrossCorrelationOfAnalogSignalList(Analysis):
                 st = str(st)
                 asl_ass = []
                 for idd in self.parameters.neurons:
-                    asl_cross = self.cross_correlation([ads.get_asl_by_id(idd).magnitude[self.parameters.window_min:self.parameters.window_min] for ads in dsv.get_analysis_result()])                                         
+                    asl_cross = self.cross_correlation([ads.get_asl_by_id(idd).magnitude[self.parameters.window_min:self.parameters.window_max] for ads in dsv.get_analysis_result()])                                         
                     asl_ass.append(NeoAnalogSignal(asl_cross,t_start=-dsv.get_analysis_result()[0].get_asl_by_id(idd).duration,
                                          sampling_period=dsv.get_analysis_result()[0].get_asl_by_id(idd).sampling_period,
                                          units=qt.dimensionless))        
@@ -358,6 +356,7 @@ class TrialToTrialCrossCorrelationOfAnalogSignalList(Analysis):
                                          stimulus_id=str(st)))           
                 
     def cross_correlation(self,ass):
+	logger.info("TTC: " + str(numpy.shape(ass)))
         cc = 0
         for i in xrange(0,len(ass)):
             for j in xrange(i+1,len(ass)):
@@ -368,6 +367,7 @@ class TrialToTrialCrossCorrelationOfAnalogSignalList(Analysis):
                     cc= cc + a
                 
         cc = cc / (len(ass)*(len(ass)-1)/2)
+	logger.info("TTC: " + str(numpy.shape(ass)))
         
         if type(cc) == int:
            cc = numpy.array([0 for i in xrange(0,len(ass[0])*2-1)]) 
@@ -781,7 +781,6 @@ class GaussianTuningCurveFit(Analysis):
                 # also make sure they are ordered according to the first pnv's idds 
                 
                 self.tc_dict = colapse_to_dictionary([z.get_value_by_id(self.pnvs[0].ids) for z in self.pnvs],self.st,self.parameters.parameter_name)
-                logger.info(str(self.tc_dict.keys()))
                 for k in self.tc_dict.keys():
                         print k
                         if len(self.tc_dict[k][0]) < 4:
@@ -1056,6 +1055,7 @@ class Irregularity(Analysis):
                     to_delete = [i for i, x in enumerate(cv_isi) if (x == None or x.magnitude == 0.0)]
                     ids=numpy.delete(seg.get_stored_spike_train_ids(),to_delete)
                     cv_isi=numpy.delete(cv_isi,to_delete)
+		    logger.info(str(numpy.shape(cv_isi)))
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(cv_isi,ids,qt.dimensionless,value_name = 'CV of ISI squared',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))
            
 
@@ -1266,7 +1266,8 @@ class CrossCorrelationOfExcitatoryAndInhibitoryConductances(Analysis):
                 ccs = []
                 
                 dt = segs[0].get_esyn(segs[0].get_stored_esyn_ids()[0]).sampling_period
-                
+		
+
                 for seg in segs:
                     esyn_ids = seg.get_stored_esyn_ids()
                     isyn_ids = seg.get_stored_isyn_ids()
@@ -1276,10 +1277,9 @@ class CrossCorrelationOfExcitatoryAndInhibitoryConductances(Analysis):
                     assert all([seg.get_esyn(idd).sampling_period == dt for idd in esyn_ids])
                     assert all([seg.get_isyn(idd).sampling_period == dt for idd in esyn_ids])
                     
-                    
                 for seg in segs:
-                    ccs.append([numpy.correlate(seg.get_esyn(idd),seg.get_isyn(idd),'full') for idd in esyn_ids])
-                
+                    ccs.append([numpy.correlate(seg.get_esyn(idd).magnitude.flatten(),seg.get_isyn(idd).magnitude.flatten(),'full') for idd in esyn_ids])
+
                 new_ccs,new_st = colapse(ccs,st,parameter_list=['trial'],allow_non_identical_objects=False)
                 new_ccs = [numpy.mean(numpy.array(l),axis=0) for l in new_ccs]
                 
@@ -1309,7 +1309,6 @@ class AnalogSignal_PerNeuronBetweenSignalCorrelation(Analysis):
             for sheet in self.datastore.sheets():
                 dsv = queries.param_filter_query(self.datastore, sheet_name=sheet,name='AnalogSignalList',y_axis_name=[self.parameters.value_name1,self.parameters.value_name2])
                 dsvs_by_valuename = queries.partition_analysis_results_by_parameters_query(dsv,parameter_list=["y_axis_name"])
-                logger.info(len(dsvs_by_valuename))
                 for dsv1 in dsvs_by_valuename:
                    dsv1.print_content(full_ADS=True) 
                    asl1 = dsv1.get_analysis_result(y_axis_name=self.parameters.value_name1)[0]

@@ -616,7 +616,7 @@ def test_stimulating_function_Naka(sheet,coor_x,coor_y,current_update_interval,p
     signals = numpy.zeros((numpy.shape(coor_x)[0],numpy.shape(coor_x)[1],int(parameters.duration/current_update_interval)))
         
     # figure out the light scale 
-    rate = parameters.nv_r_max * parameters.contrast.value / (parameters.contrast.value + parameters.nv_c50)
+    rate = parameters.nv_r_max * numpy.power(parameters.contrast.value,parameters.nv_exponent) / (numpy.power(parameters.contrast.value,parameters.nv_exponent) + parameters.nv_c50)
     scale = numpy.power(rate * parameters.cs_c50  / (parameters.cs_r_max - rate), 1/ parameters.cs_exponent)
 
     for i in xrange(0,numpy.shape(coor_x)[0]):

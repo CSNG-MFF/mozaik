@@ -10,7 +10,9 @@ from neo.core.segment import Segment
 import numpy
 import cPickle
 import quantities as qt
+import mozaik
 
+logger = mozaik.getMozaikLogger()
 
 class MozaikSegment(Segment):
         """
@@ -96,6 +98,7 @@ class MozaikSegment(Segment):
 
             for a in self.analogsignals:
                 if a.name == 'v':
+			
                     return a[:, a.annotations['source_ids'].tolist().index(neuron_id)]
 
         def get_esyn(self,neuron_id):

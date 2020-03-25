@@ -182,7 +182,7 @@ class DataStoreView(ParametrizedObject):
         if stimuli == None:
             return self.sensory_stimulus.values()
         else:
-            return [self.sensory_stimulus[s] for s in stimuli]
+            return [self.sensory_stimulus[s] for s in stimuli if self.sensory_stimulus.has_key(s)]
 
     def get_experiment_parametrization_list(self):
         

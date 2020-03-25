@@ -36,7 +36,7 @@ class VogelsAbbott(Model):
 
         # initialize projections
         UniformProbabilisticArborization(self,'ExcExcConnection',exc,exc,self.parameters.sheets.exc_layer.ExcExcConnection).connect()
-        #UniformProbabilisticArborization(self,'ExcInhConnection',exc,inh,self.parameters.sheets.exc_layer.ExcInhConnection).connect()
-        #UniformProbabilisticArborization(self,'InhExcConnection',inh,exc,self.parameters.sheets.inh_layer.InhExcConnection).connect()
-        #UniformProbabilisticArborization(self,'InhInhConnection',inh,inh,self.parameters.sheets.inh_layer.InhInhConnection).connect()
+        UniformProbabilisticArborization(self,'ExcInhConnection',exc,inh,self.parameters.sheets.exc_layer.ExcInhConnection).connect()
+        UniformProbabilisticArborization(self,'InhExcConnection',inh,exc,self.parameters.sheets.inh_layer.InhExcConnection).connect()
+        UniformProbabilisticArborization(self,'InhInhConnection',inh,inh,self.parameters.sheets.inh_layer.InhInhConnection).connect()
 

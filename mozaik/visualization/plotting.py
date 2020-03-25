@@ -370,6 +370,9 @@ class PlotTuningCurve(Plotting):
                     
                     
                 par,val = zip(*sorted(zip(numpy.array(par),val)))
+		
+		logger.info("PLOT TUNING CURVE " + str(period) + " " + str(pi))
+		logger.info("PLOT TUNING CURVE " + str(type(period)) + " " + str(type(pi)))
 
                 # if we have a period of pi or 2*pi
                 if period != None and numpy.isclose(period,pi) and self.parameters.centered==False:
@@ -492,7 +495,7 @@ class PlotTuningCurve(Plotting):
                 params["title"] =  'Neuron ID: %d' % neuron_id
             
 
-            if not polar:
+            if (not polar) and (period != None):
                     if numpy.isclose(period,pi):
                         params["x_ticks"] = [-pi/2, 0, pi/2]
                         params["x_lim"] = (-pi/2, pi/2)
@@ -504,7 +507,7 @@ class PlotTuningCurve(Plotting):
                         params["x_lim"] = (-pi, pi)
                         params["x_tick_style"] = "Custom"
                         params["x_tick_labels"] = ["-$\\pi$","0", "$\\pi$"]
-            else:
+            elif polar:
                params["y_tick_style"] = "Custom"
                params["x_tick_style"] = "Custom"
                params["x_ticks"]  = []
@@ -513,7 +516,9 @@ class PlotTuningCurve(Plotting):
                params["y_tick_labels"]  = []
                params['grid'] = True
                params['fill'] = False
-            
+            else:
+               pass
+
             if not bottom_row:
                 params["x_axis"] = None
                 
@@ -1218,12 +1223,14 @@ class PerNeuronValuePlot(Plotting):
             params["y_label"] = '# neurons'
 
             varying_stim_parameters = sorted(varying_parameters([MozaikParametrized.idd(pnv.stimulus_id) for pnv in pnvs]))        
-            a = sorted([(','.join([p + ' : ' + str(MozaikParametrized.idd(pnv.stimulus_id).getParamValue(p)) for p in varying_stim_parameters]),pnv) for pnv in pnvs],key=lambda x: x[0])
+            a = sorted([(','.join([p + ' : ' + str(getattr(MozaikParametrized.idd(pnv.stimulus_id),p)) for p in varying_stim_parameters]),pnv) for pnv in pnvs],key=lambda x: x[0])
             
             if len(a) > 1:
                 return [("HistogramPlot",HistogramPlot([z[1].values for z in a],labels=[z[0] for z in a]),gs,params)]
             else:
                 return [("HistogramPlot",HistogramPlot([pnvs[0].values]),gs,params)]
+
+
 
 
 

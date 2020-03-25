@@ -12,6 +12,8 @@ from numpy import sin, cos, pi, exp
 
 logger = mozaik.getMozaikLogger()
 
+import pylab
+
 class MapDependentModularConnectorFunction(ModularConnectorFunction):
     """
     Corresponds to: distance*linear_scaler + constant_scaler
@@ -132,6 +134,11 @@ def gabor(x1, y1, x2, y2, orientation, frequency, phase, size, aspect_ratio):
     ker = - (X*X + Y*Y*(aspect_ratio**2)) / (2*(size**2))
     return numpy.exp(ker)*numpy.cos(2*numpy.pi*X*frequency + phase)
 
+def gauss(x1, y1, x2, y2, orientation, size,aspect_ratio):
+     X = (x1 - x2) * numpy.cos(orientation) + (y1 - y2) * numpy.sin(orientation)
+     Y = -(x1 - x2) * numpy.sin(orientation) + (y1 - y2) * numpy.cos(orientation)
+     ker = - (X*X + Y*Y*(aspect_ratio**2)) / (2*(size**2))
+     return numpy.exp(ker)
 
 class GaborArborization(ModularConnectorFunction):
     """
@@ -167,9 +174,9 @@ class GaborArborization(ModularConnectorFunction):
                                        target_ar)
                                        
         if self.parameters.ON:
-           return numpy.maximum(0,w) 
+           return numpy.maximum(0,w) #+ 0.03 * g
         else:
-           return -numpy.minimum(0,w) 
+           return -numpy.minimum(0,w) #+ 0.03 * g
  
 
 
@@ -363,16 +370,15 @@ class CoCircularModularConnectorFunction(ModularConnectorFunction):
     Hunt, J. J., Bosking, W. H., & Goodhill, G. J. (2011). Statistical structure of lateral connections in the primary visual cortex. Neural Systems & Circuits, 1(1), 3. https://doi.org/10.1186/2042-1001-1-3
     """
     required_parameters = ParameterSet({
-        'map_location': str,  # It has to point to a file containing a single pickled 2d numpy array, containing values in the interval [0..1].
+        'or_map_location': str,  # It has to point to a file containing a single pickled 2d numpy array, containing values in the interval [0..1].
         'sigma': float,  # How sharply does the probability of connection fall off with the distance from idealized co-circular connectivity
-        'periodic' : bool, # if true, the values in map will be treated as periodic (and consequently the distance between two values will be computed as circular distance).
     })
 
     def __init__(self, source,target, parameters):
         import pickle
         ModularConnectorFunction.__init__(self, source,target, parameters)
         t_size = target.size_in_degrees()
-        f = open(self.parameters.map_location, 'r')
+        f = open(self.parameters.or_map_location, 'r')
         mmap = pickle.load(f)
         coords_x = numpy.linspace(-t_size[0]/2.0,
                                   t_size[0]/2.0,
@@ -383,16 +389,60 @@ class CoCircularModularConnectorFunction(ModularConnectorFunction):
         X, Y = numpy.meshgrid(coords_x, coords_y)
         self.mmap = NearestNDInterpolator(zip(X.flatten(), Y.flatten()),
                                        mmap.flatten())    
-        self.val_source=self.mmap(numpy.transpose(numpy.array([self.source.pop.positions[0],self.source.pop.positions[1]]))) * numpy.pi
-        
+        self.or_source=self.mmap(numpy.transpose(numpy.array([self.source.pop.positions[0],self.source.pop.positions[1]]))) * numpy.pi
+
         for (index, neuron2) in enumerate(target.pop.all()):
             val_target=self.mmap(self.target.pop.positions[0][index],self.target.pop.positions[1][index])
-            self.target.add_neuron_annotation(index,'LGNAfferentOrientation', val_target*numpy.pi, protected=False) 
+            self.target.add_neuron_annotation(index,'ORMapOrientation', val_target*numpy.pi, protected=False) 
             
     def evaluate(self,index):
-            val_target = self.target.get_neuron_annotation(index,'LGNAfferentOrientation')
-            if self.parameters.periodic:
-                distance = circular_dist(self.val_source,val_target,pi)
-            else:
-                distance = numpy.abs(self.val_source-val_target)
-            return numpy.exp(-0.5*(distance/self.parameters.sigma)**2)/(self.parameters.sigma*numpy.sqrt(2*numpy.pi))
+            logger.error('EVALUATE *********************************************')
+            or_target = self.target.get_neuron_annotation(index,'ORMapOrientation')
+            x_target = self.target.pop.positions[0][index]
+            y_target = self.target.pop.positions[1][index]
+
+            phi = numpy.arctan2(self.source.pop.positions[1]-y_target,self.source.pop.positions[0]-x_target)
+            distance = circular_dist(self.or_source,2*phi-or_target,pi)
+            prob = numpy.exp(-0.5*(distance/self.parameters.sigma)**2)/(self.parameters.sigma*numpy.sqrt(2*numpy.pi))
+ 
+            if index in [1000]:
+                import pylab
+                pylab.figure()
+                pylab.subplot(131)
+                pylab.gca().set_aspect('equal', 'box')
+                s_size = self.source.size_in_degrees()
+                pylab.xlim(-s_size[0]/2.0*1.5,s_size[0]/2.0*1.5)
+                pylab.ylim(-s_size[0]/2.0*1.5,s_size[0]/2.0*1.5)
+            
+                def plot_or(x,y,phi,color):
+                    d=0.06
+                    dx = numpy.cos(phi)*d
+                    dy = numpy.sin(phi)*d   
+                    pylab.plot([x+dx,x-dx],[y+dy,y-dy],c=color)
+	
+                idx = numpy.random.choice(numpy.arange(len(phi)),size=500)
+                for i in idx:
+                   plot_or(self.source.pop.positions[0][i],self.source.pop.positions[1][i],2*phi[i]-or_target,'k')
+
+                plot_or(x_target,y_target,or_target,'r')
+    
+                pylab.subplot(132)
+                pylab.gca().set_aspect('equal', 'box')
+                logger.error(str(numpy.shape(self.source.pop.positions[1][idx])))
+                logger.error(str(numpy.max(distance)))
+                logger.error(str(numpy.max(prob)))
+                pylab.scatter(self.source.pop.positions[0],self.source.pop.positions[1],c=self.or_source,alpha=0.5,edgecolors='none',s=numpy.array(prob/numpy.max(prob))*20,cmap='hsv')
+                pylab.colorbar()
+
+                pylab.subplot(133)
+                pylab.gca().set_aspect('equal', 'box')
+                pylab.scatter(self.source.pop.positions[0],self.source.pop.positions[1],c=self.or_source,alpha=0.5,edgecolors='none',s=(1-numpy.array(distance/numpy.max(distance)))*20,cmap='hsv')
+
+                #pylab.subplot(412)
+                #pylab.scatter(self.source.pop.positions[0],self.source.pop.positions[1],c=prob)
+        
+                pylab.savefig(Global.root_directory+'aaa'+str(index)+'.png')
+
+            return prob
+
+

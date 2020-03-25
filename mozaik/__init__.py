@@ -44,6 +44,7 @@ def setup_mpi(mozaik_seed=513,pynn_seed=1023):
     exactly the same number of numbers in each process, so that once the code is executed, the rng 
     is in exactly the same state in each mpi process!
     """
+
     global rng
     global pynn_rng
     global mpi_comm
@@ -57,6 +58,8 @@ def setup_mpi(mozaik_seed=513,pynn_seed=1023):
         mpi_comm = None
     if MPI:
         mpi_comm = MPI.COMM_WORLD
+
+
 
 def get_seeds(size=None):
     """

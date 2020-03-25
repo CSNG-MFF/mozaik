@@ -1330,14 +1330,14 @@ class CorticalStimulationWithStimulatorArrayAndOrientationTuningProtocol_Contras
                                                         direct_stimulation_name='LocalStimulatorArray',
                                                         direct_stimulation_parameters=p
                                                      )
-                                            )          
-class MeasureTextureSensitivityFullfield(VisualExperiment):
-    """
-    Measure sensitivity to second order image correlations using stimuli
-    based on a texture image.
+                                            )                
 
-    This experiment will show a series of texture based images
-    that vary in matched statistics.
+
+class VonDerHeydtIllusoryBarProtocol(VisualExperiment):
+    """
+    An illusory bar from Von Der Heydt et al. 1989.
+
+    Von Der Heydt, R., & Peterhans, E. (1989). Mechanisms of contour perception in monkey visual cortex. I. Lines of pattern discontinuity. Journal of Neuroscience, 9(5), 1731–1748. Retrieved from https://www.jneurosci.org/content/jneuro/9/5/1731.full.pdf
     
     Parameters
     ----------
@@ -1346,13 +1346,97 @@ class MeasureTextureSensitivityFullfield(VisualExperiment):
 
     Other parameters
     ----------------
+    model : Model
+          The model on which to execute the experiment.
+    
+    x : float
+      The x corrdinates (of center) of the area in which the mapping will be done.
 
+    y : float
+      The y corrdinates (of center) of the area in which the mapping will be done.
+        
+    length : float
+          The length of the bar.
+    
+    background_bar_width : float
+                         Width of the background bar
+
+    occlusion_bar_width : float
+                         Width of the occlusion bar
+    bar_width : float
+              Width of the bar
+             
+    orientation : float
+                The orientation of the bar.
+
+    duration : float
+             The duration of single presentation of the stimulus.
+    
+    flash_duration : float
+             The duration of the presence of the bar.
+     
+    num_trials : int
+               Number of trials each each stimulus is shown.
+    """
+    
+    required_parameters = ParameterSet({
+            'x' : float,
+            'y' : float,
+            'length' : float,
+            'bar_width' : float,
+            'orientation' : float,
+            'background_bar_width' : float,
+            'occlusion_bar_width' : list,
+            'duration' : float,
+            'flash_duration' : float, 
+            'num_trials' : int,
+    })  
+    
+    def __init__(self, model,parameters):
+        VisualExperiment.__init__(self, model,parameters)
+        for k in xrange(0, self.parameters.num_trials):
+              for obw in self.parameters.occlusion_bar_width:  
+                            self.stimuli.append(
+                                topo.FlashedInterruptedBar(
+                                            frame_duration = 7,
+                                            size_x=model.visual_field.size_x,
+                                            size_y=model.visual_field.size_y,
+                                            location_x=0.0,
+                                            location_y=0.0,
+                                            background_luminance=self.background_luminance,
+                                            duration=self.parameters.duration,
+                                            bar_width=self.parameters.bar_width,
+                                            background_bar_width=self.parameters.background_bar_width,
+                                            occlusion_bar_width=self.parameters.occlusion_bar_width,
+                                            density=self.density,
+                                            orientation = self.parameters.orientation,
+                                            flash_duration = self.parameters.flash_duration,
+                                            x = self.parameters.x,
+                                            y = self.parameters.y,
+                                            trial=k))
+
+    def do_analysis(self, data_store):
+        pass
+
+
+class MeasureTextureSensitivityFullfield(VisualExperiment):
+    """
+    Measure sensitivity to second order image correlations using stimuli
+    based on a texture image.
+    This experiment will show a series of texture based images
+    that vary in matched statistics.
+    
+    Parameters
+    ----------
+    model : Model
+          The model on which to execute the experiment.
+    Other parameters
+    ----------------
     num_images : int
           Number of images of each type to present.
     
     image_path : string
                       Path to initial image.
-
     image_duration : float
                       The duration of single presentation of an image.
     
@@ -1365,7 +1449,7 @@ class MeasureTextureSensitivityFullfield(VisualExperiment):
     num_trials : int
                Number of trials each each stimulus is shown.
     """
-    
+
     required_parameters = ParameterSet({
             'num_images': int, #n. of images of each type, different synthesized instances
             'image_path' : str,
@@ -1375,8 +1459,11 @@ class MeasureTextureSensitivityFullfield(VisualExperiment):
             #'offset_time' : float,
             #'onset_time' : float,
     })  
-    
+
     def __init__(self,model,parameters):
+	# we place this import here to avoid the need for octave dependency unless this experiment is actually used.
+        import mozaik.stimuli.vision.texture_based as textu #vf
+
         VisualExperiment.__init__(self, model,parameters)
         for ty, t in enumerate(self.parameters.types):
             for i in xrange(0, self.parameters.num_images):                

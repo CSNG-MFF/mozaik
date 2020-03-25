@@ -581,6 +581,54 @@ class DriftingSinusoidalGratingCenterSurroundStimulus(TopographicaBasedVisualSti
             yield (numpy.add.reduce([numpy.maximum(center, surround),offset,background]), [self.current_phase])
             self.current_phase += 2*pi * (self.frame_duration/1000.0) * self.temporal_frequency
 
+class DriftingSinusoidalGratingRing(TopographicaBasedVisualStimulus):
+    """
+    A standard stimulus to probe orientation specific surround modulation:
+    A drifting grating in center surrounded by a drifting grating in the surround.
+    Orientations of both center and surround gratings can be varied independently.
+
+    Notes
+    -----
+    max_luminance is interpreted as scale and size_x/2 as the bounding box radius.
+    """
+    
+    orientation = SNumber(rad, period=pi, bounds=[0,pi], doc="Center grating orientation")
+    spatial_frequency = SNumber(cpd, doc="Spatial frequency of the grating ")
+    temporal_frequency = SNumber(Hz, doc="Temporal frequency of the grating ")
+    outer_appareture_radius = SNumber(degrees, doc="The outside radius of the grating ring - in degrees of visual field")
+    inner_appareture_radius = SNumber(degrees, doc="The inside radius of the  grating ring - in degrees of visual field")
+    contrast = SNumber(dimensionless,bounds=[0,100.0],doc="Contrast of the stimulus")
+
+    def frames(self):
+        self.current_phase = 0
+        while True:
+            r = (self.inner_appareture_radius + self.outer_appareture_radius)/2.0
+            t = (self.outer_appareture_radius - self.inner_appareture_radius)/2.0
+            ring = imagen.SineGrating(mask_shape=imagen.Ring(thickness=t*2.0, smoothing=0.0, size=r*2.0),
+                                          orientation=self.orientation,
+                                          frequency=self.spatial_frequency,
+                                          phase=self.current_phase,
+                                          bounds=BoundingBox(radius=self.size_x/2.0),
+                                          offset = 0,
+                                          scale=2*self.background_luminance*self.contrast/100.0,   
+                                          xdensity=self.density,
+                                          ydensity=self.density)()
+            
+            bg = imagen.Constant(bounds=BoundingBox(radius=self.size_x/2.0),
+                                 scale=self.background_luminance,
+                                 xdensity=self.density,
+                                 ydensity=self.density)()
+
+            correction = imagen.Ring(smoothing=0.0,
+                                     thickness=t*2.0, 
+                                     size=r*2.0,
+                                     scale=-self.background_luminance,
+                                     bounds=BoundingBox(radius=self.size_x/2.0),
+                                     xdensity=self.density,
+                                     ydensity=self.density)()
+            
+            yield (numpy.add.reduce([ring,bg,correction]), [self.current_phase])
+            self.current_phase += 2*pi * (self.frame_duration/1000.0) * self.temporal_frequency
 
 
 class FlashedInterruptedBar(TopographicaBasedVisualStimulus):
@@ -592,10 +640,11 @@ class FlashedInterruptedBar(TopographicaBasedVisualStimulus):
     For the remaining time, until the *duration* of the stimulus, constant *background_luminance* 
     is displayed.
     """
-    relative_luminance = SNumber(dimensionless,bounds=[0,1.0],doc="The scale of the stimulus. 0 is dark, 1.0 is double the background luminance")
-    orientation = SNumber(rad, period=pi, bounds=[0,pi], doc="Grating orientation")
-    width = SNumber(cpd, doc="Spatial frequency of the grating")
-    length = SNumber(Hz, doc="Temporal frequency of the grating")
+    relative_luminance = SNumber(dimensionless,bounds=[0,1.0],doc="The scale of the stimulus. 0 is dark, 1.0 is double the background luminance.")
+    orientation = SNumber(rad, period=pi, bounds=[0,pi], doc="Grating orientation.")
+    disalignment = SNumber(rad, period=pi, bounds=[-pi/2,pi/2], doc="The orientation by which the flanking bars are rotated away from the principal orientation axis.")
+    width = SNumber(cpd, doc="Width of the bar")
+    length = SNumber(Hz, doc="Length of the bar`")
     flash_duration = SNumber(ms, doc="The duration of the bar presentation.")
     x = SNumber(degrees, doc="The x location of the center of the bar (where the gap will appear).")
     y = SNumber(degrees, doc="The y location of the center of the bar (where the gap will appear).")
@@ -605,40 +654,30 @@ class FlashedInterruptedBar(TopographicaBasedVisualStimulus):
         num_frames = 0
         while True:
             
+            z = self.gap_length/4.0 + self.length/4.0 
 
             d1 = imagen.RawRectangle(offset = self.background_luminance,
                                     scale = 2*self.background_luminance*(self.relative_luminance-0.5),
                                     bounds=BoundingBox(radius=self.size_x/2),
                                     xdensity=self.density,
                                     ydensity=self.density,
-                                    x = self.x,
-                                    y = self.y,
-                                    orientation=self.orientation,
+                                    x = self.x + numpy.cos(self.orientation) * (z),
+                                    y = self.y + numpy.sin(self.orientation) * (z),
+                                    orientation=self.orientation+self.disalignment,
                                     size = self.width,
-                                    aspect_ratio = self.length/ self.width)()  
+                                    aspect_ratio = (self.length-self.gap_length)/2/self.width)()  
 
-            d2 = imagen.RawRectangle(offset = 1,
-                                    scale = -1,
+            d2 = imagen.RawRectangle(offset = self.background_luminance,
+                                    scale = 2*self.background_luminance*(self.relative_luminance-0.5),
                                     bounds=BoundingBox(radius=self.size_x/2),
                                     xdensity=self.density,
                                     ydensity=self.density,
-                                    x = self.x,
-                                    y = self.y,
-                                    orientation=self.orientation,
+                                    x = self.x + numpy.cos(self.orientation) * (-z),
+                                    y = self.y + numpy.sin(self.orientation) * (-z),
+                                    orientation=self.orientation+self.disalignment,
                                     size = self.width,
-                                    aspect_ratio = self.gap_length/ self.width)()  
+                                    aspect_ratio = (self.length-self.gap_length)/2/self.width)()  
 
-
-            d3 = imagen.RawRectangle(offset = 0,
-                                    scale = self.background_luminance,
-                                    bounds=BoundingBox(radius=self.size_x/2),
-                                    xdensity=self.density,
-                                    ydensity=self.density,
-                                    x = self.x,
-                                    y = self.y,
-                                    orientation=self.orientation,
-                                    size = self.width,
-                                    aspect_ratio = self.gap_length/ self.width)()  
                                     
             b = imagen.Constant(scale=self.background_luminance,
                     bounds=BoundingBox(radius=self.size_x/2),
@@ -647,9 +686,14 @@ class FlashedInterruptedBar(TopographicaBasedVisualStimulus):
                     
             num_frames += 1;
             if (num_frames-1) * self.frame_duration < self.flash_duration: 
-                yield (numpy.add(numpy.multiply(d1,d2),d3),[1])
+                if self.relative_luminance > 0.5: 
+                   yield (numpy.maximum(d1,d2),[1])
+                else:
+                   yield (numpy.minimum(d1,d2),[1]) 
             else:
                 yield (b,[0])
+
+
 
 class FlashedInterruptedCorner(TopographicaBasedVisualStimulus):
     """
@@ -713,3 +757,58 @@ class FlashedInterruptedCorner(TopographicaBasedVisualStimulus):
                     yield (r(),[1])
             else:
                     yield (b,[0])
+
+
+class VonDerHeydtIllusoryBar(TopographicaBasedVisualStimulus):
+    """
+    An illusory bar from Von Der Heydt et al. 1989.
+
+    Von Der Heydt, R., & Peterhans, E. (1989). Mechanisms of contour perception in monkey visual cortex. I. Lines of pattern discontinuity. Journal of Neuroscience, 9(5), 1731–1748. Retrieved from https://www.jneurosci.org/content/jneuro/9/5/1731.full.pdf
+    """
+    orientation = SNumber(rad, period=pi, bounds=[0,pi], doc="Grating orientation")
+    background_bar_width = SNumber(degrees, doc="Width of the background bar")
+    occlusion_bar_width = SNumber(degrees, doc="Width of the occlusion bar")
+    bar_width = SNumber(degrees, doc="Width of the bar")
+    length = SNumber(Hz, doc="Length of the background bar")
+    flash_duration = SNumber(ms, doc="The duration of the bar presentation.")
+    x = SNumber(degrees, doc="The x location of the center of the bar (where the gap will appear).")
+    y = SNumber(degrees, doc="The y location of the center of the bar (where the gap will appear).")
+    
+    def frames(self):
+        num_frames = 0
+        while True:
+            
+
+            d1 = imagen.RawRectangle(offset = 0,
+                                    scale = 2*self.background_luminance,
+                                    bounds=BoundingBox(radius=self.size_x/2),
+                                    xdensity=self.density,
+                                    ydensity=self.density,
+                                    x = self.x-(self.occlusion_bar_width/2)-(self.length-self.occlusion_bar_width)/4,
+                                    y = self.y,
+                                    orientation=self.orientation,
+                                    size = self.background_bar_width,
+                                    aspect_ratio = (self.length-self.occlusion_bar_width)/2/self.background_bar_width)()  
+
+            d2 = imagen.RawRectangle(offset = 0,
+                                    scale = 2*self.background_luminance,
+                                    bounds=BoundingBox(radius=self.size_x/2),
+                                    xdensity=self.density,
+                                    ydensity=self.density,
+                                    x = self.x+(self.occlusion_bar_width/2)+(self.length-self.occlusion_bar_width)/4,
+                                    y = self.y,
+                                    orientation=self.orientation,
+                                    size = self.background_bar_width,
+                                    aspect_ratio = (self.length-self.occlusion_bar_width)/2/self.background_bar_width)()  
+
+                                    
+            b = imagen.Constant(scale=0,
+                    bounds=BoundingBox(radius=self.size_x/2),
+                    xdensity=self.density,
+                    ydensity=self.density)()
+                    
+            num_frames += 1;
+            if (num_frames-1) * self.frame_duration < self.flash_duration: 
+                yield (numpy.add(d1,d2),[1])
+            else:
+                yield (b,[0])

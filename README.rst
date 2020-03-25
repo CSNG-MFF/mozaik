@@ -131,23 +131,41 @@ ____________
 Now you can install in this protected environment all other dependencies::
 
   pip install --upgrade distribute
-  pip install numpy scipy mpi4py matplotlib quantities lazyarray interval Pillow imagen param==1.5.1 parameters neo cython pynn
+  pip install numpy scipy mpi4py matplotlib==2.1.1 quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.5.2 cython pynn psutil
+
+Now we will manually install several packages. It is probably the best if you create a separate directory in an appropriate
+place, where you will download and install from the packages.
+
+First we will install *imagen* package::
+
+  git clone https://github.com/antolikjan/imagen.git
+  cd imagen
+  python setup.py install
 
 Now we can install *Nest* (always in the virtual environment):
 
     - download the latest version from their `website <http://www.nest-initiative.org/index.php/Software:Download>`_
+        
+        wget https://github.com/nest/nest-simulator/archive/v2.18.0.tar.gz
+        
     - untar and cd into it::
 
-        tar xvfz nest-2.12.0.tar.gz
-        cd nest-2.12.0
-    - then configure, choose if you want mpi. ::
+        tar xvfz v2.18.0.tar.gz
+        cd nest-simulator-2.18.0
     
-       (mozaik)$ cmake -Dwith-mpi=ON -DCMAKE_INSTALL_PREFIX:PATH=$HOME/virt_env/mozaik -Dwith-optimize='-O3' ./
+    - then configure, choose if you want mpi::
+    
+        (mozaik)$ cmake -Dwith-mpi=OFF -DCMAKE_INSTALL_PREFIX:PATH=$HOME/virt_env/mozaik -Dwith-optimize='-O3' ./
+       
     - finally, by launching make and install, it installs PyNest in the activated virtual environment mozaik::
+    
         (mozaik)$ make
         (mozaik)$ make install
+        
     - Then::
+        
         make installcheck
+    
     - nest will reside in $HOME/virt_env/mozaik/lib/python2.7/site-packages. Check that the package is seen by python using::
         python -c 'import nest'
 
@@ -155,7 +173,7 @@ Now we can install *Nest* (always in the virtual environment):
 And, finally, Mozaik::
     
     git clone https://github.com/antolikjan/mozaik.git
-    cd mozaik/
+    cd mozaik
     python setup.py install
     
 .. _ref-run:
@@ -167,7 +185,7 @@ Go to the examples directory in the mozaik cloned from github (see above) and la
 
   cd examples
   cd VogelsAbbott2005
-  mpirun -np 2 python run.py nest 2 param/defaults 'test'
+  python run.py nest 2 param/defaults 'test'
   
 This will launch the example with the nest simulator, on 2 nodes with each node using 2 threads, using the parameter param/defaults. Last, 'test' is the name of this run.
 
