@@ -8,7 +8,7 @@ merged into the :mod:`.datastore` module.
 """
 from neo.core.segment import Segment
 import numpy
-import cPickle
+import pickle
 import quantities as qt
 import mozaik
 
@@ -243,7 +243,7 @@ class PickledDataStoreNeoWrapper(MozaikSegment):
 
         def load_full(self):
             f = open(self.datastore_path + '/' + self.identifier + ".pickle", 'rb')
-            s = cPickle.load(f)
+            s = pickle.load(f)
             f.close()
             self._spiketrains = s.spiketrains
             self.analogsignals = s.analogsignals

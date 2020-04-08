@@ -11,6 +11,8 @@ from mozaik.storage.queries import *
 from mozaik.tools.mozaik_parametrized import *
 from neo import AnalogSignal
 
+from builtins import zip
+
 logger = mozaik.getMozaikLogger()
 
 

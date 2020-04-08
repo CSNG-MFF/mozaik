@@ -13,6 +13,7 @@ from parameters import ParameterSet
 from mozaik.storage import queries
 from mozaik.tools.circ_stat import circ_mean, circular_dist
 from mozaik.tools.neo_object_operations import neo_mean, neo_sum
+from builtins import zip
 
 logger = mozaik.getMozaikLogger()
 
@@ -38,7 +39,6 @@ class ModulationRatio(Analysis):
         for sheet in self.datastore.sheets():
             # Load up spike trains for the right sheet and the corresponding
             # stimuli, and transform spike trains into psth
-            print sheet
             self.datastore.print_content()
             dsv = queries.param_filter_query(self.datastore,identifier='AnalogSignalList',sheet_name=sheet,analysis_algorithm='PSTH',st_name='FullfieldDriftingSinusoidalGrating')
             dsv.print_content()
@@ -64,14 +64,13 @@ class ModulationRatio(Analysis):
             ps = {}
             for s in st:
                 ps[MozaikParametrized.idd(s).orientation] = True
-            ps = ps.keys()
-            print ps
+            ps = list(ps.keys())
             # now find the closest presented orientations
             closest_presented_orientation = []
-            for i in xrange(0, len(or_pref.values)):
+            for i in range(0, len(or_pref.values)):
                 circ_d = 100000
                 idx = 0
-                for j in xrange(0, len(ps)):
+                for j in range(0, len(ps)):
                     if circ_d > circular_dist(or_pref.values[i], ps[j], numpy.pi):
                         circ_d = circular_dist(or_pref.values[i], ps[j], numpy.pi)
                         idx = j
@@ -151,16 +150,16 @@ class ModulationRatio(Analysis):
         first_har = int(round(cycles.magnitude))
 
         fft = numpy.fft.fft(signal)
-	logger.info("MR: " + str(cycles))
-	logger.info("MR: " + str(first_har))
-	logger.info("MR: " + str(type(first_har)))
-	logger.info("MR: " + str(duration) + " " +  str(period))
-	logger.info("MR: " + str(fft[0]) + " " + str(fft[first_har]))
+        logger.info("MR: " + str(cycles))
+        logger.info("MR: " + str(first_har))
+        logger.info("MR: " + str(type(first_har)))
+        logger.info("MR: " + str(duration) + " " +  str(period))
+        logger.info("MR: " + str(fft[0]) + " " + str(fft[first_har]))
 
         if abs(fft[0]) != 0:
             return 2*abs(fft[first_har])/abs(fft[0]),abs(fft[0]),2*abs(fft[first_har]),
         else:
-	    logger.info("MR: ARGH: " + str(fft[0]) +"  " +  str(numpy.mean(signal)))
+            logger.info("MR: ARGH: " + str(fft[0]) +"  " +  str(numpy.mean(signal)))
             return 10,abs(fft[0]),2*abs(fft[first_har]),
 
 class Analog_F0andF1(Analysis):
@@ -308,7 +307,7 @@ class SizeTuningAnalysis(Analysis):
                         csis = []
                         
                         # we will do the calculation neuron by neuron
-                        for i in xrange(0,len(self.parameters.neurons)):
+                        for i in range(0,len(self.parameters.neurons)):
                             
                             rads = self.tc_dict[k][0]
                             values = numpy.array([a[i] for a in self.tc_dict[k][1]])
@@ -388,7 +387,7 @@ class OCTCTuningAnalysis(Analysis):
                         surround_tuning=[]
                         
                         # we will do the calculation neuron by neuron
-                        for i in xrange(0,len(self.parameters.neurons)):
+                        for i in range(0,len(self.parameters.neurons)):
                             
                             ors = self.tc_dict[k][0]
                             values = numpy.array([a[i] for a in self.tc_dict[k][1]])

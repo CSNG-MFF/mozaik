@@ -11,6 +11,8 @@ import quantities as pq
 from matplotlib.colors import *
 from cycler import cycler
 
+from builtins import zip
+
 logger = mozaik.getMozaikLogger()
 
 
@@ -410,11 +412,11 @@ class SpikeRasterPlot(StandardStyle):
 
     def plot(self):
         if self.parameters["colors"] == None:
-            colors = ['#000000' for i in xrange(0, len(self.sps))]
+            colors = ['#000000' for i in range(0, len(self.sps))]
         else:
             colors = self.colors
 
-        neurons = [i for i in xrange(0, len(self.sps[0][0]))]
+        neurons = [i for i in range(0, len(self.sps[0][0]))]
         
         t_start = float(self.sps[0][0][0].t_start.rescale(pq.s))
         t_stop = float(self.sps[0][0][0].t_stop.rescale(pq.s))
@@ -429,17 +431,17 @@ class SpikeRasterPlot(StandardStyle):
                    train = []
                    for i, spike_list in enumerate(sp):
                        train.extend(spike_list[n].rescale(pq.s))
-                   self.axis.plot(train,[j for x in xrange(0, len(train))],'|',color=colors[k],mew=1)
+                   self.axis.plot(train,[j for x in range(0, len(train))],'|',color=colors[k],mew=1)
                 else:
                     for i, spike_list in enumerate(sp):
                         spike_train = spike_list[n].rescale(pq.s)
                         self.axis.plot(spike_train,
                                        [j * (num_t + 1) + i + 1
-                                          for x in xrange(0, len(spike_train))],
+                                          for x in range(0, len(spike_train))],
                                        '|',
                                        color=colors[k])
             if not self.group_trials:
-                for j in xrange(0, num_n - 1):
+                for j in range(0, num_n - 1):
                     self.axis.axhline(j * (num_t + 1) + num_t + 1, c='k')
                     
         if not self.group_trials:
@@ -492,11 +494,11 @@ class SpikeHistogramPlot(SpikeRasterPlot):
     def __init__(self, spike_lists,num_trials,**param):
         SpikeRasterPlot.__init__(self, spike_lists,**param)
         self.parameters["bin_width"] = 0.005
-        self.parameters["colors"] = ['#000000' for i in xrange(0, len(self.sps))]
+        self.parameters["colors"] = ['#000000' for i in range(0, len(self.sps))]
         self.num_trials = num_trials
         
     def plot(self):
-        self.neurons = [i for i in xrange(0, len(self.sps[0][0]))]
+        self.neurons = [i for i in range(0, len(self.sps[0][0]))]
 
         t_stop = float(self.sps[0][0][0].t_stop.rescale(pq.s))
         t_start = float(self.sps[0][0][0].t_start.rescale(pq.s))
@@ -848,7 +850,7 @@ class StandardStyleLinePlot(StandardStyle):
             assert len(x) == len(labels)
         
         if self.mean:
-            for i in xrange(0, len(x)):
+            for i in range(0, len(x)):
                 if not numpy.all(x[i] == x[0]):
                     raise ValueError("Mean cannot be calculated from data not containing identical x axis values")
 
@@ -865,7 +867,7 @@ class StandardStyleLinePlot(StandardStyle):
         
         tmin = 10**10
         tmax = -10**10
-        for i in xrange(0, len(self.x)):
+        for i in range(0, len(self.x)):
             if self.mean:
                 if i == 0:
                     m = self.y[i]
@@ -1214,7 +1216,7 @@ class CorticalColumnSpikeRasterPlot(StandardStyle):
 
     def plot(self):
         if self.parameters["colors"] == None:
-            colors = ['#000000' for i in xrange(0, len(self.sps))]
+            colors = ['#000000' for i in range(0, len(self.sps))]
         else:
             colors = self.colors
             
@@ -1233,10 +1235,10 @@ class CorticalColumnSpikeRasterPlot(StandardStyle):
         for k, sp in enumerate(self.sps):
             yticks.append(yticks[-1]+len(sp))
             for j, n in enumerate(sp):
-                self.axis.scatter(n.rescale(pq.s),[y for x in xrange(0, len(n))],s=7, c=colors[k], marker='o',lw=0)
+                self.axis.scatter(n.rescale(pq.s),[y for x in range(0, len(n))],s=7, c=colors[k], marker='o',lw=0)
                 y += 1
         
-        yticks = [yticks[j-1] + (yticks[j]-yticks[j-1])/2.0 for j in xrange(1,len(yticks))]
+        yticks = [yticks[j-1] + (yticks[j]-yticks[j-1])/2.0 for j in range(1,len(yticks))]
         
         self.x_lim = (t_start, t_stop)
         self.x_label = 'time (s)'

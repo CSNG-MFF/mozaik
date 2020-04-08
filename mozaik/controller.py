@@ -108,24 +108,26 @@ def run_workflow(simulation_name, model_class, create_experiments):
         simulator_name = sys.argv[1]
         num_threads = sys.argv[2]
         parameters_url = sys.argv[3]
-        modified_parameters = { sys.argv[i*2+4] : eval(sys.argv[i*2+5])  for i in xrange(0,(len(sys.argv)-5)/2)}
+        modified_parameters = { sys.argv[i*2+4] : eval(sys.argv[i*2+5])  for i in range(0,(len(sys.argv)-5)//2)}
     else:
         raise ValueError("Usage: runscript simulator_name num_threads parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n simulation_run_name")
 
-    print "Loading parameters";
+    print("Loading parameters");
     parameters = load_parameters(parameters_url,modified_parameters)
-    print "Finished loading parameters";
+    print("Finished loading parameters");
 
     p={}
-    if parameters.has_key('mozaik_seed') : p['mozaik_seed'] = parameters['mozaik_seed']
-    if parameters.has_key('pynn_seed') : p['pynn_seed'] = parameters['pynn_seed']
+    if 'mozaik_seed' in parameters : p['mozaik_seed'] = parameters['mozaik_seed']
+    if 'pynn_seed' in parameters : p['pynn_seed'] = parameters['pynn_seed']
 
-    print "START MPI"
+    print("START MPI")
 
     mozaik.setup_mpi(**p)
     # Read parameters
-    exec "import pyNN.nest as sim" in  globals(), locals()
-    
+    # JAHACK!!!!!!!!!!!!
+    #exec("import pyNN.nest as sim",  globals(), locals())
+    import pyNN.nest as sim
+
     # Create results directory
     timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
     
@@ -142,13 +144,12 @@ def run_workflow(simulation_name, model_class, create_experiments):
     if mozaik.mpi_comm and mozaik.mpi_comm.rank == 0:
         mozaik.mpi_comm.barrier()
     
-    
     if mozaik.mpi_comm.rank == 0:
         #let's store the full and modified parameters, if we are the 0 rank process
         parameters.save(Global.root_directory + "parameters", expand_urls=True)        
         import pickle
-        f = open(Global.root_directory+"modified_parameters","w")
-        pickle.dump(modified_parameters,f)
+        f = open(Global.root_directory+"modified_parameters","wb")
+        pickle.dump(str(modified_parameters),f)
         f.close()        
 
     setup_logging()
@@ -172,7 +173,7 @@ def run_workflow(simulation_name, model_class, create_experiments):
 	    data_store.save()
 
     import resource
-    print "Final memory usage: %iMB" % (resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/(1024))
+    print("Final memory usage: %iMB" % (resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/(1024)))
     return (data_store,model)
 
 def result_directory_name(simulation_run_name,simulation_name,modified_parameters):

@@ -56,14 +56,15 @@ from mozaik.tools.mozaik_parametrized import colapse_to_dictionary, MozaikParame
 from numpy import pi
 from neo.core.analogsignal import AnalogSignal as NeoAnalogSignal
 from neo.core.spiketrain import SpikeTrain as NeoSpikeTrain
-from simple_plot import StandardStyleLinePlot, SpikeRasterPlot, \
+from .simple_plot import StandardStyleLinePlot, SpikeRasterPlot, \
                         SpikeHistogramPlot, ConductancesPlot, PixelMovie, \
                         ScatterPlotMovie, ScatterPlot, ConnectionPlot, SimplePlot, HistogramPlot, CorticalColumnSpikeRasterPlot, OrderedAnalogSignalListPlot
-from plot_constructors import LinePlot, PerStimulusPlot, PerStimulusADSPlot, ADSGridPlot
+from .plot_constructors import LinePlot, PerStimulusPlot, PerStimulusADSPlot, ADSGridPlot
 
 import mozaik
 logger = mozaik.getMozaikLogger()
 
+from builtins import zip
 
 
 class Plotting(ParametrizedObject):
@@ -173,7 +174,7 @@ class Plotting(ParametrizedObject):
         if self.plot_file_name:
             #if there were animations, save them
             if self.animation_update_functions != []:
-		logger.info(str(animation.writers))
+                logger.info(str(animation.writers))
                 self.animation.save(Global.root_directory+self.plot_file_name+'.mov', writer='avconv_file', fps=30,bitrate=5000, extra_args=['--verbose-debug']) 
             else:
                 # save the analysis plot
@@ -306,7 +307,7 @@ class PlotTuningCurve(Plotting):
                period = st[0].getParams()[self.parameters.parameter_name].period
                assert period != None, "ERROR: You asked for centering of tuning curves even though the domain over which it is measured is not periodic." 
                centers = centering_pnv.get_value_by_id(self.parameters.neurons)
-               self.max_mean_response_indexes.append(numpy.array([numpy.argmin(circular_dist(par,centers[i],period)) for i in xrange(0,len(centers))]))
+               self.max_mean_response_indexes.append(numpy.array([numpy.argmin(circular_dist(par,centers[i],period)) for i in range(0,len(centers))]))
 
         if self.parameters.pool:
            assert all([p[0].value_units == self.pnvs[0][0].value_units for p in self.pnvs]), "You asked to pool tuning curves across different value_names, but the datastore contains PerNeuronValue datastructures with different units"
@@ -351,7 +352,7 @@ class PlotTuningCurve(Plotting):
                 error = None
                 if self.parameters.mean:
                     v = []
-                    for j in xrange(0,len(self.parameters.neurons)):
+                    for j in range(0,len(self.parameters.neurons)):
                         if self.parameters.centered:
                             vv,p = self.center_tc(val[:,j],par,period,self.max_mean_response_indexes[i][j])
                         else:
@@ -370,9 +371,9 @@ class PlotTuningCurve(Plotting):
                     
                     
                 par,val = zip(*sorted(zip(numpy.array(par),val)))
-		
-		logger.info("PLOT TUNING CURVE " + str(period) + " " + str(pi))
-		logger.info("PLOT TUNING CURVE " + str(type(period)) + " " + str(type(pi)))
+
+                logger.info("PLOT TUNING CURVE " + str(period) + " " + str(pi))
+                logger.info("PLOT TUNING CURVE " + str(type(period)) + " " + str(type(pi)))
 
                 # if we have a period of pi or 2*pi
                 if period != None and numpy.isclose(period,pi) and self.parameters.centered==False:
@@ -489,7 +490,7 @@ class PlotTuningCurve(Plotting):
                 
             params['labels']=labels
             params['linewidth'] = 2
-            #params['colors'] = [cm.jet(j/float(number_of_curves)) for j in xrange(0,number_of_curves)] 
+            #params['colors'] = [cm.jet(j/float(number_of_curves)) for j in range(0,number_of_curves)] 
             
             if top_row:
                 params["title"] =  'Neuron ID: %d' % neuron_id
@@ -1020,8 +1021,8 @@ class RetinalInputMovie(Plotting):
         self.st = datastore.sensory_stimulus.keys()
         
         # remove internal stimuli from the list 
-        self.retinal_input = [self.retinal_input[i] for i in xrange(0,len(self.st)) if MozaikParametrized.idd(self.st[i]).name != 'InternalStimulus']
-        self.st = [self.st[i]  for i in xrange(0,len(self.st)) if MozaikParametrized.idd(self.st[i]).name != 'InternalStimulus']
+        self.retinal_input = [self.retinal_input[i] for i in range(0,len(self.st)) if MozaikParametrized.idd(self.st[i]).name != 'InternalStimulus']
+        self.st = [self.st[i]  for i in range(0,len(self.st)) if MozaikParametrized.idd(self.st[i]).name != 'InternalStimulus']
         
         
         
@@ -1139,7 +1140,7 @@ class ActivityMovie(Plotting):
                                 self.parameters.resolution)
 
             movie = []
-            for i in xrange(0, numpy.shape(h)[1]):
+            for i in range(0, numpy.shape(h)[1]):
                 movie.append(griddata((posx, posy),
                                       h[:, i],
                                       (xi[None, :], yi[:, None]),
@@ -1255,8 +1256,8 @@ class PerNeuronValueScatterPlot(Plotting):
             pnvs = datastore.get_analysis_result(identifier='PerNeuronValue',sheet_name=sheet)
             if len(pnvs) < 2:
                raise ValueError('At least 2 DSVs have to be provided') 
-            for i in xrange(0,len(pnvs)):
-                for j in xrange(i+1,len(pnvs)):
+            for i in range(0,len(pnvs)):
+                for j in range(i+1,len(pnvs)):
                     if (pnvs[i].value_units == pnvs[j].value_units) or not self.parameters.only_matching_units:
                        self.pairs.append((pnvs[i],pnvs[j]))
                        self.sheets.append(sheet) 
@@ -1694,7 +1695,7 @@ class PlotTemporalTuningCurve(Plotting):
                period = st[0].getParams()[self.parameters.parameter_name].period
                assert period != None, "ERROR: You asked for centering of tuning curves even though the domain over which it is measured is not periodic." 
                centers = centering_pnv.get_value_by_id(self.parameters.neurons)
-               self.center_response_indexes.append(numpy.array([numpy.argmin(circular_dist(par,centers[i],period)) for i in xrange(0,len(centers))]))
+               self.center_response_indexes.append(numpy.array([numpy.argmin(circular_dist(par,centers[i],period)) for i in range(0,len(centers))]))
             
     def subplot(self, subplotspec):
         if self.parameters.mean:
@@ -1719,7 +1720,7 @@ class PlotTemporalTuningCurve(Plotting):
                 error = None
                 if self.parameters.mean:
                     v = []
-                    for j in xrange(0,len(self.parameters.neurons)):
+                    for j in range(0,len(self.parameters.neurons)):
                         if self.centered_response_indexes != None:
                             vv,p = self.center_tc(val[:,j],par,period,self.centered_response_indexes[i][j])
                         else:

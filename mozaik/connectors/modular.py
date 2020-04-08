@@ -9,7 +9,7 @@ from parameters import ParameterSet, ParameterDist
 from mozaik.tools.misc import sample_from_bin_distribution, normal_function
 from mozaik import load_component
 
-
+from builtins import zip
 
 logger = mozaik.getMozaikLogger()
 

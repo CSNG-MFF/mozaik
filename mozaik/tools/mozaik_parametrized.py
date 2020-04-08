@@ -11,7 +11,6 @@ allow None value, are instantiated and allow for definition of units and period.
 
 from param.parameterized import Parameterized
 from param import Number, Integer, String, produce_value, ClassSelector
-from sets import Set
 from parameters import ParameterSet
 import logging
 import inspect
@@ -19,7 +18,7 @@ import numbers
 import numpy
 import collections
 from mozaik.tools.distribution_parametrization import ParameterWithUnitsAndPeriod, MozaikExtendedParameterSet
-
+from builtins import zip
 
 import param.parameterized
 param.parameterized.docstring_signature=False
@@ -177,7 +176,7 @@ class MozaikParametrized(Parameterized):
 
 
         if self.expanded_paramset_params != []:
-            self.expanded_params_names = zip(*self.expanded_paramset_params)[0]
+            self.expanded_params_names = list(zip(*self.expanded_paramset_params))[0]
         else:
             self.expanded_params_names= []
 
@@ -187,7 +186,7 @@ class MozaikParametrized(Parameterized):
         self.expanded_paramset_params_dict = self.params().copy()
 
         # remove SParemeterSet parameters 
-        for key in self.expanded_paramset_params_dict.keys():
+        for key in list(self.expanded_paramset_params_dict.keys()):
             if isinstance(self.expanded_paramset_params_dict[key],SParameterSet):
                del self.expanded_paramset_params_dict[key]
         
@@ -378,7 +377,7 @@ def filter_query(object_list, extra_data_list=None,allow_non_existent_parameters
     """
     no_data = False
     if extra_data_list == None:
-        extra_data_list = [[] for z in xrange(0, len(object_list))]
+        extra_data_list = [[] for z in range(0, len(object_list))]
         no_data = True
     else:
         assert(len(extra_data_list) == len(object_list))
@@ -515,8 +514,8 @@ def varying_parameters(parametrized_objects):
                         break
             else:
                     if o.getParamValue(n) != parametrized_objects[0].getParamValue(n):
-	                varying_params[n] = True
-    	                break
+                        varying_params[n] = True
+                        break
 
     return varying_params.keys()
 

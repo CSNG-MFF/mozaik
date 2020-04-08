@@ -176,11 +176,11 @@ class SimilarAnnotationSelector(PopulationSelector):
       def pick_close_to_annotation(self):
           picked = []
           z = self.sheet.pop.all_cells.astype(int)
-          vals = [self.sheet.get_neuron_annotation(i,self.parameters.annotation) for i in xrange(0,len(z))]
+          vals = [self.sheet.get_neuron_annotation(i,self.parameters.annotation) for i in range(0,len(z))]
           if self.parameters.period != 0:
-            picked = numpy.array([i for i in xrange(0,len(z)) if abs(vals[i]-self.parameters.value) < self.parameters.distance])
+            picked = numpy.array([i for i in range(0,len(z)) if abs(vals[i]-self.parameters.value) < self.parameters.distance])
           else:
-            picked = numpy.array([i for i in xrange(0,len(z)) if circular_dist(vals[i],self.parameters.value,self.parameters.period) < self.parameters.distance])  
+            picked = numpy.array([i for i in range(0,len(z)) if circular_dist(vals[i],self.parameters.value,self.parameters.period) < self.parameters.distance])  
           
           return picked
       

@@ -60,7 +60,7 @@ def stRF_2d(x, y, t, p):
     assert abs(fsm_area - surround_area)/max(fsm_area,surround_area) < 0.5, "Synthesized surround of RF doesn't fit the supplied sigma and amplitude (%f-%f=%f), check visual field size and model size!" % (fsm_area, surround_area, abs(fsm_area - surround_area))
 
     if p.subtract_mean:
-        for i in xrange(0,numpy.shape(rf)[2]): # lets normalize each time slice separately
+        for i in range(0,numpy.shape(rf)[2]): # lets normalize each time slice separately
             rf[:,:,i] = rf[:,:,i] - rf[:,:,i].mean()
         #rf = rf - rf.mean()
     return rf

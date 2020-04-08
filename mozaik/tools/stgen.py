@@ -249,7 +249,7 @@ class StGen:
             spikes = numpy.concatenate((spikes,extra_spikes))
 
             if debug:
-                print "ISI buf overrun handled. len(spikes)=%d, len(extra_spikes)=%d" % (len(spikes),len(extra_spikes))
+                print("ISI buf overrun handled. len(spikes)=%d, len(extra_spikes)=%d" % (len(spikes),len(extra_spikes)))
 
 
         else:

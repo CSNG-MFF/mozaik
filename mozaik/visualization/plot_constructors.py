@@ -73,7 +73,7 @@ class LinePlot(Parameterized):
             
             d = {}
             params = {}
-            for idx in xrange(0, l):
+            for idx in range(0, l):
                 if idx > 0 and self.shared_axis and self.horizontal:
                     params["y_label"]=None
                     if self.shared_lim:
@@ -310,8 +310,8 @@ class ADSGridPlot(Parameterized):
         
         params = {}
         d = {}
-        for i in xrange(0,len(self.x_axis_values)):
-            for j in xrange(0,len(self.y_axis_values)):
+        for i in range(0,len(self.x_axis_values)):
+            for j in range(0,len(self.y_axis_values)):
                 if i > 0 and self.shared_axis:
                     params["y_label"]=None
                     if self.shared_lim:

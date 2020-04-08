@@ -10,6 +10,8 @@ from parameters import ParameterSet
 from scipy.interpolate import NearestNDInterpolator
 from numpy import sin, cos, pi, exp
 
+from builtins import zip
+
 logger = mozaik.getMozaikLogger()
 
 import pylab
@@ -100,8 +102,8 @@ class V1PushPullArborization(ModularConnectorFunction):
 
     def __init__(self, source,target, parameters):
         ModularConnectorFunction.__init__(self, source,target,  parameters)
-        self.source_or = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentOrientation') for i in xrange(0,self.source.pop.size)])
-        self.source_phase = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentPhase') for i in xrange(0,self.source.pop.size)])
+        self.source_or = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentOrientation') for i in range(0,self.source.pop.size)])
+        self.source_phase = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentPhase') for i in range(0,self.source.pop.size)])
 
     def evaluate(self,index):
         target_or = self.target.get_neuron_annotation(index, 'LGNAfferentOrientation')
@@ -217,13 +219,13 @@ class V1CorrelationBasedConnectivity(ModularConnectorFunction):
 
     def __init__(self, source,target, parameters):
         ModularConnectorFunction.__init__(self, source,target,  parameters)
-        self.source_or = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentOrientation') for i in xrange(0,self.source.pop.size)])
-        self.source_phase = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentPhase') for i in xrange(0,self.source.pop.size)])
-        self.source_ar = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentAspectRatio') for i in xrange(0,self.source.pop.size)])
-        self.source_freq = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentFrequency') for i in xrange(0,self.source.pop.size)])
-        self.source_size = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentSize') for i in xrange(0,self.source.pop.size)])
-        self.source_posx = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentX') for i in xrange(0,self.source.pop.size)])
-        self.source_posy = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentY') for i in xrange(0,self.source.pop.size)])
+        self.source_or = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentOrientation') for i in range(0,self.source.pop.size)])
+        self.source_phase = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentPhase') for i in range(0,self.source.pop.size)])
+        self.source_ar = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentAspectRatio') for i in range(0,self.source.pop.size)])
+        self.source_freq = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentFrequency') for i in range(0,self.source.pop.size)])
+        self.source_size = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentSize') for i in range(0,self.source.pop.size)])
+        self.source_posx = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentX') for i in range(0,self.source.pop.size)])
+        self.source_posy = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentY') for i in range(0,self.source.pop.size)])
         
         #import pylab
         #pylab.figure()

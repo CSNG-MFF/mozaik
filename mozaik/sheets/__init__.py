@@ -97,7 +97,7 @@ class Sheet(BaseComponent):
         self._pop = None
         self.size_x = size_x
         self.size_y = size_y
-	self.msc=0
+        self.msc=0
         # We want to be able to define in cell.params the cell parameters as also PyNNDistributions so we can get variably parametrized populations
         # The problem is that the pyNN.Population can accept only scalar parameters. There fore we will remove from cell.params all parameters
         # that are PyNNDistributions, and will initialize them later just after the population is initialized (in property pop())
@@ -146,8 +146,7 @@ class Sheet(BaseComponent):
             self._pop = value
             l = value.all_cells.astype(int)
 
-	    
-	    self._neuron_annotations = [{} for i in xrange(0, len(value))]
+            self._neuron_annotations = [{} for i in range(0, len(value))]
             self.setup_artificial_stimulation()
             self.setup_initial_values()
 
@@ -203,7 +202,7 @@ class Sheet(BaseComponent):
         if not self._pop:
             logger.error('Population has not been yet set in sheet: ' + self.name + '!')
         if not self._neuron_annotations[neuron_number].has_key(key):
-            print "ERROR, annotation does not exist:",self.name,neuron_number,key,self._neuron_annotations[neuron_number].keys()
+            logger.error("ERROR, annotation does not exist:" + self.name + " " + neuron_number + " " + key + " " + self._neuron_annotations[neuron_number].keys())
         return self._neuron_annotations[neuron_number][key][1]
 
     def get_neuron_annotations(self):
@@ -211,7 +210,7 @@ class Sheet(BaseComponent):
             logger.error('Population has not been yet set in sheet: ' +  self.name + '!')
 
         anns = []
-        for i in xrange(0, len(self.pop)):
+        for i in range(0, len(self.pop)):
             d = {}
             for (k, v) in self._neuron_annotations[i].items():
                 d[k] = v[1]
@@ -255,7 +254,7 @@ class Sheet(BaseComponent):
 
         try:
             block = self.pop.get_data(['spikes', 'v', 'gsyn_exc', 'gsyn_inh'],clear=True)
-        except NothingToWriteError, errmsg:
+        except (NothingToWriteError, errmsg):
             logger.debug(errmsg)
         
         if (mozaik.mpi_comm) and (mozaik.mpi_comm.rank != mozaik.MPI_ROOT):
@@ -267,9 +266,8 @@ class Sheet(BaseComponent):
         # population indexes
         def compare(a, b):
             return cmp(a.annotations['source_id'], b.annotations['source_id'])
-	
 
-	self.msc = numpy.mean([numpy.sum(st) for st in s.spiketrains])
+        self.msc = numpy.mean([numpy.sum(st) for st in s.spiketrains])
         s.spiketrains = sorted(s.spiketrains, compare)
         if stimulus_duration != None:        
            for st in s.spiketrains:
@@ -277,14 +275,14 @@ class Sheet(BaseComponent):
                st -= tstart
                st.t_stop -= tstart
                st.t_start = 0 * pq.ms
-           for i in xrange(0, len(s.analogsignals)):
+           for i in range(0, len(s.analogsignals)):
                s.analogsignals[i].t_start = 0 * pq.ms
        
         return s
 
     def mean_spike_count(self):
-	logger.info(self.msc)
-	return self.msc
+        logger.info(self.msc)
+        return self.msc
 
     def prepare_artificial_stimulation(self, duration, offset,additional_stimulators):
         """

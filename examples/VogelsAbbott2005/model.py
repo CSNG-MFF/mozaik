@@ -28,6 +28,7 @@ class VogelsAbbott(Model):
     def __init__(self, sim, num_threads, parameters):
         Model.__init__(self, sim, num_threads, parameters)
         # Load components
+        print(self.parameters.sheets.exc_layer.component)
         ExcLayer = load_component(self.parameters.sheets.exc_layer.component)
         InhLayer = load_component(self.parameters.sheets.inh_layer.component)
         

@@ -5,6 +5,7 @@ from scipy.interpolate import griddata
 import matplotlib.cm as cm
 from analysis import load_fixed_parameter_set_parameter_search
 import pickle
+from builtins import zip
         
 def single_value_visualization(simulation_name,master_results_dir,query,value_names=None,filename=None,resolution=None,treat_nan_as_zero=False,ranges={},cols=4):
     """
@@ -34,20 +35,16 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
                
     """
     (parameters,datastores,n) = load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir,filter=ParamFilterQuery(ParameterSet({'ads_unique' : False, 'rec_unique' : False, 'params' : ParameterSet({'identifier' : 'SingleValue'})})))
-    print parameters
 
     # Lets first filter out parameters that do not vary
     todelete=[];
-    for i in xrange(0,len(parameters)):
+    for i in range(0,len(parameters)):
         vals = set([v[0][i] for v in datastores])
-        print vals
         if len(vals) == 1:
             todelete.append(i)
-            print todelete
-    for k in xrange(0,len(datastores)):
-	datastores[k] = ([i for j, i in enumerate(datastores[k][0]) if j not in todelete],datastores[k][1])
+    for k in range(0,len(datastores)):
+        datastores[k] = ([i for j, i in enumerate(datastores[k][0]) if j not in todelete],datastores[k][1])
     parameters = [i for j, i in enumerate(parameters) if j not in todelete]
-    print parameters
 
     # Lets first filter out stuff we were asked by user
     datastores = [(a,query.query(b)) for a,b in datastores]
@@ -56,13 +53,11 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
     
     # if value_names is None lets set it to set of value_names in the first datastore
     if value_names == None:
-	value_names = set([])
-	for d in datastores:
-    	    value_names.update(set([ads.value_name for ads in param_filter_query(d[1],identifier='SingleValue').get_analysis_result()]))
+       value_names = set([])
+       for d in datastores:
+         value_names.update(set([ads.value_name for ads in param_filter_query(d[1],identifier='SingleValue').get_analysis_result()]))
         
-	value_names = set(sorted(value_names))
-    print "Value names:"    
-    print value_names
+       value_names = set(sorted(value_names))
     
     # Lets first make sure that the value_names uniqly identify a SingleValue ADS in each DataStore and 
     # that they exist in each DataStore.
@@ -76,9 +71,6 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
     
     pylab.figure(figsize=(12*cols, 6*rows), dpi=300, facecolor='w', edgecolor='k')
                 
-    print rows
-    print cols
-    print "Plotting"
     res = {}
     for i,value_name in enumerate(value_names): 
         pylab.subplot(rows,cols,i+1)
@@ -87,35 +79,28 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
                y = []
                for (param_values,datastore) in datastores: 
                        x.append(param_values[0]) 
-	               y.append(float(adss[0].value))
+                       y.append(float(adss[0].value))
                pylab.plot(x,y)
                pylab.plot(x,y,marker='o')
                pylab.xlabel(parameters[sorted_parameter_indexes[0]]) 
                pylab.ylabel(value_name) 
                
         elif len(parameters) == 2:
-	       print '*****************************'
-	       print i
-	       print len(datastores)
                x = []
                y = []
                z = []
                for (param_values,datastore) in datastores: 
-		   adss = param_filter_query(datastore,identifier='SingleValue',value_name=value_name).get_analysis_result()
-		   if len(adss)>0:
-			x.append(param_values[sorted_parameter_indexes[0]]) 
-			y.append(param_values[sorted_parameter_indexes[1]]) 
-			z.append(float(adss[0].value))
+                   adss = param_filter_query(datastore,identifier='SingleValue',value_name=value_name).get_analysis_result()
+                   if len(adss)>0:
+                        x.append(param_values[sorted_parameter_indexes[0]]) 
+                        y.append(param_values[sorted_parameter_indexes[1]]) 
+                        z.append(float(adss[0].value))
                if treat_nan_as_zero: 
                   z = numpy.nan_to_num(z)
                
                if value_name in ranges:
                   vmin,vmax = ranges[value_name] 
                else:
-		  print value_name
-                  print z
-                  print min(z) 
-                  print max(z) 
                   vmin = min(z) 
                   vmax = max(z) 
 
@@ -142,10 +127,10 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
             raise ValueError("Currently cannot handle more than 2D data")
         pylab.title(value_name)    
 
-	import scipy
+        import scipy
         f = open('ps_res.pickle','w')
         pickle.dump(res,f)
-	scipy.io.savemat('ps_res.mat', res)
+        scipy.io.savemat('ps_res.mat', res)
         f.close()
 
     if filename != None:
@@ -225,7 +210,6 @@ def multi_curve_visualzition(simulation_name,master_results_dir,x_axis_parameter
     (parameters,datastores,n) = load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir)
     
     sorted_parameter_indexes = zip(*sorted(enumerate(parameters), key=lambda x: x[1]))[0]
-    print sorted_parameter_indexes
 
     # if value_names isNone lets set it to set of value_names in the first datastore
     if value_name == None:

@@ -11,7 +11,7 @@ class TestV1CorrelationBasedConnectivity(unittest.TestCase):
     @staticmethod
     def generate_a_list_of_gabor_parameters(length):
         params = []
-        for i in xrange(0,length):
+        for i in range(0,length):
             K = 0.1+numpy.random.rand()*9.9
             a = 1/(1+numpy.random.rand()*9)
             b = 1/(1+numpy.random.rand()*9)
@@ -27,7 +27,7 @@ class TestV1CorrelationBasedConnectivity(unittest.TestCase):
     @staticmethod
     def generate_a_list_of_gabor_relative_parameters(length):
         params = []
-        for i in xrange(0,length):
+        for i in range(0,length):
             x0 = -5+numpy.random.rand()*5
             y0 = -5+numpy.random.rand()*5
             F = 0.1+numpy.random.rand()*0.3

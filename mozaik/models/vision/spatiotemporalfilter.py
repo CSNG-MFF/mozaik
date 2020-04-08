@@ -14,6 +14,8 @@ from mozaik.sheets.vision import RetinalUniformSheet
 from mozaik.tools.mozaik_parametrized import MozaikParametrized
 from parameters import ParameterSet
 
+from builtins import zip
+
 logger = mozaik.getMozaikLogger()
 
 
@@ -667,7 +669,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         for rf_type in self.rf_types:
             input_cells[rf_type] = []
             for i in numpy.nonzero(self.sheets[rf_type].pop._mask_local)[0]:
-            #for i in xrange(0,len(self.sheets[rf_type].pop.positions[0])):
+            #for i in range(0,len(self.sheets[rf_type].pop.positions[0])):
                 cell = CellWithReceptiveField(self.sheets[rf_type].pop.positions[0][i],
                                               self.sheets[rf_type].pop.positions[1][i],
                                               self.rf[rf_type],
@@ -706,13 +708,13 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                     cell.view()
 
 
-	    if self.model.parameters.store_stimuli == True:
+            if self.model.parameters.store_stimuli == True:
                 visual_region = VisualRegion(location_x=0, location_y=0,
                                          size_x=self.model.visual_field.size_x,
                                          size_y=self.model.visual_field.size_y)
-	        im = visual_space.view(visual_region,pixel_size=self.rf["X_ON"].spatial_resolution)
-	    else:
-		im = None
+                im = visual_space.view(visual_region,pixel_size=self.rf["X_ON"].spatial_resolution)
+            else:
+                im = None
             retinal_input.append(im)
 
         input_currents = {}
