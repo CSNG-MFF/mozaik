@@ -67,7 +67,7 @@ class VisualStimulus(BaseStimulus):
             view = self.background_luminance * numpy.ones(size_in_pixels)
             
         if region.overlaps(self.region):
-            if not self.region_cache.has_key(region):
+            if region not in self.region_cache:
                 intersection = region.intersection(self.region)
                 assert intersection == self.region.intersection(region)  # just a consistency check. Could be removed if necessary for performance.
                 img_relative_left = (intersection.left - self.region.left) / self.region.width
@@ -161,7 +161,7 @@ class VisualStimulus(BaseStimulus):
         Sets the current frame to the next frame in the sequence.
         """
         try:
-            self.img, self.variables = self._frames.next()
+            self.img, self.variables = next(self._frames)
         except StopIteration:
             self.visible = False
         else:

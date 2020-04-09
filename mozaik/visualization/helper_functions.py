@@ -6,7 +6,7 @@ from matplotlib.ticker import FuncFormatter
 
 
 def disable_top_right_axis(ax):
-    for loc, spine in ax.spines.iteritems():
+    for loc, spine in ax.spines.items():
         if loc in ['right', 'top']:
             spine.set_color('none')  # don't draw spine
     for tick in ax.yaxis.get_major_ticks():
@@ -18,7 +18,7 @@ def disable_top_right_axis(ax):
     
 
 def disable_bottom_axis(ax):
-    for loc, spine in ax.spines.iteritems():
+    for loc, spine in ax.spines.items():
         if loc in ['bottom']:
             spine.set_color('none')  # don't draw spine
     for tick in ax.xaxis.get_major_ticks():
@@ -26,7 +26,7 @@ def disable_bottom_axis(ax):
 
 
 def disable_left_axis(ax):
-    for loc, spine in ax.spines.iteritems():
+    for loc, spine in ax.spines.items():
         if loc in ['left']:
             spine.set_color('none')  # don't draw spine
     for tick in ax.yaxis.get_major_ticks():

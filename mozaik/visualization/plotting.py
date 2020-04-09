@@ -110,7 +110,7 @@ class Plotting(ParametrizedObject):
     def _nip_parameters(self,plot_name,user_params):
         new_user_params = {}
         params_to_update = {}
-        for (k,v) in user_params.iteritems():
+        for (k,v) in user_params.items():
             l = k.split('.')
             assert len(l) > 1, "Parameter %s not matching the simple plot" % (k)
             if l[0] == plot_name or l[0] == '*':
@@ -123,7 +123,7 @@ class Plotting(ParametrizedObject):
     
     def _handle_parameters_and_execute_plots(self,parameters,user_parameters,gs):
         d = self.subplot(gs)
-        for (k,(pl,gs,p)) in d.iteritems():
+        for (k,(pl,gs,p)) in d.items():
             p.update(parameters)
             ### THIS IS WRONG 'UP' DO NOT WORK        
             up = user_parameters

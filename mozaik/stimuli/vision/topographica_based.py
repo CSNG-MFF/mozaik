@@ -3,7 +3,7 @@ The file contains stimuli that use topographica to generate the stimulus
 
 """
 
-from visual_stimulus import VisualStimulus
+from mozaik.stimuli.vision.visual_stimulus import VisualStimulus
 import imagen
 import imagen.random
 from imagen.transferfn import TransferFn

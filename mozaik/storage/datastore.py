@@ -95,10 +95,10 @@ class DataStoreView(ParametrizedObject):
         for ads in self.analysis_results:
             sheets[ads.sheet_name] = 1
         
-        if sheets.has_key(None):
+        if None in sheets:
             sheets.pop(None)
                 
-        return sheets.keys()
+        return list(sheets.keys())
 
     def get_neuron_postions(self):
         """
@@ -180,9 +180,9 @@ class DataStoreView(ParametrizedObject):
         If stimuli==None returns all sensory stimuli.
         """
         if stimuli == None:
-            return self.sensory_stimulus.values()
+            return list(self.sensory_stimulus.values())
         else:
-            return [self.sensory_stimulus[s] for s in stimuli if self.sensory_stimulus.has_key(s)]
+            return [self.sensory_stimulus[s] for s in stimuli if s in self.sensory_stimulus]
 
     def get_experiment_parametrization_list(self):
         

@@ -3,7 +3,7 @@ Vision specific connectors.
 """
 import numpy
 import mozaik
-from modular_connector_functions import ModularConnectorFunction
+from .modular_connector_functions import ModularConnectorFunction
 from mozaik.tools.circ_stat import *
 from mozaik.tools.misc import *
 from parameters import ParameterSet

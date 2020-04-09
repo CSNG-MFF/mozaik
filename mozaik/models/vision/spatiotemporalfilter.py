@@ -7,7 +7,7 @@ import numpy
 import os.path
 import pickle
 import mozaik
-import cai97
+from  mozaik.models.vision import cai97
 from mozaik.space import VisualSpace, VisualRegion
 from mozaik.core import SensoryInputComponent
 from mozaik.sheets.vision import RetinalUniformSheet
@@ -101,8 +101,8 @@ class SpatioTemporalReceptiveField(object):
         #x = numpy.arange(0.0, width, dx)  + dx/2.0 - width/2.0
         #y = numpy.arange(0.0, height, dy) + dy/2.0 - height/2.0
 
-        x = numpy.linspace(0.0, width - dx, width/dx) + dx/2.0 - width/2.0
-        y = numpy.linspace(0.0, height - dy, height/dy) + dx/2.0 - height/2.0
+        x = numpy.linspace(0.0, width - dx, int(width/dx)) + int(dx/2.0 - width/2.0)
+        y = numpy.linspace(0.0, height - dy, int(height/dy)) + int(dx/2.0 - height/2.0)
 
         # t is the time at the beginning of each timestep
         t = numpy.arange(0.0, duration, dt)
@@ -497,7 +497,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
             return None
 
         if str(stimulus_id) not in self.cached_stimuli:
-            counter = 0 if (len(self.cached_stimuli.values()) == 0) else max(self.cached_stimuli.values()) + 1
+            counter = 0 if (len(list(self.cached_stimuli.values())) == 0) else max(self.cached_stimuli.values()) + 1
 
             self.cached_stimuli[str(stimulus_id)] = counter
 
@@ -547,7 +547,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
             # Even if we didn't find the stimulus in cache, we still check if we haven't already presented it during this simulation run.
             # This is mainly to avoid regenerating stimuli for multiple trials.
 
-            if self.internal_stimulus_cache.has_key(str(st)):
+            if str(st) in self.internal_stimulus_cache:
                (input_currents, retinal_input) =  self.internal_stimulus_cache[str(st)]
             else:
                (input_currents, retinal_input) = self._calculate_input_currents(visual_space,

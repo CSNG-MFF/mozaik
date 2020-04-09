@@ -201,7 +201,7 @@ class Sheet(BaseComponent):
 
         if not self._pop:
             logger.error('Population has not been yet set in sheet: ' + self.name + '!')
-        if not self._neuron_annotations[neuron_number].has_key(key):
+        if key not in self._neuron_annotations[neuron_number]:
             logger.error("ERROR, annotation does not exist:" + self.name + " " + neuron_number + " " + key + " " + self._neuron_annotations[neuron_number].keys())
         return self._neuron_annotations[neuron_number][key][1]
 
@@ -264,11 +264,11 @@ class Sheet(BaseComponent):
 
         # lets sort spike train so that it is ordered by IDs and thus hopefully
         # population indexes
-        def compare(a, b):
-            return cmp(a.annotations['source_id'], b.annotations['source_id'])
+        def key(a):
+            return a.annotations['source_id']
 
         self.msc = numpy.mean([numpy.sum(st) for st in s.spiketrains])
-        s.spiketrains = sorted(s.spiketrains, compare)
+        s.spiketrains = sorted(s.spiketrains, key=key)
         if stimulus_duration != None:        
            for st in s.spiketrains:
                tstart = st.t_start

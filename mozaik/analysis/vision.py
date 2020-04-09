@@ -5,7 +5,7 @@ Module containing vision specific analysis.
 import mozaik
 import numpy
 import quantities as qt
-from analysis import Analysis
+from .analysis import Analysis
 from mozaik.tools.mozaik_parametrized import colapse, colapse_to_dictionary, MozaikParametrized
 from mozaik.analysis.data_structures import PerNeuronValue
 from mozaik.analysis.helper_functions import psth
@@ -185,7 +185,7 @@ class Analog_F0andF1(Analysis):
                 if len(dsv.get_segments()) != 0:
                   assert queries.equal_stimulus_type(self.datastore) , "Data store has to contain only recordings to the same stimulus type"
                   st = self.datastore.get_stimuli()[0]
-                  assert MozaikParametrized.idd(st).getParams().has_key('temporal_frequency'), "The stimulus has to have parameter temporal_frequency which is used as first harmonic"
+                  assert 'temporal_frequency' in MozaikParametrized.idd(st).getParams(), "The stimulus has to have parameter temporal_frequency which is used as first harmonic"
 
                   segs1, stids = colapse(dsv.get_segments(),dsv.get_stimuli(),parameter_list=['trial'],allow_non_identical_objects=True)
                   for segs,st in zip(segs1, stids):
@@ -217,7 +217,7 @@ class Analog_F0andF1(Analysis):
                 # AnalogSignalList part 
                 dsv = queries.param_filter_query(dsv, sheet_name=sheet,name='AnalogSignalList')
                 for asl in dsv.get_analysis_result():
-                    assert MozaikParametrized.idd(asl.stimulus_id).getParams().has_key('temporal_frequency'), "The stimulus has to have parameter temporal_frequency which is used as first harmonic"
+                    assert 'temporal_frequency' in MozaikParametrized.idd(asl.stimulus_id).getParams(), "The stimulus has to have parameter temporal_frequency which is used as first harmonic"
 
                     signals = asl.asl
                     first_analog_signal = signals[0]

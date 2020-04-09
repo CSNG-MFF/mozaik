@@ -138,8 +138,8 @@ class GaborConnector(BaseComponent):
             phase_map = NearestNDInterpolator(zip(X.flatten(), Y.flatten()),
                                               phase_map.flatten())
         
-        print(min(target.pop.positions[0]) + " " +  max(target.pop.positions[0]))
-        print(min(target.pop.positions[1]) + " " +  max(target.pop.positions[1]))
+        print(str(min(target.pop.positions[0])) + " " +  str(max(target.pop.positions[0])))
+        print(str(min(target.pop.positions[1])) + " " +  str(max(target.pop.positions[1])))
         for (j, neuron2) in enumerate(target.pop.all()):
             if or_map:
                 orientation = or_map(target.pop.positions[0][j],

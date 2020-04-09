@@ -395,7 +395,7 @@ def filter_query(object_list, extra_data_list=None,allow_non_existent_parameters
                return False
         return True
     
-    res = zip(*filter(lambda x : fl(x,kwargs,allow_non_existent_parameters),zip(object_list,extra_data_list)))
+    res = list(zip(*filter(lambda x : fl(x,kwargs,allow_non_existent_parameters),zip(object_list,extra_data_list))))
     
     if no_data:
        if len(res)==0:
@@ -484,7 +484,7 @@ def colapse(data_list, object_list, func=None, parameter_list=[],
             
     for param in parameter_list:
         d = _colapse(d, param)
-    values = d.values()
+    values = list(d.values())
 
     st = [MozaikParametrized.idd(idd) for idd in d.keys()]
     if func != None:

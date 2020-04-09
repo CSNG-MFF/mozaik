@@ -478,7 +478,7 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
               for trial in raw_xcorr.keys() :
                   xcorr = [] # local storage
                   # loop over raw_xcorr[trial] source_ids and anothertrial same source_ids
-                  anothertrial = (trial+1)%len(raw_xcorr.keys())
+                  anothertrial = (trial+1)%len(list(raw_xcorr.keys()))
                   for rcorr in raw_xcorr[trial] :
                       # compute the xcorr if the references and targets of spiketrains of different trials corresponds to those of the raw_xcorr 
                       for ref in dsvs_spiketrains[trial] :
@@ -500,7 +500,7 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
                   shift_xcorr[trial] = xcorr
               # Save 
               self.datastore.full_datastore.add_analysis_result( 
-                  numpy.sum([ xcorr for xcorr in shift_xcorr[trial] for trial in shift_xcorr.keys() ]).division_by_num(len(shift_xcorr.keys()))
+                  numpy.sum([ xcorr for xcorr in shift_xcorr[trial] for trial in shift_xcorr.keys() ]).division_by_num(len(list(shift_xcorr.keys())))
               )
                 
       def cross_correlation( self, reference, target, bins, bin_length ):
