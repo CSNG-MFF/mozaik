@@ -90,3 +90,5 @@ RUN groupadd -g 1000 mozaik \
  && useradd -m -u 1000 -g mozaik mozaik
 
 USER mozaik
+WORKDIR /app
+ENTRYPOINT ["python"]
