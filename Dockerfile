@@ -64,7 +64,7 @@ COPY setup.py README.rst ./
 RUN python setup.py install
 
 
-FROM ubuntu:18.04 as app
+FROM ubuntu:18.04 as prod
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
         libfreetype6 \
@@ -92,3 +92,13 @@ RUN groupadd -g 1000 mozaik \
 USER mozaik
 WORKDIR /app
 ENTRYPOINT ["python"]
+
+FROM prod as dev
+USER root
+RUN apt-get update \
+ && apt-get install -y \
+        python-pip \
+ && pip install pytest
+
+USER mozaik
+ENTRYPOINT [""]
