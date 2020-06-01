@@ -24,24 +24,11 @@ RUN apt-get update \
         zlib1g-dev \
         wget
 
-RUN pip install --upgrade distribute \
- && pip install \
-        cython \
-        interval \
-        lazyarray \
-        matplotlib==2.1.1 \
-        mpi4py \
-        neo==0.5.2 \
-        numpy \
-        param==1.5.1 \
-        parameters \
-        Pillow \
-        psutil \
-        pynn \
-        quantities \
-        scipy
-
 WORKDIR /source
+COPY requirements.txt ./
+RUN pip install --upgrade distribute \
+ && pip install -r requirements.txt
+
 RUN git clone https://github.com/antolikjan/imagen.git \
  && cd imagen \
  && python setup.py install
