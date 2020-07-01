@@ -100,7 +100,7 @@ class DataStoreView(ParametrizedObject):
                 
         return list(sheets.keys())
 
-    def get_neuron_postions(self):
+    def get_neuron_positions(self):
         """
         Returns the positions for all neurons in the model within their respective sheets.
         A dictionary is returned with keys names of sheets and values a 2d ndarray of size (2,number of neurons)
