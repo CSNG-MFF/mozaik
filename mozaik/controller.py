@@ -1,6 +1,7 @@
 """
 This is the nexus of workflow execution controll of *mozaik*.
 """
+from mozaik.cli import parse_workflow_args
 from mozaik.storage.datastore import Hdf5DataStore, PickledDataStore
 from mozaik.tools.distribution_parametrization import MozaikExtendedParameterSet, load_parameters
 from mozaik.tools.misc import result_directory_name
@@ -103,14 +104,13 @@ def run_workflow(simulation_name, model_class, create_experiments):
     
     >>> python userscript simulator_name num_threads parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n simulation_run_name
     """
-    if len(sys.argv) > 4 and len(sys.argv)%2 == 1:
-        simulation_run_name = sys.argv[-1]    
-        simulator_name = sys.argv[1]
-        num_threads = sys.argv[2]
-        parameters_url = sys.argv[3]
-        modified_parameters = { sys.argv[i*2+4] : eval(sys.argv[i*2+5])  for i in xrange(0,(len(sys.argv)-5)/2)}
-    else:
-        raise ValueError("Usage: runscript simulator_name num_threads parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n simulation_run_name")
+    (
+        simulation_run_name,
+        simulator_name,
+        num_threads,
+        parameters_url,
+        modified_parameters,
+    ) = parse_workflow_args()
 
     print "Loading parameters";
     parameters = load_parameters(parameters_url,modified_parameters)
