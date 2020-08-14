@@ -29,10 +29,11 @@ from parameters import ParameterSet
 
 #mpi_comm = MPI.COMM_WORLD
 logger = mozaik.getMozaikLogger()
-simulation_run_name, simulator_name, _, _, modified_parameters = parse_workflow_args()
+simulation_name = "VogelsAbbott2005"
+simulation_run_name, _, _, _, modified_parameters = parse_workflow_args()
 
 if True:
-    data_store,model = run_workflow(simulation_run_name,VogelsAbbott,create_experiments)
+    data_store,model = run_workflow(simulation_name,VogelsAbbott,create_experiments)
 else: 
     setup_logging()
     data_store = PickledDataStore(
@@ -40,7 +41,7 @@ else:
         parameters=ParameterSet(
             {
                 "root_directory": result_directory_name(
-                    simulation_run_name, simulator_name, modified_parameters
+                    simulation_run_name, simulation_name, modified_parameters
                 ),
                 "store_stimuli": False,
             }
