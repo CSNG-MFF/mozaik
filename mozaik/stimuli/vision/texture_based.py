@@ -3,8 +3,8 @@ The file contains stimuli generated based on a texture image
 
 """
 
-from visual_stimulus import VisualStimulus
-import visual_stimulus
+from .visual_stimulus import VisualStimulus
+from . import visual_stimulus
 import imagen
 import imagen.random
 from imagen.transferfn import TransferFn
@@ -16,8 +16,8 @@ from mozaik.tools.mozaik_parametrized import SNumber, SString
 from mozaik.tools.units import cpd
 from numpy import pi
 from quantities import Hz, rad, degrees, ms, dimensionless
-from oct2py import octave #octave interface
-import scipy.misc #for testing
+from oct2py import octave  # octave interface
+import scipy.misc  # for testing
 
 
 class TextureBasedVisualStimulus(VisualStimulus):
@@ -27,16 +27,14 @@ class TextureBasedVisualStimulus(VisualStimulus):
 
     We require a path to the image from which we generate stimuli
     """
+
     texture_path = SString(doc="path to the image from which we generate stimuli")
 
-    def __init__(self,**params):
-        VisualStimulus.__init__(self,**params)
-        #self.transparent = False # We will not handle transparency anywhere here for now so let's make it fast
-    
-            
+    def __init__(self, **params):
+        VisualStimulus.__init__(self, **params)
+        # self.transparent = False # We will not handle transparency anywhere here for now so let's make it fast
 
 
-                    
 class PSTextureStimulus(TextureBasedVisualStimulus):
     """
     A stimulus generated using the Portilla-Simoncelli algorithm (see textureLib/textureBasedStimulus.m)
@@ -56,29 +54,41 @@ class PSTextureStimulus(TextureBasedVisualStimulus):
     We should add new 'empty' paramter to replace trial to force recalculaton of the stimuls.
     """
 
-    stats_type = SNumber(dimensionless,bounds=[0,3],doc="Type of statistial matching of the stimulus")
+    stats_type = SNumber(
+        dimensionless, bounds=[0, 3], doc="Type of statistial matching of the stimulus"
+    )
     seed = int
 
     def frames(self):
         print("TRIAL NUMBER " + str(self.trial))
         fieldsize_x = self.size_x * self.density
         fieldsize_y = self.size_y * self.density
-        libpath = visual_stimulus.__file__.replace("/visual_stimulus.pyc", "") + "/textureLib" #path to the image processing library
-        octave.addpath(libpath)     
-        im = octave.textureBasedStimulus(self.texture_path,
-                                         self.stats_type,
-                                         self.seed, 
-                                         fieldsize_x, 
-                                         fieldsize_y,
-                                         libpath)
+        libpath = (
+            visual_stimulus.__file__.replace("/visual_stimulus.pyc", "") + "/textureLib"
+        )  # path to the image processing library
+        octave.addpath(libpath)
+        im = octave.textureBasedStimulus(
+            self.texture_path,
+            self.stats_type,
+            self.seed,
+            fieldsize_x,
+            fieldsize_y,
+            libpath,
+        )
 
-        im = im / 255* 2*self.background_luminance
-        #scipy.misc.toimage(im, cmin=0.0, cmax=2*self.background_luminance).save('/home/kaktus/Documents/mozaik/examples/img' + str(self.trial) + '.jpg')
-        scipy.misc.toimage(im, cmin=0.0, cmax=2*self.background_luminance).save('/home/kaktus/Documents/mozaik/examples/img' + str(len(self.texture_path)) + "type" + str(self.stats_type) + '.jpg')
-        
-        assert (im.shape == (fieldsize_x, fieldsize_y)), "Image dimensions do not correspond to visual field size"
+        im = im / 255 * 2 * self.background_luminance
+        # scipy.misc.toimage(im, cmin=0.0, cmax=2*self.background_luminance).save('/home/kaktus/Documents/mozaik/examples/img' + str(self.trial) + '.jpg')
+        scipy.misc.toimage(im, cmin=0.0, cmax=2 * self.background_luminance).save(
+            "/home/kaktus/Documents/mozaik/examples/img"
+            + str(len(self.texture_path))
+            + "type"
+            + str(self.stats_type)
+            + ".jpg"
+        )
+
+        assert im.shape == (
+            fieldsize_x,
+            fieldsize_y,
+        ), "Image dimensions do not correspond to visual field size"
         while True:
             yield (im, [0])
-
-
-

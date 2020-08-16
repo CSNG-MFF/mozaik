@@ -9,8 +9,9 @@ from parameters import ParameterSet
 from pyNN import space
 from pyNN.errors import NothingToWriteError
 from mozaik.sheets import Sheet
-        
+
 logger = mozaik.getMozaikLogger()
+
 
 class RetinalUniformSheet(Sheet):
     """
@@ -29,26 +30,39 @@ class RetinalUniformSheet(Sheet):
     density : int
             Number of neurons along both axis.
     """
-    required_parameters = ParameterSet({
-        'sx': float,  # degrees, x size of the region
-        'sy': float,  # degrees, y size of the region
-        'density': int,  # neurons along each axis
-    })
-    
+
+    required_parameters = ParameterSet(
+        {
+            "sx": float,  # degrees, x size of the region
+            "sy": float,  # degrees, y size of the region
+            "density": int,  # neurons along each axis
+        }
+    )
+
     def __init__(self, model, parameters):
-        Sheet.__init__(self, model,parameters.sx, parameters.sy, parameters)
-        logger.info("Creating %s with %d neurons." % (self.__class__.__name__, int(parameters.sx * parameters.sy * parameters.density)))
-        rs = space.RandomStructure(boundary=space.Cuboid(self.size_x,self.size_y, 0),
-                                   origin=(0.0, 0.0, 0.0),
-                                   rng=mozaik.pynn_rng)
-        
-        #rs = space.Grid2D(aspect_ratio=1, dx=parameters.sx/parameters.density, dy=parameters.sy/parameters.density, x0=-parameters.sx/2,y0=-parameters.sy/2,z=0.0)
-        self.pop = self.sim.Population(int(parameters.sx * parameters.sy * parameters.density),
-                                           getattr(self.model.sim, self.parameters.cell.model),
-                                           self.parameters.cell.params,
-                                           structure=rs,
-                                           initial_values=self.parameters.cell.initial_values,
-                                           label=self.name)
+        Sheet.__init__(self, model, parameters.sx, parameters.sy, parameters)
+        logger.info(
+            "Creating %s with %d neurons."
+            % (
+                self.__class__.__name__,
+                int(parameters.sx * parameters.sy * parameters.density),
+            )
+        )
+        rs = space.RandomStructure(
+            boundary=space.Cuboid(self.size_x, self.size_y, 0),
+            origin=(0.0, 0.0, 0.0),
+            rng=mozaik.pynn_rng,
+        )
+
+        # rs = space.Grid2D(aspect_ratio=1, dx=parameters.sx/parameters.density, dy=parameters.sy/parameters.density, x0=-parameters.sx/2,y0=-parameters.sy/2,z=0.0)
+        self.pop = self.sim.Population(
+            int(parameters.sx * parameters.sy * parameters.density),
+            getattr(self.model.sim, self.parameters.cell.model),
+            self.parameters.cell.params,
+            structure=rs,
+            initial_values=self.parameters.cell.initial_values,
+            label=self.name,
+        )
 
     def size_in_degrees(self):
         return (self.parameters.sx, self.parameters.sy)
@@ -73,17 +87,32 @@ class SheetWithMagnificationFactor(Sheet):
     sy : float (μm)
        Y size of the region.
     """
-    required_parameters = ParameterSet({
-        'magnification_factor': float,  # μm / degree
-        'sx': float,      # μm, x size of the region
-        'sy': float,      # μm, y size of the region
-    })
+
+    required_parameters = ParameterSet(
+        {
+            "magnification_factor": float,  # μm / degree
+            "sx": float,  # μm, x size of the region
+            "sy": float,  # μm, y size of the region
+        }
+    )
 
     def __init__(self, model, parameters):
         """
         """
-        logger.info("Creating %s with %d neurons." % (self.__class__.__name__, int(parameters.sx*parameters.sy/1000000*parameters.density)))
-        Sheet.__init__(self, model, parameters.sx/ parameters.magnification_factor,parameters.sy/parameters.magnification_factor,parameters)
+        logger.info(
+            "Creating %s with %d neurons."
+            % (
+                self.__class__.__name__,
+                int(parameters.sx * parameters.sy / 1000000 * parameters.density),
+            )
+        )
+        Sheet.__init__(
+            self,
+            model,
+            parameters.sx / parameters.magnification_factor,
+            parameters.sy / parameters.magnification_factor,
+            parameters,
+        )
         self.magnification_factor = parameters.magnification_factor
 
     def vf_2_cs(self, degree_x, degree_y):
@@ -104,8 +133,10 @@ class SheetWithMagnificationFactor(Sheet):
                                           Tuple with the coordinates in cortical space (μm)
         
         """
-        return (degree_x * self.magnification_factor,
-                degree_y * self.magnification_factor)
+        return (
+            degree_x * self.magnification_factor,
+            degree_y * self.magnification_factor,
+        )
 
     def cs_2_vf(self, micro_meters_x, micro_meters_y):
         """
@@ -125,8 +156,10 @@ class SheetWithMagnificationFactor(Sheet):
         degrees_x,degrees_y : float,float (degrees,degrees)
                                           Tuple with the coordinates in visual space (degrees)
         """
-        return (micro_meters_x / self.magnification_factor,
-                micro_meters_y / self.magnification_factor)
+        return (
+            micro_meters_x / self.magnification_factor,
+            micro_meters_y / self.magnification_factor,
+        )
 
     def dvf_2_dcs(self, distance_vf):
         """
@@ -161,24 +194,26 @@ class VisualCorticalUniformSheet(SheetWithMagnificationFactor):
     density : float (neurons/mm^2)
             The density of neurons per square milimeter.
     """
-    
-    required_parameters = ParameterSet({
-        'density': float,  # neurons/(mm^2)
-    })
+
+    required_parameters = ParameterSet({"density": float,})  # neurons/(mm^2)
 
     def __init__(self, model, parameters):
         SheetWithMagnificationFactor.__init__(self, model, parameters)
         dx, dy = self.cs_2_vf(parameters.sx, parameters.sy)
-        rs = space.RandomStructure(boundary=space.Cuboid(dx, dy, 0),
-                                   origin=(0.0, 0.0, 0.0),
-                                   rng=mozaik.pynn_rng)
+        rs = space.RandomStructure(
+            boundary=space.Cuboid(dx, dy, 0),
+            origin=(0.0, 0.0, 0.0),
+            rng=mozaik.pynn_rng,
+        )
 
-        self.pop = self.sim.Population(int(parameters.sx*parameters.sy/1000000*parameters.density),
-                                       getattr(self.model.sim, self.parameters.cell.model),
-                                       self.parameters.cell.params,
-                                       structure=rs,
-                                       initial_values=self.parameters.cell.initial_values,
-                                       label=self.name)
+        self.pop = self.sim.Population(
+            int(parameters.sx * parameters.sy / 1000000 * parameters.density),
+            getattr(self.model.sim, self.parameters.cell.model),
+            self.parameters.cell.params,
+            structure=rs,
+            initial_values=self.parameters.cell.initial_values,
+            label=self.name,
+        )
 
 
 class VisualCorticalUniformSheet3D(VisualCorticalUniformSheet):
@@ -204,26 +239,29 @@ class VisualCorticalUniformSheet3D(VisualCorticalUniformSheet):
             The maxinmum depth of neurons.
 
     """
-    
-    required_parameters = ParameterSet({
-        'min_depth': float,  # μm
-        'max_depth': float,  # μm
-    })
+
+    required_parameters = ParameterSet(
+        {"min_depth": float, "max_depth": float,}  # μm  # μm
+    )
 
     def __init__(self, model, parameters):
         SheetWithMagnificationFactor.__init__(self, model, parameters)
         dx, dy = self.cs_2_vf(parameters.sx, parameters.sy)
 
-        origin_z = (self.parameters.min_depth + self.parameters.max_depth)/2.0
-        width_z = (self.parameters.max_depth - self.parameters.min_depth)
+        origin_z = (self.parameters.min_depth + self.parameters.max_depth) / 2.0
+        width_z = self.parameters.max_depth - self.parameters.min_depth
 
-        rs = space.RandomStructure(boundary=space.Cuboid(dx, dy, width_z),
-                                   origin=(0.0, 0.0, origin_z),
-                                   rng=mozaik.pynn_rng)
+        rs = space.RandomStructure(
+            boundary=space.Cuboid(dx, dy, width_z),
+            origin=(0.0, 0.0, origin_z),
+            rng=mozaik.pynn_rng,
+        )
 
-        self.pop = self.sim.Population(int(parameters.sx*parameters.sy/1000000*parameters.density),
-                                       getattr(self.model.sim, self.parameters.cell.model),
-                                       self.parameters.cell.params,
-                                       structure=rs,
-                                       initial_values=self.parameters.cell.initial_values,
-                                       label=self.name)
+        self.pop = self.sim.Population(
+            int(parameters.sx * parameters.sy / 1000000 * parameters.density),
+            getattr(self.model.sim, self.parameters.cell.model),
+            self.parameters.cell.params,
+            structure=rs,
+            initial_values=self.parameters.cell.initial_values,
+            label=self.name,
+        )

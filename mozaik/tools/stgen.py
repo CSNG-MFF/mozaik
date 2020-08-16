@@ -31,7 +31,7 @@ class SpikeTrain(object):
     ## Constructor and key methods to manipulate the SpikeTrain objects  ##
     #######################################################################
     def __init__(self, spike_times, t_start=None, t_stop=None):
-        #TODO: add information about sampling rate at time of creation
+        # TODO: add information about sampling rate at time of creation
 
         """
         Constructor of the SpikeTrain object
@@ -40,19 +40,23 @@ class SpikeTrain(object):
             SpikeTrain
         """
 
-        self.t_start     = t_start
-        self.t_stop      = t_stop
+        self.t_start = t_start
+        self.t_stop = t_stop
         self.spike_times = numpy.array(spike_times, numpy.float32)
 
         # If t_start is not None, we resize the spike_train keeping only
         # the spikes with t >= t_start
         if self.t_start is not None:
-            self.spike_times = numpy.extract((self.spike_times >= self.t_start), self.spike_times)
+            self.spike_times = numpy.extract(
+                (self.spike_times >= self.t_start), self.spike_times
+            )
 
         # If t_stop is not None, we resize the spike_train keeping only
         # the spikes with t <= t_stop
         if self.t_stop is not None:
-            self.spike_times = numpy.extract((self.spike_times <= self.t_stop), self.spike_times)
+            self.spike_times = numpy.extract(
+                (self.spike_times <= self.t_stop), self.spike_times
+            )
 
         # We sort the spike_times. May be slower, but is necessary by the way for quite a
         # lot of methods...
@@ -69,8 +73,8 @@ class SpikeTrain(object):
             if self.t_start is None:
                 self.t_start = 0
             if self.t_stop is None:
-                self.t_stop  = 0.1
-        elif size == 1: # spike list may be empty
+                self.t_stop = 0.1
+        elif size == 1:  # spike list may be empty
             if self.t_start is None:
                 self.t_start = self.spike_times[0]
             if self.t_stop is None:
@@ -85,8 +89,11 @@ class SpikeTrain(object):
             if numpy.any(self.spike_times > self.t_stop):
                 raise ValueError("Spike times must not be greater than t_stop")
 
-        if self.t_start >= self.t_stop :
-            raise Exception("Incompatible time interval : t_start = %s, t_stop = %s" % (self.t_start, self.t_stop))
+        if self.t_start >= self.t_stop:
+            raise Exception(
+                "Incompatible time interval : t_start = %s, t_stop = %s"
+                % (self.t_start, self.t_stop)
+            )
         if self.t_start < 0:
             raise ValueError("t_start must not be negative")
         if numpy.any(self.spike_times < 0):
@@ -118,7 +125,7 @@ class SpikeTrain(object):
         See also:
             time_parameters()
         """
-        test = (self.time_parameters() == spktrain.time_parameters())
+        test = self.time_parameters() == spktrain.time_parameters()
         return numpy.all(self.spike_times == spktrain.spike_times) and test
 
     def copy(self):
@@ -127,7 +134,6 @@ class SpikeTrain(object):
         """
         return SpikeTrain(self.spike_times, self.t_start, self.t_stop)
 
-
     def duration(self):
         """
         Return the duration of the SpikeTrain
@@ -135,10 +141,7 @@ class SpikeTrain(object):
         return self.t_stop - self.t_start
 
 
-
-
 class StGen:
-
     def __init__(self, rng=None, seed=None):
         """ 
         Stochastic Process Generator
@@ -176,7 +179,7 @@ class StGen:
         inh_poisson_generator - inhomogeneous Poisson process (time varying rate)
         """
 
-        if rng==None:
+        if rng == None:
             self.rng = numpy.random.RandomState()
         else:
             self.rng = rng
@@ -185,12 +188,13 @@ class StGen:
             self.rng.seed(seed)
         self.dep_checked = False
 
-    def seed(self,seed):
+    def seed(self, seed):
         """ seed the gsl rng with a given seed """
         self.rng.seed(seed)
 
-
-    def poisson_generator(self, rate, t_start=0.0, t_stop=1000.0, array=False,debug=False):
+    def poisson_generator(
+        self, rate, t_start=0.0, t_stop=1000.0, array=False, debug=False
+    ):
         """
         Returns a SpikeTrain whose spikes are a realization of a Poisson process
         with the given rate (Hz) and stopping time t_stop (milliseconds).
@@ -216,16 +220,16 @@ class StGen:
             inh_poisson_generator, inh_gamma_generator, inh_adaptingmarkov_generator
         """
 
-        #number = int((t_stop-t_start)/1000.0*2.0*rate)
+        # number = int((t_stop-t_start)/1000.0*2.0*rate)
 
         # less wasteful than double length method above
-        n = (t_stop-t_start)/1000.0*rate
-        number = numpy.ceil(n+3*numpy.sqrt(n))
-        if number<100:
-            number = min(5+numpy.ceil(2*n),100)
+        n = (t_stop - t_start) / 1000.0 * rate
+        number = numpy.ceil(n + 3 * numpy.sqrt(n))
+        if number < 100:
+            number = min(5 + numpy.ceil(2 * n), 100)
 
         if number > 0:
-            isi = self.rng.exponential(1.0/rate, int(number))*1000.0
+            isi = self.rng.exponential(1.0 / rate, int(number)) * 1000.0
             if number > 1:
                 spikes = numpy.add.accumulate(isi)
             else:
@@ -233,38 +237,38 @@ class StGen:
         else:
             spikes = numpy.array([])
 
-        spikes+=t_start
+        spikes += t_start
         i = numpy.searchsorted(spikes, t_stop)
 
         extra_spikes = []
-        if i==len(spikes):
+        if i == len(spikes):
             # ISI buf overrun
-            
-            t_last = spikes[-1] + self.rng.exponential(1.0/rate, 1)[0]*1000.0
 
-            while (t_last<t_stop):
+            t_last = spikes[-1] + self.rng.exponential(1.0 / rate, 1)[0] * 1000.0
+
+            while t_last < t_stop:
                 extra_spikes.append(t_last)
-                t_last += self.rng.exponential(1.0/rate, 1)[0]*1000.0
-            
-            spikes = numpy.concatenate((spikes,extra_spikes))
+                t_last += self.rng.exponential(1.0 / rate, 1)[0] * 1000.0
+
+            spikes = numpy.concatenate((spikes, extra_spikes))
 
             if debug:
-                print "ISI buf overrun handled. len(spikes)=%d, len(extra_spikes)=%d" % (len(spikes),len(extra_spikes))
-
+                print(
+                    "ISI buf overrun handled. len(spikes)=%d, len(extra_spikes)=%d"
+                    % (len(spikes), len(extra_spikes),)
+                )
 
         else:
-            spikes = numpy.resize(spikes,(i,))
+            spikes = numpy.resize(spikes, (i,))
 
         if not array:
-            spikes = SpikeTrain(spikes, t_start=t_start,t_stop=t_stop)
-
+            spikes = SpikeTrain(spikes, t_start=t_start, t_stop=t_stop)
 
         if debug:
             return spikes, extra_spikes
         else:
             return spikes
 
-            
     def inh_poisson_generator(self, rate, t, t_stop, array=False):
         """
         Returns a SpikeTrain whose spikes are a realization of an inhomogeneous 
@@ -304,8 +308,8 @@ class StGen:
             poisson_generator
         """
 
-        if numpy.shape(t)!=numpy.shape(rate):
-            raise ValueError('shape mismatch: t,rate must be of the same shape')
+        if numpy.shape(t) != numpy.shape(rate):
+            raise ValueError("shape mismatch: t,rate must be of the same shape")
 
         # get max rate and generate poisson process to be thinned
         rmax = numpy.max(rate)
@@ -316,23 +320,20 @@ class StGen:
             if array:
                 return numpy.array([])
             else:
-                return SpikeTrain(numpy.array([]), t_start=t[0],t_stop=t_stop)
-        
+                return SpikeTrain(numpy.array([]), t_start=t[0], t_stop=t_stop)
+
         # gen uniform rand on 0,1 for each spike
         rn = numpy.array(self.rng.uniform(0, 1, len(ps)))
 
         # instantaneous rate for each spike
-        
-        idx=numpy.searchsorted(t,ps)-1
+
+        idx = numpy.searchsorted(t, ps) - 1
         spike_rate = rate[idx]
 
         # thin and return spikes
-        spike_train = ps[rn<spike_rate/rmax]
+        spike_train = ps[rn < spike_rate / rmax]
 
         if array:
             return spike_train
 
-        return SpikeTrain(spike_train, t_start=t[0],t_stop=t_stop)
-
-
-
+        return SpikeTrain(spike_train, t_start=t[0], t_stop=t_stop)

@@ -30,15 +30,15 @@ def perform_analysis_and_visualization(data_store):
         l4_inh = analog_ids_inh[numpy.argmin([circular_dist(o,numpy.pi/2,numpy.pi)  for (o,p) in zip(l4_inh_or[0].get_value_by_id(analog_ids_inh),l4_inh_phase[0].get_value_by_id(analog_ids_inh))])]
         l4_exc_or_many = numpy.array(l4_exc_or[0].ids)[numpy.nonzero(numpy.array([circular_dist(o,numpy.pi/2,numpy.pi)  for (o,p) in zip(l4_exc_or[0].values,l4_exc_phase[0].values)]) < 0.1)[0]]
 
-        print "Prefered orientation of plotted exc neurons:"
-        print 'index ' + str(l4_exc)
-        print "Prefered phase of plotted exc neurons:"
-        print l4_exc_phase[0].get_value_by_id(l4_exc)
-        print "Prefered orientation of plotted inh neurons:"
-        print l4_inh_phase[0].get_value_by_id(l4_inh)
-        print 'index ' + str(l4_inh)
-        print "Prefered phase of plotted inh neurons:"
-        print l4_exc_phase[0].get_value_by_id(l4_exc)
+        print("Prefered orientation of plotted exc neurons:")
+        print('index ' + str(l4_exc))
+        print("Prefered phase of plotted exc neurons:")
+        print(l4_exc_phase[0].get_value_by_id(l4_exc))
+        print("Prefered orientation of plotted inh neurons:")
+        print(l4_inh_phase[0].get_value_by_id(l4_inh))
+        print('index ' + str(l4_inh))
+        print("Prefered phase of plotted inh neurons:")
+        print(l4_exc_phase[0].get_value_by_id(l4_exc))
     
         #dsv = param_filter_query(data_store,sheet_name='V1_Exc_L4')
         #TrialAveragedFiringRate(param_filter_query(data_store,sheet_name=['V1_Exc_L4','V1_Inh_L4'],st_name="FullfieldDriftingSinusoidalGrating"),ParameterSet({})).analyse()

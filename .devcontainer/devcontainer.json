@@ -1,0 +1,16 @@
+{
+	"name": "Docker from Docker Compose",
+	"dockerComposeFile": "docker-compose.yml",
+	"service": "docker-from-docker",
+	"workspaceFolder": "/app",
+	"remoteEnv": {
+		"LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
+	},
+	"settings": {
+		"terminal.integrated.shell.linux": "/bin/bash"
+	},
+	"extensions": [
+		"ms-azuretools.vscode-docker",
+		"ms-python.python"
+	]
+}

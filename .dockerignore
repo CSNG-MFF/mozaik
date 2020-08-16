@@ -1,0 +1,10 @@
+*
+!doc
+!mozaik
+!Pipfile*
+!README.rst
+!setup.py
+!test
+**/__pycache__
+**/*.pyc
+**/build

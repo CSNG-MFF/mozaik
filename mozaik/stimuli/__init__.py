@@ -20,29 +20,44 @@ import quantities as qt
 import numpy
 import mozaik
 from operator import itemgetter
-from mozaik.tools.mozaik_parametrized import MozaikParametrized, SNumber, SInteger, SString, SParameterSet
+from mozaik.tools.mozaik_parametrized import (
+    MozaikParametrized,
+    SNumber,
+    SInteger,
+    SString,
+    SParameterSet,
+)
 import collections
 
 
 logger = mozaik.getMozaikLogger()
+
 
 class BaseStimulus(MozaikParametrized):
     """
     The abstract stimulus class. It defines the parameters common to all stimuli and
     the list of function each stimulus has to provide.
     """
+
     frame_duration = SNumber(qt.ms, doc="The duration of single frame")
     duration = SNumber(qt.ms, doc="The duration of stimulus")
     trial = SInteger(doc="The trial of the stimulus")
-    direct_stimulation_name = SString(default=None,doc="The name of the artifical stimulation protocol")
-    direct_stimulation_parameters = SParameterSet(default=None,doc="The parameters with which the direct stimulation protocol has been initialized")
-    
+    direct_stimulation_name = SString(
+        default=None, doc="The name of the artifical stimulation protocol"
+    )
+    direct_stimulation_parameters = SParameterSet(
+        default=None,
+        doc="The parameters with which the direct stimulation protocol has been initialized",
+    )
+
     def __init__(self, **params):
         MozaikParametrized.__init__(self, **params)
         self.input = None
         self._frames = self.frames()
-        self.n_frames = numpy.inf  # possibly very dangerous. Don't do 'for i in range(stim.n_frames)'!
-        
+        self.n_frames = (
+            numpy.inf
+        )  # possibly very dangerous. Don't do 'for i in range(stim.n_frames)'!
+
     def __eq__(self, other):
         """
         Are the name and all parameters of two stimuli are equivallent?
@@ -102,9 +117,12 @@ class InternalStimulus(BaseStimulus):
     consistently, and will be useful in that it will record the duration of the experiment, the possible information about multiple trials,
     and the identity of the artificial stimulation used. Note that in that case the frame_duration should be set to duration time.
     """
-    def __init__(self,**params):
-        BaseStimulus.__init__(self,**params)
-        assert self.frame_duration == self.duration , "Mozaik requires that frame_duration and duration for InternalStimulus are set to equal values"
-    
+
+    def __init__(self, **params):
+        BaseStimulus.__init__(self, **params)
+        assert (
+            self.frame_duration == self.duration
+        ), "Mozaik requires that frame_duration and duration for InternalStimulus are set to equal values"
+
     def frames(self):
         return None

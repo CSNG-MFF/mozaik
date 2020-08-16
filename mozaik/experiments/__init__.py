@@ -7,7 +7,10 @@ import mozaik
 from mozaik.stimuli import InternalStimulus
 from parameters import ParameterSet
 from mozaik.core import ParametrizedObject
-from mozaik.tools.distribution_parametrization import ParameterWithUnitsAndPeriod, MozaikExtendedParameterSet
+from mozaik.tools.distribution_parametrization import (
+    ParameterWithUnitsAndPeriod,
+    MozaikExtendedParameterSet,
+)
 
 logger = mozaik.getMozaikLogger()
 
@@ -45,20 +48,20 @@ class Experiment(ParametrizedObject):
     that the experiment presents to the model. One can also implement the do_analysis method, which should perform the analysis that the experiments requires
     at the end. 
     """
-    
-    def __init__(self, model,parameters):
+
+    def __init__(self, model, parameters):
         ParametrizedObject.__init__(self, parameters)
         self.model = model
         self.stimuli = []
         self.direct_stimulation = None
-    
+
     def return_stimuli(self):
         """
         This function is called by mozaik to retrieve the list of stimuli the experiment requires to be presented to the model.
         """
         return self.stimuli
-        
-    def run(self,data_store,stimulus_indexes):
+
+    def run(self, data_store, stimulus_indexes):
         """
         This function is called to execute the experiment.
         
@@ -85,25 +88,38 @@ class Experiment(ParametrizedObject):
         srtsum = 0
         for i in stimulus_indexes:
             s = self.stimuli[i]
-            logger.debug('Presenting stimulus: ' + str(s) + '\n')
+            logger.debug("Presenting stimulus: " + str(s) + "\n")
             if self.direct_stimulation == None:
-               ds = {}
+                ds = {}
             else:
-               ds = self.direct_stimulation[i]
-            (segments,null_segments,input_stimulus,simulator_run_time) = self.model.present_stimulus_and_record(s,ds)
+                ds = self.direct_stimulation[i]
+            (
+                segments,
+                null_segments,
+                input_stimulus,
+                simulator_run_time,
+            ) = self.model.present_stimulus_and_record(s, ds)
             srtsum += simulator_run_time
-            data_store.add_recording(segments,s)
-            data_store.add_stimulus(input_stimulus,s)
-            
+            data_store.add_recording(segments, s)
+            data_store.add_stimulus(input_stimulus, s)
+
             if null_segments != []:
-               data_store.add_null_recording(null_segments,s) 
-            
-            logger.info('Stimulus %d/%d finished. Memory usage: %iMB' % (i+1,len(stimulus_indexes),resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/1024))
+                data_store.add_null_recording(null_segments, s)
+
+            logger.info(
+                "Stimulus %d/%d finished. Memory usage: %iMB"
+                % (
+                    i + 1,
+                    len(stimulus_indexes),
+                    resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024,
+                )
+            )
         return srtsum
-        
+
     def do_analysis(self):
         raise NotImplementedError
         pass
+
 
 class PoissonNetworkKick(Experiment):
     """
@@ -118,61 +134,66 @@ class PoissonNetworkKick(Experiment):
     Parameters
     ----------
     model : Model
-          The model on which to execute the experiment.
+        The model on which to execute the experiment.
 
     Other parameters
     ----------------
   
     sheet_list : int
-               The list of sheets in which to do stimulation
+        The list of sheets in which to do stimulation
 
     drive_period : float (ms)
-                 The length of the constant drive, after which it will be linearly taken down to 0 at the end of the stimulation.   
+        The length of the constant drive, after which it will be linearly taken down to 0 at the end of the stimulation.   
                         
     stimulation_configuration : ParameterSet
-                              The parameter set for direct stimulation specifing neurons to which the kick will be administered.
+        The parameter set for direct stimulation specifing neurons to which the kick will be administered.
                                  
     lambda_list : list
-                List of the means of the Poisson spike train to be injected into the neurons specified in stimulation_configuration (one per each sheet).
+        List of the means of the Poisson spike train to be injected into the neurons specified in stimulation_configuration (one per each sheet).
     
     weight_list : list
-                List of spike sizes of the Poisson spike train to be injected into the neurons specified in stimulation_configuration (one per each sheet).
+        List of spike sizes of the Poisson spike train to be injected into the neurons specified in stimulation_configuration (one per each sheet).
     """
-    
-    required_parameters = ParameterSet({
-            'duration': float,
-            'sheet_list' : list,
-            'drive_period' : float,
-            'stimulation_configuration' : ParameterSet,
-            'lambda_list' : list,
-            'weight_list' : list,
-    })
 
-    
-    def __init__(self,model,parameters):
-            Experiment.__init__(self, model,parameters)
-            from mozaik.sheets.direct_stimulator import Kick
+    required_parameters = ParameterSet(
+        {
+            "duration": float,
+            "sheet_list": list,
+            "drive_period": float,
+            "stimulation_configuration": ParameterSet,
+            "lambda_list": list,
+            "weight_list": list,
+        }
+    )
 
-            d  = {}
-            for i,sheet in enumerate(self.parameters.sheet_list):
-                p = MozaikExtendedParameterSet({'exc_firing_rate' : self.parameters.lambda_list[i],
-                                                      'exc_weight' : self.parameters.weight_list[i],
-                                                      'drive_period' : self.parameters.drive_period,
-                                                      'population_selector' : self.parameters.stimulation_configuration})
+    def __init__(self, model, parameters):
+        Experiment.__init__(self, model, parameters)
+        from mozaik.sheets.direct_stimulator import Kick
 
-                d[sheet] = [Kick(model.sheets[sheet],p)]
-            
-            self.direct_stimulation = [d]
-	    self.stimuli.append(
-                        InternalStimulus(   
-                                            frame_duration=self.parameters.duration, 
-                                            duration=self.parameters.duration,
-                                            trial=0,
-                                            direct_stimulation_name='Kick',
-                                            direct_stimulation_parameters = p
-                                         )
-                                )
-        
+        direct_stimulation = {}
+        for i, sheet in enumerate(self.parameters.sheet_list):
+            p = MozaikExtendedParameterSet(
+                {
+                    "exc_firing_rate": self.parameters.lambda_list[i],
+                    "exc_weight": self.parameters.weight_list[i],
+                    "drive_period": self.parameters.drive_period,
+                    "population_selector": self.parameters.stimulation_configuration,
+                }
+            )
+            direct_stimulation[sheet] = [Kick(model.sheets[sheet], p)]
+
+        self.direct_stimulation = [direct_stimulation]
+        self.stimuli.append(
+            InternalStimulus(
+                frame_duration=self.parameters.duration,
+                duration=self.parameters.duration,
+                trial=0,
+                direct_stimulation_name="Kick",
+                direct_stimulation_parameters=p,
+            )
+        )
+
+
 class NoStimulation(Experiment):
     """ 
     This is a special experiment that does not show any stimulus for the duration of the experiment. 
@@ -184,18 +205,15 @@ class NoStimulation(Experiment):
     -----
     Unlike :class:`.MeasureSpontaneousActivity` this can be used in model with no sensory input sheet.
     """
-    required_parameters = ParameterSet({
-                                        'duration': float,
-                                       })
 
-    def __init__(self,model,parameters):
-        Experiment.__init__(self, model,parameters)
+    required_parameters = ParameterSet({"duration": float,})
+
+    def __init__(self, model, parameters):
+        Experiment.__init__(self, model, parameters)
         self.stimuli.append(
-                        InternalStimulus(   
-                                            frame_duration=self.parameters.duration, 
-                                            duration=self.parameters.duration,
-                                            trial=0,
-                                         )
-                                )
-
-
+            InternalStimulus(
+                frame_duration=self.parameters.duration,
+                duration=self.parameters.duration,
+                trial=0,
+            )
+        )

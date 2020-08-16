@@ -28,8 +28,8 @@ from parameters import ParameterSet
 import mozaik
 from mozaik.controller import run_workflow, setup_logging
 from mozaik.storage.datastore import Hdf5DataStore,PickledDataStore
-print mozaik.__file__
-print sys.path
+print(mozaik.__file__)
+print(sys.path)
 
 
 

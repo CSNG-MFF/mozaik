@@ -1,4 +1,4 @@
-FROM ubuntu:18.04 as packages
+FROM python:3.7-buster as packages
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
  && apt-get install -y \
@@ -9,37 +9,33 @@ RUN apt-get update \
         libblas-dev \
         libfreetype6-dev \
         libgsl0-dev \
-        libjpeg8-dev \
+        libjpeg-dev \
         liblapack-dev \
         libncurses5-dev \
         libopenmpi-dev \
         libpng++-dev \
         libreadline-dev \
         openmpi-bin \
-        python-dev \
-        python-nose \
-        python-pip \
-        python-tk \
+        pkg-config \
         subversion \
+        wget \
         zlib1g-dev \
-        wget
+ && pip install pipenv==2020.8.13
 
 WORKDIR /source
-COPY requirements.txt ./
-RUN pip install --upgrade distribute \
- && pip install -r requirements.txt
-
-RUN git clone https://github.com/antolikjan/imagen.git \
- && cd imagen \
- && python setup.py install
+COPY Pipfile Pipfile.lock ./
+ARG PACKAGES_DIR=/source/packages
+RUN pipenv lock -r | pip install --prefix ${PACKAGES_DIR} --ignore-installed -r /dev/stdin
+ENV PATH=${PATH}:${PACKAGES_DIR}/bin
+ENV PYTHONPATH=${PACKAGES_DIR}/lib/python3.7/site-packages:${PYTHONPATH}
 
 RUN wget https://github.com/nest/nest-simulator/archive/v2.20.0.tar.gz \
  && tar xvfz v2.20.0.tar.gz \
  && cd nest-simulator-2.20.0 \
  && cmake \
-        -Dwith-mpi=OFF \
-        -Dwith-boost=ON \
         -DCMAKE_INSTALL_PREFIX:PATH=/opt/nest \
+        -Dwith-boost=ON \
+        -Dwith-mpi=OFF \
         -Dwith-optimize='-O3' \
         ./ \
  && make \
@@ -48,30 +44,26 @@ RUN wget https://github.com/nest/nest-simulator/archive/v2.20.0.tar.gz \
 WORKDIR /source/mozaik
 COPY mozaik ./mozaik
 COPY setup.py README.rst ./
-RUN python setup.py install
+RUN pip install --prefix=${PACKAGES_DIR} .
 
 
-FROM ubuntu:18.04 as prod
+FROM python:3.7-slim-buster as prod
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
         libfreetype6 \
         libgomp1 \
         libgsl23 \
-        libjpeg8 \
+        libjpeg62-turbo \
         libncurses5 \
-        libpython2.7 \
+        libtk \
         openmpi-bin \
-        python-nose \
-        python-six \
-        python-tk \
-        python2.7 \
         ssh \
  && rm -rf /var/lib/apt/lists/*
 
-ARG PACKAGES_DIR=/usr/local/lib/python2.7/dist-packages
-COPY --from=packages $PACKAGES_DIR $PACKAGES_DIR
+ARG PACKAGES_DIR=/source/packages
+COPY --from=packages ${PACKAGES_DIR} /usr/local
 COPY --from=packages /opt/nest /opt/nest
-ENV PYTHONPATH=/opt/nest/lib/python2.7/site-packages
+ENV PYTHONPATH=/opt/nest/lib/python3.7/site-packages:$PYTHONPATH
 
 RUN groupadd -g 1000 mozaik \
  && useradd -m -u 1000 -g mozaik mozaik
@@ -80,12 +72,21 @@ USER mozaik
 WORKDIR /app
 ENTRYPOINT ["python"]
 
+
 FROM prod as dev
 USER root
 RUN apt-get update \
  && apt-get install -y \
-        python-pip \
- && pip install pytest
+        git \
+ && pip install pipenv==2020.8.13
+
+WORKDIR /app
+RUN chown -R mozaik:mozaik .
+COPY --chown=mozaik:mozaik Pipfile Pipfile.lock ./
+RUN pipenv install --system --deploy --ignore-pipfile --dev
+
+COPY --chown=mozaik:mozaik . ./
+RUN pip install -e .
 
 USER mozaik
 ENTRYPOINT [""]
