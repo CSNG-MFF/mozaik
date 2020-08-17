@@ -14,7 +14,7 @@ interval = "~=1.0.0"
 lazyarray = "~=0.3.3"
 matplotlib = "~=3.3.1"
 mpi4py = "~=3.0.3"
-neo = "==0.5.2"
+neo = "~=0.8.0"
 numpy = "~=1.19.1"
 param = "~=1.9.3"
 parameters = "~=0.2.1"
@@ -26,3 +26,9 @@ scipy = "~=1.5.2"
 
 [requires]
 python_version = "3.7"
+
+[scripts]
+test = "pytest -v"
+test-dev = "pytest-watch -- -vv"
+format = "black --verbose --target-version py37 ."
+lint = "pipenv run format --check"

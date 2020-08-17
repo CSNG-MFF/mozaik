@@ -854,7 +854,6 @@ def test_stimulating_function(
     plt.gca().set_aspect("equal")
     plt.title("Orientatin preference (neurons)")
     plt.scatter(px, py, c=vals / numpy.pi, cmap="hsv")
-    plt.hold(True)
     # plt.scatter(coor_x.flatten(),coor_y.flatten(),c='k',cmap='hsv')
 
     ors = scipy.interpolate.griddata(
@@ -926,7 +925,6 @@ def test_stimulating_function_Naka(
     plt.gca().set_aspect("equal")
     plt.title("Orientatin preference (neurons)")
     plt.scatter(px, py, c=vals / numpy.pi, cmap="hsv")
-    plt.hold(True)
 
     ors = scipy.interpolate.griddata(
         list(zip(px, py)), vals, (coor_x, coor_y), method="nearest"

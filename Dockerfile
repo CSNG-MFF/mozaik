@@ -80,19 +80,14 @@ FROM prod as dev
 USER root
 RUN apt-get update \
  && apt-get install -y \
-        build-essential \
         git \
-        libopenmpi-dev \
  && pip install pipenv==2020.8.13
 
 WORKDIR /app
 RUN chown -R mozaik:mozaik .
-
-USER mozaik
 COPY --chown=mozaik:mozaik Pipfile Pipfile.lock ./
-RUN pipenv install --ignore-pipfile --deploy --dev
+RUN pipenv install --system --ignore-pipfile --deploy --dev
 
-USER root
 COPY --chown=mozaik:mozaik . ./
 RUN pip install -e .
 

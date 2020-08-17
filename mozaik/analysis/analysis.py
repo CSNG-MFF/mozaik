@@ -1429,7 +1429,6 @@ class GaussianTuningCurveFit(Analysis):
 
             plt.figure()
             plt.plot(X, fitfunc(p1, X), "x")
-            plt.hold("on")
             plt.plot(X, Y, "o")
             plt.title(
                 str(numpy.linalg.norm(fitfunc(p1, X) - Y) / numpy.linalg.norm(Y))
@@ -3068,7 +3067,6 @@ class NakaRushtonTuningCurveFit(Analysis):
             plt.figure()
             logger.info("a:" + str(p1))
             plt.plot(X, fitfunc(p1, X), "x")
-            plt.hold("on")
             plt.plot(X, Y, "o")
             plt.title(
                 str(numpy.linalg.norm(fitfunc(p1, X) - Y) / numpy.linalg.norm(Y))

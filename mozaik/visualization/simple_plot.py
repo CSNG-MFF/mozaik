@@ -1000,8 +1000,6 @@ class StandardStyleLinePlot(StandardStyle):
                     self.x[i], ymax, ymin, color=p["color"], alpha=0.2
                 )
 
-            plt.hold("on")
-
             tmin = min(tmin, self.x[i][0])
             tmax = max(tmax, self.x[i][-1])
 
