@@ -1,7 +1,7 @@
 """
 This module contains several low level plotting function used mainly in simple_plot module.
 """
-import pylab
+import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
 
 
@@ -75,8 +75,8 @@ def disable_yticks(ax):
 
 
 def remove_x_tick_labels():
-    pylab.xticks([], [])
+    plt.xticks([], [])
 
 
 def remove_y_tick_labels():
-    pylab.yticks([], [])
+    plt.yticks([], [])

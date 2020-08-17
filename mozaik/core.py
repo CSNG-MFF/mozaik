@@ -4,6 +4,7 @@ Definition of the component interfaces. These interfaces are not currently direc
 """
 
 import mozaik
+import numpy as np
 import parameters.random
 from mozaik import __version__
 from mozaik.tools.distribution_parametrization import PyNNDistribution
@@ -18,11 +19,11 @@ logger = mozaik.getMozaikLogger()
 class ParametrizedObject(object):
     """
     Base class for for all Mozaik objects using the dynamic parameterization framework. See `getting_started`_ for more details.
-    
+
     Parameters
     ----------
     parameters : dict
-        Dictionary of the parameter names and their values that has to match the required_parameters variable. 
+        Dictionary of the parameter names and their values that has to match the required_parameters variable.
     """
 
     required_parameters = ParameterSet({})
@@ -31,12 +32,12 @@ class ParametrizedObject(object):
     def check_parameters(self, parameters):
         """
         This is a function that checks whether all required (and no other) parameters have been specified and all their values have matching types.
-        This function gets automatically executed during initialization of each :class:.ParametrizedObject object. 
+        This function gets automatically executed during initialization of each :class:.ParametrizedObject object.
 
         Parameters
         ----------
         parameters : dict
-            Dictionary of the parameter names and their values that has to match the required_parameters variable. 
+            Dictionary of the parameter names and their values that has to match the required_parameters variable.
         """
 
         def walk(tP, P, section=None):
@@ -46,12 +47,12 @@ class ParametrizedObject(object):
                     % (
                         self.__class__.__name__,
                         section or "",
-                        tP.keys(),
-                        P.keys(),
+                        list(tP.keys()),
+                        list(P.keys()),
                         set(tP.keys()) ^ set(P.keys()),
                     )
                 )
-            for k, v in tP.items():
+            for k, v in list(tP.items()):
                 if isinstance(v, ParameterSet):
                     if P[k] != None:
                         assert isinstance(P[k], ParameterSet), (
@@ -82,7 +83,11 @@ class ParametrizedObject(object):
                         or (v == ParameterSet and P[k] == None)
                         or (v == float and isinstance(P[k], int))
                         or (v == int and isinstance(P[k], float))
-                    ), "Type mismatch for parameter %s: %s != %s " % (k, v, P[k])
+                        or (v == int and isinstance(P[k], np.int64))
+                    ), (
+                        "Type mismatch for parameter %s of value %s: %s != %s "
+                        % (k, P[k], v, type(P[k]))
+                    )
 
         try:
             # we first need to collect the required parameters from all the classes along the parent path
@@ -107,7 +112,7 @@ class ParametrizedObject(object):
 class BaseComponent(ParametrizedObject):
     """
     Base class for mozaik model components.
-    
+
     Parameters
     ----------
     model : Model
@@ -121,12 +126,12 @@ class BaseComponent(ParametrizedObject):
 
 class SensoryInputComponent(BaseComponent):
     """
-    Abstract API of sensory input component. Each mozaik sensory input component should 
+    Abstract API of sensory input component. Each mozaik sensory input component should
     inherit from this class and implement its two abstrac methods.
-    
+
     See Also
     --------
-    mozaik.models.vision : the implementation of retinal input 
+    mozaik.models.vision : the implementation of retinal input
     """
 
     def process_input(self, input_space, stimulus_id, duration=None, offset=0):
@@ -137,7 +142,7 @@ class SensoryInputComponent(BaseComponent):
         objects that are connected to it and thus represent the interface
         between the input space component and the rest of the model.
 
-        The method should return the sensory input that has been effectivitly presented to 
+        The method should return the sensory input that has been effectivitly presented to
         the model, currently the format of it is not specified.
         """
         raise NotImplementedError

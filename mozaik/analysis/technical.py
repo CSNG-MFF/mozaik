@@ -37,7 +37,7 @@ class NeuronAnnotationsToPerNeuronValues(Analysis):
             keys = set()
 
             for n in range(0, len(anns[sheet])):
-                keys = keys.union(anns[sheet][n].keys())
+                keys = keys.union(list(anns[sheet][n].keys()))
 
             for k in keys:
                 # first check if the key is defined for all neurons

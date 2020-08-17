@@ -4,13 +4,13 @@ Making a release
 
 To make a release of Mozaik requires you to have permissions to upload Mozaik
 packages to the `Python Package Index`_ and the INCF Software Center, and to
-upload documentation to the neuralensemble.org server. 
+upload documentation to the neuralensemble.org server.
 
 When you think a release is ready, run through the following checklist one
 last time:
 
     * do all the tests pass? You should do this on at least two Linux systems -- one a very
-      recent version and one at least a year old. You should also do this with Python 2.6 and 2.7.
+      recent version and one at least a year old. You should also do this with Python 3.7.
     * do all the example scripts generate the correct output? Run the
     * does the documentation build without errors? You should then at least skim
       the generated HTML pages to check for obvious problems.

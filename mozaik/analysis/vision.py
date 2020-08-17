@@ -26,14 +26,14 @@ class ModulationRatio(Analysis):
     This analysis calculates the modulation ration (as the F1/F0) for all
     neurons in the data using all available responses recorded to the
     FullfieldDriftingSinusoidalGrating stimuli. This method also requires
-    that 'orientation preference' has already been calculated for all the 
+    that 'orientation preference' has already been calculated for all the
     neurons.
-    
+
     The `ModulationRatio` takes all responses recorded to the FullfieldDriftingSinusoidalGrating and
     calculates their PSTH.  Then it collapses this list of PSTHs into groups, each containing PSTH associated
-    with the same FullfieldDriftingSinusoidalGrating stimulus with the  exception of the orientation. 
-    For each such group it then goes through each recorded neuron and selects the closest 
-    presented orientation to the orientation peference of the given neuron, and using the PSTH associated 
+    with the same FullfieldDriftingSinusoidalGrating stimulus with the  exception of the orientation.
+    For each such group it then goes through each recorded neuron and selects the closest
+    presented orientation to the orientation peference of the given neuron, and using the PSTH associated
     with this selected orientation it calculates the modulation ratio for that neuron. This way for each
     group it will calculate modulation ratios for all recorded neurons, and will store them in datastore
     using the PerNeuronValue data structure.
@@ -87,7 +87,7 @@ class ModulationRatio(Analysis):
             ps = {}
             for s in st:
                 ps[MozaikParametrized.idd(s).orientation] = True
-            ps = ps.keys()
+            ps = list(ps.keys())
             print(ps)
             # now find the closest presented orientations
             closest_presented_orientation = []
@@ -105,7 +105,7 @@ class ModulationRatio(Analysis):
             # collapse along orientation - we will calculate MR for each
             # parameter combination other than orientation
             d = colapse_to_dictionary(psths, stids, "orientation")
-            for (st, vl) in d.items():
+            for (st, vl) in list(d.items()):
                 # here we will store the modulation ratios, one per each neuron
                 modulation_ratio = []
                 f0 = []
@@ -173,10 +173,10 @@ class ModulationRatio(Analysis):
                     )
                 )
 
-                import pylab
+                import matplotlib.pyplot as plt
 
-                pylab.figure()
-                pylab.hist(modulation_ratio)
+                plt.figure()
+                plt.hist(modulation_ratio)
 
     def _calculate_MR(self, signal, frequency):
         """
@@ -220,9 +220,9 @@ class Analog_F0andF1(Analysis):
 
       The data_store has to contain responses or AnalogSignalLists to the same stimulus type, and the stymulus type has to have
       <temporal_frequency> parameter which is used as the first harmonic frequency.
-      
+
       It stores them in PerNeuronValue datastructures (one for exc. one for inh. conductances, and one for each AnalogSignalList).
-      
+
       Notes
       -----
       Only neurons for which the corresponding signals were measured will be included in the PerNeuronValue data structures.
@@ -478,7 +478,7 @@ class Analog_F0andF1(Analysis):
 class LocalHomogeneityIndex(Analysis):
     """
     Calculates Local Homogeneity Index (LHI) for each neuron, of each PerNeuronValue that is present in the datastore, according to:
-    Nauhaus, I., Benucci, A., Carandini, M., & Ringach, D. (2008). Neuronal selectivity and local map structure in visual cortex. Neuron, 57(5), 673–679. 
+    Nauhaus, I., Benucci, A., Carandini, M., & Ringach, D. (2008). Neuronal selectivity and local map structure in visual cortex. Neuron, 57(5), 673–679.
     """
 
     required_parameters = ParameterSet({"sigma": float,})
@@ -537,7 +537,7 @@ class LocalHomogeneityIndex(Analysis):
 
 class SizeTuningAnalysis(Analysis):
     """
-      Calculates the size tuning properties   
+      Calculates the size tuning properties
       """
 
     required_parameters = ParameterSet(
@@ -572,7 +572,7 @@ class SizeTuningAnalysis(Analysis):
             self.st,
             "radius",
         )
-        for k in self.tc_dict.keys():
+        for k in list(self.tc_dict.keys()):
             crf_sizes = []
             supp_sizes = []
             sis = []
@@ -586,7 +586,7 @@ class SizeTuningAnalysis(Analysis):
                 values = numpy.array([a[i] for a in self.tc_dict[k][1]])
 
                 # sort them based on radiuses
-                rads, values = zip(*sorted(zip(rads, values)))
+                rads, values = list(zip(*sorted(zip(rads, values))))
 
                 max_response = numpy.max(values)
                 crf_index = numpy.argmax(values)
@@ -724,7 +724,7 @@ class OCTCTuningAnalysis(Analysis):
             self.st,
             "surround_orientation",
         )
-        for k in self.tc_dict.keys():
+        for k in list(self.tc_dict.keys()):
             sis = []
             surround_tuning = []
 

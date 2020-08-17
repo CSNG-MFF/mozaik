@@ -1,4 +1,4 @@
-import pylab
+import matplotlib.pyplot as plt
 import pickle
 
 
@@ -9,5 +9,5 @@ def visualize_retinal_cache(data_store, which):
 
     pos = data_store.get_neuron_postions()["X_ON"]
 
-    pylab.figure()
-    pylab.scatter(pos[0], pos[1], color=cached_stimulus[:, 0])
+    plt.figure()
+    plt.scatter(pos[0], pos[1], color=cached_stimulus[:, 0])

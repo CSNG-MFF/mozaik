@@ -1,6 +1,6 @@
 import numpy
 import mozaik
-import pylab
+import matplotlib.pyplot as plt
 from mozaik.visualization.plotting import *
 from mozaik.analysis.technical import NeuronAnnotationsToPerNeuronValues
 from mozaik.analysis.analysis import *
@@ -16,11 +16,11 @@ import sys
 
 def perform_analysis_and_visualization(data_store):
     if True:
-        
+
         analog_ids = param_filter_query(data_store,sheet_name="V1_Exc_L4").get_segments()[0].get_stored_esyn_ids()
         analog_ids_inh = param_filter_query(data_store,sheet_name="V1_Inh_L4").get_segments()[0].get_stored_esyn_ids()
 
-        #find neuron with preference closet to 0  
+        #find neuron with preference closet to 0
         NeuronAnnotationsToPerNeuronValues(data_store,ParameterSet({})).analyse()
         l4_exc_or = data_store.get_analysis_result(identifier='PerNeuronValue',value_name = 'LGNAfferentOrientation', sheet_name = 'V1_Exc_L4')
         l4_exc_phase = data_store.get_analysis_result(identifier='PerNeuronValue',value_name = 'LGNAfferentPhase', sheet_name = 'V1_Exc_L4')
@@ -39,10 +39,10 @@ def perform_analysis_and_visualization(data_store):
         print('index ' + str(l4_inh))
         print("Prefered phase of plotted inh neurons:")
         print(l4_exc_phase[0].get_value_by_id(l4_exc))
-    
+
         #dsv = param_filter_query(data_store,sheet_name='V1_Exc_L4')
         #TrialAveragedFiringRate(param_filter_query(data_store,sheet_name=['V1_Exc_L4','V1_Inh_L4'],st_name="FullfieldDriftingSinusoidalGrating"),ParameterSet({})).analyse()
-                    
-        dsv = param_filter_query(data_store,st_name=['InternalStimulus'])        
+
+        dsv = param_filter_query(data_store,st_name=['InternalStimulus'])
         #OverviewPlot(dsv,ParameterSet({'sheet_name' : 'V1_Exc_L4', 'neuron' : analog_ids[0], 'sheet_activity' : {},'spontaneous' : True}),fig_param={'dpi' : 100,'figsize': (28,12)},plot_file_name='SSExcAnalog.png').plot()
         RetinalInputMovie(dsv, ParameterSet({}), fig_param={'dpi' : 100,'figsize': (28,12)},plot_file_name='video').plot()

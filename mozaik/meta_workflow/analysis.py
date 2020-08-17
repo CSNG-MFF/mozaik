@@ -36,7 +36,7 @@ def load_fixed_parameter_set_parameter_search(
         len(set([tuple(set(comb.keys())) for comb in combinations])) == 1
     ), "The parameter search didn't occur over a fixed set of parameters"
 
-    parameters = combinations[0].keys()
+    parameters = list(combinations[0].keys())
 
     datastore = []
     number_of_unloadable_datastores = 0

@@ -18,7 +18,7 @@ logger = mozaik.getMozaikLogger()
 
 class Connector(BaseComponent):
     """
-    An abstract interface class for Connectors in mozaik. Each mozaik connector should derive from this class and implement 
+    An abstract interface class for Connectors in mozaik. Each mozaik connector should derive from this class and implement
     the _connect function. The usage is: create the instance of MozaikConnector and call connect() to realize the connections.
     """
 
@@ -97,16 +97,16 @@ class Connector(BaseComponent):
         xi = numpy.linspace(min(x), max(x), 100)
         yi = numpy.linspace(min(y), max(y), 100)
         zi = griddata(x, y, w, xi, yi)
-        # pylab.figure()
-        # pylab.imshow(zi)
-        # pylab.scatter(x,y,marker='o',c=w,s=50)
-        # pylab.xlim(-self.source.parameters.sx/2,self.source.parameters.sx/2)
-        # pylab.ylim(-self.source.parameters.sy/2,self.source.parameters.sy/2)
-        # pylab.colorbar()
-        # pylab.title('Connection field from %s to %s of neuron %d' % (self.source.name,
+        # plt.figure()
+        # plt.imshow(zi)
+        # plt.scatter(x,y,marker='o',c=w,s=50)
+        # plt.xlim(-self.source.parameters.sx/2,self.source.parameters.sx/2)
+        # plt.ylim(-self.source.parameters.sy/2,self.source.parameters.sy/2)
+        # plt.colorbar()
+        # plt.title('Connection field from %s to %s of neuron %d' % (self.source.name,
         #                                                             self.target.name,
         #                                                             index))
-        # pylab.colorbar()
+        # plt.colorbar()
 
     def store_connections(self, datastore):
         from mozaik.analysis.data_structures import Connections
@@ -135,7 +135,7 @@ class SpecificArborization(Connector):
 
     This connector cannot be parametrized directly via the parameter file
     because that does not support list of tuples.
-    
+
     This connector also gets rid of very weak synapses (below one-hundreth of the maximum synapse)
     """
 
@@ -171,11 +171,13 @@ class SpecificArborization(Connector):
         # This is due to native synapses models (which we currently use as the short term synaptic plasticity model)
         # do not apply the 1000 factor scaler as the pyNN synaptic models
         self.connection_matrix = self.connection_matrix * self.weight_scaler
-        self.connection_list = zip(
-            numpy.array(X).flatten(),
-            numpy.array(Y).flatten(),
-            self.connection_matrix.flatten(),
-            self.delay_matrix.flatten(),
+        self.connection_list = list(
+            zip(
+                numpy.array(X).flatten(),
+                numpy.array(Y).flatten(),
+                self.connection_matrix.flatten(),
+                self.delay_matrix.flatten(),
+            )
         )
         # get rid of very weak synapses
         z = numpy.max(self.connection_matrix.flatten())
@@ -249,7 +251,7 @@ class SpecificProbabilisticArborization(Connector):
                         wf * co[k] / self.parameters.num_samples,
                         delays[k][i],
                     )
-                    for k in co.keys()
+                    for k in list(co.keys())
                 ]
             )
 

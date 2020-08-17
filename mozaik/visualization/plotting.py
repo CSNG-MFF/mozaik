@@ -38,7 +38,7 @@ its own (i.e. becomes the highest-level), and that would otherwise prevent
 flexible use in nesting via the subplot.
 """
 
-import pylab
+import matplotlib.pyplot as plt
 import numpy
 import time
 import quantities as pq
@@ -183,7 +183,7 @@ class Plotting(ParametrizedObject):
         t1 = time.time()
         if params == None:
             params = {}
-        self.fig = pylab.figure(facecolor="w", **self.fig_param)
+        self.fig = plt.figure(facecolor="w", **self.fig_param)
         gs = gridspec.GridSpec(1, 1)
         gs.update(left=0.05, right=0.95, top=0.95, bottom=0.05)
         self._handle_parameters_and_execute_plots({}, params, gs[0, 0])
@@ -216,7 +216,7 @@ class Plotting(ParametrizedObject):
                 )
             else:
                 # save the analysis plot
-                pylab.savefig(
+                plt.savefig(
                     Global.root_directory + self.plot_file_name, transparent=True
                 )
 
@@ -362,7 +362,7 @@ class PlotTuningCurve(Plotting):
                 if self.pnvs[-1][0].value_units == mozaik.tools.units.uS:
                     a = [[d * 1000.0 for d in c] for c in a]
 
-                par, val = zip(*sorted(zip(b, numpy.array(a))))
+                par, val = list(zip(*sorted(zip(b, numpy.array(a)))))
                 dic[k] = (par, numpy.array(val))
             self.tc_dict.append(dic)
 
@@ -371,7 +371,7 @@ class PlotTuningCurve(Plotting):
                 # lets find the highest average value for the neuron
                 self.max_mean_response_indexes.append(
                     numpy.argmax(
-                        numpy.sum([a[1] for a in dic.values()], axis=0), axis=0
+                        numpy.sum([a[1] for a in list(dic.values())], axis=0), axis=0
                     )
                 )
 
@@ -467,7 +467,7 @@ class PlotTuningCurve(Plotting):
                 else:
                     val = val[:, idx]
 
-                par, val = zip(*sorted(zip(numpy.array(par), val)))
+                par, val = list(zip(*sorted(zip(numpy.array(par), val))))
 
                 logger.info("PLOT TUNING CURVE " + str(period) + " " + str(pi))
                 logger.info(
@@ -481,7 +481,7 @@ class PlotTuningCurve(Plotting):
                     and self.parameters.centered == False
                 ):
                     par = [(p - pi if p > pi / 2 else p) for p in par]
-                    par, val = zip(*sorted(zip(numpy.array(par), val)))
+                    par, val = list(zip(*sorted(zip(numpy.array(par), val))))
                     par = list(par)
                     val = list(val)
                     par.insert(0, -pi / 2)
@@ -495,7 +495,7 @@ class PlotTuningCurve(Plotting):
                     and self.parameters.centered == False
                 ):
                     par = [(p - 2 * pi if p > pi / 2 else p) for p in par]
-                    par, val = zip(*sorted(zip(numpy.array(par), val)))
+                    par, val = list(zip(*sorted(zip(numpy.array(par), val))))
                     par = list(par)
                     val = list(val)
                     par.insert(0, -pi)
@@ -543,7 +543,7 @@ class PlotTuningCurve(Plotting):
                     if (
                         len(
                             varying_parameters(
-                                [MozaikParametrized.idd(e) for e in dic.keys()]
+                                [MozaikParametrized.idd(e) for e in list(dic.keys())]
                             )
                         )
                         > 0
@@ -553,7 +553,7 @@ class PlotTuningCurve(Plotting):
                         l = pnv[0].value_name
 
                 for p in varying_parameters(
-                    [MozaikParametrized.idd(e) for e in dic.keys()]
+                    [MozaikParametrized.idd(e) for e in list(dic.keys())]
                 ):
                     l = (
                         l
@@ -1081,7 +1081,7 @@ class OverviewPlot(Plotting):
     def _ploter(self, dsv, subplotspec):
         offset = 0
         d = []
-        if len(self.parameters.sheet_activity.keys()) != 0:
+        if len(list(self.parameters.sheet_activity.keys())) != 0:
             gs = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=subplotspec)
             self.parameters.sheet_activity["sheet_name"] = self.parameters.sheet_name
             d.append(
@@ -1427,7 +1427,7 @@ class RetinalInputMovie(Plotting):
         self.length = None
         # currently there is no way to check whether the sensory input is retinal
         self.retinal_input = datastore.get_sensory_stimulus()
-        self.st = datastore.sensory_stimulus.keys()
+        self.st = list(datastore.sensory_stimulus.keys())
 
         # remove internal stimuli from the list
         self.retinal_input = [
@@ -1450,7 +1450,7 @@ class RetinalInputMovie(Plotting):
         stimulus = MozaikParametrized.idd(self.st[idx])
         title = ""
         title = title + stimulus.name + "\n"
-        for pn, pv in stimulus.getParams().items():
+        for pn, pv in list(stimulus.getParams().items()):
             title = title + pn + " : " + str(pv) + "\n"
         return [
             (
@@ -2432,7 +2432,7 @@ class PlotTemporalTuningCurve(Plotting):
                 if self.asls[-1][0].y_axis_units == mozaik.tools.units.uS:
                     a = [[d * 1000.0 for d in c] for c in a]
 
-                par, val = zip(*sorted(zip(b, numpy.array(a))))
+                par, val = list(zip(*sorted(zip(b, numpy.array(a)))))
                 dic[k] = (par, numpy.array(val))
             self.tc_dict.append(dic)
 
@@ -2497,12 +2497,12 @@ class PlotTemporalTuningCurve(Plotting):
                 else:
                     val = val[:, idx]
 
-                par, val = zip(*sorted(zip(numpy.array(par), val)))
+                par, val = list(zip(*sorted(zip(numpy.array(par), val))))
 
                 # if we have a period of pi or 2*pi
                 if period == pi and self.centered_response_indexes == None:
                     par = [(p - pi if p > pi / 2 else p) for p in par]
-                    par, val = zip(*sorted(zip(numpy.array(par), val)))
+                    par, val = list(zip(*sorted(zip(numpy.array(par), val))))
                     par = list(par)
                     val = list(val)
                     par.insert(0, -pi / 2)
@@ -2512,7 +2512,7 @@ class PlotTemporalTuningCurve(Plotting):
                         error.insert(0, error[-1])
                 elif period == 2 * pi and self.centered_response_indexes == None:
                     par = [(p - 2 * pi if p > pi / 2 else p) for p in par]
-                    par, val = zip(*sorted(zip(numpy.array(par), val)))
+                    par, val = list(zip(*sorted(zip(numpy.array(par), val))))
                     par = list(par)
                     val = list(val)
                     par.insert(0, -pi)

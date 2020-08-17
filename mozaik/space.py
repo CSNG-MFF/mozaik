@@ -23,18 +23,18 @@ def xy2ij(coordinates):
 class InputSpace(ParametrizedObject):
     """
     A class to structure and unify operations taking place in the respective sensory space, such as stimulus presentation.
-    
+
     The basic idea of the InputSpace API is following:
-    
+
     The InputSpace assumes there is a scene, and a set of stimuli in this scene (visual objects, sounds, smells etc.).
     These objects can be removed or added to the scene. After each interval lasting  `update_interval` miliseconds all the stimuli in the scene
     are sequentially updated (following some rules of overlapping, this is left for the specific implementation of the input space).
-    After that update the scene is ready to be pased to the associated input sheet of the given model, which will use it to 
+    After that update the scene is ready to be pased to the associated input sheet of the given model, which will use it to
     generate the responses of neurons in the input sheet.
-    
+
     Other parameters
     ----------------
-    
+
     update_interval : float (ms)
                     How often does the input space update.
     """
@@ -61,7 +61,7 @@ class InputSpace(ParametrizedObject):
         Reset each Object in the scene to its initial state.
         """
         self.frame_number = 0
-        for obj in self.content.values():
+        for obj in list(self.content.values()):
             obj.reset()
 
     def clear(self):
@@ -77,7 +77,7 @@ class InputSpace(ParametrizedObject):
         Tell each Object in the scene to update itself.
         Returns the current time within the scene.
         """
-        for obj in self.content.values():
+        for obj in list(self.content.values()):
             obj.update()
         self.frame_number += 1
 
@@ -88,7 +88,7 @@ class InputSpace(ParametrizedObject):
         The maximum duration of any of the stimuli in the inpust space.
         """
         duration = 0
-        for obj in self.content.values():
+        for obj in list(self.content.values()):
             duration = max(duration, self.update_interval * obj.n_frames)
         return duration
 
@@ -117,21 +117,21 @@ class VisualSpace(InputSpace):
     """
     A class to structure and simplify operations taking place in visual
     space, such as stimulus presentation.
-    
+
     In VisualSpace the stimuli are sequentially drawn into the scene in the order in which
     thay have been added to the scene (thus later stimuli will draw over earlier added ones).
     Stimuli can specify areas in which they are transparent by using the `TRANSPARENT` value.
-    
-    The key operation of VisualSpace is the :func:`.view` function that recieves a region and resolution 
-    and returns rendered scene as a 2D array, within that region and down-sampled to the specified 
+
+    The key operation of VisualSpace is the :func:`.view` function that recieves a region and resolution
+    and returns rendered scene as a 2D array, within that region and down-sampled to the specified
     resolution. This allows for implementation of a visual system that changes the viewed area of the scene.
-    The :func:`.view` function itself makes sequential calls to the :func:`mozaik.visual_stimulus.VisualStimulus.display` 
-    function passing the region and pixel size, which have to render themselves within the region and 
+    The :func:`.view` function itself makes sequential calls to the :func:`mozaik.visual_stimulus.VisualStimulus.display`
+    function passing the region and pixel size, which have to render themselves within the region and
     return 2D array of luminance values. :func:`.view` then assambles the final scene rendering from this data.
-    
+
     Notes
     -----
-    
+
     For now, we deal only with two-dimensions, i.e. everything projected onto a
     plane. We ignore distortions in going from a flat plane to the curved retina.
     Could consider using matplotlib.transforms for some of this.
@@ -154,7 +154,7 @@ class VisualSpace(InputSpace):
     def view(self, region, pixel_size):
         """
         Show the scene within a specific region.
-        
+
         Parameters
         ----------
         region : VisualRegion
@@ -164,21 +164,25 @@ class VisualSpace(InputSpace):
 
         Returns
         -------
-                array : nd_array 
-                       A numpy 2D array containing luminance values, corresponding to 
-                       to the visual scene in the visual region specified in `region` 
+                array : nd_array
+                       A numpy 2D array containing luminance values, corresponding to
+                       to the visual scene in the visual region specified in `region`
                        downsample such that one pixel has `pixel_size` degree.
         """
         # Let's make it more efficient if there is only one object in the scene that is not transparrent (which is often the case):
-        o = self.content.values()[0]
-        if len(self.content.values()) == 1 and not o.transparent and o.is_visible:
-            return o.display(region, pixel_size)
+        o = list(self.content.values())
+        if (
+            len(list(self.content.values())) == 1
+            and not o[0].transparent
+            and o[0].is_visible
+        ):
+            return o[0].display(region, pixel_size)
 
         size_in_pixels = numpy.ceil(
             xy2ij((region.size_x, region.size_y)) / float(pixel_size)
         ).astype(int)
         scene = TRANSPARENT * numpy.ones(size_in_pixels)
-        for obj in self.content.values():
+        for obj in o:
             if obj.is_visible:
                 if region.overlaps(obj.region):
                     obj_view = obj.display(region, pixel_size)
@@ -203,7 +207,7 @@ class VisualSpace(InputSpace):
         """
         Returns the maximum luminance in the scene.
         """
-        return max(obj.max_luminance for obj in self.content.values())
+        return max(obj.max_luminance for obj in list(self.content.values()))
 
     def describe(self):
         return (
@@ -215,20 +219,20 @@ class VisualSpace(InputSpace):
 class VisualRegion(object):
     """
     A rectangular region of visual space.
-    
+
     Parameters
     ----------
     location_x : float (degrees)
-               The x coordinate of the center of the region in the visual space. 
-            
+               The x coordinate of the center of the region in the visual space.
+
     location_y : float (degrees)
-               The y coordinate of the center of the region in the visual space. 
+               The y coordinate of the center of the region in the visual space.
 
     size_x : float (degrees)
-               The x size of the region in the visual space. 
+               The x size of the region in the visual space.
 
     size_y : float (degrees)
-               The y size of the region in the visual space. 
+               The y size of the region in the visual space.
     """
 
     def __init__(self, location_x, location_y, size_x, size_y):
@@ -259,6 +263,9 @@ class VisualRegion(object):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    def __hash__(self):
+        return hash((self.location_x, self.location_y, self.size_x, self.size_y))
 
     def overlaps(self, another_region):
         """

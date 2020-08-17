@@ -127,7 +127,7 @@ class MozaikExtendedParameterSet(ParameterSet):
         def walk(d, label):
             # Iterate through the dictionary `d`, replacing `dict`s by
             # `ParameterSet` objects.
-            for k, v in d.items():
+            for k, v in list(d.items()):
                 ParameterSet.check_validity(k)
                 if isinstance(v, ParameterSet):
                     d[k] = v
@@ -140,23 +140,18 @@ class MozaikExtendedParameterSet(ParameterSet):
         self._url = None
         if isinstance(initialiser, str):  # url or str
             try:
-                # TODO: can't handle cases where authentication is required
-                # should be rewritten using urllib2
-                # scheme, netloc, path, \
-                #        parameters, query, fragment = urlparse(initialiser)
                 f = (
                     open(initialiser, "r")
                     if Path(initialiser).exists()
                     else urllib.request.urlopen(initialiser)
                 )
                 pstr = f.read()
+                f.close()
                 self._url = initialiser
 
             except IOError:
                 pstr = initialiser
                 self._url = None
-            else:
-                f.close()
 
             # is it a yaml url?
             if self._url:
@@ -181,7 +176,7 @@ class MozaikExtendedParameterSet(ParameterSet):
         # copying its contents into the current instance, and replacing dicts by
         # ParameterSet objects.
         if isinstance(initialiser, dict):
-            for k, v in initialiser.items():
+            for k, v in list(initialiser.items()):
                 ParameterSet.check_validity(k)
                 if isinstance(v, ParameterSet):
                     self[k] = v

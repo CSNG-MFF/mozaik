@@ -50,7 +50,7 @@ class Analysis(ParametrizedObject):
 
     Parameters
     ------------
-    
+
     datastore : DataStoreView
                 The datastore from which to pull data.
     parameters : ParameterSet
@@ -89,9 +89,9 @@ class Analysis(ParametrizedObject):
 
 class TrialAveragedFiringRate(Analysis):
     """
-    This analysis takes each recording in DSV that has been done in response to stimulus type 'stimulus_type' 
-    and calculates the average (over trials) number of spikes. For each set of equal recordings (except trial) it creates one PerNeuronValue 
-    `AnalysisDataStructure` instance containing the trial averaged firing rate per each recorded 
+    This analysis takes each recording in DSV that has been done in response to stimulus type 'stimulus_type'
+    and calculates the average (over trials) number of spikes. For each set of equal recordings (except trial) it creates one PerNeuronValue
+    `AnalysisDataStructure` instance containing the trial averaged firing rate per each recorded
     neuron.
     """
 
@@ -148,7 +148,7 @@ class TrialAveragedFiringRate(Analysis):
 class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
     """
     Calculates a preference and selectvitiy tuning of a periodic variable via vector average method.
-    
+
     This analysis takes from the DSV all `PerNeuronValues`.
     All PerNeuronValues have to belong to stimuli of the same type and
     contain the same type of values (i.e. have the same `value_name`).
@@ -157,9 +157,9 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
     `PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage` creates a
     PerNeuronValue which corresponsd to the vector average through the
     periodic domain of `parameter_name`.
-    
+
     Other parameters
-    ---------------- 
+    ----------------
     parameter_name : str
                    The name of the parameter through which to calculate the VectorAverage
     """
@@ -195,7 +195,7 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
                 st,
                 self.parameters.parameter_name,
             )
-            for k in d.keys():
+            for k in list(d.keys()):
                 keys, values = d[k]
                 y = []
                 x = []
@@ -245,16 +245,16 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
 class GSTA(Analysis):
     """
     Computes conductance spike triggered average, it uses all recordings present in the DSV for the given neruon.
-    
+
     Other parameters
-    ---------------- 
+    ----------------
     length : float (ms)
            how long before and after spike to compute the GSTA
-           it will be rounded *down* to fit the sampling frequency 
-           
+           it will be rounded *down* to fit the sampling frequency
+
     neurons : list
             the list of neuron ids for which to compute the GSTA
-           
+
     Notes
     -----
 
@@ -335,13 +335,13 @@ class TrialToTrialCrossCorrelationOfAnalogSignalList(Analysis):
     """
     Computes the cross-correlation between identical AnalogSignalList ADSs associated with different trials.
 
-    Takes all the responses in the datastore, and for each group of AnalogSignalList ADSs that is identical except the 
-    trial number it will compute the cross-correlation between the analog signals corresponding to the same neurons. For each such 
-    group it will create and add an AnalogSignalList instances into the datastore containing the calculated cross-correlation 
+    Takes all the responses in the datastore, and for each group of AnalogSignalList ADSs that is identical except the
+    trial number it will compute the cross-correlation between the analog signals corresponding to the same neurons. For each such
+    group it will create and add an AnalogSignalList instances into the datastore containing the calculated cross-correlation
     vector for each neuron in `required_parameters.neurons`
-    
+
     Other parameters
-    ---------------- 
+    ----------------
     bin_length : float (ms)
                the size of bin to construct the PSTH from
     neurons: list
@@ -443,7 +443,7 @@ class TrialToTrialCrossCorrelationOfAnalogSignalList(Analysis):
 
 class TrialAveragedCorrectedCrossCorrelation(Analysis):
     """
-      It computes the cross-correlation between different AnalogSignalList but shifted across trials, 
+      It computes the cross-correlation between different AnalogSignalList but shifted across trials,
       in order to avoid covariations introduced by simultaneous stimulation.
 
       It takes all the responses in the datastore and for each AnalogSignalList ADSs listed in 'neurons' ids it will:
@@ -452,10 +452,10 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
       - subtract cross-trial and raw cross-correlation vectors
 
       For each couple (target & reference) it will create an AnalogSignalList containing the calculated cross-correlation vector.
-      
+
       Other parameters
-      ---------------- 
-      bins : int 
+      ----------------
+      bins : int
                   The number of bins around the 0 point
       bin_length : float (ms)
                   The bin length of the cross-correlation
@@ -498,11 +498,13 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
             print("    higher extreme:", higher_range)
             # Get sheet indexes from ids of recorded neurons
             # print("neuron ids:",self.parameters.neurons)
-            rec_idd_idx = zip(
-                self.parameters.neurons,
-                dsv.get_sheet_indexes(
-                    sheet_name=sheet, neuron_ids=self.parameters.neurons
-                ),
+            rec_idd_idx = list(
+                zip(
+                    self.parameters.neurons,
+                    dsv.get_sheet_indexes(
+                        sheet_name=sheet, neuron_ids=self.parameters.neurons
+                    ),
+                )
             )
             # print("neuron indexes:",rec_idd_idx)
             # get positions in the sheet of the recorded neurons
@@ -579,7 +581,7 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
             # raw_xcorr will have keys labeled after trial number, containing all combinations with no repetition (and considering that cross-correlation is simmetric)
             # each raw_xcorr analogsignal will have an annotation 'xcorr_ids' with the list of target and source of the xcorr
             raw_xcorr = {}
-            for trial in dsvs_spiketrains.keys():
+            for trial in list(dsvs_spiketrains.keys()):
                 xcorr = []  # local storage
                 for ref in dsvs_spiketrains[trial]:
                     for trg in dsvs_spiketrains[trial]:
@@ -615,10 +617,10 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
             # for each raw_xcorr analogsignal take the reference and change the target to the same source_id but different trial
             shift_xcorr = {}
             # the two dictionaries in the end must be identical by indexes in order to do a one-by-one subtraction
-            for trial in raw_xcorr.keys():
+            for trial in list(raw_xcorr.keys()):
                 xcorr = []  # local storage
                 # loop over raw_xcorr[trial] source_ids and anothertrial same source_ids
-                anothertrial = (trial + 1) % len(raw_xcorr.keys())
+                anothertrial = (trial + 1) % len(list(raw_xcorr.keys()))
                 # print(trial, anothertrial)
                 for rcorr in raw_xcorr[trial]:
                     # compute the xcorr if the references and targets of spiketrains of different trials corresponds to those of the raw_xcorr
@@ -661,28 +663,28 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
                     [
                         xcorr
                         for xcorr in shift_xcorr[trial]
-                        for trial in shift_xcorr.keys()
+                        for trial in list(shift_xcorr.keys())
                     ]
-                ).division_by_num(len(shift_xcorr.keys()))
+                ).division_by_num(len(list(shift_xcorr.keys())))
             )
 
     def cross_correlation(self, reference, target, bins, bin_length):
         """
           The function returns the cross-correlation of the spiketrains with bin length bin_length.
-          
+
           Parameters
           ----------
           reference, target : SpikeTrains
                      Reference and target spike trains. They are assumed to start and end at the same time.
 
-          bin_length : float (ms) 
+          bin_length : float (ms)
                      Bin length.
 
           Returns
           -------
           xcorr : AnalogSignalList
-                 The cross correlation of each spiketrain with each other (without auto-correlation). 
-          
+                 The cross correlation of each spiketrain with each other (without auto-correlation).
+
           Note
           ----
           The spiketrains are assumed to start and stop at the same time!
@@ -708,24 +710,24 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
 
 class TrialVariability(Analysis):
     """
-      For each neuron it calculates the trial-to-trial variability of Vm or conductance (depending on parameters) for all recording in the datastore, 
+      For each neuron it calculates the trial-to-trial variability of Vm or conductance (depending on parameters) for all recording in the datastore,
       and for all AnalogSignalList ADS in the datastore.
-      
+
       For the AnalogSignalList we expect only identical AnalogSignalList with the exception of stimulus in the datastore view.
-      
+
       It creates a AnalogSignalList list for each recording or AnalogSignalList (except trials).
-      
+
       Other parameters
-      ---------------- 
+      ----------------
       vm : bool
          calculate variability for Vm?
-      
+
       cond_exc : bool
                calculate variability for excitatory conductance?
-      
+
       cond_inh : bool
                calculate variability for inhibitory conductance?
-         
+
 
       """
 
@@ -938,20 +940,20 @@ class TrialMean(Analysis):
       In addition it calculated the trial average for the follwoing analysis data_structures: AnalogSignalList, PerNeuronValue, PerNeuronPairValue
 
       For the ADS we expect only identical ADS with the exception of stimulus in the datastore view.
-      
+
       It creates a AnalogSignalList list for each recording or AnalogSignalList (except trials).
-      
+
       Other parameters
-      ---------------- 
+      ----------------
       vm : bool
          calculate variability for Vm?
-      
+
       cond_exc : bool
                calculate variability for excitatory conductance?
-      
+
       cond_inh : bool
                calculate variability for inhibitory conductance?
-         
+
 
       """
 
@@ -1192,7 +1194,7 @@ class TrialMean(Analysis):
 class GaussianTuningCurveFit(Analysis):
     """
       Fits each tuning curve with a gaussian.
-      
+
       It takes a dsv containing some PerNeuronValues.
       All PerNeuronValues have to belong to stimuli of the same type and
       contain the same type of values (i.e. have the same `value_name`).
@@ -1200,17 +1202,17 @@ class GaussianTuningCurveFit(Analysis):
       For each combination of parameters of the stimuli other than `parameter_name`
       `GaussianTuningCurveFit` fits a gaussian tuning curve to the values in the PerNeuronValues
       that span the parameter values of the `parameter_name` stimulus parameter.
-      
-      It stores the parameters of the fitted Gaussian in a PerNeuronValue - for each combination of parameters of the stimulus associated 
-      with the supplied PerNeuronValue with the exception of the stimulus parameter `parameter_name`. For each combination it stored 
-      5 PerNeuronValue data structures, containing the calculated selectivity, preference, half-width at half-height (HWHH), maximum ('scale' of the gaussian) and 
+
+      It stores the parameters of the fitted Gaussian in a PerNeuronValue - for each combination of parameters of the stimulus associated
+      with the supplied PerNeuronValue with the exception of the stimulus parameter `parameter_name`. For each combination it stored
+      5 PerNeuronValue data structures, containing the calculated selectivity, preference, half-width at half-height (HWHH), maximum ('scale' of the gaussian) and
       baseline (the constant offset).
-    
+
       Other parameters
-      ------------------- 
+      -------------------
       parameter_name : str
                      The stimulus parameter name through which to fit the tuning curve.
-    
+
       """
 
     required_parameters = ParameterSet(
@@ -1244,7 +1246,7 @@ class GaussianTuningCurveFit(Analysis):
                 self.st,
                 self.parameters.parameter_name,
             )
-            for k in self.tc_dict.keys():
+            for k in list(self.tc_dict.keys()):
                 print(k)
                 if len(self.tc_dict[k][0]) < 4:
                     logger.info(
@@ -1423,13 +1425,13 @@ class GaussianTuningCurveFit(Analysis):
             #    p1=p0
 
         if False:
-            import pylab
+            import matplotlib.pyplot as plt
 
-            pylab.figure()
-            pylab.plot(X, fitfunc(p1, X), "x")
-            pylab.hold("on")
-            pylab.plot(X, Y, "o")
-            pylab.title(
+            plt.figure()
+            plt.plot(X, fitfunc(p1, X), "x")
+            plt.hold("on")
+            plt.plot(X, Y, "o")
+            plt.title(
                 str(numpy.linalg.norm(fitfunc(p1, X) - Y) / numpy.linalg.norm(Y))
                 + "  "
                 + str(numpy.max(Y))
@@ -1444,12 +1446,12 @@ class PSTH(Analysis):
     """
       For each recording in the datastore view it creates an AnalogSignalList containing the PSTH of the neuron
       using the bin length `required_parameters.bin_length`.
-      
+
       Other parameters
-      ------------------- 
+      -------------------
       bin_length : float
                  The bin length of the PSTH
-    
+
       """
 
     required_parameters = ParameterSet(
@@ -1490,12 +1492,12 @@ class SpikeCount(Analysis):
       For each recording in the datastore view it creates an AnalogSignalList containing the spike count per bin of the neuron
       using the bin length `required_parameters.bin_length`. This is the same as PSTH, except in PSTH the spike counts are re-normalized
       to form instantaneous firing rate.
-      
+
       Other parameters
-      ------------------- 
+      -------------------
       bin_length : float
                  The bin length of the spike count
-    
+
       """
 
     required_parameters = ParameterSet(
@@ -1537,18 +1539,18 @@ class TemporalBinAverage(Analysis):
       For each recording or AnalogSingalList ADS `with x_axis_name`='time' in the datastore `TemporalBinAverage` creates a new
       AnalogSingalList, containing a down-sampled version of the signal (vm, conductances or the AnalogSingalList), such that it will
       bin the time axis with bin length `required_parameters.bin_length` and make average for each bin.
-      
+
       Other parameters
-      ------------------- 
+      -------------------
       bin_length : float
                  The bin length of the PSTH
-      
+
       vm : bool
          calculate TemporalBinAverage for Vm?
-      
+
       cond_exc : bool
                calculate TemporalBinAverage for excitatory conductance?
-      
+
       cond_inh : bool
                calculate TemporalBinAverage for inhibitory conductance?
       """
@@ -1650,14 +1652,14 @@ class TemporalBinAverage(Analysis):
 
 class ActionPotentialRemoval(Analysis):
     """
-      For each recording in the datastore view it creates an AnalogSignalList containing the VMs with 
-      the spikes removed and sends it to the datastore. 
-      
+      For each recording in the datastore view it creates an AnalogSignalList containing the VMs with
+      the spikes removed and sends it to the datastore.
+
       Other parameters
-      ------------------- 
+      -------------------
       window_length : float (ms)
                     The length of the window starting at a spike time in which the Vm is replaced with linear interpolation.
-      
+
       Notes
       -----
       Vm, in the window starting at each spike time, and lasting the window_length is removed and replaced by linear
@@ -1740,11 +1742,11 @@ class ActionPotentialRemoval(Analysis):
 class Irregularity(Analysis):
     """
       Irregularity as defined in:
-      Kumar, A., Schrader, S., Aertsen, A., & Rotter, S. (2008). The high-conductance state of cortical networks. Neural computation, 20(1), 1-43. 
+      Kumar, A., Schrader, S., Aertsen, A., & Rotter, S. (2008). The high-conductance state of cortical networks. Neural computation, 20(1), 1-43.
       It is the square of inter spike interval coefficient of variation.
-      
+
       It creates on `PerNeuronValue` ADS per each recording in the DSV.
-      
+
       Notes
       -----
       It is not possible to compute CV for neurons with no spikes. Therefore we exclude such neurons from the analysis.
@@ -1784,10 +1786,10 @@ class NeuronToNeuronAnalogSignalCorrelations(Analysis):
     """
       Calculates the pairwise correlation of AnalogSignal object for each pair of neurons.
       It creates one PerNeuronPairValue for each AnalogSignalList ADS present in the DSV.
-      
+
       Parameters
       ----------
-      convert_nan_to_zero : bool,  
+      convert_nan_to_zero : bool,
                           If true nan values in correlation coefficients which can result from non-varying varialbes will be turned to zeros.
       """
 
@@ -1825,9 +1827,9 @@ class NeuronToNeuronAnalogSignalCorrelations(Analysis):
 class PopulationMeanAndVar(Analysis):
     """
       Calculates the mean value accross population of a quantity. Currently it can process PerNeuronValues , PerNeuronPairValue, and AnalogSignalList ADS.
-      
+
       For periodic variables, the mean is correctly handled, but variance is not computed.
-      
+
       This list is likely to grow in future.
       """
 
@@ -1943,9 +1945,9 @@ class PopulationMedian(Analysis):
 
 class Analog_MeanSTDAndFanoFactor(Analysis):
     """
-      Calculates the mean, standard deviation and fano-factor of vm and conductances for each neuron, and averages them over trials. 
+      Calculates the mean, standard deviation and fano-factor of vm and conductances for each neuron, and averages them over trials.
       It stores them in PerNeuronValue datastructures (one for exc. one for inh. conductances and one for vm).
-      
+
       Notes
       -----
       Only neurons for which the corresponding signals were measured will be included in the PerNeuronValue data structures.
@@ -2161,9 +2163,9 @@ class Analog_MeanSTDAndFanoFactor(Analysis):
 
 class AnalogSignal_PerNeuronMeanVar(Analysis):
     """
-      Calculates the mean, and variance of AnalogSignal for each neuron. 
+      Calculates the mean, and variance of AnalogSignal for each neuron.
       It stores them in PerNeuronValue datastructures, one for mean one for variance.
-      
+
       Notes
       -----
       Only neurons for which the AnalogSignal exists were measured will be included in the PerNeuronValue data structures.
@@ -2210,7 +2212,7 @@ class TrialAveragedVarianceAndVarianceRatioOfConductances(Analysis):
     """
       Calculates the variance of the excitatory and inhibitory conductances and their ratios, and averages across trials, for all neurons and for all recordings in the datastore.
       Also the ratio of the means is calculated.
-      
+
       Notes
       -----
       * Only neurons for which the corresponding signals were measured will be included in the PerNeuronValue data structures.
@@ -2337,7 +2339,7 @@ class TrialAveragedVarianceAndVarianceRatioOfConductances(Analysis):
 class CrossCorrelationOfExcitatoryAndInhibitoryConductances(Analysis):
     """
       Calculates the cross-correlation between excitatory and inhibitory conductance of each neuron, averaged over the trials of the stimulus.
-      
+
       Notes
       -----
       * Only neurons for which the corresponding signals were measured will be included.
@@ -2453,10 +2455,10 @@ class AnalogSignal_PerNeuronBetweenSignalCorrelation(Analysis):
                     from scipy.signal import savgol_filter
 
                     if i == 13:
-                        import pylab
+                        import matplotlib.pyplot as plt
 
-                        pylab.figure()
-                        pylab.plot(
+                        plt.figure()
+                        plt.plot(
                             savgol_filter(a1.magnitude.flatten()[100:], 501, 2),
                             "b",
                             savgol_filter(
@@ -2464,8 +2466,8 @@ class AnalogSignal_PerNeuronBetweenSignalCorrelation(Analysis):
                             ),
                             "r",
                         )
-                        # pylab.title(str(numpy.corrcoef([savgol_filter(a1.magnitude.flatten()[100:],151,2),savgol_filter(a2.rescale(a1.units).magnitude.flatten()[100:],151,2)])))
-                        pylab.savefig("smoothed.eps")
+                        # plt.title(str(numpy.corrcoef([savgol_filter(a1.magnitude.flatten()[100:],151,2),savgol_filter(a2.rescale(a1.units).magnitude.flatten()[100:],151,2)])))
+                        plt.savefig("smoothed.eps")
 
                     vs.append(
                         numpy.corrcoef(
@@ -2502,8 +2504,8 @@ class AnalogSignal_PerNeuronBetweenSignalCorrelation(Analysis):
 class TrialAveragedSparseness(Analysis):
     """
     Sparseness measure for one-sided distributions
-    
-    Activity ratio is computed, it has a maximum value of 1.0 when each stimulus or frame receives equal numbers of spikes, 
+
+    Activity ratio is computed, it has a maximum value of 1.0 when each stimulus or frame receives equal numbers of spikes,
     and is near zero when one stimulus from the set of stimuli, or one frame, contains all the spikes (maximum sparsity).
     Hence is giving the tuning of the neuron for a specific stimulus.
 
@@ -2671,14 +2673,14 @@ class OperationPNVfromPNVS(Analysis):
 
 class TrialToTrialFanoFactorOfAnalogSignal(Analysis):
     """
-      This is a generalization of the trial-to-trial factor analysis done in 
+      This is a generalization of the trial-to-trial factor analysis done in
       Baudot, P., Levy, M., Marre, O., Monier, C., Pananceau, M., & FrÃ©gnac, Y. (2013). Animation of natural scene by virtual eye-movements evokes high precision and low noise in V1 neurons. Frontiers in neural circuits, 7(December), 206. doi:10.3389/fncir.2013.00206
-      
-      Specifically this method takes multiple trials of given AnalogSignal and calculates the variance and mean at each time point. Then it calculates Fano Factor as the 
+
+      Specifically this method takes multiple trials of given AnalogSignal and calculates the variance and mean at each time point. Then it calculates Fano Factor as the
       slope of the regression line fitting the scatter polot between the corresponding means and variances (it calculates this as a cov(mean,variance) / var(mean)).
-      
+
       For each set of a given analog signal over trials it will add a new PerNeuronValue ADS containing the FF values into the datastore.
-      
+
       Notes
       -----
       If this is run over data returned by PSTH analysis it should give equivalent results for Baudot et al. 2013.
@@ -2754,27 +2756,27 @@ class TrialToTrialFanoFactorOfAnalogSignal(Analysis):
 
 class CircularVarianceOfTuningCurve(Analysis):
     """
-      Calculates circular variance (see for example [1] for defintion) of each tuning curve present in DSV. 
-      
+      Calculates circular variance (see for example [1] for defintion) of each tuning curve present in DSV.
+
       It takes a dsv containing some PerNeuronValues.
       All PerNeuronValues have to belong to stimuli of the same type and
       contain the same type of values (i.e. have the same `value_name`).
 
       For each combination of parameters of the stimuli other than `parameter_name`
       `CircularVarianceTuningCurve` it calculates the circular variance through the dimension defined by `parameter_name`.
-      The `parameter_name` needs to be associated with units with periodic value. The period of the value will be mapped onto 
+      The `parameter_name` needs to be associated with units with periodic value. The period of the value will be mapped onto
       the (0,2pi) interval over which circular variance is calculated in [1].
-      
-      It stores the circular variance in a PerNeuronValue - for each combination of parameters of the stimulus associated 
-      with the supplied PerNeuronValue with the exception of the stimulus parameter `parameter_name`. 
-    
-      [1] 1. Ringach DL, Shapley RM, Hawken MJ. Orientation selectivity in macaque V1: diversity and laminar dependence. J Neurosci [Internet]. 2002 Jul 1;22(13):5639–51. 
-    
+
+      It stores the circular variance in a PerNeuronValue - for each combination of parameters of the stimulus associated
+      with the supplied PerNeuronValue with the exception of the stimulus parameter `parameter_name`.
+
+      [1] 1. Ringach DL, Shapley RM, Hawken MJ. Orientation selectivity in macaque V1: diversity and laminar dependence. J Neurosci [Internet]. 2002 Jul 1;22(13):5639–51.
+
       Other parameters
-      ------------------- 
+      -------------------
       parameter_name : str
                      The stimulus parameter name through which to fit the tuning curve.
-    
+
       """
 
     required_parameters = ParameterSet(
@@ -2810,7 +2812,7 @@ class CircularVarianceOfTuningCurve(Analysis):
                 self.st,
                 self.parameters.parameter_name,
             )
-            for k in self.tc_dict.keys():
+            for k in list(self.tc_dict.keys()):
                 z = []
                 for i in range(0, len(self.pnvs[0].values)):
                     angles = self.tc_dict[k][0]
@@ -2854,7 +2856,7 @@ class CircularVarianceOfTuningCurve(Analysis):
 class NakaRushtonTuningCurveFit(Analysis):
     """
       Fits each tuning curve with a gaussian.
-      
+
       It takes a dsv containing some PerNeuronValues.
       All PerNeuronValues have to belong to stimuli of the same type and
       contain the same type of values (i.e. have the same `value_name`).
@@ -2862,15 +2864,15 @@ class NakaRushtonTuningCurveFit(Analysis):
       For each combination of parameters of the stimuli other than `parameter_name`
       `NakaRushtonTuningCurveFit` fits a Naka-Rushton curve to the values in the PerNeuronValues
       that span the parameter values of the `parameter_name` stimulus parameter.
-      
-      It stores the parameters of the fitted Naka-Rushton curve in a PerNeuronValue - for each combination of parameters of the stimulus associated 
-      with the supplied PerNeuronValue with the exception of the stimulus parameter `parameter_name`. 
-    
+
+      It stores the parameters of the fitted Naka-Rushton curve in a PerNeuronValue - for each combination of parameters of the stimulus associated
+      with the supplied PerNeuronValue with the exception of the stimulus parameter `parameter_name`.
+
       Other parameters
-      ------------------- 
+      -------------------
       parameter_name : str
                      The stimulus parameter name through which to fit the tuning curve.
-    
+
       """
 
     required_parameters = ParameterSet(
@@ -2902,7 +2904,7 @@ class NakaRushtonTuningCurveFit(Analysis):
                 self.st,
                 self.parameters.parameter_name,
             )
-            for k in self.tc_dict.keys():
+            for k in list(self.tc_dict.keys()):
                 if len(self.tc_dict[k][0]) < 4:
                     logger.info(
                         "Failed to fit tuning curve, not enough points supplied: %d"
@@ -3061,14 +3063,14 @@ class NakaRushtonTuningCurveFit(Analysis):
         p1, success, err = res[numpy.argmin(numpy.array(res)[:, 2].tolist())]
 
         if flag:
-            import pylab
+            import matplotlib.pyplot as plt
 
-            pylab.figure()
+            plt.figure()
             logger.info("a:" + str(p1))
-            pylab.plot(X, fitfunc(p1, X), "x")
-            pylab.hold("on")
-            pylab.plot(X, Y, "o")
-            pylab.title(
+            plt.plot(X, fitfunc(p1, X), "x")
+            plt.hold("on")
+            plt.plot(X, Y, "o")
+            plt.title(
                 str(numpy.linalg.norm(fitfunc(p1, X) - Y) / numpy.linalg.norm(Y))
                 + "  "
                 + str(numpy.max(Y))

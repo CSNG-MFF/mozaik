@@ -171,7 +171,7 @@ class MozaikParametrized(Parameterized):
             Helper function that expands parameter set.
             """
             ret = []
-            for k in ps.keys():
+            for k in list(ps.keys()):
                 if isinstance(ps[k], MozaikExtendedParameterSet):
                     ret += [(k + "_" + p, v) for p, v in _expand_parameter_set(ps[k])]
                 else:
@@ -181,7 +181,7 @@ class MozaikParametrized(Parameterized):
         # find out which params are SParameterSet
         self.paramset_params_names = [
             ps
-            for ps in self.params().keys()
+            for ps in list(self.params().keys())
             if isinstance(self.params()[ps], SParameterSet)
         ]
 
@@ -195,7 +195,7 @@ class MozaikParametrized(Parameterized):
         self.expanded_paramset_params.sort(key=lambda tup: tup[0])
 
         if self.expanded_paramset_params != []:
-            self.expanded_params_names = zip(*self.expanded_paramset_params)[0]
+            self.expanded_params_names = list(zip(*self.expanded_paramset_params))[0]
         else:
             self.expanded_params_names = []
 
@@ -214,7 +214,7 @@ class MozaikParametrized(Parameterized):
         self.expanded_paramset_params_dict = self.params().copy()
 
         # remove SParemeterSet parameters
-        for key in self.expanded_paramset_params_dict.keys():
+        for key in list(self.expanded_paramset_params_dict.keys()):
             if isinstance(self.expanded_paramset_params_dict[key], SParameterSet):
                 del self.expanded_paramset_params_dict[key]
 
@@ -273,9 +273,7 @@ class MozaikParametrized(Parameterized):
     def get_param_values(self, onlychanged=False):
         if self.cached_get_param_values == None:
             Parameterized.__setattr__(
-                self,
-                "cached_get_param_values",
-                Parameterized.get_param_values(self, onlychanged),
+                self, "cached_get_param_values", super().get_param_values(onlychanged),
             )
         return self.cached_get_param_values
 
@@ -452,10 +450,14 @@ def filter_query(
                 return False
         return True
 
-    res = zip(
-        *filter(
-            lambda x: fl(x, kwargs, allow_non_existent_parameters),
-            zip(object_list, extra_data_list),
+    res = list(
+        zip(
+            *list(
+                filter(
+                    lambda x: fl(x, kwargs, allow_non_existent_parameters),
+                    list(zip(object_list, extra_data_list)),
+                )
+            )
         )
     )
 
@@ -474,7 +476,7 @@ def _colapse(dd, param):
     for s in dd:
         s1 = MozaikParametrized.idd(s)
 
-        if param not in s1.getParams().keys():
+        if param not in list(s1.getParams().keys()):
             raise KeyError(
                 "colapse: MozaikParametrized object "
                 + str(s1)
@@ -555,9 +557,9 @@ def colapse(
 
     for param in parameter_list:
         d = _colapse(d, param)
-    values = d.values()
+    values = list(d.values())
 
-    st = [MozaikParametrized.idd(idd) for idd in d.keys()]
+    st = [MozaikParametrized.idd(idd) for idd in list(d.keys())]
     if func != None:
         return ([func(v) for v in values], st)
     else:
@@ -580,7 +582,7 @@ def varying_parameters(parametrized_objects):
         )
 
     varying_params = collections.OrderedDict()
-    for n in parametrized_objects[0].getParams().keys():
+    for n in list(parametrized_objects[0].getParams().keys()):
         for o in parametrized_objects:
             if isinstance(getattr(o, n), numbers.Number):
                 if not numpy.isclose(
@@ -593,7 +595,7 @@ def varying_parameters(parametrized_objects):
                     varying_params[n] = True
                     break
 
-    return varying_params.keys()
+    return list(varying_params.keys())
 
 
 def parameter_value_list(parametrized_objects, param):
@@ -673,7 +675,7 @@ def matching_parametrized_object_params(
         )
 
     if except_params == None and params == None:
-        params = parametrized_objects[0].getParams().keys()
+        params = list(parametrized_objects[0].getParams().keys())
 
     if len(parametrized_objects) == 0:
         return True

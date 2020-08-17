@@ -126,11 +126,11 @@ class Model(BaseComponent):
                                           
         """
         t0 = time.time()
-        for sheet in self.sheets.values():
+        for sheet in list(self.sheets.values()):
             if self.first_time:
                 sheet.record()
         null_segments, sim_run_time = self.reset()
-        for sheet in self.sheets.values():
+        for sheet in list(self.sheets.values()):
             sheet.prepare_artificial_stimulation(
                 stimulus.duration,
                 self.simulator_time,
@@ -154,7 +154,7 @@ class Model(BaseComponent):
         sim_run_time += self.run(stimulus.duration)
         segments = []
 
-        for sheet in self.sheets.values():
+        for sheet in list(self.sheets.values()):
             if sheet.to_record != None:
                 if self.parameters.reset:
                     s = sheet.get_data()
@@ -171,13 +171,13 @@ class Model(BaseComponent):
 
         self.first_time = False
 
-        for sheet in self.sheets.values():
+        for sheet in list(self.sheets.values()):
             logger.info(
                 "Sheet %s average rate: %f" % (sheet.name, sheet.mean_spike_count())
             )
 
             # remove any artificial stimulators
-        for sheet in self.sheets.values():
+        for sheet in list(self.sheets.values()):
             for ds in artificial_stimulators.get(sheet.name, []):
                 ds.inactivate(self.simulator_time)
 
@@ -224,7 +224,7 @@ class Model(BaseComponent):
             self.simulator_time = 0
         else:
             if self.parameters.null_stimulus_period != 0:
-                for sheet in self.sheets.values():
+                for sheet in list(self.sheets.values()):
                     sheet.prepare_artificial_stimulation(
                         self.parameters.null_stimulus_period, self.simulator_time, []
                     )
@@ -243,7 +243,7 @@ class Model(BaseComponent):
 
                 self.sim.run(self.parameters.null_stimulus_period)
                 self.simulator_time += self.parameters.null_stimulus_period
-                for sheet in self.sheets.values():
+                for sheet in list(self.sheets.values()):
                     if sheet.to_record != None:
                         s = sheet.get_data(self.parameters.null_stimulus_period)
                         if (not mozaik.mpi_comm) or (
@@ -275,7 +275,7 @@ class Model(BaseComponent):
         Returns the list of ids of neurons in the model.
         """
         ids = {}
-        for s in self.sheets.values():
+        for s in list(self.sheets.values()):
             ids[s.name] = numpy.array([int(a) for a in s.pop.all()])
         return ids
 
@@ -284,7 +284,7 @@ class Model(BaseComponent):
         Returns the list of ids of neurons in the model.
         """
         p = {}
-        for s in self.sheets.values():
+        for s in list(self.sheets.values()):
             p[s.name] = s.parameters
         return p
 
@@ -296,7 +296,7 @@ class Model(BaseComponent):
         containing the x and y coordinates of the neurons in the given sheet.
         """
         pos = {}
-        for s in self.sheets.values():
+        for s in list(self.sheets.values()):
             pos[s.name] = s.pop.positions
         return pos
 
@@ -306,6 +306,6 @@ class Model(BaseComponent):
         dictionaries as values.
         """
         neuron_annotations = {}
-        for s in self.sheets.values():
+        for s in list(self.sheets.values()):
             neuron_annotations[s.name] = s.get_neuron_annotations()
         return neuron_annotations

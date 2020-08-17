@@ -5,24 +5,24 @@ verify_ssl = true
 
 [dev-packages]
 black = "==19.10b0"
-pytest = "==6.0.1"
+pytest = "~=6.0.1"
 
 [packages]
-Cython = "==0.29.19"
+Cython = "~=0.29.19"
 imagen = {git = "https://github.com/antolikjan/imagen.git"}
-interval = "==1.0.0"
-lazyarray = "==0.3.3"
-matplotlib = "==2.1.1"
-mpi4py = "==3.0.3"
+interval = "~=1.0.0"
+lazyarray = "~=0.3.3"
+matplotlib = "~=3.3.1"
+mpi4py = "~=3.0.3"
 neo = "==0.5.2"
-numpy = "==1.16.6"
-param = "==1.5.1"
-parameters = "==0.2.1"
-Pillow = "==6.2.2"
-psutil = "==5.7.0"
-PyNN = "==0.9.5"
-quantities = "==0.12.4"
-scipy = "==1.2.3"
+numpy = "~=1.19.1"
+param = "~=1.9.3"
+parameters = "~=0.2.1"
+Pillow = "~=6.2.2"
+psutil = "~=5.7.0"
+PyNN = "~=0.9.5"
+quantities = "~=0.12.4"
+scipy = "~=1.5.2"
 
 [requires]
 python_version = "3.7"

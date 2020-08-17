@@ -1,7 +1,7 @@
 # encoding: utf-8
 """
-This file contains the API for direct stimulation of neurons. 
-By direct stimulation here we mean a artificial stimulation that 
+This file contains the API for direct stimulation of neurons.
+By direct stimulation here we mean a artificial stimulation that
 would happen during electrophisiological experiment - such a injection
 of spikes/currents etc into cells. In mozaik this happens at population level - i.e.
 each direct stimulator specifies how the given population is stimulated. In general each population can have several
@@ -18,7 +18,7 @@ from pyNN.parameters import Sequence
 from mozaik import load_component
 import math
 from mozaik.tools.circ_stat import circular_dist, circ_mean
-import pylab
+import matplotlib.pyplot as plt
 from scipy.integrate import odeint
 import pickle
 import scipy.interpolate
@@ -32,24 +32,24 @@ logger = mozaik.getMozaikLogger()
 class DirectStimulator(ParametrizedObject):
     """
       The API for direct stimulation.
-      The DirectStimulator specifies how are cells in the assigned population directly stimulated. 
-        
+      The DirectStimulator specifies how are cells in the assigned population directly stimulated.
+
       Parameters
       ----------
       parameters : ParameterSet
                    The dictionary of required parameters.
-                    
+
       sheet : Sheet
               The sheet in which to stimulate neurons.
-              
+
       Notes
       -----
-      
-      By defalut the direct stimulation should ensure that it is mpi-safe - this is especially crucial for 
+
+      By defalut the direct stimulation should ensure that it is mpi-safe - this is especially crucial for
       stimulators that involve source of randomnes. However, the DirectSimulators also can inspect the mpi_safe
-      value of the population to which they are assigned, and if it is False they can switch to potentially 
+      value of the population to which they are assigned, and if it is False they can switch to potentially
       more efficient implementation that will however not be reproducible across multi-process simulations.
-      
+
       Important: the functiona inactivate should only temporarily inactivate the stimulator, a subsequent call to prepare_stimulation
       should activate the stimulator back!
       """
@@ -61,15 +61,15 @@ class DirectStimulator(ParametrizedObject):
     def prepare_stimulation(self, duration, offset):
         """
           Prepares the stimulation during the next period of model simulation lasting `duration` seconds.
-          
+
           Parameters
           ----------
           duration : double (seconds)
                      The period for which to prepare the stimulation
-          
+
           offset : double (seconds)
                    The current simulator time.
-                     
+
           """
         raise NotImplemented
 
@@ -81,7 +81,7 @@ class DirectStimulator(ParametrizedObject):
           ----------
           offset : double (seconds)
                    The current simulator time.
-          
+
           Note that a subsequent call to prepare_stimulation should 'activate' the stimulator again.
           """
         raise NotImplemented
@@ -89,34 +89,34 @@ class DirectStimulator(ParametrizedObject):
 
 class BackgroundActivityBombardment(DirectStimulator):
     """
-    The BackgroundActivityBombardment simulates the poisson distrubated background bombardment of spikes onto a 
+    The BackgroundActivityBombardment simulates the poisson distrubated background bombardment of spikes onto a
     neuron due to the other 'unsimulated' neurons in its pre-synaptic population.
-    
+
     Parameters
     ----------
     parameters : ParameterSet
                The dictionary of required parameters.
-                
+
     sheet : Sheet
           The sheet in which to stimulate neurons.
-    
+
     Other parameters
     ----------------
-    
+
     exc_firing_rate : float
                      The firing rate of external neurons sending excitatory inputs to each neuron of this sheet.
- 
+
     inh_firing_rate : float
                      The firing rate of external neurons sending inhibitory inputs to each neuron of this sheet.
-    
+
     exc_weight : float
-                     The weight of the synapses for the excitatory external Poisson input.    
+                     The weight of the synapses for the excitatory external Poisson input.
 
     inh_weight : float
-                     The weight of the synapses for the inh external Poisson input.    
+                     The weight of the synapses for the inh external Poisson input.
     Notes
     -----
-    
+
     Currently the mpi_safe version only works in nest!
     """
 
@@ -245,35 +245,35 @@ class BackgroundActivityBombardment(DirectStimulator):
 class Kick(DirectStimulator):
     """
     This stimulator sends a kick of excitatory spikes into a specified subpopulation of neurons.
-    
+
     Parameters
     ----------
     parameters : ParameterSet
                The dictionary of required parameters.
-                
+
     sheet : Sheet
           The sheet in which to stimulate neurons.
-    
+
     Other parameters
     ----------------
-    
+
     exc_firing_rate : float
                      The firing rate of external neurons sending excitatory inputs to each neuron of this sheet.
- 
+
     exc_weight : float
-                     The weight of the synapses for the excitatory external Poisson input.    
-    
+                     The weight of the synapses for the excitatory external Poisson input.
+
     drive_period : float
-                     Period over which the Kick will deposit the full drive defined by the exc_firing_rate, after this time the 
+                     Period over which the Kick will deposit the full drive defined by the exc_firing_rate, after this time the
                      firing rates will be linearly reduced to reach zero at the end of stimulation.
 
     population_selector : ParemeterSet
-                        Defines the population selector and its parameters to specify to which neurons in the population the 
-                        background activity should be applied. 
-                     
+                        Defines the population selector and its parameters to specify to which neurons in the population the
+                        background activity should be applied.
+
     Notes
     -----
-    
+
     Currently the mpi_safe version only works in nest!
     """
 
@@ -352,28 +352,28 @@ class Kick(DirectStimulator):
 class Depolarization(DirectStimulator):
     """
     This stimulator injects a constant current into neurons in the population.
-    
+
     Parameters
     ----------
     parameters : ParameterSet
                The dictionary of required parameters.
-                
+
     sheet : Sheet
           The sheet in which to stimulate neurons.
-    
+
     Other parameters
     ----------------
-    
+
     current : float (mA)
                      The current to inject into neurons.
 
     population_selector : ParemeterSet
-                        Defines the population selector and its parameters to specify to which neurons in the population the 
-                        background activity should be applied. 
-                     
+                        Defines the population selector and its parameters to specify to which neurons in the population the
+                        background activity should be applied.
+
     Notes
     -----
-    
+
     Currently the mpi_safe version only works in nest!
     """
 
@@ -411,13 +411,13 @@ class Depolarization(DirectStimulator):
 class LocalStimulatorArray(DirectStimulator):
     """
     This class assumes there is a regular grid of stimulators (parameters `size` and `spacing` control
-    the geometry of the grid), with each stimulator stimulating indiscriminately the local population 
-    of neurons in the given sheet. The intensity of stimulation falls of as Gaussian (parameter `itensity_fallof`), 
-    and the stimulations from different stimulators add up linearly. 
+    the geometry of the grid), with each stimulator stimulating indiscriminately the local population
+    of neurons in the given sheet. The intensity of stimulation falls of as Gaussian (parameter `itensity_fallof`),
+    and the stimulations from different stimulators add up linearly.
 
     The temporal profile of the stimulator is given by function specified in the parameter `stimulating_signal`.
-    This function receives the population to be stimulated, the list of coordinates of the stimulators, and any extra user parameters 
-    specified in the parameter `stimulating_signal_parameters`. It should return the list of currents that 
+    This function receives the population to be stimulated, the list of coordinates of the stimulators, and any extra user parameters
+    specified in the parameter `stimulating_signal_parameters`. It should return the list of currents that
     flow out of the stimulators. The function specified in `stimulating_signal` should thus look like this:
 
     def stimulating_signal_function(population,list_of_coordinates, parameters)
@@ -429,14 +429,14 @@ class LocalStimulatorArray(DirectStimulator):
     ----------
     parameters : ParameterSet
                The dictionary of required parameters.
-                
+
     sheet : Sheet
           The sheet in which to stimulate neurons.
-    
+
     Other parameters
     ----------------
-    
-    size : float (μm) 
+
+    size : float (μm)
                      The size of the stimulator grid
 
     spacing : float (μm)
@@ -454,7 +454,7 @@ class LocalStimulatorArray(DirectStimulator):
     current_update_interval : float
                      The interval at which the current is updated. Thus the length of the stimulation is current_update_interval times
                      the number of current values returned by the function specified in the `stimulating_signal` parameter.
-    
+
     depth_sampling_step : float (μm)
                      For optimization reasons we will assume that neurons lie at descrete range of depth spaced at `depth_sampling_step`
 
@@ -500,7 +500,7 @@ class LocalStimulatorArray(DirectStimulator):
         n = int(numpy.floor(len(axis_coors) / 2.0))
         stimulator_coordinates = numpy.meshgrid(axis_coors, axis_coors)
 
-        pylab.figure(figsize=(42, 12))
+        plt.figure(figsize=(42, 12))
 
         # let's load up disperssion data and setup interpolation
         f = open(self.parameters.light_source_light_propagation_data, "r")
@@ -641,10 +641,10 @@ class LocalStimulatorArray(DirectStimulator):
                 protected=True,
             )
 
-        # ax = pylab.subplot(154, projection='3d')
-        ax = pylab.subplot(154)
-        pylab.gca().set_aspect("equal")
-        pylab.title("Activation magnitude (neurons)")
+        # ax = plt.subplot(154, projection='3d')
+        ax = plt.subplot(154)
+        plt.gca().set_aspect("equal")
+        plt.title("Activation magnitude (neurons)")
         # ax.scatter(self.sheet.pop.positions[0],self.sheet.pop.positions[1],self.sheet.pop.positions[2],s=10,c=lam,cmap='gray',vmin=0)
         ax.scatter(
             self.sheet.pop.positions[0],
@@ -654,7 +654,7 @@ class LocalStimulatorArray(DirectStimulator):
             cmap="gray",
             vmin=0,
         )
-        ax = pylab.gca()
+        ax = plt.gca()
         # ax.set_zlim(ax.get_zlim()[::-1])
 
         assert numpy.shape(self.mixed_signals) == (
@@ -759,11 +759,11 @@ class LocalStimulatorArrayChR(LocalStimulatorArray):
     """
       Like *LocalStimulatorArray* but the signal calculated to impinge on a neuron is interpreted as light (photons/s/cm^2)
       impinging on the neuron and the signal is transformed via a model of Channelrhodopsin (courtesy of Quentin Sabatier)
-      to give the final injected current. 
-      
-      Note that we approximate the current by ignoring the voltage dependence of the channels, as it is very expensive 
-      to inject conductance in PyNN. The Channelrhodopsin has reverse potential of ~0, and we assume that our neurons 
-      sits on average at -60mV to calculate the current. 
+      to give the final injected current.
+
+      Note that we approximate the current by ignoring the voltage dependence of the channels, as it is very expensive
+      to inject conductance in PyNN. The Channelrhodopsin has reverse potential of ~0, and we assume that our neurons
+      sits on average at -60mV to calculate the current.
       """
 
     def __init__(self, sheet, parameters, shared_scs=None):
@@ -771,7 +771,7 @@ class LocalStimulatorArrayChR(LocalStimulatorArray):
         times = numpy.arange(
             0, self.stimulation_duration, self.parameters.current_update_interval
         )
-        ax = pylab.subplot(155)
+        ax = plt.subplot(155)
         ax.set_title("Single neuron current injection profile")
 
         ax.plot(times, self.mixed_signals[100, :], "k")
@@ -828,7 +828,7 @@ class LocalStimulatorArrayChR(LocalStimulatorArray):
         pickle.dump(self.mixed_signals, f)
         f.close()
 
-        pylab.savefig(
+        plt.savefig(
             Global.root_directory
             + "LocalStimulatorArrayTest_"
             + self.sheet.name.replace("/", "_")
@@ -850,21 +850,21 @@ def test_stimulating_function(
 
     px, py = sheet.vf_2_cs(sheet.pop.positions[0], sheet.pop.positions[1])
 
-    pylab.subplot(151)
-    pylab.gca().set_aspect("equal")
-    pylab.title("Orientatin preference (neurons)")
-    pylab.scatter(px, py, c=vals / numpy.pi, cmap="hsv")
-    pylab.hold(True)
-    # pylab.scatter(coor_x.flatten(),coor_y.flatten(),c='k',cmap='hsv')
+    plt.subplot(151)
+    plt.gca().set_aspect("equal")
+    plt.title("Orientatin preference (neurons)")
+    plt.scatter(px, py, c=vals / numpy.pi, cmap="hsv")
+    plt.hold(True)
+    # plt.scatter(coor_x.flatten(),coor_y.flatten(),c='k',cmap='hsv')
 
     ors = scipy.interpolate.griddata(
-        zip(px, py), vals, (coor_x, coor_y), method="nearest"
+        list(zip(px, py)), vals, (coor_x, coor_y), method="nearest"
     )
 
-    pylab.subplot(152)
-    pylab.title("Orientatin preference (stimulators)")
-    pylab.gca().set_aspect("equal")
-    pylab.scatter(coor_x.flatten(), coor_y.flatten(), c=ors.flatten(), cmap="hsv")
+    plt.subplot(152)
+    plt.title("Orientatin preference (stimulators)")
+    plt.gca().set_aspect("equal")
+    plt.scatter(coor_x.flatten(), coor_y.flatten(), c=ors.flatten(), cmap="hsv")
     signals = numpy.zeros(
         (
             numpy.shape(coor_x)[0],
@@ -894,17 +894,17 @@ def test_stimulating_function(
                 )
             )
 
-    pylab.subplot(153)
-    pylab.gca().set_aspect("equal")
-    pylab.title("Activation magnitude (stimulators)")
-    pylab.scatter(
+    plt.subplot(153)
+    plt.gca().set_aspect("equal")
+    plt.title("Activation magnitude (stimulators)")
+    plt.scatter(
         coor_x.flatten(),
         coor_y.flatten(),
         c=numpy.squeeze(numpy.mean(signals, axis=2)).flatten(),
         cmap="gray",
     )
-    pylab.title(str(parameters.orientation.value))
-    # pylab.colorbar()
+    plt.title(str(parameters.orientation.value))
+    # plt.colorbar()
     return numpy.array(signals), parameters.scale.value
 
 
@@ -922,20 +922,20 @@ def test_stimulating_function_Naka(
 
     px, py = sheet.vf_2_cs(sheet.pop.positions[0], sheet.pop.positions[1])
 
-    pylab.subplot(151)
-    pylab.gca().set_aspect("equal")
-    pylab.title("Orientatin preference (neurons)")
-    pylab.scatter(px, py, c=vals / numpy.pi, cmap="hsv")
-    pylab.hold(True)
+    plt.subplot(151)
+    plt.gca().set_aspect("equal")
+    plt.title("Orientatin preference (neurons)")
+    plt.scatter(px, py, c=vals / numpy.pi, cmap="hsv")
+    plt.hold(True)
 
     ors = scipy.interpolate.griddata(
-        zip(px, py), vals, (coor_x, coor_y), method="nearest"
+        list(zip(px, py)), vals, (coor_x, coor_y), method="nearest"
     )
 
-    pylab.subplot(152)
-    pylab.title("Orientatin preference (stimulators)")
-    pylab.gca().set_aspect("equal")
-    pylab.scatter(coor_x.flatten(), coor_y.flatten(), c=ors.flatten(), cmap="hsv")
+    plt.subplot(152)
+    plt.title("Orientatin preference (stimulators)")
+    plt.gca().set_aspect("equal")
+    plt.scatter(coor_x.flatten(), coor_y.flatten(), c=ors.flatten(), cmap="hsv")
     signals = numpy.zeros(
         (
             numpy.shape(coor_x)[0],
@@ -980,15 +980,15 @@ def test_stimulating_function_Naka(
                 )
             )
 
-    pylab.subplot(153)
-    pylab.gca().set_aspect("equal")
-    pylab.title("Activation magnitude (stimulators)")
-    pylab.scatter(
+    plt.subplot(153)
+    plt.gca().set_aspect("equal")
+    plt.title("Activation magnitude (stimulators)")
+    plt.scatter(
         coor_x.flatten(),
         coor_y.flatten(),
         c=numpy.squeeze(numpy.mean(signals, axis=2)).flatten(),
         cmap="gray",
     )
-    pylab.title(str(parameters.orientation.value))
+    plt.title(str(parameters.orientation.value))
 
     return numpy.array(signals), scale

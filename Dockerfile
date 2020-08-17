@@ -25,7 +25,11 @@ RUN apt-get update \
 WORKDIR /source
 COPY Pipfile Pipfile.lock ./
 ARG PACKAGES_DIR=/source/packages
-RUN pipenv lock -r | pip install --prefix ${PACKAGES_DIR} --ignore-installed -r /dev/stdin
+# six is not installed for some reason
+RUN PIP_PREFIX=${PACKAGES_DIR} \
+    PIP_IGNORE_INSTALLED=1 \
+    pipenv install --system --ignore-pipfile --deploy \
+ && pip install --prefix=${PACKAGES_DIR} --ignore-installed six
 ENV PATH=${PATH}:${PACKAGES_DIR}/bin
 ENV PYTHONPATH=${PACKAGES_DIR}/lib/python3.7/site-packages:${PYTHONPATH}
 
@@ -42,8 +46,7 @@ RUN wget https://github.com/nest/nest-simulator/archive/v2.20.0.tar.gz \
  && make install
 
 WORKDIR /source/mozaik
-COPY mozaik ./mozaik
-COPY setup.py README.rst ./
+COPY . ./
 RUN pip install --prefix=${PACKAGES_DIR} .
 
 
@@ -82,11 +85,12 @@ RUN apt-get update \
 
 WORKDIR /app
 RUN chown -R mozaik:mozaik .
+
+USER mozaik
 COPY --chown=mozaik:mozaik Pipfile Pipfile.lock ./
-RUN pipenv install --system --deploy --ignore-pipfile --dev
+RUN pipenv install --system --ignore-pipfile --deploy --dev
 
 COPY --chown=mozaik:mozaik . ./
 RUN pip install -e .
 
-USER mozaik
 ENTRYPOINT [""]

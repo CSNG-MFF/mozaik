@@ -26,7 +26,7 @@ def sample_from_bin_distribution(bins, number_of_samples):
         return []
 
     bins = bins / numpy.sum(bins)
-    si = numpy.random.choice(range(len(bins)), size=number_of_samples, p=bins)
+    si = numpy.random.choice(list(range(len(bins))), size=number_of_samples, p=bins)
 
     return si
 

@@ -60,7 +60,7 @@ class LocalSequentialBackend(object):
                     The dictionary holding the names of parameters to be modified as keys, and the values to set them to as the corresponding values. 
          """
         modified_parameters = []
-        for k in parameters.keys():
+        for k in list(parameters.keys()):
             modified_parameters.append(k)
             modified_parameters.append(str(parameters[k]))
 
@@ -120,7 +120,7 @@ class SlurmSequentialBackend(object):
                     The dictionary holding the names of parameters to be modified as keys, and the values to set them to as the corresponding values. 
          """
         modified_parameters = []
-        for k in parameters.keys():
+        for k in list(parameters.keys()):
             modified_parameters.append(k)
             modified_parameters.append(str(parameters[k]))
 
@@ -213,7 +213,7 @@ class SlurmSequentialBackendIoV(object):
                     The dictionary holding the names of parameters to be modified as keys, and the values to set them to as the corresponding values. 
          """
         modified_parameters = []
-        for k in parameters.keys():
+        for k in list(parameters.keys()):
             modified_parameters.append(k)
             modified_parameters.append(str(parameters[k]))
 
@@ -362,9 +362,12 @@ class CombinationParameterSearch(ParameterSearch):
 
     def generate_parameter_combinations(self):
         combs = []
-        for combination in parameter_combinations(self.parameter_values.values()):
+        for combination in parameter_combinations(list(self.parameter_values.values())):
             combs.append(
-                {a: b for (a, b) in zip(self.parameter_values.keys(), combination)}
+                {
+                    a: b
+                    for (a, b) in zip(list(self.parameter_values.keys()), combination)
+                }
             )
         return combs
 
@@ -380,7 +383,7 @@ class CombinationParameterSearch(ParameterSearch):
                         if len(self.parameter_values[k]) < 5
                         else str(len(self.parameter_values[k]))
                     )
-                    for k in self.parameter_values.keys()
+                    for k in list(self.parameter_values.keys())
                 ]
             )
             + "}/"
@@ -389,7 +392,7 @@ class CombinationParameterSearch(ParameterSearch):
         if len(s) > 200:
             s = (
                 "CombinationParamSearch{"
-                + str(len(self.parameter_values.keys()))
+                + str(len(list(self.parameter_values.keys())))
                 + "}/"
             )
         return s

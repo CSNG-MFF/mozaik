@@ -3,15 +3,15 @@ Installation intructions
 
 Dependencies
 ------------
-* python 2.7
+* python 3
 * scipy/numpy
 * nest (latest release, compiled with mpi)
 * mpi4py
-* pyNN 
+* pyNN
 * imagen
 * param
 * parameters
-* quantities 
+* quantities
 * neo
 
 Installation
@@ -22,12 +22,12 @@ Instructions::
   git clone https://github.com/antolikjan/mozaik.git
   cd mozaik
   python setup.py install
-  
+
 Please see below:
  * the installation of the dependencies.
  * the installation on Ubuntu Linux
  * how to run the examples
- 
+
 .. _ref-detailed:
 
 Detailed instructions
@@ -40,22 +40,22 @@ ___________
 
 We recommend to install mozaik using the virtualenv python environment manager (http://pypi.python.org/pypi/virtualenv/) , to prevent potential
 conflicts with standard versions of required libraries. Users can follow for example http://simononsoftware.com/virtualenv-tutorial tutorial or just do the following steps:
- 
+
  * Install virtualenv
  * Create (for example in your home directory) a directory where all virtual environments will be created home/virt_env
- * Create the virtual environment for mozaik:: 
-    
+ * Create the virtual environment for mozaik::
+
     virtualenv virt_env/virt_env_mozaik/ --verbose --no-site-packages
 
  * Load the virtual environment for mozaik by::
- 
+
     source virt_env/virt_env_mozaik/bin/activate
 
 Your shell should look now something like::
 
 (virt_env_mozaik)Username@Machinename:~$
 
-Dependencies 
+Dependencies
 ____________
 
 Note that if the installation is done in your virtualenv environment, it doesn't require any root privilege. Unless specified otherwise
@@ -89,12 +89,12 @@ you're using scipy, numpy, matplotlib anyway you don't have to install those in 
 Ubuntu
 ------
 
-Following these instruction should give you a working copy of mozaik on a 
+Following these instruction should give you a working copy of mozaik on a
 fresh installation of Ubuntu (at the time of the writing the version was 16.04)
 
 First the list of ubuntu package dependencies::
 
-  sudo apt-get install python2.7 python-dev python-pip python-nose subversion git libopenmpi-dev g++ libjpeg8 libjpeg8-dev libfreetype6 libfreetype6-dev zlib1g-dev libpng++-dev libncurses5 libncurses5-dev libreadline-dev liblapack-dev libblas-dev gfortran libgsl0-dev openmpi-bin python-tk cmake
+  sudo apt-get install python3 python3-dev python3-pip python3-nose subversion git libopenmpi-dev g++ libjpeg8 libjpeg8-dev libfreetype6 libfreetype6-dev zlib1g-dev libpng++-dev libncurses5 libncurses5-dev libreadline-dev liblapack-dev libblas-dev gfortran libgsl0-dev openmpi-bin python3-tk cmake
 
 
 Virtual env
@@ -113,7 +113,7 @@ To setup `virtualenvwrapper <http://virtualenvwrapper.readthedocs.org/en/latest/
     export PIP_VIRTUALENV_BASE=$WORKON_HOME
     export PIP_RESPECT_VIRTUALENV=true
 
-For the first time, run .bashrc (the next times it will be loaded by your terminal)::      
+For the first time, run .bashrc (the next times it will be loaded by your terminal)::
 
 $ source .bashrc
 
@@ -122,16 +122,16 @@ To create a new managed virtualenv you just need to::
     $ mkvirtualenv --no-site-packages mozaik
     $ workon mozaik
     (mozaik)$>
- 
 
-Dependencies 
+
+Dependencies
 ____________
 
- 
+
 Now you can install in this protected environment all other dependencies::
 
-  pip install --upgrade distribute
-  pip install numpy scipy mpi4py matplotlib==2.1.1 quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.5.2 cython pynn psutil
+  pip3 install --upgrade distribute
+  pip3 install numpy scipy mpi4py matplotlib quantities lazyarray interval Pillow param parameters neo==0.5.2 cython pynn psutil
 
 Now we will manually install several packages. It is probably the best if you create a separate directory in an appropriate
 place, where you will download and install from the packages.
@@ -140,42 +140,42 @@ First we will install *imagen* package::
 
   git clone https://github.com/antolikjan/imagen.git
   cd imagen
-  python setup.py install
+  python3 setup.py install
 
 Now we can install *Nest* (always in the virtual environment):
 
     - download the latest version from their `website <http://www.nest-initiative.org/index.php/Software:Download>`_
-        
+
         wget https://github.com/nest/nest-simulator/archive/v2.18.0.tar.gz
-        
+
     - untar and cd into it::
 
         tar xvfz v2.18.0.tar.gz
         cd nest-simulator-2.18.0
-    
+
     - then configure, choose if you want mpi::
-    
+
         (mozaik)$ cmake -Dwith-mpi=OFF -Dwith-boost=ON -DCMAKE_INSTALL_PREFIX:PATH=$HOME/virt_env/mozaik -Dwith-optimize='-O3' ./
-       
+
     - finally, by launching make and install, it installs PyNest in the activated virtual environment mozaik::
-    
+
         (mozaik)$ make
         (mozaik)$ make install
-        
+
     - Then::
-        
+
         make installcheck
-    
-    - nest will reside in $HOME/virt_env/mozaik/lib/python2.7/site-packages. Check that the package is seen by python using::
-        python -c 'import nest'
+
+    - nest will reside in $HOME/virt_env/mozaik/lib/python3.x/site-packages. Check that the package is seen by python using::
+        python3 -c 'import nest'
 
 
 And, finally, Mozaik::
-    
+
     git clone https://github.com/antolikjan/mozaik.git
     cd mozaik
-    python setup.py install
-    
+    python3 setup.py install
+
 .. _ref-run:
 
 Running examples
@@ -185,8 +185,8 @@ Go to the examples directory in the mozaik cloned from github (see above) and la
 
   cd examples
   cd VogelsAbbott2005
-  python run.py nest 2 param/defaults 'test'
-  
+  python3 run.py nest 2 param/defaults 'test'
+
 This will launch the example with the nest simulator, on 2 nodes with each node using 2 threads, using the parameter param/defaults. Last, 'test' is the name of this run.
 
 .. _ref-docker:

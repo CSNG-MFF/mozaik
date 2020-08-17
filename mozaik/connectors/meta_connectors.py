@@ -116,7 +116,7 @@ class GaborConnector(BaseComponent):
             X, Y = numpy.meshgrid(coords_x, coords_y)
 
             or_map = NearestNDInterpolator(
-                zip(X.flatten(), Y.flatten()), or_map.flatten()
+                list(zip(X.flatten(), Y.flatten())), or_map.flatten()
             )
             # or_map = CloughTocher2DInterpolator(zip(X.flatten(), Y.flatten()),
             #                               or_map.flatten())
@@ -133,7 +133,7 @@ class GaborConnector(BaseComponent):
             )
             X, Y = numpy.meshgrid(coords_x, coords_y)
             phase_map = NearestNDInterpolator(
-                zip(X.flatten(), Y.flatten()), phase_map.flatten()
+                list(zip(X.flatten(), Y.flatten())), phase_map.flatten()
             )
 
         print(min(target.pop.positions[0]), max(target.pop.positions[0]))

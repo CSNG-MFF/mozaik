@@ -2,12 +2,12 @@
 """
 Retina/LGN model based on that developed by Jens Kremkow (CNRS-INCM/ALUF)
 """
-import pylab
+import matplotlib.pyplot as plt
 import numpy
 import os.path
 import pickle
 import mozaik
-import cai97
+from . import cai97
 from mozaik.space import VisualSpace, VisualRegion
 from mozaik.core import SensoryInputComponent
 from mozaik.sheets.vision import RetinalUniformSheet
@@ -38,18 +38,20 @@ class SpatioTemporalReceptiveField(object):
     Parameters
     ----------
     func : function
-         should be a function of x, y, t, and a ParameterSet object
+        should be a function of x, y, t, and a ParameterSet object
+
     func_params : ParameterSet
-                ParameterSet that is passed to `func`.
+        ParameterSet that is passed to `func`.
+
     width : float (degrees)
-          x-dimension size
+        x-dimension size
 
     height : float (degrees)
-          y-dimension size
+        y-dimension size
 
     duration : float (ms)
-             length of the temporal axis of the RF
-             
+        length of the temporal axis of the RF
+
     Notes
     -----
     Coordinates x = 0 and y = 0 are at the centre of the spatial kernel.
@@ -67,19 +69,19 @@ class SpatioTemporalReceptiveField(object):
 
     def quantize(self, dx, dy, dt):
         """
-        Quantizes the the receptive field. 
-        
+        Quantizes the the receptive field.
+
         Parameters
         ----------
         dx : float
            The number of pixels along x axis.
-        
+
         dy : float
            The number of pixels along y axis.
-        
+
         dy : float
            The number of time bins along the t axis.
-        
+
         Notes
         -----
         If `dx` does not
@@ -159,18 +161,18 @@ class CellWithReceptiveField(object):
     initialize() should be called once, before stimulus presentation
     view() should be called in a loop, once for each stimulus frame
     response_current() should be called at the end of stimulus presentation
-    
+
     Parameters
     ----------
     x , y : float
           x and y coordinates of the center of the RF in visual space.
-    
+
     receptive_field : SpatioTemporalReceptiveField
           The receptive field object containing the RFs data.
-          
+
     gain_control : float
          The calculated input current values will be multiplied by the gain parameter.
-    
+
     visual_space : VisualSpace
                  The object representing the visual space.
     """
@@ -216,16 +218,16 @@ class CellWithReceptiveField(object):
         Create the array that will contain the current response, and set the
         initial values on the assumption that the system was looking at a blank
         screen of constant luminance prior to stimulus onset.
-        
+
         Parameters
         ----------
-        
+
         background_luminance : float
                              The background luminance of the visual space.
-        
+
         stimulus_duration : float (ms)
                           The duration  of the visual stimulus.
-            
+
         """
         # we add some extra padding to avoid having to check for index out-of-bounds in view()
         self.response_length = int(
@@ -376,10 +378,10 @@ class CellWithReceptiveField(object):
 class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
     """
     Retina/LGN model with spatiotemporal receptive field.
-    
+
     Parameters
     ----------
-    
+
     density : int (1/degree^2)
               Number of neurons to simulate per square degree of visual space.
     size : tuple (degree,degree)
@@ -387,28 +389,28 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
     linear_scaler : float
                   The linear scaler that the RF output is multiplied with.
     cached : bool
-           If the stimuli are chached. 
-           
+           If the stimuli are chached.
+
     cache_path : str
            Path to the directory where to store the create the cache.
-    
+
     mpi_reproducible_noise : bool
-           If true the background noise is generated in such a way that is reproducible accross runs using different number of mpi processes. 
+           If true the background noise is generated in such a way that is reproducible accross runs using different number of mpi processes.
            Significant slowdown if True.
-    
+
     Notes
     -----
     If the stimulus is cached SpatioTemporalFilterRetinaLGN will write in the local directory `parameters.cache_path`
     the generated amplitudes for all the neurons in the retina (so this will be specific to the model)
-    for each new presented stimulus. If it is asked to generate activities for a stimulus that already exists in the directory (it just 
+    for each new presented stimulus. If it is asked to generate activities for a stimulus that already exists in the directory (it just
     checks for the name and parameter values of the stimulus, *except* trail number) it will retrieve the values from the cahce.
-    Note that the input currents are stored without the noise and the aditional noise is still applied after retrieval 
-    so the actual current injected into the retinal neurons will not be identical to the one that was injected when 
+    Note that the input currents are stored without the noise and the aditional noise is still applied after retrieval
+    so the actual current injected into the retinal neurons will not be identical to the one that was injected when
     the stimulus was saved in the cache.
-    
+
     **IMPORTANT**
-    This mechanism assumes that the retinal model stays otherwise identical between 
-    simulations. The moment anything is changed in the retinal model one **has** to delete 
+    This mechanism assumes that the retinal model stays otherwise identical between
+    simulations. The moment anything is changed in the retinal model one **has** to delete
     the retina_cache directory (which effectively resets the cache).
     """
 
@@ -525,15 +527,15 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
     def get_cache(self, stimulus_id):
         """
         Returns the cached calculated responses due to stimulus corresponding to `stimulus_id`.
-        
+
         Parameters
         ----------
             stimulus_id : StimulusID
                         The stimulus id of the stimulus for which to return the activities
-        
+
         Returns
         -------
-        Tuple (input_currents, retinal_input)  where input_currents are the currents due to the RFs of the individual RFs and retinal_input is the 
+        Tuple (input_currents, retinal_input)  where input_currents are the currents due to the RFs of the individual RFs and retinal_input is the
         list of frames shown to the retina.
         """
 
@@ -565,18 +567,18 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
     def write_cache(self, stimulus_id, input_currents, retinal_input):
         """
         Stores input currents and the retinal input corresponding to a given stimulus.
-        
+
         Parameters
         ----------
                 stimulus_id : StimulusID
                         The stimulus id of the stimulus for which we will store the input currents
-                
+
                 input_currents : list(ndarray)
                                List containing the input currents that will be injected to the LGN neurons due to the neuron's RFs. One per each LGN neuron.
-                
+
                 retinal_input : list(ndarray)
                               List of 2D arrays containing the frames of luminances that were presented to the retina for the stimulus `stimulus_id`.
-        
+
         """
         if self.parameters.cached == False:
             return None
@@ -584,7 +586,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         if str(stimulus_id) not in self.cached_stimuli:
             counter = (
                 0
-                if (len(self.cached_stimuli.values()) == 0)
+                if (len(list(self.cached_stimuli.values())) == 0)
                 else max(self.cached_stimuli.values()) + 1
             )
 
@@ -603,21 +605,21 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         """
         Present a visual stimulus to the model, and create the LGN output
         (relay) neurons.
-        
+
         Parameters
         ----------
         visual_space : VisualSpace
                      The visual space to which the stimuli are presented.
-                     
-        stimulus : VisualStimulus    
+
+        stimulus : VisualStimulus
                  The visual stimulus to be shown.
-        
+
         duration : int (ms)
                  The time for which we will simulate the stimulus
-        
+
         offset : int(ms)
                The time (in absolute time of the whole simulation) at which the stimulus starts.
-        
+
         Returns
         -------
         retinal_input : list(ndarray)
@@ -695,21 +697,21 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
 
     def provide_null_input(self, visual_space, duration=None, offset=0):
         """
-        This function exists for optimization purposes. It is the analog to 
-        :func:.`mozaik.retinal.SpatioTemporalFilterRetinaLGN.process_input` for the 
+        This function exists for optimization purposes. It is the analog to
+        :func:.`mozaik.retinal.SpatioTemporalFilterRetinaLGN.process_input` for the
         special case when blank stimulus is shown.
-        
+
         Parameters
         ----------
         visual_space : VisualSpace
                      The visual space to which the blank stimulus are presented.
-                     
+
         duration : int (ms)
                  The time for which we will simulate the blank stimulus
-        
+
         offset : int(ms)
                The time (in absolute time of the whole simulation) at which the stimulus starts.
-        
+
         Returns
         -------
         retinal_input : list(ndarray)

@@ -1,5 +1,5 @@
 from mozaik.storage.queries import *
-import pylab
+import matplotlib.pyplot as plt
 import math
 from scipy.interpolate import griddata
 import matplotlib.cm as cm
@@ -20,8 +20,8 @@ def single_value_visualization(
 ):
     """
     Visualizes all single values (or those whose names match ones in `value_names` argument)
-    present in the datastores of parameter search over a fixed set of parameters. 
-    
+    present in the datastores of parameter search over a fixed set of parameters.
+
     Parameters
     ----------
     simulation_name : str
@@ -30,19 +30,19 @@ def single_value_visualization(
                     The directory where the parameter search results are stored.
     query : ParamFilterQuery
           ParamFilterQuery filter query instance that will be applied to each datastore before records are retrieved.
-    
+
     value_names : list(str)
-                  List of value names to visualize.  
+                  List of value names to visualize.
     file_name : str
-              The file name into which to save the resulting figure. If None figure is just displayed.  
+              The file name into which to save the resulting figure. If None figure is just displayed.
     resolution : int
                If not None data will be plotted on a interpolated grid of size (resolution,...,resolution)
     ranges : dict
            A dictionary with value names as keys, and tuples of (min,max) ranges as values indicating what range of values should be displayed.
-           
+
     cols : int
          The number of columns in which to show plots, default is 4.
-               
+
     """
     (parameters, datastores, n) = load_fixed_parameter_set_parameter_search(
         simulation_name,
@@ -78,9 +78,9 @@ def single_value_visualization(
     # Lets first filter out stuff we were asked by user
     datastores = [(a, query.query(b)) for a, b in datastores]
 
-    sorted_parameter_indexes = zip(*sorted(enumerate(parameters), key=lambda x: x[1]))[
-        0
-    ]
+    sorted_parameter_indexes = list(
+        zip(*sorted(enumerate(parameters), key=lambda x: x[1]))
+    )[0]
 
     # if value_names is None lets set it to set of value_names in the first datastore
     if value_names == None:
@@ -120,24 +120,24 @@ def single_value_visualization(
 
     rows = math.ceil(1.0 * len(value_names) / cols)
 
-    pylab.figure(figsize=(12 * cols, 6 * rows), dpi=300, facecolor="w", edgecolor="k")
+    plt.figure(figsize=(12 * cols, 6 * rows), dpi=300, facecolor="w", edgecolor="k")
 
     print(rows)
     print(cols)
     print("Plotting")
     res = {}
     for i, value_name in enumerate(value_names):
-        pylab.subplot(rows, cols, i + 1)
+        plt.subplot(rows, cols, i + 1)
         if len(parameters) == 1:
             x = []
             y = []
             for (param_values, datastore) in datastores:
                 x.append(param_values[0])
                 y.append(float(adss[0].value))
-            pylab.plot(x, y)
-            pylab.plot(x, y, marker="o")
-            pylab.xlabel(parameters[sorted_parameter_indexes[0]])
-            pylab.ylabel(value_name)
+            plt.plot(x, y)
+            plt.plot(x, y, marker="o")
+            plt.xlabel(parameters[sorted_parameter_indexes[0]])
+            plt.ylabel(value_name)
 
         elif len(parameters) == 2:
             print("*****************************")
@@ -171,7 +171,7 @@ def single_value_visualization(
                 xi = numpy.linspace(numpy.min(x), numpy.max(x), resolution)
                 yi = numpy.linspace(numpy.min(y), numpy.max(y), resolution)
                 gr = griddata((x, y), z, (xi[None, :], yi[:, None]), method="cubic")
-                pylab.imshow(
+                plt.imshow(
                     gr,
                     interpolation="none",
                     vmin=vmin,
@@ -182,16 +182,16 @@ def single_value_visualization(
                     extent=[numpy.min(x), numpy.max(x), numpy.min(y), numpy.max(y)],
                 )
             else:
-                pylab.scatter(
+                plt.scatter(
                     x, y, marker="o", s=300, c=z, cmap=cm.jet, vmin=vmin, vmax=vmax
                 )
-                pylab.xlim(
+                plt.xlim(
                     min(x) - 0.1 * (max(x) - min(x)), max(x) + 0.1 * (max(x) - min(x))
                 )
-                pylab.ylim(
+                plt.ylim(
                     min(y) - 0.1 * (max(y) - min(y)), max(y) + 0.1 * (max(y) - min(y))
                 )
-                pylab.colorbar()
+                plt.colorbar()
 
                 res[value_name] = (
                     (
@@ -217,11 +217,11 @@ def single_value_visualization(
                 )
                 f.close()
 
-            pylab.xlabel(parameters[sorted_parameter_indexes[0]])
-            pylab.ylabel(parameters[sorted_parameter_indexes[1]])
+            plt.xlabel(parameters[sorted_parameter_indexes[0]])
+            plt.ylabel(parameters[sorted_parameter_indexes[1]])
         else:
             raise ValueError("Currently cannot handle more than 2D data")
-        pylab.title(value_name)
+        plt.title(value_name)
 
         import scipy
 
@@ -231,7 +231,7 @@ def single_value_visualization(
         f.close()
 
     if filename != None:
-        pylab.savefig(master_results_dir + "/" + filename, bbox_inches="tight")
+        plt.savefig(master_results_dir + "/" + filename, bbox_inches="tight")
 
 
 def fixed_point_visualization(
@@ -239,24 +239,24 @@ def fixed_point_visualization(
 ):
     """
     Visualizes all single values (or those whose names match ones in `value_names` argument)
-    present in the datastores of parameter search over a fixed set of parameters. 
-    
+    present in the datastores of parameter search over a fixed set of parameters.
+
     Parameters
     ----------
     rate_name : str
-              The parameter full name that corresponds to the input rate.  
-                
+              The parameter full name that corresponds to the input rate.
+
     simulation_name : str
                     The name of the simulation.
     master_results_dir : str
                     The directory where the parameter search results are stored.
     query : ParamFilterQuery
           ParamFilterQuery filter query instance that will be applied to each datastore before records are retrieved.
-    
+
     value_names : list(str)
-                  List of value names to visualize.  
+                  List of value names to visualize.
     file_name : str
-              The file name into which to save the resulting figure. If None figure is just displayed.  
+              The file name into which to save the resulting figure. If None figure is just displayed.
     """
     (parameters, datastores, n) = load_fixed_parameter_set_parameter_search(
         simulation_name, master_results_dir
@@ -264,9 +264,9 @@ def fixed_point_visualization(
 
     assert len(parameters) == 3
 
-    sorted_parameter_indexes = zip(*sorted(enumerate(parameters), key=lambda x: x[1]))[
-        0
-    ]
+    sorted_parameter_indexes = list(
+        zip(*sorted(enumerate(parameters), key=lambda x: x[1]))
+    )[0]
     # if value_names isNone lets set it to set of value_names in the first datastore
     value_names = set(
         [
@@ -325,31 +325,31 @@ def multi_curve_visualzition(
     """
     Parameters
     ----------
-    
+
     x_axis_parameter_name : str
                           The parameter that will be varied along x axis.
-                          
+
     simulation_name : str
                     The name of the simulation.
-                    
+
     master_results_dir : str
                     The directory where the parameter search results are stored.
     query : ParamFilterQuery
           ParamFilterQuery filter query instance that will be applied to each datastore before records are retrieved.
-    
+
     value_name : list(str)
                  The value name to visualize
     file_name : str
-              The file name into which to save the resulting figure. If None figure is just displayed.  
-               
+              The file name into which to save the resulting figure. If None figure is just displayed.
+
     """
     (parameters, datastores, n) = load_fixed_parameter_set_parameter_search(
         simulation_name, master_results_dir
     )
 
-    sorted_parameter_indexes = zip(*sorted(enumerate(parameters), key=lambda x: x[1]))[
-        0
-    ]
+    sorted_parameter_indexes = list(
+        zip(*sorted(enumerate(parameters), key=lambda x: x[1]))
+    )[0]
     print(sorted_parameter_indexes)
 
     # if value_names isNone lets set it to set of value_names in the first datastore
@@ -395,7 +395,7 @@ def multi_curve_visualzition(
 
     x_axis_parameter_index = parameters.index(x_axis_parameter_name)
 
-    pylab.figure(figsize=(24, 12), dpi=2000, facecolor="w", edgecolor="k")
+    plt.figure(figsize=(24, 12), dpi=2000, facecolor="w", edgecolor="k")
 
     # assert len(parameters) == 3, "We required there to be three changing parameters for this visualization, you provided %d" % (len(parameters))
 
@@ -423,8 +423,8 @@ def multi_curve_visualzition(
     x = []
     y = []
     z = []
-    pylab.subplot(2, 2, 1)
-    for k in d.keys():
+    plt.subplot(2, 2, 1)
+    for k in list(d.keys()):
         color = (
             (k[0] - mmin[0]) / (mmax[0] - mmin[0]),
             (k[1] - mmin[1]) / (mmax[1] - mmin[1]),
@@ -433,26 +433,26 @@ def multi_curve_visualzition(
         x.append(k[0])
         y.append(k[1])
         z.append(color)
-        pylab.plot(d[k][0], d[k][1])
-        pylab.plot(d[k][0], d[k][1], marker="o", color=color)
+        plt.plot(d[k][0], d[k][1])
+        plt.plot(d[k][0], d[k][1], marker="o", color=color)
 
-    pylab.xlabel(parameters[sorted_parameter_indexes[0]])
-    pylab.ylabel(value_name)
-    pylab.ylim(0, 20)
+    plt.xlabel(parameters[sorted_parameter_indexes[0]])
+    plt.ylabel(value_name)
+    plt.ylim(0, 20)
 
-    pylab.subplot(2, 2, 2)
-    pylab.scatter(x, y, marker="o", s=100, c=z)
+    plt.subplot(2, 2, 2)
+    plt.scatter(x, y, marker="o", s=100, c=z)
     parameters.remove(x_axis_parameter_name)
-    pylab.xlabel(parameters[0])
-    pylab.ylabel(parameters[1])
+    plt.xlabel(parameters[0])
+    plt.ylabel(parameters[1])
 
     # let's add ratio colored plot
     x = []
     y = []
     z = []
 
-    pylab.subplot(2, 2, 3)
-    for k in d.keys():
+    plt.subplot(2, 2, 3)
+    for k in list(d.keys()):
         a = (k[0] - mmin[0]) / (mmax[0] - mmin[0])
         b = (k[1] - mmin[1]) / (mmax[1] - mmin[1])
         color = [a, b, 0]
@@ -464,16 +464,16 @@ def multi_curve_visualzition(
         x.append(k[0])
         y.append(k[1])
         z.append(color)
-        pylab.plot(d[k][0], d[k][1])
-        pylab.plot(d[k][0], d[k][1], color=color)
+        plt.plot(d[k][0], d[k][1])
+        plt.plot(d[k][0], d[k][1], color=color)
 
-    pylab.xlabel(parameters[sorted_parameter_indexes[0]])
-    pylab.ylabel(value_name)
+    plt.xlabel(parameters[sorted_parameter_indexes[0]])
+    plt.ylabel(value_name)
 
-    pylab.subplot(2, 2, 4)
-    pylab.scatter(x, y, marker="o", s=100, c=z)
-    pylab.xlabel(parameters[0])
-    pylab.ylabel(parameters[1])
+    plt.subplot(2, 2, 4)
+    plt.scatter(x, y, marker="o", s=100, c=z)
+    plt.xlabel(parameters[0])
+    plt.ylabel(parameters[1])
 
     if filename != None:
-        pylab.savefig(master_results_dir + "/" + filename)
+        plt.savefig(master_results_dir + "/" + filename)

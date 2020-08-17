@@ -122,11 +122,13 @@ class ModularConnector(Connector):
         z = numpy.zeros((self.target.pop.size,))
         for i in numpy.nonzero(self.target.pop._mask_local)[0]:
             connection_list.extend(
-                zip(
-                    numpy.arange(0, self.source.pop.size, 1),
-                    z + i,
-                    self.weight_scaler * self._obtain_weights(i).flatten(),
-                    self._obtain_delays(i).flatten(),
+                list(
+                    zip(
+                        numpy.arange(0, self.source.pop.size, 1),
+                        z + i,
+                        self.weight_scaler * self._obtain_weights(i).flatten(),
+                        self._obtain_delays(i).flatten(),
+                    )
                 )
             )
 
@@ -168,15 +170,15 @@ class ModularSamplingProbabilisticConnector(ModularConnector):
                     weights, int(next(self.parameters.num_samples))
                 )
             )
-            v = v + numpy.sum(co.values())
-            k = co.keys()
+            v = v + numpy.sum(list(co.values()))
+            k = list(co.keys())
             a = numpy.array(
                 [
                     k,
                     numpy.zeros(len(k)) + i,
                     self.weight_scaler
                     * numpy.multiply(
-                        self.parameters.base_weight.next(len(k)), co.values()
+                        self.parameters.base_weight.next(len(k)), list(co.values())
                     ),
                     numpy.array(delays)[k],
                 ]
@@ -324,7 +326,7 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(ModularConnect
                     weights, int(self.parameters.num_samples - 2 * int(samples))
                 )
                 co = Counter(a)
-            v = v + numpy.sum(co.values())
+            v = v + numpy.sum(list(co.values()))
             cl.extend(
                 [
                     (
@@ -335,7 +337,7 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(ModularConnect
                         * co[k],
                         delays[k],
                     )
-                    for k in co.keys()
+                    for k in list(co.keys())
                 ]
             )
         return cl
@@ -362,15 +364,15 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(ModularConnect
                         weights, int(self.parameters.num_samples - 2 * int(samples))
                     )
                 )
-            v = v + numpy.sum(co.values())
-            k = co.keys()
+            v = v + numpy.sum(list(co.values()))
+            k = list(co.keys())
             a = numpy.array(
                 [
                     k,
                     numpy.zeros(len(k)) + i,
                     self.weight_scaler
                     * numpy.multiply(
-                        self.parameters.base_weight.next(len(k)), co.values()
+                        self.parameters.base_weight.next(len(k)), list(co.values())
                     ),
                     numpy.array(delays)[k],
                 ]

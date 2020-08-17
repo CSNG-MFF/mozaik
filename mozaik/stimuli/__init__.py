@@ -68,7 +68,7 @@ class BaseStimulus(MozaikParametrized):
         """
         Returns number of parameters of the stimulus.
         """
-        return len(self.getParams().keys())
+        return len(list(self.getParams().keys()))
 
     def frames(self):
         """

@@ -100,7 +100,7 @@ class DataStoreView(ParametrizedObject):
         if None in sheets:
             sheets.pop(None)
 
-        return sheets.keys()
+        return list(sheets.keys())
 
     def get_neuron_postions(self):
         """
@@ -190,7 +190,7 @@ class DataStoreView(ParametrizedObject):
         If stimuli==None returns all sensory stimuli.
         """
         if stimuli == None:
-            return self.sensory_stimulus.values()
+            return list(self.sensory_stimulus.values())
         else:
             return [
                 self.sensory_stimulus[s] for s in stimuli if s in self.sensory_stimulus
@@ -212,7 +212,7 @@ class DataStoreView(ParametrizedObject):
         Utility function that makes a shallow copy of the dictionary holding sensory stimuli.
         """
         new_dict = collections.OrderedDict()
-        for k in self.sensory_stimulus.keys():
+        for k in list(self.sensory_stimulus.keys()):
             new_dict[k] = self.sensory_stimulus[k]
         return new_dict
 
@@ -258,7 +258,7 @@ class DataStoreView(ParametrizedObject):
                 d.get(MozaikParametrized.idd(st).name, 0) + 1
             )
 
-        for k in d.keys():
+        for k in list(d.keys()):
             logger.info("     " + str(k) + " : " + str(d[k]))
 
         logger.info("   Number of ADS: " + str(len(self.analysis_results)))
@@ -266,7 +266,7 @@ class DataStoreView(ParametrizedObject):
         for ads in self.analysis_results:
             d[ads.identifier] = d.get(ads.identifier, 0) + 1
 
-        for k in d.keys():
+        for k in list(d.keys()):
             logger.info("     " + str(k) + " : " + str(d[k]))
 
         if full_recordings:
