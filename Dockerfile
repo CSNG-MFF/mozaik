@@ -53,14 +53,14 @@ RUN pip install --prefix=${PACKAGES_DIR} .
 FROM python:3.7-slim-buster as prod
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
-        libfreetype6 \
-        libgomp1 \
-        libgsl23 \
-        libjpeg62-turbo \
-        libncurses5 \
-        libtk \
-        openmpi-bin \
-        ssh \
+        libfreetype6=2.9.1-3+deb10u1 \
+        libgomp1=8.3.0-6 \
+        libgsl23=2.5+dfsg-6 \
+        libjpeg62-turbo=1:1.5.2-2+b1 \
+        libncurses5=6.1+20181013-2+deb10u2 \
+        libtk8.6=8.6.9-2 \
+        openmpi-bin=3.1.3-11 \
+        ssh=1:7.9p1-10+deb10u2 \
  && rm -rf /var/lib/apt/lists/*
 
 ARG PACKAGES_DIR=/source/packages
@@ -80,7 +80,9 @@ FROM prod as dev
 USER root
 RUN apt-get update \
  && apt-get install -y \
+        build-essential \
         git \
+        libopenmpi-dev \
  && pip install pipenv==2020.8.13
 
 WORKDIR /app
@@ -88,9 +90,11 @@ RUN chown -R mozaik:mozaik .
 
 USER mozaik
 COPY --chown=mozaik:mozaik Pipfile Pipfile.lock ./
-RUN pipenv install --system --ignore-pipfile --deploy --dev
+RUN pipenv install --ignore-pipfile --deploy --dev
 
+USER root
 COPY --chown=mozaik:mozaik . ./
 RUN pip install -e .
 
+USER mozaik
 ENTRYPOINT [""]

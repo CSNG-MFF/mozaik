@@ -12,9 +12,10 @@ For example:
 mpirun python run.py nest 2 param/defaults 'test'
 """
 import matplotlib
-matplotlib.use('Agg')
 
-from mpi4py import MPI 
+matplotlib.use("Agg")
+
+from mpi4py import MPI
 from pyNN import nest
 import sys
 import mozaik
@@ -23,18 +24,18 @@ from mozaik.controller import run_workflow, setup_logging
 from mozaik.tools.misc import result_directory_name
 from experiments import create_experiments
 from model import VogelsAbbott
-from mozaik.storage.datastore import Hdf5DataStore,PickledDataStore
+from mozaik.storage.datastore import Hdf5DataStore, PickledDataStore
 from analysis_and_visualization import perform_analysis_and_visualization
 from parameters import ParameterSet
 
-#mpi_comm = MPI.COMM_WORLD
+# mpi_comm = MPI.COMM_WORLD
 logger = mozaik.getMozaikLogger()
 simulation_name = "VogelsAbbott2005"
 simulation_run_name, _, _, _, modified_parameters = parse_workflow_args()
 
 if True:
-    data_store,model = run_workflow(simulation_name,VogelsAbbott,create_experiments)
-else: 
+    data_store, model = run_workflow(simulation_name, VogelsAbbott, create_experiments)
+else:
     setup_logging()
     data_store = PickledDataStore(
         load=True,
@@ -48,9 +49,9 @@ else:
         ),
         replace=True,
     )
-    logger.info('Loaded data store')
+    logger.info("Loaded data store")
 
-#if mpi_comm.rank == 0:
-print("Starting visualization" )
+# if mpi_comm.rank == 0:
+print("Starting visualization")
 perform_analysis_and_visualization(data_store)
-data_store.save() 
+data_store.save()

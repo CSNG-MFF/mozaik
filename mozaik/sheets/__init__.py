@@ -263,7 +263,7 @@ class Sheet(BaseComponent):
         if self.to_record is None:
             return
 
-        spike_var = 'spikes'
+        spike_var = "spikes"
         variables = [k for k in self.to_record if k != spike_var]
         if spike_var in self.to_record:
             variables.append(spike_var)
