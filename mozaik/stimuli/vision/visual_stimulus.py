@@ -1,29 +1,31 @@
 """
 This module contains API of visual stimuli.
 """
-import numpy
-import mozaik
-from quantities import degrees
-from mozaik.stimuli import BaseStimulus
-from mozaik.space import TRANSPARENT, xy2ij, VisualRegion
-from mozaik.tools.mozaik_parametrized import SNumber
-from mozaik.tools.units import lux
-from scipy.ndimage import interpolation
+import logging
 
-logger = mozaik.getMozaikLogger()
+from quantities import degrees
+from scipy.ndimage import interpolation
+import numpy
+
+from .. import BaseStimulus
+from ...space import TRANSPARENT, xy2ij, VisualRegion
+from ...tools.mozaik_parametrized import SNumber
+from ...tools.units import lux
+
+logger = logging.getLogger(__name__)
 
 
 class VisualStimulus(BaseStimulus):
     """
     Abstract base class for visual stimuli.
-    
+
     This class defines all parameters common to all visual stimuli.
-    
+
     This class implements all functions specified by the :class:`mozaik.stimuli.stimulus.BaseStimulus` interface.
     The only function that remains to be implemented by the user whenever creating a new stimulus by subclassing
     this class is the :func:`mozaik.stimuli.stimulus.BaseStimulus.frames` function.
-    
-    This class also implements functions common to all visual stimuli that are required for it to be compatible 
+
+    This class also implements functions common to all visual stimuli that are required for it to be compatible
     with the :class:`mozaik.space.VisualSpace` and  class.
     """
 
@@ -42,7 +44,8 @@ class VisualStimulus(BaseStimulus):
         self._zoom_cache = {}
         self.region_cache = {}
         self.is_visible = True
-        self.transparent = True  # And efficiency flag. It should be set to false by the stimulus if there are no transparent points in it.
+        # And efficiency flag. It should be set to false by the stimulus if there are no transparent points in it.
+        self.transparent = True
         # This will avoid all the code related to transparency which is very expensive.
         self.region = VisualRegion(
             self.location_x, self.location_y, self.size_x, self.size_y

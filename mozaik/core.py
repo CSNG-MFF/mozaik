@@ -2,18 +2,17 @@
 """
 Definition of the component interfaces. These interfaces are not currently directly checked or enforced.
 """
+import logging
 
-import mozaik
-import numpy as np
-import parameters.random
-from mozaik import __version__
-from mozaik.tools.distribution_parametrization import PyNNDistribution
 from parameters import ParameterSet, ParameterDist
 from parameters.random import UniformDist
-from string import Template
+import numpy as np
+
+from . import __version__
+from .tools.distribution_parametrization import PyNNDistribution
 
 
-logger = mozaik.getMozaikLogger()
+logger = logging.getLogger(__name__)
 
 
 class ParametrizedObject(object):

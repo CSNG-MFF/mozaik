@@ -1,4 +1,5 @@
 import sys
+
 from mozaik.meta_workflow.visualization import single_value_visualization
 from mozaik.storage.queries import *
 from parameters import ParameterSet

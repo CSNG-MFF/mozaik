@@ -1,18 +1,16 @@
 """
 This modules implements the API for input space.
 """
+import logging
 
-import os.path
-import numpy
-import mozaik
-from PIL import Image
 from parameters import ParameterSet
-from mozaik.core import ParametrizedObject
+import numpy
 
-from mozaik import __version__
+from . import __version__
+from .core import ParametrizedObject
 
 TRANSPARENT = -1
-logger = mozaik.getMozaikLogger()
+logger = logging.getLogger(__name__)
 
 
 def xy2ij(coordinates):
@@ -139,7 +137,7 @@ class VisualSpace(InputSpace):
 
     version = __version__
 
-    required_parameters = ParameterSet({"background_luminance": float,})
+    required_parameters = ParameterSet({"background_luminance": float})
 
     def __init__(self, params):
         InputSpace.__init__(

@@ -2,43 +2,41 @@
 Various helper functions.
 """
 
-import numpy
-import numpy.random
-from numpy import pi, sqrt, exp, power
+import numpy as np
 
 
 def sample_from_bin_distribution(bins, number_of_samples):
     """
     Samples from a distribution defined by a vector the sum in. The vector doesn't have to add up to one
-    it will be automatically normalized. 
-    
-    
+    it will be automatically normalized.
+
+
     Parameters
     ----------
-    
+
     bins : ndarray
          The returned samples correspond to the bins in `bins` - the numpy array defining the bin distribution
-      
+
     number_of_samples : int
                       Number of samples to generate.
     """
     if len(bins) == 0:
         return []
 
-    bins = bins / numpy.sum(bins)
-    si = numpy.random.choice(list(range(len(bins))), size=number_of_samples, p=bins)
+    bins = bins / np.sum(bins)
+    si = np.random.choice(list(range(len(bins))), size=number_of_samples, p=bins)
 
     return si
 
 
-_normal_function_sqertofpi = sqrt(2 * pi)
+_normal_function_sqertofpi = np.sqrt(2 * np.pi)
 
 
 def normal_function(x, mean=0, sigma=1.0):
     """
     Returns the value of probability density of normal distribution N(mean,sigma) at point `x`.
     """
-    return numpy.exp(-numpy.power((x - mean) / sigma, 2) / 2) / (
+    return np.exp(-np.power((x - mean) / sigma, 2) / 2) / (
         sigma * _normal_function_sqertofpi
     )
 
@@ -46,22 +44,22 @@ def normal_function(x, mean=0, sigma=1.0):
 def find_neuron(which, positions):
     """
     Finds a neuron depending on which:
-        'center' - the most central neuron in the sheet 
+        'center' - the most central neuron in the sheet
         'top_right' - the top_right neuron in the sheet
         'top_left' - the top_left neuron in the sheet
         'bottom_left' - the bottom_left neuron in the sheet
         'bottom_right' - the bottom_right neuron in the sheet
     """
-    minx = numpy.min(positions[0, :])
-    maxx = numpy.max(positions[0, :])
-    miny = numpy.min(positions[1, :])
-    maxy = numpy.max(positions[1, :])
+    minx = np.min(positions[0, :])
+    maxx = np.max(positions[0, :])
+    miny = np.min(positions[1, :])
+    maxy = np.max(positions[1, :])
 
     def closest(x, y, positions):
-        return numpy.argmin(
-            numpy.sqrt(
-                numpy.power(positions[0, :].flatten() - x, 2)
-                + numpy.power(positions[1, :].flatten() - y, 2)
+        return np.argmin(
+            np.sqrt(
+                np.power(positions[0, :].flatten() - x, 2)
+                + np.power(positions[1, :].flatten() - y, 2)
             )
         )
 

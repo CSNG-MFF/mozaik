@@ -36,23 +36,23 @@ def circ_mean(matrix, weights=None, axis=None, low=0, high=pi * 2, normalize=Fal
     """
     Circular mean of matrix. Weighted if weights are not none.
     Mean will be computed along axis axis.
-    
+
     Parameters
     ----------
-    
+
     matrix : ndarray
            Matrix of data for which the compute the circular mean. 
-           
+
     weights : ndarray, optional
             If not none, matrix of the same size as matrix. It will be used as weighting for the mean.
-    
+
     low, high : double, optional
               The min and max values that will be mapped onto the periodic interval of (0, 2pi).
-              
+
     axis : int, optional
          Numpy axis along which to compute the circular mean. 
-    
-    
+
+
     normalize : bool
               If True weights will be normalized along axis. If any weights
               that are to be jointly normalized are all zero they will be

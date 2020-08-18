@@ -1,17 +1,19 @@
 """
 See :mod:`mozaik.visualization` for more general documentation.
 """
-import mozaik.visualization.helper_functions as phf
+import logging
+import math
+
+from cycler import cycler
+from matplotlib.colors import hsv_to_rgb, LinearSegmentedColormap
 import matplotlib.pyplot as plt
 import numpy
-import math
-import mozaik
-import mozaik.tools.units
 import quantities as pq
-from matplotlib.colors import *
-from cycler import cycler
 
-logger = mozaik.getMozaikLogger()
+from ..tools import units as munits
+from ..visualization import helper_functions as phf
+
+logger = logging.getLogger(__name__)
 
 
 class SimplePlot(object):
@@ -262,9 +264,8 @@ class StandardStyle(SimplePlot):
             "Ve": (0.8, 0.4, 0),
             "rP": (0.8, 0.6, 0.7),
         }
-        import matplotlib.colors
 
-        self.colormap = matplotlib.colors.LinearSegmentedColormap.from_list(
+        self.colormap = LinearSegmentedColormap.from_list(
             "CMcmSBVe", [self.color_cycle["SB"], self.color_cycle["Ve"]]
         )
 
@@ -1054,8 +1055,8 @@ class ConductancesPlot(StandardStyle):
         )
 
         for e, i in zip(self.gsyn_es, self.gsyn_is):
-            e = e.rescale(mozaik.tools.units.nS)
-            i = i.rescale(mozaik.tools.units.nS)
+            e = e.rescale(munits.nS)
+            i = i.rescale(munits.nS)
             self.axis.plot(time_axis, e.tolist(), color="#F5A9A9")
             self.axis.plot(time_axis, i.tolist(), color="#A9BCF5")
             mean_gsyn_e = mean_gsyn_e + numpy.array(e.tolist())
@@ -1075,7 +1076,7 @@ class ConductancesPlot(StandardStyle):
         self.x_lim = (t_start, t_stop)
         # self.x_ticks = [t_start, (t_stop - t_start)/2, t_stop]
         self.x_label = "time (" + self.gsyn_es[0].t_start.dimensionality.latex + ")"
-        self.y_label = "g (" + mozaik.tools.units.nS.dimensionality.latex + ")"
+        self.y_label = "g (" + munits.nS.dimensionality.latex + ")"
 
 
 class ConnectionPlot(StandardStyle):

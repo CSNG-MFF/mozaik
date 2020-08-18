@@ -1,40 +1,43 @@
 # encoding: utf-8
 """
-This file contains connectors that were written for speed - as a general rule 
+This file contains connectors that were written for speed - as a general rule
 they tend to use the more native pyNN or even backend specific pyNN methods.
 
 To obtain speed they generally sacrifice ease customization.
 """
+import logging
 
-import mozaik
-from mozaik.connectors import Connector
-from parameters import ParameterSet, ParameterDist
+from parameters import ParameterSet
 from pyNN import space
 import numpy
 
-logger = mozaik.getMozaikLogger()
+import mozaik
+from . import Connector, SheetWithMagnificationFactor
+
+logger = logging.getLogger(__name__)
 
 
 class DistanceDependentProbabilisticArborization(Connector):
     """
     A abstract connector that implements distance dependent connection.
     Each implementation just needs to implement the arborization_function and delay function.
-    The distance input is in the 'native' metric of the sheets, i.e. degrees of visual field 
+    The distance input is in the 'native' metric of the sheets, i.e. degrees of visual field
     in RetinalSheet or micrometers in CorticalSheet.
     """
 
     required_parameters = ParameterSet(
         {
             "weights": float,  # nA, the synapse strength
-            "map_location": str,  # location of the map. It has to be a file containing a single pickled 2d numpy array with values between 0 and 1.0.
+            # location of the map. It has to be a file containing a single pickled 2d numpy array with values between 0 and 1.0.
+            "map_location": str,
         }
     )
 
-    def arborization_function(distance):
+    def arborization_function(self, distance):
         raise NotImplementedError
         pass
 
-    def delay_function(distance):
+    def delay_function(self, distance):
         raise NotImplementedError
         pass
 
@@ -80,21 +83,23 @@ class ExponentialProbabilisticArborization(DistanceDependentProbabilisticArboriz
 
     required_parameters = ParameterSet(
         {
-            "propagation_constant": float,  # ms/μm the constant that will determinine the distance dependent delays on the connections
-            "arborization_constant": float,  # μm distance constant of the exponential decay of the probability of the connection with respect (in cortical distance)
+            # ms/μm the constant that will determinine the distance dependent delays on the connections
+            "propagation_constant": float,
+            # μm distance constant of the exponential decay of the probability of the connection with respect (in cortical distance)
+            "arborization_constant": float,
             # to the distance from the innervation point.
             "arborization_scaler": float,  # the scaler of the exponential decay
         }
     )
 
-    def arborization_function(distance):
+    def arborization_function(self, distance):
         return (
             self.parameters.arborization_scaler
             * numpy.exp(-0.5 * (distance / self.parameters.arborization_constant) ** 2)
             / (self.parameters.arborization_constant * numpy.sqrt(2 * numpy.pi))
         )
 
-    def delay_function(distance):
+    def delay_function(self, distance):
         return distance * self.parameters.propagation_constant
 
 
@@ -105,7 +110,8 @@ class UniformProbabilisticArborization(Connector):
 
     required_parameters = ParameterSet(
         {
-            "connection_probability": float,  # probability of connection between two neurons from the two populations
+            # probability of connection between two neurons from the two populations
+            "connection_probability": float,
             "weights": float,  # nA, the synapse strength
             "delay": float,  # ms delay of the connections
         }

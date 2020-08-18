@@ -1,31 +1,33 @@
 """
 This module contains definition of the PopulationSelector API.
 It is used as mechanism for selecting subpopulations of neurons within
-Sheets. The most typical use is for selecting neurons for recordings, where 
-a PopulationSelector can for example simulate the sampling of neurons 
+Sheets. The most typical use is for selecting neurons for recordings, where
+a PopulationSelector can for example simulate the sampling of neurons
 when using a multi-electrode array of some specific spatial configuration.
 """
 
-from mozaik.core import ParametrizedObject
-from mozaik.tools.circ_stat import circular_dist
-from parameters import ParameterSet
 import math
+
+from parameters import ParameterSet
 import numpy
+
 import mozaik
+from ..core import ParametrizedObject
+from ..tools.circ_stat import circular_dist
 
 
 class PopulationSelector(ParametrizedObject):
     """
-    The PopulationSelector specifies which cells should be selected from population. 
-    
-    It defines only one function: generate_idd_list_of_neurons that should 
+    The PopulationSelector specifies which cells should be selected from population.
+
+    It defines only one function: generate_idd_list_of_neurons that should
     return the list of selected neurons ids, based on the provided sheet and parameters.
-    
+
     Parameters
     ----------
     parameters : ParameterSet
                The dictionary of required parameters.
-                
+
     sheet : Sheet
           The sheet from which to pick the neurons
     """
@@ -36,9 +38,9 @@ class PopulationSelector(ParametrizedObject):
 
     def generate_idd_list_of_neurons(self):
         """
-        The abastract function that has to be implemented by each `.PopulationSelector` 
+        The abastract function that has to be implemented by each `.PopulationSelector`
         and has to return the list of selected neurons.
-        
+
         Returns
         -------
         ids : list
@@ -58,7 +60,7 @@ class RCAll(PopulationSelector):
 
 class RCRandomN(PopulationSelector):
     """
-      Select random neurons.  
+      Select random neurons.
 
       This PopulationSelector selects *num_of_cells* random neurons from the given population.
 
@@ -69,7 +71,7 @@ class RCRandomN(PopulationSelector):
       """
 
     required_parameters = ParameterSet(
-        {"num_of_cells": int,}  # The number of cells to be selected
+        {"num_of_cells": int}  # The number of cells to be selected
     )
 
     def generate_idd_list_of_neurons(self):
@@ -93,7 +95,7 @@ class RCRandomPercentage(PopulationSelector):
       """
 
     required_parameters = ParameterSet(
-        {"percentage": float,}  # the cell type of the sheet
+        {"percentage": float}  # the cell type of the sheet
     )
 
     def generate_idd_list_of_neurons(self):
@@ -106,17 +108,17 @@ class RCGrid(PopulationSelector):
     """
       Select neurons on a grid.
 
-      This PopulationSelector assumes a grid of points ('electrodes') with a 
+      This PopulationSelector assumes a grid of points ('electrodes') with a
       given *spacing* and *size*, centered on (*offset_x*,*offset_x*) coordinates.
       It then finds the closest neuron to each point in the grid to be
       inserted into the list of selected neurons .
-      
+
       Other parameters
       ----------------
 
       size : float (micro meters of cortical space)
-           The size of the grid (it is assumed to be square) - it has to be multiple of spacing 
-      
+           The size of the grid (it is assumed to be square) - it has to be multiple of spacing
+
       spacing : float (micro meters of cortical space)
            The space between two neighboring electrodes.
 
@@ -129,10 +131,13 @@ class RCGrid(PopulationSelector):
 
     required_parameters = ParameterSet(
         {
-            "size": float,  # the size of the grid (it is assumed to be square) - it has to be multiple of spacing (micro meters)
+            # the size of the grid (it is assumed to be square) - it has to be multiple of spacing (micro meters)
+            "size": float,
             "spacing": float,  # the space between two electrodes (micro meters)
-            "offset_x": float,  # the x axis offset from the center of the sheet (micro meters)
-            "offset_y": float,  # the y axis offset from the center of the sheet (micro meters)
+            # the x axis offset from the center of the sheet (micro meters)
+            "offset_x": float,
+            # the y axis offset from the center of the sheet (micro meters)
+            "offset_y": float,
         }
     )
 
@@ -170,26 +175,26 @@ class SimilarAnnotationSelector(PopulationSelector):
     """
       Choose neurons based on annotations info.
 
-      This PopulationSelector picks random *num_of_cells* neurons whose 
-      *annotation* value is closer than *distance* from pre-specified *value* 
+      This PopulationSelector picks random *num_of_cells* neurons whose
+      *annotation* value is closer than *distance* from pre-specified *value*
       (based on Euclidian norm).
-      
+
       Other parameters
       ----------------
       annotation : str
                  The name of the annotation value. It has to be defined in the given population for all neurons.
-      
-      distance : float 
-		 The the upper limit on distance between the given neurons annotation value and the specified value that permits inclusion.
-      
+
+      distance : float
+                 The the upper limit on distance between the given neurons annotation value and the specified value that permits inclusion.
+
       value : float
-	    The value from which to calculate distance.
-      
+            The value from which to calculate distance.
+
       num_of_cells : int
                    The number of cells to be selected.
 
       period : float
-		The period of the annotation value (0 if none)
+                The period of the annotation value (0 if none)
       """
 
     required_parameters = ParameterSet(
@@ -198,7 +203,8 @@ class SimilarAnnotationSelector(PopulationSelector):
             "distance": float,
             "value": float,
             "num_of_cells": int,  # The number of cells to be selected
-            "period": float,  # if the value is periodic this should be set to the period, oterwise it should be set to 0.
+            # if the value is periodic this should be set to the period, oterwise it should be set to 0.
+            "period": float,
         }
     )
 
@@ -232,6 +238,7 @@ class SimilarAnnotationSelector(PopulationSelector):
         return picked
 
     def generate_idd_list_of_neurons(self):
+        z = self.sheet.pop.all_cells.astype(int)
         picked = self.pick_close_to_annotation()
         mozaik.rng.shuffle(picked)
         return z[picked[: self.parameters.num_of_cells]]
@@ -241,8 +248,8 @@ class SimilarAnnotationSelectorRegion(SimilarAnnotationSelector):
     """
     Choose neurons based on annotations info.
 
-    This PopulationSelector picks random *num_of_cells* neurons whose 
-    *annotation* value is closer than *distance* from pre-specified *value* 
+    This PopulationSelector picks random *num_of_cells* neurons whose
+    *annotation* value is closer than *distance* from pre-specified *value*
     (based on Euclidian norm). Furthermore, all selected neurons have to
     sit within a region defined by *size* centered  on (*offset_x*,*offset_x*) coordinates
     (in degrees of visual field).
@@ -253,14 +260,14 @@ class SimilarAnnotationSelectorRegion(SimilarAnnotationSelector):
         The name of the annotation value. It has to be defined in the given population for all neurons.
 
     distance : The the upper limit on distance between the given neurons annotation value and the specified value that permits inclusion.
-      
+
     value : The value from which to calculate distance.
-      
+
     num_of_cells : int
         The number of cells to be selected.
 
     size : float (micro meters of cortical space)
-        The size of the grid (it is assumed to be square) - it has to be multiple of spacing 
+        The size of the grid (it is assumed to be square) - it has to be multiple of spacing
 
     offset_x : float (micro meters of cortical space)
         The x axis offset from the center of the sheet.
@@ -271,9 +278,12 @@ class SimilarAnnotationSelectorRegion(SimilarAnnotationSelector):
 
     required_parameters = ParameterSet(
         {
-            "size": float,  # the size of the grid (it is assumed to be square) - it has to be multiple of spacing (micro meters)
-            "offset_x": float,  # the x axis offset from the center of the sheet (micro meters)
-            "offset_y": float,  # the y axis offset from the center of the sheet (micro meters)
+            # the size of the grid (it is assumed to be square) - it has to be multiple of spacing (micro meters)
+            "size": float,
+            # the x axis offset from the center of the sheet (micro meters)
+            "offset_x": float,
+            # the y axis offset from the center of the sheet (micro meters)
+            "offset_y": float,
         }
     )
 

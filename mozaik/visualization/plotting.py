@@ -37,30 +37,37 @@ one wants to add some additional figure level decorations, in case the figure is
 its own (i.e. becomes the highest-level), and that would otherwise prevent
 flexible use in nesting via the subplot.
 """
+import logging
+import time
 
+from neo.core.analogsignal import AnalogSignal as NeoAnalogSignal
+from neo.core.spiketrain import SpikeTrain as NeoSpikeTrain
+from numpy import pi
+from parameters import ParameterSet
+from scipy.interpolate import griddata
+import matplotlib.animation as animation
+import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import numpy
-import time
 import quantities as pq
-import matplotlib.cm as cm
-import matplotlib.gridspec as gridspec
-from scipy.interpolate import griddata
-import mozaik.tools.units
-from parameters import ParameterSet
 
-from mozaik.tools.circ_stat import *
-from mozaik.core import ParametrizedObject
-from mozaik.storage import queries
-from mozaik.controller import Global
-from mozaik.tools.mozaik_parametrized import (
+from ..controller import Global
+from ..core import ParametrizedObject
+from ..storage import queries
+from ..tools import units as munits
+from ..tools.circ_stat import *
+from ..tools.mozaik_parametrized import (
     colapse_to_dictionary,
     MozaikParametrized,
     varying_parameters,
     matching_parametrized_object_params,
 )
-from numpy import pi
-from neo.core.analogsignal import AnalogSignal as NeoAnalogSignal
-from neo.core.spiketrain import SpikeTrain as NeoSpikeTrain
+from .plot_constructors import (
+    LinePlot,
+    PerStimulusPlot,
+    PerStimulusADSPlot,
+    ADSGridPlot,
+)
 from .simple_plot import (
     StandardStyleLinePlot,
     SpikeRasterPlot,
@@ -75,16 +82,8 @@ from .simple_plot import (
     CorticalColumnSpikeRasterPlot,
     OrderedAnalogSignalListPlot,
 )
-from .plot_constructors import (
-    LinePlot,
-    PerStimulusPlot,
-    PerStimulusADSPlot,
-    ADSGridPlot,
-)
 
-import mozaik
-
-logger = mozaik.getMozaikLogger()
+logger = logging.getLogger(__name__)
 
 
 class Plotting(ParametrizedObject):
@@ -151,7 +150,7 @@ class Plotting(ParametrizedObject):
         d = self.subplot(gs)
         for (k, (pl, gs, p)) in d.items():
             p.update(parameters)
-            ### THIS IS WRONG 'UP' DO NOT WORK
+            # THIS IS WRONG 'UP' DO NOT WORK
             up = user_parameters
             for z in k.split("."):
                 up, fp = self._nip_parameters(z, up)
@@ -190,8 +189,6 @@ class Plotting(ParametrizedObject):
 
         # ANIMATION Handling
         if self.animation_update_functions != []:
-            import matplotlib.animation as animation
-
             self.animation = animation.FuncAnimation(
                 self.fig,
                 Plotting.update_animation_function,
@@ -293,8 +290,10 @@ class PlotTuningCurve(Plotting):
             "sheet_name": str,  # from which layer to plot the tuning curves
             "parameter_name": str,  # the parameter_name through which to plot the tuning curve
             "centered": bool,  # if True it will center each set of tuning curves on the parameter value with the largest mean response across the other parameter variations
-            "mean": bool,  # if True it will plot the mean tuning curve over the neurons (in case centered=True it will first center the TCs before computing the mean)
-            "pool": bool,  # if True it will not plot each different value_name found in datastore on a sepparete line of plots but pool them together.
+            # if True it will plot the mean tuning curve over the neurons (in case centered=True it will first center the TCs before computing the mean)
+            "mean": bool,
+            # if True it will not plot each different value_name found in datastore on a sepparete line of plots but pool them together.
+            "pool": bool,
             "polar": bool,  # if True polar coordinates will be used
         }
     )
@@ -359,7 +358,7 @@ class PlotTuningCurve(Plotting):
             for k in dic:
                 (b, a) = dic[k]
 
-                if self.pnvs[-1][0].value_units == mozaik.tools.units.uS:
+                if self.pnvs[-1][0].value_units == munits.uS:
                     a = [[d * 1000.0 for d in c] for c in a]
 
                 par, val = list(zip(*sorted(zip(b, numpy.array(a)))))
@@ -657,7 +656,7 @@ class PlotTuningCurve(Plotting):
 
         params["x_label"] = self.parameters.parameter_name
         if idx == 0:
-            if units == mozaik.tools.units.uS:
+            if units == munits.uS:
                 params["y_label"] = value_name + "(nS)"
             else:
                 params["y_label"] = value_name + "(" + units.dimensionality.latex + ")"
@@ -1066,7 +1065,8 @@ class OverviewPlot(Plotting):
             "sheet_name": str,  # the name of the sheet for which to plot
             "spontaneous": bool,  # the name of the sheet for which to plot
             "neuron": int,
-            "sheet_activity": ParameterSet,  # if not empty the ParameterSet is passed to ActivityMovie which is displayed in to top row, note that the sheet_name will be set by OverviewPlot
+            # if not empty the ParameterSet is passed to ActivityMovie which is displayed in to top row, note that the sheet_name will be set by OverviewPlot
+            "sheet_activity": ParameterSet,
         }
     )
 
@@ -1250,7 +1250,7 @@ class AnalogSignalPlot(Plotting):
     """
 
     required_parameters = ParameterSet(
-        {"sheet_name": str,}  # the name of the sheet for which to plot
+        {"sheet_name": str}  # the name of the sheet for which to plot
     )
 
     def subplot(self, subplotspec):
@@ -1310,7 +1310,8 @@ class ConductanceSignalListPlot(Plotting):
 
     required_parameters = ParameterSet(
         {
-            "normalize_individually": bool,  # each trace will be normalized individually by dividing it with its maximum
+            # each trace will be normalized individually by dividing it with its maximum
+            "normalize_individually": bool,
             "neurons": list,  # list of neuron ids for which to plot the conductances
         }
     )
@@ -1359,7 +1360,7 @@ class PerNeuronPairAnalogSignalListPlot(Plotting):
     """
 
     required_parameters = ParameterSet(
-        {"sheet_name": str,}  # the name of the sheet for which to plot
+        {"sheet_name": str}  # the name of the sheet for which to plot
     )
 
     def subplot(self, subplotspec):
@@ -1496,10 +1497,13 @@ class ActivityMovie(Plotting):
     required_parameters = ParameterSet(
         {
             "bin_width": float,  # in ms the width of the bins into which to sample spikes
-            "scatter": bool,  # whether to plot neurons activity into a scatter plot (if True) or as an interpolated pixel image
-            "resolution": int,  # the number of pixels into which the activity will be interpolated in case scatter = False
+            # whether to plot neurons activity into a scatter plot (if True) or as an interpolated pixel image
+            "scatter": bool,
+            # the number of pixels into which the activity will be interpolated in case scatter = False
+            "resolution": int,
             "sheet_name": str,  # the sheet for which to display the actvity movie
-            "exp_time_constant": float,  # the time-constant of the exponential with which the convolve psth, 0 means no convolution
+            # the time-constant of the exponential with which the convolve psth, 0 means no convolution
+            "exp_time_constant": float,
         }
     )
 
@@ -1654,7 +1658,8 @@ class PerNeuronValuePlot(Plotting):
 
     required_parameters = ParameterSet(
         {
-            "cortical_view": bool,  # Whether to show cortical view or histogram (see class description for full detail.)
+            # Whether to show cortical view or histogram (see class description for full detail.)
+            "cortical_view": bool,
         }
     )
 
@@ -1762,8 +1767,10 @@ class PerNeuronValueScatterPlot(Plotting):
 
     required_parameters = ParameterSet(
         {
-            "only_matching_units": bool,  # only plot combinations of PNVs that have the same value units.
-            "ignore_nan": bool,  # if True NaNs will be removed from the data. In general if there are NaN in the data and this is False it will not be displayed correctly.
+            # only plot combinations of PNVs that have the same value units.
+            "only_matching_units": bool,
+            # if True NaNs will be removed from the data. In general if there are NaN in the data and this is False it will not be displayed correctly.
+            "ignore_nan": bool,
         }
     )
 
@@ -2038,8 +2045,6 @@ class ConnectivityPlot(Plotting):
         params["y_lim"] = (-ys / 2.0, ys / 2.0)
 
         if pnv != []:
-            from mozaik.tools.circ_stat import circ_mean
-
             (angle, mag) = circ_mean(
                 numpy.array(
                     pnv.get_value_by_id(
@@ -2197,7 +2202,7 @@ class PerNeuronAnalogSignalScatterPlot(Plotting):
             List of neuron ids for which to plot the tuning curves.
     """
 
-    required_parameters = ParameterSet({"neurons": list,})
+    required_parameters = ParameterSet({"neurons": list})
 
     def __init__(
         self,
@@ -2288,6 +2293,7 @@ class CorticalColumnRasterPlot(Plotting):
     def subplot(self, subplotspec):
 
         if self.parameters.sheet_names == []:
+            # TODO: dsv is undefined
             self.sheet_names = dsv.sheets()
         else:
             self.sheet_names = self.parameters.sheet_names
@@ -2378,7 +2384,8 @@ class PlotTemporalTuningCurve(Plotting):
             "neurons": list,  # which neurons to plot
             "sheet_name": str,  # from which layer to plot the tuning curves
             "parameter_name": str,  # the parameter_name through which to plot the tuning curve
-            "mean": bool,  # if True it will plot the mean tuning curve over the neurons (in case centered=True it will first center the TCs before computing the mean)
+            # if True it will plot the mean tuning curve over the neurons (in case centered=True it will first center the TCs before computing the mean)
+            "mean": bool,
         }
     )
 
@@ -2429,7 +2436,7 @@ class PlotTemporalTuningCurve(Plotting):
             # sort the entries in dict according to the parameter parameter_name values
             for k in dic:
                 (b, a) = dic[k]
-                if self.asls[-1][0].y_axis_units == mozaik.tools.units.uS:
+                if self.asls[-1][0].y_axis_units == munits.uS:
                     a = [[d * 1000.0 for d in c] for c in a]
 
                 par, val = list(zip(*sorted(zip(b, numpy.array(a)))))
@@ -2574,7 +2581,7 @@ class PlotTemporalTuningCurve(Plotting):
         params["colorbar"] = True
         params["x_label"] = "time (ms)"
 
-        if units == mozaik.tools.units.uS:
+        if units == munits.uS:
             params["colorbar_label"] = y_axis_name + " (nS)"
         else:
             params["colorbar_label"] = (

@@ -1,16 +1,17 @@
 # encoding: utf-8
-import mozaik
-import numpy
-import ast
-from mozaik.connectors import Connector
-from mozaik.connectors.modular_connector_functions import ModularConnectorFunction
 from collections import Counter
+import ast
+import logging
+import numpy
+
 from parameters import ParameterSet, ParameterDist
-from mozaik.tools.misc import sample_from_bin_distribution, normal_function
-from mozaik import load_component
 
+from . import Connector
+from .. import load_component
+from ..tools.misc import sample_from_bin_distribution
+from .modular_connector_functions import ModularConnectorFunction
 
-logger = mozaik.getMozaikLogger()
+logger = logging.getLogger(__name__)
 
 
 class ExpVisitor(ast.NodeVisitor):
@@ -31,23 +32,24 @@ class ExpVisitor(ast.NodeVisitor):
 class ModularConnector(Connector):
     """
     An abstract connector than allows for mixing of various factors that can affect the connectivity.
-    
+
     The connector sepparates the implementation of delays from the implementation of weights.
-    
-    It receives a dictionary of weight functions and a dictonary of delays functions each being an instance of ModularConnectorFunction. 
-    In both cases the list of functions is combined by using expression string which is a parameter of this class (see parameters for details). 
-    
-    The values returned by the ModularConnectorFunction will be considered to be in miliseconds when used for specifying delays, or the units used by pyNN for weights 
+
+    It receives a dictionary of weight functions and a dictonary of delays functions each being an instance of ModularConnectorFunction.
+    In both cases the list of functions is combined by using expression string which is a parameter of this class (see parameters for details).
+
+    The values returned by the ModularConnectorFunction will be considered to be in miliseconds when used for specifying delays, or the units used by pyNN for weights
     in case of specifying weights.
-    
+
     The ModularConnector then sets such computed values of weights and delays directly in the connections.
-    
-    
+
+
     """
 
     required_parameters = ParameterSet(
         {
-            "weight_functions": ParameterSet,  # a dictionary of ModularConnectorFunction's and their parameters that will be used to determine the weights.
+            # a dictionary of ModularConnectorFunction's and their parameters that will be used to determine the weights.
+            "weight_functions": ParameterSet,
             # strucutured as follows
             #            {
             #                 component : 'class_name_of_the_ModularConnectorFunction',
@@ -218,7 +220,7 @@ class ModularSamplingProbabilisticConnector(ModularConnector):
 class ModularSingleWeightProbabilisticConnector(ModularConnector):
     """
     ModularConnector that interprets the weights as proportional probabilities of connectivity.
-    The parameter connection_probability is interepreted as the average probability that two neurons will be connected in this 
+    The parameter connection_probability is interepreted as the average probability that two neurons will be connected in this
     projection. For each pair this connecter will make one random choice of connecting them (where the probability of this choice
     is determined as the proportional probability of the corresponding weight normalized by the connection_probability parameter).
     It will set each connections to the weight base_weight.
@@ -307,7 +309,8 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(ModularConnect
         }
     )
 
-    def worker(ref, idxs):
+    def worker(self, ref, idxs):
+        cl = []
         for i in idxs:
             samples = self.target.get_neuron_annotation(
                 i, self.parameters.annotation_reference_name

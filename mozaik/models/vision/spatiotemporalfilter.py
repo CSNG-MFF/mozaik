@@ -2,19 +2,22 @@
 """
 Retina/LGN model based on that developed by Jens Kremkow (CNRS-INCM/ALUF)
 """
-import matplotlib.pyplot as plt
-import numpy
+import logging
 import os.path
 import pickle
-import mozaik
-from . import cai97
-from mozaik.space import VisualSpace, VisualRegion
-from mozaik.core import SensoryInputComponent
-from mozaik.sheets.vision import RetinalUniformSheet
-from mozaik.tools.mozaik_parametrized import MozaikParametrized
-from parameters import ParameterSet
 
-logger = mozaik.getMozaikLogger()
+from parameters import ParameterSet
+import numpy
+
+import mozaik
+from ... import get_seeds
+from ...core import SensoryInputComponent
+from ...sheets.vision import RetinalUniformSheet
+from ...space import VisualSpace, VisualRegion
+from ...tools.mozaik_parametrized import MozaikParametrized
+
+
+logger = logging.getLogger(__name__)
 
 
 def meshgrid3D(x, y, z):
@@ -421,7 +424,8 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
             "linear_scaler": float,  # linear scaler that the RF output is multiplied with
             "cached": bool,
             "cache_path": str,
-            "mpi_reproducible_noise": bool,  # if True, noise is precomputed and StepCurrentSource is used which makes it slower
+            # if True, noise is precomputed and StepCurrentSource is used which makes it slower
+            "mpi_reproducible_noise": bool,
             "recorders": ParameterSet,
             "recording_interval": float,
             "receptive_field": ParameterSet(
@@ -436,7 +440,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                 }
             ),
             "cell": ParameterSet(
-                {"model": str, "params": ParameterSet, "initial_values": ParameterSet,}
+                {"model": str, "params": ParameterSet, "initial_values": ParameterSet}
             ),
             "gain_control": {
                 "gain": float,
@@ -448,7 +452,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                     }
                 ),
             },
-            "noise": ParameterSet({"mean": float, "stdev": float,}),  # nA
+            "noise": ParameterSet({"mean": float, "stdev": float}),  # nA
         }
     )
 
@@ -487,7 +491,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
             self.scs[rf_type] = []
             self.ncs[rf_type] = []
             self.ncs_rng[rf_type] = []
-            seeds = mozaik.get_seeds((self.sheets[rf_type].pop.size,))
+            seeds = get_seeds((self.sheets[rf_type].pop.size,))
             for i, lgn_cell in enumerate(self.sheets[rf_type].pop.all_cells):
                 scs = sim.StepCurrentSource(times=[0.0], amplitudes=[0.0])
 
@@ -805,11 +809,9 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         t = 0
         retinal_input = []
 
-        # import threading
-        # def view_cell(cell):
-        #    cell.view()
-
         if False:
+            import threading
+
             while t < duration:
                 t = visual_space.update()
                 for rf_type in self.rf_types:

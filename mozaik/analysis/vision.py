@@ -2,23 +2,24 @@
 """
 Module containing vision specific analysis.
 """
-import mozaik
+import logging
+
+from parameters import ParameterSet
 import numpy
 import quantities as qt
-from .analysis import Analysis
-from mozaik.tools.mozaik_parametrized import (
-    colapse,
+
+from ..storage import queries
+from ..tools.circ_stat import circular_dist
+from ..tools.mozaik_parametrized import (
     colapse_to_dictionary,
+    colapse,
     MozaikParametrized,
 )
-from mozaik.analysis.data_structures import PerNeuronValue
-from mozaik.analysis.helper_functions import psth
-from parameters import ParameterSet
-from mozaik.storage import queries
-from mozaik.tools.circ_stat import circ_mean, circular_dist
-from mozaik.tools.neo_object_operations import neo_mean, neo_sum
+from ..tools.neo_object_operations import neo_sum
+from .analysis import Analysis
+from .data_structures import PerNeuronValue
 
-logger = mozaik.getMozaikLogger()
+logger = logging.getLogger(__name__)
 
 
 class ModulationRatio(Analysis):
@@ -481,7 +482,7 @@ class LocalHomogeneityIndex(Analysis):
     Nauhaus, I., Benucci, A., Carandini, M., & Ringach, D. (2008). Neuronal selectivity and local map structure in visual cortex. Neuron, 57(5), 673–679.
     """
 
-    required_parameters = ParameterSet({"sigma": float,})
+    required_parameters = ParameterSet({"sigma": float})
 
     def perform_analysis(self):
         sigma = self.parameters.sigma
@@ -542,7 +543,8 @@ class SizeTuningAnalysis(Analysis):
 
     required_parameters = ParameterSet(
         {
-            "neurons": list,  # list of neurons for which to compute this (normally this analysis will only makes sense for neurons for which the sine grating disk stimulus has been optimally oriented)
+            # list of neurons for which to compute this (normally this analysis will only makes sense for neurons for which the sine grating disk stimulus has been optimally oriented)
+            "neurons": list,
             "sheet_name": str,
         }
     )
@@ -694,7 +696,8 @@ class OCTCTuningAnalysis(Analysis):
 
     required_parameters = ParameterSet(
         {
-            "neurons": list,  # list of neurons for which to compute this (normally this analysis will only makes sense for neurons for which the sine grating disk stimulus has been optimally oriented)
+            # list of neurons for which to compute this (normally this analysis will only makes sense for neurons for which the sine grating disk stimulus has been optimally oriented)
+            "neurons": list,
             "sheet_name": str,
         }
     )

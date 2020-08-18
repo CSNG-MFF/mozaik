@@ -2,22 +2,13 @@
 The file contains stimuli generated based on a texture image
 
 """
-
-from .visual_stimulus import VisualStimulus
-from . import visual_stimulus
-import imagen
-import imagen.random
-from imagen.transferfn import TransferFn
-import param
-from imagen.image import BoundingBox
-import pickle
-import numpy
-from mozaik.tools.mozaik_parametrized import SNumber, SString
-from mozaik.tools.units import cpd
-from numpy import pi
-from quantities import Hz, rad, degrees, ms, dimensionless
 from oct2py import octave  # octave interface
+from quantities import dimensionless
 import scipy.misc  # for testing
+
+from . import visual_stimulus
+from ...tools.mozaik_parametrized import SNumber, SString
+from .visual_stimulus import VisualStimulus
 
 
 class TextureBasedVisualStimulus(VisualStimulus):
@@ -38,12 +29,12 @@ class TextureBasedVisualStimulus(VisualStimulus):
 class PSTextureStimulus(TextureBasedVisualStimulus):
     """
     A stimulus generated using the Portilla-Simoncelli algorithm (see textureLib/textureBasedStimulus.m)
-    with statistics matched to the original image according to the Type. 
-     
+    with statistics matched to the original image according to the Type.
+
     Types:
         0 - original image
         1 - naturalistic texture image (matched higher order statistics)
-        2 - spectrally matched noise (matched marginal statistics only). 
+        2 - spectrally matched noise (matched marginal statistics only).
 
     Notes
     -----

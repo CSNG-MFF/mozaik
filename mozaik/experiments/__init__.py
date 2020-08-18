@@ -1,40 +1,42 @@
 """
 Module containing the experiment API.
 """
-import numpy
+import logging
 import resource
-import mozaik
-from mozaik.stimuli import InternalStimulus
+
 from parameters import ParameterSet
-from mozaik.core import ParametrizedObject
-from mozaik.tools.distribution_parametrization import (
-    ParameterWithUnitsAndPeriod,
+import numpy
+
+from ..core import ParametrizedObject
+from ..stimuli import InternalStimulus
+from ..tools.distribution_parametrization import (
     MozaikExtendedParameterSet,
+    ParameterWithUnitsAndPeriod,
 )
 
-logger = mozaik.getMozaikLogger()
+logger = logging.getLogger(__name__)
 
 
 class Experiment(ParametrizedObject):
     """
-    The abastract class for an experiment. 
-    
+    The abastract class for an experiment.
+
     The experiment defines the list of stimuli that it needs to present to the brain.These stimuli presentations have to be independent - e.g. should not
     temporarily depend on each other. Experiment should also specify the analysis of the
     recorded results that it performs. This can be left empty if analysis will
     be done later.
-    
+
     The experiment has to also define the `direct_stimulation` variable which should contain a list of dictionaries one per each stimulus.
     The keys in these dictionaries are sheet names and values are list of :class:`mozail.sheets.direct_stimulator.DirectStimulator` instances,
-    that specify what direct stimulations should be applied to given layers during the corresponding stimulus. Layers to which no direct stimulation 
-    is applied can stay empty. Also if the direct_stimulation is set to None, empty dictionaries will be automatically passed to the model, 
+    that specify what direct stimulations should be applied to given layers during the corresponding stimulus. Layers to which no direct stimulation
+    is applied can stay empty. Also if the direct_stimulation is set to None, empty dictionaries will be automatically passed to the model,
     indicating no direct stimulation is required.
-    
+
     Parameters
     ----------
     model : Model
           The model on which to execute the experiment.
-          
+
     Other parameters
     ----------------
 
@@ -46,7 +48,7 @@ class Experiment(ParametrizedObject):
     ----
     When creating a new Expriment, user inherits from the Experiment class, and in the constructor fills up the `self.stimuli` array with the list of stimuli
     that the experiment presents to the model. One can also implement the do_analysis method, which should perform the analysis that the experiments requires
-    at the end. 
+    at the end.
     """
 
     def __init__(self, model, parameters):
@@ -64,21 +66,21 @@ class Experiment(ParametrizedObject):
     def run(self, data_store, stimulus_indexes):
         """
         This function is called to execute the experiment.
-        
+
         Parameters
         ----------
-        
+
         data_store : DataStore
                    The data store into which to store the recorded data.
-                   
+
         stimuli : list(Stimulus)
                 The list of stimuli to present to the model.
-        
+
         Returns
         -------
         strsum : int (s)
                The overal simulation time it took to execute the experiment.
-                
+
         Notes
         -----
         The reason why this function gets a list of stimuli as input is that even though the experiment itself defines the list of stimuli
@@ -124,13 +126,13 @@ class Experiment(ParametrizedObject):
 class PoissonNetworkKick(Experiment):
     """
     This experiment injects Poisson spike trains into the target popullation.
-    
+
     This experiment does not show any stimulus.
-    For the duration of the experiment it will stimulate neurons 
+    For the duration of the experiment it will stimulate neurons
     definded by the recording configurations in recording_configuration_list
-    in the sheets specified in the sheet_list with Poisson spike train of mean 
+    in the sheets specified in the sheet_list with Poisson spike train of mean
     frequency determined by the corresponding values in lambda_list.
-    
+
     Parameters
     ----------
     model : Model
@@ -138,19 +140,19 @@ class PoissonNetworkKick(Experiment):
 
     Other parameters
     ----------------
-  
+
     sheet_list : int
         The list of sheets in which to do stimulation
 
     drive_period : float (ms)
-        The length of the constant drive, after which it will be linearly taken down to 0 at the end of the stimulation.   
-                        
+        The length of the constant drive, after which it will be linearly taken down to 0 at the end of the stimulation.
+
     stimulation_configuration : ParameterSet
         The parameter set for direct stimulation specifing neurons to which the kick will be administered.
-                                 
+
     lambda_list : list
         List of the means of the Poisson spike train to be injected into the neurons specified in stimulation_configuration (one per each sheet).
-    
+
     weight_list : list
         List of spike sizes of the Poisson spike train to be injected into the neurons specified in stimulation_configuration (one per each sheet).
     """
@@ -168,7 +170,7 @@ class PoissonNetworkKick(Experiment):
 
     def __init__(self, model, parameters):
         Experiment.__init__(self, model, parameters)
-        from mozaik.sheets.direct_stimulator import Kick
+        from ..sheets.direct_stimulator import Kick
 
         direct_stimulation = {}
         for i, sheet in enumerate(self.parameters.sheet_list):
@@ -195,18 +197,18 @@ class PoissonNetworkKick(Experiment):
 
 
 class NoStimulation(Experiment):
-    """ 
-    This is a special experiment that does not show any stimulus for the duration of the experiment. 
+    """
+    This is a special experiment that does not show any stimulus for the duration of the experiment.
 
     This experiment is universal, in that it is not dependent on what sensory modality/model is used in the
-    given simulation. It will ensure that no sensory stimulation will be performed.  
-    
+    given simulation. It will ensure that no sensory stimulation will be performed.
+
     Notes
     -----
     Unlike :class:`.MeasureSpontaneousActivity` this can be used in model with no sensory input sheet.
     """
 
-    required_parameters = ParameterSet({"duration": float,})
+    required_parameters = ParameterSet({"duration": float})
 
     def __init__(self, model, parameters):
         Experiment.__init__(self, model, parameters)

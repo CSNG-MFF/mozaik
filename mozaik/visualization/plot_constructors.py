@@ -2,34 +2,36 @@
 This module contains classes that assist with construction of complicated arrangements of plots.
 A typical example is a class that helps with creating a line of plots with a common y axis.
 """
+import logging
 
-import param
 from param.parameterized import Parameterized
-from mozaik.storage.queries import (
-    partition_by_stimulus_paramter_query,
-    partition_analysis_results_by_stimulus_parameters_query,
-    param_filter_query,
-)
 import matplotlib.gridspec as gridspec
-from mozaik.tools.mozaik_parametrized import (
-    MozaikParametrized,
-    varying_parameters,
-    parameter_value_list,
-)
-import mozaik
 import numpy
+import param
 
-logger = mozaik.getMozaikLogger()
+from ..storage.queries import (
+    param_filter_query,
+    partition_analysis_results_by_stimulus_parameters_query,
+    partition_by_stimulus_paramter_query,
+)
+from ..tools.mozaik_parametrized import (
+    MozaikParametrized,
+    parameter_value_list,
+    varying_parameters,
+)
+
+
+logger = logging.getLogger(__name__)
 
 
 class LinePlot(Parameterized):
     """
-        Plot multiple plots with common x or y axis in a row or column. The user has to specify 
+        Plot multiple plots with common x or y axis in a row or column. The user has to specify
         the function. This one has to return a list of tuples, each containing:
             * a name of a plot
             * a Plotting or SimplePlot instance
             * the simple_plot parameters that should be passed on
-        
+
         Assuming each *function* returns a list of plots with names PlotA,...PlotX
         The LinePlot will create a list of plots named:
                     PlotA.plot0 ... PlotA.plotN
@@ -262,7 +264,7 @@ class PerStimulusPlot(PerDSVPlot):
 
 class PerStimulusADSPlot(PerStimulusPlot):
     """
-      As PerStimulusPlot, but partitions the ADS not recordings. 
+      As PerStimulusPlot, but partitions the ADS not recordings.
       """
 
     def _get_stimulus_ids(self):
@@ -288,17 +290,17 @@ class PerStimulusADSPlot(PerStimulusPlot):
 class ADSGridPlot(Parameterized):
     """
     Set of plots that are placed on a grid, that vary in two parameters and can have shared x or y axis (only at the level of labels for now).
-    
 
-    Plot multiple plots with common x and y axis in a grid. 
-    
+
+    Plot multiple plots with common x and y axis in a grid.
+
     The user has to specify a plotting function (the function parameter) which has to return a list of tuples, each containing:
         * a name of a plot
         * a Plotting or SimplePlot instance
         * the simple_plot parameters that should be passed on
-    
+
     The ADSGridPlot, automaticall filters the datastore such that the function always receives a DSV where the two parameters are already fixed to the right values.
-    
+
     Assuming each *function* returns a list of plots with names PlotA,...PlotX
     The LinePlot will create a list of plots named:
                 PlotA.plot[0,0] ... PlotA.plot[n,m]
@@ -349,7 +351,7 @@ class ADSGridPlot(Parameterized):
         Parameterized.__init__(self, **params)
         self.datastore = datastore
 
-        ### lets first find the values of the two parameters in the datastore
+        # lets first find the values of the two parameters in the datastore
         self.x_axis_values = list(
             parameter_value_list(datastore.get_analysis_result(), self.x_axis_parameter)
         )
@@ -362,7 +364,7 @@ class ADSGridPlot(Parameterized):
             )
         )
 
-        ### and verify it forms a grid
+        # and verify it forms a grid
         for v in self.x_axis_values:
             assert set(self.y_axis_values) == parameter_value_list(
                 param_filter_query(

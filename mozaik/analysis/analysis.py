@@ -4,37 +4,39 @@ This module contains the Mozaik analysis interface and implementation of various
 
 For more documentation refer to `mozaik.analysis`_
 """
+import logging
+import time
+
+from neo.core.analogsignal import AnalogSignal as NeoAnalogSignal
+from parameters import ParameterSet
 import numpy
+import quantities as qt
 import scipy
 import scipy.signal
-import time
-import quantities as qt
-import mozaik.tools.units as munits
-from mozaik.tools.mozaik_parametrized import colapse
-from mozaik.tools.mozaik_parametrized import colapse_to_dictionary
-from mozaik.tools.mozaik_parametrized import MozaikParametrized
-from mozaik.analysis.data_structures import ConductanceSignalList
-from mozaik.analysis.data_structures import SingleValue
-from mozaik.analysis.data_structures import AnalogSignal
-from mozaik.analysis.data_structures import AnalogSignalList
-from mozaik.analysis.data_structures import PerNeuronValue
-from mozaik.analysis.data_structures import PerNeuronPairValue
-from mozaik.analysis.data_structures import PerNeuronPairAnalogSignalList
 
-from mozaik.analysis.helper_functions import psth
-from mozaik.core import ParametrizedObject
-from parameters import ParameterSet
-from mozaik.storage import queries
-from neo.core.analogsignal import AnalogSignal as NeoAnalogSignal
-from mozaik.tools.circ_stat import circ_mean, circular_dist
-from mozaik.tools.neo_object_operations import (
-    neo_mean,
-    neo_sum,
-    down_sample_analog_signal_average_method,
+from ..core import ParametrizedObject
+from ..storage import queries
+from ..tools import units as munits
+from ..tools.circ_stat import circ_mean, circular_dist
+from ..tools.mozaik_parametrized import (
+    colapse,
+    colapse_to_dictionary,
+    MozaikParametrized,
 )
-import mozaik
+from ..tools.neo_object_operations import down_sample_analog_signal_average_method
+from .data_structures import (
+    ConductanceSignalList,
+    SingleValue,
+    AnalogSignal,
+    AnalogSignalList,
+    PerNeuronValue,
+    PerNeuronPairValue,
+    PerNeuronPairAnalogSignalList,
+)
+from .helper_functions import psth
 
-logger = mozaik.getMozaikLogger()
+
+logger = logging.getLogger(__name__)
 
 
 class Analysis(ParametrizedObject):
@@ -266,7 +268,8 @@ class GSTA(Analysis):
 
     required_parameters = ParameterSet(
         {
-            "length": float,  # length (in ms time) how long before and after spike to compute the GSTA
+            # length (in ms time) how long before and after spike to compute the GSTA
+            "length": float,
             # it will be rounded down to fit the sampling frequency
             "neurons": list,  # the list of neuron ids for which to compute the
         }
@@ -1384,14 +1387,21 @@ class GaussianTuningCurveFit(Analysis):
 
     def _fitgaussian(self, X, Y, period):
         if period != None:
-            fitfunc = lambda p, x: p[0] + p[1] * numpy.exp(
-                -circular_dist(p[3], x, period) ** 2 / (2 * p[2] ** 2)
-            )
+
+            def fitfunc(p, x):
+                return p[0] + p[1] * numpy.exp(
+                    -circular_dist(p[3], x, period) ** 2 / (2 * p[2] ** 2)
+                )
+
         else:
-            fitfunc = lambda p, x: p[0] + p[1] * numpy.exp(
-                -numpy.abs(p[3] - x) ** 2 / (2 * p[2] ** 2)
-            )
-        errfunc = lambda p, x, y: fitfunc(p, x) - y  # Distance to the target function
+
+            def fitfunc(p, x):
+                return p[0] + p[1] * numpy.exp(
+                    -numpy.abs(p[3] - x) ** 2 / (2 * p[2] ** 2)
+                )
+
+        def errfunc(p, x, y):
+            return fitfunc(p, x) - y  # Distance to the target function
 
         p0 = [0, 1.0, 0.5, 0.0]  # Initial guess for the parameters
         p0[0] = numpy.min(Y)
@@ -1454,7 +1464,7 @@ class PSTH(Analysis):
       """
 
     required_parameters = ParameterSet(
-        {"bin_length": float,}  # the bin length of the PSTH
+        {"bin_length": float}  # the bin length of the PSTH
     )
 
     def perform_analysis(self):
@@ -1500,7 +1510,7 @@ class SpikeCount(Analysis):
       """
 
     required_parameters = ParameterSet(
-        {"bin_length": float,}  # the bin length of the PSTH
+        {"bin_length": float}  # the bin length of the PSTH
     )
 
     def perform_analysis(self):
@@ -1667,7 +1677,8 @@ class ActionPotentialRemoval(Analysis):
 
     required_parameters = ParameterSet(
         {
-            "window_length": float,  # the length of window in which the Vm starting at a spike time is replaced with interpolation (in milliseconds)
+            # the length of window in which the Vm starting at a spike time is replaced with interpolation (in milliseconds)
+            "window_length": float,
         }
     )
 
@@ -1794,7 +1805,8 @@ class NeuronToNeuronAnalogSignalCorrelations(Analysis):
 
     required_parameters = ParameterSet(
         {
-            "convert_nan_to_zero": bool,  # if true nan values in correlation coefficients which can result from non-varying varialbes will be turned to zeros.
+            # if true nan values in correlation coefficients which can result from non-varying varialbes will be turned to zeros.
+            "convert_nan_to_zero": bool,
         }
     )
 
@@ -2451,28 +2463,30 @@ class AnalogSignal_PerNeuronBetweenSignalCorrelation(Analysis):
                 for i, (a1, a2) in enumerate(
                     zip(asl1.get_asl_by_id(asl1.ids), asl2.get_asl_by_id(asl1.ids))
                 ):
-                    from scipy.signal import savgol_filter
-
                     if i == 13:
                         import matplotlib.pyplot as plt
 
                         plt.figure()
                         plt.plot(
-                            savgol_filter(a1.magnitude.flatten()[100:], 501, 2),
+                            scipy.signal.savgol_filter(
+                                a1.magnitude.flatten()[100:], 501, 2
+                            ),
                             "b",
-                            savgol_filter(
+                            scipy.signal.savgol_filter(
                                 a2.rescale(a1.units).magnitude.flatten()[100:], 501, 2
                             ),
                             "r",
                         )
-                        # plt.title(str(numpy.corrcoef([savgol_filter(a1.magnitude.flatten()[100:],151,2),savgol_filter(a2.rescale(a1.units).magnitude.flatten()[100:],151,2)])))
+                        # plt.title(str(numpy.corrcoef([scipy.signal.savgol_filter(a1.magnitude.flatten()[100:],151,2),scipy.signal.savgol_filter(a2.rescale(a1.units).magnitude.flatten()[100:],151,2)])))
                         plt.savefig("smoothed.eps")
 
                     vs.append(
                         numpy.corrcoef(
                             [
-                                savgol_filter(a1.magnitude.flatten()[100:], 501, 2),
-                                savgol_filter(
+                                scipy.signal.savgol_filter(
+                                    a1.magnitude.flatten()[100:], 501, 2
+                                ),
+                                scipy.signal.savgol_filter(
                                     a2.rescale(a1.units).magnitude.flatten()[100:],
                                     501,
                                     2,
@@ -3045,7 +3059,9 @@ class NakaRushtonTuningCurveFit(Analysis):
         fitfunc = (
             lambda p, x: p[1] * numpy.power(x, p[0]) / (numpy.power(x, p[0]) + p[2])
         )
-        errfunc = lambda p, x, y: fitfunc(p, x) - y  # Distance to the target function
+
+        def errfunc(p, x, y):
+            return fitfunc(p, x) - y  # Distance to the target function
 
         res = []
 

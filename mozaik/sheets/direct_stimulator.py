@@ -7,26 +7,27 @@ of spikes/currents etc into cells. In mozaik this happens at population level - 
 each direct stimulator specifies how the given population is stimulated. In general each population can have several
 stimultors.
 """
-from mozaik.core import ParametrizedObject
-from parameters import ParameterSet
-import numpy
-import numpy.random
-import mozaik
-from mozaik.tools.stgen import StGen
-from mozaik import load_component
-from pyNN.parameters import Sequence
-from mozaik import load_component
+import logging
 import math
-from mozaik.tools.circ_stat import circular_dist, circ_mean
-import matplotlib.pyplot as plt
-from scipy.integrate import odeint
-import pickle
-import scipy.interpolate
-from mpl_toolkits.mplot3d import Axes3D
-from mozaik.controller import Global
 import pickle
 
-logger = mozaik.getMozaikLogger()
+from mpl_toolkits.mplot3d import Axes3D
+from parameters import ParameterSet
+from pyNN.parameters import Sequence
+from scipy.integrate import odeint
+import matplotlib.pyplot as plt
+import numpy
+import numpy.random
+import scipy.interpolate
+
+from .. import get_seeds, load_component
+from ..controller import Global
+from ..core import ParametrizedObject
+from ..tools.circ_stat import circular_dist
+from ..tools.stgen import StGen
+
+
+logger = logging.getLogger(__name__)
 
 
 class DirectStimulator(ParametrizedObject):
@@ -173,7 +174,7 @@ class BackgroundActivityBombardment(DirectStimulator):
                 self.ssae = self.sheet.sim.Population(
                     self.sheet.pop.size, self.sheet.sim.SpikeSourceArray()
                 )
-                seeds = mozaik.get_seeds((self.sheet.pop.size,))
+                seeds = get_seeds((self.sheet.pop.size,))
                 self.stgene = [
                     StGen(rng=numpy.random.RandomState(seed=seeds[i]))
                     for i in numpy.nonzero(self.sheet.pop._mask_local)[0]
@@ -190,7 +191,7 @@ class BackgroundActivityBombardment(DirectStimulator):
                 self.ssai = self.sheet.sim.Population(
                     self.sheet.pop.size, self.sheet.sim.SpikeSourceArray()
                 )
-                seeds = mozaik.get_seeds((self.sheet.pop.size,))
+                seeds = get_seeds((self.sheet.pop.size,))
                 self.stgeni = [
                     StGen(rng=numpy.random.RandomState(seed=seeds[i]))
                     for i in numpy.nonzero(self.sheet.pop._mask_local)[0]
@@ -307,7 +308,7 @@ class Kick(DirectStimulator):
             self.ssae = self.sheet.sim.Population(
                 self.sheet.pop.size, self.sheet.sim.SpikeSourceArray()
             )
-            seeds = mozaik.get_seeds((self.sheet.pop.size,))
+            seeds = get_seeds((self.sheet.pop.size,))
             self.stgene = [
                 StGen(rng=numpy.random.RandomState(seed=seeds[i]))
                 for i in self.to_stimulate_indexes

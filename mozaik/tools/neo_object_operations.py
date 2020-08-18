@@ -30,12 +30,12 @@ def neo_mean(l):
 def down_sample_analog_signal_average_method(analog_signal, new_sampling_period):
     """
     It down-samples the signal such that it will bin the time axis with bin length `new_sampling_period` and make average for each bin.
-    
+
     Parameters
     ----------
     analog_signal : AnalogSignal
              The analog signal to downsample
-    
+
     new_sampling_period : float(ms)
                         The desired new sampling period of the signal
     """
@@ -57,12 +57,12 @@ def down_sample_analog_signal_average_method(analog_signal, new_sampling_period)
 def down_sample_analog_signal2(analog_signal, new_sampling_period):
     """
     It down-samples the signal such that it picks each i-th element of the analog signal based on the desired new sampling period.
-    
+
     Parameters
     ----------
     analog_signal : AnalogSignal
              The analog signal to downsample
-    
+
     new_sampling_period : float(ms)
                         The desired new sampling period of the signal
     """

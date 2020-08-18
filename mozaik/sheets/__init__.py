@@ -2,21 +2,22 @@
 """
 Module containing the implementation of sheets - one of the basic building blocks of *mozaik* models.
 """
+from string import Template
+import logging
 
-import numpy
-import mozaik
-from mozaik.core import BaseComponent
-from mozaik import load_component
-from mozaik.tools.distribution_parametrization import PyNNDistribution
+from neo.core.spiketrain import SpikeTrain
 from parameters import ParameterSet, UniformDist
 from pyNN import space
 from pyNN.errors import NothingToWriteError
-from string import Template
-from neo.core.spiketrain import SpikeTrain
+import numpy
 import quantities as pq
 
+import mozaik
+from .. import load_component
+from ..core import BaseComponent
+from ..tools.distribution_parametrization import PyNNDistribution
 
-logger = mozaik.getMozaikLogger()
+logger = logging.getLogger(__name__)
 
 
 class Sheet(BaseComponent):

@@ -1,10 +1,14 @@
-from mozaik.storage.queries import *
-import matplotlib.pyplot as plt
 import math
+import pickle
+
 from scipy.interpolate import griddata
 import matplotlib.cm as cm
+import matplotlib.pyplot as plt
+import numpy as np
+import scipy
+
+from ..storage.queries import *
 from .analysis import load_fixed_parameter_set_parameter_search
-import pickle
 
 
 def single_value_visualization(
@@ -155,7 +159,7 @@ def single_value_visualization(
                     y.append(param_values[sorted_parameter_indexes[1]])
                     z.append(float(adss[0].value))
             if treat_nan_as_zero:
-                z = numpy.nan_to_num(z)
+                z = np.nan_to_num(z)
 
             if value_name in ranges:
                 vmin, vmax = ranges[value_name]
@@ -168,8 +172,8 @@ def single_value_visualization(
                 vmax = max(z)
 
             if resolution != None:
-                xi = numpy.linspace(numpy.min(x), numpy.max(x), resolution)
-                yi = numpy.linspace(numpy.min(y), numpy.max(y), resolution)
+                xi = np.linspace(np.min(x), np.max(x), resolution)
+                yi = np.linspace(np.min(y), np.max(y), resolution)
                 gr = griddata((x, y), z, (xi[None, :], yi[:, None]), method="cubic")
                 plt.imshow(
                     gr,
@@ -179,7 +183,7 @@ def single_value_visualization(
                     aspect="auto",
                     cmap=cm.gray,
                     origin="lower",
-                    extent=[numpy.min(x), numpy.max(x), numpy.min(y), numpy.max(y)],
+                    extent=[np.min(x), np.max(x), np.min(y), np.max(y)],
                 )
             else:
                 plt.scatter(
@@ -203,7 +207,7 @@ def single_value_visualization(
                     z,
                 )
 
-                f = open(v + ".pickle", "w")
+                f = open(value_name + ".pickle", "w")
                 pickle.dump(
                     (
                         value_name,
@@ -222,8 +226,6 @@ def single_value_visualization(
         else:
             raise ValueError("Currently cannot handle more than 2D data")
         plt.title(value_name)
-
-        import scipy
 
         f = open("ps_res.pickle", "w")
         pickle.dump(res, f)
@@ -399,10 +401,10 @@ def multi_curve_visualzition(
 
     # assert len(parameters) == 3, "We required there to be three changing parameters for this visualization, you provided %d" % (len(parameters))
 
-    a = numpy.array([param_values for (param_values, datastore) in datastores])
+    a = np.array([param_values for (param_values, datastore) in datastores])
     a = a[:, [j for j in [0, 1, 2] if j != x_axis_parameter_index]]
-    mmax = numpy.max(a, axis=0)
-    mmin = numpy.min(a, axis=0)
+    mmax = np.max(a, axis=0)
+    mmin = np.min(a, axis=0)
 
     d = {}
     for (param_values, datastore) in datastores:
@@ -456,10 +458,10 @@ def multi_curve_visualzition(
         a = (k[0] - mmin[0]) / (mmax[0] - mmin[0])
         b = (k[1] - mmin[1]) / (mmax[1] - mmin[1])
         color = [a, b, 0]
-        if numpy.sqrt(numpy.sum(numpy.power(color, 2))) != 0:
-            color = color / numpy.sqrt(numpy.sum(numpy.power(color, 2)))
+        if np.sqrt(np.sum(np.power(color, 2))) != 0:
+            color = color / np.sqrt(np.sum(np.power(color, 2)))
 
-        color[2] = numpy.sqrt(a * a + b * b) / numpy.sqrt(2)
+        color[2] = np.sqrt(a * a + b * b) / np.sqrt(2)
 
         x.append(k[0])
         y.append(k[1])

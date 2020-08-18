@@ -1,16 +1,16 @@
 # encoding: utf-8
-import numpy
-from mozaik.core import ParametrizedObject
-from parameters import ParameterSet
-from mozaik.tools.distribution_parametrization import PyNNDistribution
-from mozaik.tools.misc import *
 from parameters import ParameterSet, ParameterDist
+import numpy
+
+from ..core import ParametrizedObject
+from ..tools.distribution_parametrization import PyNNDistribution
+from ..tools.misc import *
 
 
 class ModularConnectorFunction(ParametrizedObject):
     """
     Abstract class defining the interface of nodular connector functions.
-    
+
     Each instance has to implement the evaluate(u) function that returns the pre-synaptic weights
     of neuron i.
     """
@@ -36,11 +36,11 @@ class ConstantModularConnectorFunction(ModularConnectorFunction):
 class PyNNDistributionConnectorFunction(ModularConnectorFunction):
     """
       ConnectorFunction which draws the values from the PyNNDistribution
-      
+
       """
 
     required_parameters = ParameterSet(
-        {"pynn_distribution": PyNNDistribution,}  # The distribution
+        {"pynn_distribution": PyNNDistribution}  # The distribution
     )
 
     def evaluate(self, index):
@@ -50,10 +50,10 @@ class PyNNDistributionConnectorFunction(ModularConnectorFunction):
 class DistanceDependentModularConnectorFunction(ModularConnectorFunction):
     """
     Helper abstract class to ease the definitions of purely distance dependent connector functions.
-    
-    The distance is defined as the *horizontal* distance between the retinotopical positions of the neurons (one in source and one in destination sheet). 
+
+    The distance is defined as the *horizontal* distance between the retinotopical positions of the neurons (one in source and one in destination sheet).
     The distane is translated into the native coordinates of the target sheet (e.g. micrometers for CorticlaSheet)!
-    
+
     For the special case where source = target, this coresponds to the intuitive lateral distance of the neurons.
     """
 
@@ -91,7 +91,8 @@ class GaussianDecayModularConnectorFunction(DistanceDependentModularConnectorFun
 
     required_parameters = ParameterSet(
         {
-            "arborization_constant": float,  # μm distance constant of the gaussian decay of the connections with respect (in cortical distance)
+            # μm distance constant of the gaussian decay of the connections with respect (in cortical distance)
+            "arborization_constant": float,
             # to the distance from the innervation point.
             "arborization_scaler": float,  # the scaler of the gaussian decay
         }
@@ -114,7 +115,8 @@ class ExponentialDecayModularConnectorFunction(
 
     required_parameters = ParameterSet(
         {
-            "arborization_constant": float,  # μm distance constant of the exponential decay of the connections with respect (in cortical distance)
+            # μm distance constant of the exponential decay of the connections with respect (in cortical distance)
+            "arborization_constant": float,
             # to the distance from the innervation point.
             "arborization_scaler": float,  # the scaler of the exponential decay
         }
@@ -166,13 +168,13 @@ class LinearModularConnectorFunction1(DistanceDependentModularConnectorFunction)
 class HyperbolicModularConnectorFunction(DistanceDependentModularConnectorFunction):
     """
     Corresponds to: exp(-alpha*sqrt(\theta^2 + distance^2)) , where distance is in micrometers
-    And is the best fit I could so far find to the data from: 
-    Stepanyants, A., Hirsch, J. a, Martinez, L. M., Kisvárday, Z. F., Ferecskó, A. S., & Chklovskii, D. B. (2008). 
+    And is the best fit I could so far find to the data from:
+    Stepanyants, A., Hirsch, J. a, Martinez, L. M., Kisvárday, Z. F., Ferecskó, A. S., & Chklovskii, D. B. (2008).
     Local potential connectivity in cat primary visual cortex. Cerebral cortex, 18(1), 13–28. doi:10.1093/cercor/bhm027
     """
 
     required_parameters = ParameterSet(
-        {"alpha": float, "theta": float,}  # see description  # see description
+        {"alpha": float, "theta": float}  # see description  # see description
     )
 
     def distance_dependent_function(self, distance):

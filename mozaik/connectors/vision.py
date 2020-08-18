@@ -1,18 +1,19 @@
 """
 Vision specific connectors.
 """
-import numpy
-import mozaik
-from .modular_connector_functions import ModularConnectorFunction
-from mozaik.tools.circ_stat import *
-from mozaik.tools.misc import *
+import logging
+
 from parameters import ParameterSet
 from scipy.interpolate import NearestNDInterpolator
-from numpy import sin, cos, pi, exp
-
-logger = mozaik.getMozaikLogger()
-
 import matplotlib.pyplot as plt
+import numpy as np
+
+from . import Global
+from ..tools.circ_stat import *
+from ..tools.misc import *
+from .modular_connector_functions import ModularConnectorFunction
+
+logger = logging.getLogger(__name__)
 
 
 class MapDependentModularConnectorFunction(ModularConnectorFunction):
@@ -22,9 +23,12 @@ class MapDependentModularConnectorFunction(ModularConnectorFunction):
 
     required_parameters = ParameterSet(
         {
-            "map_location": str,  # It has to point to a file containing a single pickled 2d numpy array, containing values in the interval [0..1].
-            "sigma": float,  # How sharply does the wieght fall off with the increasing distance between the map values (exp(-0.5*(distance/sigma)*2)/(sigma*sqrt(2*pi)))
-            "periodic": bool,  # if true, the values in map will be treated as periodic (and consequently the distance between two values will be computed as circular distance).
+            # It has to point to a file containing a single pickled 2d numpy array, containing values in the interval [0..1].
+            "map_location": str,
+            # How sharply does the wieght fall off with the increasing distance between the map values (exp(-0.5*(distance/sigma)*2)/(sigma*sqrt(2*np.pi)))
+            "sigma": float,
+            # if true, the values in map will be treated as periodic (and consequently the distance between two values will be computed as circular distance).
+            "periodic": bool,
         }
     )
 
@@ -35,25 +39,21 @@ class MapDependentModularConnectorFunction(ModularConnectorFunction):
         t_size = target.size_in_degrees()
         f = open(self.parameters.map_location, "r")
         mmap = pickle.load(f)
-        coords_x = numpy.linspace(
-            -t_size[0] / 2.0, t_size[0] / 2.0, numpy.shape(mmap)[0]
-        )
-        coords_y = numpy.linspace(
-            -t_size[1] / 2.0, t_size[1] / 2.0, numpy.shape(mmap)[1]
-        )
-        X, Y = numpy.meshgrid(coords_x, coords_y)
+        coords_x = np.linspace(-t_size[0] / 2.0, t_size[0] / 2.0, np.shape(mmap)[0])
+        coords_y = np.linspace(-t_size[1] / 2.0, t_size[1] / 2.0, np.shape(mmap)[1])
+        X, Y = np.meshgrid(coords_x, coords_y)
         self.mmap = NearestNDInterpolator(
             list(zip(X.flatten(), Y.flatten())), mmap.flatten()
         )
         self.val_source = (
             self.mmap(
-                numpy.transpose(
-                    numpy.array(
+                np.transpose(
+                    np.array(
                         [self.source.pop.positions[0], self.source.pop.positions[1]]
                     )
                 )
             )
-            * numpy.pi
+            * np.pi
         )
 
         for (index, neuron2) in enumerate(target.pop.all()):
@@ -61,17 +61,17 @@ class MapDependentModularConnectorFunction(ModularConnectorFunction):
                 self.target.pop.positions[0][index], self.target.pop.positions[1][index]
             )
             self.target.add_neuron_annotation(
-                index, "LGNAfferentOrientation", val_target * numpy.pi, protected=False
+                index, "LGNAfferentOrientation", val_target * np.pi, protected=False
             )
 
     def evaluate(self, index):
         val_target = self.target.get_neuron_annotation(index, "LGNAfferentOrientation")
         if self.parameters.periodic:
-            distance = circular_dist(self.val_source, val_target, pi)
+            distance = circular_dist(self.val_source, val_target, np.pi)
         else:
-            distance = numpy.abs(self.val_source - val_target)
-        return numpy.exp(-0.5 * (distance / self.parameters.sigma) ** 2) / (
-            self.parameters.sigma * numpy.sqrt(2 * numpy.pi)
+            distance = np.abs(self.val_source - val_target)
+        return np.exp(-0.5 * (distance / self.parameters.sigma) ** 2) / (
+            self.parameters.sigma * np.sqrt(2 * np.pi)
         )
 
 
@@ -117,19 +117,20 @@ class V1PushPullArborization(ModularConnectorFunction):
             "or_sigma": float,  # how sharply does the probability of connection fall off with orientation difference
             "phase_sigma": float,  # how sharply does the probability of connection fall off with phase difference
             "target_synapses": str,  # what type is the target excitatory/inhibitory
-            "push_pull_ratio": float,  # the ratio of push-pull connections, the rest will be random drawn randomly
+            # the ratio of push-pull connections, the rest will be random drawn randomly
+            "push_pull_ratio": float,
         }
     )
 
     def __init__(self, source, target, parameters):
         ModularConnectorFunction.__init__(self, source, target, parameters)
-        self.source_or = numpy.array(
+        self.source_or = np.array(
             [
                 self.source.get_neuron_annotation(i, "LGNAfferentOrientation")
                 for i in range(0, self.source.pop.size)
             ]
         )
-        self.source_phase = numpy.array(
+        self.source_phase = np.array(
             [
                 self.source.get_neuron_annotation(i, "LGNAfferentPhase")
                 for i in range(0, self.source.pop.size)
@@ -139,21 +140,21 @@ class V1PushPullArborization(ModularConnectorFunction):
     def evaluate(self, index):
         target_or = self.target.get_neuron_annotation(index, "LGNAfferentOrientation")
         target_phase = self.target.get_neuron_annotation(index, "LGNAfferentPhase")
-        assert numpy.all(self.source_or >= 0) and numpy.all(self.source_or <= pi)
-        assert numpy.all(target_or >= 0) and numpy.all(target_or <= pi)
-        assert numpy.all(self.source_phase >= 0) and numpy.all(
-            self.source_phase <= 2 * pi
-        )
-        assert numpy.all(target_phase >= 0) and numpy.all(target_phase <= 2 * pi)
+        assert np.all(self.source_or >= 0) and np.all(self.source_or <= np.pi)
+        assert np.all(target_or >= 0) and np.all(target_or <= np.pi)
+        assert np.all(self.source_phase >= 0) and np.all(self.source_phase <= 2 * np.pi)
+        assert np.all(target_phase >= 0) and np.all(target_phase <= 2 * np.pi)
 
-        or_dist = circular_dist(self.source_or, target_or, pi)
+        or_dist = circular_dist(self.source_or, target_or, np.pi)
         if self.parameters.target_synapses == "excitatory":
-            phase_dist = circular_dist(self.source_phase, target_phase, 2 * pi)
+            phase_dist = circular_dist(self.source_phase, target_phase, 2 * np.pi)
         else:
-            phase_dist = pi - circular_dist(self.source_phase, target_phase, 2 * pi)
+            phase_dist = np.pi - circular_dist(
+                self.source_phase, target_phase, 2 * np.pi
+            )
 
-        assert numpy.all(or_dist >= 0) and numpy.all(or_dist <= pi / 2)
-        assert numpy.all(phase_dist >= 0) and numpy.all(phase_dist <= pi)
+        assert np.all(or_dist >= 0) and np.all(or_dist <= np.pi / 2)
+        assert np.all(phase_dist >= 0) and np.all(phase_dist <= np.pi)
 
         or_gauss = normal_function(or_dist, mean=0, sigma=self.parameters.or_sigma)
         phase_gauss = normal_function(
@@ -161,11 +162,11 @@ class V1PushPullArborization(ModularConnectorFunction):
         )
 
         # normalize the product with the product of the two normal distribution at 0.
-        m = numpy.multiply(phase_gauss, or_gauss) / (
-            normal_function(numpy.array([0]), mean=0, sigma=self.parameters.or_sigma)[0]
-            * normal_function(
-                numpy.array([0]), mean=0, sigma=self.parameters.phase_sigma
-            )[0]
+        m = np.multiply(phase_gauss, or_gauss) / (
+            normal_function(np.array([0]), mean=0, sigma=self.parameters.or_sigma)[0]
+            * normal_function(np.array([0]), mean=0, sigma=self.parameters.phase_sigma)[
+                0
+            ]
         )
 
         return (
@@ -174,17 +175,17 @@ class V1PushPullArborization(ModularConnectorFunction):
 
 
 def gabor(x1, y1, x2, y2, orientation, frequency, phase, size, aspect_ratio):
-    X = (x1 - x2) * numpy.cos(orientation) + (y1 - y2) * numpy.sin(orientation)
-    Y = -(x1 - x2) * numpy.sin(orientation) + (y1 - y2) * numpy.cos(orientation)
+    X = (x1 - x2) * np.cos(orientation) + (y1 - y2) * np.sin(orientation)
+    Y = -(x1 - x2) * np.sin(orientation) + (y1 - y2) * np.cos(orientation)
     ker = -(X * X + Y * Y * (aspect_ratio ** 2)) / (2 * (size ** 2))
-    return numpy.exp(ker) * numpy.cos(2 * numpy.pi * X * frequency + phase)
+    return np.exp(ker) * np.cos(2 * np.pi * X * frequency + phase)
 
 
 def gauss(x1, y1, x2, y2, orientation, size, aspect_ratio):
-    X = (x1 - x2) * numpy.cos(orientation) + (y1 - y2) * numpy.sin(orientation)
-    Y = -(x1 - x2) * numpy.sin(orientation) + (y1 - y2) * numpy.cos(orientation)
+    X = (x1 - x2) * np.cos(orientation) + (y1 - y2) * np.sin(orientation)
+    Y = -(x1 - x2) * np.sin(orientation) + (y1 - y2) * np.cos(orientation)
     ker = -(X * X + Y * Y * (aspect_ratio ** 2)) / (2 * (size ** 2))
-    return numpy.exp(ker)
+    return np.exp(ker)
 
 
 class GaborArborization(ModularConnectorFunction):
@@ -199,7 +200,7 @@ class GaborArborization(ModularConnectorFunction):
     """
 
     required_parameters = ParameterSet(
-        {"ON": bool,}  # Whether this is gabor on ON or OFF cells.
+        {"ON": bool}  # Whether this is gabor on ON or OFF cells.
     )
 
     def evaluate(self, index):
@@ -216,7 +217,7 @@ class GaborArborization(ModularConnectorFunction):
             self.source.pop.positions[1],
             target_posx,
             target_posy,
-            target_or + pi / 2,
+            target_or + np.pi / 2,
             target_freq,
             target_phase,
             target_size,
@@ -224,9 +225,9 @@ class GaborArborization(ModularConnectorFunction):
         )
 
         if self.parameters.ON:
-            return numpy.maximum(0, w)  # + 0.03 * g
+            return np.maximum(0, w)  # + 0.03 * g
         else:
-            return -numpy.minimum(0, w)  # + 0.03 * g
+            return -np.minimum(0, w)  # + 0.03 * g
 
 
 class V1CorrelationBasedConnectivity(ModularConnectorFunction):
@@ -257,54 +258,55 @@ class V1CorrelationBasedConnectivity(ModularConnectorFunction):
 
     required_parameters = ParameterSet(
         {
-            "sigma": float,  # how sharply does the probability of connection fall off depending on the afferent RF correlation of the two neurons.
+            # how sharply does the probability of connection fall off depending on the afferent RF correlation of the two neurons.
+            "sigma": float,
             "target_synapses": str,  # what type is the target excitatory/inhibitory
         }
     )
 
     @staticmethod
     def u_func(F, omega):
-        return numpy.matrix([[F * numpy.cos(omega), F * numpy.sin(omega)]]).T
+        return np.matrix([[F * np.cos(omega), F * np.sin(omega)]]).T
 
     def __init__(self, source, target, parameters):
         ModularConnectorFunction.__init__(self, source, target, parameters)
-        self.source_or = numpy.array(
+        self.source_or = np.array(
             [
                 self.source.get_neuron_annotation(i, "LGNAfferentOrientation")
                 for i in range(0, self.source.pop.size)
             ]
         )
-        self.source_phase = numpy.array(
+        self.source_phase = np.array(
             [
                 self.source.get_neuron_annotation(i, "LGNAfferentPhase")
                 for i in range(0, self.source.pop.size)
             ]
         )
-        self.source_ar = numpy.array(
+        self.source_ar = np.array(
             [
                 self.source.get_neuron_annotation(i, "LGNAfferentAspectRatio")
                 for i in range(0, self.source.pop.size)
             ]
         )
-        self.source_freq = numpy.array(
+        self.source_freq = np.array(
             [
                 self.source.get_neuron_annotation(i, "LGNAfferentFrequency")
                 for i in range(0, self.source.pop.size)
             ]
         )
-        self.source_size = numpy.array(
+        self.source_size = np.array(
             [
                 self.source.get_neuron_annotation(i, "LGNAfferentSize")
                 for i in range(0, self.source.pop.size)
             ]
         )
-        self.source_posx = numpy.array(
+        self.source_posx = np.array(
             [
                 self.source.get_neuron_annotation(i, "LGNAfferentX")
                 for i in range(0, self.source.pop.size)
             ]
         )
-        self.source_posy = numpy.array(
+        self.source_posy = np.array(
             [
                 self.source.get_neuron_annotation(i, "LGNAfferentY")
                 for i in range(0, self.source.pop.size)
@@ -319,15 +321,9 @@ class V1CorrelationBasedConnectivity(ModularConnectorFunction):
 
     @staticmethod
     def omega(widthx, widthy, gauss_or):
-        a = (
-            widthx ** 2 * numpy.cos(gauss_or) ** 2
-            + widthy ** 2 * numpy.sin(gauss_or) ** 2
-        )
-        b = numpy.cos(gauss_or) * numpy.sin(gauss_or) * (widthx ** 2 - widthy ** 2)
-        d = (
-            widthx ** 2 * numpy.sin(gauss_or) ** 2
-            + widthy ** 2 * numpy.cos(gauss_or) ** 2
-        )
+        a = widthx ** 2 * np.cos(gauss_or) ** 2 + widthy ** 2 * np.sin(gauss_or) ** 2
+        b = np.cos(gauss_or) * np.sin(gauss_or) * (widthx ** 2 - widthy ** 2)
+        d = widthx ** 2 * np.sin(gauss_or) ** 2 + widthy ** 2 * np.cos(gauss_or) ** 2
         return (a, b, b, d)
 
     @staticmethod
@@ -351,11 +347,12 @@ class V1CorrelationBasedConnectivity(ModularConnectorFunction):
         sine_orientation2,
         phase2,
     ):
+        def dot2x2times2x1(a, b, c, d, x, y):
+            return (
+                a * x + b * y,
+                c * x + d * y,
+            )  # calculates out the dot([[a,b],[c,d]],[[x],[y]])
 
-        dot2x2times2x1 = lambda a, b, c, d, x, y: (
-            a * x + b * y,
-            c * x + d * y,
-        )  # calculates out the dot([[a,b],[c,d]],[[x],[y]])
         dotVTtimes2x2timeV = (
             lambda a, b, c, d, x, y: a * x * x + b * y * x + c * x * y + d * y * y
         )  # calculates out the dot([x,y],dot([[a,b],[c,d]],[[x],[y]]))
@@ -387,16 +384,16 @@ class V1CorrelationBasedConnectivity(ModularConnectorFunction):
             OmegaSInva, OmegaSInvb, OmegaSInvc, OmegaSInvd, _x, _y
         )
 
-        ux1 = freq1 * numpy.cos(sine_orientation1)
-        uy1 = freq1 * numpy.sin(sine_orientation1)
-        ux2 = freq2 * numpy.cos(sine_orientation2)
-        uy2 = freq2 * numpy.sin(sine_orientation2)
+        ux1 = freq1 * np.cos(sine_orientation1)
+        uy1 = freq1 * np.sin(sine_orientation1)
+        ux2 = freq2 * np.cos(sine_orientation2)
+        uy2 = freq2 * np.sin(sine_orientation2)
 
         K_s = (
             K1
             * K2
-            * numpy.exp(
-                -numpy.pi
+            * np.exp(
+                -np.pi
                 * (
                     dotVTtimes2x2timeV(Omega1a, Omega1b, Omega1c, Omega1d, posx1, posy1)
                     + dotVTtimes2x2timeV(
@@ -410,26 +407,24 @@ class V1CorrelationBasedConnectivity(ModularConnectorFunction):
         def integral_complex_gabors(ux, uy, P_s):
             return (
                 K_s
-                / numpy.sqrt(OmegaSa * OmegaSd - OmegaSb * OmegaSc)
-                * numpy.exp(
-                    -numpy.pi
+                / np.sqrt(OmegaSa * OmegaSd - OmegaSb * OmegaSc)
+                * np.exp(
+                    -np.pi
                     * (
                         dotVTtimes2x2timeV(
                             OmegaSInva, OmegaSInvb, OmegaSInvc, OmegaSInvd, ux, uy
                         )
                     )
                 )
-                * numpy.exp(1j * 2 * numpy.pi * (ux * xs1 + uy * xs2) + 1j * P_s)
+                * np.exp(1j * 2 * np.pi * (ux * xs1 + uy * xs2) + 1j * P_s)
             )
 
         return (
             1.0
             / 2
             * (
-                numpy.real(
-                    integral_complex_gabors(ux1 - ux2, uy1 - uy2, phase1 - phase2)
-                )
-                + numpy.real(
+                np.real(integral_complex_gabors(ux1 - ux2, uy1 - uy2, phase1 - phase2))
+                + np.real(
                     integral_complex_gabors(ux1 + ux2, uy1 + uy2, phase1 + phase2)
                 )
             )
@@ -456,12 +451,10 @@ class V1CorrelationBasedConnectivity(ModularConnectorFunction):
         sine_orientation2,
         phase2,
     ):
-
-        import numpy as np
-
-        R_theta_func = lambda theta: np.matrix(
-            [[np.cos(theta), np.sin(theta)], [-np.sin(theta), np.cos(theta)]]
-        )
+        def R_theta_func(theta):
+            return np.matrix(
+                [[np.cos(theta), np.sin(theta)], [-np.sin(theta), np.cos(theta)]]
+            )
 
         def gabor_matrices(a, b, xc, yc, theta, F, omega):
             V = np.matrix([[a, 0], [0, b]])
@@ -592,7 +585,7 @@ class V1CorrelationBasedConnectivity(ModularConnectorFunction):
             sine_orientation2,
             phase2,
         )
-        return numpy.array(cov / (numpy.sqrt(var1) * numpy.sqrt(var2)))  # [0][0]
+        return np.array(cov / (np.sqrt(var1) * np.sqrt(var2)))  # [0][0]
 
     @staticmethod
     def gabor_correlation_rescaled_parammeters(
@@ -614,25 +607,23 @@ class V1CorrelationBasedConnectivity(ModularConnectorFunction):
 
         return V1CorrelationBasedConnectivity.gabor_correlation(
             1.0,
-            1 / (numpy.sqrt(2 * numpy.pi) * width1),
-            ar1 / (numpy.sqrt(2 * numpy.pi) * width1),
+            1 / (np.sqrt(2 * np.pi) * width1),
+            ar1 / (np.sqrt(2 * np.pi) * width1),
             posx1,
             posy1,
             or1,
             freq1,
             or1,
-            phase1
-            - numpy.pi * 2 * freq1 * (posx1 * numpy.cos(or1) + posy1 * numpy.sin(or1)),
+            phase1 - np.pi * 2 * freq1 * (posx1 * np.cos(or1) + posy1 * np.sin(or1)),
             1.0,
-            1 / (numpy.sqrt(2 * numpy.pi) * width2),
-            ar2 / (numpy.sqrt(2 * numpy.pi) * width2),
+            1 / (np.sqrt(2 * np.pi) * width2),
+            ar2 / (np.sqrt(2 * np.pi) * width2),
             posx2,
             posy2,
             or2,
             freq2,
             or2,
-            phase2
-            - numpy.pi * 2 * freq2 * (posx2 * numpy.cos(or2) + posy2 * numpy.sin(or2)),
+            phase2 - np.pi * 2 * freq2 * (posx2 * np.cos(or2) + posy2 * np.sin(or2)),
         )
 
     def evaluate(self, index):
@@ -645,12 +636,10 @@ class V1CorrelationBasedConnectivity(ModularConnectorFunction):
         target_posx = self.target.get_neuron_annotation(index, "LGNAfferentX")
         target_posy = self.target.get_neuron_annotation(index, "LGNAfferentY")
 
-        assert numpy.all(self.source_or >= 0) and numpy.all(self.source_or <= pi)
-        assert numpy.all(target_or >= 0) and numpy.all(target_or <= pi)
-        assert numpy.all(self.source_phase >= 0) and numpy.all(
-            self.source_phase <= 2 * pi
-        )
-        assert numpy.all(target_phase >= 0) and numpy.all(target_phase <= 2 * pi)
+        assert np.all(self.source_or >= 0) and np.all(self.source_or <= np.pi)
+        assert np.all(target_or >= 0) and np.all(target_or <= np.pi)
+        assert np.all(self.source_phase >= 0) and np.all(self.source_phase <= 2 * np.pi)
+        assert np.all(target_phase >= 0) and np.all(target_phase <= 2 * np.pi)
 
         corr = V1CorrelationBasedConnectivity.gabor_correlation_rescaled_parammeters(
             self.source_size,
@@ -669,9 +658,9 @@ class V1CorrelationBasedConnectivity(ModularConnectorFunction):
             target_phase,
         )
 
-        assert numpy.all(corr >= -1.0) and numpy.all(
+        assert np.all(corr >= -1.0) and np.all(
             corr <= 1.000001
-        ), "The correlation is %f %f" % (numpy.min(corr), numpy.max(corr))
+        ), "The correlation is %f %f" % (np.min(corr), np.max(corr))
         # import matplotlib.pyplot as plt
         # plt.figure()
         # if self.flag:
@@ -697,7 +686,8 @@ class CoCircularModularConnectorFunction(ModularConnectorFunction):
 
     required_parameters = ParameterSet(
         {
-            "or_map_location": str,  # It has to point to a file containing a single pickled 2d numpy array, containing values in the interval [0..1].
+            # It has to point to a file containing a single pickled 2d numpy array, containing values in the interval [0..1].
+            "or_map_location": str,
             "sigma": float,  # How sharply does the probability of connection fall off with the distance from idealized co-circular connectivity
         }
     )
@@ -709,25 +699,21 @@ class CoCircularModularConnectorFunction(ModularConnectorFunction):
         t_size = target.size_in_degrees()
         f = open(self.parameters.or_map_location, "r")
         mmap = pickle.load(f)
-        coords_x = numpy.linspace(
-            -t_size[0] / 2.0, t_size[0] / 2.0, numpy.shape(mmap)[0]
-        )
-        coords_y = numpy.linspace(
-            -t_size[1] / 2.0, t_size[1] / 2.0, numpy.shape(mmap)[1]
-        )
-        X, Y = numpy.meshgrid(coords_x, coords_y)
+        coords_x = np.linspace(-t_size[0] / 2.0, t_size[0] / 2.0, np.shape(mmap)[0])
+        coords_y = np.linspace(-t_size[1] / 2.0, t_size[1] / 2.0, np.shape(mmap)[1])
+        X, Y = np.meshgrid(coords_x, coords_y)
         self.mmap = NearestNDInterpolator(
             list(zip(X.flatten(), Y.flatten())), mmap.flatten()
         )
         self.or_source = (
             self.mmap(
-                numpy.transpose(
-                    numpy.array(
+                np.transpose(
+                    np.array(
                         [self.source.pop.positions[0], self.source.pop.positions[1]]
                     )
                 )
             )
-            * numpy.pi
+            * np.pi
         )
 
         for (index, neuron2) in enumerate(target.pop.all()):
@@ -735,7 +721,7 @@ class CoCircularModularConnectorFunction(ModularConnectorFunction):
                 self.target.pop.positions[0][index], self.target.pop.positions[1][index]
             )
             self.target.add_neuron_annotation(
-                index, "ORMapOrientation", val_target * numpy.pi, protected=False
+                index, "ORMapOrientation", val_target * np.pi, protected=False
             )
 
     def evaluate(self, index):
@@ -744,18 +730,16 @@ class CoCircularModularConnectorFunction(ModularConnectorFunction):
         x_target = self.target.pop.positions[0][index]
         y_target = self.target.pop.positions[1][index]
 
-        phi = numpy.arctan2(
+        phi = np.arctan2(
             self.source.pop.positions[1] - y_target,
             self.source.pop.positions[0] - x_target,
         )
-        distance = circular_dist(self.or_source, 2 * phi - or_target, pi)
-        prob = numpy.exp(-0.5 * (distance / self.parameters.sigma) ** 2) / (
-            self.parameters.sigma * numpy.sqrt(2 * numpy.pi)
+        distance = circular_dist(self.or_source, 2 * phi - or_target, np.pi)
+        prob = np.exp(-0.5 * (distance / self.parameters.sigma) ** 2) / (
+            self.parameters.sigma * np.sqrt(2 * np.pi)
         )
 
         if index in [1000]:
-            import matplotlib.pyplot as plt
-
             plt.figure()
             plt.subplot(131)
             plt.gca().set_aspect("equal", "box")
@@ -765,11 +749,11 @@ class CoCircularModularConnectorFunction(ModularConnectorFunction):
 
             def plot_or(x, y, phi, color):
                 d = 0.06
-                dx = numpy.cos(phi) * d
-                dy = numpy.sin(phi) * d
+                dx = np.cos(phi) * d
+                dy = np.sin(phi) * d
                 plt.plot([x + dx, x - dx], [y + dy, y - dy], c=color)
 
-            idx = numpy.random.choice(numpy.arange(len(phi)), size=500)
+            idx = np.random.choice(np.arange(len(phi)), size=500)
             for i in idx:
                 plot_or(
                     self.source.pop.positions[0][i],
@@ -782,16 +766,16 @@ class CoCircularModularConnectorFunction(ModularConnectorFunction):
 
             plt.subplot(132)
             plt.gca().set_aspect("equal", "box")
-            logger.error(str(numpy.shape(self.source.pop.positions[1][idx])))
-            logger.error(str(numpy.max(distance)))
-            logger.error(str(numpy.max(prob)))
+            logger.error(str(np.shape(self.source.pop.positions[1][idx])))
+            logger.error(str(np.max(distance)))
+            logger.error(str(np.max(prob)))
             plt.scatter(
                 self.source.pop.positions[0],
                 self.source.pop.positions[1],
                 c=self.or_source,
                 alpha=0.5,
                 edgecolors="none",
-                s=numpy.array(prob / numpy.max(prob)) * 20,
+                s=np.array(prob / np.max(prob)) * 20,
                 cmap="hsv",
             )
             plt.colorbar()
@@ -804,7 +788,7 @@ class CoCircularModularConnectorFunction(ModularConnectorFunction):
                 c=self.or_source,
                 alpha=0.5,
                 edgecolors="none",
-                s=(1 - numpy.array(distance / numpy.max(distance))) * 20,
+                s=(1 - np.array(distance / np.max(distance))) * 20,
                 cmap="hsv",
             )
 

@@ -6,13 +6,15 @@ Most of the included functionality should in future be provided directly by neo.
 When this happens most of this code should become irrelevant and the rest should be
 merged into the :mod:`.datastore` module.
 """
+import logging
+import pickle
+
 from neo.core.segment import Segment
 import numpy
-import pickle
 import quantities as qt
-import mozaik
 
-logger = mozaik.getMozaikLogger()
+
+logger = logging.getLogger(__name__)
 
 
 class MozaikSegment(Segment):

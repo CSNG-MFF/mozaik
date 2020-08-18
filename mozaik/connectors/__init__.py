@@ -2,18 +2,21 @@
 """
 Mozaik connector interface.
 """
-import math
-import numpy
-import mozaik
-import time
-from mozaik.core import BaseComponent
-from mozaik.sheets.vision import SheetWithMagnificationFactor
-from parameters import ParameterSet, ParameterDist
-from mozaik.tools.misc import sample_from_bin_distribution, normal_function
 from collections import Counter
-from pyNN import random, space
+import logging
+import math
+import time
 
-logger = mozaik.getMozaikLogger()
+from parameters import ParameterSet, ParameterDist
+from pyNN import random, space
+import numpy as np
+import scipy
+
+from ..core import BaseComponent
+from ..sheets.vision import SheetWithMagnificationFactor
+from ..tools.misc import sample_from_bin_distribution, normal_function
+
+logger = logging.getLogger(__name__)
 
 
 class Connector(BaseComponent):
@@ -49,7 +52,8 @@ class Connector(BaseComponent):
         self.input = source
         self.target.input = self
 
-        self.weight_scaler = 1.0  # This scaler has to be always applied to all weights just before sent to pyNN connect command
+        # This scaler has to be always applied to all weights just before sent to pyNN connect command
+        self.weight_scaler = 1.0
         # This is because certain pyNN synaptic models interpret weights with different units and the Connector
         # function here corrects for these - ie. the Connectors in Mozaik will always assume the weights to be in nano-siemens
         if self.parameters.short_term_plasticity != None:
@@ -82,21 +86,21 @@ class Connector(BaseComponent):
         raise NotImplementedError
 
     def connection_field_plot_continuous(self, index, afferent=True, density=30):
-        weights = numpy.array(self.proj.get("weight", format="list", gather=True))
+        weights = np.array(self.proj.get("weight", format="list", gather=True))
         if afferent:
-            idx = numpy.array(numpy.flatnonzero(weights[:, 1].flatten() == index))
+            idx = np.array(np.flatnonzero(weights[:, 1].flatten() == index))
             x = self.proj.pre.positions[0][weights[idx, 0].astype(int)]
             y = self.proj.pre.positions[1][weights[idx, 0].astype(int)]
             w = weights[idx, 2]
         else:
-            idx = numpy.flatnonzero(weights[:, 0] == index)
+            idx = np.flatnonzero(weights[:, 0] == index)
             x = self.proj.post.positions[0][weights[idx, 1].astype(int)]
             y = self.proj.post.positions[1][weights[idx, 1].astype(int)]
             w = weights[idx, 2]
 
-        xi = numpy.linspace(min(x), max(x), 100)
-        yi = numpy.linspace(min(y), max(y), 100)
-        zi = griddata(x, y, w, xi, yi)
+        xi = np.linspace(min(x), max(x), 100)
+        yi = np.linspace(min(y), max(y), 100)
+        zi = scipy.interpolate.griddata(x, y, w, xi, yi)
         # plt.figure()
         # plt.imshow(zi)
         # plt.scatter(x,y,marker='o',c=w,s=50)
@@ -109,7 +113,7 @@ class Connector(BaseComponent):
         # plt.colorbar()
 
     def store_connections(self, datastore):
-        from mozaik.analysis.data_structures import Connections
+        from ..analysis.data_structures import Connections
 
         weights = self.proj.get("weight", format="list", gather=True)
         delays = self.proj.get("delay", format="list", gather=True)
@@ -141,7 +145,8 @@ class SpecificArborization(Connector):
 
     required_parameters = ParameterSet(
         {
-            "weight_factor": float,  # the overall (sum) weight that a single target neuron should receive
+            # the overall (sum) weight that a single target neuron should receive
+            "weight_factor": float,
         }
     )
 
@@ -153,8 +158,8 @@ class SpecificArborization(Connector):
         self.delay_matrix = delay_matrix
 
     def _connect(self):
-        X = numpy.zeros(self.connection_matrix.shape)
-        Y = numpy.zeros(self.connection_matrix.shape)
+        X = np.zeros(self.connection_matrix.shape)
+        Y = np.zeros(self.connection_matrix.shape)
 
         for x in range(0, X.shape[0]):
             for y in range(0, X.shape[1]):
@@ -164,7 +169,7 @@ class SpecificArborization(Connector):
         for i in range(0, self.target.pop.size):
             self.connection_matrix[:, i] = (
                 self.connection_matrix[:, i]
-                / numpy.sum(self.connection_matrix[:, i])
+                / np.sum(self.connection_matrix[:, i])
                 * self.parameters.weight_factor
             )
 
@@ -173,14 +178,14 @@ class SpecificArborization(Connector):
         self.connection_matrix = self.connection_matrix * self.weight_scaler
         self.connection_list = list(
             zip(
-                numpy.array(X).flatten(),
-                numpy.array(Y).flatten(),
+                np.array(X).flatten(),
+                np.array(Y).flatten(),
                 self.connection_matrix.flatten(),
                 self.delay_matrix.flatten(),
             )
         )
         # get rid of very weak synapses
-        z = numpy.max(self.connection_matrix.flatten())
+        z = np.max(self.connection_matrix.flatten())
         self.connection_list = [
             (int(a), int(b), c, d)
             for (a, b, c, d) in self.connection_list
@@ -218,7 +223,8 @@ class SpecificProbabilisticArborization(Connector):
 
     required_parameters = ParameterSet(
         {
-            "weight_factor": float,  # the overall strength of synapses in this connection per neuron (in µS) (i.e. the sum of the strength of synapses in this connection per target neuron)
+            # the overall strength of synapses in this connection per neuron (in µS) (i.e. the sum of the strength of synapses in this connection per target neuron)
+            "weight_factor": float,
             "num_samples": int,
         }
     )

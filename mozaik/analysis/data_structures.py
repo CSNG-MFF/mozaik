@@ -3,17 +3,18 @@ This module contains the definition of the AnalysisDataStructure API and impleme
 
 For more documentation refer to `mozaik.analysis`_
 """
+import logging
 
-import mozaik
 import numpy
-from mozaik.tools.mozaik_parametrized import (
+
+from ..tools.mozaik_parametrized import (
     MozaikParametrized,
-    SNumber,
     SInteger,
+    SNumber,
     SString,
 )
 
-logger = mozaik.getMozaikLogger()
+logger = logging.getLogger(__name__)
 
 
 class AnalysisDataStructure(MozaikParametrized):
@@ -67,16 +68,16 @@ class SingleValue(AnalysisDataStructure):
 class PerNeuronValue(AnalysisDataStructure):
     """
     Data structure holding single value per neuron.
-    
+
     Parameters
-    ---------- 
-    
+    ----------
+
     values : list
            The vector of values one per neuron
 
     value_units : quantities
                 Quantities unit describing the units of the value
-    
+
     ids : list(int)
         The ids of the neurons which are stored, in the same order as in the values
     """
@@ -98,10 +99,10 @@ class PerNeuronValue(AnalysisDataStructure):
     def get_value_by_id(self, idds):
         """
         Parameters
-        ---------- 
+        ----------
         idd : int or list(int)
             The ids for which the return the values.
-        
+
         Returns
         -------
         ids : AnalogSignal or list(AnalogSignal)
@@ -116,16 +117,16 @@ class PerNeuronValue(AnalysisDataStructure):
 class PerNeuronPairValue(AnalysisDataStructure):
     """
     Data structure holding values for each pair of neurons.
-    
+
     Parameters
-    ---------- 
-    
+    ----------
+
     values : numpy.nd_array
-           The 2D array holding the values. 
+           The 2D array holding the values.
 
     value_units : quantities
                 Quantities unit describing the units of the value
-    
+
     ids : list(int)
         The ids of the neurons which are stored, in the same order as in the values (along both axis).
     """
@@ -147,13 +148,13 @@ class PerNeuronPairValue(AnalysisDataStructure):
     def get_value_by_ids(self, idds1, idds2):
         """
         Parameters
-        ---------- 
+        ----------
         idds1 : int or list(int)
             The ids for which the return the values along first dimension.
-        
+
         idds2 : int or list(int)
             The ids for which the return the values along first dimension.
-        
+
         Returns
         -------
         ids : scaler or array
@@ -183,7 +184,7 @@ class AnalysisDataStructure1D(AnalysisDataStructure):
     arrays with matching units!
 
     Parameters
-    ---------- 
+    ----------
     y_axis_units : quantities
           The quantities units of y axis.
     """
@@ -202,7 +203,7 @@ class AnalogSignal(AnalysisDataStructure1D):
     A single analog signal. This is effectively a wrapper around a single Neo AnalogSignal object.
 
     Parameters
-    ---------- 
+    ----------
     analog_signal : AnalogSignal
          The neo AnalogSignal
     """
@@ -235,11 +236,11 @@ class AnalogSignalList(AnalysisDataStructure1D):
     This is a simple list of Neo AnalogSignal objects.
 
     Parameters
-    ---------- 
+    ----------
     asl : list(AnalogSignal)
          The variable containing the list of AnalogSignal objects, in the order
          corresponding to the order of neurons indexes in the indexes parameter.
-    
+
     ids : list(int)
          List of ids of neurons in the original Mozaik sheet to which the
          AnalogSignals correspond.
@@ -260,9 +261,9 @@ class AnalogSignalList(AnalysisDataStructure1D):
     def get_asl_by_id(self, idds):
         """
         Parameters
-        ---------- 
+        ----------
         idd : int or list(int)
-        
+
         Returns
         -------
         asls : AnalogSignal or list(AnalogSignal)
@@ -332,11 +333,11 @@ class PerNeuronPairAnalogSignalList(AnalysisDataStructure1D):
     This is a list of Neo AnalogSignal objects associated with pairs of neurons.
 
     Parameters
-    ---------- 
+    ----------
     asl : list(AnalogSignal)
          The variable containing the list of AnalogSignal objects, in the order
          corresponding to the order of neuron indexe pairs in the ids parameter.
-    
+
     ids : list((int,int))
          List of id pairs of neurons to which the AnalogSignals correspond.
     """
@@ -356,9 +357,9 @@ class PerNeuronPairAnalogSignalList(AnalysisDataStructure1D):
     def get_asl_by_id_pair(self, idd_pair):
         """
         Parameters
-        ---------- 
+        ----------
         idd_pair : tuple of neuron ids or list of tuples of neuron ids
-        
+
         Returns
         -------
         ids : AnalogSignal or list(AnalogSignal)
@@ -467,17 +468,17 @@ class ConductanceSignalList(AnalysisDataStructure1D):
     conductances.
 
     Parameters
-    ---------- 
+    ----------
     e_asl : list(AnalogSignal)
        The variable containing the list of AnalogSignal objects corresponding
        to excitatory conductances, in the order corresponding to the order of
        neurons indexes in the indexes parameter.
-    
+
     i_asl : list(AnalogSignal)
        The variable containing the list of AnalogSignal objects corresponding
        to inhibitory conductances, in the order corresponding to the order of
        neurons indexes in the indexes parameter.
-       
+
     ids : list(int)
        List of ids of neurons in the original Mozaik sheet to which the
        AnalogSignals correspond.
@@ -503,9 +504,9 @@ class ConductanceSignalList(AnalysisDataStructure1D):
     def get_econ_by_id(self, idd):
         """
         Parameters
-        ---------- 
+        ----------
         idd : int or list(int)
-        
+
         Returns
         -------
         ids : AnalogSignal or list(AnalogSignal)
@@ -516,9 +517,9 @@ class ConductanceSignalList(AnalysisDataStructure1D):
     def get_icon_by_id(self, idd):
         """
         Parameters
-        ---------- 
+        ----------
         idd : int or list(int)
-        
+
         Returns
         -------
         ids : AnalogSignal or list(AnalogSignal)
@@ -563,13 +564,13 @@ class Connections(AnalysisDataStructure):
     Data structure holding connections.
 
     Parameters
-    ---------- 
+    ----------
     weights : list
             List of tuples (i,j,w) where i is index of pre-synaptic neuron in sheet source_name and j is index of post-synaptic neuron in sheet target_name, and w is the weights.
-    
+
     delays : list
             List of tuples (i,j,d) where i is index of pre-synaptic neuron in sheet source_name and j is index of post-synaptic neuron in sheet target_name, and d is the delay.
-    
+
     """
 
     proj_name = SString(doc="Projection name.")

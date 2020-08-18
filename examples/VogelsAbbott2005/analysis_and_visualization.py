@@ -1,10 +1,9 @@
-import numpy
-import mozaik
-from mozaik.visualization.plotting import *
-from mozaik.analysis.technical import NeuronAnnotationsToPerNeuronValues
 from mozaik.analysis.analysis import *
-from mozaik.storage.queries import *
+from mozaik.analysis.technical import NeuronAnnotationsToPerNeuronValues
 from mozaik.storage.datastore import PickledDataStore
+from mozaik.storage.queries import *
+from mozaik.visualization.plotting import *
+import numpy
 
 
 def perform_analysis_and_visualization(data_store):

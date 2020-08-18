@@ -21,9 +21,15 @@ Parameters
     mpi_comm : mpi4py.Comm
         The mpi communication object, None if MPI not available.
 """
-__version__ = "0.1.0"
-import numpy.random
 from importlib import import_module
+import logging
+
+import numpy.random
+
+__version__ = "0.1.0"
+
+logger = logging.getLogger(__package__)
+logger.setLevel(level=logging.INFO)
 
 rng = None
 pynn_rng = None
@@ -86,12 +92,8 @@ def get_seeds(size=None):
 
 def getMozaikLogger():
     """
-    To maintain consistent logging settings around mozaik use this method to obtain the logger isntance.
+    DEPRECATED: Use logging.getLogger() instead
     """
-    import logging
-
-    logger = logging.getLogger("Mozaik")
-    logger.setLevel(logging.INFO)
     return logger
 
 
@@ -114,7 +116,6 @@ def load_component(path):
     This function is primarily used to automatically load components based on configuration files during model construction.
     """
 
-    logger = getMozaikLogger()
     path_parts = path.split(".")
     module_name = ".".join(path_parts[:-1])
     class_name = path_parts[-1]

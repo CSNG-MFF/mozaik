@@ -1,21 +1,23 @@
 """
 This module implements the data storage functionality.
 """
+import collections
+import logging
+import os.path
+import pickle
 
-import numpy
-from parameters import ParameterSet
 from neo.core.block import Block
 
-# from neo.io.hdf5io import NeoHdf5IO
-import mozaik
-from mozaik.core import ParametrizedObject
-from .neo_neurotools_wrapper import MozaikSegment, PickledDataStoreNeoWrapper
-from mozaik.tools.mozaik_parametrized import MozaikParametrized, filter_query
-import pickle
-import collections
-import os.path
+from neo.io.hdf5io import NeoHdf5IO
+from parameters import ParameterSet
+import numpy
 
-logger = mozaik.getMozaikLogger()
+from ..core import ParametrizedObject
+from ..tools.mozaik_parametrized import MozaikParametrized, filter_query
+from .neo_neurotools_wrapper import MozaikSegment, PickledDataStoreNeoWrapper
+
+
+logger = logging.getLogger(__name__)
 
 
 class DataStoreView(ParametrizedObject):
@@ -197,7 +199,6 @@ class DataStoreView(ParametrizedObject):
             ]
 
     def get_experiment_parametrization_list(self):
-
         """
         Return the list of parameters of all experiments performed (in the order they were performed).
 
@@ -340,7 +341,7 @@ class DataStore(DataStoreView):
                The required parameter set.
     """
 
-    required_parameters = ParameterSet({"root_directory": str, "store_stimuli": bool,})
+    required_parameters = ParameterSet({"root_directory": str, "store_stimuli": bool})
 
     def __init__(self, load, parameters, **params):
         """
@@ -458,12 +459,15 @@ class DataStore(DataStoreView):
                     "Warning: ADS with the same parametrization already added in the datastore.: %s"
                     % (str(result))
                 )
+                # TODO: i is undefined
                 self.analysis_results[i] = result
                 return
+            # TODO: ads is undefined
             logger.error(
                 "Analysis Data Structure with the same parametrization already added in the datastore. Currently uniqueness is required. The ADS was not added. User should modify analysis specification to avoid this!: \n %s \n %s "
                 % (str(result), str(ads))
             )
+            # TODO: ads is undefined
             raise ValueError(
                 "Analysis Data Structure with the same parametrization already added in the datastore. Currently uniqueness is required. The ADS was not added. User should modify analysis specification to avoid this!: %s \n %s"
                 % (str(result), str(ads))
@@ -530,12 +534,15 @@ class Hdf5DataStore(DataStore):
                     "Warning: ADS with the same parametrization already added in the datastore.: %s"
                     % (str(result))
                 )
+                # TODO: i is undefined
                 self.analysis_results[i] = result
                 return
+            # TODO: ads is undefined
             logger.error(
                 "Analysis Data Structure with the same parametrization already added in the datastore. Currently uniqueness is required. The ADS was not added. User should modify analysis specification to avoid this!: \n %s \n %s "
                 % (str(result), str(ads))
             )
+            # TODO: ads is undefined
             raise ValueError(
                 "Analysis Data Structure with the same parametrization already added in the datastore. Currently uniqueness is required. The ADS was not added. User should modify analysis specification to avoid this!: %s \n %s"
                 % (str(result), str(ads))

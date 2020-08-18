@@ -1,26 +1,28 @@
 # -*- coding: utf-8 -*-
 import sys
-import numpy
-import mozaik
-from parameters import ParameterSet
-from mozaik.models import Model
+import logging
+
+from mozaik import load_component
 from mozaik.connectors.meta_connectors import GaborConnector
 from mozaik.connectors.modular import ModularSamplingProbabilisticConnector
-from mozaik import load_component
+from mozaik.models import Model
 from mozaik.space import VisualRegion
+from parameters import ParameterSet
+import numpy
 
-logger = mozaik.getMozaikLogger()
+
+logger = logging.getLogger(__name__)
 
 
 class PushPullCCModel(Model):
     """
     This model is a re-implementation of a model by Jens Kremkow presented in following paper:
-    
+
     Jens Kremkow, Laurent U. Perrinet, Cyril Monier, Jose-Manuel Alonso, Ad Aertsen, Yves Frégnac and Guillaume S. Masson
 
-    [Push-Pull Receptive Field Organization and Synaptic Depression: 
+    [Push-Pull Receptive Field Organization and Synaptic Depression:
     Mechanisms for Reliably Encoding Naturalistic Stimuli in V1AffInhConnection](http://journal.frontiersin.org/article/10.3389/fncir.2016.00037/full)
-    
+
     Front. Neural Circuits, 11 May 2016
 
     DOI: https://doi.org/10.3389/fncir.2016.00037

@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 import sys
+
 from mozaik.meta_workflow.parameter_search import (
     CombinationParameterSearch,
-    SlurmSequentialBackend,
     LocalSequentialBackend,
+    SlurmSequentialBackend,
 )
 import numpy
 

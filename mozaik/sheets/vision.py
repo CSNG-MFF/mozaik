@@ -2,28 +2,28 @@
 """
 This module contains implementation of vision related sheets.
 """
+import logging
 
-import numpy
-import mozaik
 from parameters import ParameterSet
 from pyNN import space
-from pyNN.errors import NothingToWriteError
-from mozaik.sheets import Sheet
 
-logger = mozaik.getMozaikLogger()
+import mozaik
+from . import Sheet
+
+logger = logging.getLogger(__name__)
 
 
 class RetinalUniformSheet(Sheet):
     """
-    Retinal sheet corresponds to a sheet of retinal cells (retinal ganglion cells or photoreceptors). 
+    Retinal sheet corresponds to a sheet of retinal cells (retinal ganglion cells or photoreceptors).
     It implicitly assumes the coordinate systems is in degress in visual field.
-    
+
     Other parameters
     ----------------
-    
+
     sx : float (degrees)
        X size of the region.
-        
+
     sy : float (degrees)
        Y size of the region.
 
@@ -72,18 +72,18 @@ class SheetWithMagnificationFactor(Sheet):
     """
     A Sheet that has a magnification factor corresponding to cortical visual area.
     It interprets the coordinates system to be in degrees of visual field, but it allows
-    for definition of the layer using parameters in cortical space. It offers 
+    for definition of the layer using parameters in cortical space. It offers
     number of functions that facilitate conversion between the underlying visual degree
-    coordinates and cortical space coordinate systems using the magnification factor. 
-    
+    coordinates and cortical space coordinate systems using the magnification factor.
+
     Other parameters
     ----------------
     magnification_factor : float (μm/degree)
                          The magnification factor.
-    
+
     sx : float (μm)
        X size of the region.
-        
+
     sy : float (μm)
        Y size of the region.
     """
@@ -119,19 +119,19 @@ class SheetWithMagnificationFactor(Sheet):
         """
         vf_2_cs converts the position (degree_x, degree_y) in visual field to
         position in cortical space (in μm) given the magnification_factor.
-        
+
         Parameters
         ----------
         degree_x : float (degrees)
                  X coordinate of the position in degrees of visual field
         degree_y : float (degrees)
                  Y coordinate of the position in degrees of visual field
-        
+
         Returns
         -------
         microm_meters_x,microm_meters_y : float,float (μm,μm)
                                           Tuple with the coordinates in cortical space (μm)
-        
+
         """
         return (
             degree_x * self.magnification_factor,
@@ -143,14 +143,14 @@ class SheetWithMagnificationFactor(Sheet):
         cs_2_vf converts the position (micro_meters_x, micro_meters_y) in
         cortical space to the position in the visual field (in degrees) given
         the magnification_factor
-        
+
         Parameters
         ----------
         micro_meters_x : float (μm)
                  X coordinate of the position in μm of cortical space
         micro_meters_y : float (μm)
                  Y coordinate of the position in μm of cortical space
-        
+
         Returns
         -------
         degrees_x,degrees_y : float,float (degrees,degrees)
@@ -165,12 +165,12 @@ class SheetWithMagnificationFactor(Sheet):
         """
         dvf_2_dcs converts the distance in visual space to the distance in
         cortical space given the magnification_factor
-        
+
         Parameters
         ----------
         distance_vf : float (degrees)
                  The distance in visual field coordinates (degrees).
-                 
+
         Returns
         -------
         distance_cs : float (μm)
@@ -188,14 +188,14 @@ class SheetWithMagnificationFactor(Sheet):
 class VisualCorticalUniformSheet(SheetWithMagnificationFactor):
     """
     Represents a visual cortical sheet of neurons, randomly uniformly distributed in cortical space.
-    
+
     Other parameters
     ----------------
     density : float (neurons/mm^2)
             The density of neurons per square milimeter.
     """
 
-    required_parameters = ParameterSet({"density": float,})  # neurons/(mm^2)
+    required_parameters = ParameterSet({"density": float})  # neurons/(mm^2)
 
     def __init__(self, model, parameters):
         SheetWithMagnificationFactor.__init__(self, model, parameters)
@@ -219,18 +219,18 @@ class VisualCorticalUniformSheet(SheetWithMagnificationFactor):
 class VisualCorticalUniformSheet3D(VisualCorticalUniformSheet):
     """
     Represents a visual cortical sheet of neurons, randomly uniformly distributed in cortical space.
-    In addition to the VisualCorticalUniformSheet it adds 3rd dimension to the neurons that corresponds their depth 
-    within cortical sheet (prepandicular to the cortical surface). 
+    In addition to the VisualCorticalUniformSheet it adds 3rd dimension to the neurons that corresponds their depth
+    within cortical sheet (prepandicular to the cortical surface).
     In the third dimensions, the neurons will be uniformly distributed between the *min_depth* and *max_depth* parameters.
-    
+
     Notes
     -----
-    Manny existing Mozaik components that take neural position into consideration will 
+    Manny existing Mozaik components that take neural position into consideration will
     ignore this 3rd dimension. Also unlike the first to dimensions, corresponding to the axis along
     the cortical surface, the third depth dimension is in μm!
 
     Also note the density is still calculated only per surface unit.
-    
+
     Other parameters
     ----------------
     min_depth : float (μm)
@@ -241,10 +241,12 @@ class VisualCorticalUniformSheet3D(VisualCorticalUniformSheet):
     """
 
     required_parameters = ParameterSet(
-        {"min_depth": float, "max_depth": float,}  # μm  # μm
+        {"min_depth": float, "max_depth": float}  # μm  # μm
     )
 
     def __init__(self, model, parameters):
+        # TODO: should this be super()?
+        # Or should this class inherit from SheetWithMagnificationFactor?
         SheetWithMagnificationFactor.__init__(self, model, parameters)
         dx, dy = self.cs_2_vf(parameters.sx, parameters.sy)
 

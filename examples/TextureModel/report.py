@@ -1,28 +1,27 @@
 #!/usr/local/bin/ipython -i
-import sys
-
-sys.path.append("/home/jan/projects/mozaik/")
-import matplotlib
-import time
+import logging
 import os
-import matplotlib.pyplot as plt
+import sys
+import time
+
+from mozaik.analysis.analysis import *
+from mozaik.analysis.technical import NeuronAnnotationsToPerNeuronValues
 from mozaik.framework.experiment_controller import (
     run_experiments,
     setup_experiments,
     setup_logging,
 )
-from mozaik.visualization.plotting import *
-from mozaik.visualization.MRfig import *
-from mozaik.analysis.analysis import *
-from mozaik.analysis.technical import NeuronAnnotationsToPerNeuronValues
-from mozaik.visualization.Kremkow_plots import *
 from mozaik.storage.datastore import Hdf5DataStore, PickledDataStore
-from parameters import ParameterSet
 from mozaik.storage.queries import *
 from mozaik.tools.circ_stat import circular_dist
-import mozaik
+from mozaik.visualization.Kremkow_plots import *
+from mozaik.visualization.MRfig import *
+from mozaik.visualization.plotting import *
+from parameters import ParameterSet
+import matplotlib
+import matplotlib.pyplot as plt
 
-logger = mozaik.getMozaikLogger("Mozaik")
+logger = logging.getLogger(__name__)
 
 setup_logging()
 data_store = PickledDataStore(

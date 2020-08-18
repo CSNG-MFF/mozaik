@@ -3,7 +3,6 @@ from mozaik.experiments import *
 from mozaik.experiments.vision import *
 from mozaik.sheets.population_selector import RCRandomPercentage
 from parameters import ParameterSet
-import mozaik
 
 
 def create_experiments(model):

@@ -1,8 +1,7 @@
 """
 This file contains code extracted from the NeuroTools package (http://neuralensemble.org/NeuroTools).
 """
-from numpy import array, log
-import numpy
+import numpy as np
 
 
 class SpikeTrain(object):
@@ -32,7 +31,6 @@ class SpikeTrain(object):
     #######################################################################
     def __init__(self, spike_times, t_start=None, t_stop=None):
         # TODO: add information about sampling rate at time of creation
-
         """
         Constructor of the SpikeTrain object
 
@@ -42,25 +40,25 @@ class SpikeTrain(object):
 
         self.t_start = t_start
         self.t_stop = t_stop
-        self.spike_times = numpy.array(spike_times, numpy.float32)
+        self.spike_times = np.array(spike_times, np.float32)
 
         # If t_start is not None, we resize the spike_train keeping only
         # the spikes with t >= t_start
         if self.t_start is not None:
-            self.spike_times = numpy.extract(
+            self.spike_times = np.extract(
                 (self.spike_times >= self.t_start), self.spike_times
             )
 
         # If t_stop is not None, we resize the spike_train keeping only
         # the spikes with t <= t_stop
         if self.t_stop is not None:
-            self.spike_times = numpy.extract(
+            self.spike_times = np.extract(
                 (self.spike_times <= self.t_stop), self.spike_times
             )
 
         # We sort the spike_times. May be slower, but is necessary by the way for quite a
         # lot of methods...
-        self.spike_times = numpy.sort(self.spike_times, kind="quicksort")
+        self.spike_times = np.sort(self.spike_times, kind="quicksort")
         # Here we deal with the t_start and t_stop values if the SpikeTrain
         # is empty, with only one element or several elements, if we
         # need to guess t_start and t_stop
@@ -81,12 +79,12 @@ class SpikeTrain(object):
                 self.t_stop = self.spike_times[0] + 0.1
         elif size > 1:
             if self.t_start is None:
-                self.t_start = numpy.min(self.spike_times)
-            if numpy.any(self.spike_times < self.t_start):
+                self.t_start = np.min(self.spike_times)
+            if np.any(self.spike_times < self.t_start):
                 raise ValueError("Spike times must not be less than t_start")
             if self.t_stop is None:
-                self.t_stop = numpy.max(self.spike_times)
-            if numpy.any(self.spike_times > self.t_stop):
+                self.t_stop = np.max(self.spike_times)
+            if np.any(self.spike_times > self.t_stop):
                 raise ValueError("Spike times must not be greater than t_stop")
 
         if self.t_start >= self.t_stop:
@@ -96,7 +94,7 @@ class SpikeTrain(object):
             )
         if self.t_start < 0:
             raise ValueError("t_start must not be negative")
-        if numpy.any(self.spike_times < 0):
+        if np.any(self.spike_times < 0):
             raise ValueError("Spike times must not be negative")
 
     def __str__(self):
@@ -126,7 +124,7 @@ class SpikeTrain(object):
             time_parameters()
         """
         test = self.time_parameters() == spktrain.time_parameters()
-        return numpy.all(self.spike_times == spktrain.spike_times) and test
+        return np.all(self.spike_times == spktrain.spike_times) and test
 
     def copy(self):
         """
@@ -143,23 +141,23 @@ class SpikeTrain(object):
 
 class StGen:
     def __init__(self, rng=None, seed=None):
-        """ 
+        """
         Stochastic Process Generator
         ============================
 
         Object to generate stochastic processes of various kinds
         and return them as SpikeTrain object.
-      
+
 
         Inputs:
         -------
-            rng - The random number generator state object (optional). Can be None, or 
-                  a numpy.random.RandomState object, or an object with the same 
+            rng - The random number generator state object (optional). Can be None, or
+                  a np.random.RandomState object, or an object with the same
                   interface.
 
             seed - A seed for the rng (optional).
 
-        If rng is not None, the provided rng will be used to generate random numbers, 
+        If rng is not None, the provided rng will be used to generate random numbers,
         otherwise StGen will create its own random number generator.
         If a seed is provided, it is passed to rng.seed(seed)
 
@@ -174,13 +172,13 @@ class StGen:
 
         Spiking point processes:
         ------------------------
- 
+
         poisson_generator - homogeneous Poisson process
         inh_poisson_generator - inhomogeneous Poisson process (time varying rate)
         """
 
         if rng == None:
-            self.rng = numpy.random.RandomState()
+            self.rng = np.random.RandomState()
         else:
             self.rng = rng
 
@@ -199,7 +197,7 @@ class StGen:
         Returns a SpikeTrain whose spikes are a realization of a Poisson process
         with the given rate (Hz) and stopping time t_stop (milliseconds).
 
-        Note: t_start is always 0.0, thus all realizations are as if 
+        Note: t_start is always 0.0, thus all realizations are as if
         they spiked at t=0.0, though this spike is not included in the SpikeList.
 
         Inputs:
@@ -224,21 +222,21 @@ class StGen:
 
         # less wasteful than double length method above
         n = (t_stop - t_start) / 1000.0 * rate
-        number = numpy.ceil(n + 3 * numpy.sqrt(n))
+        number = np.ceil(n + 3 * np.sqrt(n))
         if number < 100:
-            number = min(5 + numpy.ceil(2 * n), 100)
+            number = min(5 + np.ceil(2 * n), 100)
 
         if number > 0:
             isi = self.rng.exponential(1.0 / rate, int(number)) * 1000.0
             if number > 1:
-                spikes = numpy.add.accumulate(isi)
+                spikes = np.add.accumulate(isi)
             else:
                 spikes = isi
         else:
-            spikes = numpy.array([])
+            spikes = np.array([])
 
         spikes += t_start
-        i = numpy.searchsorted(spikes, t_stop)
+        i = np.searchsorted(spikes, t_stop)
 
         extra_spikes = []
         if i == len(spikes):
@@ -250,7 +248,7 @@ class StGen:
                 extra_spikes.append(t_last)
                 t_last += self.rng.exponential(1.0 / rate, 1)[0] * 1000.0
 
-            spikes = numpy.concatenate((spikes, extra_spikes))
+            spikes = np.concatenate((spikes, extra_spikes))
 
             if debug:
                 print(
@@ -259,7 +257,7 @@ class StGen:
                 )
 
         else:
-            spikes = numpy.resize(spikes, (i,))
+            spikes = np.resize(spikes, (i,))
 
         if not array:
             spikes = SpikeTrain(spikes, t_start=t_start, t_stop=t_stop)
@@ -271,15 +269,15 @@ class StGen:
 
     def inh_poisson_generator(self, rate, t, t_stop, array=False):
         """
-        Returns a SpikeTrain whose spikes are a realization of an inhomogeneous 
-        poisson process (dynamic rate). The implementation uses the thinning 
+        Returns a SpikeTrain whose spikes are a realization of an inhomogeneous
+        poisson process (dynamic rate). The implementation uses the thinning
         method, as presented in the references.
 
         Inputs:
         -------
-            rate   - an array of the rates (Hz) where rate[i] is active on interval 
+            rate   - an array of the rates (Hz) where rate[i] is active on interval
                      [t[i],t[i+1]]
-            t      - an array specifying the time bins (in milliseconds) at which to 
+            t      - an array specifying the time bins (in milliseconds) at which to
                      specify the rate
             t_stop - length of time to simulate process (in ms)
             array  - if True, a numpy array of sorted spikes is returned,
@@ -292,7 +290,7 @@ class StGen:
         References:
         -----------
 
-        Eilif Muller, Lars Buesing, Johannes Schemmel, and Karlheinz Meier 
+        Eilif Muller, Lars Buesing, Johannes Schemmel, and Karlheinz Meier
         Spike-Frequency Adapting Neural Ensembles: Beyond Mean Adaptation and Renewal Theories
         Neural Comput. 2007 19: 2958-3010.
 
@@ -308,26 +306,26 @@ class StGen:
             poisson_generator
         """
 
-        if numpy.shape(t) != numpy.shape(rate):
+        if np.shape(t) != np.shape(rate):
             raise ValueError("shape mismatch: t,rate must be of the same shape")
 
         # get max rate and generate poisson process to be thinned
-        rmax = numpy.max(rate)
+        rmax = np.max(rate)
         ps = self.poisson_generator(rmax, t_start=t[0], t_stop=t_stop, array=True)
 
         # return empty if no spikes
         if len(ps) == 0:
             if array:
-                return numpy.array([])
+                return np.array([])
             else:
-                return SpikeTrain(numpy.array([]), t_start=t[0], t_stop=t_stop)
+                return SpikeTrain(np.array([]), t_start=t[0], t_stop=t_stop)
 
         # gen uniform rand on 0,1 for each spike
-        rn = numpy.array(self.rng.uniform(0, 1, len(ps)))
+        rn = np.array(self.rng.uniform(0, 1, len(ps)))
 
         # instantaneous rate for each spike
 
-        idx = numpy.searchsorted(t, ps) - 1
+        idx = np.searchsorted(t, ps) - 1
         spike_rate = rate[idx]
 
         # thin and return spikes

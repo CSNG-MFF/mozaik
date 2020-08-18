@@ -2,7 +2,7 @@
 This module contains several low level plotting function used mainly in simple_plot module.
 """
 import matplotlib.pyplot as plt
-from matplotlib.ticker import FuncFormatter
+import matplotlib.ticker as mticker
 
 
 def disable_top_right_axis(ax):
@@ -34,8 +34,6 @@ def disable_left_axis(ax):
 
 
 def three_tick_axis(axis, log=False):
-    import matplotlib.ticker as mticker
-
     if log:
         axis.set_major_locator(mticker.LogLocator(numticks=3))
     else:
@@ -48,7 +46,7 @@ def three_tick_axis(axis, log=False):
             return s_f
         return s_g
 
-    a = FuncFormatter(millions)
+    a = mticker.FuncFormatter(millions)
     axis.set_major_formatter(a)
 
 
@@ -60,7 +58,7 @@ def short_tick_labels_axis(axis):
             return s_f
         return s_g
 
-    a = FuncFormatter(millions)
+    a = mticker.FuncFormatter(millions)
     axis.set_major_formatter(a)
 
 

@@ -2,16 +2,18 @@
 This module contains special analysis functions that relate to some tehnical mozaik architecture aspects and thus
 do not represent a standard analysis
 """
-from mozaik.analysis.data_structures import PerNeuronValue
-from mozaik.analysis.analysis import Analysis
-from mozaik.storage import queries
-from parameters import ParameterSet
-import quantities as qt
-import numpy
-import mozaik
+import logging
 
-logger = mozaik.getMozaikLogger()
-from mozaik.controller import Global
+from parameters import ParameterSet
+import numpy
+import quantities as qt
+
+from ..controller import Global
+from ..storage import queries
+from .analysis import Analysis
+from .data_structures import PerNeuronValue
+
+logger = logging.getLogger(__name__)
 
 
 class NeuronAnnotationsToPerNeuronValues(Analysis):
@@ -75,7 +77,7 @@ class NeuronAnnotationsToPerNeuronValues(Analysis):
 
 class SummarizeSingleValues(Analysis):
 
-    required_parameters = ParameterSet({"file_name": str,})  # the first value name
+    required_parameters = ParameterSet({"file_name": str})  # the first value name
 
     def perform_analysis(self):
 

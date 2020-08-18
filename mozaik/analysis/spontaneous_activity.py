@@ -1,26 +1,25 @@
-import numpy
-from mozaik.analysis.data_structures import SingleValue
-from parameters import ParameterSet
-from mozaik.storage import queries
-import mozaik
-from mozaik.analysis.analysis import Analysis
-from mozaik.storage import queries
-
 import logging
 
-logger = logging.getLogger("mozaik")
+import numpy
+
+from .analysis import Analysis
+from .data_structures import SingleValue
+from ..storage import queries
+
+
+logger = logging.getLogger(__name__)
 
 
 class SpontaneousActivityLength(Analysis):
     """
-      This anlysis detrmines how long does spontaneous activity stays stable. 
-      
+      This anlysis detrmines how long does spontaneous activity stays stable.
+
       It does so by calculating the lenght of period over which the population activity stays non zero, and excluding the points for which either population mean of neuron-to-neuron correlations or mean
       CV reach over a fixed threhsold. For these points it sets the length to 0.
-      
+
       This anlysis assumes that PSTH, CV, and neuron-to-neuron correlation analysis has already been ran on the model, and that the PSTH has been computed with 5ms bin.
       Also PopulationMean analysis over all the above has been ran as well.
-      
+
       NOTE: we should probably give the PSTH bin as parameter.
       """
 

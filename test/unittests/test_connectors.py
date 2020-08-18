@@ -1,8 +1,9 @@
 import unittest
-from mozaik.connectors import vision
+
 import numpy
 import numpy.linalg
-import logging
+
+from mozaik.connectors import vision
 
 
 class TestV1CorrelationBasedConnectivity(unittest.TestCase):

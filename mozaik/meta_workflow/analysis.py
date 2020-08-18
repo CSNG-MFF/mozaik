@@ -1,26 +1,26 @@
 import pickle
-from mozaik.tools.misc import result_directory_name
-from mozaik.storage.datastore import PickledDataStore
+
 from parameters import ParameterSet
-from mozaik.storage.queries import *
-import sys
-import os
-import time
+import numpy as np
+
+from ..storage.datastore import PickledDataStore
+from ..storage.queries import *
+from ..tools.misc import result_directory_name
 
 
 def load_fixed_parameter_set_parameter_search(
     simulation_name, master_results_dir, filter=None
 ):
     """
-    Loads all datastores of parameter search over a fixed set of parameters. 
-    
+    Loads all datastores of parameter search over a fixed set of parameters.
+
     Parameters
     ----------
     simulation_name : str
                     The name of the simulation.
     master_results_dir : str
                        The directory where the parameter search results are stored.
-    
+
     Returns
     -------
     A tuple (parameters,datastores), where `parameters` is a list of parameters over which the parameter search was performed.
@@ -83,7 +83,7 @@ def run_analysis_on_parameter_search(
     Runs the *analysis_function* on each of the simualtions that have been executed as a part of the parameter search.
     Results are stored in the corresponding simulation's datastore. The analysis is executed sequentially over results
     of each parameter combination simulation.
-    
+
     Parameters
     ----------
     simulation_name : str
@@ -106,24 +106,24 @@ def collect_results_from_parameter_search(
 ):
     """
     This function loads datastore associated with each parameter combination in the parameter search,
-    passes it to the *processing_function* function and then adds the result this function returns to a list. 
+    passes it to the *processing_function* function and then adds the result this function returns to a list.
     It then creates a tuple, with first element the list of parameter names in the same order as they appear in the parameter combinations,
-    second element is the list of parameter combinations and third element is the the corresponding list of results 
+    second element is the list of parameter combinations and third element is the the corresponding list of results
     returned bu the processing function. It then pickles the resulting tuple into *file_name*.
-    
-    
+
+
     Parameters
     ----------
     simulation_name : str
                     The name of the simulation.
     master_results_dir : str
                     The directory where the parameter search results are stored.
-    
+
     processing_function : func(ds)
                     A function accepting one parameter which will be the given datastore, and returning a pickable python structure to be associated with the parameter combination of the simulation run that produced the given datastore.
-    
+
     filename : str
-             The name of file into which to pickle the resutls.   
+             The name of file into which to pickle the resutls.
     """
     (parameters, datastores, n) = load_fixed_parameter_set_parameter_search(
         simulation_name, master_results_dir
@@ -131,7 +131,6 @@ def collect_results_from_parameter_search(
     results = [processing_function(d) for p, d in datastores]
     param_combs = [p for (p, d) in datastores]
     f = open(file_name, "wb")
-    import pickle
 
     pickle.dump((parameters, param_combs, results), f)
     f.close()
@@ -141,7 +140,7 @@ def export_SingleValues_as_matricies(simulation_name, master_results_dir, query)
     """
     It assumes that there was a grid parameter search. Providing this it reformats the SingleValues into matricies
     (one per each value_name parameter encountered) and exports them as pickled numpy ndarrays.
-    
+
     Parameters
     ----------
     simulation_name : str
@@ -177,19 +176,19 @@ def export_SingleValues_as_matricies(simulation_name, master_results_dir, query)
                 )
                 # assert len(param_filter_query(dsv,identifier='SingleValue',value_name=v).get_analysis_result()) == 1, "Error, %d ADS with value_name %s found for parameter combination:" % (len(param_filter_query(datastore,identifier='SingleValue',value_name=v).get_analysis_result()), str([str(a) + ':' + str(b) + ', ' for (a,b) in zip(parameters,param_values)]))
 
-    params = numpy.array([p for p, ds in datastores])
-    num_params = numpy.shape(params)[1]
+    params = np.array([p for p, ds in datastores])
+    num_params = np.shape(params)[1]
 
     # lets find out unique values of each parameter set
     param_values = [sorted(set(params[:, i])) for i in range(0, num_params)]
-    dimensions = numpy.array([len(x) for x in param_values])
+    dimensions = np.array([len(x) for x in param_values])
 
     # lets check that the dataset has the same number of entries as the number of all combinations of parameter values
     # assert len(datastores)+n == dimensions.prod()
 
     for v in value_names:
-        matrix = numpy.zeros(dimensions)
-        matrix.fill(numpy.NAN)
+        matrix = np.zeros(dimensions)
+        matrix.fill(np.NAN)
         for (pv, datastore) in datastores:
             index = [param_values[i].index(pv[i]) for i in range(0, len(param_values))]
             dsv = query.query(datastore)

@@ -1,19 +1,19 @@
 """
 This is the nexus of workflow execution controll of *mozaik*.
 """
+from datetime import datetime
 import logging
 import os
-import sys
 import time
+
 import mozaik
 from .cli import parse_workflow_args
-from .storage.datastore import Hdf5DataStore, PickledDataStore
+from .storage.datastore import PickledDataStore
 from .tools.distribution_parametrization import (
     MozaikExtendedParameterSet,
     load_parameters,
 )
 from .tools.misc import result_directory_name
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
 

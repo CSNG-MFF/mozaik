@@ -4,16 +4,17 @@ This module contains code interfacing parameters package, and pyNN distribution 
 In future pyNN plans to make an comprehensive merge between the parameters parametrization system and pyNN,
 in which case this code should become obsolete and mozaik should fully switch to such new system.
 """
+from pathlib import Path
+from urllib.parse import urlparse
+import os.path
+import urllib.request
+import urllib.parse
+import urllib.error  # TODO: to be replaced with srblib
 
-import copy
-import numpy as np
-import urllib.request, urllib.parse, urllib.error  # TODO: to be replaced with srblib
-import warnings
 from parameters import ParameterSet, ParameterRange, ParameterTable, ParameterReference
 from parameters.random import ParameterDist, GammaDist, UniformDist, NormalDist
-from pathlib import Path
 from pyNN.random import RandomDistribution, NumpyRNG
-from urllib.parse import urlparse
+import numpy as np
 
 
 def load_parameters(parameter_url, modified_parameters):
@@ -155,8 +156,6 @@ class MozaikExtendedParameterSet(ParameterSet):
 
             # is it a yaml url?
             if self._url:
-                import os.path
-
                 o = urlparse(self._url)
                 base, ext = os.path.splitext(o.path)
                 if ext in [".yaml", ".yml"]:

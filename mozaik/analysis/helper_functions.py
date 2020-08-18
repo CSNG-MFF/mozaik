@@ -1,39 +1,40 @@
 """
 This module contains various utility functions often useb by analysis code.
 """
+import logging
 
+from neo import AnalogSignal
 import numpy
 import quantities as qt
-import mozaik
-import mozaik.tools.units as munits
-from mozaik.controller import Global
-from mozaik.storage.queries import *
-from mozaik.tools.mozaik_parametrized import *
-from neo import AnalogSignal
 
-logger = mozaik.getMozaikLogger()
+from ..controller import Global
+from ..storage.queries import *
+from ..tools import units as munits
+from ..tools.mozaik_parametrized import *
+
+logger = logging.getLogger(__name__)
 
 
 def psth(spike_list, bin_length, normalize=True):
     """
     The function returns the psth of the spiketrains with bin length bin_length.
-    
+
     Parameters
     ----------
     spike_list : list(SpikeTrain )
                The list of spike trains. They are assumed to start and end at the same time.
 
-    bin_length : float (ms) 
+    bin_length : float (ms)
                Bin length.
-               
+
     normalized : bool
-               If true the psth will return the instantenous firing rate, if False it will return spike count per bin. 
+               If true the psth will return the instantenous firing rate, if False it will return spike count per bin.
 
     Returns
     -------
     psth : AnalogSignal
-           The PSTH of the spiketrain. 
-    
+           The PSTH of the spiketrain.
+
     Note
     ----
     The spiketrains are assumed to start and stop at the same time!
@@ -65,21 +66,21 @@ def psth(spike_list, bin_length, normalize=True):
 def psth_across_trials(spike_trials, bin_length):
     """
     It returns PSTH averaged across the spiketrains
-    
-    
+
+
     Parameters
     ----------
-    spike_trials : list(list(SpikeTrain)) 
+    spike_trials : list(list(SpikeTrain))
                  should contain a list of lists of neo spiketrains objects,
                  first coresponding to different trials and second to different neurons.
                  The function returns the histogram of spikes across trials with bin length
                  bin_length.
-   
+
     Returns
     -------
     psth : AnalogSignal
          The PSTH averages over the spiketrains in spike_trials.
-                 
+
     Note
     ----
     The spiketrains are assumed to start and stop at the same time.
@@ -87,69 +88,13 @@ def psth_across_trials(spike_trials, bin_length):
     return sum([psth(st, bin_length) for st in spike_trials]) / len(spike_trials)
 
 
-def pnv_datastore_view_to_tensor(pnv_view):
-    """
-    Assuming:
-        * the pnv_view contains a set of identical pnvs to identical stimuli with the exception of variation of some stimulus parameters
-        * all values of the varied parameters lay on a n-dimensional grid where n is the number of parameters
-    This function turns the pnv_view set into a n+1 dimensional tensor of values, where the first n dimensions correspond to the stimulus 
-    parameters varied, and nth+1 dimension correspond to the number of neurons recorded in the pnvs in the pnv_view.    
-    """
-    assert queries.equal_ads(
-        pnv_view, except_params=["stimulus_id"]
-    ), "All ADS in the view have to be same with the exception of stimulus"
-    pnvs = dsv.get_analysis_result()
-    assert (
-        pnvs[0].identifier == "PerNeuronValue"
-    ), "All ADS have to be of the PerNeuronValue type"
-    assert queries.ads_with_equal_stimulus_type(
-        pnv_view, allow_None=True
-    ), "All PNVs have to be with respect to the same stimulus type"
-
-    # let's find out which parameters are varying
-    params = varying_parameters(MozaikParametrized.idd(pnv.stimulus_id) for pnv in pnvs)
-
-    # let's determine what should be coordinates along the different parameter axes
-    _min = []
-    _max = []
-    _step = []
-    for p in params:
-        s = set([getattr(pnv, p) for pnv in pnv_view]).sort()
-        _min.append(s[0])
-        _max.append(s[-1])
-        _step.append(s[1] - s[0])
-
-    # let's verify that each pnv sits on the determined coordinates
-    coords = [
-        numpy.arange(mmin, mmax, step) for (mmin, mmax, step) in zip(_min, _max, _step)
-    ]
-
-    for pnv in pnvs:
-        for p, c in zip(params, coords):
-            assert getattr(pnv, p) in c, (
-                "Value %f of parameter < %s > of PNV[%s] does not conform to coordinate range"
-                % (getattr(pnv, p), p, str(pnv), str(c))
-            )
-
-    # let's create the tensor
-    tensor = numpy.empty([len(c) for c in coords] + [len(pnvs[0].values)])
-    tensor.fill(numpy.nan)
-
-    # let's insert data into the tensor
-    for pnv in pnvs:
-        coord = [getattr(pnv, p) for p in params]
-        tensor[coord] = pnv.values
-
-    return (tensor, params)
-
-
 def pnv_datastore_view_to_tensor(pnv_view, allow_missing=False, pickle_file=None):
     """
     Assuming:
         * the pnv_view contains a set of identical pnvs to identical stimuli with the exception of variation of some stimulus parameters
         * all values of the varied parameters lay on a n-dimensional (irregularly spaced) grid where n is the number of parameters
-    This function turns the pnv_view set into a n+1 dimensional tensor of values, where the first n dimensions correspond to the stimulus 
-    parameters varied, and nth+1 dimension correspond to the number of neurons recorded in the pnvs in the pnv_view.    
+    This function turns the pnv_view set into a n+1 dimensional tensor of values, where the first n dimensions correspond to the stimulus
+    parameters varied, and nth+1 dimension correspond to the number of neurons recorded in the pnvs in the pnv_view.
     """
     assert equal_ads(
         pnv_view, except_params=["stimulus_id"]

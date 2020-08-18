@@ -7,27 +7,24 @@ When parametrizing *mozaik* objects we will allow only SNumber, SInteger and SSt
 These are extension of corresponding parametrized parameters that automatically
 allow None value, are instantiated and allow for definition of units and period.
 """
-
-
-from param.parameterized import Parameterized
-from param import Number, Integer, String, produce_value, ClassSelector
-from parameters import ParameterSet
-import logging
-import inspect
-import numbers
-import numpy
 import collections
-from mozaik.tools.distribution_parametrization import (
-    ParameterWithUnitsAndPeriod,
-    MozaikExtendedParameterSet,
-)
+import inspect
+import logging
+import numbers
 
-
+from param import Number, Integer, String, ClassSelector
+from param.parameterized import Parameterized
+import numpy
 import param.parameterized
+
+from .distribution_parametrization import (
+    MozaikExtendedParameterSet,
+    ParameterWithUnitsAndPeriod,
+)
 
 param.parameterized.docstring_signature = False
 
-logger = logging.getLogger("mozaik")
+logger = logging.getLogger(__name__)
 
 
 class SNumber(Number):
@@ -81,24 +78,6 @@ class SString(String):
         super(SString, self).__init__(allow_None=True, instantiate=True, **params)
         self.units = None
         self.period = None
-
-
-class SNumber(Number):
-    """
-    A mozaik parameter that can hold a number. For the full range of options the
-    parameter offers reffer to the `Number` class in `param <http://ioam.github.io/param/>`_ package.
-
-    On top of the Number class it adds the ability to specify units and period in constructor.
-    The units should be `quantities.units`.
-    """
-
-    __slots__ = ["units", "period"]
-
-    def __init__(self, units, period=None, **params):
-        params.setdefault("default", None)
-        super(SNumber, self).__init__(allow_None=True, instantiate=True, **params)
-        self.units = units
-        self.period = period
 
 
 class SParameterSet(ClassSelector):

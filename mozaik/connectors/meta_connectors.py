@@ -1,29 +1,28 @@
 # encoding: utf-8
 import pickle
-import numpy
-from scipy.interpolate import NearestNDInterpolator, CloughTocher2DInterpolator
-from mozaik.core import BaseComponent
-from mozaik import load_component
+
 from parameters import ParameterSet, ParameterDist
-from mozaik.connectors.modular import (
-    ModularSamplingProbabilisticConnector,
+from scipy.interpolate import NearestNDInterpolator
+import numpy
+
+from ..connectors.modular import (
     ModularSamplingProbabilisticConnectorAnnotationSamplesCount,
 )
-from mozaik.tools.distribution_parametrization import PyNNDistribution
+from ..core import BaseComponent
 
 
 """
-This file contains meta-connectors. These are classes that represent some higher-level 
+This file contains meta-connectors. These are classes that represent some higher-level
 algorithms for connecting neurons in mozaik.
 
 A typical use case is when several projections have to be somehow synchronized and therefore
 the code generating the connections cannot be completely broken up into individual MozaikConnector
-classes. Use of meta-connectors is discoureged unless there is no way to implement the given 
+classes. Use of meta-connectors is discoureged unless there is no way to implement the given
 connectivity with MozaikConnector class (or some of it derivatives).
 
 An example of usage is the case of Gabor connectivity from LGN to V1. Here one needs to make sure that a given V1 neuron
 follows the pattern of connectivity with respect to a given gabor pattern both in the LGNOn and LGNOff population - therefore
-information has to be shared between these two projection during the creation process (e.g. the same orientation of the gabor for 
+information has to be shared between these two projection during the creation process (e.g. the same orientation of the gabor for
 a given neuron has to be used when calclulating both the ON and OFF connections to a given neuron)
 """
 
@@ -42,16 +41,16 @@ class GaborConnector(BaseComponent):
     `frequency`     -  the frequency of the gabor in degrees of visual field
 
     Other parameters:
-    
+
     `topological`          -  should the receptive field centers vary with the
                               position of the given neurons in the target sheet
                               (note positions of neurons are always stored in
                               visual field coordinates)
-    
+
     `delay`                -  (ms) the delay on the projections
 
     `short_term_plasticity` - short term plasticity configuration (see basic connector)
-    
+
     `base_weight`          - The weight of the synapses
     `num_samples`           - The number of synapses per cortical neuron from each of the ON and OFF LGN populations (so effectively there will be 2 * num_samples LGN synapses)
 
@@ -72,26 +71,31 @@ class GaborConnector(BaseComponent):
             "orientation_preference": ParameterDist,  # the orientation preference of the gabor RFs
             "phase": ParameterDist,  # the phase of the gabor RFs
             "frequency": ParameterDist,  # the frequency of the gabor in degrees of visual field
-            "rf_jitter": ParameterDist,  # The jitter to apply to the center of RF (on top of retinotopic position)
-            "off_bias": float,  # The bias towards off responses (it will be applied to the weight strength)
+            # The jitter to apply to the center of RF (on top of retinotopic position)
+            "rf_jitter": ParameterDist,
+            # The bias towards off responses (it will be applied to the weight strength)
+            "off_bias": float,
             "topological": bool,  # should the receptive field centers vary with the position of the given neurons
             # (note positions of neurons are always stored in visual field coordinates)
-            "delay_functions": ParameterSet,  # the delay functions for ModularSamplingProbabilisticConnectorAnnotationSamplesCount (see its documentation for details)
-            "delay_expression": str,  # the delay expression for ModularSamplingProbabilisticConnectorAnnotationSamplesCount (see its documentation for details)
+            # the delay functions for ModularSamplingProbabilisticConnectorAnnotationSamplesCount (see its documentation for details)
+            "delay_functions": ParameterSet,
+            # the delay expression for ModularSamplingProbabilisticConnectorAnnotationSamplesCount (see its documentation for details)
+            "delay_expression": str,
             "short_term_plasticity": ParameterSet,
             "base_weight": float,  # the weights of synapses
-            "num_samples": ParameterDist,  # number of synapses per cortical neuron from each of the ON and OFF LGN populations (so effectively there will be 2 * num_samples LGN synapses)
+            # number of synapses per cortical neuron from each of the ON and OFF LGN populations (so effectively there will be 2 * num_samples LGN synapses)
+            "num_samples": ParameterDist,
             "or_map": bool,  # is a orientation map supplied?
-            "or_map_location": str,  # if or_map is True where can one find the map. It has to be a file containing a single pickled 2d numpy array
+            # if or_map is True where can one find the map. It has to be a file containing a single pickled 2d numpy array
+            "or_map_location": str,
             "phase_map": bool,  # is a phase map supplied?
-            "phase_map_location": str,  # if phase_map is True where can one find the map. It has to be a file containing a single pickled 2d numpy array
+            # if phase_map is True where can one find the map. It has to be a file containing a single pickled 2d numpy array
+            "phase_map_location": str,
         }
     )
 
     def __init__(self, network, lgn_on, lgn_off, target, parameters, name):
-        from numpy import random
-
-        random.seed(1023)
+        numpy.random.seed(1023)
         BaseComponent.__init__(self, network, parameters)
         self.name = name
 
@@ -205,7 +209,7 @@ class GaborConnector(BaseComponent):
                 "weight_functions": {
                     "f1": {
                         "component": "mozaik.connectors.vision.GaborArborization",
-                        "params": {"ON": True,},
+                        "params": {"ON": True},
                     }
                 },
                 "delay_functions": self.parameters.delay_functions,

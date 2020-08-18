@@ -1,14 +1,14 @@
-import numpy
-import mozaik
-import matplotlib.pyplot as plt
-from mozaik.visualization.plotting import *
-from mozaik.analysis.technical import NeuronAnnotationsToPerNeuronValues
-from mozaik.analysis.analysis import *
-from mozaik.analysis.vision import *
-from mozaik.storage.queries import *
-from mozaik.storage.datastore import PickledDataStore
-from mozaik.tools.circ_stat import circular_dist
 import sys
+
+from mozaik.analysis.analysis import *
+from mozaik.analysis.technical import NeuronAnnotationsToPerNeuronValues
+from mozaik.analysis.vision import *
+from mozaik.storage.datastore import PickledDataStore
+from mozaik.storage.queries import *
+from mozaik.tools.circ_stat import circular_dist
+from mozaik.visualization.plotting import *
+import matplotlib.pyplot as plt
+import numpy
 
 # sys.path.append('/home/antolikjan/projects/mozaik/contrib')
 # from Kremkow_plots import *

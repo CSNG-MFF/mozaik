@@ -1,18 +1,17 @@
-import sys
-import subprocess
-import pickle
 from datetime import datetime
 import os
+import pickle
+import subprocess
 import time
-import re
-from mozaik.cli import parse_parameter_search_args
-from mozaik.tools.misc import result_directory_name
+
+from ..cli import parse_parameter_search_args
+from ..tools.misc import result_directory_name
 
 
 class ParameterSearchBackend(object):
     """
     This is the parameter search backend interface. The :func:.`execute_job`
-    implements the execution of the job, using the information given to the 
+    implements the execution of the job, using the information given to the
     constructor, and the dictionary of modified parameters given in its arguments.
     """
 
@@ -25,20 +24,20 @@ class ParameterSearchBackend(object):
         simulation_run_name,
     ):
         """
-         This function recevies the list of parameters to modify and their values, and has to 
+         This function recevies the list of parameters to modify and their values, and has to
          execute the corresponding mozaik simulation.
-         
+
          Parameters
          ----------
          parameters : dict
-                    The dictionary holding the names of parameters to be modified as keys, and the values to set them to as the corresponding values. 
+                    The dictionary holding the names of parameters to be modified as keys, and the values to set them to as the corresponding values.
          """
         raise NotImplemented
 
 
 class LocalSequentialBackend(object):
     """
-    This is the simplest backend that simply executes the simulation on the present 
+    This is the simplest backend that simply executes the simulation on the present
     machine sequentially (i.e. it waits for the simulation to end before starting new one).
     """
 
@@ -51,13 +50,13 @@ class LocalSequentialBackend(object):
         simulation_run_name,
     ):
         """
-         This function recevies the list of parameters to modify and their values, and has to 
+         This function recevies the list of parameters to modify and their values, and has to
          execute the corresponding mozaik simulation.
-         
+
          Parameters
          ----------
          parameters : dict
-                    The dictionary holding the names of parameters to be modified as keys, and the values to set them to as the corresponding values. 
+                    The dictionary holding the names of parameters to be modified as keys, and the values to set them to as the corresponding values.
          """
         modified_parameters = []
         for k in list(parameters.keys()):
@@ -76,8 +75,8 @@ class LocalSequentialBackend(object):
 
 class SlurmSequentialBackend(object):
     """
-    This is a back end that runs each simulation run as a slurm job. 
-    
+    This is a back end that runs each simulation run as a slurm job.
+
     Parameters
     ----------
     num_threads : int
@@ -85,9 +84,9 @@ class SlurmSequentialBackend(object):
 
     num_mpi : int
                   Number of mpi processes to spawn per job.
-                  
-    slurm_options : list(string), optional 
-                  List of strings that will be passed to slurm sbatch command as options.  
+
+    slurm_options : list(string), optional
+                  List of strings that will be passed to slurm sbatch command as options.
     Note:
     -----
     -----
@@ -111,13 +110,13 @@ class SlurmSequentialBackend(object):
         simulation_run_name,
     ):
         """
-         This function recevies the list of parameters to modify and their values, and has to 
+         This function recevies the list of parameters to modify and their values, and has to
          execute the corresponding mozaik simulation.
-         
+
          Parameters
          ----------
          parameters : dict
-                    The dictionary holding the names of parameters to be modified as keys, and the values to set them to as the corresponding values. 
+                    The dictionary holding the names of parameters to be modified as keys, and the values to set them to as the corresponding values.
          """
         modified_parameters = []
         for k in list(parameters.keys()):
@@ -126,7 +125,7 @@ class SlurmSequentialBackend(object):
 
         from subprocess import Popen, PIPE, STDOUT
 
-        #'--exclude=node[01-04]',
+        # '--exclude=node[01-04]',
         p = Popen(
             ["sbatch"]
             + self.slurm_options
@@ -169,8 +168,8 @@ class SlurmSequentialBackend(object):
 
 class SlurmSequentialBackendIoV(object):
     """
-    This is a back end that runs each simulation run as a slurm job. 
-    
+    This is a back end that runs each simulation run as a slurm job.
+
     Parameters
     ----------
     num_threads : int
@@ -178,9 +177,9 @@ class SlurmSequentialBackendIoV(object):
 
     num_mpi : int
                   Number of mpi processes to spawn per job.
-                  
-    slurm_options : list(string), optional 
-                  List of strings that will be passed to slurm sbatch command as options.  
+
+    slurm_options : list(string), optional
+                  List of strings that will be passed to slurm sbatch command as options.
     Note:
     -----
     -----
@@ -204,13 +203,13 @@ class SlurmSequentialBackendIoV(object):
         simulation_run_name,
     ):
         """
-         This function recevies the list of parameters to modify and their values, and has to 
+         This function recevies the list of parameters to modify and their values, and has to
          execute the corresponding mozaik simulation.
-         
+
          Parameters
          ----------
          parameters : dict
-                    The dictionary holding the names of parameters to be modified as keys, and the values to set them to as the corresponding values. 
+                    The dictionary holding the names of parameters to be modified as keys, and the values to set them to as the corresponding values.
          """
         modified_parameters = []
         for k in list(parameters.keys()):
@@ -262,24 +261,24 @@ class ParameterSearch(object):
     This class defines the interface of parameter search.
     Each ParameterSearch has to implement the function `generate_parameter_combinations`
     and `master_directory_name`.
-    
+
     The parameter search is executed with the function run_parameter_search.
-    
+
     Furthermore each ParameterSearch receives a backend object, that determines how the simulation
     with a given parameter combination is executed. This allows for user to define executaion
     mechanisms using various cluster scheaduling architectures. See :class:.`ParameterSearchBackend`
     for more details.
-     
+
     Parameters
     ----------
     params : ParameterSearchBackend
-           The job execution backend to use. 
-           
-           
+           The job execution backend to use.
+
+
     Examples
     --------
     The commandline usage should be:
-    
+
     >>> parameter_search_script simulation_run_script simulator_name path_to_root_parameter_file
     """
 
@@ -304,10 +303,10 @@ class ParameterSearch(object):
         in the default parametrization and runing the simulation with each such modified parameters,
         storing the results of each simulation run in a subdirectory named based on the given modified parameter names and their
         values.
-        
+
         It will read the command line for the name of the script that runs individual simulations, the simulator name and the root parameter file path
         Command line syntax:
-        
+
         python parameter_search_script simulation_run_script simulator_name root_parameter_file_name
         """
 
@@ -349,7 +348,7 @@ class CombinationParameterSearch(ParameterSearch):
     """
     A ParameterSearch that recevies a list of parameters and list of values for each parameter to test.
     It will then test each of the combination of values.
-    
+
     Parameters
     ----------
     parameter_values : dict
@@ -422,7 +421,7 @@ def parameter_search_run_script_distributed_slurm(
     Scheadules the execution of *run_script*, one per each parameter combination of an existing parameter search run.
     Each execution receives as the first commandline argument the directory in which the results for the given
     parameter combination were stored.
-    
+
     Parameters
     ----------
     simulation_name : str
@@ -487,7 +486,7 @@ def parameter_search_run_script_distributed_slurm_IoV(
     Scheadules the execution of *run_script*, one per each parameter combination of an existing parameter search run.
     Each execution receives as the first commandline argument the directory in which the results for the given
     parameter combination were stored.
-    
+
     Parameters
     ----------
     simulation_name : str
