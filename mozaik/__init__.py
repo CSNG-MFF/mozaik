@@ -43,7 +43,7 @@ def setup_mpi(mozaik_seed=513, pynn_seed=1023):
     functions that accept pynn_rng as one of their paramters
 
     Any other code using random numbers should instead use the mozaik.rng that hold a numpy RandomState instance.
-    It is important to make sure that any piece of  code using this random generator draws from it
+    It is important to make sure that any piece of code using this random generator draws from it
     exactly the same number of numbers in each process, so that once the code is executed, the rng
     is in exactly the same state in each mpi process!
     """
@@ -58,10 +58,10 @@ def setup_mpi(mozaik_seed=513, pynn_seed=1023):
 
     try:
         from mpi4py import MPI
+
+        mpi_comm = MPI.COMM_WORLD
     except ImportError:
         mpi_comm = None
-    if MPI:
-        mpi_comm = MPI.COMM_WORLD
 
 
 def get_seeds(size=None):

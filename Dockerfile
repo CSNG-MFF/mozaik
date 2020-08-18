@@ -25,7 +25,7 @@ RUN apt-get update \
 WORKDIR /source
 COPY Pipfile Pipfile.lock ./
 ARG PACKAGES_DIR=/source/packages
-# six is not installed for some reason
+# six is not installed into the prefix directory for some reason
 RUN PIP_PREFIX=${PACKAGES_DIR} \
     PIP_IGNORE_INSTALLED=1 \
     pipenv install --system --ignore-pipfile --deploy \
@@ -92,4 +92,5 @@ COPY --chown=mozaik:mozaik . ./
 RUN pip install -e .
 
 USER mozaik
+ENV SHELL /bin/bash
 ENTRYPOINT [""]

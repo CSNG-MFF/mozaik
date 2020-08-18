@@ -9,9 +9,8 @@ pytest = "~=6.0.1"
 
 [packages]
 Cython = "~=0.29.19"
+cycler = "~=0.10.0"
 imagen = {git = "https://github.com/antolikjan/imagen.git"}
-interval = "~=1.0.0"
-lazyarray = "~=0.3.3"
 matplotlib = "~=3.3.1"
 mpi4py = "~=3.0.3"
 neo = "~=0.8.0"
@@ -19,8 +18,8 @@ numpy = "~=1.19.1"
 param = "~=1.9.3"
 parameters = "~=0.2.1"
 Pillow = "~=6.2.2"
-psutil = "~=5.7.0"
 PyNN = "~=0.9.5"
+PyYAML = "~=5.3.1"
 quantities = "~=0.12.4"
 scipy = "~=1.5.2"
 

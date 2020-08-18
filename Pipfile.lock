@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "2558f38a0f5aa45300b7f6c2ea0327ba3cc7be4579cb8258f7a05191e2a5a7ac"
+            "sha256": "8b1a95d53563d8b7c4c6311e7f0ddba60fab14bf1e2f8ed03e91d59981a3d488"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -28,6 +28,7 @@
                 "sha256:1d8a5ae1ff6c5cf9b93e8811e581232ad8920aeec647c37316ceac982b08cb2d",
                 "sha256:cd7b2d1018258d7247a71425e9f26463dfb444d411c39569972f4ce586b0c9d8"
             ],
+            "index": "pypi",
             "version": "==0.10.0"
         },
         "cython": {
@@ -73,14 +74,6 @@
             "git": "https://github.com/antolikjan/imagen.git",
             "ref": "c8a4f09c37e8bf59e2d5836489f07c3a2c206efb"
         },
-        "interval": {
-            "hashes": [
-                "sha256:6619937f3fcb5cf85bb3a60b4e4391664e8d7b30ae3dc4d04c3fc1d063ff1c3b",
-                "sha256:912c1175179ef8f7d22d204da00345c3af0e4625918a8e6020e7e629604e8c8e"
-            ],
-            "index": "pypi",
-            "version": "==1.0.0"
-        },
         "kiwisolver": {
             "hashes": [
                 "sha256:03662cbd3e6729f341a97dd2690b271e51a67a68322affab12a5b011344b973c",
@@ -110,7 +103,6 @@
             "hashes": [
                 "sha256:c9df003af5e1007a28c4ec45f995662fd195590d5694ef7d4cfb028bc508f6ed"
             ],
-            "index": "pypi",
             "version": "==0.3.3"
         },
         "matplotlib": {
@@ -248,23 +240,6 @@
             "index": "pypi",
             "version": "==6.2.2"
         },
-        "psutil": {
-            "hashes": [
-                "sha256:0ee3c36428f160d2d8fce3c583a0353e848abb7de9732c50cf3356dd49ad63f8",
-                "sha256:10512b46c95b02842c225f58fa00385c08fa00c68bac7da2d9a58ebe2c517498",
-                "sha256:4080869ed93cce662905b029a1770fe89c98787e543fa7347f075ade761b19d6",
-                "sha256:5e9d0f26d4194479a13d5f4b3798260c20cecf9ac9a461e718eb59ea520a360c",
-                "sha256:66c18ca7680a31bf16ee22b1d21b6397869dda8059dbdb57d9f27efa6615f195",
-                "sha256:68d36986ded5dac7c2dcd42f2682af1db80d4bce3faa126a6145c1637e1b559f",
-                "sha256:90990af1c3c67195c44c9a889184f84f5b2320dce3ee3acbd054e3ba0b4a7beb",
-                "sha256:a5b120bb3c0c71dfe27551f9da2f3209a8257a178ed6c628a819037a8df487f1",
-                "sha256:d8a82162f23c53b8525cf5f14a355f5d1eea86fa8edde27287dd3a98399e4fdf",
-                "sha256:f2018461733b23f308c298653c8903d32aaad7873d25e1d228765e91ae42c3f2",
-                "sha256:ff1977ba1a5f71f89166d5145c3da1cea89a0fdb044075a12c720ee9123ec818"
-            ],
-            "index": "pypi",
-            "version": "==5.7.2"
-        },
         "pynn": {
             "hashes": [
                 "sha256:91af2126b639a6a795bfc2709ac49423278c4794b6d0da143908b9afcb415f80"
@@ -287,6 +262,23 @@
             ],
             "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
             "version": "==2.8.1"
+        },
+        "pyyaml": {
+            "hashes": [
+                "sha256:06a0d7ba600ce0b2d2fe2e78453a470b5a6e000a985dd4a4e54e436cc36b0e97",
+                "sha256:240097ff019d7c70a4922b6869d8a86407758333f02203e0fc6ff79c5dcede76",
+                "sha256:4f4b913ca1a7319b33cfb1369e91e50354d6f07a135f3b901aca02aa95940bd2",
+                "sha256:69f00dca373f240f842b2931fb2c7e14ddbacd1397d57157a9b005a6a9942648",
+                "sha256:73f099454b799e05e5ab51423c7bcf361c58d3206fa7b0d555426b1f4d9a3eaf",
+                "sha256:74809a57b329d6cc0fdccee6318f44b9b8649961fa73144a98735b0aaf029f1f",
+                "sha256:7739fc0fa8205b3ee8808aea45e968bc90082c10aef6ea95e855e10abf4a37b2",
+                "sha256:95f71d2af0ff4227885f7a6605c37fd53d3a106fcab511b8860ecca9fcf400ee",
+                "sha256:b8eac752c5e14d3eca0e6dd9199cd627518cb5ec06add0de9d32baeee6fe645d",
+                "sha256:cc8955cfbfc7a115fa81d85284ee61147059a753344bc51098f3ccd69b0d7e0c",
+                "sha256:d13155f591e6fcc1ec3b30685d50bf0711574e2c0dfffd7644babf8b5102ca1a"
+            ],
+            "index": "pypi",
+            "version": "==5.3.1"
         },
         "quantities": {
             "hashes": [
