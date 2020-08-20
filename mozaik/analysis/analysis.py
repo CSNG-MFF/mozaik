@@ -21,7 +21,7 @@ from ..tools.circ_stat import circ_mean, circular_dist
 from ..tools.mozaik_parametrized import (
     colapse,
     colapse_to_dictionary,
-    MozaikParametrized,
+    MozaikParametrized
 )
 from ..tools.neo_object_operations import down_sample_analog_signal_average_method
 from .data_structures import (
@@ -31,7 +31,7 @@ from .data_structures import (
     AnalogSignalList,
     PerNeuronValue,
     PerNeuronPairValue,
-    PerNeuronPairAnalogSignalList,
+    PerNeuronPairAnalogSignalList
 )
 from .helper_functions import psth
 
@@ -116,7 +116,8 @@ class TrialAveragedFiringRate(Analysis):
             # JAHACK make sure that mean_rates() return spikes per second
             units = munits.spike / qt.s
             logger.debug(
-                "Adding PerNeuronValue containing trial averaged firing rates to datastore"
+                "Adding PerNeuronValue containing trial averaged firing rates to"
+                " datastore"
             )
             for mr, vr, st in zip(_mean_rates, _var_rates, s):
                 self.datastore.full_datastore.add_analysis_result(
@@ -129,7 +130,7 @@ class TrialAveragedFiringRate(Analysis):
                         sheet_name=sheet,
                         tags=self.tags,
                         analysis_algorithm=self.__class__.__name__,
-                        period=None,
+                        period=None
                     )
                 )
                 self.datastore.full_datastore.add_analysis_result(
@@ -142,7 +143,7 @@ class TrialAveragedFiringRate(Analysis):
                         sheet_name=sheet,
                         tags=self.tags,
                         analysis_algorithm=self.__class__.__name__,
-                        period=None,
+                        period=None
                     )
                 )
 
@@ -186,7 +187,10 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
             assert queries.ads_with_equal_stimulus_type(dsv, allow_None=True)
             assert len(
                 set([a.value_name for a in dsv.get_analysis_result(sheet_name=sheet)])
-            ), "PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage accepts only DSVs containing values with the same value_name"
+            ), (
+                "PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage accepts only"
+                " DSVs containing values with the same value_name"
+            )
             self.pnvs = dsv.get_analysis_result(sheet_name=sheet)
             # get stimuli
             st = [MozaikParametrized.idd(s.stimulus_id) for s in self.pnvs]
@@ -195,7 +199,7 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
             d = colapse_to_dictionary(
                 [z.get_value_by_id(self.pnvs[0].ids) for z in self.pnvs],
                 st,
-                self.parameters.parameter_name,
+                self.parameters.parameter_name
             )
             for k in list(d.keys()):
                 keys, values = d[k]
@@ -210,11 +214,12 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
                     axis=0,
                     low=0,
                     high=st[0].getParams()[self.parameters.parameter_name].period,
-                    normalize=True,
+                    normalize=True
                 )
 
                 logger.debug(
-                    "PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage: Adding PerNeuronValue to datastore"
+                    "PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage: Adding"
+                    " PerNeuronValue to datastore"
                 )
                 self.datastore.full_datastore.add_analysis_result(
                     PerNeuronValue(
@@ -226,7 +231,7 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
                         tags=self.tags,
                         period=st[0].getParams()[self.parameters.parameter_name].period,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=str(k),
+                        stimulus_id=str(k)
                     )
                 )
                 self.datastore.full_datastore.add_analysis_result(
@@ -239,7 +244,7 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
                         tags=self.tags,
                         period=1.0,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=str(k),
+                        stimulus_id=str(k)
                     )
                 )
 
@@ -305,7 +310,7 @@ class GSTA(Analysis):
                         sheet_name=sheet,
                         tags=self.tags,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=str(st),
+                        stimulus_id=str(st)
                     )
                 )
 
@@ -355,7 +360,7 @@ class TrialToTrialCrossCorrelationOfAnalogSignalList(Analysis):
         {
             "neurons": list,  # the list of neuron ids for which to compute the
             "window_min": int,
-            "window_max": int,
+            "window_max": int
         }
     )
 
@@ -396,7 +401,7 @@ class TrialToTrialCrossCorrelationOfAnalogSignalList(Analysis):
                             sampling_period=dsv.get_analysis_result()[0]
                             .get_asl_by_id(idd)
                             .sampling_period,
-                            units=qt.dimensionless,
+                            units=qt.dimensionless
                         )
                     )
 
@@ -411,7 +416,7 @@ class TrialToTrialCrossCorrelationOfAnalogSignalList(Analysis):
                         sheet_name=sheet,
                         tags=self.tags,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=str(st),
+                        stimulus_id=str(st)
                     )
                 )
 
@@ -427,7 +432,7 @@ class TrialToTrialCrossCorrelationOfAnalogSignalList(Analysis):
                         scipy.signal.fftconvolve(
                             ass[i] - numpy.mean(ass[i]),
                             ass[j][::-1] - numpy.mean(ass[j]),
-                            mode="full",
+                            mode="full"
                         )
                         / sta1
                         / sta2
@@ -446,27 +451,27 @@ class TrialToTrialCrossCorrelationOfAnalogSignalList(Analysis):
 
 class TrialAveragedCorrectedCrossCorrelation(Analysis):
     """
-      It computes the cross-correlation between different AnalogSignalList but shifted across trials,
-      in order to avoid covariations introduced by simultaneous stimulation.
+    It computes the cross-correlation between different AnalogSignalList but shifted across trials,
+    in order to avoid covariations introduced by simultaneous stimulation.
 
-      It takes all the responses in the datastore and for each AnalogSignalList ADSs listed in 'neurons' ids it will:
-      - compute, from one 'raw' trial, the cross-correlation between the analog signals corresponding to one reference and one target neuron
-      - compute, from two different trials, the cross-correlation between the same analog signals of reference and target neurons
-      - subtract cross-trial and raw cross-correlation vectors
+    It takes all the responses in the datastore and for each AnalogSignalList ADSs listed in 'neurons' ids it will:
+    - compute, from one 'raw' trial, the cross-correlation between the analog signals corresponding to one reference and one target neuron
+    - compute, from two different trials, the cross-correlation between the same analog signals of reference and target neurons
+    - subtract cross-trial and raw cross-correlation vectors
 
-      For each couple (target & reference) it will create an AnalogSignalList containing the calculated cross-correlation vector.
+    For each couple (target & reference) it will create an AnalogSignalList containing the calculated cross-correlation vector.
 
-      Other parameters
-      ----------------
-      bins : int
-                  The number of bins around the 0 point
-      bin_length : float (ms)
-                  The bin length of the cross-correlation
-      neurons : list
-                  The list of neuron ids for which to compute the crosscorrelation
-      size : float
-                  The size of a square in which the neurons will be searched at the opposite extremes of the sheet
-      """
+    Other parameters
+    ----------------
+    bins : int
+                The number of bins around the 0 point
+    bin_length : float (ms)
+                The bin length of the cross-correlation
+    neurons : list
+                The list of neuron ids for which to compute the crosscorrelation
+    size : float
+                The size of a square in which the neurons will be searched at the opposite extremes of the sheet
+    """
 
     required_parameters = ParameterSet(
         {
@@ -491,11 +496,11 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
             # print("sheet_params.sx",sheet_params['sx'])
             lower_range = [
                 -(sheet_params["sx"] / 2),
-                -(sheet_params["sx"] / 2) + self.parameters.size,
+                -(sheet_params["sx"] / 2) + self.parameters.size
             ]
             higher_range = [
                 (sheet_params["sx"] / 2) - self.parameters.size,
-                (sheet_params["sx"] / 2),
+                (sheet_params["sx"] / 2)
             ]
             print("    lower extreme:", lower_range)
             print("    higher extreme:", higher_range)
@@ -506,7 +511,7 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
                     self.parameters.neurons,
                     dsv.get_sheet_indexes(
                         sheet_name=sheet, neuron_ids=self.parameters.neurons
-                    ),
+                    )
                 )
             )
             # print("neuron indexes:",rec_idd_idx)
@@ -515,7 +520,7 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
             # initialize pair array to dummy ids, first and last recorded neurons ids
             pair_ids_idx = [
                 (self.parameters.neurons[0], positions[sheet][0][0]),
-                (self.parameters.neurons[-1], positions[sheet][0][-1]),
+                (self.parameters.neurons[-1], positions[sheet][0][-1])
             ]
             for idd, idx in rec_idd_idx:
                 # print("neuron(",idd,idx,") position:", positions[sheet][0][ idx ], positions[sheet][1][ idx ])
@@ -547,14 +552,14 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
                 pair_ids[0],
                 ") position:",
                 positions[sheet][0][pair_ids_idx[0][1]],
-                positions[sheet][1][pair_ids_idx[0][1]],
+                positions[sheet][1][pair_ids_idx[0][1]]
             )
             print(
                 "    highest id (",
                 pair_ids[1],
                 ") position:",
                 positions[sheet][0][pair_ids_idx[1][1]],
-                positions[sheet][1][pair_ids_idx[1][1]],
+                positions[sheet][1][pair_ids_idx[1][1]]
             )
             # # for this sheet, get AnalogSignalList
             dsv = queries.param_filter_query(dsv, identifier="AnalogSignalList")
@@ -574,7 +579,7 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
                 # get stimulus id name to label segments corresponding to a trial
                 for stimid, seg in zip(
                     [MozaikParametrized.idd(s) for s in dsv.get_stimuli()],
-                    dsv.get_segments(),
+                    dsv.get_segments()
                 ):
                     # print(stimid.trial, seg.name, seg.description)
                     dsvs_spiketrains[stimid.trial] = seg.get_spiketrain(
@@ -598,20 +603,20 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
                                         ref,
                                         trg,
                                         self.parameters.bins,
-                                        self.parameters.bin_length,
+                                        self.parameters.bin_length
                                     )
                                 ],
                                 [
                                     (
                                         ref.annotations["source_id"],
-                                        trg.annotations["source_id"],
+                                        trg.annotations["source_id"]
                                     )
                                 ],
                                 qt.dimensionless,
                                 sheet_name=sheet,
                                 tags=self.tags,
                                 analysis_algorithm=self.__class__.__name__,
-                                stimulus_id=str(stimid),
+                                stimulus_id=str(stimid)
                             )
                         )
                 raw_xcorr[trial] = xcorr
@@ -643,7 +648,7 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
                                                 ref,
                                                 trg,
                                                 self.parameters.bins,
-                                                self.parameters.bin_length,
+                                                self.parameters.bin_length
                                             )
                                         ],
                                         rcorr.ids,
@@ -655,7 +660,7 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
                                         + str(self.parameters.bin_length)
                                         + ")",
                                         analysis_algorithm=self.__class__.__name__,
-                                        stimulus_id=str(stimid),
+                                        stimulus_id=str(stimid)
                                     )
                                 )
                 shift_xcorr[trial] = xcorr
@@ -673,25 +678,25 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
 
     def cross_correlation(self, reference, target, bins, bin_length):
         """
-          The function returns the cross-correlation of the spiketrains with bin length bin_length.
+        The function returns the cross-correlation of the spiketrains with bin length bin_length.
 
-          Parameters
-          ----------
-          reference, target : SpikeTrains
-                     Reference and target spike trains. They are assumed to start and end at the same time.
+        Parameters
+        ----------
+        reference, target : SpikeTrains
+                   Reference and target spike trains. They are assumed to start and end at the same time.
 
-          bin_length : float (ms)
-                     Bin length.
+        bin_length : float (ms)
+                   Bin length.
 
-          Returns
-          -------
-          xcorr : AnalogSignalList
-                 The cross correlation of each spiketrain with each other (without auto-correlation).
+        Returns
+        -------
+        xcorr : AnalogSignalList
+               The cross correlation of each spiketrain with each other (without auto-correlation).
 
-          Note
-          ----
-          The spiketrains are assumed to start and stop at the same time!
-          """
+        Note
+        ----
+        The spiketrains are assumed to start and stop at the same time!
+        """
         t_start = round(reference.t_start.rescale(qt.ms), 5)
         t_stop = round(reference.t_stop.rescale(qt.ms), 5)
         # initialize the correlation matrix
@@ -707,32 +712,32 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
             c,
             t_start=-(len(c) / 2) * (bin_length * qt.ms),
             sampling_period=bin_length * qt.ms,
-            units=munits.spike_per_sec,
+            units=munits.spike_per_sec
         )
 
 
 class TrialVariability(Analysis):
     """
-      For each neuron it calculates the trial-to-trial variability of Vm or conductance (depending on parameters) for all recording in the datastore,
-      and for all AnalogSignalList ADS in the datastore.
+    For each neuron it calculates the trial-to-trial variability of Vm or conductance (depending on parameters) for all recording in the datastore,
+    and for all AnalogSignalList ADS in the datastore.
 
-      For the AnalogSignalList we expect only identical AnalogSignalList with the exception of stimulus in the datastore view.
+    For the AnalogSignalList we expect only identical AnalogSignalList with the exception of stimulus in the datastore view.
 
-      It creates a AnalogSignalList list for each recording or AnalogSignalList (except trials).
+    It creates a AnalogSignalList list for each recording or AnalogSignalList (except trials).
 
-      Other parameters
-      ----------------
-      vm : bool
-         calculate variability for Vm?
+    Other parameters
+    ----------------
+    vm : bool
+       calculate variability for Vm?
 
-      cond_exc : bool
-               calculate variability for excitatory conductance?
+    cond_exc : bool
+             calculate variability for excitatory conductance?
 
-      cond_inh : bool
-               calculate variability for inhibitory conductance?
+    cond_inh : bool
+             calculate variability for inhibitory conductance?
 
 
-      """
+    """
 
     required_parameters = ParameterSet(
         {
@@ -756,7 +761,7 @@ class TrialVariability(Analysis):
                     dsv.get_segments(),
                     dsv.get_stimuli(),
                     parameter_list=["trial"],
-                    allow_non_identical_objects=True,
+                    allow_non_identical_objects=True
                 )
                 for segs, st in zip(segs, stids):
                     if self.parameters.vm:
@@ -766,11 +771,11 @@ class TrialVariability(Analysis):
                                 numpy.var(
                                     numpy.array([s.get_vm(i) for s in segs]),
                                     axis=0,
-                                    ddof=1,
+                                    ddof=1
                                 ),
                                 t_start=first_vm.t_start,
                                 sampling_period=first_vm.sampling_period,
-                                units=first_vm.units,
+                                units=first_vm.units
                             )
                             for i in segs[0].get_stored_vm_ids()
                         ]
@@ -784,7 +789,7 @@ class TrialVariability(Analysis):
                                 sheet_name=sheet,
                                 tags=self.tags,
                                 analysis_algorithm=self.__class__.__name__,
-                                stimulus_id=str(st),
+                                stimulus_id=str(st)
                             )
                         )
                     if self.parameters.cond_exc:
@@ -794,11 +799,11 @@ class TrialVariability(Analysis):
                                 numpy.var(
                                     numpy.array([s.get_esyn(i) for s in segs]),
                                     axis=0,
-                                    ddof=1,
+                                    ddof=1
                                 ),
                                 t_start=first_cond.t_start,
                                 sampling_period=first_cond.sampling_period,
-                                units=first_cond.units,
+                                units=first_cond.units
                             )
                             for i in segs[0].get_stored_esyn_ids()
                         ]
@@ -814,7 +819,7 @@ class TrialVariability(Analysis):
                                 sheet_name=sheet,
                                 tags=self.tags,
                                 analysis_algorithm=self.__class__.__name__,
-                                stimulus_id=str(st),
+                                stimulus_id=str(st)
                             )
                         )
                     if self.parameters.cond_inh:
@@ -824,11 +829,11 @@ class TrialVariability(Analysis):
                                 numpy.var(
                                     numpy.array([s.get_isyn(i) for s in segs]),
                                     axis=0,
-                                    ddof=1,
+                                    ddof=1
                                 ),
                                 t_start=first_cond.t_start,
                                 sampling_period=first_cond.sampling_period,
-                                units=first_cond.units,
+                                units=first_cond.units
                             )
                             for i in segs[0].get_stored_isyn_ids()
                         ]
@@ -844,7 +849,7 @@ class TrialVariability(Analysis):
                                 sheet_name=sheet,
                                 tags=self.tags,
                                 analysis_algorithm=self.__class__.__name__,
-                                stimulus_id=str(st),
+                                stimulus_id=str(st)
                             )
                         )
 
@@ -866,7 +871,7 @@ class TrialVariability(Analysis):
                         adss,
                         [MozaikParametrized.idd(a.stimulus_id) for a in adss],
                         parameter_list=["trial"],
-                        allow_non_identical_objects=True,
+                        allow_non_identical_objects=True
                     )
 
                     for ads, st in zip(adss, stids):
@@ -876,11 +881,11 @@ class TrialVariability(Analysis):
                                 numpy.var(
                                     numpy.array([s.get_asl_by_id(i) for s in ads]),
                                     axis=0,
-                                    ddof=1,
+                                    ddof=1
                                 ),
                                 t_start=first.t_start,
                                 sampling_period=first.sampling_period,
-                                units=first.units,
+                                units=first.units
                             )
                             for i in ads[0].ids
                         ]
@@ -895,7 +900,7 @@ class TrialVariability(Analysis):
                                 sheet_name=sheet,
                                 tags=self.tags,
                                 analysis_algorithm=self.__class__.__name__,
-                                stimulus_id=str(st),
+                                stimulus_id=str(st)
                             )
                         )
 
@@ -916,7 +921,7 @@ class TrialVariability(Analysis):
                         [pnv.get_value_by_id(pnvs[0].ids) for pnv in pnvs],
                         [MozaikParametrized.idd(a.stimulus_id) for a in pnvs],
                         parameter_list=["trial"],
-                        allow_non_identical_objects=True,
+                        allow_non_identical_objects=True
                     )
 
                     for pnvs1, st in zip(pnvss, stids):
@@ -932,33 +937,33 @@ class TrialVariability(Analysis):
                                 sheet_name=sheet,
                                 tags=self.tags,
                                 analysis_algorithm=self.__class__.__name__,
-                                stimulus_id=str(st),
+                                stimulus_id=str(st)
                             )
                         )
 
 
 class TrialMean(Analysis):
     """
-      For each neuron it calculates the mean over trials of Vm or conductance (depending on parameters) for all recording in the datastore.
-      In addition it calculated the trial average for the follwoing analysis data_structures: AnalogSignalList, PerNeuronValue, PerNeuronPairValue
+    For each neuron it calculates the mean over trials of Vm or conductance (depending on parameters) for all recording in the datastore.
+    In addition it calculated the trial average for the follwoing analysis data_structures: AnalogSignalList, PerNeuronValue, PerNeuronPairValue
 
-      For the ADS we expect only identical ADS with the exception of stimulus in the datastore view.
+    For the ADS we expect only identical ADS with the exception of stimulus in the datastore view.
 
-      It creates a AnalogSignalList list for each recording or AnalogSignalList (except trials).
+    It creates a AnalogSignalList list for each recording or AnalogSignalList (except trials).
 
-      Other parameters
-      ----------------
-      vm : bool
-         calculate variability for Vm?
+    Other parameters
+    ----------------
+    vm : bool
+       calculate variability for Vm?
 
-      cond_exc : bool
-               calculate variability for excitatory conductance?
+    cond_exc : bool
+             calculate variability for excitatory conductance?
 
-      cond_inh : bool
-               calculate variability for inhibitory conductance?
+    cond_inh : bool
+             calculate variability for inhibitory conductance?
 
 
-      """
+    """
 
     required_parameters = ParameterSet(
         {
@@ -982,7 +987,7 @@ class TrialMean(Analysis):
                     dsv.get_segments(),
                     dsv.get_stimuli(),
                     parameter_list=["trial"],
-                    allow_non_identical_objects=True,
+                    allow_non_identical_objects=True
                 )
                 for segs, st in zip(segs, stids):
                     if self.parameters.vm:
@@ -994,7 +999,7 @@ class TrialMean(Analysis):
                                 ),
                                 t_start=first_vm.t_start,
                                 sampling_period=first_vm.sampling_period,
-                                units=first_vm.units,
+                                units=first_vm.units
                             )
                             for i in segs[0].get_stored_vm_ids()
                         ]
@@ -1008,7 +1013,7 @@ class TrialMean(Analysis):
                                 sheet_name=sheet,
                                 tags=self.tags,
                                 analysis_algorithm=self.__class__.__name__,
-                                stimulus_id=str(st),
+                                stimulus_id=str(st)
                             )
                         )
                     if self.parameters.cond_exc:
@@ -1020,7 +1025,7 @@ class TrialMean(Analysis):
                                 ),
                                 t_start=first_cond.t_start,
                                 sampling_period=first_cond.sampling_period,
-                                units=first_cond.units,
+                                units=first_cond.units
                             )
                             for i in segs[0].get_stored_esyn_ids()
                         ]
@@ -1036,7 +1041,7 @@ class TrialMean(Analysis):
                                 sheet_name=sheet,
                                 tags=self.tags,
                                 analysis_algorithm=self.__class__.__name__,
-                                stimulus_id=str(st),
+                                stimulus_id=str(st)
                             )
                         )
                     if self.parameters.cond_inh:
@@ -1048,7 +1053,7 @@ class TrialMean(Analysis):
                                 ),
                                 t_start=first_cond.t_start,
                                 sampling_period=first_cond.sampling_period,
-                                units=first_cond.units,
+                                units=first_cond.units
                             )
                             for i in segs[0].get_stored_isyn_ids()
                         ]
@@ -1064,7 +1069,7 @@ class TrialMean(Analysis):
                                 sheet_name=sheet,
                                 tags=self.tags,
                                 analysis_algorithm=self.__class__.__name__,
-                                stimulus_id=str(st),
+                                stimulus_id=str(st)
                             )
                         )
 
@@ -1086,7 +1091,7 @@ class TrialMean(Analysis):
                         adss,
                         [MozaikParametrized.idd(a.stimulus_id) for a in adss],
                         parameter_list=["trial"],
-                        allow_non_identical_objects=True,
+                        allow_non_identical_objects=True
                     )
 
                     for ads, st in zip(adss, stids):
@@ -1095,11 +1100,11 @@ class TrialMean(Analysis):
                             NeoAnalogSignal(
                                 numpy.mean(
                                     numpy.array([s.get_asl_by_id(i) for s in ads]),
-                                    axis=0,
+                                    axis=0
                                 ),
                                 t_start=first.t_start,
                                 sampling_period=first.sampling_period,
-                                units=first.units,
+                                units=first.units
                             )
                             for i in ads[0].ids
                         ]
@@ -1113,7 +1118,7 @@ class TrialMean(Analysis):
                                 sheet_name=sheet,
                                 tags=self.tags,
                                 analysis_algorithm=self.__class__.__name__,
-                                stimulus_id=str(st),
+                                stimulus_id=str(st)
                             )
                         )
 
@@ -1134,7 +1139,7 @@ class TrialMean(Analysis):
                         [pnv.get_value_by_id(pnvs[0].ids) for pnv in pnvs],
                         [MozaikParametrized.idd(a.stimulus_id) for a in pnvs],
                         parameter_list=["trial"],
-                        allow_non_identical_objects=True,
+                        allow_non_identical_objects=True
                     )
 
                     for pnvs1, st in zip(pnvss, stids):
@@ -1150,7 +1155,7 @@ class TrialMean(Analysis):
                                 sheet_name=sheet,
                                 tags=self.tags,
                                 analysis_algorithm=self.__class__.__name__,
-                                stimulus_id=str(st),
+                                stimulus_id=str(st)
                             )
                         )
 
@@ -1173,7 +1178,7 @@ class TrialMean(Analysis):
                         [pnv.values for pnv in pnvs],
                         [MozaikParametrized.idd(a.stimulus_id) for a in pnvs],
                         parameter_list=["trial"],
-                        allow_non_identical_objects=True,
+                        allow_non_identical_objects=True
                     )
 
                     for pnvs1, st in zip(pnvss, stids):
@@ -1189,34 +1194,34 @@ class TrialMean(Analysis):
                                 sheet_name=sheet,
                                 tags=self.tags,
                                 analysis_algorithm=self.__class__.__name__,
-                                stimulus_id=str(st),
+                                stimulus_id=str(st)
                             )
                         )
 
 
 class GaussianTuningCurveFit(Analysis):
     """
-      Fits each tuning curve with a gaussian.
+    Fits each tuning curve with a gaussian.
 
-      It takes a dsv containing some PerNeuronValues.
-      All PerNeuronValues have to belong to stimuli of the same type and
-      contain the same type of values (i.e. have the same `value_name`).
+    It takes a dsv containing some PerNeuronValues.
+    All PerNeuronValues have to belong to stimuli of the same type and
+    contain the same type of values (i.e. have the same `value_name`).
 
-      For each combination of parameters of the stimuli other than `parameter_name`
-      `GaussianTuningCurveFit` fits a gaussian tuning curve to the values in the PerNeuronValues
-      that span the parameter values of the `parameter_name` stimulus parameter.
+    For each combination of parameters of the stimuli other than `parameter_name`
+    `GaussianTuningCurveFit` fits a gaussian tuning curve to the values in the PerNeuronValues
+    that span the parameter values of the `parameter_name` stimulus parameter.
 
-      It stores the parameters of the fitted Gaussian in a PerNeuronValue - for each combination of parameters of the stimulus associated
-      with the supplied PerNeuronValue with the exception of the stimulus parameter `parameter_name`. For each combination it stored
-      5 PerNeuronValue data structures, containing the calculated selectivity, preference, half-width at half-height (HWHH), maximum ('scale' of the gaussian) and
-      baseline (the constant offset).
+    It stores the parameters of the fitted Gaussian in a PerNeuronValue - for each combination of parameters of the stimulus associated
+    with the supplied PerNeuronValue with the exception of the stimulus parameter `parameter_name`. For each combination it stored
+    5 PerNeuronValue data structures, containing the calculated selectivity, preference, half-width at half-height (HWHH), maximum ('scale' of the gaussian) and
+    baseline (the constant offset).
 
-      Other parameters
-      -------------------
-      parameter_name : str
-                     The stimulus parameter name through which to fit the tuning curve.
+    Other parameters
+    -------------------
+    parameter_name : str
+                   The stimulus parameter name through which to fit the tuning curve.
 
-      """
+    """
 
     required_parameters = ParameterSet(
         {
@@ -1247,7 +1252,7 @@ class GaussianTuningCurveFit(Analysis):
             self.tc_dict = colapse_to_dictionary(
                 [z.get_value_by_id(self.pnvs[0].ids) for z in self.pnvs],
                 self.st,
-                self.parameters.parameter_name,
+                self.parameters.parameter_name
             )
             for k in list(self.tc_dict.keys()):
                 print(k)
@@ -1283,7 +1288,7 @@ class GaussianTuningCurveFit(Analysis):
                             tags=self.tags,
                             period=None,
                             analysis_algorithm=self.__class__.__name__,
-                            stimulus_id=str(k),
+                            stimulus_id=str(k)
                         )
                     )
                     self.datastore.full_datastore.add_analysis_result(
@@ -1298,7 +1303,7 @@ class GaussianTuningCurveFit(Analysis):
                             tags=self.tags,
                             period=None,
                             analysis_algorithm=self.__class__.__name__,
-                            stimulus_id=str(k),
+                            stimulus_id=str(k)
                         )
                     )
                     self.datastore.full_datastore.add_analysis_result(
@@ -1313,7 +1318,7 @@ class GaussianTuningCurveFit(Analysis):
                             tags=self.tags,
                             period=None,
                             analysis_algorithm=self.__class__.__name__,
-                            stimulus_id=str(k),
+                            stimulus_id=str(k)
                         )
                     )
                     self.datastore.full_datastore.add_analysis_result(
@@ -1328,7 +1333,7 @@ class GaussianTuningCurveFit(Analysis):
                             tags=self.tags,
                             period=None,
                             analysis_algorithm=self.__class__.__name__,
-                            stimulus_id=str(k),
+                            stimulus_id=str(k)
                         )
                     )
                     self.datastore.full_datastore.add_analysis_result(
@@ -1345,7 +1350,7 @@ class GaussianTuningCurveFit(Analysis):
                             tags=self.tags,
                             period=None,
                             analysis_algorithm=self.__class__.__name__,
-                            stimulus_id=str(k),
+                            stimulus_id=str(k)
                         )
                     )
                     self.datastore.full_datastore.add_analysis_result(
@@ -1362,7 +1367,7 @@ class GaussianTuningCurveFit(Analysis):
                             tags=self.tags,
                             period=period,
                             analysis_algorithm=self.__class__.__name__,
-                            stimulus_id=str(k),
+                            stimulus_id=str(k)
                         )
                     )
                     self.datastore.full_datastore.add_analysis_result(
@@ -1379,7 +1384,7 @@ class GaussianTuningCurveFit(Analysis):
                             tags=self.tags,
                             period=None,
                             analysis_algorithm=self.__class__.__name__,
-                            stimulus_id=str(k),
+                            stimulus_id=str(k)
                         )
                     )
                 else:
@@ -1413,7 +1418,7 @@ class GaussianTuningCurveFit(Analysis):
                 axis=1,
                 low=0,
                 high=period,
-                normalize=True,
+                normalize=True
             )[0]
         else:
             p0[3] = numpy.average(numpy.array(X), weights=numpy.array(Y))[0]
@@ -1453,15 +1458,15 @@ class GaussianTuningCurveFit(Analysis):
 
 class PSTH(Analysis):
     """
-      For each recording in the datastore view it creates an AnalogSignalList containing the PSTH of the neuron
-      using the bin length `required_parameters.bin_length`.
+    For each recording in the datastore view it creates an AnalogSignalList containing the PSTH of the neuron
+    using the bin length `required_parameters.bin_length`.
 
-      Other parameters
-      -------------------
-      bin_length : float
-                 The bin length of the PSTH
+    Other parameters
+    -------------------
+    bin_length : float
+               The bin length of the PSTH
 
-      """
+    """
 
     required_parameters = ParameterSet(
         {"bin_length": float}  # the bin length of the PSTH
@@ -1473,11 +1478,11 @@ class PSTH(Analysis):
             dsv = queries.param_filter_query(self.datastore, sheet_name=sheet)
             for st, seg in zip(
                 [MozaikParametrized.idd(s) for s in dsv.get_stimuli()],
-                dsv.get_segments(),
+                dsv.get_segments()
             ):
                 psths = psth(
                     seg.get_spiketrain(seg.get_stored_spike_train_ids()),
-                    self.parameters.bin_length,
+                    self.parameters.bin_length
                 )
                 self.datastore.full_datastore.add_analysis_result(
                     AnalogSignalList(
@@ -1491,23 +1496,23 @@ class PSTH(Analysis):
                         sheet_name=sheet,
                         tags=self.tags,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=str(st),
+                        stimulus_id=str(st)
                     )
                 )
 
 
 class SpikeCount(Analysis):
     """
-      For each recording in the datastore view it creates an AnalogSignalList containing the spike count per bin of the neuron
-      using the bin length `required_parameters.bin_length`. This is the same as PSTH, except in PSTH the spike counts are re-normalized
-      to form instantaneous firing rate.
+    For each recording in the datastore view it creates an AnalogSignalList containing the spike count per bin of the neuron
+    using the bin length `required_parameters.bin_length`. This is the same as PSTH, except in PSTH the spike counts are re-normalized
+    to form instantaneous firing rate.
 
-      Other parameters
-      -------------------
-      bin_length : float
-                 The bin length of the spike count
+    Other parameters
+    -------------------
+    bin_length : float
+               The bin length of the spike count
 
-      """
+    """
 
     required_parameters = ParameterSet(
         {"bin_length": float}  # the bin length of the PSTH
@@ -1519,12 +1524,12 @@ class SpikeCount(Analysis):
             dsv = queries.param_filter_query(self.datastore, sheet_name=sheet)
             for st, seg in zip(
                 [MozaikParametrized.idd(s) for s in dsv.get_stimuli()],
-                dsv.get_segments(),
+                dsv.get_segments()
             ):
                 psths = psth(
                     seg.get_spiketrain(seg.get_stored_spike_train_ids()),
                     self.parameters.bin_length,
-                    normalize=False,
+                    normalize=False
                 )
                 self.datastore.full_datastore.add_analysis_result(
                     AnalogSignalList(
@@ -1538,31 +1543,31 @@ class SpikeCount(Analysis):
                         sheet_name=sheet,
                         tags=self.tags,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=str(st),
+                        stimulus_id=str(st)
                     )
                 )
 
 
 class TemporalBinAverage(Analysis):
     """
-      For each recording or AnalogSingalList ADS `with x_axis_name`='time' in the datastore `TemporalBinAverage` creates a new
-      AnalogSingalList, containing a down-sampled version of the signal (vm, conductances or the AnalogSingalList), such that it will
-      bin the time axis with bin length `required_parameters.bin_length` and make average for each bin.
+    For each recording or AnalogSingalList ADS `with x_axis_name`='time' in the datastore `TemporalBinAverage` creates a new
+    AnalogSingalList, containing a down-sampled version of the signal (vm, conductances or the AnalogSingalList), such that it will
+    bin the time axis with bin length `required_parameters.bin_length` and make average for each bin.
 
-      Other parameters
-      -------------------
-      bin_length : float
-                 The bin length of the PSTH
+    Other parameters
+    -------------------
+    bin_length : float
+               The bin length of the PSTH
 
-      vm : bool
-         calculate TemporalBinAverage for Vm?
+    vm : bool
+       calculate TemporalBinAverage for Vm?
 
-      cond_exc : bool
-               calculate TemporalBinAverage for excitatory conductance?
+    cond_exc : bool
+             calculate TemporalBinAverage for excitatory conductance?
 
-      cond_inh : bool
-               calculate TemporalBinAverage for inhibitory conductance?
-      """
+    cond_inh : bool
+             calculate TemporalBinAverage for inhibitory conductance?
+    """
 
     required_parameters = ParameterSet(
         {
@@ -1594,7 +1599,7 @@ class TemporalBinAverage(Analysis):
                             sheet_name=sheet,
                             tags=self.tags,
                             analysis_algorithm=self.__class__.__name__,
-                            stimulus_id=str(st),
+                            stimulus_id=str(st)
                         )
                     )
                 if self.parameters.cond_exc:
@@ -1612,7 +1617,7 @@ class TemporalBinAverage(Analysis):
                             sheet_name=sheet,
                             tags=self.tags,
                             analysis_algorithm=self.__class__.__name__,
-                            stimulus_id=str(st),
+                            stimulus_id=str(st)
                         )
                     )
                 if self.parameters.cond_inh:
@@ -1630,7 +1635,7 @@ class TemporalBinAverage(Analysis):
                             sheet_name=sheet,
                             tags=self.tags,
                             analysis_algorithm=self.__class__.__name__,
-                            stimulus_id=str(st),
+                            stimulus_id=str(st)
                         )
                     )
 
@@ -1654,31 +1659,31 @@ class TemporalBinAverage(Analysis):
                         sheet_name=sheet,
                         tags=self.tags,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=asl.stimulus_id,
+                        stimulus_id=asl.stimulus_id
                     )
                 )
 
 
 class ActionPotentialRemoval(Analysis):
     """
-      For each recording in the datastore view it creates an AnalogSignalList containing the VMs with
-      the spikes removed and sends it to the datastore.
+    For each recording in the datastore view it creates an AnalogSignalList containing the VMs with
+    the spikes removed and sends it to the datastore.
 
-      Other parameters
-      -------------------
-      window_length : float (ms)
-                    The length of the window starting at a spike time in which the Vm is replaced with linear interpolation.
+    Other parameters
+    -------------------
+    window_length : float (ms)
+                  The length of the window starting at a spike time in which the Vm is replaced with linear interpolation.
 
-      Notes
-      -----
-      Vm, in the window starting at each spike time, and lasting the window_length is removed and replaced by linear
-      interpolation between the values of Vm at the extrems of the  cutout window.
-      """
+    Notes
+    -----
+    Vm, in the window starting at each spike time, and lasting the window_length is removed and replaced by linear
+    interpolation between the values of Vm at the extrems of the  cutout window.
+    """
 
     required_parameters = ParameterSet(
         {
             # the length of window in which the Vm starting at a spike time is replaced with interpolation (in milliseconds)
-            "window_length": float,
+            "window_length": float
         }
     )
 
@@ -1724,13 +1729,13 @@ class ActionPotentialRemoval(Analysis):
             dsv = queries.param_filter_query(self.datastore, sheet_name=sheet)
             for st, seg in zip(
                 [MozaikParametrized.idd(s) for s in dsv.get_stimuli()],
-                dsv.get_segments(),
+                dsv.get_segments()
             ):
                 asl = [
                     ActionPotentialRemoval._remove_spikes(
                         seg.get_vm(i),
                         seg.get_spiketrain(i),
-                        self.parameters.window_length,
+                        self.parameters.window_length
                     )
                     for i in seg.get_stored_vm_ids()
                 ]
@@ -1744,24 +1749,24 @@ class ActionPotentialRemoval(Analysis):
                         sheet_name=sheet,
                         tags=self.tags,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=str(st),
+                        stimulus_id=str(st)
                     )
                 )
 
 
 class Irregularity(Analysis):
     """
-      Irregularity as defined in:
-      Kumar, A., Schrader, S., Aertsen, A., & Rotter, S. (2008). The high-conductance state of cortical networks. Neural computation, 20(1), 1-43.
-      It is the square of inter spike interval coefficient of variation.
+    Irregularity as defined in:
+    Kumar, A., Schrader, S., Aertsen, A., & Rotter, S. (2008). The high-conductance state of cortical networks. Neural computation, 20(1), 1-43.
+    It is the square of inter spike interval coefficient of variation.
 
-      It creates on `PerNeuronValue` ADS per each recording in the DSV.
+    It creates on `PerNeuronValue` ADS per each recording in the DSV.
 
-      Notes
-      -----
-      It is not possible to compute CV for neurons with no spikes. Therefore we exclude such neurons from the analysis.
-      This means that the resulting PerNeuronValue ADS might not contain all ids of neurons as the source recording.
-      """
+    Notes
+    -----
+    It is not possible to compute CV for neurons with no spikes. Therefore we exclude such neurons from the analysis.
+    This means that the resulting PerNeuronValue ADS might not contain all ids of neurons as the source recording.
+    """
 
     def perform_analysis(self):
         for sheet in self.datastore.sheets():
@@ -1787,26 +1792,26 @@ class Irregularity(Analysis):
                         tags=self.tags,
                         period=None,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=str(st),
+                        stimulus_id=str(st)
                     )
                 )
 
 
 class NeuronToNeuronAnalogSignalCorrelations(Analysis):
     """
-      Calculates the pairwise correlation of AnalogSignal object for each pair of neurons.
-      It creates one PerNeuronPairValue for each AnalogSignalList ADS present in the DSV.
+    Calculates the pairwise correlation of AnalogSignal object for each pair of neurons.
+    It creates one PerNeuronPairValue for each AnalogSignalList ADS present in the DSV.
 
-      Parameters
-      ----------
-      convert_nan_to_zero : bool,
-                          If true nan values in correlation coefficients which can result from non-varying varialbes will be turned to zeros.
-      """
+    Parameters
+    ----------
+    convert_nan_to_zero : bool,
+                        If true nan values in correlation coefficients which can result from non-varying varialbes will be turned to zeros.
+    """
 
     required_parameters = ParameterSet(
         {
             # if true nan values in correlation coefficients which can result from non-varying varialbes will be turned to zeros.
-            "convert_nan_to_zero": bool,
+            "convert_nan_to_zero": bool
         }
     )
 
@@ -1830,19 +1835,19 @@ class NeuronToNeuronAnalogSignalCorrelations(Analysis):
                         tags=self.tags,
                         period=None,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=asl.stimulus_id,
+                        stimulus_id=asl.stimulus_id
                     )
                 )
 
 
 class PopulationMeanAndVar(Analysis):
     """
-      Calculates the mean value accross population of a quantity. Currently it can process PerNeuronValues , PerNeuronPairValue, and AnalogSignalList ADS.
+    Calculates the mean value accross population of a quantity. Currently it can process PerNeuronValues , PerNeuronPairValue, and AnalogSignalList ADS.
 
-      For periodic variables, the mean is correctly handled, but variance is not computed.
+    For periodic variables, the mean is correctly handled, but variance is not computed.
 
-      This list is likely to grow in future.
-      """
+    This list is likely to grow in future.
+    """
 
     def perform_analysis(self):
         dsv = queries.param_filter_query(
@@ -1863,7 +1868,7 @@ class PopulationMeanAndVar(Analysis):
                     sheet_name=ads.sheet_name,
                     tags=self.tags,
                     analysis_algorithm=self.__class__.__name__,
-                    stimulus_id=ads.stimulus_id,
+                    stimulus_id=ads.stimulus_id
                 )
             )
             if v != None:
@@ -1875,7 +1880,7 @@ class PopulationMeanAndVar(Analysis):
                         sheet_name=ads.sheet_name,
                         tags=self.tags,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=ads.stimulus_id,
+                        stimulus_id=ads.stimulus_id
                     )
                 )
 
@@ -1887,13 +1892,13 @@ class PopulationMeanAndVar(Analysis):
                 ads.mean(),
                 t_start=ads.asl[0].t_start,
                 sampling_period=ads.asl[0].sampling_period,
-                units=ads.asl[0].units,
+                units=ads.asl[0].units
             )
             nas_v = NeoAnalogSignal(
                 ads.var(),
                 t_start=ads.asl[0].t_start,
                 sampling_period=ads.asl[0].sampling_period,
-                units=ads.asl[0].units,
+                units=ads.asl[0].units
             )
 
             self.datastore.full_datastore.add_analysis_result(
@@ -1905,7 +1910,7 @@ class PopulationMeanAndVar(Analysis):
                     sheet_name=ads.sheet_name,
                     tags=self.tags,
                     analysis_algorithm=self.__class__.__name__,
-                    stimulus_id=ads.stimulus_id,
+                    stimulus_id=ads.stimulus_id
                 )
             )
 
@@ -1918,19 +1923,19 @@ class PopulationMeanAndVar(Analysis):
                     sheet_name=ads.sheet_name,
                     tags=self.tags,
                     analysis_algorithm=self.__class__.__name__,
-                    stimulus_id=ads.stimulus_id,
+                    stimulus_id=ads.stimulus_id
                 )
             )
 
 
 class PopulationMedian(Analysis):
     """
-      Calculates the meddian value accross population of a quantity. Currently it can process PerNeuronValues , PerNeuronPairValue.
+    Calculates the meddian value accross population of a quantity. Currently it can process PerNeuronValues , PerNeuronPairValue.
 
-      Periodic variables are not supported.
+    Periodic variables are not supported.
 
-      This list is likely to grow in future.
-      """
+    This list is likely to grow in future.
+    """
 
     def perform_analysis(self):
         dsv = queries.param_filter_query(
@@ -1949,20 +1954,20 @@ class PopulationMedian(Analysis):
                     sheet_name=ads.sheet_name,
                     tags=self.tags,
                     analysis_algorithm=self.__class__.__name__,
-                    stimulus_id=ads.stimulus_id,
+                    stimulus_id=ads.stimulus_id
                 )
             )
 
 
 class Analog_MeanSTDAndFanoFactor(Analysis):
     """
-      Calculates the mean, standard deviation and fano-factor of vm and conductances for each neuron, and averages them over trials.
-      It stores them in PerNeuronValue datastructures (one for exc. one for inh. conductances and one for vm).
+    Calculates the mean, standard deviation and fano-factor of vm and conductances for each neuron, and averages them over trials.
+    It stores them in PerNeuronValue datastructures (one for exc. one for inh. conductances and one for vm).
 
-      Notes
-      -----
-      Only neurons for which the corresponding signals were measured will be included in the PerNeuronValue data structures.
-      """
+    Notes
+    -----
+    Only neurons for which the corresponding signals were measured will be included in the PerNeuronValue data structures.
+    """
 
     def perform_analysis(self):
         for sheet in self.datastore.sheets():
@@ -1971,7 +1976,7 @@ class Analog_MeanSTDAndFanoFactor(Analysis):
                 dsv.get_segments(),
                 dsv.get_stimuli(),
                 parameter_list=["trial"],
-                allow_non_identical_objects=True,
+                allow_non_identical_objects=True
             )
             for segs, st in zip(segs1, stids):
                 vm_ids = segs[0].get_stored_vm_ids()
@@ -1985,7 +1990,7 @@ class Analog_MeanSTDAndFanoFactor(Analysis):
                             for seg in segs
                         ]
                     ),
-                    axis=0,
+                    axis=0
                 )
                 esyn_mean = numpy.mean(
                     numpy.array(
@@ -1996,7 +2001,7 @@ class Analog_MeanSTDAndFanoFactor(Analysis):
                             for seg in segs
                         ]
                     ),
-                    axis=0,
+                    axis=0
                 )
                 isyn_mean = numpy.mean(
                     numpy.array(
@@ -2007,7 +2012,7 @@ class Analog_MeanSTDAndFanoFactor(Analysis):
                             for seg in segs
                         ]
                     ),
-                    axis=0,
+                    axis=0
                 )
                 # standard deviation
                 vm_std = numpy.mean(
@@ -2017,7 +2022,7 @@ class Analog_MeanSTDAndFanoFactor(Analysis):
                             for seg in segs
                         ]
                     ),
-                    axis=0,
+                    axis=0
                 )
                 esyn_std = numpy.mean(
                     numpy.array(
@@ -2028,7 +2033,7 @@ class Analog_MeanSTDAndFanoFactor(Analysis):
                             for seg in segs
                         ]
                     ),
-                    axis=0,
+                    axis=0
                 )
                 isyn_std = numpy.mean(
                     numpy.array(
@@ -2039,7 +2044,7 @@ class Analog_MeanSTDAndFanoFactor(Analysis):
                             for seg in segs
                         ]
                     ),
-                    axis=0,
+                    axis=0
                 )
                 # fano factor
                 vm_fano_factor = numpy.array(
@@ -2063,7 +2068,7 @@ class Analog_MeanSTDAndFanoFactor(Analysis):
                         tags=self.tags,
                         period=None,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=str(st),
+                        stimulus_id=str(st)
                     )
                 )
                 self.datastore.full_datastore.add_analysis_result(
@@ -2076,7 +2081,7 @@ class Analog_MeanSTDAndFanoFactor(Analysis):
                         tags=self.tags,
                         period=None,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=str(st),
+                        stimulus_id=str(st)
                     )
                 )
                 self.datastore.full_datastore.add_analysis_result(
@@ -2089,7 +2094,7 @@ class Analog_MeanSTDAndFanoFactor(Analysis):
                         tags=self.tags,
                         period=None,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=str(st),
+                        stimulus_id=str(st)
                     )
                 )
                 self.datastore.full_datastore.add_analysis_result(
@@ -2102,7 +2107,7 @@ class Analog_MeanSTDAndFanoFactor(Analysis):
                         tags=self.tags,
                         period=None,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=str(st),
+                        stimulus_id=str(st)
                     )
                 )
                 self.datastore.full_datastore.add_analysis_result(
@@ -2115,7 +2120,7 @@ class Analog_MeanSTDAndFanoFactor(Analysis):
                         tags=self.tags,
                         period=None,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=str(st),
+                        stimulus_id=str(st)
                     )
                 )
                 self.datastore.full_datastore.add_analysis_result(
@@ -2128,7 +2133,7 @@ class Analog_MeanSTDAndFanoFactor(Analysis):
                         tags=self.tags,
                         period=None,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=str(st),
+                        stimulus_id=str(st)
                     )
                 )
                 self.datastore.full_datastore.add_analysis_result(
@@ -2141,7 +2146,7 @@ class Analog_MeanSTDAndFanoFactor(Analysis):
                         tags=self.tags,
                         period=None,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=str(st),
+                        stimulus_id=str(st)
                     )
                 )
                 self.datastore.full_datastore.add_analysis_result(
@@ -2154,7 +2159,7 @@ class Analog_MeanSTDAndFanoFactor(Analysis):
                         tags=self.tags,
                         period=None,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=str(st),
+                        stimulus_id=str(st)
                     )
                 )
                 self.datastore.full_datastore.add_analysis_result(
@@ -2167,20 +2172,20 @@ class Analog_MeanSTDAndFanoFactor(Analysis):
                         tags=self.tags,
                         period=None,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=str(st),
+                        stimulus_id=str(st)
                     )
                 )
 
 
 class AnalogSignal_PerNeuronMeanVar(Analysis):
     """
-      Calculates the mean, and variance of AnalogSignal for each neuron.
-      It stores them in PerNeuronValue datastructures, one for mean one for variance.
+    Calculates the mean, and variance of AnalogSignal for each neuron.
+    It stores them in PerNeuronValue datastructures, one for mean one for variance.
 
-      Notes
-      -----
-      Only neurons for which the AnalogSignal exists were measured will be included in the PerNeuronValue data structures.
-      """
+    Notes
+    -----
+    Only neurons for which the AnalogSignal exists were measured will be included in the PerNeuronValue data structures.
+    """
 
     def perform_analysis(self):
         for sheet in self.datastore.sheets():
@@ -2201,7 +2206,7 @@ class AnalogSignal_PerNeuronMeanVar(Analysis):
                         tags=self.tags,
                         period=None,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=ads.stimulus_id,
+                        stimulus_id=ads.stimulus_id
                     )
                 )
                 self.datastore.full_datastore.add_analysis_result(
@@ -2214,21 +2219,21 @@ class AnalogSignal_PerNeuronMeanVar(Analysis):
                         tags=self.tags,
                         period=None,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=ads.stimulus_id,
+                        stimulus_id=ads.stimulus_id
                     )
                 )
 
 
 class TrialAveragedVarianceAndVarianceRatioOfConductances(Analysis):
     """
-      Calculates the variance of the excitatory and inhibitory conductances and their ratios, and averages across trials, for all neurons and for all recordings in the datastore.
-      Also the ratio of the means is calculated.
+    Calculates the variance of the excitatory and inhibitory conductances and their ratios, and averages across trials, for all neurons and for all recordings in the datastore.
+    Also the ratio of the means is calculated.
 
-      Notes
-      -----
-      * Only neurons for which the corresponding signals were measured will be included in the PerNeuronValue data structures.
-      * It requires that both conductances were recorded from the same neurons
-      """
+    Notes
+    -----
+    * Only neurons for which the corresponding signals were measured will be included in the PerNeuronValue data structures.
+    * It requires that both conductances were recorded from the same neurons
+    """
 
     def perform_analysis(self):
         for sheet in self.datastore.sheets():
@@ -2237,14 +2242,16 @@ class TrialAveragedVarianceAndVarianceRatioOfConductances(Analysis):
                 dsv.get_segments(),
                 dsv.get_stimuli(),
                 parameter_list=["trial"],
-                allow_non_identical_objects=True,
+                allow_non_identical_objects=True
             )
             for segs, st in zip(segs1, stids):
                 esyn_ids = segs[0].get_stored_esyn_ids()
                 isyn_ids = segs[0].get_stored_isyn_ids()
-                assert all(
-                    esyn_ids == isyn_ids
-                ), "TrialAveragedVarianceAndVarianceRatioOfConductances: the ids of neurons in which excitatory and inhibitory conductances were recorded do not match."
+                assert all(esyn_ids == isyn_ids), (
+                    "TrialAveragedVarianceAndVarianceRatioOfConductances: the ids of"
+                    " neurons in which excitatory and inhibitory conductances were"
+                    " recorded do not match."
+                )
                 # mean
                 esyn_var = numpy.mean(
                     numpy.array(
@@ -2255,7 +2262,7 @@ class TrialAveragedVarianceAndVarianceRatioOfConductances(Analysis):
                             for seg in segs
                         ]
                     ),
-                    axis=0,
+                    axis=0
                 )
                 isyn_var = numpy.mean(
                     numpy.array(
@@ -2266,7 +2273,7 @@ class TrialAveragedVarianceAndVarianceRatioOfConductances(Analysis):
                             for seg in segs
                         ]
                     ),
-                    axis=0,
+                    axis=0
                 )
                 esyn_mean = numpy.mean(
                     numpy.array(
@@ -2277,7 +2284,7 @@ class TrialAveragedVarianceAndVarianceRatioOfConductances(Analysis):
                             for seg in segs
                         ]
                     ),
-                    axis=0,
+                    axis=0
                 )
                 isyn_mean = numpy.mean(
                     numpy.array(
@@ -2288,7 +2295,7 @@ class TrialAveragedVarianceAndVarianceRatioOfConductances(Analysis):
                             for seg in segs
                         ]
                     ),
-                    axis=0,
+                    axis=0
                 )
                 variance_ratio = esyn_var / isyn_var
                 mean_ratio = esyn_mean / isyn_mean
@@ -2303,7 +2310,7 @@ class TrialAveragedVarianceAndVarianceRatioOfConductances(Analysis):
                         tags=self.tags,
                         period=None,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=str(st),
+                        stimulus_id=str(st)
                     )
                 )
                 self.datastore.full_datastore.add_analysis_result(
@@ -2316,7 +2323,7 @@ class TrialAveragedVarianceAndVarianceRatioOfConductances(Analysis):
                         tags=self.tags,
                         period=None,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=str(st),
+                        stimulus_id=str(st)
                     )
                 )
                 self.datastore.full_datastore.add_analysis_result(
@@ -2329,7 +2336,7 @@ class TrialAveragedVarianceAndVarianceRatioOfConductances(Analysis):
                         tags=self.tags,
                         period=None,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=str(st),
+                        stimulus_id=str(st)
                     )
                 )
                 self.datastore.full_datastore.add_analysis_result(
@@ -2342,20 +2349,20 @@ class TrialAveragedVarianceAndVarianceRatioOfConductances(Analysis):
                         tags=self.tags,
                         period=None,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=str(st),
+                        stimulus_id=str(st)
                     )
                 )
 
 
 class CrossCorrelationOfExcitatoryAndInhibitoryConductances(Analysis):
     """
-      Calculates the cross-correlation between excitatory and inhibitory conductance of each neuron, averaged over the trials of the stimulus.
+    Calculates the cross-correlation between excitatory and inhibitory conductance of each neuron, averaged over the trials of the stimulus.
 
-      Notes
-      -----
-      * Only neurons for which the corresponding signals were measured will be included.
-      * It requires that both conductances were recorded from the same neurons.
-      """
+    Notes
+    -----
+    * Only neurons for which the corresponding signals were measured will be included.
+    * It requires that both conductances were recorded from the same neurons.
+    """
 
     def perform_analysis(self):
         for sheet in self.datastore.sheets():
@@ -2370,11 +2377,15 @@ class CrossCorrelationOfExcitatoryAndInhibitoryConductances(Analysis):
             for seg in segs:
                 esyn_ids = seg.get_stored_esyn_ids()
                 isyn_ids = seg.get_stored_isyn_ids()
-                assert all(
-                    esyn_ids == isyn_ids
-                ), "CrossCorrelationOfExcitatoryAndInhibitoryConductances: the ids of neurons in which excitatory and inhibitory conductances were recorded do not match."
+                assert all(esyn_ids == isyn_ids), (
+                    "CrossCorrelationOfExcitatoryAndInhibitoryConductances: the ids of"
+                    " neurons in which excitatory and inhibitory conductances were"
+                    " recorded do not match."
+                )
                 assert all(esyn_ids == segs[0].get_stored_esyn_ids()), (
-                    "CrossCorrelationOfExcitatoryAndInhibitoryConductances requires all recordings to hold conductance recordings for the same set of neurons. Mismatch %s %s"
+                    "CrossCorrelationOfExcitatoryAndInhibitoryConductances requires all"
+                    " recordings to hold conductance recordings for the same set of"
+                    " neurons. Mismatch %s %s"
                     % (str(esyn_ids), str(segs[0].get_stored_esyn_ids()))
                 )
                 # lets make sure everything has the same samplig period
@@ -2391,7 +2402,7 @@ class CrossCorrelationOfExcitatoryAndInhibitoryConductances(Analysis):
                         numpy.correlate(
                             seg.get_esyn(idd).magnitude.flatten(),
                             seg.get_isyn(idd).magnitude.flatten(),
-                            "full",
+                            "full"
                         )
                         for idd in esyn_ids
                     ]
@@ -2408,7 +2419,7 @@ class CrossCorrelationOfExcitatoryAndInhibitoryConductances(Analysis):
                         a,
                         t_start=-((len(a) - 1) / 2) * dt,
                         sampling_period=dt,
-                        units=segs[0].get_esyn(esyn_ids[0]).units ** 2,
+                        units=segs[0].get_esyn(esyn_ids[0]).units ** 2
                     )
                     for a in cc
                 ]
@@ -2422,16 +2433,16 @@ class CrossCorrelationOfExcitatoryAndInhibitoryConductances(Analysis):
                         sheet_name=sheet,
                         tags=self.tags,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=str(st),
+                        stimulus_id=str(st)
                     )
                 )
 
 
 class AnalogSignal_PerNeuronBetweenSignalCorrelation(Analysis):
     """
-      Calculates the correlation between two signals (defined by the names of the two values) for each two AnalogSignalList
-      that contain those value names, and otherwise match in parameters.
-      """
+    Calculates the correlation between two signals (defined by the names of the two values) for each two AnalogSignalList
+    that contain those value names, and otherwise match in parameters.
+    """
 
     required_parameters = ParameterSet(
         {
@@ -2446,7 +2457,7 @@ class AnalogSignal_PerNeuronBetweenSignalCorrelation(Analysis):
                 self.datastore,
                 sheet_name=sheet,
                 name="AnalogSignalList",
-                y_axis_name=[self.parameters.value_name1, self.parameters.value_name2],
+                y_axis_name=[self.parameters.value_name1, self.parameters.value_name2]
             )
             dsvs_by_valuename = queries.partition_analysis_results_by_parameters_query(
                 dsv, parameter_list=["y_axis_name"]
@@ -2475,7 +2486,7 @@ class AnalogSignal_PerNeuronBetweenSignalCorrelation(Analysis):
                             scipy.signal.savgol_filter(
                                 a2.rescale(a1.units).magnitude.flatten()[100:], 501, 2
                             ),
-                            "r",
+                            "r"
                         )
                         # plt.title(str(numpy.corrcoef([scipy.signal.savgol_filter(a1.magnitude.flatten()[100:],151,2),scipy.signal.savgol_filter(a2.rescale(a1.units).magnitude.flatten()[100:],151,2)])))
                         plt.savefig("smoothed.eps")
@@ -2489,8 +2500,8 @@ class AnalogSignal_PerNeuronBetweenSignalCorrelation(Analysis):
                                 scipy.signal.savgol_filter(
                                     a2.rescale(a1.units).magnitude.flatten()[100:],
                                     501,
-                                    2,
-                                ),
+                                    2
+                                )
                             ]
                         )[0][1]
                     )
@@ -2509,7 +2520,7 @@ class AnalogSignal_PerNeuronBetweenSignalCorrelation(Analysis):
                         sheet_name=sheet,
                         tags=self.tags,
                         analysis_algorithm=self.__class__.__name__,
-                        period=None,
+                        period=None
                     )
                 )
 
@@ -2549,7 +2560,8 @@ class TrialAveragedSparseness(Analysis):
             ) / (numpy.sum(numpy.power(mean_rates, 2), axis=0) / nstim)
 
             logger.debug(
-                "Adding PerNeuronValue containing trial averaged sparseness to datastore"
+                "Adding PerNeuronValue containing trial averaged sparseness to"
+                " datastore"
             )
 
             self.datastore.full_datastore.add_analysis_result(
@@ -2562,15 +2574,15 @@ class TrialAveragedSparseness(Analysis):
                     sheet_name=sheet,
                     tags=self.tags,
                     analysis_algorithm=self.__class__.__name__,
-                    period=None,
+                    period=None
                 )
             )
 
 
 class SubtractPNVfromPNVS(Analysis):
     """
-      Takes datastore, and from each PerNeuronValue it subtracts the PerNeuronValue supplied in parameters, and saves the new PNVs into the datastore.
-      """
+    Takes datastore, and from each PerNeuronValue it subtracts the PerNeuronValue supplied in parameters, and saves the new PNVs into the datastore.
+    """
 
     def __init__(self, pnv, datastore, parameters, tags=None):
         Analysis.__init__(self, datastore, parameters, tags)
@@ -2597,15 +2609,15 @@ class SubtractPNVfromPNVS(Analysis):
                         tags=self.tags + p.tags,
                         period=p.period,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=p.stimulus_id,
+                        stimulus_id=p.stimulus_id
                     )
                 )
 
 
 class AddPNVfromPNVS(Analysis):
     """
-      Takes datastore, and it adds to each PerNeuronValue in it a PerNeuronValue supplied in parameters, and saves the new PNVs into the datastore.
-      """
+    Takes datastore, and it adds to each PerNeuronValue in it a PerNeuronValue supplied in parameters, and saves the new PNVs into the datastore.
+    """
 
     def __init__(self, pnv, datastore, parameters, tags=None):
         Analysis.__init__(self, datastore, parameters, tags)
@@ -2632,16 +2644,16 @@ class AddPNVfromPNVS(Analysis):
                         tags=self.tags + p.tags,
                         period=p.period,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=p.stimulus_id,
+                        stimulus_id=p.stimulus_id
                     )
                 )
 
 
 class OperationPNVfromPNVS(Analysis):
     """
-      Takes datastore, and for each PerNeuronValue A in it it peformes an operation with first argument A and second the PerNeuronValue supplied in parameters.
-      It saves the newly created PNVs into the datastore.
-      """
+    Takes datastore, and for each PerNeuronValue A in it it peformes an operation with first argument A and second the PerNeuronValue supplied in parameters.
+    It saves the newly created PNVs into the datastore.
+    """
 
     def __init__(
         self, pnv, operation, operation_descriptor, datastore, parameters, tags=None
@@ -2661,7 +2673,7 @@ class OperationPNVfromPNVS(Analysis):
                 sub = list(
                     self.operation(
                         numpy.array(p.get_value_by_id(p.ids)),
-                        numpy.array(self.pnv.get_value_by_id(p.ids)),
+                        numpy.array(self.pnv.get_value_by_id(p.ids))
                     )
                 )
                 self.datastore.full_datastore.add_analysis_result(
@@ -2679,25 +2691,25 @@ class OperationPNVfromPNVS(Analysis):
                         tags=self.tags + p.tags,
                         period=p.period,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=p.stimulus_id,
+                        stimulus_id=p.stimulus_id
                     )
                 )
 
 
 class TrialToTrialFanoFactorOfAnalogSignal(Analysis):
     """
-      This is a generalization of the trial-to-trial factor analysis done in
-      Baudot, P., Levy, M., Marre, O., Monier, C., Pananceau, M., & FrÃ©gnac, Y. (2013). Animation of natural scene by virtual eye-movements evokes high precision and low noise in V1 neurons. Frontiers in neural circuits, 7(December), 206. doi:10.3389/fncir.2013.00206
+    This is a generalization of the trial-to-trial factor analysis done in
+    Baudot, P., Levy, M., Marre, O., Monier, C., Pananceau, M., & FrÃ©gnac, Y. (2013). Animation of natural scene by virtual eye-movements evokes high precision and low noise in V1 neurons. Frontiers in neural circuits, 7(December), 206. doi:10.3389/fncir.2013.00206
 
-      Specifically this method takes multiple trials of given AnalogSignal and calculates the variance and mean at each time point. Then it calculates Fano Factor as the
-      slope of the regression line fitting the scatter polot between the corresponding means and variances (it calculates this as a cov(mean,variance) / var(mean)).
+    Specifically this method takes multiple trials of given AnalogSignal and calculates the variance and mean at each time point. Then it calculates Fano Factor as the
+    slope of the regression line fitting the scatter polot between the corresponding means and variances (it calculates this as a cov(mean,variance) / var(mean)).
 
-      For each set of a given analog signal over trials it will add a new PerNeuronValue ADS containing the FF values into the datastore.
+    For each set of a given analog signal over trials it will add a new PerNeuronValue ADS containing the FF values into the datastore.
 
-      Notes
-      -----
-      If this is run over data returned by PSTH analysis it should give equivalent results for Baudot et al. 2013.
-      """
+    Notes
+    -----
+    If this is run over data returned by PSTH analysis it should give equivalent results for Baudot et al. 2013.
+    """
 
     def perform_analysis(self):
         for sheet in self.datastore.sheets():
@@ -2762,35 +2774,35 @@ class TrialToTrialFanoFactorOfAnalogSignal(Analysis):
                                 tags=self.tags,
                                 period=None,
                                 analysis_algorithm=self.__class__.__name__,
-                                stimulus_id=str(st),
+                                stimulus_id=str(st)
                             )
                         )
 
 
 class CircularVarianceOfTuningCurve(Analysis):
     """
-      Calculates circular variance (see for example [1] for defintion) of each tuning curve present in DSV.
+    Calculates circular variance (see for example [1] for defintion) of each tuning curve present in DSV.
 
-      It takes a dsv containing some PerNeuronValues.
-      All PerNeuronValues have to belong to stimuli of the same type and
-      contain the same type of values (i.e. have the same `value_name`).
+    It takes a dsv containing some PerNeuronValues.
+    All PerNeuronValues have to belong to stimuli of the same type and
+    contain the same type of values (i.e. have the same `value_name`).
 
-      For each combination of parameters of the stimuli other than `parameter_name`
-      `CircularVarianceTuningCurve` it calculates the circular variance through the dimension defined by `parameter_name`.
-      The `parameter_name` needs to be associated with units with periodic value. The period of the value will be mapped onto
-      the (0,2pi) interval over which circular variance is calculated in [1].
+    For each combination of parameters of the stimuli other than `parameter_name`
+    `CircularVarianceTuningCurve` it calculates the circular variance through the dimension defined by `parameter_name`.
+    The `parameter_name` needs to be associated with units with periodic value. The period of the value will be mapped onto
+    the (0,2pi) interval over which circular variance is calculated in [1].
 
-      It stores the circular variance in a PerNeuronValue - for each combination of parameters of the stimulus associated
-      with the supplied PerNeuronValue with the exception of the stimulus parameter `parameter_name`.
+    It stores the circular variance in a PerNeuronValue - for each combination of parameters of the stimulus associated
+    with the supplied PerNeuronValue with the exception of the stimulus parameter `parameter_name`.
 
-      [1] 1. Ringach DL, Shapley RM, Hawken MJ. Orientation selectivity in macaque V1: diversity and laminar dependence. J Neurosci [Internet]. 2002 Jul 1;22(13):5639–51.
+    [1] 1. Ringach DL, Shapley RM, Hawken MJ. Orientation selectivity in macaque V1: diversity and laminar dependence. J Neurosci [Internet]. 2002 Jul 1;22(13):5639–51.
 
-      Other parameters
-      -------------------
-      parameter_name : str
-                     The stimulus parameter name through which to fit the tuning curve.
+    Other parameters
+    -------------------
+    parameter_name : str
+                   The stimulus parameter name through which to fit the tuning curve.
 
-      """
+    """
 
     required_parameters = ParameterSet(
         {
@@ -2823,7 +2835,7 @@ class CircularVarianceOfTuningCurve(Analysis):
             self.tc_dict = colapse_to_dictionary(
                 [z.get_value_by_id(self.pnvs[0].ids) for z in self.pnvs],
                 self.st,
-                self.parameters.parameter_name,
+                self.parameters.parameter_name
             )
             for k in list(self.tc_dict.keys()):
                 z = []
@@ -2861,37 +2873,37 @@ class CircularVarianceOfTuningCurve(Analysis):
                         tags=self.tags,
                         period=None,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=str(k),
+                        stimulus_id=str(k)
                     )
                 )
 
 
 class NakaRushtonTuningCurveFit(Analysis):
     """
-      Fits each tuning curve with a gaussian.
+    Fits each tuning curve with a gaussian.
 
-      It takes a dsv containing some PerNeuronValues.
-      All PerNeuronValues have to belong to stimuli of the same type and
-      contain the same type of values (i.e. have the same `value_name`).
+    It takes a dsv containing some PerNeuronValues.
+    All PerNeuronValues have to belong to stimuli of the same type and
+    contain the same type of values (i.e. have the same `value_name`).
 
-      For each combination of parameters of the stimuli other than `parameter_name`
-      `NakaRushtonTuningCurveFit` fits a Naka-Rushton curve to the values in the PerNeuronValues
-      that span the parameter values of the `parameter_name` stimulus parameter.
+    For each combination of parameters of the stimuli other than `parameter_name`
+    `NakaRushtonTuningCurveFit` fits a Naka-Rushton curve to the values in the PerNeuronValues
+    that span the parameter values of the `parameter_name` stimulus parameter.
 
-      It stores the parameters of the fitted Naka-Rushton curve in a PerNeuronValue - for each combination of parameters of the stimulus associated
-      with the supplied PerNeuronValue with the exception of the stimulus parameter `parameter_name`.
+    It stores the parameters of the fitted Naka-Rushton curve in a PerNeuronValue - for each combination of parameters of the stimulus associated
+    with the supplied PerNeuronValue with the exception of the stimulus parameter `parameter_name`.
 
-      Other parameters
-      -------------------
-      parameter_name : str
-                     The stimulus parameter name through which to fit the tuning curve.
+    Other parameters
+    -------------------
+    parameter_name : str
+                   The stimulus parameter name through which to fit the tuning curve.
 
-      """
+    """
 
     required_parameters = ParameterSet(
         {
             "parameter_name": str,  # the parameter_name through which to fit the tuning curve
-            "neurons": list,
+            "neurons": list
         }
     )
 
@@ -2915,7 +2927,7 @@ class NakaRushtonTuningCurveFit(Analysis):
             self.tc_dict = colapse_to_dictionary(
                 [z.get_value_by_id(self.parameters.neurons) for z in self.pnvs],
                 self.st,
-                self.parameters.parameter_name,
+                self.parameters.parameter_name
             )
             for k in list(self.tc_dict.keys()):
                 if len(self.tc_dict[k][0]) < 4:
@@ -2947,7 +2959,7 @@ class NakaRushtonTuningCurveFit(Analysis):
                             tags=self.tags,
                             period=None,
                             analysis_algorithm=self.__class__.__name__,
-                            stimulus_id=str(k),
+                            stimulus_id=str(k)
                         )
                     )
                     self.datastore.full_datastore.add_analysis_result(
@@ -2962,7 +2974,7 @@ class NakaRushtonTuningCurveFit(Analysis):
                             tags=self.tags,
                             period=None,
                             analysis_algorithm=self.__class__.__name__,
-                            stimulus_id=str(k),
+                            stimulus_id=str(k)
                         )
                     )
                     self.datastore.full_datastore.add_analysis_result(
@@ -2977,7 +2989,7 @@ class NakaRushtonTuningCurveFit(Analysis):
                             tags=self.tags,
                             period=None,
                             analysis_algorithm=self.__class__.__name__,
-                            stimulus_id=str(k),
+                            stimulus_id=str(k)
                         )
                     )
                     self.datastore.full_datastore.add_analysis_result(
@@ -2992,7 +3004,7 @@ class NakaRushtonTuningCurveFit(Analysis):
                             tags=self.tags,
                             period=None,
                             analysis_algorithm=self.__class__.__name__,
-                            stimulus_id=str(k),
+                            stimulus_id=str(k)
                         )
                     )
                 else:
@@ -3012,7 +3024,7 @@ class NakaRushtonTuningCurveFit(Analysis):
                         tags=self.tags,
                         period=None,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=str(k),
+                        stimulus_id=str(k)
                     )
                 )
                 self.datastore.full_datastore.add_analysis_result(
@@ -3025,7 +3037,7 @@ class NakaRushtonTuningCurveFit(Analysis):
                         tags=self.tags,
                         period=None,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=str(k),
+                        stimulus_id=str(k)
                     )
                 )
                 self.datastore.full_datastore.add_analysis_result(
@@ -3038,7 +3050,7 @@ class NakaRushtonTuningCurveFit(Analysis):
                         tags=self.tags,
                         period=None,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=str(k),
+                        stimulus_id=str(k)
                     )
                 )
                 self.datastore.full_datastore.add_analysis_result(
@@ -3051,7 +3063,7 @@ class NakaRushtonTuningCurveFit(Analysis):
                         tags=self.tags,
                         period=None,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=str(k),
+                        stimulus_id=str(k)
                     )
                 )
 

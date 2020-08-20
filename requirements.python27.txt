@@ -1,0 +1,15 @@
+cycler==0.10.0
+Cython==0.29.21
+imagen @ git+https://github.com/antolikjan/imagen.git@c8a4f09c37e8bf59e2d5836489f07c3a2c206efb
+matplotlib==2.2.5
+mpi4py==3.0.3
+neo==0.8.0
+numpy==1.16.6
+param==1.9.3
+parameters==0.2.1
+pathlib==1.0.1
+Pillow==6.2.2
+PyNN==0.9.5
+PyYAML==5.3.1
+quantities==0.12.4
+scipy==1.2.3

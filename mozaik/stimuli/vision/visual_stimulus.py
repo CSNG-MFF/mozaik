@@ -31,7 +31,10 @@ class VisualStimulus(BaseStimulus):
 
     background_luminance = SNumber(
         lux,
-        doc="Background luminance. Maximum luminance of object allowed is 2*background_luminance",
+        doc=(
+            "Background luminance. Maximum luminance of object allowed is"
+            " 2*background_luminance"
+        )
     )
     density = SNumber(1 / (degrees), doc="The density of stimulus - units per degree")
     location_x = SNumber(degrees, doc="x location of the center of  visual region.")
@@ -109,7 +112,8 @@ class VisualStimulus(BaseStimulus):
                 else:
                     if self.first_resolution_mismatch_display:
                         logger.warning(
-                            "Image pixel size does not match desired size (%g vs. %g) degrees. This is extremely inefficient!!!!!!!!!!!"
+                            "Image pixel size does not match desired size (%g vs. %g)"
+                            " degrees. This is extremely inefficient!!!!!!!!!!!"
                             % (pixel_size, img_pixel_size[0])
                         )
                         logger.warning("Image pixel size %g,%g" % numpy.shape(self.img))
@@ -159,11 +163,11 @@ class VisualStimulus(BaseStimulus):
 
                 assert delta_j == delta_l, "delta_j = %g, delta_l = %g" % (
                     delta_j,
-                    delta_l,
+                    delta_l
                 )
                 assert delta_i == delta_k, "delta_i = %g, delta_k = %g" % (
                     delta_i,
-                    delta_k,
+                    delta_k
                 )
 
                 i_stop = i_start + delta_i
@@ -176,7 +180,7 @@ class VisualStimulus(BaseStimulus):
                 try:
                     self.region_cache[region] = (
                         (k_start, k_start + delta_k, l_start, l_start + delta_l),
-                        (i_start, i_start + delta_i, j_start, j_start + delta_j),
+                        (i_start, i_start + delta_i, j_start, j_start + delta_j)
                     )
                     view[
                         k_start : k_start + delta_k, l_start : l_start + delta_l
@@ -206,7 +210,7 @@ class VisualStimulus(BaseStimulus):
                 try:
                     (
                         (sx_min, sx_max, sy_min, sy_max),
-                        (tx_min, tx_max, ty_min, ty_max),
+                        (tx_min, tx_max, ty_min, ty_max)
                     ) = self.region_cache[region]
                     view[sx_min:sx_max, sy_min:sy_max] = self.img[
                         tx_min:tx_max, ty_min:ty_max

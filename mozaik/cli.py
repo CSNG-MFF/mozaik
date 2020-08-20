@@ -9,7 +9,8 @@ def parse_parameter_search_args():
         return run_script, simulator_name, parameters_url
     else:
         raise ValueError(
-            "Usage: python parameter_search_script simulation_run_script simulator_name root_parameter_file_name"
+            "Usage: python parameter_search_script simulation_run_script simulator_name"
+            " root_parameter_file_name"
         )
 
 
@@ -28,9 +29,11 @@ def parse_workflow_args():
             simulator_name,
             num_threads,
             parameters_url,
-            modified_parameters,
+            modified_parameters
         )
     else:
         raise ValueError(
-            "Usage: runscript simulator_name num_threads parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n simulation_run_name"
+            "Usage: runscript simulator_name num_threads parameter_file_path"
+            " modified_parameter_path_1 modified_parameter_value_1 ..."
+            " modified_parameter_path_n modified_parameter_value_n simulation_run_name"
         )

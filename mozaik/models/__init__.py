@@ -76,7 +76,7 @@ class Model(BaseComponent):
             "time_step": float,
             "sheets": ParameterSet,  # can be none - in which case input_space_type is ignored
             "mpi_seed": int,
-            "pynn_seed": int,
+            "pynn_seed": int
         }
     )
 
@@ -88,7 +88,7 @@ class Model(BaseComponent):
             timestep=self.parameters.time_step,
             min_delay=self.parameters.min_delay,
             max_delay=self.parameters.max_delay,
-            threads=num_threads,
+            threads=num_threads
         )  # should have some parameters here
         self.sheets = {}
         self.connectors = {}
@@ -138,7 +138,7 @@ class Model(BaseComponent):
             sheet.prepare_artificial_stimulation(
                 stimulus.duration,
                 self.simulator_time,
-                artificial_stimulators.get(sheet.name, []),
+                artificial_stimulators.get(sheet.name, [])
             )
         if self.input_space:
             self.input_space.clear()
@@ -237,7 +237,7 @@ class Model(BaseComponent):
                     self.input_layer.provide_null_input(
                         self.input_space,
                         self.parameters.null_stimulus_period,
-                        self.simulator_time,
+                        self.simulator_time
                     )
 
                 logger.info(

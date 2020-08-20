@@ -42,7 +42,8 @@ def down_sample_analog_signal_average_method(analog_signal, new_sampling_period)
     length = analog_signal.t_stop.rescale(qt.ms) - analog_signal.t_start.rescale(qt.ms)
 
     assert (length.magnitude % new_sampling_period) < 0.000000001, (
-        "TemporalBinAverage: The analog signal length has to be divisible by bin_length. length: %f, bin length: %f "
+        "TemporalBinAverage: The analog signal length has to be divisible by"
+        " bin_length. length: %f, bin length: %f "
         % (length.magnitude, new_sampling_period)
     )
     div = int(round(length.magnitude / new_sampling_period))
@@ -50,7 +51,7 @@ def down_sample_analog_signal_average_method(analog_signal, new_sampling_period)
         numpy.mean(numpy.reshape(analog_signal.magnitude, (div, -1)), axis=1).flatten(),
         t_start=analog_signal.t_start,
         sampling_period=new_sampling_period * qt.ms,
-        units=analog_signal.units,
+        units=analog_signal.units
     )
 
 
@@ -77,7 +78,7 @@ def down_sample_analog_signal2(analog_signal, new_sampling_period):
             analog_signal[::div],
             t_start=0 * qt.ms,
             sampling_period=new_sampling_period * qt.ms,
-            units=analog_signal.units,
+            units=analog_signal.units
         )
 
     else:

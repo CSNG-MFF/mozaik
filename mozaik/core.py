@@ -42,20 +42,22 @@ class ParametrizedObject(object):
         def walk(tP, P, section=None):
             if set(tP.keys()) != set(P.keys()):
                 raise KeyError(
-                    "Invalid parameters for %s.%s Required: %s. Supplied: %s. Difference: %s"
+                    "Invalid parameters for %s.%s Required: %s. Supplied: %s."
+                    " Difference: %s"
                     % (
                         self.__class__.__name__,
                         section or "",
                         list(tP.keys()),
                         list(P.keys()),
-                        set(tP.keys()) ^ set(P.keys()),
+                        set(tP.keys()) ^ set(P.keys())
                     )
                 )
             for k, v in list(tP.items()):
                 if isinstance(v, ParameterSet):
                     if P[k] != None:
                         assert isinstance(P[k], ParameterSet), (
-                            "Type mismatch for parameter %s: %s !=  ParameterSet, for %s "
+                            "Type mismatch for parameter %s: %s !=  ParameterSet,"
+                            " for %s "
                             % (k, type(P[k]), P[k])
                         )
                         walk(v, P[k], section=k)

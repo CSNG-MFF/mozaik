@@ -18,7 +18,7 @@ cpd = UnitQuantity("cycles_per_degree", qt.cycle / qt.degree)
 lux = lx = UnitQuantity(
     "lux",  # I've seen both luxes and luces given as plurals, but I think in the SI unit sense, "lux" is both singular and plural - see Oxford English Dictionary
     symbol="lx",
-    aliases=["lux", "lx"],
+    aliases=["lux", "lx"]
 )
 
 nS = nanosiemens = UnitQuantity(

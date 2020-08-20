@@ -28,7 +28,7 @@ from ..tools.mozaik_parametrized import (
     SInteger,
     SNumber,
     SParameterSet,
-    SString,
+    SString
 )
 
 
@@ -49,7 +49,10 @@ class BaseStimulus(MozaikParametrized):
     )
     direct_stimulation_parameters = SParameterSet(
         default=None,
-        doc="The parameters with which the direct stimulation protocol has been initialized",
+        doc=(
+            "The parameters with which the direct stimulation protocol has been"
+            " initialized"
+        )
     )
 
     def __init__(self, **params):
@@ -122,9 +125,10 @@ class InternalStimulus(BaseStimulus):
 
     def __init__(self, **params):
         BaseStimulus.__init__(self, **params)
-        assert (
-            self.frame_duration == self.duration
-        ), "Mozaik requires that frame_duration and duration for InternalStimulus are set to equal values"
+        assert self.frame_duration == self.duration, (
+            "Mozaik requires that frame_duration and duration for InternalStimulus are"
+            " set to equal values"
+        )
 
     def frames(self):
         return None

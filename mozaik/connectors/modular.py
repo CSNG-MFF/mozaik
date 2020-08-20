@@ -129,7 +129,7 @@ class ModularConnector(Connector):
                         numpy.arange(0, self.source.pop.size, 1),
                         z + i,
                         self.weight_scaler * self._obtain_weights(i).flatten(),
-                        self._obtain_delays(i).flatten(),
+                        self._obtain_delays(i).flatten()
                     )
                 )
             )
@@ -141,7 +141,7 @@ class ModularConnector(Connector):
             self.method,
             synapse_type=self.init_synaptic_mechanisms(),
             label=self.name,
-            receptor_type=self.parameters.target_synapses,
+            receptor_type=self.parameters.target_synapses
         )
 
 
@@ -182,7 +182,7 @@ class ModularSamplingProbabilisticConnector(ModularConnector):
                     * numpy.multiply(
                         self.parameters.base_weight.next(len(k)), list(co.values())
                     ),
-                    numpy.array(delays)[k],
+                    numpy.array(delays)[k]
                 ]
             )
             cl.append(a)
@@ -197,7 +197,7 @@ class ModularSamplingProbabilisticConnector(ModularConnector):
                 self.__class__.__name__,
                 len(cl),
                 len(cl) / len(numpy.nonzero(self.target.pop._mask_local)[0]),
-                v / len(numpy.nonzero(self.target.pop._mask_local)[0]),
+                v / len(numpy.nonzero(self.target.pop._mask_local)[0])
             )
         )
 
@@ -208,7 +208,7 @@ class ModularSamplingProbabilisticConnector(ModularConnector):
                 method,
                 synapse_type=self.init_synaptic_mechanisms(),
                 label=self.name,
-                receptor_type=self.parameters.target_synapses,
+                receptor_type=self.parameters.target_synapses
             )
         else:
             logger.warning(
@@ -251,7 +251,7 @@ class ModularSingleWeightProbabilisticConnector(ModularConnector):
                         k,
                         i,
                         self.weight_scaler * next(self.parameters.base_weight),
-                        delays[k],
+                        delays[k]
                     )
                     for k in connection_indices
                 ]
@@ -262,7 +262,7 @@ class ModularSingleWeightProbabilisticConnector(ModularConnector):
             "%s: %g %g",
             self.name,
             min(conections_probabilities),
-            max(conections_probabilities),
+            max(conections_probabilities)
         )
         logger.warning(
             "%s: %d connections  [,%g,%g,%g]",
@@ -270,7 +270,7 @@ class ModularSingleWeightProbabilisticConnector(ModularConnector):
             len(cl),
             self.parameters.connection_probability,
             numpy.sum(weights),
-            len(weights),
+            len(weights)
         )
 
         if len(cl) > 0:
@@ -280,7 +280,7 @@ class ModularSingleWeightProbabilisticConnector(ModularConnector):
                 method,
                 synapse_type=self.init_synaptic_mechanisms(),
                 label=self.name,
-                receptor_type=self.parameters.target_synapses,
+                receptor_type=self.parameters.target_synapses
             )
         else:
             logger.warning(
@@ -305,7 +305,7 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(ModularConnect
         {
             "annotation_reference_name": str,
             "num_samples": int,
-            "base_weight": ParameterDist,
+            "base_weight": ParameterDist
         }
     )
 
@@ -323,7 +323,7 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(ModularConnect
                 assert self.parameters.num_samples > 2 * int(samples), "%s: %d %d" % (
                     self.name,
                     self.parameters.num_samples,
-                    2 * int(samples),
+                    2 * int(samples)
                 )
                 a = sample_from_bin_distribution(
                     weights, int(self.parameters.num_samples - 2 * int(samples))
@@ -338,7 +338,7 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(ModularConnect
                         self.weight_scaler
                         * self.parameters.base_weight.next()[0]
                         * co[k],
-                        delays[k],
+                        delays[k]
                     )
                     for k in list(co.keys())
                 ]
@@ -360,7 +360,7 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(ModularConnect
                 assert self.parameters.num_samples > 2 * int(samples), "%s: %d %d" % (
                     self.name,
                     self.parameters.num_samples,
-                    2 * int(samples),
+                    2 * int(samples)
                 )
                 co = Counter(
                     sample_from_bin_distribution(
@@ -377,7 +377,7 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(ModularConnect
                     * numpy.multiply(
                         self.parameters.base_weight.next(len(k)), list(co.values())
                     ),
-                    numpy.array(delays)[k],
+                    numpy.array(delays)[k]
                 ]
             )
             cl.append(a)
@@ -392,7 +392,7 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(ModularConnect
                 self.__class__.__name__,
                 len(cl),
                 len(cl) / len(numpy.nonzero(self.target.pop._mask_local)[0]),
-                v / len(numpy.nonzero(self.target.pop._mask_local)[0]),
+                v / len(numpy.nonzero(self.target.pop._mask_local)[0])
             )
         )
 
@@ -403,7 +403,7 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(ModularConnect
                 method,
                 synapse_type=self.init_synaptic_mechanisms(),
                 label=self.name,
-                receptor_type=self.parameters.target_synapses,
+                receptor_type=self.parameters.target_synapses
             )
         else:
             logger.warning(

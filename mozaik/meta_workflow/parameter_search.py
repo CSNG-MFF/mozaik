@@ -21,17 +21,17 @@ class ParameterSearchBackend(object):
         simulator_name,
         parameters_url,
         parameters,
-        simulation_run_name,
+        simulation_run_name
     ):
         """
-         This function recevies the list of parameters to modify and their values, and has to
-         execute the corresponding mozaik simulation.
+        This function recevies the list of parameters to modify and their values, and has to
+        execute the corresponding mozaik simulation.
 
-         Parameters
-         ----------
-         parameters : dict
-                    The dictionary holding the names of parameters to be modified as keys, and the values to set them to as the corresponding values.
-         """
+        Parameters
+        ----------
+        parameters : dict
+                   The dictionary holding the names of parameters to be modified as keys, and the values to set them to as the corresponding values.
+        """
         raise NotImplemented
 
 
@@ -47,17 +47,17 @@ class LocalSequentialBackend(object):
         simulator_name,
         parameters_url,
         parameters,
-        simulation_run_name,
+        simulation_run_name
     ):
         """
-         This function recevies the list of parameters to modify and their values, and has to
-         execute the corresponding mozaik simulation.
+        This function recevies the list of parameters to modify and their values, and has to
+        execute the corresponding mozaik simulation.
 
-         Parameters
-         ----------
-         parameters : dict
-                    The dictionary holding the names of parameters to be modified as keys, and the values to set them to as the corresponding values.
-         """
+        Parameters
+        ----------
+        parameters : dict
+                   The dictionary holding the names of parameters to be modified as keys, and the values to set them to as the corresponding values.
+        """
         modified_parameters = []
         for k in list(parameters.keys()):
             modified_parameters.append(k)
@@ -69,7 +69,7 @@ class LocalSequentialBackend(object):
                 + modified_parameters
                 + ["ParameterSearch"]
             ),
-            shell=True,
+            shell=True
         )
 
 
@@ -107,17 +107,17 @@ class SlurmSequentialBackend(object):
         simulator_name,
         parameters_url,
         parameters,
-        simulation_run_name,
+        simulation_run_name
     ):
         """
-         This function recevies the list of parameters to modify and their values, and has to
-         execute the corresponding mozaik simulation.
+        This function recevies the list of parameters to modify and their values, and has to
+        execute the corresponding mozaik simulation.
 
-         Parameters
-         ----------
-         parameters : dict
-                    The dictionary holding the names of parameters to be modified as keys, and the values to set them to as the corresponding values.
-         """
+        Parameters
+        ----------
+        parameters : dict
+                   The dictionary holding the names of parameters to be modified as keys, and the values to set them to as the corresponding values.
+        """
         modified_parameters = []
         for k in list(parameters.keys()):
             modified_parameters.append(k)
@@ -132,7 +132,7 @@ class SlurmSequentialBackend(object):
             + ["-o", parameters["results_dir"][2:-2] + "/slurm-%j.out"],
             stdin=PIPE,
             stdout=PIPE,
-            stderr=PIPE,
+            stderr=PIPE
         )
 
         # THIS IS A BIT OF A HACK, have to add customization for other people ...
@@ -152,13 +152,13 @@ class SlurmSequentialBackend(object):
                         run_script,
                         simulator_name,
                         str(self.num_threads),
-                        parameters_url,
+                        parameters_url
                     ]
                     + modified_parameters
                     + [simulation_run_name]
                     + [">"]
                     + [parameters["results_dir"][1:-1] + "/OUTFILE" + str(time.time())]
-                ),
+                )
             ]
         )
         print(p.communicate(input=data)[0])
@@ -200,17 +200,17 @@ class SlurmSequentialBackendIoV(object):
         simulator_name,
         parameters_url,
         parameters,
-        simulation_run_name,
+        simulation_run_name
     ):
         """
-         This function recevies the list of parameters to modify and their values, and has to
-         execute the corresponding mozaik simulation.
+        This function recevies the list of parameters to modify and their values, and has to
+        execute the corresponding mozaik simulation.
 
-         Parameters
-         ----------
-         parameters : dict
-                    The dictionary holding the names of parameters to be modified as keys, and the values to set them to as the corresponding values.
-         """
+        Parameters
+        ----------
+        parameters : dict
+                   The dictionary holding the names of parameters to be modified as keys, and the values to set them to as the corresponding values.
+        """
         modified_parameters = []
         for k in list(parameters.keys()):
             modified_parameters.append(k)
@@ -224,7 +224,7 @@ class SlurmSequentialBackendIoV(object):
             + ["-o", parameters["results_dir"][2:-2] + "/slurm-%j.out"],
             stdin=PIPE,
             stdout=PIPE,
-            stderr=PIPE,
+            stderr=PIPE
         )
 
         # THIS IS A BIT OF A HACK, have to add customization for other people ...
@@ -242,13 +242,13 @@ class SlurmSequentialBackendIoV(object):
                         run_script,
                         simulator_name,
                         str(self.num_threads),
-                        parameters_url,
+                        parameters_url
                     ]
                     + modified_parameters
                     + [simulation_run_name]
                     + [">"]
                     + [parameters["results_dir"][1:-1] + "/OUTFILE" + str(time.time())]
-                ),
+                )
             ]
         )
         print(p.communicate(input=data)[0])
@@ -337,7 +337,7 @@ class ParameterSearch(object):
                 simulator_name,
                 parameters_url,
                 combination,
-                "ParameterSearch",
+                "ParameterSearch"
             )
             counter = counter + 1
 
@@ -410,7 +410,7 @@ def _parameter_combinations_rec(combination, arrays):
                 _parameter_combinations_rec(combination[:] + [value], arrays[1:])
                 for value in arrays[0]
             ],
-            [],
+            []
         )
 
 
@@ -454,7 +454,7 @@ def parameter_search_run_script_distributed_slurm(
             ["sbatch"] + ["-o", master_results_dir + "/slurm_analysis-%j.out"],
             stdin=PIPE,
             stdout=PIPE,
-            stderr=PIPE,
+            stderr=PIPE
         )
 
         # THIS IS A BIT OF A HACK, have to add customization for other people ...
@@ -471,7 +471,7 @@ def parameter_search_run_script_distributed_slurm(
                     ["mpirun", " --mca mtl ^psm python", run_script, "'" + rdn + "'"]
                     + [">"]
                     + ["'" + rdn + "/OUTFILE_analysis" + str(time.time()) + "'"]
-                ),
+                )
             ]
         )
         print(p.communicate(input=data)[0])
@@ -519,7 +519,7 @@ def parameter_search_run_script_distributed_slurm_IoV(
             ["sbatch"] + ["-o", master_results_dir + "/slurm_analysis-%j.out"],
             stdin=PIPE,
             stdout=PIPE,
-            stderr=PIPE,
+            stderr=PIPE
         )
 
         # THIS IS A BIT OF A HACK, have to add customization for other people ...
@@ -535,7 +535,7 @@ def parameter_search_run_script_distributed_slurm_IoV(
                     ["python", run_script, "'" + rdn + "'"]
                     + [">"]
                     + ["'" + rdn + "/OUTFILE_analysis" + str(time.time()) + "'"]
-                ),
+                )
             ]
         )
         print(p.communicate(input=data)[0])

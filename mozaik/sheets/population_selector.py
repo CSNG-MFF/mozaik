@@ -51,8 +51,8 @@ class PopulationSelector(ParametrizedObject):
 
 class RCAll(PopulationSelector):
     """
-      This PopulationSelector selects all neurons in the sheet.
-      """
+    This PopulationSelector selects all neurons in the sheet.
+    """
 
     def generate_idd_list_of_neurons(self):
         return self.sheet.pop.all_cells.astype(int)
@@ -60,15 +60,15 @@ class RCAll(PopulationSelector):
 
 class RCRandomN(PopulationSelector):
     """
-      Select random neurons.
+    Select random neurons.
 
-      This PopulationSelector selects *num_of_cells* random neurons from the given population.
+    This PopulationSelector selects *num_of_cells* random neurons from the given population.
 
-      Other parameters
-      ----------------
-      num_of_cells : int
-                   The number of cells to be selected.
-      """
+    Other parameters
+    ----------------
+    num_of_cells : int
+                 The number of cells to be selected.
+    """
 
     required_parameters = ParameterSet(
         {"num_of_cells": int}  # The number of cells to be selected
@@ -82,17 +82,17 @@ class RCRandomN(PopulationSelector):
 
 class RCRandomPercentage(PopulationSelector):
     """
-      Select random neurons.
+    Select random neurons.
 
-      This PopulationSelector selects *percentage* of randomly chosen neurons from the given population.
+    This PopulationSelector selects *percentage* of randomly chosen neurons from the given population.
 
 
-      Other parameters
-      ----------------
-      percentage : float
-                   The percentage of neurons to select.
+    Other parameters
+    ----------------
+    percentage : float
+                 The percentage of neurons to select.
 
-      """
+    """
 
     required_parameters = ParameterSet(
         {"percentage": float}  # the cell type of the sheet
@@ -106,28 +106,28 @@ class RCRandomPercentage(PopulationSelector):
 
 class RCGrid(PopulationSelector):
     """
-      Select neurons on a grid.
+    Select neurons on a grid.
 
-      This PopulationSelector assumes a grid of points ('electrodes') with a
-      given *spacing* and *size*, centered on (*offset_x*,*offset_x*) coordinates.
-      It then finds the closest neuron to each point in the grid to be
-      inserted into the list of selected neurons .
+    This PopulationSelector assumes a grid of points ('electrodes') with a
+    given *spacing* and *size*, centered on (*offset_x*,*offset_x*) coordinates.
+    It then finds the closest neuron to each point in the grid to be
+    inserted into the list of selected neurons .
 
-      Other parameters
-      ----------------
+    Other parameters
+    ----------------
 
-      size : float (micro meters of cortical space)
-           The size of the grid (it is assumed to be square) - it has to be multiple of spacing
+    size : float (micro meters of cortical space)
+         The size of the grid (it is assumed to be square) - it has to be multiple of spacing
 
-      spacing : float (micro meters of cortical space)
-           The space between two neighboring electrodes.
+    spacing : float (micro meters of cortical space)
+         The space between two neighboring electrodes.
 
-      offset_x : float (micro meters of cortical space)
-           The x axis offset from the center of the sheet.
+    offset_x : float (micro meters of cortical space)
+         The x axis offset from the center of the sheet.
 
-      offset_y : float (micro meters of cortical space)
-           The y axis offset from the center of the sheet.
-      """
+    offset_y : float (micro meters of cortical space)
+         The y axis offset from the center of the sheet.
+    """
 
     required_parameters = ParameterSet(
         {
@@ -137,7 +137,7 @@ class RCGrid(PopulationSelector):
             # the x axis offset from the center of the sheet (micro meters)
             "offset_x": float,
             # the y axis offset from the center of the sheet (micro meters)
-            "offset_y": float,
+            "offset_y": float
         }
     )
 
@@ -173,29 +173,29 @@ class RCGrid(PopulationSelector):
 
 class SimilarAnnotationSelector(PopulationSelector):
     """
-      Choose neurons based on annotations info.
+    Choose neurons based on annotations info.
 
-      This PopulationSelector picks random *num_of_cells* neurons whose
-      *annotation* value is closer than *distance* from pre-specified *value*
-      (based on Euclidian norm).
+    This PopulationSelector picks random *num_of_cells* neurons whose
+    *annotation* value is closer than *distance* from pre-specified *value*
+    (based on Euclidian norm).
 
-      Other parameters
-      ----------------
-      annotation : str
-                 The name of the annotation value. It has to be defined in the given population for all neurons.
+    Other parameters
+    ----------------
+    annotation : str
+               The name of the annotation value. It has to be defined in the given population for all neurons.
 
-      distance : float
-                 The the upper limit on distance between the given neurons annotation value and the specified value that permits inclusion.
+    distance : float
+               The the upper limit on distance between the given neurons annotation value and the specified value that permits inclusion.
 
-      value : float
-            The value from which to calculate distance.
+    value : float
+          The value from which to calculate distance.
 
-      num_of_cells : int
-                   The number of cells to be selected.
+    num_of_cells : int
+                 The number of cells to be selected.
 
-      period : float
-                The period of the annotation value (0 if none)
-      """
+    period : float
+              The period of the annotation value (0 if none)
+    """
 
     required_parameters = ParameterSet(
         {
@@ -204,7 +204,7 @@ class SimilarAnnotationSelector(PopulationSelector):
             "value": float,
             "num_of_cells": int,  # The number of cells to be selected
             # if the value is periodic this should be set to the period, oterwise it should be set to 0.
-            "period": float,
+            "period": float
         }
     )
 
@@ -283,7 +283,7 @@ class SimilarAnnotationSelectorRegion(SimilarAnnotationSelector):
             # the x axis offset from the center of the sheet (micro meters)
             "offset_x": float,
             # the y axis offset from the center of the sheet (micro meters)
-            "offset_y": float,
+            "offset_y": float
         }
     )
 
@@ -303,7 +303,7 @@ class SimilarAnnotationSelectorRegion(SimilarAnnotationSelector):
                         abs(
                             numpy.array(yy - self.parameters.offset_y)
                             < self.parameters.size / 2.0
-                        ),
+                        )
                     )
                 )
             ]

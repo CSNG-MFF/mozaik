@@ -6,7 +6,7 @@ from scipy.interpolate import NearestNDInterpolator
 import numpy
 
 from ..connectors.modular import (
-    ModularSamplingProbabilisticConnectorAnnotationSamplesCount,
+    ModularSamplingProbabilisticConnectorAnnotationSamplesCount
 )
 from ..core import BaseComponent
 
@@ -90,7 +90,7 @@ class GaborConnector(BaseComponent):
             "or_map_location": str,
             "phase_map": bool,  # is a phase map supplied?
             # if phase_map is True where can one find the map. It has to be a file containing a single pickled 2d numpy array
-            "phase_map_location": str,
+            "phase_map_location": str
         }
     )
 
@@ -187,13 +187,13 @@ class GaborConnector(BaseComponent):
                     j,
                     "LGNAfferentX",
                     target.pop.positions[0][j] + parameters.rf_jitter.next()[0],
-                    protected=True,
+                    protected=True
                 )
                 target.add_neuron_annotation(
                     j,
                     "LGNAfferentY",
                     target.pop.positions[1][j] + parameters.rf_jitter.next()[0],
-                    protected=True,
+                    protected=True
                 )
             else:
                 target.add_neuron_annotation(
@@ -209,7 +209,7 @@ class GaborConnector(BaseComponent):
                 "weight_functions": {
                     "f1": {
                         "component": "mozaik.connectors.vision.GaborArborization",
-                        "params": {"ON": True},
+                        "params": {"ON": True}
                     }
                 },
                 "delay_functions": self.parameters.delay_functions,
@@ -218,7 +218,7 @@ class GaborConnector(BaseComponent):
                 "short_term_plasticity": self.parameters.short_term_plasticity,
                 "base_weight": self.parameters.base_weight,
                 "num_samples": 0,
-                "annotation_reference_name": "aff_samples",
+                "annotation_reference_name": "aff_samples"
             }
         )
 

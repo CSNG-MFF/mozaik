@@ -41,7 +41,7 @@ def circ_mean(matrix, weights=None, axis=None, low=0, high=pi * 2, normalize=Fal
     ----------
 
     matrix : ndarray
-           Matrix of data for which the compute the circular mean. 
+           Matrix of data for which the compute the circular mean.
 
     weights : ndarray, optional
             If not none, matrix of the same size as matrix. It will be used as weighting for the mean.
@@ -50,7 +50,7 @@ def circ_mean(matrix, weights=None, axis=None, low=0, high=pi * 2, normalize=Fal
               The min and max values that will be mapped onto the periodic interval of (0, 2pi).
 
     axis : int, optional
-         Numpy axis along which to compute the circular mean. 
+         Numpy axis along which to compute the circular mean.
 
 
     normalize : bool

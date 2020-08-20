@@ -56,7 +56,7 @@ def psth(spike_list, bin_length, normalize=True):
             numpy.histogram(sp, bins=num_bins, range=r)[0] / normalizer,
             t_start=t_start * qt.ms,
             sampling_period=bin_length * qt.ms,
-            units=munits.spike_per_sec,
+            units=munits.spike_per_sec
         )
         for sp in spike_list
     ]
@@ -130,12 +130,13 @@ def pnv_datastore_view_to_tensor(pnv_view, allow_missing=False, pickle_file=None
     for pnv in pnvs:
         for p, c in zip(params, coords):
             assert getattr(MozaikParametrized.idd(pnv.stimulus_id), p) in c, (
-                "Value %f of parameter <%s> of PNV[%s] does not conform to coordinate range: %s"
+                "Value %f of parameter <%s> of PNV[%s] does not conform to coordinate"
+                " range: %s"
                 % (
                     getattr(MozaikParametrized.idd(pnv.stimulus_id), p),
                     p,
                     str(pnv),
-                    str(c),
+                    str(c)
                 )
             )
 

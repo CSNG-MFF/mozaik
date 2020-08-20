@@ -42,7 +42,7 @@ def plot_layer_activity(sheet, value_to_plot, cortical_coordinates=False, labels
                 sheet.pop.positions[1] * sheet.magnification_factor,
                 c=value_to_plot,
                 faceted=False,
-                edgecolors="none",
+                edgecolors="none"
             )
             if labels:
                 plt.xlabel("x (μm)")
@@ -53,7 +53,7 @@ def plot_layer_activity(sheet, value_to_plot, cortical_coordinates=False, labels
             sheet.pop.positions[1],
             c=value_to_plot,
             faceted=False,
-            edgecolors="none",
+            edgecolors="none"
         )
         if labels:
             plt.xlabel("x (° of visual field)")

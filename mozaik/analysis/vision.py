@@ -13,7 +13,7 @@ from ..tools.circ_stat import circular_dist
 from ..tools.mozaik_parametrized import (
     colapse_to_dictionary,
     colapse,
-    MozaikParametrized,
+    MozaikParametrized
 )
 from ..tools.neo_object_operations import neo_sum
 from .analysis import Analysis
@@ -51,12 +51,13 @@ class ModulationRatio(Analysis):
                 identifier="AnalogSignalList",
                 sheet_name=sheet,
                 analysis_algorithm="PSTH",
-                st_name="FullfieldDriftingSinusoidalGrating",
+                st_name="FullfieldDriftingSinusoidalGrating"
             )
             dsv.print_content()
-            assert queries.equal_ads(
-                dsv, except_params=["stimulus_id"]
-            ), "It seems PSTH computed in different ways are present in datastore, ModulationRatio can accept only one"
+            assert queries.equal_ads(dsv, except_params=["stimulus_id"]), (
+                "It seems PSTH computed in different ways are present in datastore,"
+                " ModulationRatio can accept only one"
+            )
             psths = dsv.get_analysis_result()
             st = [MozaikParametrized.idd(p.stimulus_id) for p in psths]
             # average across trials
@@ -65,14 +66,14 @@ class ModulationRatio(Analysis):
                 st,
                 parameter_list=["trial"],
                 func=neo_sum,
-                allow_non_identical_objects=True,
+                allow_non_identical_objects=True
             )
 
             # retrieve the computed orientation preferences
             pnvs = self.datastore.get_analysis_result(
                 identifier="PerNeuronValue",
                 sheet_name=sheet,
-                value_name="orientation preference",
+                value_name="orientation preference"
             )
             if len(pnvs) != 1:
                 logger.error(
@@ -142,7 +143,7 @@ class ModulationRatio(Analysis):
                         tags=self.tags,
                         period=None,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=str(st),
+                        stimulus_id=str(st)
                     )
                 )
 
@@ -156,7 +157,7 @@ class ModulationRatio(Analysis):
                         tags=self.tags,
                         period=None,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=str(st),
+                        stimulus_id=str(st)
                     )
                 )
 
@@ -170,7 +171,7 @@ class ModulationRatio(Analysis):
                         tags=self.tags,
                         period=None,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=str(st),
+                        stimulus_id=str(st)
                     )
                 )
 
@@ -202,32 +203,32 @@ class ModulationRatio(Analysis):
             return (
                 2 * abs(fft[first_har]) / abs(fft[0]),
                 abs(fft[0]),
-                2 * abs(fft[first_har]),
+                2 * abs(fft[first_har])
             )
         else:
             logger.info("MR: ARGH: " + str(fft[0]) + "  " + str(numpy.mean(signal)))
             return (
                 10,
                 abs(fft[0]),
-                2 * abs(fft[first_har]),
+                2 * abs(fft[first_har])
             )
 
 
 class Analog_F0andF1(Analysis):
     """
-      Calculates the DC and first harmonic of trial averaged vm and conductancesfor each neuron.
+    Calculates the DC and first harmonic of trial averaged vm and conductancesfor each neuron.
 
-      It also calculates the DC and F1 to any AnalogSignalList present in the datastore (not trial averaged this time).
+    It also calculates the DC and F1 to any AnalogSignalList present in the datastore (not trial averaged this time).
 
-      The data_store has to contain responses or AnalogSignalLists to the same stimulus type, and the stymulus type has to have
-      <temporal_frequency> parameter which is used as the first harmonic frequency.
+    The data_store has to contain responses or AnalogSignalLists to the same stimulus type, and the stymulus type has to have
+    <temporal_frequency> parameter which is used as the first harmonic frequency.
 
-      It stores them in PerNeuronValue datastructures (one for exc. one for inh. conductances, and one for each AnalogSignalList).
+    It stores them in PerNeuronValue datastructures (one for exc. one for inh. conductances, and one for each AnalogSignalList).
 
-      Notes
-      -----
-      Only neurons for which the corresponding signals were measured will be included in the PerNeuronValue data structures.
-      """
+    Notes
+    -----
+    Only neurons for which the corresponding signals were measured will be included in the PerNeuronValue data structures.
+    """
 
     def perform_analysis(self):
 
@@ -238,15 +239,16 @@ class Analog_F0andF1(Analysis):
                     self.datastore
                 ), "Data store has to contain only recordings to the same stimulus type"
                 st = self.datastore.get_stimuli()[0]
-                assert (
-                    "temporal_frequency" in MozaikParametrized.idd(st).getParams()
-                ), "The stimulus has to have parameter temporal_frequency which is used as first harmonic"
+                assert "temporal_frequency" in MozaikParametrized.idd(st).getParams(), (
+                    "The stimulus has to have parameter temporal_frequency which is"
+                    " used as first harmonic"
+                )
 
                 segs1, stids = colapse(
                     dsv.get_segments(),
                     dsv.get_stimuli(),
                     parameter_list=["trial"],
-                    allow_non_identical_objects=True,
+                    allow_non_identical_objects=True
                 )
                 for segs, st in zip(segs1, stids):
                     first_analog_signal = segs[0].get_esyn(
@@ -349,7 +351,7 @@ class Analog_F0andF1(Analysis):
                             tags=self.tags,
                             period=None,
                             analysis_algorithm=self.__class__.__name__,
-                            stimulus_id=str(st),
+                            stimulus_id=str(st)
                         )
                     )
                     self.datastore.full_datastore.add_analysis_result(
@@ -362,7 +364,7 @@ class Analog_F0andF1(Analysis):
                             tags=self.tags,
                             period=None,
                             analysis_algorithm=self.__class__.__name__,
-                            stimulus_id=str(st),
+                            stimulus_id=str(st)
                         )
                     )
                     self.datastore.full_datastore.add_analysis_result(
@@ -375,7 +377,7 @@ class Analog_F0andF1(Analysis):
                             tags=self.tags,
                             period=None,
                             analysis_algorithm=self.__class__.__name__,
-                            stimulus_id=str(st),
+                            stimulus_id=str(st)
                         )
                     )
                     self.datastore.full_datastore.add_analysis_result(
@@ -388,7 +390,7 @@ class Analog_F0andF1(Analysis):
                             tags=self.tags,
                             period=None,
                             analysis_algorithm=self.__class__.__name__,
-                            stimulus_id=str(st),
+                            stimulus_id=str(st)
                         )
                     )
                     self.datastore.full_datastore.add_analysis_result(
@@ -401,7 +403,7 @@ class Analog_F0andF1(Analysis):
                             tags=self.tags,
                             period=None,
                             analysis_algorithm=self.__class__.__name__,
-                            stimulus_id=str(st),
+                            stimulus_id=str(st)
                         )
                     )
                     self.datastore.full_datastore.add_analysis_result(
@@ -414,7 +416,7 @@ class Analog_F0andF1(Analysis):
                             tags=self.tags,
                             period=None,
                             analysis_algorithm=self.__class__.__name__,
-                            stimulus_id=str(st),
+                            stimulus_id=str(st)
                         )
                     )
 
@@ -426,7 +428,10 @@ class Analog_F0andF1(Analysis):
                 assert (
                     "temporal_frequency"
                     in MozaikParametrized.idd(asl.stimulus_id).getParams()
-                ), "The stimulus has to have parameter temporal_frequency which is used as first harmonic"
+                ), (
+                    "The stimulus has to have parameter temporal_frequency which is"
+                    " used as first harmonic"
+                )
 
                 signals = asl.asl
                 first_analog_signal = signals[0]
@@ -458,7 +463,7 @@ class Analog_F0andF1(Analysis):
                         tags=self.tags,
                         period=None,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=asl.stimulus_id,
+                        stimulus_id=asl.stimulus_id
                     )
                 )
                 self.datastore.full_datastore.add_analysis_result(
@@ -471,7 +476,7 @@ class Analog_F0andF1(Analysis):
                         tags=self.tags,
                         period=None,
                         analysis_algorithm=self.__class__.__name__,
-                        stimulus_id=asl.stimulus_id,
+                        stimulus_id=asl.stimulus_id
                     )
                 )
 
@@ -531,21 +536,21 @@ class LocalHomogeneityIndex(Analysis):
                         sheet_name=sheet,
                         tags=self.tags,
                         period=None,
-                        analysis_algorithm=self.__class__.__name__,
+                        analysis_algorithm=self.__class__.__name__
                     )
                 )
 
 
 class SizeTuningAnalysis(Analysis):
     """
-      Calculates the size tuning properties
-      """
+    Calculates the size tuning properties
+    """
 
     required_parameters = ParameterSet(
         {
             # list of neurons for which to compute this (normally this analysis will only makes sense for neurons for which the sine grating disk stimulus has been optimally oriented)
             "neurons": list,
-            "sheet_name": str,
+            "sheet_name": str
         }
     )
 
@@ -554,7 +559,7 @@ class SizeTuningAnalysis(Analysis):
             self.datastore,
             identifier="PerNeuronValue",
             sheet_name=self.parameters.sheet_name,
-            st_name="DriftingSinusoidalGratingDisk",
+            st_name="DriftingSinusoidalGratingDisk"
         )
 
         if len(dsv.get_analysis_result()) == 0:
@@ -572,7 +577,7 @@ class SizeTuningAnalysis(Analysis):
         self.tc_dict = colapse_to_dictionary(
             [z.get_value_by_id(self.parameters.neurons) for z in self.pnvs],
             self.st,
-            "radius",
+            "radius"
         )
         for k in list(self.tc_dict.keys()):
             crf_sizes = []
@@ -631,7 +636,7 @@ class SizeTuningAnalysis(Analysis):
                     tags=self.tags,
                     period=None,
                     analysis_algorithm=self.__class__.__name__,
-                    stimulus_id=str(k),
+                    stimulus_id=str(k)
                 )
             )
             self.datastore.full_datastore.add_analysis_result(
@@ -644,7 +649,7 @@ class SizeTuningAnalysis(Analysis):
                     tags=self.tags,
                     period=None,
                     analysis_algorithm=self.__class__.__name__,
-                    stimulus_id=str(k),
+                    stimulus_id=str(k)
                 )
             )
             self.datastore.full_datastore.add_analysis_result(
@@ -657,7 +662,7 @@ class SizeTuningAnalysis(Analysis):
                     tags=self.tags,
                     period=None,
                     analysis_algorithm=self.__class__.__name__,
-                    stimulus_id=str(k),
+                    stimulus_id=str(k)
                 )
             )
             self.datastore.full_datastore.add_analysis_result(
@@ -670,7 +675,7 @@ class SizeTuningAnalysis(Analysis):
                     tags=self.tags,
                     period=None,
                     analysis_algorithm=self.__class__.__name__,
-                    stimulus_id=str(k),
+                    stimulus_id=str(k)
                 )
             )
             self.datastore.full_datastore.add_analysis_result(
@@ -684,21 +689,21 @@ class SizeTuningAnalysis(Analysis):
                     tags=self.tags,
                     period=None,
                     analysis_algorithm=self.__class__.__name__,
-                    stimulus_id=str(k),
+                    stimulus_id=str(k)
                 )
             )
 
 
 class OCTCTuningAnalysis(Analysis):
     """
-      Calculates the Orientation Contrast tuning properties.
-      """
+    Calculates the Orientation Contrast tuning properties.
+    """
 
     required_parameters = ParameterSet(
         {
             # list of neurons for which to compute this (normally this analysis will only makes sense for neurons for which the sine grating disk stimulus has been optimally oriented)
             "neurons": list,
-            "sheet_name": str,
+            "sheet_name": str
         }
     )
 
@@ -707,7 +712,7 @@ class OCTCTuningAnalysis(Analysis):
             self.datastore,
             identifier="PerNeuronValue",
             sheet_name=self.parameters.sheet_name,
-            st_name="DriftingSinusoidalGratingCenterSurroundStimulus",
+            st_name="DriftingSinusoidalGratingCenterSurroundStimulus"
         )
 
         if len(dsv.get_analysis_result()) == 0:
@@ -725,7 +730,7 @@ class OCTCTuningAnalysis(Analysis):
         self.tc_dict = colapse_to_dictionary(
             [z.get_value_by_id(self.parameters.neurons) for z in self.pnvs],
             self.st,
-            "surround_orientation",
+            "surround_orientation"
         )
         for k in list(self.tc_dict.keys()):
             sis = []
@@ -751,6 +756,6 @@ class OCTCTuningAnalysis(Analysis):
                     tags=self.tags,
                     period=None,
                     analysis_algorithm=self.__class__.__name__,
-                    stimulus_id=str(k),
+                    stimulus_id=str(k)
                 )
             )

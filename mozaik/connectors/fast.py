@@ -29,7 +29,7 @@ class DistanceDependentProbabilisticArborization(Connector):
         {
             "weights": float,  # nA, the synapse strength
             # location of the map. It has to be a file containing a single pickled 2d numpy array with values between 0 and 1.0.
-            "map_location": str,
+            "map_location": str
         }
     )
 
@@ -63,7 +63,7 @@ class DistanceDependentProbabilisticArborization(Connector):
             safe=True,
             verbose=False,
             n_connections=None,
-            rng=mozaik.pynn_rng,
+            rng=mozaik.pynn_rng
         )
 
         self.proj = self.sim.Projection(
@@ -72,7 +72,7 @@ class DistanceDependentProbabilisticArborization(Connector):
             method,
             synapse_type=self.init_synaptic_mechanisms(),
             label=self.name,
-            receptor_type=self.parameters.target_synapses,
+            receptor_type=self.parameters.target_synapses
         )
 
 
@@ -122,7 +122,7 @@ class UniformProbabilisticArborization(Connector):
             self.parameters.connection_probability,
             allow_self_connections=False,
             safe=True,
-            rng=mozaik.pynn_rng,
+            rng=mozaik.pynn_rng
         )
 
         self.proj = self.sim.Projection(
@@ -131,11 +131,11 @@ class UniformProbabilisticArborization(Connector):
             method,
             synapse_type=self.init_synaptic_mechanisms(
                 weight=self.parameters.weights * self.weight_scaler,
-                delay=self.parameters.delay,
+                delay=self.parameters.delay
             ),
             label=self.name,
             space=space.Space(axes="xy"),
-            receptor_type=self.parameters.target_synapses,
+            receptor_type=self.parameters.target_synapses
         )
 
 
@@ -157,7 +157,7 @@ class FixedKConnector(Connector):
             self.parameters.k,
             allow_self_connections=False,
             safe=True,
-            rng=mozaik.pynn_rng,
+            rng=mozaik.pynn_rng
         )
 
         self.proj = self.sim.Projection(
@@ -166,9 +166,9 @@ class FixedKConnector(Connector):
             method,
             synapse_type=self.init_synaptic_mechanisms(
                 weight=self.parameters.weights * self.weight_scaler,
-                delay=self.parameters.delay,
+                delay=self.parameters.delay
             ),
             label=self.name,
             space=space.Space(axes="xy"),
-            receptor_type=self.parameters.target_synapses,
+            receptor_type=self.parameters.target_synapses
         )

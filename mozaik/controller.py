@@ -11,7 +11,7 @@ from .cli import parse_workflow_args
 from .storage.datastore import PickledDataStore
 from .tools.distribution_parametrization import (
     MozaikExtendedParameterSet,
-    load_parameters,
+    load_parameters
 )
 from .tools.misc import result_directory_name
 
@@ -35,7 +35,7 @@ class FancyFormatter(logging.Formatter):
         "WARNING": "",
         "HEADER": "",
         "INFO": "  ",
-        "DEBUG": "    ",
+        "DEBUG": "    "
     }
 
     def __init__(self, fmt=None, datefmt=None, mpi_rank=None):
@@ -62,10 +62,13 @@ def init_logging(
         mpi_fmt = "%3d " % mpi_rank
     logging.basicConfig(
         level=file_level,
-        format="%%(asctime)s %s%%(name)-10s %%(levelname)-6s %%(message)s [%%(pathname)s:%%(lineno)d]"
+        format=(
+            "%%(asctime)s %s%%(name)-10s %%(levelname)-6s %%(message)s"
+            " [%%(pathname)s:%%(lineno)d]"
+        )
         % mpi_fmt,
         filename=filename,
-        filemode="w",
+        filemode="w"
     )
     console = logging.StreamHandler()
     console.setLevel(console_level)
@@ -83,13 +86,13 @@ def setup_logging():
             Global.root_directory + "log",
             file_level=logging.INFO,
             console_level=logging.INFO,
-            mpi_rank=mozaik.mpi_comm.rank,
+            mpi_rank=mozaik.mpi_comm.rank
         )
     else:
         init_logging(
             Global.root_directory + "log",
             file_level=logging.INFO,
-            console_level=logging.INFO,
+            console_level=logging.INFO
         )
 
 
@@ -127,7 +130,7 @@ def run_workflow(simulation_name, model_class, create_experiments):
         simulator_name,
         num_threads,
         parameters_url,
-        modified_parameters,
+        modified_parameters
     ) = parse_workflow_args()
 
     print("Loading parameters")
@@ -190,7 +193,7 @@ def run_workflow(simulation_name, model_class, create_experiments):
                     "model_docstring": model_class.__doc__,
                     "simulation_run_name": simulation_run_name,
                     "model_name": simulation_name,
-                    "creation_data": datetime.now().strftime("%d/%m/%Y-%H:%M:%S"),
+                    "creation_data": datetime.now().strftime("%d/%m/%Y-%H:%M:%S")
                 }
             )
         )
@@ -248,16 +251,16 @@ def run_experiments(model, experiment_list, parameters, load_from=None):
             parameters=MozaikExtendedParameterSet(
                 {
                     "root_directory": Global.root_directory,
-                    "store_stimuli": parameters.store_stimuli,
+                    "store_stimuli": parameters.store_stimuli
                 }
-            ),
+            )
         )
     else:
         data_store = PickledDataStore(
             load=True,
             parameters=MozaikExtendedParameterSet(
                 {"root_directory": load_from, "store_stimuli": parameters.store_stimuli}
-            ),
+            )
         )
 
     data_store.set_neuron_ids(model.neuron_ids())

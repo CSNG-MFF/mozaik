@@ -12,12 +12,12 @@ import param
 from ..storage.queries import (
     param_filter_query,
     partition_analysis_results_by_stimulus_parameters_query,
-    partition_by_stimulus_paramter_query,
+    partition_by_stimulus_paramter_query
 )
 from ..tools.mozaik_parametrized import (
     MozaikParametrized,
     parameter_value_list,
-    varying_parameters,
+    varying_parameters
 )
 
 
@@ -26,43 +26,53 @@ logger = logging.getLogger(__name__)
 
 class LinePlot(Parameterized):
     """
-        Plot multiple plots with common x or y axis in a row or column. The user has to specify
-        the function. This one has to return a list of tuples, each containing:
-            * a name of a plot
-            * a Plotting or SimplePlot instance
-            * the simple_plot parameters that should be passed on
+    Plot multiple plots with common x or y axis in a row or column. The user has to specify
+    the function. This one has to return a list of tuples, each containing:
+        * a name of a plot
+        * a Plotting or SimplePlot instance
+        * the simple_plot parameters that should be passed on
 
-        Assuming each *function* returns a list of plots with names PlotA,...PlotX
-        The LinePlot will create a list of plots named:
-                    PlotA.plot0 ... PlotA.plotN
-                    PlotX.plot0 ... PlotX.plotN
-        where N is defined by the length parameter.
-        User can this way target the plots with parameters as desribed in the Plotting class.
-        """
+    Assuming each *function* returns a list of plots with names PlotA,...PlotX
+    The LinePlot will create a list of plots named:
+                PlotA.plot0 ... PlotA.plotN
+                PlotX.plot0 ... PlotX.plotN
+    where N is defined by the length parameter.
+    User can this way target the plots with parameters as desribed in the Plotting class.
+    """
 
     horizontal = param.Boolean(
         default=True,
         instantiate=True,
-        doc="Should the line of plots be horizontal or vertical",
+        doc="Should the line of plots be horizontal or vertical"
     )
 
     shared_axis = param.Boolean(
         default=True,
         instantiate=True,
-        doc="should the x axis or y axis (depending on the horizontal flag) considered shared",
+        doc=(
+            "should the x axis or y axis (depending on the horizontal flag) considered"
+            " shared"
+        )
     )
 
     shared_lim = param.Boolean(
         default=False,
         instantiate=True,
-        doc="should the limits of the x axis or y axis (depending on the horizontal flag) be considered shared",
+        doc=(
+            "should the limits of the x axis or y axis (depending on the horizontal"
+            " flag) be considered shared"
+        )
     )
 
     length = param.Integer(
         default=0, instantiate=True, doc="how many plots will there be"
     )
     function = param.Callable(
-        doc="The function that should be called to plot individual plots. It should accept three parameters: self, index in the line, gridspec object into which to plot the plot, the simple_plot parameters"
+        doc=(
+            "The function that should be called to plot individual plots. It should"
+            " accept three parameters: self, index in the line, gridspec object into"
+            " which to plot the plot, the simple_plot parameters"
+        )
     )
     max_length = param.Integer(
         default=10, instantiate=True, doc="The maximum # plots actually displayed"
@@ -70,23 +80,29 @@ class LinePlot(Parameterized):
     extra_space_top = param.Number(
         default=0.0,
         instantiate=True,
-        doc="Space to be reserved on top of the subplot, defined as fraction of the subplot.",
+        doc=(
+            "Space to be reserved on top of the subplot, defined as fraction of the"
+            " subplot."
+        )
     )
     extra_space_right = param.Number(
         default=0.0,
         instantiate=True,
-        doc="Space to be reserved on the right side of the subplot, defined as fraction of the subplot.",
+        doc=(
+            "Space to be reserved on the right side of the subplot, defined as fraction"
+            " of the subplot."
+        )
     )
 
     def make_line_plot(self, subplotspec):
         """
-            Call to execute the line plot.
+        Call to execute the line plot.
 
-            Parameters
-            ----------
-            subplotspec : subplotspec
-                        Is the subplotspec into which the whole lineplot is to be plotted.
-            """
+        Parameters
+        ----------
+        subplotspec : subplotspec
+                    Is the subplotspec into which the whole lineplot is to be plotted.
+        """
         if not self.length:
             raise ValueError("Length not specified")
 
@@ -95,7 +111,7 @@ class LinePlot(Parameterized):
             100, 100, subplot_spec=subplotspec
         )[
             int(100 * self.extra_space_top) : 100,
-            0 : int(100 * (1 - self.extra_space_right)),
+            0 : int(100 * (1 - self.extra_space_right))
         ]
 
         if self.horizontal:
@@ -148,7 +164,11 @@ class PerDSVPlot(LinePlot):
 
     function = param.Callable(
         instantiate=True,
-        doc="The function that should be called to plot individual plots. It should accept three parameters: self, the DSV from which to generate the plot, gridspec object into which to plot the plot, the simple_plot parameters",
+        doc=(
+            "The function that should be called to plot individual plots. It should"
+            " accept three parameters: self, the DSV from which to generate the plot,"
+            " gridspec object into which to plot the plot, the simple_plot parameters"
+        )
     )
 
     def __init__(self, datastore, **params):
@@ -207,7 +227,8 @@ class PerStimulusPlot(PerDSVPlot):
                 s = MozaikParametrized.idd(s)
                 if s.name != stimulus.name:
                     logger.warning(
-                        "Datastore does not contain same type of stimuli: changing title_style from Clever to Standard"
+                        "Datastore does not contain same type of stimuli: changing"
+                        " title_style from Clever to Standard"
                     )
                     self.title_style = "Standard"
                     break
@@ -264,8 +285,8 @@ class PerStimulusPlot(PerDSVPlot):
 
 class PerStimulusADSPlot(PerStimulusPlot):
     """
-      As PerStimulusPlot, but partitions the ADS not recordings.
-      """
+    As PerStimulusPlot, but partitions the ADS not recordings.
+    """
 
     def _get_stimulus_ids(self):
         return [
@@ -312,39 +333,55 @@ class ADSGridPlot(Parameterized):
     x_axis_parameter = param.String(
         default=None,
         instantiate=True,
-        doc="The parameter whose values should be iterated along x-axis",
+        doc="The parameter whose values should be iterated along x-axis"
     )
     y_axis_parameter = param.String(
         default=None,
         instantiate=True,
-        doc="The parameter whose values should be iterated along y-axis",
+        doc="The parameter whose values should be iterated along y-axis"
     )
 
     function = param.Callable(
-        doc="The function that should be called to plot individual plots. It should accept three parameters: self, DSV, gridspec object into which to plot the plot, the simple_plot parameters"
+        doc=(
+            "The function that should be called to plot individual plots. It should"
+            " accept three parameters: self, DSV, gridspec object into which to plot"
+            " the plot, the simple_plot parameters"
+        )
     )
 
     shared_axis = param.Boolean(
         default=True,
         instantiate=True,
-        doc="should the x axis or y axis (depending on the horizontal flag) considered shared",
+        doc=(
+            "should the x axis or y axis (depending on the horizontal flag) considered"
+            " shared"
+        )
     )
 
     shared_lim = param.Boolean(
         default=False,
         instantiate=True,
-        doc="should the limits of the x axis or y axis (depending on the horizontal flag) be considered shared",
+        doc=(
+            "should the limits of the x axis or y axis (depending on the horizontal"
+            " flag) be considered shared"
+        )
     )
 
     extra_space_top = param.Number(
         default=0.0,
         instantiate=True,
-        doc="Space to be reserved on top of the subplot, defined as fraction of the subplot.",
+        doc=(
+            "Space to be reserved on top of the subplot, defined as fraction of the"
+            " subplot."
+        )
     )
     extra_space_right = param.Number(
         default=0.0,
         instantiate=True,
-        doc="Space to be reserved on the right side of the subplot, defined as fraction of the subplot.",
+        doc=(
+            "Space to be reserved on the right side of the subplot, defined as fraction"
+            " of the subplot."
+        )
     )
 
     def __init__(self, datastore, **params):
@@ -360,7 +397,7 @@ class ADSGridPlot(Parameterized):
                 param_filter_query(
                     datastore, **{self.x_axis_parameter: self.x_axis_values[0]}
                 ).get_analysis_result(),
-                self.y_axis_parameter,
+                self.y_axis_parameter
             )
         )
 
@@ -370,7 +407,7 @@ class ADSGridPlot(Parameterized):
                 param_filter_query(
                     datastore, **{self.x_axis_parameter: v}
                 ).get_analysis_result(),
-                self.y_axis_parameter,
+                self.y_axis_parameter
             )
 
     def make_grid_plot(self, subplotspec):
@@ -386,7 +423,7 @@ class ADSGridPlot(Parameterized):
             100, 100, subplot_spec=subplotspec
         )[
             int(100 * self.extra_space_top) : 100,
-            0 : int(100 * (1 - self.extra_space_right)),
+            0 : int(100 * (1 - self.extra_space_right))
         ]
 
         gs = gridspec.GridSpecFromSubplotSpec(
@@ -415,8 +452,8 @@ class ADSGridPlot(Parameterized):
                     self.datastore,
                     **{
                         self.x_axis_parameter: self.x_axis_values[i],
-                        self.y_axis_parameter: self.y_axis_values[j],
-                    },
+                        self.y_axis_parameter: self.y_axis_values[j]
+                    }
                 )
                 li = self._single_plot(dsv, gs[j, i])
                 for (name, plot, gss, par) in li:
@@ -424,7 +461,7 @@ class ADSGridPlot(Parameterized):
                     d[name + "." + "plot[" + str(i) + "," + str(j) + "]"] = (
                         plot,
                         gss,
-                        par,
+                        par
                     )
         return d
 

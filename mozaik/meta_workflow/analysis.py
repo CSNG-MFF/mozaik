@@ -50,10 +50,10 @@ def load_fixed_parameter_set_parameter_search(
                 parameters=ParameterSet(
                     {
                         "root_directory": master_results_dir + "/" + rdn,
-                        "store_stimuli": False,
+                        "store_stimuli": False
                     }
                 ),
-                replace=False,
+                replace=False
             )
             if filter != None:
                 filter.query(data_store).remove_ads_outside_of_dsv()

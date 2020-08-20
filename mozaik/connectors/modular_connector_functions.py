@@ -26,8 +26,8 @@ class ModularConnectorFunction(ParametrizedObject):
 
 class ConstantModularConnectorFunction(ModularConnectorFunction):
     """
-      Triavial modular connection function assigning each connections the same weight
-      """
+    Triavial modular connection function assigning each connections the same weight
+    """
 
     def evaluate(self, index):
         return numpy.zeros(len(self.source.pop)) + 1
@@ -35,9 +35,9 @@ class ConstantModularConnectorFunction(ModularConnectorFunction):
 
 class PyNNDistributionConnectorFunction(ModularConnectorFunction):
     """
-      ConnectorFunction which draws the values from the PyNNDistribution
+    ConnectorFunction which draws the values from the PyNNDistribution
 
-      """
+    """
 
     required_parameters = ParameterSet(
         {"pynn_distribution": PyNNDistribution}  # The distribution
@@ -71,12 +71,12 @@ class DistanceDependentModularConnectorFunction(ModularConnectorFunction):
                     numpy.power(
                         self.source.pop.positions[0, :]
                         - self.target.pop.positions[0, index],
-                        2,
+                        2
                     )
                     + numpy.power(
                         self.source.pop.positions[1, :]
                         - self.target.pop.positions[1, index],
-                        2,
+                        2
                     )
                 )
             )
@@ -183,6 +183,6 @@ class HyperbolicModularConnectorFunction(DistanceDependentModularConnectorFuncti
                 self.parameters.alpha,
                 numpy.sqrt(
                     numpy.power(self.parameters.theta, 2) + numpy.power(distance, 2)
-                ),
+                )
             )
         )

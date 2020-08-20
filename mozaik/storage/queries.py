@@ -13,7 +13,7 @@ from ..tools.mozaik_parametrized import (
     colapse,
     filter_query,
     matching_parametrized_object_params,
-    MozaikParametrized,
+    MozaikParametrized
 )
 
 
@@ -136,7 +136,7 @@ def param_filter_query(dsv, ads_unique=False, rec_unique=False, **kwargs):
                 extra_data_list=[
                     ads for ads in dsv.analysis_results if ads.stimulus_id != None
                 ],
-                **st_kwargs,
+                **st_kwargs
             )[1]
         )
     else:
@@ -184,7 +184,7 @@ class ParamFilterQuery(Query):
             "params": ParameterSet,
             "ads_unique": bool,  # It will raise exception if result does not contain a single AnalysisDataStructure
             # It will raise exception if result does not contain a single segment (Recording structure)
-            "rec_unique": bool,
+            "rec_unique": bool
         }
     )
 
@@ -193,7 +193,7 @@ class ParamFilterQuery(Query):
             dsv,
             ads_unique=self.parameters.ads_unique,
             rec_unique=self.parameters.rec_unique,
-            **self.parameters.params,
+            **self.parameters.params
         )
 
 
@@ -203,13 +203,13 @@ class ParamFilterQuery(Query):
 ########################################################################
 def tag_based_query(dsv, tags):
     """
-        This query filters out all AnalysisDataStructure's corresponding to the given tags.
+    This query filters out all AnalysisDataStructure's corresponding to the given tags.
 
-        Parameters
-        ----------
-        tags : list(str)
-                 The list of tags that each ADS has to contain.
-        """
+    Parameters
+    ----------
+    tags : list(str)
+             The list of tags that each ADS has to contain.
+    """
 
     new_dsv = dsv.fromDataStoreView()
     new_dsv.block.segments = dsv.recordings_copy()
@@ -280,7 +280,7 @@ def partition_by_stimulus_paramter_query(dsv, parameter_list):
         dsv.get_segments() + dsv.get_segments(null=True),
         st,
         parameter_list=parameter_list,
-        allow_non_identical_objects=True,
+        allow_non_identical_objects=True
     )
     dsvs = []
     for vals in values:
@@ -321,28 +321,28 @@ def partition_analysis_results_by_parameters_query(
     dsv, parameter_list=None, excpt=False
 ):
     """
-        This query will take all analysis results and return list of DataStoreViews
-        each holding analysis results that have the same values of
-        the parameters in parameter_list.
+    This query will take all analysis results and return list of DataStoreViews
+    each holding analysis results that have the same values of
+    the parameters in parameter_list.
 
-        Note that in most cases one wants to do this only against datastore holding
-        only single analysis results type! In that case the datastore is partitioned into
-        subsets each holding recordings to the same stimulus with the same paramter
-        values, with the exception to the parameters in parameter_list.
+    Note that in most cases one wants to do this only against datastore holding
+    only single analysis results type! In that case the datastore is partitioned into
+    subsets each holding recordings to the same stimulus with the same paramter
+    values, with the exception to the parameters in parameter_list.
 
-        Parameters
-        ----------
+    Parameters
+    ----------
 
-        dsv : DataStoreView
-            The input DSV.
+    dsv : DataStoreView
+        The input DSV.
 
-        parameter_list : list(string)
-               The list of parameters that will vary in the returned DSVs, all other parameters will have the same value within each of the
-               returned DSVs.
+    parameter_list : list(string)
+           The list of parameters that will vary in the returned DSVs, all other parameters will have the same value within each of the
+           returned DSVs.
 
-        except : bool
-               If excpt is True the query is allowed only on DSVs holding the same AnalysisDataStructures.
-        """
+    except : bool
+           If excpt is True the query is allowed only on DSVs holding the same AnalysisDataStructures.
+    """
     if dsv.analysis_results == []:
         return []
     assert parameter_list != None, "parameter_list has to be given"
@@ -358,7 +358,7 @@ def partition_analysis_results_by_parameters_query(
         dsv.analysis_results,
         dsv.analysis_results,
         parameter_list=parameter_list,
-        allow_non_identical_objects=True,
+        allow_non_identical_objects=True
     )
     dsvs = []
 
@@ -404,35 +404,36 @@ def partition_analysis_results_by_stimulus_parameters_query(
     dsv, parameter_list=None, excpt=False
 ):
     """
-        This query will take all analysis results and return list of DataStoreViews
-        each holding analysis results that have the same values of
-        of stimulus parameters in parameter_list.
+    This query will take all analysis results and return list of DataStoreViews
+    each holding analysis results that have the same values of
+    of stimulus parameters in parameter_list.
 
-        Note that in most cases one wants to do this only against datastore holding
-        only analysis results  measured to the same stimulus type! In that case the datastore is partitioned into
-        subsets each holding recordings to the same stimulus with the same paramter
-        values, with the exception to the parameters in parameter_list.
+    Note that in most cases one wants to do this only against datastore holding
+    only analysis results  measured to the same stimulus type! In that case the datastore is partitioned into
+    subsets each holding recordings to the same stimulus with the same paramter
+    values, with the exception to the parameters in parameter_list.
 
-        Parameters
-        ----------
+    Parameters
+    ----------
 
-        dsv : DataStoreView
-            The input DSV.
+    dsv : DataStoreView
+        The input DSV.
 
-        parameter_list : list(string)
-               The list of stimulus parameters that will vary between the ASDs in the returned DSVs, all other parameters will have the same value within each of the
-               returned DSVs.
+    parameter_list : list(string)
+           The list of stimulus parameters that will vary between the ASDs in the returned DSVs, all other parameters will have the same value within each of the
+           returned DSVs.
 
-        except : bool
-               If excpt is True the query is allowed only on DSVs holding the same AnalysisDataStructures type.
-        """
+    except : bool
+           If excpt is True the query is allowed only on DSVs holding the same AnalysisDataStructures type.
+    """
     if dsv.analysis_results == []:
         return []
 
     for ads in dsv.analysis_results:
-        assert (
-            ads.stimulus_id != None
-        ), "partition_analysis_results_by_stimulus_parameters_query accepts only DSV with ADS that all have defined stimulus id"
+        assert ads.stimulus_id != None, (
+            "partition_analysis_results_by_stimulus_parameters_query accepts only DSV"
+            " with ADS that all have defined stimulus id"
+        )
 
     st = [MozaikParametrized.idd(ads.stimulus_id) for ads in dsv.analysis_results]
     assert parameter_list != None, "parameter_list has to be given"
@@ -450,7 +451,7 @@ def partition_analysis_results_by_stimulus_parameters_query(
         dsv.analysis_results,
         st,
         parameter_list=parameter_list,
-        allow_non_identical_objects=True,
+        allow_non_identical_objects=True
     )
     dsvs = []
 
@@ -521,7 +522,7 @@ def equal_stimulus(dsv, except_params):
     """
     return matching_parametrized_object_params(
         [MozaikParametrized.idd(s) for s in dsv.get_stimuli()],
-        except_params=["name"] + except_params,
+        except_params=["name"] + except_params
     )
 
 
@@ -554,7 +555,7 @@ def ads_with_equal_stimuli(dsv, params=None, except_params=None):
     return matching_parametrized_object_params(
         [MozaikParametrized.idd(ads.stimulus_id) for ads in dsv.analysis_results],
         params=params,
-        except_params=except_params,
+        except_params=except_params
     )
 
 
@@ -589,14 +590,14 @@ def ads_with_equal_stimulus_type(dsv, allow_None=False):
                 for ads in dsv.analysis_results
                 if ads.stimulus_id != None
             ],
-            params=["name"],
+            params=["name"]
         )
     else:
         if len([0 for ads in dsv.analysis_results if ads.stimulus_id == None]) > 0:
             return False
         return matching_parametrized_object_params(
             [MozaikParametrized.idd(ads.stimulus_id) for ads in dsv.analysis_results],
-            params=["name"],
+            params=["name"]
         )
 
 

@@ -190,7 +190,8 @@ class VisualSpace(InputSpace):
                         )  # later objects overlay earlier ones with no transparency
                     except ValueError:
                         logger.error(
-                            "Array dimensions mismatch. obj_view.shape=%s, scene.shape=%s"
+                            "Array dimensions mismatch. obj_view.shape=%s,"
+                            " scene.shape=%s"
                             % (obj_view.shape, scene.shape)
                         )
                         logger.error("  region: %s" % region.describe())
@@ -209,7 +210,8 @@ class VisualSpace(InputSpace):
 
     def describe(self):
         return (
-            "visual space with background luminance %g cd/m2, updating every %g ms, containing %d objects"
+            "visual space with background luminance %g cd/m2, updating every %g ms,"
+            " containing %d objects"
             % (self.background_luminance, self.update_interval, len(self.content))
         )
 
@@ -284,7 +286,7 @@ class VisualRegion(object):
         right = min(self.right, another_region.right)
         assert left <= right, "self: %s\nanother_region: %s" % (
             self.describe(),
-            another_region.describe(),
+            another_region.describe()
         )
         bottom = max(self.bottom, another_region.bottom)
         top = min(self.top, another_region.top)
@@ -293,7 +295,7 @@ class VisualRegion(object):
             location_x=(left + right) / 2.0,
             location_y=(top + bottom) / 2.0,
             size_x=right - left,
-            size_y=top - bottom,
+            size_y=top - bottom
         )
 
     def describe(self):

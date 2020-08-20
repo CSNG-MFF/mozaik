@@ -15,7 +15,7 @@ def meshgrid3D(x, y, z):
     return (
         x[:, nax, nax] * mult_fact,
         y[nax, :, nax] * mult_fact,
-        z[nax, nax, :] * mult_fact,
+        z[nax, nax, :] * mult_fact
     )
 
 
@@ -30,7 +30,7 @@ def stRF_kernel_2d(
     x = np.arange(
         -size / 2.0 + degree_per_pixel / 2,
         size / 2.0 + degree_per_pixel / 2,
-        degree_per_pixel,
+        degree_per_pixel
     )
     t = np.arange(0.0, duration, dt)
     xm, ym, tm = meshgrid3D(x, x, t)
@@ -61,13 +61,15 @@ def stRF_2d(x, y, t, p):
     fcm_area = fcm[:, :, 0].sum() * x_res * x_res
     center_area = 2 * np.pi * p.sigma_c * p.sigma_c * p.Ac
     assert abs(fcm_area - center_area) / max(fcm_area, center_area) < 0.5, (
-        "Synthesized center of RF doesn't fit the supplied sigma and amplitude (%f-%f=%f), check visual field size and model size!"
+        "Synthesized center of RF doesn't fit the supplied sigma and amplitude"
+        " (%f-%f=%f), check visual field size and model size!"
         % (fcm_area, center_area, abs(fcm_area - center_area))
     )
     fsm_area = fsm[:, :, 0].sum() * x_res * x_res
     surround_area = 2 * np.pi * p.sigma_s * p.sigma_s * p.As
     assert abs(fsm_area - surround_area) / max(fsm_area, surround_area) < 0.5, (
-        "Synthesized surround of RF doesn't fit the supplied sigma and amplitude (%f-%f=%f), check visual field size and model size!"
+        "Synthesized surround of RF doesn't fit the supplied sigma and amplitude"
+        " (%f-%f=%f), check visual field size and model size!"
         % (fsm_area, surround_area, abs(fsm_area - surround_area))
     )
 

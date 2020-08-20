@@ -5,11 +5,14 @@ In future pyNN plans to make an comprehensive merge between the parameters param
 in which case this code should become obsolete and mozaik should fully switch to such new system.
 """
 from pathlib import Path
-from urllib.parse import urlparse
 import os.path
-import urllib.request
-import urllib.parse
-import urllib.error  # TODO: to be replaced with srblib
+
+try:
+    from urllib.parse import urlparse
+    from urllib.request import urlopen
+except ImportError:
+    from urllib import urlopen
+    from urlparse import urlparse
 
 from parameters import ParameterSet, ParameterRange, ParameterTable, ParameterReference
 from parameters.random import ParameterDist, GammaDist, UniformDist, NormalDist
@@ -30,12 +33,12 @@ def load_parameters(parameter_url, modified_parameters):
 
 class PyNNDistribution(RandomDistribution):
     """
-      This will be the wraper for the PyNN RandomDistribution
+    This will be the wraper for the PyNN RandomDistribution
 
-      The first parameter is the name of the distribution (see pyNN.random.RandomDistribution)
-      The params is a tuple of parameters of the corresponding numpy distribution (see pyNN.random.RandomDistribution)
-      For the rest of the parameters see pyNN.random.RandomDistribution
-      """
+    The first parameter is the name of the distribution (see pyNN.random.RandomDistribution)
+    The params is a tuple of parameters of the corresponding numpy distribution (see pyNN.random.RandomDistribution)
+    For the rest of the parameters see pyNN.random.RandomDistribution
+    """
 
     def __init__(self, name, **params):
         RandomDistribution.__init__(self, name, **params)
@@ -88,7 +91,7 @@ class MozaikExtendedParameterSet(ParameterSet):
         global_dict = dict(
             ref=ParameterReference,
             url=MozaikExtendedParameterSet,
-            ParameterSet=ParameterSet,
+            ParameterSet=ParameterSet
         )
         global_dict.update(
             dict(
@@ -102,7 +105,7 @@ class MozaikExtendedParameterSet(ParameterSet):
                 NumpyRNG=NumpyRNG,
                 ParameterWithUnitsAndPeriod=ParameterWithUnitsAndPeriod,
                 pi=np.pi,
-                LogNormalDistribution=LogNormalDistribution,
+                LogNormalDistribution=LogNormalDistribution
             )
         )
         if update_namespace:
@@ -144,7 +147,7 @@ class MozaikExtendedParameterSet(ParameterSet):
                 f = (
                     open(initialiser, "r")
                     if Path(initialiser).exists()
-                    else urllib.request.urlopen(initialiser)
+                    else urlopen(initialiser)
                 )
                 pstr = f.read()
                 f.close()
@@ -185,7 +188,8 @@ class MozaikExtendedParameterSet(ParameterSet):
                     self[k] = v
         else:
             raise TypeError(
-                "`initialiser` must be a `dict`, a `ParameterSet` object, a string, or a valid URL"
+                "`initialiser` must be a `dict`, a `ParameterSet` object, a string, or"
+                " a valid URL"
             )
 
         # Set the label

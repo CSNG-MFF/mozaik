@@ -82,14 +82,14 @@ class Sheet(BaseComponent):
                 {
                     "model": str,  # the cell type of the sheet
                     "params": ParameterSet,
-                    "initial_values": ParameterSet,
+                    "initial_values": ParameterSet
                 }
             ),
             "mpi_safe": bool,
             "artificial_stimulators": ParameterSet,
             "name": str,
             "recorders": ParameterSet,
-            "recording_interval": float,
+            "recording_interval": float
         }
     )
 
@@ -156,7 +156,8 @@ class Sheet(BaseComponent):
         def fset(self, value):
             if self._pop:
                 raise Exception(
-                    "Error population has already been set. It is not allowed to do this twice!"
+                    "Error population has already been set. It is not allowed to do"
+                    " this twice!"
                 )
             self._pop = value
             l = value.all_cells.astype(int)
@@ -231,7 +232,7 @@ class Sheet(BaseComponent):
                 self.name,
                 neuron_number,
                 key,
-                list(self._neuron_annotations[neuron_number].keys()),
+                list(self._neuron_annotations[neuron_number].keys())
             )
         return self._neuron_annotations[neuron_number][key][1]
 
@@ -251,7 +252,7 @@ class Sheet(BaseComponent):
         self, template="default", render=lambda t, c: Template(t).safe_substitute(c)
     ):
         context = {
-            "name": self.__class__.__name__,
+            "name": self.__class__.__name__
         }
         if template:
             render(template, context)

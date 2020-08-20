@@ -11,7 +11,7 @@ from ..tools.mozaik_parametrized import (
     MozaikParametrized,
     SInteger,
     SNumber,
-    SString,
+    SString
 )
 
 logger = logging.getLogger(__name__)
@@ -29,15 +29,24 @@ class AnalysisDataStructure(MozaikParametrized):
 
     neuron = SInteger(
         default=None,
-        doc="Neuron id to which the datastructure belongs. None if it is not neuron specific",
+        doc=(
+            "Neuron id to which the datastructure belongs. None if it is not neuron"
+            " specific"
+        )
     )
     sheet_name = SString(
         default=None,
-        doc="The sheet for which this results were computed. None if they do not belong to specific sheet",
+        doc=(
+            "The sheet for which this results were computed. None if they do not belong"
+            " to specific sheet"
+        )
     )
     stimulus_id = SString(
         default=None,
-        doc="The stimulus for which the results were computed. None if they are not related to specific stimulus",
+        doc=(
+            "The stimulus for which the results were computed. None if they are not"
+            " related to specific stimulus"
+        )
     )
 
     def __init__(self, tags=[], **params):
@@ -58,7 +67,7 @@ class SingleValue(AnalysisDataStructure):
     period = SNumber(
         units=None,
         default=None,
-        doc="The period of the value. If value is not periodic period=None",
+        doc="The period of the value. If value is not periodic period=None"
     )
 
     def __init__(self, **params):
@@ -86,7 +95,7 @@ class PerNeuronValue(AnalysisDataStructure):
     period = SNumber(
         units=None,
         default=None,
-        doc="The period of the value. If value is not periodic period=None",
+        doc="The period of the value. If value is not periodic period=None"
     )
 
     def __init__(self, values, idds, value_units, **params):
@@ -135,7 +144,7 @@ class PerNeuronPairValue(AnalysisDataStructure):
     period = SNumber(
         units=None,
         default=None,
-        doc="The period of the value. If value is not periodic period=None",
+        doc="The period of the value. If value is not periodic period=None"
     )
 
     def __init__(self, values, idds, value_units, **params):
@@ -214,7 +223,7 @@ class AnalogSignal(AnalysisDataStructure1D):
             analog_signal.sampling_period.units,
             y_axis_units,
             identifier="AnalogSignal",
-            **params,
+            **params
         )
         self.analog_signal = analog_signal
 
@@ -227,7 +236,7 @@ class AnalogSignal(AnalysisDataStructure1D):
             y_axis_units=self.y_axis_units,
             x_axis_name=self.x_axis_name,
             y_axis_name=self.y_axis_name,
-            sheet_name=self.sheet_name,
+            sheet_name=self.sheet_name
         )
 
 
@@ -252,7 +261,7 @@ class AnalogSignalList(AnalysisDataStructure1D):
             asl[0].sampling_period.units,
             y_axis_units,
             identifier="AnalogSignalList",
-            **params,
+            **params
         )
         self.asl = asl
         self.ids = list(ids)
@@ -290,7 +299,7 @@ class AnalogSignalList(AnalysisDataStructure1D):
             y_axis_units=self.y_axis_units,
             x_axis_name=self.x_axis_name,
             y_axis_name=self.y_axis_name,
-            sheet_name=self.sheet_name,
+            sheet_name=self.sheet_name
         )
 
     def mean(self):
@@ -298,15 +307,18 @@ class AnalogSignalList(AnalysisDataStructure1D):
         Calculates the mean analog signal from the ones in the list.
         """
         for asl in self.asl:
-            assert (
-                asl.units == self.asl[0].units
-            ), "AnalogSignalList.mean: units of AnalogSignal objects in the list do not match."
-            assert (
-                asl.sampling_rate == self.asl[0].sampling_rate
-            ), "AnalogSignalList.mean: sampling_rate of AnalogSignal objects in the list do not match"
-            assert (
-                asl.t_start == self.asl[0].t_start
-            ), "AnalogSignalList.mean: t_start of AnalogSignal objects in the list do not match."
+            assert asl.units == self.asl[0].units, (
+                "AnalogSignalList.mean: units of AnalogSignal objects in the list do"
+                " not match."
+            )
+            assert asl.sampling_rate == self.asl[0].sampling_rate, (
+                "AnalogSignalList.mean: sampling_rate of AnalogSignal objects in the"
+                " list do not match"
+            )
+            assert asl.t_start == self.asl[0].t_start, (
+                "AnalogSignalList.mean: t_start of AnalogSignal objects in the list do"
+                " not match."
+            )
 
         return numpy.mean(self.asl, axis=0)
 
@@ -315,15 +327,18 @@ class AnalogSignalList(AnalysisDataStructure1D):
         Calculates the mean analog signal from the ones in the list.
         """
         for asl in self.asl:
-            assert (
-                asl.units == self.asl[0].units
-            ), "AnalogSignalList.mean: units of AnalogSignal objects in the list do not match."
-            assert (
-                asl.sampling_rate == self.asl[0].sampling_rate
-            ), "AnalogSignalList.mean: sampling_rate of AnalogSignal objects in the list do not match"
-            assert (
-                asl.t_start == self.asl[0].t_start
-            ), "AnalogSignalList.mean: t_start of AnalogSignal objects in the list do not match."
+            assert asl.units == self.asl[0].units, (
+                "AnalogSignalList.mean: units of AnalogSignal objects in the list do"
+                " not match."
+            )
+            assert asl.sampling_rate == self.asl[0].sampling_rate, (
+                "AnalogSignalList.mean: sampling_rate of AnalogSignal objects in the"
+                " list do not match"
+            )
+            assert asl.t_start == self.asl[0].t_start, (
+                "AnalogSignalList.mean: t_start of AnalogSignal objects in the list do"
+                " not match."
+            )
 
         return numpy.var(self.asl, axis=0)
 
@@ -348,7 +363,7 @@ class PerNeuronPairAnalogSignalList(AnalysisDataStructure1D):
             asl[0].sampling_period.units,
             y_axis_units,
             identifier="AnalogSignalList",
-            **params,
+            **params
         )
         self.asl = asl
         self.ids = list(ids)
@@ -385,7 +400,7 @@ class PerNeuronPairAnalogSignalList(AnalysisDataStructure1D):
             x_axis_name=self.x_axis_name,
             y_axis_name=self.y_axis_name,
             sheet_name=self.sheet_name,
-            stimulus_id=self.stimulus_id,
+            stimulus_id=self.stimulus_id
         )
 
     def __sub__(self, other):
@@ -406,7 +421,7 @@ class PerNeuronPairAnalogSignalList(AnalysisDataStructure1D):
             x_axis_name=self.x_axis_name,
             y_axis_name=self.y_axis_name,
             sheet_name=self.sheet_name,
-            stimulus_id=self.stimulus_id,
+            stimulus_id=self.stimulus_id
         )
 
     def division_by_num(self, num):
@@ -414,15 +429,18 @@ class PerNeuronPairAnalogSignalList(AnalysisDataStructure1D):
         Divides all asl by the supplied number.
         """
         for asl in self.asl:
-            assert (
-                asl.units == self.asl[0].units
-            ), "AnalogSignalList.mean: units of AnalogSignal objects in the list do not match."
-            assert (
-                asl.sampling_rate == self.asl[0].sampling_rate
-            ), "AnalogSignalList.mean: sampling_rate of AnalogSignal objects in the list do not match"
-            assert (
-                asl.t_start == self.asl[0].t_start
-            ), "AnalogSignalList.mean: t_start of AnalogSignal objects in the list do not match."
+            assert asl.units == self.asl[0].units, (
+                "AnalogSignalList.mean: units of AnalogSignal objects in the list do"
+                " not match."
+            )
+            assert asl.sampling_rate == self.asl[0].sampling_rate, (
+                "AnalogSignalList.mean: sampling_rate of AnalogSignal objects in the"
+                " list do not match"
+            )
+            assert asl.t_start == self.asl[0].t_start, (
+                "AnalogSignalList.mean: t_start of AnalogSignal objects in the list do"
+                " not match."
+            )
 
         assert num != 0.0
 
@@ -438,7 +456,7 @@ class PerNeuronPairAnalogSignalList(AnalysisDataStructure1D):
             x_axis_name=self.x_axis_name,
             y_axis_name=self.y_axis_name,
             sheet_name=self.sheet_name,
-            stimulus_id=self.stimulus_id,
+            stimulus_id=self.stimulus_id
         )
 
     def mean(self):
@@ -446,15 +464,18 @@ class PerNeuronPairAnalogSignalList(AnalysisDataStructure1D):
         Calculates the mean analog signal from the ones in the list.
         """
         for asl in self.asl:
-            assert (
-                asl.units == self.asl[0].units
-            ), "AnalogSignalList.mean: units of AnalogSignal objects in the list do not match."
-            assert (
-                asl.sampling_rate == self.asl[0].sampling_rate
-            ), "AnalogSignalList.mean: sampling_rate of AnalogSignal objects in the list do not match"
-            assert (
-                asl.t_start == self.asl[0].t_start
-            ), "AnalogSignalList.mean: t_start of AnalogSignal objects in the list do not match."
+            assert asl.units == self.asl[0].units, (
+                "AnalogSignalList.mean: units of AnalogSignal objects in the list do"
+                " not match."
+            )
+            assert asl.sampling_rate == self.asl[0].sampling_rate, (
+                "AnalogSignalList.mean: sampling_rate of AnalogSignal objects in the"
+                " list do not match"
+            )
+            assert asl.t_start == self.asl[0].t_start, (
+                "AnalogSignalList.mean: t_start of AnalogSignal objects in the list do"
+                " not match."
+            )
 
         return numpy.sum(self.asl) / len(self.asl)
 
@@ -493,7 +514,7 @@ class ConductanceSignalList(AnalysisDataStructure1D):
             x_axis_name="time",
             y_axis_name="conductance",
             identifier="ConductanceSignalList",
-            **params,
+            **params
         )
         self.e_con = e_con
         self.i_con = i_con
@@ -532,30 +553,36 @@ class ConductanceSignalList(AnalysisDataStructure1D):
         Calculates the mean conductance from the ones in the list.
         """
         for asl in self.e_con:
-            assert (
-                asl.units == self.asl[0].units
-            ), "ConductanceSignalList.mean: units of AnalogSignal objects in the exc. list do not match."
-            assert (
-                asl.sampling_rate == self.asl[0].sampling_rate
-            ), "ConductanceSignalList.mean: sampling_rate of AnalogSignal objects in the exc.list do not match"
-            assert (
-                asl.t_start == self.asl[0].t_start
-            ), "ConductanceSignalList.mean: t_start of AnalogSignal objects in the exc. list do not match."
+            assert asl.units == self.asl[0].units, (
+                "ConductanceSignalList.mean: units of AnalogSignal objects in the exc."
+                " list do not match."
+            )
+            assert asl.sampling_rate == self.asl[0].sampling_rate, (
+                "ConductanceSignalList.mean: sampling_rate of AnalogSignal objects in"
+                " the exc.list do not match"
+            )
+            assert asl.t_start == self.asl[0].t_start, (
+                "ConductanceSignalList.mean: t_start of AnalogSignal objects in the"
+                " exc. list do not match."
+            )
 
         for asl in self.i_con:
-            assert (
-                asl.units == self.asl[0].units
-            ), "ConductanceSignalList.mean: units of AnalogSignal objects in the inh. list do not match."
-            assert (
-                asl.sampling_rate == self.asl[0].sampling_rate
-            ), "ConductanceSignalList.mean: sampling_rate of AnalogSignal objects in the inh. list do not match"
-            assert (
-                asl.t_start == self.asl[0].t_start
-            ), "ConductanceSignalList.mean: t_start of AnalogSignal objects in the inh. list do not match."
+            assert asl.units == self.asl[0].units, (
+                "ConductanceSignalList.mean: units of AnalogSignal objects in the inh."
+                " list do not match."
+            )
+            assert asl.sampling_rate == self.asl[0].sampling_rate, (
+                "ConductanceSignalList.mean: sampling_rate of AnalogSignal objects in"
+                " the inh. list do not match"
+            )
+            assert asl.t_start == self.asl[0].t_start, (
+                "ConductanceSignalList.mean: t_start of AnalogSignal objects in the"
+                " inh. list do not match."
+            )
 
         return (
             numpy.sum(self.e_con) / len(self.e_con),
-            numpy.sum(self.i_con) / len(self.i_con),
+            numpy.sum(self.i_con) / len(self.i_con)
         )
 
 

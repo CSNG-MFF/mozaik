@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 The file contains stimuli that use topographica to generate the stimulus
 
@@ -61,7 +62,7 @@ class SparseNoise(TopographicaBasedVisualStimulus):
             bounds=BoundingBox(radius=self.size_x / 2),
             xdensity=self.density,
             ydensity=self.density,
-            random_generator=numpy.random.RandomState(seed=self.experiment_seed),
+            random_generator=numpy.random.RandomState(seed=self.experiment_seed)
         )
         while True:
             aux2 = aux()
@@ -96,7 +97,7 @@ class DenseNoise(TopographicaBasedVisualStimulus):
             bounds=BoundingBox(radius=self.size_x / 2),
             xdensity=self.density,
             ydensity=self.density,
-            random_generator=numpy.random.RandomState(seed=self.experiment_seed),
+            random_generator=numpy.random.RandomState(seed=self.experiment_seed)
         )
 
         while True:
@@ -137,9 +138,9 @@ class FullfieldDriftingSinusoidalGrating(TopographicaBasedVisualStimulus):
                     offset=self.background_luminance * (100.0 - self.contrast) / 100.0,
                     scale=2 * self.background_luminance * self.contrast / 100.0,
                     xdensity=self.density,
-                    ydensity=self.density,
+                    ydensity=self.density
                 )(),
-                [self.current_phase],
+                [self.current_phase]
             )
             self.current_phase += (
                 2 * pi * (self.frame_duration / 1000.0) * self.temporal_frequency
@@ -175,9 +176,9 @@ class FullfieldDriftingSquareGrating(TopographicaBasedVisualStimulus):
                     offset=self.background_luminance * (100.0 - self.contrast) / 100.0,
                     scale=2 * self.background_luminance * self.contrast / 100.0,
                     xdensity=self.density,
-                    ydensity=self.density,
+                    ydensity=self.density
                 )(),
-                [self.current_phase],
+                [self.current_phase]
             )
             self.current_phase += (
                 2 * pi * (self.frame_duration / 1000.0) * self.temporal_frequency
@@ -215,7 +216,7 @@ class FullfieldDriftingSinusoidalGratingA(TopographicaBasedVisualStimulus):
                 offset=self.background_luminance * (100.0 - self.contrast) / 100.0,
                 scale=2 * self.background_luminance * self.contrast / 100.0,
                 xdensity=self.density,
-                ydensity=self.density,
+                ydensity=self.density
             )()
             if t > self.offset_time:
                 st = st * 0 + self.background_luminance
@@ -248,7 +249,7 @@ class FlashingSquares(TopographicaBasedVisualStimulus):
     contrast = SNumber(dimensionless, bounds=[0, 100.0], doc="Contrast of the stimulus")
     separated = SNumber(
         dimensionless,
-        doc="Boolean string to decide whether the separation is specified or not",
+        doc="Boolean string to decide whether the separation is specified or not"
     )
 
     def frames(self):
@@ -289,7 +290,7 @@ class FlashingSquares(TopographicaBasedVisualStimulus):
                     scale=2 * self.background_luminance * self.contrast / 100.0,
                     xdensity=self.density,
                     ydensity=self.density,
-                    size=size,
+                    size=size
                 )()
                 b = imagen.RawRectangle(
                     x=halfseparation,
@@ -303,7 +304,7 @@ class FlashingSquares(TopographicaBasedVisualStimulus):
                     scale=2 * self.background_luminance * self.contrast / 100.0,
                     xdensity=self.density,
                     ydensity=self.density,
-                    size=size,
+                    size=size
                 )()
                 yield (numpy.add(a, b), [t])
             else:
@@ -314,9 +315,9 @@ class FlashingSquares(TopographicaBasedVisualStimulus):
                         / 100.0,
                         bounds=BoundingBox(radius=self.size_x / 2),
                         xdensity=self.density,
-                        ydensity=self.density,
+                        ydensity=self.density
                     )(),
-                    [t],
+                    [t]
                 )
             # time
             t += 1
@@ -336,9 +337,9 @@ class Null(TopographicaBasedVisualStimulus):
                     scale=self.background_luminance,
                     bounds=BoundingBox(radius=self.size_x / 2),
                     xdensity=self.density,
-                    ydensity=self.density,
+                    ydensity=self.density
                 )(),
-                [self.frame_duration],
+                [self.frame_duration]
             )
 
 
@@ -373,7 +374,10 @@ class NaturalImageWithEyeMovement(TopographicaBasedVisualStimulus):
     )
     eye_movement_period = SNumber(
         ms,
-        doc="The time between two consequitve eye movements recorded in the eye_path file",
+        doc=(
+            "The time between two consequitve eye movements recorded in the eye_path"
+            " file"
+        )
     )
     image_location = SString(doc="Location of the image")
     eye_path_location = SString(
@@ -386,7 +390,7 @@ class NaturalImageWithEyeMovement(TopographicaBasedVisualStimulus):
         self.eye_path = pickle.load(f)
         self.pattern_sampler = imagen.image.PatternSampler(
             size_normalization="fit_longest",
-            whole_pattern_output_fns=[MaximumDynamicRange()],
+            whole_pattern_output_fns=[MaximumDynamicRange()]
         )
 
         image = imagen.image.FileImage(
@@ -400,11 +404,11 @@ class NaturalImageWithEyeMovement(TopographicaBasedVisualStimulus):
             bounds=BoundingBox(
                 points=(
                     (-self.size_x / 2, -self.size_y / 2),
-                    (self.size_x / 2, self.size_y / 2),
+                    (self.size_x / 2, self.size_y / 2)
                 )
             ),
             scale=2 * self.background_luminance,
-            pattern_sampler=self.pattern_sampler,
+            pattern_sampler=self.pattern_sampler
         )
 
         while True:
@@ -436,7 +440,10 @@ class DriftingGratingWithEyeMovement(TopographicaBasedVisualStimulus):
     contrast = SNumber(dimensionless, bounds=[0, 100.0], doc="Contrast of the stimulus")
     eye_movement_period = SNumber(
         ms,
-        doc="The time between two consequitve eye movements recorded in the eye_path file",
+        doc=(
+            "The time between two consequitve eye movements recorded in the eye_path"
+            " file"
+        )
     )
     eye_path_location = SString(
         doc="Location of file containing the eye path (two columns of numbers)"
@@ -466,13 +473,13 @@ class DriftingGratingWithEyeMovement(TopographicaBasedVisualStimulus):
                 bounds=BoundingBox(
                     points=(
                         (-self.size_x / 2, -self.size_y / 2),
-                        (self.size_x / 2, self.size_y / 2),
+                        (self.size_x / 2, self.size_y / 2)
                     )
                 ),
                 offset=self.background_luminance * (100.0 - self.contrast) / 100.0,
                 scale=2 * self.background_luminance * self.contrast / 100.0,
                 xdensity=self.density,
-                ydensity=self.density,
+                ydensity=self.density
             )()
             self.current_phase += (
                 2 * pi * (self.frame_duration / 1000.0) * self.temporal_frequency
@@ -514,14 +521,14 @@ class DriftingSinusoidalGratingDisk(TopographicaBasedVisualStimulus):
                 offset=self.background_luminance * (100.0 - self.contrast) / 100.0,
                 scale=2 * self.background_luminance * self.contrast / 100.0,
                 xdensity=self.density,
-                ydensity=self.density,
+                ydensity=self.density
             )()
 
             b = imagen.Constant(
                 scale=self.background_luminance,
                 bounds=BoundingBox(radius=self.size_x / 2),
                 xdensity=self.density,
-                ydensity=self.density,
+                ydensity=self.density
             )()
             c = imagen.Disk(
                 smoothing=0.0,
@@ -529,7 +536,7 @@ class DriftingSinusoidalGratingDisk(TopographicaBasedVisualStimulus):
                 scale=1.0,
                 bounds=BoundingBox(radius=self.size_x / 2),
                 xdensity=self.density,
-                ydensity=self.density,
+                ydensity=self.density
             )()
             d1 = numpy.multiply(a, c)
             d2 = numpy.multiply(b, -(c - 1.0))
@@ -568,7 +575,7 @@ class FlatDisk(TopographicaBasedVisualStimulus):
                 scale=self.background_luminance * (self.contrast / 100.0),
                 bounds=BoundingBox(radius=self.size_x / 2),
                 xdensity=self.density,
-                ydensity=self.density,
+                ydensity=self.density
             )()
 
             yield (d, [self.current_phase])
@@ -587,7 +594,10 @@ class FlashedBar(TopographicaBasedVisualStimulus):
     relative_luminance = SNumber(
         dimensionless,
         bounds=[0, 1.0],
-        doc="The scale of the stimulus. 0 is dark, 1.0 is double the background luminance",
+        doc=(
+            "The scale of the stimulus. 0 is dark, 1.0 is double the background"
+            " luminance"
+        )
     )
     orientation = SNumber(rad, period=pi, bounds=[0, pi], doc="Grating orientation")
     width = SNumber(cpd, doc="Spatial frequency of the grating")
@@ -610,14 +620,14 @@ class FlashedBar(TopographicaBasedVisualStimulus):
                 y=self.y,
                 orientation=self.orientation,
                 size=self.width,
-                aspect_ratio=self.length / self.width,
+                aspect_ratio=self.length / self.width
             )()
 
             b = imagen.Constant(
                 scale=self.background_luminance,
                 bounds=BoundingBox(radius=self.size_x / 2),
                 xdensity=self.density,
-                ydensity=self.density,
+                ydensity=self.density
             )()
 
             num_frames += 1
@@ -658,15 +668,21 @@ class DriftingSinusoidalGratingCenterSurroundStimulus(TopographicaBasedVisualSti
     )
     gap = SNumber(
         degrees,
-        doc="The gap between center and surround grating - in degrees of visual field",
+        doc="The gap between center and surround grating - in degrees of visual field"
     )
     center_radius = SNumber(
         degrees,
-        doc="The (outside) radius of the center grating disk - in degrees of visual field",
+        doc=(
+            "The (outside) radius of the center grating disk - in degrees of visual"
+            " field"
+        )
     )
     surround_radius = SNumber(
         degrees,
-        doc="The (outside) radius of the surround grating disk - in degrees of visual field",
+        doc=(
+            "The (outside) radius of the surround grating disk - in degrees of visual"
+            " field"
+        )
     )
     contrast = SNumber(dimensionless, bounds=[0, 100.0], doc="Contrast of the stimulus")
 
@@ -682,7 +698,7 @@ class DriftingSinusoidalGratingCenterSurroundStimulus(TopographicaBasedVisualSti
                 offset=0,
                 scale=2 * self.background_luminance * self.contrast / 100.0,
                 xdensity=self.density,
-                ydensity=self.density,
+                ydensity=self.density
             )()
             r = (self.center_radius + self.surround_radius + self.gap) / 2.0
             t = (self.surround_radius - self.center_radius - self.gap) / 2.0
@@ -695,7 +711,7 @@ class DriftingSinusoidalGratingCenterSurroundStimulus(TopographicaBasedVisualSti
                 offset=0,
                 scale=2 * self.background_luminance * self.contrast / 100.0,
                 xdensity=self.density,
-                ydensity=self.density,
+                ydensity=self.density
             )()
 
             offset = imagen.Constant(
@@ -703,7 +719,7 @@ class DriftingSinusoidalGratingCenterSurroundStimulus(TopographicaBasedVisualSti
                 bounds=BoundingBox(radius=self.size_x / 2.0),
                 scale=self.background_luminance * (100.0 - self.contrast) / 100.0,
                 xdensity=self.density,
-                ydensity=self.density,
+                ydensity=self.density
             )()
 
             background = (
@@ -712,14 +728,14 @@ class DriftingSinusoidalGratingCenterSurroundStimulus(TopographicaBasedVisualSti
                     size=self.surround_radius * 2.0,
                     bounds=BoundingBox(radius=self.size_x / 2.0),
                     xdensity=self.density,
-                    ydensity=self.density,
+                    ydensity=self.density
                 )()
                 - 1
             ) * -self.background_luminance
 
             yield (
                 numpy.add.reduce([numpy.maximum(center, surround), offset, background]),
-                [self.current_phase],
+                [self.current_phase]
             )
             self.current_phase += (
                 2 * pi * (self.frame_duration / 1000.0) * self.temporal_frequency
@@ -744,11 +760,11 @@ class DriftingSinusoidalGratingRing(TopographicaBasedVisualStimulus):
     temporal_frequency = SNumber(Hz, doc="Temporal frequency of the grating ")
     outer_appareture_radius = SNumber(
         degrees,
-        doc="The outside radius of the grating ring - in degrees of visual field",
+        doc="The outside radius of the grating ring - in degrees of visual field"
     )
     inner_appareture_radius = SNumber(
         degrees,
-        doc="The inside radius of the  grating ring - in degrees of visual field",
+        doc="The inside radius of the  grating ring - in degrees of visual field"
     )
     contrast = SNumber(dimensionless, bounds=[0, 100.0], doc="Contrast of the stimulus")
 
@@ -766,14 +782,14 @@ class DriftingSinusoidalGratingRing(TopographicaBasedVisualStimulus):
                 offset=0,
                 scale=2 * self.background_luminance * self.contrast / 100.0,
                 xdensity=self.density,
-                ydensity=self.density,
+                ydensity=self.density
             )()
 
             bg = imagen.Constant(
                 bounds=BoundingBox(radius=self.size_x / 2.0),
                 scale=self.background_luminance,
                 xdensity=self.density,
-                ydensity=self.density,
+                ydensity=self.density
             )()
 
             correction = imagen.Ring(
@@ -783,7 +799,7 @@ class DriftingSinusoidalGratingRing(TopographicaBasedVisualStimulus):
                 scale=-self.background_luminance,
                 bounds=BoundingBox(radius=self.size_x / 2.0),
                 xdensity=self.density,
-                ydensity=self.density,
+                ydensity=self.density
             )()
 
             yield (numpy.add.reduce([ring, bg, correction]), [self.current_phase])
@@ -805,25 +821,31 @@ class FlashedInterruptedBar(TopographicaBasedVisualStimulus):
     relative_luminance = SNumber(
         dimensionless,
         bounds=[0, 1.0],
-        doc="The scale of the stimulus. 0 is dark, 1.0 is double the background luminance.",
+        doc=(
+            "The scale of the stimulus. 0 is dark, 1.0 is double the background"
+            " luminance."
+        )
     )
     orientation = SNumber(rad, period=pi, bounds=[0, pi], doc="Grating orientation.")
     disalignment = SNumber(
         rad,
         period=pi,
         bounds=[-pi / 2, pi / 2],
-        doc="The orientation by which the flanking bars are rotated away from the principal orientation axis.",
+        doc=(
+            "The orientation by which the flanking bars are rotated away from the"
+            " principal orientation axis."
+        )
     )
     width = SNumber(cpd, doc="Width of the bar")
     length = SNumber(Hz, doc="Length of the bar`")
     flash_duration = SNumber(ms, doc="The duration of the bar presentation.")
     x = SNumber(
         degrees,
-        doc="The x location of the center of the bar (where the gap will appear).",
+        doc="The x location of the center of the bar (where the gap will appear)."
     )
     y = SNumber(
         degrees,
-        doc="The y location of the center of the bar (where the gap will appear).",
+        doc="The y location of the center of the bar (where the gap will appear)."
     )
     gap_length = SNumber(Hz, doc="Length of the gap in the center of the bar")
 
@@ -843,7 +865,7 @@ class FlashedInterruptedBar(TopographicaBasedVisualStimulus):
                 y=self.y + numpy.sin(self.orientation) * (z),
                 orientation=self.orientation + self.disalignment,
                 size=self.width,
-                aspect_ratio=(self.length - self.gap_length) / 2 / self.width,
+                aspect_ratio=(self.length - self.gap_length) / 2 / self.width
             )()
 
             d2 = imagen.RawRectangle(
@@ -856,14 +878,14 @@ class FlashedInterruptedBar(TopographicaBasedVisualStimulus):
                 y=self.y + numpy.sin(self.orientation) * (-z),
                 orientation=self.orientation + self.disalignment,
                 size=self.width,
-                aspect_ratio=(self.length - self.gap_length) / 2 / self.width,
+                aspect_ratio=(self.length - self.gap_length) / 2 / self.width
             )()
 
             b = imagen.Constant(
                 scale=self.background_luminance,
                 bounds=BoundingBox(radius=self.size_x / 2),
                 xdensity=self.density,
-                ydensity=self.density,
+                ydensity=self.density
             )()
 
             num_frames += 1
@@ -889,7 +911,10 @@ class FlashedInterruptedCorner(TopographicaBasedVisualStimulus):
     relative_luminance = SNumber(
         dimensionless,
         bounds=[0, 1.0],
-        doc="The scale of the stimulus. 0 is dark, 1.0 is double the background luminance",
+        doc=(
+            "The scale of the stimulus. 0 is dark, 1.0 is double the background"
+            " luminance"
+        )
     )
     orientation = SNumber(
         rad, period=pi, bounds=[0, pi], doc="Orientation of the corner"
@@ -899,11 +924,11 @@ class FlashedInterruptedCorner(TopographicaBasedVisualStimulus):
     flash_duration = SNumber(ms, doc="The duration of the corner presentation.")
     x = SNumber(
         degrees,
-        doc="The x location of the center of the bar (where the gap will appear).",
+        doc="The x location of the center of the bar (where the gap will appear)."
     )
     y = SNumber(
         degrees,
-        doc="The y location of the center of the bar (where the gap will appear).",
+        doc="The y location of the center of the bar (where the gap will appear)."
     )
     left_angle = SNumber(
         rad, period=pi, bounds=[0, pi], doc="orientation of the left arm"
@@ -929,7 +954,7 @@ class FlashedInterruptedCorner(TopographicaBasedVisualStimulus):
                 smoothing=0,
                 aspect_ratio=self.width / length,
                 size=length,
-                bounds=BoundingBox(radius=self.size_x / 2),
+                bounds=BoundingBox(radius=self.size_x / 2)
             )
 
             r2 = imagen.Rectangle(
@@ -941,7 +966,7 @@ class FlashedInterruptedCorner(TopographicaBasedVisualStimulus):
                 smoothing=0,
                 aspect_ratio=self.width / length,
                 size=length,
-                bounds=BoundingBox(radius=self.size_x / 2),
+                bounds=BoundingBox(radius=self.size_x / 2)
             )
 
             r = imagen.Composite(
@@ -951,14 +976,14 @@ class FlashedInterruptedCorner(TopographicaBasedVisualStimulus):
                 bounds=BoundingBox(radius=self.size_x / 2),
                 orientation=self.orientation,
                 xdensity=self.density,
-                ydensity=self.density,
+                ydensity=self.density
             )
 
             b = imagen.Constant(
                 scale=self.background_luminance,
                 bounds=BoundingBox(radius=self.size_x / 2),
                 xdensity=self.density,
-                ydensity=self.density,
+                ydensity=self.density
             )()
 
             num_frames += 1
@@ -983,11 +1008,11 @@ class VonDerHeydtIllusoryBar(TopographicaBasedVisualStimulus):
     flash_duration = SNumber(ms, doc="The duration of the bar presentation.")
     x = SNumber(
         degrees,
-        doc="The x location of the center of the bar (where the gap will appear).",
+        doc="The x location of the center of the bar (where the gap will appear)."
     )
     y = SNumber(
         degrees,
-        doc="The y location of the center of the bar (where the gap will appear).",
+        doc="The y location of the center of the bar (where the gap will appear)."
     )
 
     def frames(self):
@@ -1008,7 +1033,7 @@ class VonDerHeydtIllusoryBar(TopographicaBasedVisualStimulus):
                 size=self.background_bar_width,
                 aspect_ratio=(self.length - self.occlusion_bar_width)
                 / 2
-                / self.background_bar_width,
+                / self.background_bar_width
             )()
 
             d2 = imagen.RawRectangle(
@@ -1025,14 +1050,14 @@ class VonDerHeydtIllusoryBar(TopographicaBasedVisualStimulus):
                 size=self.background_bar_width,
                 aspect_ratio=(self.length - self.occlusion_bar_width)
                 / 2
-                / self.background_bar_width,
+                / self.background_bar_width
             )()
 
             b = imagen.Constant(
                 scale=0,
                 bounds=BoundingBox(radius=self.size_x / 2),
                 xdensity=self.density,
-                ydensity=self.density,
+                ydensity=self.density
             )()
 
             num_frames += 1

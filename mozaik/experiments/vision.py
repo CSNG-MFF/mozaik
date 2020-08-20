@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import logging
 
 from parameters import ParameterSet
@@ -10,7 +11,7 @@ from ..stimuli import InternalStimulus
 from ..stimuli.vision import topographica_based as topo
 from ..tools.distribution_parametrization import (
     ParameterWithUnitsAndPeriod,
-    MozaikExtendedParameterSet,
+    MozaikExtendedParameterSet
 )
 
 logger = logging.getLogger(__name__)
@@ -91,7 +92,7 @@ class MeasureFlatLuminanceSensitivity(VisualExperiment):
                         density=self.density,
                         background_luminance=l,
                         duration=self.parameters.step_duration,
-                        trial=k,
+                        trial=k
                     )
                 )
 
@@ -143,7 +144,7 @@ class MeasureSparse(VisualExperiment):
             "num_trials": int,
             "experiment_seed": int,
             "grid_size": int,
-            "grid": bool,
+            "grid": bool
         }
     )
 
@@ -167,7 +168,7 @@ class MeasureSparse(VisualExperiment):
                     trial=k,
                     experiment_seed=self.parameters.experiment_seed,
                     grid_size=self.parameters.grid_size,
-                    grid=self.parameters.grid,
+                    grid=self.parameters.grid
                 )
             )
 
@@ -215,7 +216,7 @@ class MeasureDense(VisualExperiment):
             "total_number_of_images": int,
             "num_trials": int,
             "experiment_seed": int,
-            "grid_size": int,
+            "grid_size": int
         }
     )
 
@@ -237,7 +238,7 @@ class MeasureDense(VisualExperiment):
                     density=self.density,
                     trial=k,
                     experiment_seed=self.parameters.experiment_seed,
-                    grid_size=self.parameters.grid_size,
+                    grid_size=self.parameters.grid_size
                 )
             )
 
@@ -286,7 +287,7 @@ class MeasureOrientationTuningFullfield(VisualExperiment):
             "temporal_frequency": float,
             "grating_duration": float,
             "contrasts": list,
-            "num_trials": int,
+            "num_trials": int
         }
     )
 
@@ -309,7 +310,7 @@ class MeasureOrientationTuningFullfield(VisualExperiment):
                             trial=k,
                             orientation=numpy.pi / self.parameters.num_orientations * i,
                             spatial_frequency=self.parameters.spatial_frequency,
-                            temporal_frequency=self.parameters.temporal_frequency,
+                            temporal_frequency=self.parameters.temporal_frequency
                         )
                     )
 
@@ -360,7 +361,7 @@ class MeasureOrientationTuningFullfieldA(VisualExperiment):
             "contrasts": list,
             "num_trials": int,
             "offset_time": float,
-            "onset_time": float,
+            "onset_time": float
         }
     )
 
@@ -385,7 +386,7 @@ class MeasureOrientationTuningFullfieldA(VisualExperiment):
                             trial=k,
                             orientation=numpy.pi / self.parameters.num_orientations * i,
                             spatial_frequency=self.parameters.spatial_frequency,
-                            temporal_frequency=self.parameters.temporal_frequency,
+                            temporal_frequency=self.parameters.temporal_frequency
                         )
                     )
 
@@ -450,7 +451,7 @@ class MeasureSizeTuning(VisualExperiment):
             "grating_duration": float,
             "contrasts": list,
             "num_trials": int,
-            "log_spacing": bool,
+            "log_spacing": bool
         }
     )
 
@@ -487,7 +488,7 @@ class MeasureSizeTuning(VisualExperiment):
                             orientation=self.parameters.orientation,
                             radius=s,
                             spatial_frequency=self.parameters.spatial_frequency,
-                            temporal_frequency=self.parameters.temporal_frequency,
+                            temporal_frequency=self.parameters.temporal_frequency
                         )
                     )
 
@@ -537,7 +538,7 @@ class MeasureContrastSensitivity(VisualExperiment):
             "temporal_frequency": float,
             "grating_duration": float,
             "contrasts": list,
-            "num_trials": int,
+            "num_trials": int
         }
     )
 
@@ -561,7 +562,7 @@ class MeasureContrastSensitivity(VisualExperiment):
                         trial=k,
                         orientation=self.parameters.orientation,
                         spatial_frequency=self.parameters.spatial_frequency,
-                        temporal_frequency=self.parameters.temporal_frequency,
+                        temporal_frequency=self.parameters.temporal_frequency
                     )
                 )
 
@@ -613,7 +614,7 @@ class MeasureContrastSensitivityA(VisualExperiment):
             "contrasts": list,
             "num_trials": int,
             "offset_time": float,
-            "onset_time": float,
+            "onset_time": float
         }
     )
 
@@ -639,7 +640,7 @@ class MeasureContrastSensitivityA(VisualExperiment):
                         onset_time=self.parameters.onset_time,
                         orientation=self.parameters.orientation,
                         spatial_frequency=self.parameters.spatial_frequency,
-                        temporal_frequency=self.parameters.temporal_frequency,
+                        temporal_frequency=self.parameters.temporal_frequency
                     )
                 )
 
@@ -696,7 +697,7 @@ class MeasureFrequencySensitivity(VisualExperiment):
             "grating_duration": float,
             "contrasts": list,
             "num_trials": int,
-            "square": bool,
+            "square": bool
         }
     )
 
@@ -723,7 +724,7 @@ class MeasureFrequencySensitivity(VisualExperiment):
                                     trial=k,
                                     orientation=self.parameters.orientation,
                                     spatial_frequency=sf,
-                                    temporal_frequency=tf,
+                                    temporal_frequency=tf
                                 )
                             )
                         else:
@@ -741,7 +742,7 @@ class MeasureFrequencySensitivity(VisualExperiment):
                                     trial=k,
                                     orientation=self.parameters.orientation,
                                     spatial_frequency=sf,
-                                    temporal_frequency=tf,
+                                    temporal_frequency=tf
                                 )
                             )
 
@@ -806,7 +807,7 @@ class MeasureOrientationContrastTuning(VisualExperiment):
             "temporal_frequency": float,
             "grating_duration": float,
             "contrasts": list,
-            "num_trials": int,
+            "num_trials": int
         }
     )
 
@@ -836,7 +837,7 @@ class MeasureOrientationContrastTuning(VisualExperiment):
                             center_radius=self.parameters.center_radius,
                             surround_radius=self.parameters.surround_radius,
                             spatial_frequency=self.parameters.spatial_frequency,
-                            temporal_frequency=self.parameters.temporal_frequency,
+                            temporal_frequency=self.parameters.temporal_frequency
                         )
                     )
 
@@ -888,7 +889,7 @@ class MeasureFeatureInducedCorrelation(VisualExperiment):
             "grating_duration": float,
             "contrasts": list,
             "separation": float,
-            "num_trials": int,
+            "num_trials": int
         }
     )
 
@@ -914,7 +915,7 @@ class MeasureFeatureInducedCorrelation(VisualExperiment):
                         trial=k,
                         orientation=orientation,
                         spatial_frequency=self.parameters.sf,
-                        temporal_frequency=self.parameters.temporal_frequency,
+                        temporal_frequency=self.parameters.temporal_frequency
                     )
                 )
         # FLASHING SQUARES
@@ -937,7 +938,7 @@ class MeasureFeatureInducedCorrelation(VisualExperiment):
                         duration=self.parameters.grating_duration,
                         orientation=orientation * 2,
                         spatial_frequency=sf,
-                        temporal_frequency=self.parameters.temporal_frequency,
+                        temporal_frequency=self.parameters.temporal_frequency
                     )
                 )
 
@@ -994,7 +995,7 @@ class MeasureNaturalImagesWithEyeMovement(VisualExperiment):
                     size=60,  # x size of image
                     eye_movement_period=6.66,  # eye movement period
                     eye_path_location="./eye_path.pickle",
-                    image_location="./image_naturelle_HIGHC.bmp",
+                    image_location="./image_naturelle_HIGHC.bmp"
                 )
             )
 
@@ -1041,7 +1042,7 @@ class MeasureDriftingSineGratingWithEyeMovement(VisualExperiment):
             "temporal_frequency": float,
             "grating_duration": float,
             "contrast": float,
-            "num_trials": int,
+            "num_trials": int
         }
     )
 
@@ -1065,7 +1066,7 @@ class MeasureDriftingSineGratingWithEyeMovement(VisualExperiment):
                     eye_path_location="./eye_path.pickle",
                     orientation=0,
                     spatial_frequency=self.parameters.spatial_frequency,
-                    temporal_frequency=self.parameters.temporal_frequency,
+                    temporal_frequency=self.parameters.temporal_frequency
                 )
             )
 
@@ -1110,7 +1111,7 @@ class MeasureSpontaneousActivity(VisualExperiment):
                     background_luminance=self.background_luminance,
                     duration=self.parameters.duration,
                     density=self.density,
-                    trial=k,
+                    trial=k
                 )
             )
 
@@ -1184,7 +1185,7 @@ class MapPhaseResponseWithBarStimulus(VisualExperiment):
             "duration": float,
             "flash_duration": float,
             "relative_luminance": float,
-            "num_trials": int,
+            "num_trials": int
         }
     )
 
@@ -1223,7 +1224,7 @@ class MapPhaseResponseWithBarStimulus(VisualExperiment):
                             / (self.parameters.steps - 1)
                             * s
                         ),
-                        trial=k,
+                        trial=k
                     )
                 )
 
@@ -1259,7 +1260,7 @@ class CorticalStimulationWithStimulatorArrayAndHomogeneousOrientedStimulus(Exper
         {
             "sheet_list": list,
             "num_trials": int,
-            "localstimulationarray_parameters": ParameterSet,
+            "localstimulationarray_parameters": ParameterSet
         }
     )
 
@@ -1272,7 +1273,7 @@ class CorticalStimulationWithStimulatorArrayAndHomogeneousOrientedStimulus(Exper
             d[sheet] = [
                 LocalStimulatorArrayChR(
                     model.sheets[sheet],
-                    self.parameters.localstimulationarray_parameters,
+                    self.parameters.localstimulationarray_parameters
                 )
             ]
 
@@ -1286,7 +1287,7 @@ class CorticalStimulationWithStimulatorArrayAndHomogeneousOrientedStimulus(Exper
                     duration=self.parameters.localstimulationarray_parameters.stimulating_signal_parameters.duration,
                     trial=i,
                     direct_stimulation_name="LocalStimulatorArray",
-                    direct_stimulation_parameters=self.parameters.localstimulationarray_parameters,
+                    direct_stimulation_parameters=self.parameters.localstimulationarray_parameters
                 )
             )
 
@@ -1321,7 +1322,7 @@ class CorticalStimulationWithStimulatorArrayAndOrientationTuningProtocol(Experim
             "num_trials": int,
             "num_orientations": int,
             "intensities": list,
-            "localstimulationarray_parameters": ParameterSet,
+            "localstimulationarray_parameters": ParameterSet
         }
     )
 
@@ -1354,7 +1355,7 @@ class CorticalStimulationWithStimulatorArrayAndOrientationTuningProtocol(Experim
                             LocalStimulatorArrayChR(
                                 model.sheets[sheet],
                                 p,
-                                shared_scs=self.direct_stimulation[0][sheet][0].scs,
+                                shared_scs=self.direct_stimulation[0][sheet][0].scs
                             )
                         ]
 
@@ -1366,7 +1367,7 @@ class CorticalStimulationWithStimulatorArrayAndOrientationTuningProtocol(Experim
                             duration=self.parameters.localstimulationarray_parameters.stimulating_signal_parameters.duration,
                             trial=i,
                             direct_stimulation_name="LocalStimulatorArray",
-                            direct_stimulation_parameters=p,
+                            direct_stimulation_parameters=p
                         )
                     )
 
@@ -1403,7 +1404,7 @@ class CorticalStimulationWithStimulatorArrayAndOrientationTuningProtocol_Contras
             "num_trials": int,
             "num_orientations": int,
             "contrasts": list,
-            "localstimulationarray_parameters": ParameterSet,
+            "localstimulationarray_parameters": ParameterSet
         }
     )
 
@@ -1436,7 +1437,7 @@ class CorticalStimulationWithStimulatorArrayAndOrientationTuningProtocol_Contras
                             LocalStimulatorArrayChR(
                                 model.sheets[sheet],
                                 p,
-                                shared_scs=self.direct_stimulation[0][sheet][0].scs,
+                                shared_scs=self.direct_stimulation[0][sheet][0].scs
                             )
                         ]
 
@@ -1448,7 +1449,7 @@ class CorticalStimulationWithStimulatorArrayAndOrientationTuningProtocol_Contras
                             duration=self.parameters.localstimulationarray_parameters.stimulating_signal_parameters.duration,
                             trial=i,
                             direct_stimulation_name="LocalStimulatorArray",
-                            direct_stimulation_parameters=p,
+                            direct_stimulation_parameters=p
                         )
                     )
 
@@ -1510,7 +1511,7 @@ class VonDerHeydtIllusoryBarProtocol(VisualExperiment):
             "occlusion_bar_width": list,
             "duration": float,
             "flash_duration": float,
-            "num_trials": int,
+            "num_trials": int
         }
     )
 
@@ -1535,7 +1536,7 @@ class VonDerHeydtIllusoryBarProtocol(VisualExperiment):
                         flash_duration=self.parameters.flash_duration,
                         x=self.parameters.x,
                         y=self.parameters.y,
-                        trial=k,
+                        trial=k
                     )
                 )
 
@@ -1582,7 +1583,7 @@ class MeasureTextureSensitivityFullfield(VisualExperiment):
             "types": list,
             "num_trials": int,  # n. of same instance
             # 'offset_time' : float,
-            # 'onset_time' : float,
+            # 'onset_time' : float
         }
     )
 
@@ -1607,7 +1608,7 @@ class MeasureTextureSensitivityFullfield(VisualExperiment):
                         size_y=model.visual_field.size_y,
                         texture_path=self.parameters.image_path,
                         stats_type=t,
-                        seed=523 * (i + 1) + 5113 * (ty + 1),
+                        seed=523 * (i + 1) + 5113 * (ty + 1)
                     )
                     self.stimuli.append(im)
 
@@ -1686,7 +1687,7 @@ class MapResponseToInterruptedBarStimulus(VisualExperiment):
             "flash_duration": float,
             "relative_luminances": list,
             "gap_lengths": list,
-            "num_trials": int,
+            "num_trials": int
         }
     )
 
@@ -1726,7 +1727,7 @@ class MapResponseToInterruptedBarStimulus(VisualExperiment):
                                 y=self.parameters.y
                                 + numpy.sin(self.parameters.orientation + numpy.pi / 2)
                                 * (-self.parameters.max_offset + z),
-                                trial=k,
+                                trial=k
                             )
                         )
 
@@ -1802,7 +1803,7 @@ class MapResponseToInterruptedCornerStimulus(VisualExperiment):
             "relative_luminances": list,
             "gap_length": float,
             "num_trials": int,
-            "angles": list,
+            "angles": list
         }
     )
 
@@ -1844,7 +1845,7 @@ class MapResponseToInterruptedCornerStimulus(VisualExperiment):
                                 y=self.parameters.y
                                 + numpy.sin(self.parameters.orientation + numpy.pi / 2)
                                 * (-self.parameters.max_offset + z),
-                                trial=k,
+                                trial=k
                             )
                         )
 
@@ -1872,7 +1873,7 @@ class MapResponseToInterruptedCornerStimulus(VisualExperiment):
                                 y=self.parameters.y
                                 + numpy.sin(self.parameters.orientation + numpy.pi / 2)
                                 * (-self.parameters.max_offset + z),
-                                trial=k,
+                                trial=k
                             )
                         )
 

@@ -251,7 +251,7 @@ class StandardStyle(SimplePlot):
             "y_tick_labels": None,
             "x_tick_pad": fontsize - 5,
             "y_tick_pad": fontsize - 5,
-            "grid": False,
+            "grid": False
         }
 
         self.color_cycle = {
@@ -262,7 +262,7 @@ class StandardStyle(SimplePlot):
             "Ye": (0.95, 0.9, 0.25),
             "Bu": (0, 0.45, 0.7),
             "Ve": (0.8, 0.4, 0),
-            "rP": (0.8, 0.6, 0.7),
+            "rP": (0.8, 0.6, 0.7)
         }
 
         self.colormap = LinearSegmentedColormap.from_list(
@@ -317,14 +317,14 @@ class StandardStyle(SimplePlot):
                 self.y_label,
                 multialignment="center",
                 fontsize=self.fontsize,
-                labelpad=self.y_label_pad,
+                labelpad=self.y_label_pad
             )
         if self.x_label and self.x_axis:
             plt.xlabel(
                 self.x_label,
                 multialignment="center",
                 fontsize=self.fontsize,
-                labelpad=self.x_label_pad,
+                labelpad=self.x_label_pad
             )
         if not self.top_right_border:
             phf.disable_top_right_axis(self.axis)
@@ -448,7 +448,7 @@ class SpikeRasterPlot(StandardStyle):
                         [j for x in range(0, len(train))],
                         "|",
                         color=colors[k],
-                        mew=1,
+                        mew=1
                     )
                 else:
                     for i, spike_list in enumerate(sp):
@@ -460,7 +460,7 @@ class SpikeRasterPlot(StandardStyle):
                                 for x in range(0, len(spike_train))
                             ],
                             "|",
-                            color=colors[k],
+                            color=colors[k]
                         )
             if not self.group_trials:
                 for j in range(0, num_n - 1):
@@ -537,7 +537,7 @@ class SpikeHistogramPlot(SpikeRasterPlot):
                 all_spikes,
                 bins=numpy.arange(0, t_stop, self.bin_width),
                 color=self.colors,
-                edgecolor="none",
+                edgecolor="none"
             )
 
         self.y_tick_style = "Custom"
@@ -548,14 +548,14 @@ class SpikeHistogramPlot(SpikeRasterPlot):
                 math.ceil(
                     numpy.max(n) / len(self.neurons) / self.bin_width / self.num_trials
                 )
-            ),
+            )
         ]
 
         self.y_tick_style = "Custom"
         self.y_ticks = [0, numpy.max(n)]
         self.y_tick_labels = [
             0,
-            numpy.max(n) / len(self.neurons) / self.bin_width / self.num_trials,
+            numpy.max(n) / len(self.neurons) / self.bin_width / self.num_trials
         ]
 
         self.y_label = "(spk/s)"
@@ -644,7 +644,7 @@ class PixelMovie(StandardStyleAnimatedPlot):
             interpolation="nearest",
             vmin=0,
             vmax=self.background_luminance * 2,
-            cmap="gray",
+            cmap="gray"
         )
 
 
@@ -698,7 +698,7 @@ class ScatterPlotMovie(StandardStyleAnimatedPlot):
                 (
                     numpy.tile(self.parameters["colors"], (len(self.z), 1)),
                     numpy.ones_like(self.z) * 0.8,
-                    self.z,
+                    self.z
                 )
             )
             self.z = hsv_to_rgb(HSV)
@@ -711,7 +711,7 @@ class ScatterPlotMovie(StandardStyleAnimatedPlot):
                 marker=self.parameters["marker"],
                 lw=0,
                 vmax=vmax,
-                alpha=0.4,
+                alpha=0.4
             )
         else:
             self.scatter = self.axis.scatter(
@@ -723,7 +723,7 @@ class ScatterPlotMovie(StandardStyleAnimatedPlot):
                 lw=0,
                 vmax=vmax,
                 alpha=0.4,
-                cmap="gray",
+                cmap="gray"
             )
         plt.axis("equal")
         plt.gca().set_axis_bgcolor("black")
@@ -818,7 +818,7 @@ class ScatterPlot(StandardStyle):
             cmap=self.cmp,
             # color='k',
             vmin=vmin,
-            vmax=vmax,
+            vmax=vmax
         )
         if self.equal_aspect_ratio:
             self.axis.set_aspect(aspect=1.0, adjustable="box")
@@ -912,7 +912,8 @@ class StandardStyleLinePlot(StandardStyle):
             for i in range(0, len(x)):
                 if not numpy.all(x[i] == x[0]):
                     raise ValueError(
-                        "Mean cannot be calculated from data not containing identical x axis values"
+                        "Mean cannot be calculated from data not containing identical x"
+                        " axis values"
                     )
 
     def plot(self):
@@ -947,7 +948,7 @@ class StandardStyleLinePlot(StandardStyle):
                     % (
                         self.labels[i],
                         list(self.colors.keys()),
-                        self.colors[self.labels[i]],
+                        self.colors[self.labels[i]]
                     )
                 )
                 p["color"] = self.colors[self.labels[i]]
@@ -964,7 +965,7 @@ class StandardStyleLinePlot(StandardStyle):
                     % (
                         self.labels[i],
                         list(self.linestyles.keys()),
-                        self.linestyles[self.labels[i]],
+                        self.linestyles[self.labels[i]]
                     )
                 )
                 p["linestyle"] = self.linestyles[self.labels[i]]
@@ -983,7 +984,7 @@ class StandardStyleLinePlot(StandardStyle):
                     where=self.y[i] >= d,
                     color=p["color"],
                     alpha=0.2,
-                    linewidth=0,
+                    linewidth=0
                 )
                 self.axis.fill_between(
                     self.x[i],
@@ -991,7 +992,7 @@ class StandardStyleLinePlot(StandardStyle):
                     where=self.y[i] <= d,
                     color=p["color"],
                     alpha=0.2,
-                    linewidth=0,
+                    linewidth=0
                 )
 
             if self.error:
@@ -1135,7 +1136,7 @@ class ConnectionPlot(StandardStyle):
         weights,
         colors=None,
         period=None,
-        **param,
+        **param
     ):
         StandardStyle.__init__(self, **param)
         self.pos_x = pos_x
@@ -1194,7 +1195,7 @@ class ConnectionPlot(StandardStyle):
                 lw=1,
                 cmap=self.cmp,
                 vmin=vmin,
-                vmax=vmax,
+                vmax=vmax
             )
             if self.colorbar:
                 if vmin != vmax:
@@ -1260,7 +1261,7 @@ class HistogramPlot(StandardStyle):
                 bins=int(self.num_bins),
                 range=self.x_lim,
                 edgecolor="none",
-                color=colors,
+                color=colors
             )
         else:
             self.axis.hist(
@@ -1269,7 +1270,7 @@ class HistogramPlot(StandardStyle):
                 range=self.x_lim,
                 rwidth=1,
                 edgecolor="none",
-                color=colors,
+                color=colors
             )
 
         if self.mark_mean:
@@ -1292,7 +1293,7 @@ class HistogramPlot(StandardStyle):
                     textcoords="data",
                     arrowprops=dict(
                         arrowstyle="->", connectionstyle="arc3", linewidth=3.0, color=c
-                    ),
+                    )
                 )
         if self.mark_value != False:
             self.axis.annotate(
@@ -1303,7 +1304,7 @@ class HistogramPlot(StandardStyle):
                 textcoords="data",
                 arrowprops=dict(
                     arrowstyle="->", connectionstyle="arc3", linewidth=3.0, color="r"
-                ),
+                )
             )
 
         self.y_label = "#"
@@ -1378,7 +1379,7 @@ class CorticalColumnSpikeRasterPlot(StandardStyle):
                     s=7,
                     c=colors[k],
                     marker="o",
-                    lw=0,
+                    lw=0
                 )
                 y += 1
 
@@ -1441,7 +1442,7 @@ class OrderedAnalogSignalListPlot(StandardStyle):
             self.signals,
             cmap=self.cmap,
             aspect="auto",
-            interpolation=self.interpolation,
+            interpolation=self.interpolation
         )
 
         if self.colorbar:

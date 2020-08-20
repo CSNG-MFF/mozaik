@@ -30,7 +30,7 @@ class Connector(BaseComponent):
             "target_synapses": str,
             "short_term_plasticity": ParameterSet(
                 {"U": float, "tau_rec": float, "tau_fac": float, "tau_psc": float}
-            ),
+            )
         }
     )
 
@@ -40,7 +40,7 @@ class Connector(BaseComponent):
             % (
                 self.__class__.__name__,
                 source.__class__.__name__,
-                target.__class__.__name__,
+                target.__class__.__name__
             )
         )
         BaseComponent.__init__(self, model, parameters)
@@ -127,7 +127,7 @@ class Connector(BaseComponent):
                 proj_name=self.name,
                 source_name=self.source.name,
                 target_name=self.target.name,
-                analysis_algorithm="connection storage",
+                analysis_algorithm="connection storage"
             )
         )
 
@@ -146,7 +146,7 @@ class SpecificArborization(Connector):
     required_parameters = ParameterSet(
         {
             # the overall (sum) weight that a single target neuron should receive
-            "weight_factor": float,
+            "weight_factor": float
         }
     )
 
@@ -181,7 +181,7 @@ class SpecificArborization(Connector):
                 np.array(X).flatten(),
                 np.array(Y).flatten(),
                 self.connection_matrix.flatten(),
-                self.delay_matrix.flatten(),
+                self.delay_matrix.flatten()
             )
         )
         # get rid of very weak synapses
@@ -199,7 +199,7 @@ class SpecificArborization(Connector):
             synapse_type=self.init_synaptic_mechanisms(),
             label=self.name,
             rng=None,
-            receptor_type=self.parameters.target_synapses,
+            receptor_type=self.parameters.target_synapses
         )
 
 
@@ -225,7 +225,7 @@ class SpecificProbabilisticArborization(Connector):
         {
             # the overall strength of synapses in this connection per neuron (in µS) (i.e. the sum of the strength of synapses in this connection per target neuron)
             "weight_factor": float,
-            "num_samples": int,
+            "num_samples": int
         }
     )
 
@@ -255,7 +255,7 @@ class SpecificProbabilisticArborization(Connector):
                         int(k),
                         int(i),
                         wf * co[k] / self.parameters.num_samples,
-                        delays[k][i],
+                        delays[k][i]
                     )
                     for k in list(co.keys())
                 ]
@@ -269,5 +269,5 @@ class SpecificProbabilisticArborization(Connector):
             method,
             synapse_type=self.init_synaptic_mechanisms(),
             label=self.name,
-            receptor_type=self.parameters.target_synapses,
+            receptor_type=self.parameters.target_synapses
         )

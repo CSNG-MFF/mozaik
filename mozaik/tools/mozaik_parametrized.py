@@ -19,7 +19,7 @@ import param.parameterized
 
 from .distribution_parametrization import (
     MozaikExtendedParameterSet,
-    ParameterWithUnitsAndPeriod,
+    ParameterWithUnitsAndPeriod
 )
 
 param.parameterized.docstring_signature = False
@@ -114,7 +114,10 @@ class MozaikParametrized(Parameterized):
     """
 
     name = SString(
-        doc="String identifier for this object that is set to it's class name DO NOT TOUCH!"
+        doc=(
+            "String identifier for this object that is set to it's class name DO NOT"
+            " TOUCH!"
+        )
     )
 
     # we will chache imported modules due to the idd statement here, as module imports seem to be extremely costly.
@@ -136,7 +139,8 @@ class MozaikParametrized(Parameterized):
                 or isinstance(o, SParameterSet)
             ):
                 raise ValueError(
-                    "The parameter %s is not of type SNumber or SInteger or SString or SParameterSet but of type %s."
+                    "The parameter %s is not of type SNumber or SInteger or SString or"
+                    " SParameterSet but of type %s."
                     % (name, type(o))
                 )
 
@@ -182,7 +186,8 @@ class MozaikParametrized(Parameterized):
             set([t[0] for t in self.expanded_paramset_params])
             & set(self.params().keys())
         ) == set([]), (
-            "Conflict between MozaikParametrized and expanded ParameterSet parameters. Intersection: %s "
+            "Conflict between MozaikParametrized and expanded ParameterSet parameters."
+            " Intersection: %s "
             % str(
                 set([t[0] for t in self.expanded_paramset_params])
                 & set(self.params().keys())
@@ -252,7 +257,7 @@ class MozaikParametrized(Parameterized):
     def get_param_values(self, onlychanged=False):
         if self.cached_get_param_values == None:
             Parameterized.__setattr__(
-                self, "cached_get_param_values", super().get_param_values(onlychanged),
+                self, "cached_get_param_values", super().get_param_values(onlychanged)
             )
         return self.cached_get_param_values
 
@@ -356,9 +361,7 @@ class MozaikParametrized(Parameterized):
 
     @classmethod
     def idd_to_instance(cls, obj):
-        """
-
-        """
+        """"""
         if isinstance(obj, MozaikParametrized):
             return MozaikParametrized.idd(str(obj))
         assert isinstance(obj, str)
@@ -434,7 +437,7 @@ def filter_query(
             *list(
                 filter(
                     lambda x: fl(x, kwargs, allow_non_existent_parameters),
-                    list(zip(object_list, extra_data_list)),
+                    list(zip(object_list, extra_data_list))
                 )
             )
         )
@@ -478,7 +481,7 @@ def colapse(
     object_list,
     func=None,
     parameter_list=[],
-    allow_non_identical_objects=False,
+    allow_non_identical_objects=False
 ):
     """
     It collapses the data_list against parameters of objects in object_list that are in parameter_list.
@@ -557,7 +560,8 @@ def varying_parameters(parametrized_objects):
     """
     if not identical_parametrized_object_params(parametrized_objects):
         raise ValueError(
-            "varying_parameters: accepts only MozaikParametrized lists with the same parameters"
+            "varying_parameters: accepts only MozaikParametrized lists with the same"
+            " parameters"
         )
 
     varying_params = collections.OrderedDict()
@@ -650,7 +654,8 @@ def matching_parametrized_object_params(
 
     if except_params != None and params != None:
         raise ValueError(
-            "identical_parametrized_object_params cannot be called with both params and except_params equal to None"
+            "identical_parametrized_object_params cannot be called with both params and"
+            " except_params equal to None"
         )
 
     if except_params == None and params == None:

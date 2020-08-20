@@ -64,7 +64,7 @@ class PSTextureStimulus(TextureBasedVisualStimulus):
             self.seed,
             fieldsize_x,
             fieldsize_y,
-            libpath,
+            libpath
         )
 
         im = im / 255 * 2 * self.background_luminance
@@ -79,7 +79,7 @@ class PSTextureStimulus(TextureBasedVisualStimulus):
 
         assert im.shape == (
             fieldsize_x,
-            fieldsize_y,
+            fieldsize_y
         ), "Image dimensions do not correspond to visual field size"
         while True:
             yield (im, [0])

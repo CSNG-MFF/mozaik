@@ -456,7 +456,8 @@ class DataStore(DataStoreView):
         else:
             if self.replace:
                 logger.info(
-                    "Warning: ADS with the same parametrization already added in the datastore.: %s"
+                    "Warning: ADS with the same parametrization already added in the"
+                    " datastore.: %s"
                     % (str(result))
                 )
                 # TODO: i is undefined
@@ -464,12 +465,18 @@ class DataStore(DataStoreView):
                 return
             # TODO: ads is undefined
             logger.error(
-                "Analysis Data Structure with the same parametrization already added in the datastore. Currently uniqueness is required. The ADS was not added. User should modify analysis specification to avoid this!: \n %s \n %s "
+                "Analysis Data Structure with the same parametrization already added in"
+                " the datastore. Currently uniqueness is required. The ADS was not"
+                " added. User should modify analysis specification to avoid this!: \n"
+                " %s \n %s "
                 % (str(result), str(ads))
             )
             # TODO: ads is undefined
             raise ValueError(
-                "Analysis Data Structure with the same parametrization already added in the datastore. Currently uniqueness is required. The ADS was not added. User should modify analysis specification to avoid this!: %s \n %s"
+                "Analysis Data Structure with the same parametrization already added in"
+                " the datastore. Currently uniqueness is required. The ADS was not"
+                " added. User should modify analysis specification to avoid this!: %s"
+                " \n %s"
                 % (str(result), str(ads))
             )
 
@@ -531,7 +538,8 @@ class Hdf5DataStore(DataStore):
         else:
             if self.replace:
                 logger.info(
-                    "Warning: ADS with the same parametrization already added in the datastore.: %s"
+                    "Warning: ADS with the same parametrization already added in the"
+                    " datastore.: %s"
                     % (str(result))
                 )
                 # TODO: i is undefined
@@ -539,12 +547,18 @@ class Hdf5DataStore(DataStore):
                 return
             # TODO: ads is undefined
             logger.error(
-                "Analysis Data Structure with the same parametrization already added in the datastore. Currently uniqueness is required. The ADS was not added. User should modify analysis specification to avoid this!: \n %s \n %s "
+                "Analysis Data Structure with the same parametrization already added in"
+                " the datastore. Currently uniqueness is required. The ADS was not"
+                " added. User should modify analysis specification to avoid this!: \n"
+                " %s \n %s "
                 % (str(result), str(ads))
             )
             # TODO: ads is undefined
             raise ValueError(
-                "Analysis Data Structure with the same parametrization already added in the datastore. Currently uniqueness is required. The ADS was not added. User should modify analysis specification to avoid this!: %s \n %s"
+                "Analysis Data Structure with the same parametrization already added in"
+                " the datastore. Currently uniqueness is required. The ADS was not"
+                " added. User should modify analysis specification to avoid this!: %s"
+                " \n %s"
                 % (str(result), str(ads))
             )
 
@@ -577,7 +591,7 @@ class PickledDataStore(Hdf5DataStore):
         ):
             f = open(
                 self.parameters.root_directory + "/datastore.sensory.stimulus.pickle",
-                "rb",
+                "rb"
             )
             self.sensory_stimulus = pickle.load(f)
         else:
@@ -606,7 +620,7 @@ class PickledDataStore(Hdf5DataStore):
                 PickledDataStoreNeoWrapper(
                     s,
                     "Segment" + str(len(self.block.segments)),
-                    self.parameters.root_directory,
+                    self.parameters.root_directory
                 )
             )
             f = open(
@@ -615,7 +629,7 @@ class PickledDataStore(Hdf5DataStore):
                 + "Segment"
                 + str(len(self.block.segments) - 1)
                 + ".pickle",
-                "wb",
+                "wb"
             )
             pickle.dump(s, f)
 
@@ -633,7 +647,7 @@ class PickledDataStore(Hdf5DataStore):
                     s,
                     "Segment" + str(len(self.block.segments)),
                     self.parameters.root_directory,
-                    null=True,
+                    null=True
                 )
             )
             f = open(
@@ -642,6 +656,6 @@ class PickledDataStore(Hdf5DataStore):
                 + "Segment"
                 + str(len(self.block.segments) - 1)
                 + ".pickle",
-                "wb",
+                "wb"
             )
             pickle.dump(s, f)

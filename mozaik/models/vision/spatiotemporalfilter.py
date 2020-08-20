@@ -10,6 +10,7 @@ from parameters import ParameterSet
 import numpy
 
 import mozaik
+from . import cai97
 from ... import get_seeds
 from ...core import SensoryInputComponent
 from ...sheets.vision import RetinalUniformSheet
@@ -30,7 +31,7 @@ def meshgrid3D(x, y, z):
     return (
         x[:, nax, nax] * mult_fact,
         y[nax, :, nax] * mult_fact,
-        z[nax, nax, :] * mult_fact,
+        z[nax, nax, :] * mult_fact
     )
 
 
@@ -133,19 +134,20 @@ class SpatioTemporalReceptiveField(object):
         s = "Receptive field: width=%gº, height=%gº, duration=%g ms" % (
             self.width,
             self.height,
-            self.duration,
+            self.duration
         )
         if self.kernel is not None:
             k = self.kernel
             h, w = k.shape[0:2]
             s += (
-                ", quantization=%s, actual width=%gº, actual_height=%gº, min=%g, max=%g."
+                ", quantization=%s, actual width=%gº, actual_height=%gº, min=%g,"
+                " max=%g."
                 % (
                     k.shape,
                     w * self.spatial_resolution,
                     h * self.spatial_resolution,
                     k.min(),
-                    k.max(),
+                    k.max()
                 )
             )
         else:
@@ -195,17 +197,18 @@ class CellWithReceptiveField(object):
             location_x=self.x,
             location_y=self.y,
             size_x=self.receptive_field.width,
-            size_y=self.receptive_field.height,
+            size_y=self.receptive_field.height
         )
         # logger.debug("view_array.shape = %s" % str(view_array.shape))
         # logger.debug("receptive_field.kernel.shape = %s" % str(self.receptive_field.kernel.shape))
         # logger.debug("response.shape = %s" % str(self.response.shape))
         if visual_space.update_interval % self.receptive_field.temporal_resolution != 0:
             errmsg = (
-                "The receptive field temporal resolution (%g ms) must be an integer multiple of the visual space update interval (%g ms)"
+                "The receptive field temporal resolution (%g ms) must be an integer"
+                " multiple of the visual space update interval (%g ms)"
                 % (
                     self.receptive_field.temporal_resolution,
-                    visual_space.update_interval,
+                    visual_space.update_interval
                 )
             )
             raise Exception(errmsg)
@@ -283,7 +286,7 @@ class CellWithReceptiveField(object):
         self.mean[self.i : self.i + self.update_factor] = numpy.mean(view_array)
         time_course = numpy.dot(
             self.receptive_field.reshaped_kernel,
-            view_array.reshape(-1)[: numpy.newaxis],
+            view_array.reshape(-1)[: numpy.newaxis]
         )
 
         self.va = view_array
@@ -321,7 +324,7 @@ class CellWithReceptiveField(object):
                 numpy.squeeze(
                     numpy.mean(numpy.abs(self.receptive_field.kernel), axis=0)
                 ),
-                axis=0,
+                axis=0
             )
         )
         # self.std = numpy.convolve(self.std,k[::-1]/numpy.sqrt(numpy.power(k,2).sum()),mode='same')
@@ -436,7 +439,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                     "height": float,
                     "spatial_resolution": float,
                     "temporal_resolution": float,
-                    "duration": float,
+                    "duration": float
                 }
             ),
             "cell": ParameterSet(
@@ -448,9 +451,9 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                     {
                         "luminance_gain": float,
                         "luminance_scaler": float,
-                        "contrast_scaler": float,
+                        "contrast_scaler": float
                     }
-                ),
+                )
             },
             "noise": ParameterSet({"mean": float, "stdev": float}),  # nA
         }
@@ -481,9 +484,9 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                         "artificial_stimulators": {},
                         "recorders": self.parameters.recorders,
                         "recording_interval": self.parameters.recording_interval,
-                        "mpi_safe": False,
+                        "mpi_safe": False
                     }
-                ),
+                )
             )
             self.sheets[rf_type] = p
 
@@ -520,7 +523,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
             P_rf.func_params,
             P_rf.width,
             P_rf.height,
-            P_rf.duration,
+            P_rf.duration
         )
         dx = dy = P_rf.spatial_resolution
         dt = P_rf.temporal_resolution
@@ -560,7 +563,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                     + "/"
                     + str(self.cached_stimuli[str(stimulus_id)])
                     + ".st",
-                    "rb",
+                    "rb"
                 )
                 z = pickle.load(f)
                 f.close()
@@ -661,7 +664,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                     self.sheets[rf_type].pop,
                     input_currents[rf_type],
                     self.scs[rf_type],
-                    self.ncs[rf_type],
+                    self.ncs[rf_type]
                 )
             ):
                 assert isinstance(input_current, dict)
@@ -735,7 +738,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                 self.sheets[rf_type].pop.positions[1][0],
                 self.rf[rf_type],
                 self.parameters.gain_control,
-                visual_space,
+                visual_space
             )
             input_cells[rf_type].initialize(visual_space.background_luminance, duration)
 
@@ -799,7 +802,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                     self.sheets[rf_type].pop.positions[1][i],
                     self.rf[rf_type],
                     self.parameters.gain_control,
-                    visual_space,
+                    visual_space
                 )
                 cell.initialize(visual_space.background_luminance, duration)
                 input_cells[rf_type].append(cell)
@@ -835,7 +838,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                     location_x=0,
                     location_y=0,
                     size_x=self.model.visual_field.size_x,
-                    size_y=self.model.visual_field.size_y,
+                    size_y=self.model.visual_field.size_y
                 )
                 im = visual_space.view(
                     visual_region, pixel_size=self.rf["X_ON"].spatial_resolution

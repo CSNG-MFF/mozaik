@@ -8,7 +8,7 @@ from scipy.interpolate import NearestNDInterpolator
 import matplotlib.pyplot as plt
 import numpy as np
 
-from . import Global
+from ..controller import Global
 from ..tools.circ_stat import *
 from ..tools.misc import *
 from .modular_connector_functions import ModularConnectorFunction
@@ -28,7 +28,7 @@ class MapDependentModularConnectorFunction(ModularConnectorFunction):
             # How sharply does the wieght fall off with the increasing distance between the map values (exp(-0.5*(distance/sigma)*2)/(sigma*sqrt(2*np.pi)))
             "sigma": float,
             # if true, the values in map will be treated as periodic (and consequently the distance between two values will be computed as circular distance).
-            "periodic": bool,
+            "periodic": bool
         }
     )
 
@@ -118,7 +118,7 @@ class V1PushPullArborization(ModularConnectorFunction):
             "phase_sigma": float,  # how sharply does the probability of connection fall off with phase difference
             "target_synapses": str,  # what type is the target excitatory/inhibitory
             # the ratio of push-pull connections, the rest will be random drawn randomly
-            "push_pull_ratio": float,
+            "push_pull_ratio": float
         }
     )
 
@@ -221,7 +221,7 @@ class GaborArborization(ModularConnectorFunction):
             target_freq,
             target_phase,
             target_size,
-            target_ar,
+            target_ar
         )
 
         if self.parameters.ON:
@@ -345,12 +345,12 @@ class V1CorrelationBasedConnectivity(ModularConnectorFunction):
         gauss_or2,
         freq2,
         sine_orientation2,
-        phase2,
+        phase2
     ):
         def dot2x2times2x1(a, b, c, d, x, y):
             return (
                 a * x + b * y,
-                c * x + d * y,
+                c * x + d * y
             )  # calculates out the dot([[a,b],[c,d]],[[x],[y]])
 
         dotVTtimes2x2timeV = (
@@ -449,7 +449,7 @@ class V1CorrelationBasedConnectivity(ModularConnectorFunction):
         gauss_or2,
         freq2,
         sine_orientation2,
-        phase2,
+        phase2
     ):
         def R_theta_func(theta):
             return np.matrix(
@@ -520,7 +520,7 @@ class V1CorrelationBasedConnectivity(ModularConnectorFunction):
         gauss_or2,
         freq2,
         sine_orientation2,
-        phase2,
+        phase2
     ):
 
         cov = V1CorrelationBasedConnectivity.integral_of_gabor_multiplication_vectorized(
@@ -541,7 +541,7 @@ class V1CorrelationBasedConnectivity(ModularConnectorFunction):
             gauss_or2,
             freq2,
             sine_orientation2,
-            phase2,
+            phase2
         )
 
         var1 = V1CorrelationBasedConnectivity.integral_of_gabor_multiplication_vectorized(
@@ -562,7 +562,7 @@ class V1CorrelationBasedConnectivity(ModularConnectorFunction):
             gauss_or1,
             freq1,
             sine_orientation1,
-            phase1,
+            phase1
         )
 
         var2 = V1CorrelationBasedConnectivity.integral_of_gabor_multiplication_vectorized(
@@ -583,7 +583,7 @@ class V1CorrelationBasedConnectivity(ModularConnectorFunction):
             gauss_or2,
             freq2,
             sine_orientation2,
-            phase2,
+            phase2
         )
         return np.array(cov / (np.sqrt(var1) * np.sqrt(var2)))  # [0][0]
 
@@ -602,7 +602,7 @@ class V1CorrelationBasedConnectivity(ModularConnectorFunction):
         ar2,
         or2,
         freq2,
-        phase2,
+        phase2
     ):
 
         return V1CorrelationBasedConnectivity.gabor_correlation(
@@ -623,7 +623,7 @@ class V1CorrelationBasedConnectivity(ModularConnectorFunction):
             or2,
             freq2,
             or2,
-            phase2 - np.pi * 2 * freq2 * (posx2 * np.cos(or2) + posy2 * np.sin(or2)),
+            phase2 - np.pi * 2 * freq2 * (posx2 * np.cos(or2) + posy2 * np.sin(or2))
         )
 
     def evaluate(self, index):
@@ -655,7 +655,7 @@ class V1CorrelationBasedConnectivity(ModularConnectorFunction):
             target_ar,
             target_or,
             target_freq,
-            target_phase,
+            target_phase
         )
 
         assert np.all(corr >= -1.0) and np.all(
@@ -732,7 +732,7 @@ class CoCircularModularConnectorFunction(ModularConnectorFunction):
 
         phi = np.arctan2(
             self.source.pop.positions[1] - y_target,
-            self.source.pop.positions[0] - x_target,
+            self.source.pop.positions[0] - x_target
         )
         distance = circular_dist(self.or_source, 2 * phi - or_target, np.pi)
         prob = np.exp(-0.5 * (distance / self.parameters.sigma) ** 2) / (
@@ -759,7 +759,7 @@ class CoCircularModularConnectorFunction(ModularConnectorFunction):
                     self.source.pop.positions[0][i],
                     self.source.pop.positions[1][i],
                     2 * phi[i] - or_target,
-                    "k",
+                    "k"
                 )
 
             plot_or(x_target, y_target, or_target, "r")
@@ -776,7 +776,7 @@ class CoCircularModularConnectorFunction(ModularConnectorFunction):
                 alpha=0.5,
                 edgecolors="none",
                 s=np.array(prob / np.max(prob)) * 20,
-                cmap="hsv",
+                cmap="hsv"
             )
             plt.colorbar()
 
@@ -789,7 +789,7 @@ class CoCircularModularConnectorFunction(ModularConnectorFunction):
                 alpha=0.5,
                 edgecolors="none",
                 s=(1 - np.array(distance / np.max(distance))) * 20,
-                cmap="hsv",
+                cmap="hsv"
             )
 
             # plt.subplot(412)

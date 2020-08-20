@@ -32,28 +32,28 @@ logger = logging.getLogger(__name__)
 
 class DirectStimulator(ParametrizedObject):
     """
-      The API for direct stimulation.
-      The DirectStimulator specifies how are cells in the assigned population directly stimulated.
+    The API for direct stimulation.
+    The DirectStimulator specifies how are cells in the assigned population directly stimulated.
 
-      Parameters
-      ----------
-      parameters : ParameterSet
-                   The dictionary of required parameters.
+    Parameters
+    ----------
+    parameters : ParameterSet
+                 The dictionary of required parameters.
 
-      sheet : Sheet
-              The sheet in which to stimulate neurons.
+    sheet : Sheet
+            The sheet in which to stimulate neurons.
 
-      Notes
-      -----
+    Notes
+    -----
 
-      By defalut the direct stimulation should ensure that it is mpi-safe - this is especially crucial for
-      stimulators that involve source of randomnes. However, the DirectSimulators also can inspect the mpi_safe
-      value of the population to which they are assigned, and if it is False they can switch to potentially
-      more efficient implementation that will however not be reproducible across multi-process simulations.
+    By defalut the direct stimulation should ensure that it is mpi-safe - this is especially crucial for
+    stimulators that involve source of randomnes. However, the DirectSimulators also can inspect the mpi_safe
+    value of the population to which they are assigned, and if it is False they can switch to potentially
+    more efficient implementation that will however not be reproducible across multi-process simulations.
 
-      Important: the functiona inactivate should only temporarily inactivate the stimulator, a subsequent call to prepare_stimulation
-      should activate the stimulator back!
-      """
+    Important: the functiona inactivate should only temporarily inactivate the stimulator, a subsequent call to prepare_stimulation
+    should activate the stimulator back!
+    """
 
     def __init__(self, sheet, parameters):
         ParametrizedObject.__init__(self, parameters)
@@ -61,30 +61,30 @@ class DirectStimulator(ParametrizedObject):
 
     def prepare_stimulation(self, duration, offset):
         """
-          Prepares the stimulation during the next period of model simulation lasting `duration` seconds.
+        Prepares the stimulation during the next period of model simulation lasting `duration` seconds.
 
-          Parameters
-          ----------
-          duration : double (seconds)
-                     The period for which to prepare the stimulation
+        Parameters
+        ----------
+        duration : double (seconds)
+                   The period for which to prepare the stimulation
 
-          offset : double (seconds)
-                   The current simulator time.
+        offset : double (seconds)
+                 The current simulator time.
 
-          """
+        """
         raise NotImplemented
 
     def inactivate(self, offset):
         """
-          Ensures any influences of the stimulation are inactivated for subsequent simulation of the model.
+        Ensures any influences of the stimulation are inactivated for subsequent simulation of the model.
 
-          Parameters
-          ----------
-          offset : double (seconds)
-                   The current simulator time.
+        Parameters
+        ----------
+        offset : double (seconds)
+                 The current simulator time.
 
-          Note that a subsequent call to prepare_stimulation should 'activate' the stimulator again.
-          """
+        Note that a subsequent call to prepare_stimulation should 'activate' the stimulator again.
+        """
         raise NotImplemented
 
 
@@ -126,7 +126,7 @@ class BackgroundActivityBombardment(DirectStimulator):
             "exc_firing_rate": float,
             "exc_weight": float,
             "inh_firing_rate": float,
-            "inh_weight": float,
+            "inh_weight": float
         }
     )
 
@@ -135,11 +135,11 @@ class BackgroundActivityBombardment(DirectStimulator):
 
         exc_syn = self.sheet.sim.StaticSynapse(
             weight=self.parameters.exc_weight,
-            delay=self.sheet.model.parameters.min_delay,
+            delay=self.sheet.model.parameters.min_delay
         )
         inh_syn = self.sheet.sim.StaticSynapse(
             weight=self.parameters.inh_weight,
-            delay=self.sheet.model.parameters.min_delay,
+            delay=self.sheet.model.parameters.min_delay
         )
 
         if not self.sheet.parameters.mpi_safe:
@@ -154,7 +154,7 @@ class BackgroundActivityBombardment(DirectStimulator):
                     self.sheet.pop,
                     self.sheet.sim.AllToAllConnector(),
                     synapse_type=exc_syn,
-                    receptor_type="excitatory",
+                    receptor_type="excitatory"
                 )
 
             if self.parameters.inh_firing_rate != 0 or self.parameters.inh_weight != 0:
@@ -166,7 +166,7 @@ class BackgroundActivityBombardment(DirectStimulator):
                     self.sheet.pop,
                     self.sheet.sim.AllToAllConnector(),
                     synapse_type=inh_syn,
-                    receptor_type="inhibitory",
+                    receptor_type="inhibitory"
                 )
 
         else:
@@ -184,7 +184,7 @@ class BackgroundActivityBombardment(DirectStimulator):
                     self.sheet.pop,
                     self.sheet.sim.OneToOneConnector(),
                     synapse_type=exc_syn,
-                    receptor_type="excitatory",
+                    receptor_type="excitatory"
                 )
 
             if self.parameters.inh_firing_rate != 0 or self.parameters.inh_weight != 0:
@@ -201,7 +201,7 @@ class BackgroundActivityBombardment(DirectStimulator):
                     self.sheet.pop,
                     self.sheet.sim.OneToOneConnector(),
                     synapse_type=inh_syn,
-                    receptor_type="inhibitory",
+                    receptor_type="inhibitory"
                 )
 
     def prepare_stimulation(self, duration, offset):
@@ -216,7 +216,7 @@ class BackgroundActivityBombardment(DirectStimulator):
                         .poisson_generator(
                             rate=self.parameters.exc_firing_rate,
                             t_start=0,
-                            t_stop=duration,
+                            t_stop=duration
                         )
                         .spike_times
                     )
@@ -230,7 +230,7 @@ class BackgroundActivityBombardment(DirectStimulator):
                         .poisson_generator(
                             rate=self.parameters.inh_firing_rate,
                             t_start=0,
-                            t_stop=duration,
+                            t_stop=duration
                         )
                         .spike_times
                     )
@@ -285,7 +285,7 @@ class Kick(DirectStimulator):
             "drive_period": float,
             "population_selector": ParameterSet(
                 {"component": str, "params": ParameterSet}
-            ),
+            )
         }
     )
 
@@ -302,7 +302,7 @@ class Kick(DirectStimulator):
 
         exc_syn = self.sheet.sim.StaticSynapse(
             weight=self.parameters.exc_weight,
-            delay=self.sheet.model.parameters.min_delay,
+            delay=self.sheet.model.parameters.min_delay
         )
         if self.parameters.exc_firing_rate != 0 or self.parameters.exc_weight != 0:
             self.ssae = self.sheet.sim.Population(
@@ -318,7 +318,7 @@ class Kick(DirectStimulator):
                 self.sheet.pop,
                 self.sheet.sim.OneToOneConnector(),
                 synapse_type=exc_syn,
-                receptor_type="excitatory",
+                receptor_type="excitatory"
             )
 
     def prepare_stimulation(self, duration, offset):
@@ -383,7 +383,7 @@ class Depolarization(DirectStimulator):
             "current": float,
             "population_selector": ParameterSet(
                 {"component": str, "params": ParameterSet}
-            ),
+            )
         }
     )
 
@@ -474,7 +474,7 @@ class LocalStimulatorArray(DirectStimulator):
             "stimulating_signal_parameters": ParameterSet,
             "current_update_interval": float,
             "depth_sampling_step": float,
-            "light_source_light_propagation_data": str,
+            "light_source_light_propagation_data": str
         }
     )
 
@@ -487,13 +487,16 @@ class LocalStimulatorArray(DirectStimulator):
         assert (
             math.fmod(self.parameters.size / self.parameters.spacing / 2, 2)
             < 0.000000001
-        ), "Error the size and spacing have to be such that they give odd number of elements!"
+        ), (
+            "Error the size and spacing have to be such that they give odd number of"
+            " elements!"
+        )
 
         axis_coors = (
             numpy.arange(
                 0,
                 self.parameters.size + self.parameters.spacing,
-                self.parameters.spacing,
+                self.parameters.spacing
             )
             - self.parameters.size / 2.0
         )
@@ -510,12 +513,12 @@ class LocalStimulatorArray(DirectStimulator):
         light_flux_lookup = scipy.interpolate.RegularGridInterpolator(
             (
                 numpy.arange(0, 1080, 60),
-                numpy.linspace(0, 1, 708) * 299.7 * numpy.sqrt(2),
+                numpy.linspace(0, 1, 708) * 299.7 * numpy.sqrt(2)
             ),
             radprofs,
             method="linear",
             bounds_error=False,
-            fill_value=0,
+            fill_value=0
         )
 
         # the constant translating the data in radprofs to photons/s/cm^2
@@ -535,7 +538,7 @@ class LocalStimulatorArray(DirectStimulator):
             + "positions"
             + self.sheet.name.replace("/", "_")
             + ".pickle",
-            "w",
+            "w"
         )
         pickle.dump((xx, yy), f)
 
@@ -543,18 +546,18 @@ class LocalStimulatorArray(DirectStimulator):
         for depth in numpy.arange(
             sheet.parameters.min_depth,
             sheet.parameters.max_depth + self.parameters.depth_sampling_step,
-            self.parameters.depth_sampling_step,
+            self.parameters.depth_sampling_step
         ):
             temp = numpy.reshape(
                 light_flux_lookup(
                     numpy.transpose(
                         [
                             zeros + depth,
-                            numpy.sqrt(numpy.power(x, 2) + numpy.power(y, 2)),
+                            numpy.sqrt(numpy.power(x, 2) + numpy.power(y, 2))
                         ]
                     )
                 ),
-                (2 * n + 1, 2 * n + 1),
+                (2 * n + 1, 2 * n + 1)
             )
             a = temp[n, n:]
             cutof = numpy.argmax((numpy.sum(a) - numpy.cumsum(a)) / numpy.sum(a) < 0.01)
@@ -575,14 +578,14 @@ class LocalStimulatorArray(DirectStimulator):
             stimulator_coordinates[0],
             stimulator_coordinates[1],
             self.parameters.current_update_interval,
-            self.parameters.stimulating_signal_parameters,
+            self.parameters.stimulating_signal_parameters
         )
 
         # stimulator_signals = numpy.reshape(stimulator_signals,((2*n+1)*(2*n+1),-1))
 
         self.mixed_signals = numpy.zeros(
             (self.sheet.pop.size, numpy.shape(stimulator_signals)[2]),
-            dtype=numpy.float64,
+            dtype=numpy.float64
         )
 
         # find coordinates given spacing and shift by half the array size
@@ -604,7 +607,7 @@ class LocalStimulatorArray(DirectStimulator):
             ss = stimulator_signals[
                 max(int(nearest_ix[i] - cutof), 0) : int(nearest_ix[i] + cutof + 1),
                 max(int(nearest_iy[i] - cutof), 0) : int(nearest_iy[i] + cutof + 1),
-                :,
+                :
             ]
             if ss != numpy.array([]):
                 temp = temp[
@@ -613,7 +616,7 @@ class LocalStimulatorArray(DirectStimulator):
                     ),
                     max(int(cutof - nearest_iy[i]), 0) : max(
                         int(2 * n + 1 + cutof - nearest_iy[i]), 0
-                    ),
+                    )
                 ]
                 self.mixed_signals[i, :] = (
                     K
@@ -639,7 +642,7 @@ class LocalStimulatorArray(DirectStimulator):
                 + str(self.parameters.spacing)
                 + ")",
                 lam[i],
-                protected=True,
+                protected=True
             )
 
         # ax = plt.subplot(154, projection='3d')
@@ -653,14 +656,14 @@ class LocalStimulatorArray(DirectStimulator):
             s=10,
             c=lam,
             cmap="gray",
-            vmin=0,
+            vmin=0
         )
         ax = plt.gca()
         # ax.set_zlim(ax.get_zlim()[::-1])
 
         assert numpy.shape(self.mixed_signals) == (
             self.sheet.pop.size,
-            numpy.shape(stimulator_signals)[2],
+            numpy.shape(stimulator_signals)[2]
         ), (
             "ERROR: mixed_signals doesn't have the desired size:"
             + str(numpy.shape(self.mixed_signals))
@@ -700,7 +703,7 @@ class LocalStimulatorArray(DirectStimulator):
             self.scs[i].set_parameters(
                 times=Sequence(times),
                 amplitudes=Sequence(self.mixed_signals[i, :].flatten()),
-                copy=False,
+                copy=False
             )
 
     def inactivate(self, offset):
@@ -758,14 +761,14 @@ def ChRsystem(y, time, X, sampling_period):
 
 class LocalStimulatorArrayChR(LocalStimulatorArray):
     """
-      Like *LocalStimulatorArray* but the signal calculated to impinge on a neuron is interpreted as light (photons/s/cm^2)
-      impinging on the neuron and the signal is transformed via a model of Channelrhodopsin (courtesy of Quentin Sabatier)
-      to give the final injected current.
+    Like *LocalStimulatorArray* but the signal calculated to impinge on a neuron is interpreted as light (photons/s/cm^2)
+    impinging on the neuron and the signal is transformed via a model of Channelrhodopsin (courtesy of Quentin Sabatier)
+    to give the final injected current.
 
-      Note that we approximate the current by ignoring the voltage dependence of the channels, as it is very expensive
-      to inject conductance in PyNN. The Channelrhodopsin has reverse potential of ~0, and we assume that our neurons
-      sits on average at -60mV to calculate the current.
-      """
+    Note that we approximate the current by ignoring the voltage dependence of the channels, as it is very expensive
+    to inject conductance in PyNN. The Channelrhodopsin has reverse potential of ~0, and we assume that our neurons
+    sits on average at -60mV to calculate the current.
+    """
 
     def __init__(self, sheet, parameters, shared_scs=None):
         LocalStimulatorArray.__init__(self, sheet, parameters, shared_scs)
@@ -785,8 +788,8 @@ class LocalStimulatorArrayChR(LocalStimulatorArray):
                 times,
                 args=(
                     self.mixed_signals[i, :].flatten(),
-                    self.parameters.current_update_interval,
-                ),
+                    self.parameters.current_update_interval
+                )
             )
             self.mixed_signals[i, :] = 60 * (17.2 * res[:, 0] + 2.9 * res[:, 1]) / 2500
             # the 60 corresponds to the 60mV difference between ChR reverse potential of 0mV and our expected mean Vm of about 60mV. This happens to end up being in nA which is what pyNN expect for current injection.
@@ -804,7 +807,7 @@ class LocalStimulatorArrayChR(LocalStimulatorArray):
                 + str(self.parameters.spacing)
                 + ")",
                 numpy.max(self.mixed_signals[i, :]),
-                protected=True,
+                protected=True
             )
 
         ax2 = ax.twinx()
@@ -824,7 +827,7 @@ class LocalStimulatorArrayChR(LocalStimulatorArray):
             + "_"
             + str(self.parameters.spacing)
             + ".pickle",
-            "w",
+            "w"
         )
         pickle.dump(self.mixed_signals, f)
         f.close()
@@ -869,7 +872,7 @@ def test_stimulating_function(
         (
             numpy.shape(coor_x)[0],
             numpy.shape(coor_x)[1],
-            int(parameters.duration / current_update_interval),
+            int(parameters.duration / current_update_interval)
         )
     )
 
@@ -880,7 +883,7 @@ def test_stimulating_function(
                 j,
                 int(numpy.floor(parameters.onset_time / current_update_interval)) : int(
                     numpy.floor(parameters.offset_time / current_update_interval)
-                ),
+                )
             ] = (
                 parameters.scale.value
                 * numpy.exp(
@@ -888,7 +891,7 @@ def test_stimulating_function(
                         circular_dist(
                             parameters.orientation.value, ors[i][j], numpy.pi
                         ),
-                        2,
+                        2
                     )
                     / parameters.sharpness
                 )
@@ -901,7 +904,7 @@ def test_stimulating_function(
         coor_x.flatten(),
         coor_y.flatten(),
         c=numpy.squeeze(numpy.mean(signals, axis=2)).flatten(),
-        cmap="gray",
+        cmap="gray"
     )
     plt.title(str(parameters.orientation.value))
     # plt.colorbar()
@@ -939,7 +942,7 @@ def test_stimulating_function_Naka(
         (
             numpy.shape(coor_x)[0],
             numpy.shape(coor_x)[1],
-            int(parameters.duration / current_update_interval),
+            int(parameters.duration / current_update_interval)
         )
     )
 
@@ -954,7 +957,7 @@ def test_stimulating_function_Naka(
     )
     scale = numpy.power(
         rate * parameters.cs_c50 / (parameters.cs_r_max - rate),
-        1 / parameters.cs_exponent,
+        1 / parameters.cs_exponent
     )
 
     for i in range(0, numpy.shape(coor_x)[0]):
@@ -965,7 +968,7 @@ def test_stimulating_function_Naka(
                 j,
                 int(numpy.floor(parameters.onset_time / current_update_interval)) : int(
                     numpy.floor(parameters.offset_time / current_update_interval)
-                ),
+                )
             ] = (
                 scale
                 * numpy.exp(
@@ -973,7 +976,7 @@ def test_stimulating_function_Naka(
                         circular_dist(
                             parameters.orientation.value, ors[i][j], numpy.pi
                         ),
-                        2,
+                        2
                     )
                     / parameters.sharpness
                 )
@@ -986,7 +989,7 @@ def test_stimulating_function_Naka(
         coor_x.flatten(),
         coor_y.flatten(),
         c=numpy.squeeze(numpy.mean(signals, axis=2)).flatten(),
-        cmap="gray",
+        cmap="gray"
     )
     plt.title(str(parameters.orientation.value))
 

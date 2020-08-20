@@ -20,7 +20,7 @@ def single_value_visualization(
     resolution=None,
     treat_nan_as_zero=False,
     ranges={},
-    cols=4,
+    cols=4
 ):
     """
     Visualizes all single values (or those whose names match ones in `value_names` argument)
@@ -56,10 +56,10 @@ def single_value_visualization(
                 {
                     "ads_unique": False,
                     "rec_unique": False,
-                    "params": ParameterSet({"identifier": "SingleValue"}),
+                    "params": ParameterSet({"identifier": "SingleValue"})
                 }
             )
-        ),
+        )
     )
     print(parameters)
 
@@ -74,7 +74,7 @@ def single_value_visualization(
     for k in range(0, len(datastores)):
         datastores[k] = (
             [i for j, i in enumerate(datastores[k][0]) if j not in todelete],
-            datastores[k][1],
+            datastores[k][1]
         )
     parameters = [i for j, i in enumerate(parameters) if j not in todelete]
     print(parameters)
@@ -183,7 +183,7 @@ def single_value_visualization(
                     aspect="auto",
                     cmap=cm.gray,
                     origin="lower",
-                    extent=[np.min(x), np.max(x), np.min(y), np.max(y)],
+                    extent=[np.min(x), np.max(x), np.min(y), np.max(y)]
                 )
             else:
                 plt.scatter(
@@ -200,11 +200,11 @@ def single_value_visualization(
                 res[value_name] = (
                     (
                         parameters[sorted_parameter_indexes[0]],
-                        parameters[sorted_parameter_indexes[1]],
+                        parameters[sorted_parameter_indexes[1]]
                     ),
                     x,
                     y,
-                    z,
+                    z
                 )
 
                 f = open(value_name + ".pickle", "w")
@@ -215,9 +215,9 @@ def single_value_visualization(
                         parameters[sorted_parameter_indexes[1]],
                         x,
                         y,
-                        z,
+                        z
                     ),
-                    f,
+                    f
                 )
                 f.close()
 
@@ -304,7 +304,7 @@ def fixed_point_visualization(
                             str(a) + ":" + str(b) + ", "
                             for (a, b) in zip(parameters, param_values)
                         ]
-                    ),
+                    )
                 )
             )
 
@@ -322,7 +322,7 @@ def multi_curve_visualzition(
     query,
     filename=None,
     value_name=None,
-    treat_nan_as_zero=False,
+    treat_nan_as_zero=False
 ):
     """
     Parameters
@@ -391,7 +391,7 @@ def multi_curve_visualzition(
                         str(a) + ":" + str(b) + ", "
                         for (a, b) in zip(parameters, param_values)
                     ]
-                ),
+                )
             )
         )
 
@@ -430,7 +430,7 @@ def multi_curve_visualzition(
         color = (
             (k[0] - mmin[0]) / (mmax[0] - mmin[0]),
             (k[1] - mmin[1]) / (mmax[1] - mmin[1]),
-            0,
+            0
         )
         x.append(k[0])
         y.append(k[1])

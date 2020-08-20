@@ -60,13 +60,13 @@ from ..tools.mozaik_parametrized import (
     colapse_to_dictionary,
     MozaikParametrized,
     varying_parameters,
-    matching_parametrized_object_params,
+    matching_parametrized_object_params
 )
 from .plot_constructors import (
     LinePlot,
     PerStimulusPlot,
     PerStimulusADSPlot,
-    ADSGridPlot,
+    ADSGridPlot
 )
 from .simple_plot import (
     StandardStyleLinePlot,
@@ -80,7 +80,7 @@ from .simple_plot import (
     SimplePlot,
     HistogramPlot,
     CorticalColumnSpikeRasterPlot,
-    OrderedAnalogSignalListPlot,
+    OrderedAnalogSignalListPlot
 )
 
 logger = logging.getLogger(__name__)
@@ -115,7 +115,7 @@ class Plotting(ParametrizedObject):
         parameters,
         plot_file_name=None,
         fig_param=None,
-        frame_duration=0,
+        frame_duration=0
     ):
         ParametrizedObject.__init__(self, parameters)
         self.datastore = datastore
@@ -197,7 +197,7 @@ class Plotting(ParametrizedObject):
                 fargs=(self,),
                 interval=self.frame_duration,
                 blit=False,
-                save_count=0,
+                save_count=0
             )
         gs.tight_layout(self.fig)
         if self.plot_file_name:
@@ -209,7 +209,7 @@ class Plotting(ParametrizedObject):
                     writer="avconv_file",
                     fps=30,
                     bitrate=5000,
-                    extra_args=["--verbose-debug"],
+                    extra_args=["--verbose-debug"]
                 )
             else:
                 # save the analysis plot
@@ -222,7 +222,7 @@ class Plotting(ParametrizedObject):
                 entry = {
                     "parameters": self.parameters,
                     "file_name": self.plot_file_name,
-                    "class_name": str(self.__class__),
+                    "class_name": str(self.__class__)
                 }
                 f.write(str(entry) + "\n")
                 f.close()
@@ -306,7 +306,7 @@ class PlotTuningCurve(Plotting):
         fig_param=None,
         frame_duration=0,
         centering_pnv=None,
-        spont_level_pnv=None,
+        spont_level_pnv=None
     ):
         Plotting.__init__(
             self, datastore, parameters, plot_file_name, fig_param, frame_duration
@@ -351,7 +351,7 @@ class PlotTuningCurve(Plotting):
             dic = colapse_to_dictionary(
                 [z.get_value_by_id(self.parameters.neurons) for z in self.pnvs[-1]],
                 st,
-                self.parameters.parameter_name,
+                self.parameters.parameter_name
             )
 
             # sort the entries in dict according to the parameter parameter_name values
@@ -377,9 +377,10 @@ class PlotTuningCurve(Plotting):
             elif self.parameters.centered and centering_pnv != None:
                 # if centering_pnv was supplied we are centering on maximum values
                 period = st[0].getParams()[self.parameters.parameter_name].period
-                assert (
-                    period != None
-                ), "ERROR: You asked for centering of tuning curves even though the domain over which it is measured is not periodic."
+                assert period != None, (
+                    "ERROR: You asked for centering of tuning curves even though the"
+                    " domain over which it is measured is not periodic."
+                )
                 centers = centering_pnv.get_value_by_id(self.parameters.neurons)
                 self.max_mean_response_indexes.append(
                     numpy.array(
@@ -393,7 +394,10 @@ class PlotTuningCurve(Plotting):
         if self.parameters.pool:
             assert all(
                 [p[0].value_units == self.pnvs[0][0].value_units for p in self.pnvs]
-            ), "You asked to pool tuning curves across different value_names, but the datastore contains PerNeuronValue datastructures with different units"
+            ), (
+                "You asked to pool tuning curves across different value_names, but the"
+                " datastore contains PerNeuronValue datastructures with different units"
+            )
 
     def subplot(self, subplotspec):
         if self.parameters.mean:
@@ -426,14 +430,16 @@ class PlotTuningCurve(Plotting):
             period = st[0].getParams()[self.parameters.parameter_name].period
 
             if self.parameters.centered:
-                assert (
-                    period != None
-                ), "ERROR: You asked for centering of tuning curves even though the domain over which it is measured is not periodic."
+                assert period != None, (
+                    "ERROR: You asked for centering of tuning curves even though the"
+                    " domain over which it is measured is not periodic."
+                )
 
             if self.parameters.polar:
-                assert (
-                    period != None
-                ), "ERROR: You asked to plot the tuning curve on polar axis even though the domain over which it is measured is not periodic."
+                assert period != None, (
+                    "ERROR: You asked to plot the tuning curve on polar axis even"
+                    " though the domain over which it is measured is not periodic."
+                )
 
             for k in sorted(dic.keys()):
                 (par, val) = dic[k]
@@ -446,7 +452,7 @@ class PlotTuningCurve(Plotting):
                                 val[:, j],
                                 par,
                                 period,
-                                self.max_mean_response_indexes[i][j],
+                                self.max_mean_response_indexes[i][j]
                             )
                         else:
                             vv = val[:, j]
@@ -590,7 +596,7 @@ class PlotTuningCurve(Plotting):
                     len(xs),
                     self.parameters.polar,
                     labels,
-                    idx,
+                    idx
                 )
 
                 plots.append(
@@ -598,7 +604,7 @@ class PlotTuningCurve(Plotting):
                         "TuningCurve_" + pnv[0].value_name,
                         StandardStyleLinePlot(xs, ys, error=errors, subplot_kw=po),
                         gs[i],
-                        params,
+                        params
                     )
                 )
 
@@ -616,7 +622,7 @@ class PlotTuningCurve(Plotting):
                 len(xs),
                 self.parameters.polar,
                 labels,
-                idx,
+                idx
             )
             if not self.parameters.polar:
                 plots.append(
@@ -624,7 +630,7 @@ class PlotTuningCurve(Plotting):
                         "TuningCurve_Stacked",
                         StandardStyleLinePlot(xs, ys, error=errors),
                         gs,
-                        params,
+                        params
                     )
                 )
             else:
@@ -633,7 +639,7 @@ class PlotTuningCurve(Plotting):
                         "TuningCurve_Stacked",
                         StandardStyleLinePlot(xs, ys, error=errors, subplot_kw=po),
                         gs,
-                        params,
+                        params
                     )
                 )
 
@@ -650,7 +656,7 @@ class PlotTuningCurve(Plotting):
         number_of_curves,
         polar,
         labels,
-        idx,
+        idx
     ):
         params = {}
 
@@ -676,7 +682,7 @@ class PlotTuningCurve(Plotting):
                 params["x_tick_labels"] = [
                     "-$\\frac{\\pi}{2}$",
                     "0",
-                    "$\\frac{\\pi}{2}$",
+                    "$\\frac{\\pi}{2}$"
                 ]
 
             if numpy.isclose(period, 2 * pi):
@@ -766,7 +772,7 @@ class RasterPlot(Plotting):
             s.get_spiketrain(self.parameters.neurons)
             for s in sorted(
                 dsv.get_segments(),
-                key=lambda x: MozaikParametrized.idd(x.annotations["stimulus"]).trial,
+                key=lambda x: MozaikParametrized.idd(x.annotations["stimulus"]).trial
             )
         ]
 
@@ -783,7 +789,7 @@ class RasterPlot(Plotting):
         x_ticks = [
             0.0,
             float(sp[0][0].t_stop.rescale(pq.s) / 2),
-            float(sp[0][0].t_stop.rescale(pq.s)),
+            float(sp[0][0].t_stop.rescale(pq.s))
         ]
 
         if self.parameters.spontaneous:
@@ -793,7 +799,7 @@ class RasterPlot(Plotting):
                     dsv.get_segments(null=True),
                     key=lambda x: MozaikParametrized.idd(
                         x.annotations["stimulus"]
-                    ).trial,
+                    ).trial
                 )
             ]
             sp = [
@@ -804,7 +810,7 @@ class RasterPlot(Plotting):
                 float(spont_sp[0][0].t_start.rescale(pq.s)),
                 0.0,
                 float(sp[0][0].t_stop.rescale(pq.s) / 2),
-                float(sp[0][0].t_stop.rescale(pq.s)),
+                float(sp[0][0].t_stop.rescale(pq.s))
             ]
 
         d = {}
@@ -816,14 +822,14 @@ class RasterPlot(Plotting):
                     "SpikeRasterPlot",
                     SpikeRasterPlot([sp]),
                     gs[:3, 0],
-                    {"x_axis": False, "x_label": None},
+                    {"x_axis": False, "x_label": None}
                 ),
                 (
                     "SpikeHistogramPlot",
                     SpikeHistogramPlot([sp], num_trials),
                     gs[3, 0],
-                    {"x_ticks": x_ticks},
-                ),
+                    {"x_ticks": x_ticks}
+                )
             ]
         else:
             return [
@@ -846,7 +852,7 @@ class RasterPlot(Plotting):
                     ),
                     t_start=-sp1.t_stop,
                     t_stop=sp2.t_stop,
-                    units=sp1.units,
+                    units=sp1.units
                 )
             )
         return l
@@ -895,7 +901,7 @@ class VmPlot(Plotting):
             s.get_vm(self.parameters.neuron)
             for s in sorted(
                 dsv.get_segments(),
-                key=lambda x: MozaikParametrized.idd(x.annotations["stimulus"]).trial,
+                key=lambda x: MozaikParametrized.idd(x.annotations["stimulus"]).trial
             )
         ]
         time_axis = numpy.arange(0, len(vms[0]), 1) / float(len(vms[0])) * float(
@@ -912,7 +918,7 @@ class VmPlot(Plotting):
                     dsv.get_segments(null=True),
                     key=lambda x: MozaikParametrized.idd(
                         x.annotations["stimulus"]
-                    ).trial,
+                    ).trial
                 )
             ]
             t_start = -float(spont_vms[0].t_stop)
@@ -952,8 +958,8 @@ class VmPlot(Plotting):
                     "y_lim": (-80.0, -40.0),
                     "x_ticks": x_ticks,
                     "x_label": "time (" + vms[0].t_stop.dimensionality.latex + ")",
-                    "y_label": "Vm (" + vms[0].dimensionality.latex + ")",
-                },
+                    "y_label": "Vm (" + vms[0].dimensionality.latex + ")"
+                }
             )
         ]
 
@@ -1005,13 +1011,13 @@ class GSynPlot(Plotting):
             numpy.concatenate((asl1.magnitude, asl2.magnitude)),
             t_start=-asl1.t_stop,
             sampling_period=asl1.sampling_period,
-            units=asl1.units,
+            units=asl1.units
         )
 
     def _ploter(self, dsv, gs):
         segs = sorted(
             dsv.get_segments(),
-            key=lambda x: MozaikParametrized.idd(x.annotations["stimulus"]).trial,
+            key=lambda x: MozaikParametrized.idd(x.annotations["stimulus"]).trial
         )
         gsyn_es = [s.get_esyn(self.parameters.neuron) for s in segs]
         gsyn_is = [s.get_isyn(self.parameters.neuron) for s in segs]
@@ -1020,7 +1026,7 @@ class GSynPlot(Plotting):
         if self.parameters.spontaneous:
             segs = sorted(
                 dsv.get_segments(null=True),
-                key=lambda x: MozaikParametrized.idd(x.annotations["stimulus"]).trial,
+                key=lambda x: MozaikParametrized.idd(x.annotations["stimulus"]).trial
             )
             spont_gsyn_es = [s.get_esyn(self.parameters.neuron) for s in segs]
             spont_gsyn_is = [s.get_isyn(self.parameters.neuron) for s in segs]
@@ -1066,7 +1072,7 @@ class OverviewPlot(Plotting):
             "spontaneous": bool,  # the name of the sheet for which to plot
             "neuron": int,
             # if not empty the ParameterSet is passed to ActivityMovie which is displayed in to top row, note that the sheet_name will be set by OverviewPlot
-            "sheet_activity": ParameterSet,
+            "sheet_activity": ParameterSet
         }
     )
 
@@ -1089,7 +1095,7 @@ class OverviewPlot(Plotting):
                     "Activity_plot",
                     ActivityMovie(dsv, self.parameters.sheet_activity),
                     gs[0, 0],
-                    {},
+                    {}
                 )
             )
             offset = 1
@@ -1115,12 +1121,12 @@ class OverviewPlot(Plotting):
                                 "sheet_name": self.parameters.sheet_name,
                                 "trial_averaged_histogram": False,
                                 "spontaneous": self.parameters.spontaneous,
-                                "neurons": [self.parameters.neuron],
+                                "neurons": [self.parameters.neuron]
                             }
-                        ),
+                        )
                     ),
                     gs[0 + offset, 0],
-                    params,
+                    params
                 ),
                 (
                     "Conductance_plot",
@@ -1130,17 +1136,17 @@ class OverviewPlot(Plotting):
                             {
                                 "sheet_name": self.parameters.sheet_name,
                                 "spontaneous": self.parameters.spontaneous,
-                                "neuron": self.parameters.neuron,
+                                "neuron": self.parameters.neuron
                             }
-                        ),
+                        )
                     ),
                     gs[1 + offset, 0],
                     {
                         "x_label": None,
                         "x_tick_style": "Custom",
                         "x_tick_labels": None,
-                        "title": None,
-                    },
+                        "title": None
+                    }
                 ),
                 (
                     "Vm_plot",
@@ -1150,13 +1156,13 @@ class OverviewPlot(Plotting):
                             {
                                 "sheet_name": self.parameters.sheet_name,
                                 "spontaneous": self.parameters.spontaneous,
-                                "neuron": self.parameters.neuron,
+                                "neuron": self.parameters.neuron
                             }
-                        ),
+                        )
                     ),
                     gs[2 + offset, 0],
-                    {"title": None},
-                ),
+                    {"title": None}
+                )
             ]
         )
         return d
@@ -1192,7 +1198,7 @@ class AnalogSignalListPlot(Plotting):
         dsv = queries.param_filter_query(
             self.datastore,
             sheet_name=self.parameters.sheet_name,
-            identifier="AnalogSignalList",
+            identifier="AnalogSignalList"
         )
         return PerStimulusADSPlot(
             dsv, function=self._ploter, title_style="Clever"
@@ -1257,7 +1263,7 @@ class AnalogSignalPlot(Plotting):
         dsv = queries.param_filter_query(
             self.datastore,
             sheet_name=self.parameters.sheet_name,
-            identifier="AnalogSignal",
+            identifier="AnalogSignal"
         )
         return PerStimulusADSPlot(
             dsv, function=self._ploter, title_style="Clever"
@@ -1286,7 +1292,7 @@ class AnalogSignalPlot(Plotting):
                 "AnalogSignalPlot",
                 StandardStyleLinePlot([times], [a]),
                 subplotspec,
-                params,
+                params
             )
         ]
 
@@ -1367,7 +1373,7 @@ class PerNeuronPairAnalogSignalListPlot(Plotting):
         dsv = queries.param_filter_query(
             self.datastore,
             sheet_name=self.parameters.sheet_name,
-            identifier="AnalogSignalList",
+            identifier="AnalogSignalList"
         )
         return PerStimulusADSPlot(
             dsv, function=self._ploter, title_style="Clever"
@@ -1402,7 +1408,7 @@ class PerNeuronPairAnalogSignalListPlot(Plotting):
                 "AnalogSignalPlot",
                 StandardStyleLinePlot([times], [asl]),
                 subplotspec,
-                params,
+                params
             )
         ]
 
@@ -1420,7 +1426,7 @@ class RetinalInputMovie(Plotting):
         parameters,
         plot_file_name=None,
         fig_param=None,
-        frame_duration=0,
+        frame_duration=0
     ):
         Plotting.__init__(
             self, datastore, parameters, plot_file_name, fig_param, frame_duration
@@ -1458,10 +1464,10 @@ class RetinalInputMovie(Plotting):
                 "PixelMovie",
                 PixelMovie(
                     self.retinal_input[idx],
-                    MozaikParametrized.idd(self.st[idx]).background_luminance,
+                    MozaikParametrized.idd(self.st[idx]).background_luminance
                 ),
                 gs,
-                {"x_axis": False, "y_axis": False, "title": title},
+                {"x_axis": False, "y_axis": False, "title": title}
             )
         ]
 
@@ -1503,7 +1509,7 @@ class ActivityMovie(Plotting):
             "resolution": int,
             "sheet_name": str,  # the sheet for which to display the actvity movie
             # the time-constant of the exponential with which the convolve psth, 0 means no convolution
-            "exp_time_constant": float,
+            "exp_time_constant": float
         }
     )
 
@@ -1514,7 +1520,7 @@ class ActivityMovie(Plotting):
         plot_file_name=None,
         fig_param=None,
         frame_duration=0,
-        spont_level_pnv=None,
+        spont_level_pnv=None
     ):
         Plotting.__init__(
             self, datastore, parameters, plot_file_name, fig_param, frame_duration
@@ -1547,7 +1553,7 @@ class ActivityMovie(Plotting):
                 numpy.exp(
                     -(bins[: numpy.int(numpy.floor(3 * etc / bw))] - start) / etc
                 ),
-                axis=0,
+                axis=0
             )
 
         for spike_trains in sp:
@@ -1580,15 +1586,15 @@ class ActivityMovie(Plotting):
             0,
             self.datastore.get_sheet_indexes(
                 self.parameters.sheet_name,
-                dsv.get_segments()[0].get_stored_spike_train_ids(),
-            ),
+                dsv.get_segments()[0].get_stored_spike_train_ids()
+            )
         ]
         posy = pos[
             1,
             self.datastore.get_sheet_indexes(
                 self.parameters.sheet_name,
-                dsv.get_segments()[0].get_stored_spike_train_ids(),
-            ),
+                dsv.get_segments()[0].get_stored_spike_train_ids()
+            )
         ]
 
         if not self.parameters.scatter:
@@ -1606,7 +1612,7 @@ class ActivityMovie(Plotting):
                         (posx, posy),
                         h[:, i],
                         (xi[None, :], yi[:, None]),
-                        method="nearest",
+                        method="nearest"
                     )
                 )
             w = numpy.isnan(numpy.array(movie))
@@ -1617,7 +1623,7 @@ class ActivityMovie(Plotting):
                     "PixelMovie",
                     PixelMovie(40000.0 * numpy.array(movie)),
                     gs,
-                    {"x_axis": False, "y_axis": False},
+                    {"x_axis": False, "y_axis": False}
                 )
             ]
         else:
@@ -1626,7 +1632,7 @@ class ActivityMovie(Plotting):
                     "ScatterPlot",
                     ScatterPlotMovie(posx, posy, h.T),
                     gs,
-                    {"x_axis": False, "y_axis": False, "dot_size": 40},
+                    {"x_axis": False, "y_axis": False, "dot_size": 40}
                 )
             ]
 
@@ -1659,7 +1665,7 @@ class PerNeuronValuePlot(Plotting):
     required_parameters = ParameterSet(
         {
             # Whether to show cortical view or histogram (see class description for full detail.)
-            "cortical_view": bool,
+            "cortical_view": bool
         }
     )
 
@@ -1677,7 +1683,7 @@ class PerNeuronValuePlot(Plotting):
             self.dsv,
             function=self._ploter,
             x_axis_parameter="value_name",
-            y_axis_parameter="sheet_name",
+            y_axis_parameter="sheet_name"
         ).make_grid_plot(subplotspec)
 
     def _ploter(self, dsv, gs):
@@ -1685,7 +1691,8 @@ class PerNeuronValuePlot(Plotting):
 
         if self.parameters.cortical_view:
             assert len(pnvs) <= 1, logger.error(
-                "We can only display single stimulus parametrization in cortical view, but you have suplied multiple in datastore."
+                "We can only display single stimulus parametrization in cortical view,"
+                " but you have suplied multiple in datastore."
             )
             pnv = pnvs[0]
             pos = self.dsv.get_neuron_postions()[pnv.sheet_name]
@@ -1709,12 +1716,13 @@ class PerNeuronValuePlot(Plotting):
                     "ScatterPlot",
                     ScatterPlot(posx, posy, values, periodic=periodic, period=period),
                     gs,
-                    params,
+                    params
                 )
             ]
         else:
             assert queries.ads_with_equal_stimulus_type(dsv), logger.error(
-                "Warning sheet name and value name does't seem to uniquely identify set of PerNeuronValue ADS with the same stimulus type"
+                "Warning sheet name and value name does't seem to uniquely identify set"
+                " of PerNeuronValue ADS with the same stimulus type"
             )
             params = {}
             params["y_label"] = "# neurons"
@@ -1737,11 +1745,11 @@ class PerNeuronValuePlot(Plotting):
                                 for p in varying_stim_parameters
                             ]
                         ),
-                        pnv,
+                        pnv
                     )
                     for pnv in pnvs
                 ],
-                key=lambda x: x[0],
+                key=lambda x: x[0]
             )
 
             if len(a) > 1:
@@ -1752,7 +1760,7 @@ class PerNeuronValuePlot(Plotting):
                             [z[1].values for z in a], labels=[z[0] for z in a]
                         ),
                         gs,
-                        params,
+                        params
                     )
                 ]
             else:
@@ -1770,7 +1778,7 @@ class PerNeuronValueScatterPlot(Plotting):
             # only plot combinations of PNVs that have the same value units.
             "only_matching_units": bool,
             # if True NaNs will be removed from the data. In general if there are NaN in the data and this is False it will not be displayed correctly.
-            "ignore_nan": bool,
+            "ignore_nan": bool
         }
     )
 
@@ -1793,9 +1801,10 @@ class PerNeuronValueScatterPlot(Plotting):
                         self.pairs.append((pnvs[i], pnvs[j]))
                         self.sheets.append(sheet)
 
-        assert (
-            len(self.pairs) > 0
-        ), "Error, not pairs of PerNeuronValue ADS in datastore seem to have the same value_units"
+        assert len(self.pairs) > 0, (
+            "Error, not pairs of PerNeuronValue ADS in datastore seem to have the same"
+            " value_units"
+        )
         self.length = len(self.pairs)
 
     def subplot(self, subplotspec):
@@ -2052,7 +2061,7 @@ class ConnectivityPlot(Plotting):
                     )
                 ),
                 weights=numpy.abs(w),
-                high=pnv.period,
+                high=pnv.period
             )
             params["title"] = (
                 str(self.connections[idx].proj_name)
@@ -2084,10 +2093,10 @@ class ConnectivityPlot(Plotting):
                             colors=pnv.get_value_by_id(
                                 self.datastore.get_sheet_ids(pnv.sheet_name, ix)
                             ),
-                            period=pnv.period,
+                            period=pnv.period
                         ),
                         gs,
-                        params,
+                        params
                     )
                 ]
             else:
@@ -2104,10 +2113,10 @@ class ConnectivityPlot(Plotting):
                             colors=pnv.get_value_by_id(
                                 self.datastore.get_sheet_ids(pnv.sheet_name, ix)
                             ),
-                            period=pnv.period,
+                            period=pnv.period
                         ),
                         gs,
-                        params,
+                        params
                     )
                 ]
         else:
@@ -2120,7 +2129,7 @@ class ConnectivityPlot(Plotting):
                         "ConnectionsPlot",
                         ConnectionPlot(sx, sy, tx, ty, numpy.abs(w)),
                         gs,
-                        params,
+                        params
                     )
                 ]
             else:
@@ -2133,10 +2142,10 @@ class ConnectivityPlot(Plotting):
                             sy,
                             numpy.min(sx) * 1.2,
                             numpy.min(sy) * 1.2,
-                            numpy.abs(w),
+                            numpy.abs(w)
                         ),
                         gs,
-                        params,
+                        params
                     )
                 ]
 
@@ -2160,10 +2169,10 @@ class ConnectivityPlot(Plotting):
                         tx,
                         ty,
                         (numpy.zeros(w.shape) + 0.3) * (w != 0),
-                        colors=d,
+                        colors=d
                     ),
                     gs,
-                    params,
+                    params
                 )
             )
         else:
@@ -2177,10 +2186,10 @@ class ConnectivityPlot(Plotting):
                         numpy.min(sx) * 1.2,
                         numpy.min(sy) * 1.2,
                         (numpy.zeros(w.shape) + 0.3) * (w != 0),
-                        colors=d,
+                        colors=d
                     ),
                     gs,
-                    params,
+                    params
                 )
             )
 
@@ -2210,7 +2219,7 @@ class PerNeuronAnalogSignalScatterPlot(Plotting):
         parameters,
         plot_file_name=None,
         fig_param=None,
-        frame_duration=0,
+        frame_duration=0
     ):
         Plotting.__init__(
             self, datastore, parameters, plot_file_name, fig_param, frame_duration
@@ -2219,7 +2228,8 @@ class PerNeuronAnalogSignalScatterPlot(Plotting):
             datastore, name="AnalogSignalList"
         ).get_analysis_result()
         assert len(self.asls) == 2, (
-            "PerNeuronAnalogSignalScatterPlot expects exactly two AnalogSignalList ADS in the datastore, found %d"
+            "PerNeuronAnalogSignalScatterPlot expects exactly two AnalogSignalList ADS"
+            " in the datastore, found %d"
             % len(self.asls)
         )
 
@@ -2244,8 +2254,8 @@ class PerNeuronAnalogSignalScatterPlot(Plotting):
                 {
                     "x_label": self.asls[0].y_axis_name,
                     "y_label": self.asls[1].y_axis_name,
-                    "title": "Neuron id: %d" % self.parameters.neurons[idx],
-                },
+                    "title": "Neuron id: %d" % self.parameters.neurons[idx]
+                }
             )
         ]
 
@@ -2308,9 +2318,10 @@ class CorticalColumnRasterPlot(Plotting):
         else:
             self.colors = self.parameters.colors
 
-        assert (
-            len(self.sheet_names) == len(self.labels) == len(self.colors)
-        ), "Parameter <sheet_names> , <labels> and <colors> have to have the same length or be empty lists."
+        assert len(self.sheet_names) == len(self.labels) == len(self.colors), (
+            "Parameter <sheet_names> , <labels> and <colors> have to have the same"
+            " length or be empty lists."
+        )
 
         if len(self.parameters.neurons) != 0:
             assert len(self.sheet_names) == len(
@@ -2341,7 +2352,7 @@ class CorticalColumnRasterPlot(Plotting):
                 "CorticalColumnRasterPlot",
                 CorticalColumnSpikeRasterPlot(sp),
                 gs,
-                {"labels": self.labels, "colors": self.colors},
+                {"labels": self.labels, "colors": self.colors}
             )
         ]
 
@@ -2385,7 +2396,7 @@ class PlotTemporalTuningCurve(Plotting):
             "sheet_name": str,  # from which layer to plot the tuning curves
             "parameter_name": str,  # the parameter_name through which to plot the tuning curve
             # if True it will plot the mean tuning curve over the neurons (in case centered=True it will first center the TCs before computing the mean)
-            "mean": bool,
+            "mean": bool
         }
     )
 
@@ -2396,7 +2407,7 @@ class PlotTemporalTuningCurve(Plotting):
         plot_file_name=None,
         fig_param=None,
         frame_duration=0,
-        centering_pnv=None,
+        centering_pnv=None
     ):
         Plotting.__init__(
             self, datastore, parameters, plot_file_name, fig_param, frame_duration
@@ -2418,7 +2429,7 @@ class PlotTemporalTuningCurve(Plotting):
             dsv = queries.param_filter_query(
                 dsv,
                 identifier="AnalogSignalList",
-                sheet_name=self.parameters.sheet_name,
+                sheet_name=self.parameters.sheet_name
             )
             assert matching_parametrized_object_params(
                 dsv.get_analysis_result(), params=["y_axis_name"]
@@ -2430,7 +2441,7 @@ class PlotTemporalTuningCurve(Plotting):
             dic = colapse_to_dictionary(
                 [z.get_asl_by_id(self.parameters.neurons) for z in self.asls[-1]],
                 st,
-                self.parameters.parameter_name,
+                self.parameters.parameter_name
             )
 
             # sort the entries in dict according to the parameter parameter_name values
@@ -2446,9 +2457,10 @@ class PlotTemporalTuningCurve(Plotting):
         if centering_pnv != None:
             # if centering_pnv was supplied we are centering on maximum values
             period = st[0].getParams()[self.parameters.parameter_name].period
-            assert (
-                period != None
-            ), "ERROR: You asked for centering of tuning curves even though the domain over which it is measured is not periodic."
+            assert period != None, (
+                "ERROR: You asked for centering of tuning curves even though the domain"
+                " over which it is measured is not periodic."
+            )
             centers = centering_pnv.get_value_by_id(self.parameters.neurons)
             self.center_response_indexes.append(
                 numpy.array(
@@ -2490,7 +2502,7 @@ class PlotTemporalTuningCurve(Plotting):
                                 val[:, j],
                                 par,
                                 period,
-                                self.centered_response_indexes[i][j],
+                                self.centered_response_indexes[i][j]
                             )
                         else:
                             vv = val[:, j]
@@ -2549,14 +2561,14 @@ class PlotTemporalTuningCurve(Plotting):
                 period,
                 self.parameters.neurons[idx],
                 numpy.squeeze(xs),
-                idx,
+                idx
             )
             plots.append(
                 (
                     "TuningCurve_" + asl[0].y_axis_name,
                     OrderedAnalogSignalListPlot(numpy.squeeze(ys), numpy.squeeze(xs)),
                     gs[i],
-                    params,
+                    params
                 )
             )
 
@@ -2571,7 +2583,7 @@ class PlotTemporalTuningCurve(Plotting):
         period,
         neuron_id,
         signal_labels,
-        idx,
+        idx
     ):
         params = {}
 

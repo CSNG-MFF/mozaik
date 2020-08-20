@@ -45,13 +45,13 @@ class RetinalUniformSheet(Sheet):
             "Creating %s with %d neurons."
             % (
                 self.__class__.__name__,
-                int(parameters.sx * parameters.sy * parameters.density),
+                int(parameters.sx * parameters.sy * parameters.density)
             )
         )
         rs = space.RandomStructure(
             boundary=space.Cuboid(self.size_x, self.size_y, 0),
             origin=(0.0, 0.0, 0.0),
-            rng=mozaik.pynn_rng,
+            rng=mozaik.pynn_rng
         )
 
         # rs = space.Grid2D(aspect_ratio=1, dx=parameters.sx/parameters.density, dy=parameters.sy/parameters.density, x0=-parameters.sx/2,y0=-parameters.sy/2,z=0.0)
@@ -61,7 +61,7 @@ class RetinalUniformSheet(Sheet):
             self.parameters.cell.params,
             structure=rs,
             initial_values=self.parameters.cell.initial_values,
-            label=self.name,
+            label=self.name
         )
 
     def size_in_degrees(self):
@@ -97,13 +97,12 @@ class SheetWithMagnificationFactor(Sheet):
     )
 
     def __init__(self, model, parameters):
-        """
-        """
+        """"""
         logger.info(
             "Creating %s with %d neurons."
             % (
                 self.__class__.__name__,
-                int(parameters.sx * parameters.sy / 1000000 * parameters.density),
+                int(parameters.sx * parameters.sy / 1000000 * parameters.density)
             )
         )
         Sheet.__init__(
@@ -111,7 +110,7 @@ class SheetWithMagnificationFactor(Sheet):
             model,
             parameters.sx / parameters.magnification_factor,
             parameters.sy / parameters.magnification_factor,
-            parameters,
+            parameters
         )
         self.magnification_factor = parameters.magnification_factor
 
@@ -135,7 +134,7 @@ class SheetWithMagnificationFactor(Sheet):
         """
         return (
             degree_x * self.magnification_factor,
-            degree_y * self.magnification_factor,
+            degree_y * self.magnification_factor
         )
 
     def cs_2_vf(self, micro_meters_x, micro_meters_y):
@@ -158,7 +157,7 @@ class SheetWithMagnificationFactor(Sheet):
         """
         return (
             micro_meters_x / self.magnification_factor,
-            micro_meters_y / self.magnification_factor,
+            micro_meters_y / self.magnification_factor
         )
 
     def dvf_2_dcs(self, distance_vf):
@@ -203,7 +202,7 @@ class VisualCorticalUniformSheet(SheetWithMagnificationFactor):
         rs = space.RandomStructure(
             boundary=space.Cuboid(dx, dy, 0),
             origin=(0.0, 0.0, 0.0),
-            rng=mozaik.pynn_rng,
+            rng=mozaik.pynn_rng
         )
 
         self.pop = self.sim.Population(
@@ -212,7 +211,7 @@ class VisualCorticalUniformSheet(SheetWithMagnificationFactor):
             self.parameters.cell.params,
             structure=rs,
             initial_values=self.parameters.cell.initial_values,
-            label=self.name,
+            label=self.name
         )
 
 
@@ -256,7 +255,7 @@ class VisualCorticalUniformSheet3D(VisualCorticalUniformSheet):
         rs = space.RandomStructure(
             boundary=space.Cuboid(dx, dy, width_z),
             origin=(0.0, 0.0, origin_z),
-            rng=mozaik.pynn_rng,
+            rng=mozaik.pynn_rng
         )
 
         self.pop = self.sim.Population(
@@ -265,5 +264,5 @@ class VisualCorticalUniformSheet3D(VisualCorticalUniformSheet):
             self.parameters.cell.params,
             structure=rs,
             initial_values=self.parameters.cell.initial_values,
-            label=self.name,
+            label=self.name
         )

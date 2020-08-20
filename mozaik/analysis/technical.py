@@ -70,7 +70,7 @@ class NeuronAnnotationsToPerNeuronValues(Analysis):
                             value_name=k,
                             sheet_name=sheet,
                             tags=self.tags,
-                            analysis_algorithm=self.__class__.__name__,
+                            analysis_algorithm=self.__class__.__name__
                         )
                     )
 
@@ -93,7 +93,7 @@ class SummarizeSingleValues(Analysis):
                     a.value_name,
                     str(a.value),
                     a.analysis_algorithm,
-                    a.stimulus_id,
+                    a.stimulus_id
                 )
             )
         f.close()

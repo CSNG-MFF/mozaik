@@ -11,7 +11,7 @@ from ..core import ParametrizedObject
 from ..stimuli import InternalStimulus
 from ..tools.distribution_parametrization import (
     MozaikExtendedParameterSet,
-    ParameterWithUnitsAndPeriod,
+    ParameterWithUnitsAndPeriod
 )
 
 logger = logging.getLogger(__name__)
@@ -99,7 +99,7 @@ class Experiment(ParametrizedObject):
                 segments,
                 null_segments,
                 input_stimulus,
-                simulator_run_time,
+                simulator_run_time
             ) = self.model.present_stimulus_and_record(s, ds)
             srtsum += simulator_run_time
             data_store.add_recording(segments, s)
@@ -113,7 +113,7 @@ class Experiment(ParametrizedObject):
                 % (
                     i + 1,
                     len(stimulus_indexes),
-                    resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024,
+                    resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
                 )
             )
         return srtsum
@@ -164,7 +164,7 @@ class PoissonNetworkKick(Experiment):
             "drive_period": float,
             "stimulation_configuration": ParameterSet,
             "lambda_list": list,
-            "weight_list": list,
+            "weight_list": list
         }
     )
 
@@ -179,7 +179,7 @@ class PoissonNetworkKick(Experiment):
                     "exc_firing_rate": self.parameters.lambda_list[i],
                     "exc_weight": self.parameters.weight_list[i],
                     "drive_period": self.parameters.drive_period,
-                    "population_selector": self.parameters.stimulation_configuration,
+                    "population_selector": self.parameters.stimulation_configuration
                 }
             )
             direct_stimulation[sheet] = [Kick(model.sheets[sheet], p)]
@@ -191,7 +191,7 @@ class PoissonNetworkKick(Experiment):
                 duration=self.parameters.duration,
                 trial=0,
                 direct_stimulation_name="Kick",
-                direct_stimulation_parameters=p,
+                direct_stimulation_parameters=p
             )
         )
 
@@ -216,6 +216,6 @@ class NoStimulation(Experiment):
             InternalStimulus(
                 frame_duration=self.parameters.duration,
                 duration=self.parameters.duration,
-                trial=0,
+                trial=0
             )
         )
