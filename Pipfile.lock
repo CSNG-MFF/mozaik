@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "8b1a95d53563d8b7c4c6311e7f0ddba60fab14bf1e2f8ed03e91d59981a3d488"
+            "sha256": "2a2889c20d7ec59bd8a5c516ff59675f439a4cfa0c99b673cae1214015d5c07c"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -71,8 +71,8 @@
             "version": "==0.29.21"
         },
         "imagen": {
-            "git": "https://github.com/antolikjan/imagen.git",
-            "ref": "c8a4f09c37e8bf59e2d5836489f07c3a2c206efb"
+            "git": "https://github.com/sjawhar/imagen.git",
+            "ref": "3a39f4b32c9debd9f792fb5913bce631378419fc"
         },
         "kiwisolver": {
             "hashes": [

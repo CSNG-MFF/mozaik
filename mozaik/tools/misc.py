@@ -3,6 +3,7 @@ Various helper functions.
 """
 
 import numpy as np
+import pickle
 
 
 def sample_from_bin_distribution(bins, number_of_samples):
@@ -95,3 +96,16 @@ def result_directory_name(simulation_run_name, simulation_name, modified_paramet
         )
 
     return simulation_name + "_" + simulation_run_name + "_____" + modified_params_str
+
+
+def load_pickle_crosscompat(filepath):
+    """
+    Loads pickled data in a method cross-compatible with Python 2/3
+    """
+    try:
+        with open(filepath, 'rb') as f:
+            pickle_data = pickle.load(f)
+    except UnicodeDecodeError as e:
+        with open(filepath, 'rb') as f:
+            pickle_data = pickle.load(f, encoding='bytes')
+    return pickle_data

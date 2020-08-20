@@ -207,7 +207,7 @@ def single_value_visualization(
                     z
                 )
 
-                f = open(value_name + ".pickle", "w")
+                f = open(value_name + ".pickle", "wb")
                 pickle.dump(
                     (
                         value_name,
@@ -227,7 +227,7 @@ def single_value_visualization(
             raise ValueError("Currently cannot handle more than 2D data")
         plt.title(value_name)
 
-        f = open("ps_res.pickle", "w")
+        f = open("ps_res.pickle", "wb")
         pickle.dump(res, f)
         scipy.io.savemat("ps_res.mat", res)
         f.close()

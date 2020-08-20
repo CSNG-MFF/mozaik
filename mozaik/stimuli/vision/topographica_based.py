@@ -3,8 +3,6 @@
 The file contains stimuli that use topographica to generate the stimulus
 
 """
-import pickle
-
 from imagen.image import BoundingBox
 from imagen.transferfn import TransferFn
 from numpy import pi
@@ -14,6 +12,7 @@ import imagen.random
 import numpy
 import param
 
+from ...tools.misc import load_pickle_crosscompat
 from ...tools.mozaik_parametrized import SNumber, SString
 from ...tools.units import cpd
 from .visual_stimulus import VisualStimulus
@@ -386,8 +385,7 @@ class NaturalImageWithEyeMovement(TopographicaBasedVisualStimulus):
 
     def frames(self):
         self.time = 0
-        f = open(self.eye_path_location, "r")
-        self.eye_path = pickle.load(f)
+        self.eye_path = load_pickle_crosscompat(self.eye_path_location)
         self.pattern_sampler = imagen.image.PatternSampler(
             size_normalization="fit_longest",
             whole_pattern_output_fns=[MaximumDynamicRange()]
@@ -450,9 +448,7 @@ class DriftingGratingWithEyeMovement(TopographicaBasedVisualStimulus):
     )
 
     def frames(self):
-
-        f = open(self.eye_path_location, "r")
-        self.eye_path = pickle.load(f)
+        self.eye_path = load_pickle_crosscompat(self.eye_path_location)
         self.time = 0
         self.current_phase = 0
         while True:

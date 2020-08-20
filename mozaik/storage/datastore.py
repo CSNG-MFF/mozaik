@@ -13,6 +13,7 @@ from parameters import ParameterSet
 import numpy
 
 from ..core import ParametrizedObject
+from ..tools.misc import load_pickle_crosscompat
 from ..tools.mozaik_parametrized import MozaikParametrized, filter_query
 from .neo_neurotools_wrapper import MozaikSegment, PickledDataStoreNeoWrapper
 
@@ -504,8 +505,7 @@ class Hdf5DataStore(DataStore):
         for s in self.block.segments:
             self.stimulus_dict[s.stimulus] = True
 
-        f = open(self.parameters.root_directory + "/datastore.analysis.pickle", "rb")
-        self.analysis_results = pickle.load(f)
+        self.analysis_results = load_pickle_crosscompat(self.parameters.root_directory + "/datastore.analysis.pickle")
 
     def save(self):
         # we need to first unwrap segments from MozaikWrapper
@@ -570,8 +570,7 @@ class PickledDataStore(Hdf5DataStore):
 
     def load(self):
 
-        f = open(self.parameters.root_directory + "/datastore.recordings.pickle", "rb")
-        self.block = pickle.load(f)
+        self.block = load_pickle_crosscompat(self.parameters.root_directory + "/datastore.recordings.pickle")
         for s in self.block.segments:
             s.full = False
             s.datastore_path = self.parameters.root_directory
@@ -579,21 +578,14 @@ class PickledDataStore(Hdf5DataStore):
         if os.path.isfile(
             self.parameters.root_directory + "/datastore.analysis.pickle"
         ):
-            f = open(
-                self.parameters.root_directory + "/datastore.analysis.pickle", "rb"
-            )
-            self.analysis_results = pickle.load(f)
+            self.analysis_results = load_pickle_crosscompat(self.parameters.root_directory + "/datastore.analysis.pickle")
         else:
             self.analysis_results = []
 
         if os.path.isfile(
             self.parameters.root_directory + "/datastore.sensory.stimulus.pickle"
         ):
-            f = open(
-                self.parameters.root_directory + "/datastore.sensory.stimulus.pickle",
-                "rb"
-            )
-            self.sensory_stimulus = pickle.load(f)
+            self.sensory_stimulus = load_pickle_crosscompat(self.parameters.root_directory + "/datastore.sensory.stimulus.pickle")
         else:
             self.sensory_stimulus = {}
 

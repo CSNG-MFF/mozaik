@@ -2,12 +2,12 @@ import pickle
 
 import matplotlib.pyplot as plt
 
+from .misc import load_pickle_crosscompat
 
 def visualize_retinal_cache(data_store, which):
-    f = open("./retinal_cache/" + str(which) + ".st", "r")
     # TODO: f1 is undefined
     cached_stimulus = pickle.load(f1)
-    z = pickle.load(f)
+    z = load_pickle_crosscompat("./retinal_cache/" + str(which) + ".st")
 
     pos = data_store.get_neuron_postions()["X_ON"]
 

@@ -5,7 +5,7 @@ import subprocess
 import time
 
 from ..cli import parse_parameter_search_args
-from ..tools.misc import result_directory_name
+from ..tools.misc import load_pickle_crosscompat, result_directory_name
 
 
 class ParameterSearchBackend(object):
@@ -433,9 +433,7 @@ def parameter_search_run_script_distributed_slurm(
     core_number : int
                 How many cores to reserve per process.
     """
-    f = open(master_results_dir + "/parameter_combinations", "rb")
-    combinations = pickle.load(f)
-    f.close()
+    combinations = load_pickle_crosscompat(master_results_dir + "/parameter_combinations")
 
     # first check whether all parameter combinations contain the same parameter names
     assert (
@@ -498,9 +496,7 @@ def parameter_search_run_script_distributed_slurm_IoV(
     core_number : int
                 How many cores to reserve per process.
     """
-    f = open(master_results_dir + "/parameter_combinations", "rb")
-    combinations = pickle.load(f)
-    f.close()
+    combinations = load_pickle_crosscompat(master_results_dir + "/parameter_combinations")
 
     # first check whether all parameter combinations contain the same parameter names
     assert (

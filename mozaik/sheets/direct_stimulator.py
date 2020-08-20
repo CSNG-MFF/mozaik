@@ -24,6 +24,7 @@ from .. import get_seeds, load_component
 from ..controller import Global
 from ..core import ParametrizedObject
 from ..tools.circ_stat import circular_dist
+from ..tools.misc import load_pickle_crosscompat
 from ..tools.stgen import StGen
 
 
@@ -507,8 +508,7 @@ class LocalStimulatorArray(DirectStimulator):
         plt.figure(figsize=(42, 12))
 
         # let's load up disperssion data and setup interpolation
-        f = open(self.parameters.light_source_light_propagation_data, "r")
-        radprofs = pickle.load(f)
+        radprofs = load_pickle_crosscompat(self.parameters.light_source_light_propagation_data)
         # light_flux_lookup =  scipy.interpolate.RegularGridInterpolator((numpy.arange(0,1080,60),numpy.linspace(0,1,354)*149.701*numpy.sqrt(2)), radprofs, method='linear',bounds_error=False,fill_value=0)
         light_flux_lookup = scipy.interpolate.RegularGridInterpolator(
             (
@@ -538,9 +538,10 @@ class LocalStimulatorArray(DirectStimulator):
             + "positions"
             + self.sheet.name.replace("/", "_")
             + ".pickle",
-            "w"
+            "wb"
         )
         pickle.dump((xx, yy), f)
+        f.close()
 
         mixing_templates = []
         for depth in numpy.arange(
@@ -827,7 +828,7 @@ class LocalStimulatorArrayChR(LocalStimulatorArray):
             + "_"
             + str(self.parameters.spacing)
             + ".pickle",
-            "w"
+            "wb"
         )
         pickle.dump(self.mixed_signals, f)
         f.close()

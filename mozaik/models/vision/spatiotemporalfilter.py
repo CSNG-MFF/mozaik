@@ -15,6 +15,7 @@ from ... import get_seeds
 from ...core import SensoryInputComponent
 from ...sheets.vision import RetinalUniformSheet
 from ...space import VisualSpace, VisualRegion
+from ...tools.misc import load_pickle_crosscompat
 from ...tools.mozaik_parametrized import MozaikParametrized
 
 
@@ -105,8 +106,8 @@ class SpatioTemporalReceptiveField(object):
         # x = numpy.arange(0.0, width, dx)  + dx/2.0 - width/2.0
         # y = numpy.arange(0.0, height, dy) + dy/2.0 - height/2.0
 
-        x = numpy.linspace(0.0, width - dx, width / dx) + dx / 2.0 - width / 2.0
-        y = numpy.linspace(0.0, height - dy, height / dy) + dx / 2.0 - height / 2.0
+        x = numpy.linspace(0.0, width - dx, int(width / dx)) + dx / 2.0 - width / 2.0
+        y = numpy.linspace(0.0, height - dy, int(height / dy)) + dx / 2.0 - height / 2.0
 
         # t is the time at the beginning of each timestep
         t = numpy.arange(0.0, duration, dt)
@@ -554,19 +555,14 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
             self.cached_stimuli = {}
             return None
         else:
-            f1 = open(self.parameters.cache_path + "/" + "stimuli.st", "r")
-            self.cached_stimuli = pickle.load(f1)
-            f1.close()
+            self.cached_stimuli = load_pickle_crosscompat(self.parameters.cache_path + "/" + "stimuli.st")
             if str(stimulus_id) in self.cached_stimuli:
-                f = open(
+                z = load_pickle_crosscompat(
                     self.parameters.cache_path
                     + "/"
                     + str(self.cached_stimuli[str(stimulus_id)])
-                    + ".st",
-                    "rb"
+                    + ".st"
                 )
-                z = pickle.load(f)
-                f.close()
                 return z
             else:
                 return None
@@ -601,7 +597,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
 
             logger.debug("Stored spikes to cache...")
 
-            f1 = open(self.parameters.cache_path + "/" + "stimuli.st", "w")
+            f1 = open(self.parameters.cache_path + "/" + "stimuli.st", "wb")
             f = open(self.parameters.cache_path + "/" + str(counter) + ".st", "wb")
             pickle.dump(self.cached_stimuli, f1)
             pickle.dump((input_currents, retinal_input), f)

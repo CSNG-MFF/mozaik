@@ -33,12 +33,9 @@ class MapDependentModularConnectorFunction(ModularConnectorFunction):
     )
 
     def __init__(self, source, target, parameters):
-        import pickle
-
         ModularConnectorFunction.__init__(self, source, target, parameters)
         t_size = target.size_in_degrees()
-        f = open(self.parameters.map_location, "r")
-        mmap = pickle.load(f)
+        mmap = load_pickle_crosscompat(self.parameters.map_location)
         coords_x = np.linspace(-t_size[0] / 2.0, t_size[0] / 2.0, np.shape(mmap)[0])
         coords_y = np.linspace(-t_size[1] / 2.0, t_size[1] / 2.0, np.shape(mmap)[1])
         X, Y = np.meshgrid(coords_x, coords_y)
@@ -693,12 +690,9 @@ class CoCircularModularConnectorFunction(ModularConnectorFunction):
     )
 
     def __init__(self, source, target, parameters):
-        import pickle
-
         ModularConnectorFunction.__init__(self, source, target, parameters)
         t_size = target.size_in_degrees()
-        f = open(self.parameters.or_map_location, "r")
-        mmap = pickle.load(f)
+        mmap = load_pickle_crosscompat(self.parameters.or_map_location)
         coords_x = np.linspace(-t_size[0] / 2.0, t_size[0] / 2.0, np.shape(mmap)[0])
         coords_y = np.linspace(-t_size[1] / 2.0, t_size[1] / 2.0, np.shape(mmap)[1])
         X, Y = np.meshgrid(coords_x, coords_y)

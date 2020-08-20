@@ -169,7 +169,7 @@ class ModularSamplingProbabilisticConnector(ModularConnector):
             delays = self._obtain_delays(i)
             co = Counter(
                 sample_from_bin_distribution(
-                    weights, int(next(self.parameters.num_samples))
+                    weights, int(self.parameters.num_samples.next())
                 )
             )
             v = v + numpy.sum(list(co.values()))
@@ -250,7 +250,7 @@ class ModularSingleWeightProbabilisticConnector(ModularConnector):
                     (
                         k,
                         i,
-                        self.weight_scaler * next(self.parameters.base_weight),
+                        self.weight_scaler * self.parameters.base_weight.next(),
                         delays[k]
                     )
                     for k in connection_indices

@@ -1,6 +1,4 @@
 # encoding: utf-8
-import pickle
-
 from parameters import ParameterSet, ParameterDist
 from scipy.interpolate import NearestNDInterpolator
 import numpy
@@ -9,6 +7,7 @@ from ..connectors.modular import (
     ModularSamplingProbabilisticConnectorAnnotationSamplesCount
 )
 from ..core import BaseComponent
+from ..tools.misc import load_pickle_crosscompat
 
 
 """
@@ -103,8 +102,7 @@ class GaborConnector(BaseComponent):
         or_map = None
         if self.parameters.or_map:
 
-            f = open(self.parameters.or_map_location, "r")
-            or_map = pickle.load(f) * numpy.pi
+            or_map = load_pickle_crosscompat(self.parameters.or_map_location) * numpy.pi
             # or_map = pickle.load(f)*numpy.pi*2
             # or_map = numpy.cos(or_map) + 1j*numpy.sin(or_map)
 
@@ -127,8 +125,7 @@ class GaborConnector(BaseComponent):
 
         phase_map = None
         if self.parameters.phase_map:
-            f = open(self.parameters.phase_map_location, "r")
-            phase_map = pickle.load(f)
+            phase_map = load_pickle_crosscompat(self.parameters.phase_map_location)
             coords_x = numpy.linspace(
                 -t_size[0] / 2.0, t_size[0] / 2.0, numpy.shape(phase_map)[0]
             )
@@ -179,7 +176,7 @@ class GaborConnector(BaseComponent):
             target.add_neuron_annotation(j, "LGNAfferentSize", size, protected=True)
             target.add_neuron_annotation(j, "LGNAfferentPhase", phase, protected=True)
             target.add_neuron_annotation(
-                j, "aff_samples", next(self.parameters.num_samples), protected=True
+                j, "aff_samples", self.parameters.num_samples.next(), protected=True
             )
 
             if self.parameters.topological:

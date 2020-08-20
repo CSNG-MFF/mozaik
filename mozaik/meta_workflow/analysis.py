@@ -5,7 +5,7 @@ import numpy as np
 
 from ..storage.datastore import PickledDataStore
 from ..storage.queries import *
-from ..tools.misc import result_directory_name
+from ..tools.misc import load_pickle_crosscompat, result_directory_name
 
 
 def load_fixed_parameter_set_parameter_search(
@@ -27,9 +27,7 @@ def load_fixed_parameter_set_parameter_search(
     The dsvs is a list of tuples (values,datastore) where `values` is a list of values (in the order as im `parameters`) of the
     parameters, and dsv is a DataStore with results recorded to the combination of parameter values.
     """
-    f = open(master_results_dir + "/parameter_combinations", "rb")
-    combinations = pickle.load(f)
-    f.close()
+    combinations = load_pickle_crosscompat(master_results_dir + "/parameter_combinations")
 
     # first check whether all parameter combinations contain the same parameter names
     assert (

@@ -7,12 +7,12 @@ When this happens most of this code should become irrelevant and the rest should
 merged into the :mod:`.datastore` module.
 """
 import logging
-import pickle
 
 from neo.core.segment import Segment
 import numpy
 import quantities as qt
 
+from ..tools.misc import load_pickle_crosscompat
 
 logger = logging.getLogger(__name__)
 
@@ -256,9 +256,7 @@ class PickledDataStoreNeoWrapper(MozaikSegment):
         self.datastore_path = datastore_path
 
     def load_full(self):
-        f = open(self.datastore_path + "/" + self.identifier + ".pickle", "rb")
-        s = pickle.load(f)
-        f.close()
+        s = load_pickle_crosscompat(self.datastore_path + "/" + self.identifier + ".pickle")
         self._spiketrains = s.spiketrains
         self.analogsignals = s.analogsignals
         self.full = True

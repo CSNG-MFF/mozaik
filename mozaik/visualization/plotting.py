@@ -225,7 +225,6 @@ class Plotting(ParametrizedObject):
                     "class_name": str(self.__class__)
                 }
                 f.write(str(entry) + "\n")
-                f.close()
 
         t2 = time.time()
         logger.warning(
