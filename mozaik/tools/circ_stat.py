@@ -5,7 +5,7 @@ import logging
 import numpy
 from numpy import pi, sin, cos
 
-logger = logging.getLogger("mozaik")
+logger = logging.getLogger(__name__)
 
 
 def circular_dist(a, b, period):

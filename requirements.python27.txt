@@ -1,6 +1,6 @@
 cycler==0.10.0
 Cython==0.29.21
-imagen @ git+https://github.com/antolikjan/imagen.git@c8a4f09c37e8bf59e2d5836489f07c3a2c206efb
+imagen @ git+https://github.com/sjawhar/imagen.git@chore/python3
 matplotlib==2.2.5
 mpi4py==3.0.3
 neo==0.8.0
