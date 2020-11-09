@@ -1728,35 +1728,3 @@ class MapResponseToInterruptedCornerStimulus(VisualExperiment):
 
     def do_analysis(self, data_store):
         pass
-
-
-    """
-class TextureFullField(VisualExperiment):
-    Stimulate the model with images generated from naturalistic images using the algorithm created by Portilla & Simoncelli .
-
-    This experiment presents different images generated from  naturalistic images 
-    3 type of images can be generated:
-    Types:
-        0 - original image
-        1 - naturalistic texture image (matched higher order statistics)
-        2 - spectrally matched noise (matched marginal statistics only).
-
-        
-    Parameters
-    ----------
-    model : Model
-          The model on which to execute the experiment.
-
-
-    Other parameters
-    ----------------
-    
-    stimulus_duration : str
-                      The duration of single presentation of the stimulus.
-    
-    num_trials : int
-               Number of trials each each stimulus is shown.
-               
-    def do_analysis(self, data_store):
-        pass
-    """
