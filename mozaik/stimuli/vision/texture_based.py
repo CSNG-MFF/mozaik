@@ -74,8 +74,7 @@ class PSTextureStimulus(TextureBasedVisualStimulus):
 
         im = im / 255* 2*self.background_luminance
         #scipy.misc.toimage(im, cmin=0.0, cmax=2*self.background_luminance).save('/home/kaktus/Documents/mozaik/examples/img' + str(self.trial) + '.jpg')
-        scipy.misc.toimage(im, cmin=0.0, cmax=2*self.background_luminance).save('/home/kaktus/Documents/mozaik/examples/img' + str(len(self.texture_path)) + "type" + str(self.stats_type) + '.jpg')
-        
+        scipy.misc.toimage(im, cmin=0.0, cmax=2*self.background_luminance).save('img' + str(len(self.texture_path)) + "type" + str(self.stats_type) + '.jpg')
         assert (im.shape == (fieldsize_x, fieldsize_y)), "Image dimensions do not correspond to visual field size"
         while True:
             yield (im, [0])
