@@ -11,9 +11,9 @@ from mozaik.storage.datastore import Hdf5DataStore, PickledDataStore
 from parameters import ParameterSet
 from pyNN import nest
 
-from .analysis_and_visualization import perform_analysis_and_visualization
-from .experiments import create_experiments
-from .model import PushPullCCModel
+from analysis_and_visualization import perform_analysis_and_visualization
+from experiments import create_experiments
+from model import PushPullCCModel
 
 if False:
     try:

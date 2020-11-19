@@ -265,6 +265,8 @@ class Sheet(BaseComponent):
         if self.to_record is None:
             return
 
+        # spikes has no sampling interval, and so must be recorded last
+        # otherwise PyNN throws an error about inconsistent sampling intervals
         spike_var = "spikes"
         variables = [k for k in self.to_record if k != spike_var]
         if spike_var in self.to_record:

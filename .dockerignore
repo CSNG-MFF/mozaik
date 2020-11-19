@@ -2,6 +2,7 @@
 !doc
 !mozaik
 !Pipfile*
+!requirements.python27.txt
 !README.rst
 !setup.py
 !test

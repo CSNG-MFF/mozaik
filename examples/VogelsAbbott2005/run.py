@@ -23,9 +23,9 @@ from parameters import ParameterSet
 from pyNN import nest
 import matplotlib
 
-from .analysis_and_visualization import perform_analysis_and_visualization
-from .experiments import create_experiments
-from .model import VogelsAbbott
+from analysis_and_visualization import perform_analysis_and_visualization
+from experiments import create_experiments
+from model import VogelsAbbott
 
 matplotlib.use("Agg")
 # mpi_comm = MPI.COMM_WORLD
