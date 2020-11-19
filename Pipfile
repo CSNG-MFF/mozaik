@@ -1,0 +1,33 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+black = "==19.10b0"
+pytest = "~=6.0.1"
+
+[packages]
+cycler = "~=0.10.0"
+Cython = "~=0.29.19"
+imagen = {git = "https://github.com/sjawhar/imagen.git@chore/python3"}
+matplotlib = "~=3.3.1"
+mpi4py = "~=3.0.3"
+neo = "~=0.8.0"
+numpy = "~=1.19.1"
+param = "~=1.9.3"
+parameters = "~=0.2.1"
+Pillow = "~=6.2.2"
+PyNN = "~=0.9.5"
+PyYAML = "~=5.3.1"
+quantities = "~=0.12.4"
+scipy = "~=1.5.2"
+
+[requires]
+python_version = "3.7"
+
+[scripts]
+test = "pytest -v"
+test-dev = "pytest-watch -- -vv"
+format = "black --verbose --target-version py37 ."
+lint = "pipenv run format --check"

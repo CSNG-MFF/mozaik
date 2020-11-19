@@ -29,8 +29,8 @@ The structure of the init function tells us the way a protocol works:
                  temporal_frequency, grating_duration, contrasts, num_trials):
         VisualExperiment.__init__(self, model)
         for c in contrasts:
-            for i in xrange(0, num_orientations):
-                for k in xrange(0, num_trials):
+            for i in range(0, num_orientations):
+                for k in range(0, num_trials):
                     self.stimuli.append(topo.FullfieldDriftingSinusoidalGrating(
                         frame_duration=7,
                         size_x=model.visual_field.size_x,
@@ -138,7 +138,7 @@ The init function contains the outmost cycle on the list of luminances and an in
             VisualExperiment.__init__(self, model)    
             # stimuli creation        
             for l in luminances:
-                for k in xrange(0, num_trials):
+                for k in range(0, num_trials):
                     self.stimuli.append( topo.Null(
                         frame_duration=7,
                         size_x=model.visual_field.size_x,

@@ -1,5 +1,6 @@
 import unittest
 
+
 class TestBaseStimulus(unittest.TestCase):
     pass
 
@@ -40,5 +41,5 @@ class TestDriftingSinusoidalGratingCenterSurroundStimulus(unittest.TestCase):
     pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

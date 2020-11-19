@@ -1,4 +1,4 @@
-FROM python:3.7-buster as packages
+FROM python:2.7-buster as packages
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
  && apt-get install -y \
@@ -23,15 +23,12 @@ RUN apt-get update \
  && pip install pipenv==2020.8.13
 
 WORKDIR /source
-COPY Pipfile Pipfile.lock ./
+COPY requirements.python27.txt ./
 ARG PACKAGES_DIR=/source/packages
 # six is not installed into the prefix directory for some reason
-RUN PIP_PREFIX=${PACKAGES_DIR} \
-    PIP_IGNORE_INSTALLED=1 \
-    pipenv install --system --ignore-pipfile --deploy \
- && pip install --prefix=${PACKAGES_DIR} --ignore-installed six
+RUN pip install --prefix=${PACKAGES_DIR} --ignore-installed -r requirements.python27.txt
 ENV PATH=${PATH}:${PACKAGES_DIR}/bin
-ENV PYTHONPATH=${PACKAGES_DIR}/lib/python3.7/site-packages:${PYTHONPATH}
+ENV PYTHONPATH=${PACKAGES_DIR}/lib/python2.7/site-packages:${PYTHONPATH}
 
 RUN wget https://github.com/nest/nest-simulator/archive/v2.20.0.tar.gz \
  && tar xvfz v2.20.0.tar.gz \
@@ -50,7 +47,7 @@ COPY . ./
 RUN pip install --prefix=${PACKAGES_DIR} .
 
 
-FROM python:3.7-slim-buster as prod
+FROM python:2.7-slim-buster as prod
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
         libfreetype6=2.9.1-3+deb10u1 \
@@ -66,7 +63,7 @@ RUN apt-get update \
 ARG PACKAGES_DIR=/source/packages
 COPY --from=packages ${PACKAGES_DIR} /usr/local
 COPY --from=packages /opt/nest /opt/nest
-ENV PYTHONPATH=/opt/nest/lib/python3.7/site-packages:$PYTHONPATH
+ENV PYTHONPATH=/opt/nest/lib/python2.7/site-packages:$PYTHONPATH
 
 RUN groupadd -g 1000 mozaik \
  && useradd -m -u 1000 -g mozaik mozaik

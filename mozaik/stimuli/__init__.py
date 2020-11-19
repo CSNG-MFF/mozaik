@@ -1,7 +1,7 @@
 """
 This module defines the API for:
     - implementation of stimuli as input to models (see class BaseStimulus)
-    - identification of stimulus identity 
+    - identification of stimulus identity
     - function helpers for common manipulation with collections of stimuli
 
 Each stimulus is expected to have a list of parameters which have to uniquely identify the stimulus.
@@ -10,39 +10,59 @@ that allows to specify parameters with the all above requirements.
 For Stimuli objects we will allow only SNumber, SInteger and SString parameter types (see :py:mod:`mozaik.tools.mozaik_parametrized`).
 These extend the corresponding parameterized parameters to allow specification of units.
 
-Note that each stimulus can be converted back and forth into a string via the str operator and the :func:`mozaik.tools.mozaik_parametrized.MozaikParametrized.idd` function. 
-This allows for efficient storing  and manipulation of stimulus identities. 
+Note that each stimulus can be converted back and forth into a string via the str operator and the :func:`mozaik.tools.mozaik_parametrized.MozaikParametrized.idd` function.
+This allows for efficient storing  and manipulation of stimulus identities.
 
 Note that *all* such parameters defined in the class (and its ancestors) will
 be considered as parameters of the BaseStimulus.
 """
-import quantities as qt
-import numpy
-import mozaik
-from operator import itemgetter
-from mozaik.tools.mozaik_parametrized import MozaikParametrized, SNumber, SInteger, SString, SParameterSet
 import collections
+import logging
+
+from operator import itemgetter
+import numpy
+import quantities as qt
+
+from ..tools.mozaik_parametrized import (
+    MozaikParametrized,
+    SInteger,
+    SNumber,
+    SParameterSet,
+    SString
+)
 
 
-logger = mozaik.getMozaikLogger()
+logger = logging.getLogger(__name__)
+
 
 class BaseStimulus(MozaikParametrized):
     """
     The abstract stimulus class. It defines the parameters common to all stimuli and
     the list of function each stimulus has to provide.
     """
+
     frame_duration = SNumber(qt.ms, doc="The duration of single frame")
     duration = SNumber(qt.ms, doc="The duration of stimulus")
     trial = SInteger(doc="The trial of the stimulus")
-    direct_stimulation_name = SString(default=None,doc="The name of the artifical stimulation protocol")
-    direct_stimulation_parameters = SParameterSet(default=None,doc="The parameters with which the direct stimulation protocol has been initialized")
-    
+    direct_stimulation_name = SString(
+        default=None, doc="The name of the artifical stimulation protocol"
+    )
+    direct_stimulation_parameters = SParameterSet(
+        default=None,
+        doc=(
+            "The parameters with which the direct stimulation protocol has been"
+            " initialized"
+        )
+    )
+
     def __init__(self, **params):
         MozaikParametrized.__init__(self, **params)
         self.input = None
         self._frames = self.frames()
-        self.n_frames = numpy.inf  # possibly very dangerous. Don't do 'for i in range(stim.n_frames)'!
-        
+        self.n_frames = (
+            numpy.inf
+        )  # possibly very dangerous. Don't do 'for i in range(stim.n_frames)'!
+
     def __eq__(self, other):
         """
         Are the name and all parameters of two stimuli are equivallent?
@@ -53,7 +73,7 @@ class BaseStimulus(MozaikParametrized):
         """
         Returns number of parameters of the stimulus.
         """
-        return len(self.getParams().keys())
+        return len(list(self.getParams().keys()))
 
     def frames(self):
         """
@@ -94,17 +114,21 @@ class InternalStimulus(BaseStimulus):
     """
     Technical stimulus corresponding to no sensory stimulation.
 
-    It is used exclusively in the case when the model receives no sensory stimulus. 
-    In such case it is still possible to stimulate the network 'artificially' via the Experiment's direct stimulation 
+    It is used exclusively in the case when the model receives no sensory stimulus.
+    In such case it is still possible to stimulate the network 'artificially' via the Experiment's direct stimulation
     facilities (see exc_spike_stimulators etc. in Experiment class).
-    
+
     In such case this stimulus should be associated with the experiment, as it will allow for all the other parts of mozaik to work
     consistently, and will be useful in that it will record the duration of the experiment, the possible information about multiple trials,
     and the identity of the artificial stimulation used. Note that in that case the frame_duration should be set to duration time.
     """
-    def __init__(self,**params):
-        BaseStimulus.__init__(self,**params)
-        assert self.frame_duration == self.duration , "Mozaik requires that frame_duration and duration for InternalStimulus are set to equal values"
-    
+
+    def __init__(self, **params):
+        BaseStimulus.__init__(self, **params)
+        assert self.frame_duration == self.duration, (
+            "Mozaik requires that frame_duration and duration for InternalStimulus are"
+            " set to equal values"
+        )
+
     def frames(self):
         return None
