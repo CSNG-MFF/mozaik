@@ -1337,7 +1337,7 @@ class VonDerHeydtIllusoryBarProtocol(VisualExperiment):
     """
     An illusory bar from Von Der Heydt et al. 1989.
 
-    Von Der Heydt, R., & Peterhans, E. (1989). Mechanisms of contour perception in monkey visual cortex. I. Lines of pattern discontinuity. Journal of Neuroscience, 9(5), 1731–1748. Retrieved from https://www.jneurosci.org/content/jneuro/9/5/1731.full.pdf
+    Von Der Heydt, R., & Peterhans, E. (1989). Mechanisms of contour perception in monkey visual cortex. I. Lines of pattern discontinuity. Journal of Neuroscience, 9(5), 1731-1748. Retrieved from https://www.jneurosci.org/content/jneuro/9/5/1731.full.pdf
     
     Parameters
     ----------
@@ -1435,8 +1435,12 @@ class MeasureTextureSensitivityFullfield(VisualExperiment):
     num_images : int
           Number of images of each type to present.
     
-    image_path : string
-                      Path to initial image.
+    folder_path: str
+                    Path to the folder containing the initial images
+
+    images : list
+                      List of the names of the initial image files.
+    
     image_duration : float
                       The duration of single presentation of an image.
     
@@ -1452,7 +1456,8 @@ class MeasureTextureSensitivityFullfield(VisualExperiment):
 
     required_parameters = ParameterSet({
             'num_images': int, #n. of images of each type, different synthesized instances
-            'image_path' : str,
+            'folder_path' : str,
+            'images': list,
             'image_duration' : float,
             'types' : list,
             'num_trials' : int, #n. of same instance
@@ -1463,11 +1468,11 @@ class MeasureTextureSensitivityFullfield(VisualExperiment):
     def __init__(self,model,parameters):
 	# we place this import here to avoid the need for octave dependency unless this experiment is actually used.
         import mozaik.stimuli.vision.texture_based as textu #vf
-
         VisualExperiment.__init__(self, model,parameters)
-        for ty, t in enumerate(self.parameters.types):
-            for i in xrange(0, self.parameters.num_images):                
-                for k in xrange(0, self.parameters.num_trials):
+        for image in self.parameters.images:
+            for ty, t in enumerate(self.parameters.types):
+             for i in xrange(0, self.parameters.num_images):                
+                 for k in xrange(0, self.parameters.num_trials):
                     print("TRIAL vision NUMBER " + str(k))
                     im = textu.PSTextureStimulus(
                             frame_duration = self.frame_duration,
@@ -1479,7 +1484,7 @@ class MeasureTextureSensitivityFullfield(VisualExperiment):
                             location_y=0.0,
                             size_x=model.visual_field.size_x,
                             size_y=model.visual_field.size_y,
-                            texture_path = self.parameters.image_path,
+                            texture_path = self.parameters.folder_path+image,
                             stats_type = t,
                             seed = 523*(i+1)+5113*(ty+1))
                     self.stimuli.append(im)
