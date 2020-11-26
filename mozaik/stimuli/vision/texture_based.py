@@ -18,6 +18,7 @@ from numpy import pi
 from quantities import Hz, rad, degrees, ms, dimensionless
 from oct2py import octave #octave interface
 import scipy.misc #for testing
+import os
 
 
 class TextureBasedVisualStimulus(VisualStimulus):
@@ -64,6 +65,10 @@ class PSTextureStimulus(TextureBasedVisualStimulus):
         fieldsize_x = self.size_x * self.density
         fieldsize_y = self.size_y * self.density
         libpath = visual_stimulus.__file__.replace("/visual_stimulus.pyc", "") + "/textureLib" #path to the image processing library
+        matlabPyrToolspath = os.path.join(libpath,"textureSynth","matlabPyrTools")
+        if not os.path.isdir(matlabPyrToolspath):
+            raise IOError("matlabPyrTools should be downloaded from https://github.com/LabForComputationalVision/matlabPyrTools and its content should be put in the directory "+matlabPyrToolspath)
+
         octave.addpath(libpath)     
         im = octave.textureBasedStimulus(self.texture_path,
                                          self.stats_type,
