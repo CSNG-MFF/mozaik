@@ -5,6 +5,7 @@ from datetime import datetime
 import os
 import time
 import re
+from mozaik.cli import parse_parameter_search_args
 from mozaik.tools.misc import result_directory_name
 
 class ParameterSearchBackend(object):
@@ -236,12 +237,7 @@ class ParameterSearch(object):
         """
         
         # Read parameters
-        if len(sys.argv) == 4:
-            run_script = sys.argv[1]
-            simulator_name = sys.argv[2]
-            parameters_url = sys.argv[3]
-        else:
-            raise ValueError("Usage: python parameter_search_script simulation_run_script simulator_name root_parameter_file_name")
+        run_script, simulator_name, parameters_url = parse_parameter_search_args()
         
         timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
         mdn = timestamp + "[" + parameters_url.replace('/','.') + "]" +  self.master_directory_name()

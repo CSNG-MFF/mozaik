@@ -72,6 +72,3 @@ def result_directory_name(simulation_run_name,simulation_name,modified_parameter
         modified_params_str = '_'.join([str(k).split('.')[-1] + ":" + str(modified_parameters[k]) for k in sorted(modified_parameters.keys()) if k!='results_dir'])
     
     return simulation_name + '_' + simulation_run_name + '_____' + modified_params_str
-
-    
-    

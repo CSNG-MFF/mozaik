@@ -189,5 +189,30 @@ Go to the examples directory in the mozaik cloned from github (see above) and la
   
 This will launch the example with the nest simulator, on 2 nodes with each node using 2 threads, using the parameter param/defaults. Last, 'test' is the name of this run.
 
+.. _ref-docker:
+
+Simple Installation with Docker
+-------------------------------
+
+Run the following commands to build a Docker container with Mozaik::
+
+  git clone https://github.com/antolikjan/mozaik.git
+  cd mozaik
+  docker build --tag antolikjan/mozaik --target prod .
+
+To run the examples::
+
+  cd examples
+  cd VogelsAbbott2005
+  docker run --rm -v "`pwd`:/app" antolikjan/mozaik run.py nest 2 param/defaults 'test'
+
+To build a development container::
+
+  docker build --tag antolikjan/mozaik:dev --target dev .
+
+To run tests::
+
+  docker run --rm -v "`pwd`:/app" antolikjan/mozaik:dev pytest
+
 :copyright: Copyright 2011-2013 by the *mozaik* team, see AUTHORS.
 :license: `CECILL <http://www.cecill.info/>`_, see LICENSE for details.
