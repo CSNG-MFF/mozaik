@@ -93,7 +93,7 @@ class ModulationRatio(Analysis):
                     for j in numpy.nonzero(orr == closest_presented_orientation)[0]:
                         if or_pref.ids[j] in ppsth.ids:
                             a = or_pref.ids[j]
-                            mr,F0,F1 = self._calculate_MR(ppsth.get_asl_by_id(or_pref.ids[j]),frequency)
+                            mr,F0,F1 = self._calculate_MR(ppsth.get_asl_by_id(or_pref.ids[j]).flatten(),frequency)
                             modulation_ratio.append(mr)
                             f0.append(F0)
                             f1.append(F1)
