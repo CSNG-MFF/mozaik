@@ -235,8 +235,8 @@ class SimilarAnnotationSelectorRegion(SimilarAnnotationSelector):
           picked_or = set(self.pick_close_to_annotation())
           xx,yy = self.sheet.cs_2_vf(self.sheet.pop.positions[0],self.sheet.pop.positions[1])
           picked_region = set(numpy.arange(0,len(xx))[numpy.logical_and((
-              abs(numpy.array(xx - self.parameters.offset_x) < self.parameters.size/2.0),
-              abs(numpy.array(yy - self.parameters.offset_y) < self.parameters.size/2.0)
+              abs(numpy.array(xx - self.parameters.offset_x)) < self.parameters.size/2.0
+              abs(numpy.array(yy - self.parameters.offset_y)) < self.parameters.size/2.0
           ))])
           picked = list(picked_or & picked_region)  
           mozaik.rng.shuffle(picked)
