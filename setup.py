@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 from distutils.core import setup
 from distutils.command.install import INSTALL_SCHEMES
-import glob
 import os
 
 for scheme in INSTALL_SCHEMES.values():
@@ -12,8 +11,6 @@ data_path="mozaik/stimuli/vision/textureLib/"
 for root, dirs, files in os.walk(data_path):
     for f in files:
         data_files_list.append((root,[os.path.join(root,f)]))
-
-print(data_files_list[0])
 
 setup(
     name = "mozaik",
