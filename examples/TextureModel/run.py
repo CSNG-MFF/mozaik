@@ -48,8 +48,8 @@ if True:
     #model.connectors['V1AffInhConnectionOn'].store_connections(data_store)    
     #model.connectors['V1AffInhConnectionOff'].store_connections(data_store)    
     data_store.save()
-    from analysis_and_visualization import perform_analysis_and_visualization
-    perform_analysis_and_visualization(data_store)
+    #from analysis_and_visualization import perform_analysis_and_visualization
+    #perform_analysis_and_visualization(data_store)
     
 else: 
     setup_logging()
