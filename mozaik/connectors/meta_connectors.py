@@ -4,7 +4,7 @@ import numpy
 from scipy.interpolate import NearestNDInterpolator, CloughTocher2DInterpolator
 from mozaik.core import BaseComponent
 from mozaik import load_component
-from parameters import ParameterSet, ParameterDist
+from parameters import ParameterSet
 from mozaik.connectors.modular import ModularSamplingProbabilisticConnector, ModularSamplingProbabilisticConnectorAnnotationSamplesCount
 from mozaik.tools.distribution_parametrization import PyNNDistribution
 
@@ -64,12 +64,12 @@ class GaborConnector(BaseComponent):
     """
 
     required_parameters = ParameterSet({
-        'aspect_ratio': ParameterDist,  # aspect ratio of the gabor
-        'size':         ParameterDist,  # the size of the gabor  RFs in degrees of visual field
-        'orientation_preference':  ParameterDist,  # the orientation preference of the gabor RFs
-        'phase':        ParameterDist,  # the phase of the gabor RFs
-        'frequency':    ParameterDist,  # the frequency of the gabor in degrees of visual field
-        'rf_jitter' : ParameterDist, # The jitter to apply to the center of RF (on top of retinotopic position)
+        'aspect_ratio': PyNNDistribution,  # aspect ratio of the gabor
+        'size':         PyNNDistribution,  # the size of the gabor  RFs in degrees of visual field
+        'orientation_preference':  PyNNDistribution,  # the orientation preference of the gabor RFs
+        'phase':        PyNNDistribution,  # the phase of the gabor RFs
+        'frequency':    PyNNDistribution,  # the frequency of the gabor in degrees of visual field
+        'rf_jitter' : PyNNDistribution, # The jitter to apply to the center of RF (on top of retinotopic position)
 
 	'off_bias' : float, # The bias towards off responses (it will be applied to the weight strength)
 
@@ -83,7 +83,7 @@ class GaborConnector(BaseComponent):
 
         'short_term_plasticity': ParameterSet,
         'base_weight' : float, # the weights of synapses
-        'num_samples' : ParameterDist , # number of synapses per cortical neuron from each of the ON and OFF LGN populations (so effectively there will be 2 * num_samples LGN synapses)
+        'num_samples' : PyNNDistribution, # number of synapses per cortical neuron from each of the ON and OFF LGN populations (so effectively there will be 2 * num_samples LGN synapses)
 
         'or_map': bool,  # is a orientation map supplied?
         'or_map_location': str,  # if or_map is True where can one find the map. It has to be a file containing a single pickled 2d numpy array
@@ -149,17 +149,17 @@ class GaborConnector(BaseComponent):
                 #                     target.pop.positions[1][j]))+numpy.pi)/2.0
                                      
             else:
-                orientation = parameters.orientation_preference.next()[0]
+                orientation = parameters.orientation_preference.next()
 
             if phase_map:
                 phase = phase_map(target.pop.positions[0][j],
                                   target.pop.positions[1][j])
             else:
-                phase = parameters.phase.next()[0]
+                phase = parameters.phase.next()
 
-            aspect_ratio = parameters.aspect_ratio.next()[0]
-            frequency = parameters.frequency.next()[0]
-            size = parameters.size.next()[0]
+            aspect_ratio = parameters.aspect_ratio.next()
+            frequency = parameters.frequency.next()
+            size = parameters.size.next()
 
             assert orientation < numpy.pi
 
@@ -172,11 +172,11 @@ class GaborConnector(BaseComponent):
             
             
             if self.parameters.topological:
-                target.add_neuron_annotation(j, 'LGNAfferentX', target.pop.positions[0][j]+parameters.rf_jitter.next()[0], protected=True)
-                target.add_neuron_annotation(j, 'LGNAfferentY', target.pop.positions[1][j]+parameters.rf_jitter.next()[0], protected=True)
+                target.add_neuron_annotation(j, 'LGNAfferentX', target.pop.positions[0][j]+parameters.rf_jitter.next(), protected=True)
+                target.add_neuron_annotation(j, 'LGNAfferentY', target.pop.positions[1][j]+parameters.rf_jitter.next(), protected=True)
             else:
-                target.add_neuron_annotation(j, 'LGNAfferentX', parameters.rf_jitter.next()[0], protected=True)
-                target.add_neuron_annotation(j, 'LGNAfferentY', parameters.rf_jitter.next()[0], protected=True)
+                target.add_neuron_annotation(j, 'LGNAfferentX', parameters.rf_jitter.next(), protected=True)
+                target.add_neuron_annotation(j, 'LGNAfferentY', parameters.rf_jitter.next(), protected=True)
         
         
 

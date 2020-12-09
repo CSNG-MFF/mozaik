@@ -4,7 +4,7 @@ Definition of the component interfaces. These interfaces are not currently direc
 """
 
 from mozaik import __version__
-from parameters import ParameterSet, ParameterDist
+from parameters import ParameterSet
 import parameters.random
 from parameters.random import UniformDist
 import mozaik
@@ -50,13 +50,8 @@ class ParametrizedObject(object):
                      # We will allow for parameters requiring PyNN Distirbution to also fall back to single value - this is compatible with PyNN
                      if not (isinstance(P[k],int) or isinstance(P[k],float)):
                         assert isinstance(P[k], PyNNDistribution), "Type mismatch for parameter %s: %s != %s " % (k, PyNNDistribution, P[k])
-                elif v == ParameterDist:
-                     # We will allow for parameters requiring ParameterDist to also give a scalar value, in which case we will change it to UniformDist
-                     # with minimum and maximum equal to the scalar value.
-                     if not (isinstance(P[k],int) or isinstance(P[k],float)):
-                        assert isinstance(P[k], ParameterDist), "Type mismatch for parameter %s: %s != %s " % (k, ParameterDist, P[k])
                      else:
-                        P[k] = UniformDist(min=P[k], max=P[k])
+                        P[k] = PyNNDistribution('uniform',low=P[k], high=P[k])
                 else:
                     assert isinstance(P[k], v) or (v == ParameterSet and P[k] == None) or (v == float and isinstance(P[k],int)) or (v == int and isinstance(P[k],float)), "Type mismatch for parameter %s: %s != %s " % (k, v, P[k])
         try:

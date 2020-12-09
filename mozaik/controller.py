@@ -112,18 +112,22 @@ def run_workflow(simulation_name, model_class, create_experiments):
         modified_parameters,
     ) = parse_workflow_args()
 
-    print "Loading parameters";
-    parameters = load_parameters(parameters_url,modified_parameters)
-    print "Finished loading parameters";
 
+    # First we load the parameters just to retrieve seeds. We will throw them away, because at this stage the PyNNDistribution values were not yet initialized correctly.
+    parameters = load_parameters(parameters_url,modified_parameters)
     p={}
     if parameters.has_key('mozaik_seed') : p['mozaik_seed'] = parameters['mozaik_seed']
     if parameters.has_key('pynn_seed') : p['pynn_seed'] = parameters['pynn_seed']
 
+    # now initialize mpi with the seeds
     print "START MPI"
-
     mozaik.setup_mpi(**p)
-    # Read parameters
+    
+    # Now really load parameters
+    print "Loading parameters";
+    parameters = load_parameters(parameters_url,modified_parameters)
+    print "Finished loading parameters";
+
     exec "import pyNN.nest as sim" in  globals(), locals()
     
     # Create results directory
