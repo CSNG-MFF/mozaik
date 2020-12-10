@@ -129,6 +129,9 @@ class SlurmSequentialBackendUK(object):
 
     num_mpi : int
                   Number of mpi processes to spawn per job.
+
+    path_to_mozaik_env : string
+                  Path to virtual environment in which mozaik is installed.                  
                   
     slurm_options : list(string), optional 
                   List of strings that will be passed to slurm sbatch command as options.  
