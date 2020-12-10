@@ -177,7 +177,7 @@ class SlurmSequentialBackendUK(object):
                             '#SBATCH -J MozaikParamSearch',
                             '#SBATCH -n ' + str(self.num_mpi),
                             '#SBATCH -c ' + str(self.num_threads),
-                            'source' + str(self.path_to_mozaik_env),
+                            'source ' + str(self.path_to_mozaik_env),
                             'cd ' + os.getcwd(),
                             ' '.join(["python",run_script, simulator_name, str(self.num_threads) ,parameters_url]+modified_parameters+[simulation_run_name]+['>']  + [parameters['results_dir'][1:-1] +'/OUTFILE'+str(time.time())]),
                         ]) 
