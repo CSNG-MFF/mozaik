@@ -14,7 +14,7 @@ mpirun python run.py nest 2 param/defaults 'test'
 import matplotlib
 matplotlib.use('Agg')
 
-from mpi4py import MPI 
+#from mpi4py import MPI 
 from pyNN import nest
 import sys
 import mozaik

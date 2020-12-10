@@ -17,5 +17,5 @@ def create_experiments(model):
                                                                     'weight_list' : [0.1,0.1]
                                                                     })),
                            #Spontaneous Activity 
-                           NoStimulation(model,ParameterSet({'duration' : 135.0*2})),
+                           NoStimulation(model,ParameterSet({'duration' : 10*135.0*2})),
             ]

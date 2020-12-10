@@ -5,7 +5,7 @@
                 'name':'Exc_Layer',
                 'sx':1000.0,
                 'sy':1000.0,
-                'density': 3200.0,
+                'density': 10000.0,
                 'mpi_safe' : False,    
                 'magnification_factor': 1.0,
 
