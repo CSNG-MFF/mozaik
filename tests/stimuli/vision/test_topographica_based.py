@@ -72,3 +72,120 @@ class TopographicaBasedVisualStimulusTester(object):
             if not (numpy.array_equal(f0[0], f1[0]) and f0[1] == f1[1]):
                 return False
         return True
+
+
+class TestNoise(TopographicaBasedVisualStimulusTester):
+
+    experiment_seed = 0
+
+    @classmethod
+    def setup_class(cls):
+        super(TestNoise, cls).setup_class()
+        cls.default["time_per_image"] = 2
+
+
+# grid_size, size_x, grid, background_luminance, density
+sparse_noise_params = [
+    (10, 10, True, 50, 5.0),
+    (15, 15, False, 60, 6.0),
+    (5, 5, False, 0.0, 15),
+]
+
+
+class TestSparseNoise(TestNoise):
+    def test_init_assert(self):
+        with pytest.raises(AssertionError):
+            t = topo.SparseNoise(time_per_image=1.4, frame_duration=1.5)
+
+    def reference_frames(self, grid_size, size_x, grid, background_luminance, density):
+        time_per_image = self.default["time_per_image"]
+        frame_duration = self.default["frame_duration"]
+        aux = imagen.random.SparseNoise(
+            grid_density=grid_size * 1.0 / size_x,
+            grid=grid,
+            offset=0,
+            scale=2 * background_luminance,
+            bounds=BoundingBox(radius=size_x / 2),
+            xdensity=density,
+            ydensity=density,
+            random_generator=numpy.random.RandomState(seed=self.experiment_seed),
+        )
+        while True:
+            aux2 = aux()
+            for i in range(time_per_image / frame_duration):
+                yield (aux2, [0])
+
+    def actual_frames(self, grid_size, size_x, grid, background_luminance, density):
+        snclass = topo.SparseNoise(
+            grid_size=grid_size,
+            grid=grid,
+            background_luminance=background_luminance,
+            density=density,
+            size_x=size_x,
+            size_y=self.default["size_y"],
+            location_x=self.default["location_x"],
+            location_y=self.default["location_y"],
+            time_per_image=self.default["time_per_image"],
+            frame_duration=self.default["frame_duration"],
+            experiment_seed=self.experiment_seed,
+        )
+        return snclass._frames
+
+    @pytest.mark.parametrize(
+        "grid_size, size_x, grid, background_luminance, density", sparse_noise_params
+    )
+    def test_frames(self, grid_size, size_x, grid, background_luminance, density):
+        self.evaluate(grid_size, size_x, grid, background_luminance, density)
+
+
+# grid_size, size_x, background_luminance, density
+dense_noise_params = [
+    (10, 10, 50, 5.0),
+    (15, 15, 60, 6.0),
+    (5, 5, 0.0, 15),
+]
+
+
+class TestDenseNoise(TestNoise):
+    def test_init_assert(self):
+        with pytest.raises(AssertionError):
+            t = topo.DenseNoise(time_per_image=1.4, frame_duration=1.5)
+
+    def reference_frames(self, grid_size, size_x, background_luminance, density):
+        time_per_image = self.default["time_per_image"]
+        frame_duration = self.default["frame_duration"]
+        aux = imagen.random.DenseNoise(
+            grid_density=grid_size * 1.0 / size_x,
+            offset=0,
+            scale=2 * background_luminance,
+            bounds=BoundingBox(radius=size_x / 2),
+            xdensity=density,
+            ydensity=density,
+            random_generator=numpy.random.RandomState(seed=self.experiment_seed),
+        )
+        while True:
+            aux2 = aux()
+            for i in range(time_per_image / frame_duration):
+                yield (aux2, [0])
+
+    def actual_frames(self, grid_size, size_x, background_luminance, density):
+        snclass = topo.DenseNoise(
+            grid_size=grid_size,
+            grid=False,
+            background_luminance=background_luminance,
+            density=density,
+            size_x=size_x,
+            size_y=self.default["size_y"],
+            location_x=self.default["location_x"],
+            location_y=self.default["location_y"],
+            time_per_image=self.default["time_per_image"],
+            frame_duration=self.default["frame_duration"],
+            experiment_seed=self.experiment_seed,
+        )
+        return snclass._frames
+
+    @pytest.mark.parametrize(
+        "grid_size, size_x, background_luminance, density", dense_noise_params
+    )
+    def test_frames(self, grid_size, size_x, background_luminance, density):
+        self.evaluate(grid_size, size_x, background_luminance, density)
