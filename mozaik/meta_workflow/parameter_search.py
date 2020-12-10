@@ -5,6 +5,7 @@ from datetime import datetime
 import os
 import time
 import re
+from mozaik.cli import parse_parameter_search_args
 from mozaik.tools.misc import result_directory_name
 
 class ParameterSearchBackend(object):
@@ -99,7 +100,7 @@ class SlurmSequentialBackend(object):
      
          from subprocess import Popen, PIPE, STDOUT
          #'--exclude=node[01-04]',
-         p = Popen(['sbatch'] + self.slurm_options +  ['-o',parameters['results_dir'][2:-2]+"/slurm-%j.out"],stdin=PIPE,stdout=PIPE,stderr=PIPE)
+         p = Popen(['sbatch','--exclude=node08'] + self.slurm_options +  ['-o',parameters['results_dir'][2:-2]+"/slurm-%j.out"],stdin=PIPE,stdout=PIPE,stderr=PIPE)
          
          # THIS IS A BIT OF A HACK, have to add customization for other people ...            
          data = '\n'.join([
@@ -108,7 +109,7 @@ class SlurmSequentialBackend(object):
                             '#SBATCH -n ' + str(self.num_mpi),
                             '#SBATCH -c ' + str(self.num_threads),
                             'source /opt/software/mpi/openmpi-1.6.3-gcc/env',
-                            'source /home/antolikjan/env/mozaik/bin/activate',
+                            'source /home/antolikjan/env/mozaiknew/bin/activate',
                             'cd ' + os.getcwd(),
                             ' '.join(["mpirun"," --mca mtl ^psm python",run_script, simulator_name, str(self.num_threads) ,parameters_url]+modified_parameters+[simulation_run_name]+['>']  + [parameters['results_dir'][1:-1] +'/OUTFILE'+str(time.time())]),
                         ]) 
@@ -165,7 +166,7 @@ class SlurmSequentialBackendIoV(object):
         
      
          from subprocess import Popen, PIPE, STDOUT
-         p = Popen(['sbatch'] + self.slurm_options +  ['-o',parameters['results_dir'][2:-2]+"/slurm-%j.out"],stdin=PIPE,stdout=PIPE,stderr=PIPE)
+         p = Popen(['sbatch','--exclude=node08'] + self.slurm_options +  ['-o',parameters['results_dir'][2:-2]+"/slurm-%j.out"],stdin=PIPE,stdout=PIPE,stderr=PIPE)
          
          # THIS IS A BIT OF A HACK, have to add customization for other people ...            
          data = '\n'.join([
@@ -302,12 +303,7 @@ class ParameterSearch(object):
         """
         
         # Read parameters
-        if len(sys.argv) == 4:
-            run_script = sys.argv[1]
-            simulator_name = sys.argv[2]
-            parameters_url = sys.argv[3]
-        else:
-            raise ValueError("Usage: python parameter_search_script simulation_run_script simulator_name root_parameter_file_name")
+        run_script, simulator_name, parameters_url = parse_parameter_search_args()
         
         timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
         mdn = timestamp + "[" + parameters_url.replace('/','.') + "]" +  self.master_directory_name()
@@ -400,7 +396,7 @@ def parameter_search_run_script_distributed_slurm(simulation_name,master_results
                             '#SBATCH -J MozaikParamSearchAnalysis',
                             '#SBATCH -c ' + str(core_number),
                             'source /opt/software/mpi/openmpi-1.6.3-gcc/env',
-                            'source /home/antolikjan/env/mozaik/bin/activate',
+                            'source /home/antolikjan/env/mozaiknew/bin/activate',
                             'cd ' + os.getcwd(),
                             'echo "DSADSA"',                            
                             ' '.join(["mpirun"," --mca mtl ^psm python",run_script,"'"+rdn+"'"]  +['>']  + ["'"+rdn +'/OUTFILE_analysis'+str(time.time()) + "'"]),

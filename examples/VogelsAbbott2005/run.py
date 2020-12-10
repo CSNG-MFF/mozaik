@@ -18,7 +18,9 @@ matplotlib.use('Agg')
 from pyNN import nest
 import sys
 import mozaik
+from mozaik.cli import parse_workflow_args
 from mozaik.controller import run_workflow, setup_logging
+from mozaik.tools.misc import result_directory_name
 from experiments import create_experiments
 from model import VogelsAbbott
 from mozaik.storage.datastore import Hdf5DataStore,PickledDataStore
@@ -27,12 +29,25 @@ from parameters import ParameterSet
 
 #mpi_comm = MPI.COMM_WORLD
 logger = mozaik.getMozaikLogger()
+simulation_name = "VogelsAbbott2005"
+simulation_run_name, _, _, _, modified_parameters = parse_workflow_args()
 
 if True:
-    data_store,model = run_workflow('VogelsAbbott2005',VogelsAbbott,create_experiments)
+    data_store,model = run_workflow(simulation_name,VogelsAbbott,create_experiments)
 else: 
     setup_logging()
-    data_store = PickledDataStore(load=True,parameters=ParameterSet({'root_directory':'VogelsAbbott2005_test_____', 'store_stimuli' : False}),replace=True)
+    data_store = PickledDataStore(
+        load=True,
+        parameters=ParameterSet(
+            {
+                "root_directory": result_directory_name(
+                    simulation_run_name, simulation_name, modified_parameters
+                ),
+                "store_stimuli": False,
+            }
+        ),
+        replace=True,
+    )
     logger.info('Loaded data store')
 
 #if mpi_comm.rank == 0:

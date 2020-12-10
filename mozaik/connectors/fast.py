@@ -8,7 +8,7 @@ To obtain speed they generally sacrifice ease customization.
 
 import mozaik
 from mozaik.connectors import Connector
-from parameters import ParameterSet, ParameterDist
+from parameters import ParameterSet
 from pyNN import space
 import numpy
 

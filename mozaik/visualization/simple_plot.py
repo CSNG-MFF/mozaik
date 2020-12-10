@@ -595,10 +595,12 @@ class PixelMovie(StandardStyleAnimatedPlot):
         self.parameters["bottom_border"] = False
 
     def plot_next_frame(self):
-        self.im.set_array(self.movie[self.i])
-        self.i = self.i + 1
         if self.i == self.l:
-            self.i = 0
+            self.im.set_array(self.movie[0]*0)
+        else: 
+            self.im.set_array(self.movie[self.i])
+            self.i = self.i + 1
+
         return self.im
 
     def plot(self):

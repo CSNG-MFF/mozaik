@@ -5,9 +5,10 @@ import ast
 from mozaik.connectors import Connector
 from mozaik.connectors.modular_connector_functions import ModularConnectorFunction
 from collections import Counter
-from parameters import ParameterSet, ParameterDist
+from parameters import ParameterSet
 from mozaik.tools.misc import sample_from_bin_distribution, normal_function
 from mozaik import load_component
+from mozaik.tools.distribution_parametrization import PyNNDistribution
 
 
 
@@ -132,8 +133,8 @@ class ModularSamplingProbabilisticConnector(ModularConnector):
     """
 
     required_parameters = ParameterSet({
-        'num_samples': ParameterDist,
-        'base_weight' : ParameterDist
+        'num_samples': PyNNDistribution,
+        'base_weight' : PyNNDistribution
     })
 
     def _connect(self):
@@ -176,7 +177,7 @@ class ModularSingleWeightProbabilisticConnector(ModularConnector):
 
     required_parameters = ParameterSet({
         'connection_probability': float,
-        'base_weight' : ParameterDist
+        'base_weight' : PyNNDistribution
     })
 
     def _connect(self):
@@ -222,7 +223,7 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(ModularConnect
     required_parameters = ParameterSet({
         'annotation_reference_name': str,
         'num_samples': int,
-        'base_weight' : ParameterDist,
+        'base_weight' : PyNNDistribution,
     })
 
     def worker(ref,idxs):
@@ -237,7 +238,7 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(ModularConnect
                 a = sample_from_bin_distribution(weights, int(self.parameters.num_samples - 2*int(samples)))
                 co = Counter(a)
             v = v + numpy.sum(co.values())
-            cl.extend([(int(k),int(i),self.weight_scaler*self.parameters.base_weight.next()[0]*co[k],delays[k]) for k in co.keys()])
+            cl.extend([(int(k),int(i),self.weight_scaler*self.parameters.base_weight.next()*co[k],delays[k]) for k in co.keys()])
         return cl
 
     def _connect(self):

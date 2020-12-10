@@ -1,6 +1,7 @@
 """
 This is the nexus of workflow execution controll of *mozaik*.
 """
+from mozaik.cli import parse_workflow_args
 from mozaik.storage.datastore import Hdf5DataStore, PickledDataStore
 from mozaik.tools.distribution_parametrization import MozaikExtendedParameterSet, load_parameters
 from mozaik.tools.misc import result_directory_name
@@ -103,27 +104,30 @@ def run_workflow(simulation_name, model_class, create_experiments):
     
     >>> python userscript simulator_name num_threads parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n simulation_run_name
     """
-    if len(sys.argv) > 4 and len(sys.argv)%2 == 1:
-        simulation_run_name = sys.argv[-1]    
-        simulator_name = sys.argv[1]
-        num_threads = sys.argv[2]
-        parameters_url = sys.argv[3]
-        modified_parameters = { sys.argv[i*2+4] : eval(sys.argv[i*2+5])  for i in xrange(0,(len(sys.argv)-5)/2)}
-    else:
-        raise ValueError("Usage: runscript simulator_name num_threads parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n simulation_run_name")
+    (
+        simulation_run_name,
+        simulator_name,
+        num_threads,
+        parameters_url,
+        modified_parameters,
+    ) = parse_workflow_args()
 
-    print "Loading parameters";
+
+    # First we load the parameters just to retrieve seeds. We will throw them away, because at this stage the PyNNDistribution values were not yet initialized correctly.
     parameters = load_parameters(parameters_url,modified_parameters)
-    print "Finished loading parameters";
-
     p={}
     if parameters.has_key('mozaik_seed') : p['mozaik_seed'] = parameters['mozaik_seed']
     if parameters.has_key('pynn_seed') : p['pynn_seed'] = parameters['pynn_seed']
 
+    # now initialize mpi with the seeds
     print "START MPI"
-
     mozaik.setup_mpi(**p)
-    # Read parameters
+    
+    # Now really load parameters
+    print "Loading parameters";
+    parameters = load_parameters(parameters_url,modified_parameters)
+    print "Finished loading parameters";
+
     exec "import pyNN.nest as sim" in  globals(), locals()
     
     # Create results directory
@@ -174,13 +178,6 @@ def run_workflow(simulation_name, model_class, create_experiments):
     import resource
     print "Final memory usage: %iMB" % (resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/(1024))
     return (data_store,model)
-
-def result_directory_name(simulation_run_name,simulation_name,modified_parameters):
-    modified_params_str = '_'.join([str(k) + ":" + str(modified_parameters[k]) for k in sorted(modified_parameters.keys()) if k!='results_dir'])
-    if len(modified_params_str) > 100:
-        modified_params_str = '_'.join([str(k).split('.')[-1] + ":" + str(modified_parameters[k]) for k in sorted(modified_parameters.keys()) if k!='results_dir'])
-    
-    return simulation_name + '_' + simulation_run_name + '_____' + modified_params_str
 
 def run_experiments(model,experiment_list,parameters,load_from=None):
     """

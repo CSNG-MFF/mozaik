@@ -172,11 +172,13 @@ class GaborArborization(ModularConnectorFunction):
                                        target_phase,
                                        target_size,
                                        target_ar)
+
+        g = gauss(self.source.pop.positions[0],self.source.pop.positions[1],target_posx,target_posy,target_or+pi/2,target_size,target_ar)
                                        
         if self.parameters.ON:
-           return numpy.maximum(0,w) #+ 0.03 * g
+           return numpy.maximum(0,w) + 0.03 * g
         else:
-           return -numpy.minimum(0,w) #+ 0.03 * g
+           return -numpy.minimum(0,w) + 0.03 * g
  
 
 
@@ -362,8 +364,6 @@ class V1CorrelationBasedConnectivity(ModularConnectorFunction):
             corr_gauss = normal_function(corr,mean=-1,sigma=self.parameters.sigma)
         
         return corr_gauss
-
-
 
 class CoCircularModularConnectorFunction(ModularConnectorFunction):
     """
