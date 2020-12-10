@@ -8,7 +8,7 @@ import mozaik
 import time
 from mozaik.core import BaseComponent
 from mozaik.sheets.vision import SheetWithMagnificationFactor
-from parameters import ParameterSet, ParameterDist
+from parameters import ParameterSet
 from mozaik.tools.misc import sample_from_bin_distribution, normal_function
 from collections import Counter
 from pyNN import random, space
