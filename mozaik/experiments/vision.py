@@ -128,6 +128,7 @@ class MeasureSparse(VisualExperiment):
             'total_number_of_images' : int, 
             'num_trials' : int,
             'experiment_seed' : int,
+            'stim_size' : float,
             'grid_size' : int,
             'grid' : bool
     })
@@ -141,8 +142,8 @@ class MeasureSparse(VisualExperiment):
 			    frame_duration = self.frame_duration,
                             time_per_image = self.parameters.time_per_image,
                             duration = self.parameters.total_number_of_images * self.parameters.time_per_image,  
-                            size_x=model.visual_field.size_x,
-                            size_y=model.visual_field.size_y,
+                            size_x=self.parameters.stim_size,
+                            size_y=self.parameters.stim_size,
                             location_x=0.0,
                             location_y=0.0, 
                             background_luminance=self.background_luminance,
