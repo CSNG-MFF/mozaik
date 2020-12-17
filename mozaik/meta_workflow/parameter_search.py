@@ -239,7 +239,8 @@ class SlurmSequentialBackendUK(object):
                             '#SBATCH -J MozaikParamSearch',
                             '#SBATCH -n ' + str(self.num_mpi),
                             '#SBATCH -c ' + str(self.num_threads),
-                            'source /home/antolikjan/virt_env/mozaiknew/bin/activate',
+                            '#SBATCH --hint=nomultithread',
+                            'source /home/antolikjan/virt_env/mozaik/bin/activate',
                             'cd ' + os.getcwd(),
                             ' '.join(["python",run_script, simulator_name, str(self.num_threads) ,parameters_url]+modified_parameters+[simulation_run_name]+['>']  + [parameters['results_dir'][1:-1] +'/OUTFILE'+str(time.time())]),
                         ]) 
@@ -448,3 +449,46 @@ def parameter_search_run_script_distributed_slurm_IoV(simulation_name,master_res
         print p.communicate(input=data)[0]                  
         print data
         p.stdin.close()
+
+def parameter_search_run_script_distributed_slurm_UK(simulation_name,master_results_dir,run_script,core_number):
+    """
+    Scheadules the execution of *run_script*, one per each parameter combination of an existing parameter search run.
+    Each execution receives as the first commandline argument the directory in which the results for the given
+    parameter combination were stored.
+    
+    Parameters
+    ----------
+    simulation_name : str
+                    The name of the simulation.
+    master_results_dir : str
+                    The directory where the parameter search results are stored.
+    run_script : str
+                    The name of the script to be run. The directory name of the given parameter combination datastore will be passed to it as the first command line argument.
+    core_number : int
+                How many cores to reserve per process.
+    """
+    f = open(master_results_dir+'/parameter_combinations','rb')
+    combinations = pickle.load(f)
+    f.close()
+    
+    # first check whether all parameter combinations contain the same parameter names
+    assert len(set([tuple(set(comb.keys())) for comb in combinations])) == 1 , "The parameter search didn't occur over a fixed set of parameters"
+    
+    from subprocess import Popen, PIPE, STDOUT
+    for i,combination in enumerate(combinations):
+        rdn = master_results_dir+'/'+result_directory_name('ParameterSearch',simulation_name,combination)    
+        p = Popen(['sbatch'] +  ['-o',master_results_dir+"/slurm_analysis-%j.out" ],stdin=PIPE,stdout=PIPE,stderr=PIPE)
+         
+        # THIS IS A BIT OF A HACK, have to add customization for other people ...            
+        data = '\n'.join([
+                            '#!/bin/bash',
+                            '#SBATCH -J MozaikParamSearchAnalysis',
+                            '#SBATCH -c ' + str(core_number),
+                            'source /home/antolikjan/virt_env/mozaik/bin/activate',
+                            'cd ' + os.getcwd(),
+                            ' '.join(["python",run_script,"'"+rdn+"'"]  +['>']  + ["'"+rdn +'/OUTFILE_analysis'+str(time.time()) + "'"]),
+                        ]) 
+        print p.communicate(input=data)[0]                  
+        print data
+        p.stdin.close()
+

@@ -51,6 +51,7 @@ class PSTextureStimulus(TextureBasedVisualStimulus):
     Notes
     -----
     frames_number - the number of frames for which each image is presented
+
     ALERT!!!
 
     Because of optimization issues, the stimulus is not re-generated on every trial.
@@ -61,7 +62,6 @@ class PSTextureStimulus(TextureBasedVisualStimulus):
     seed = int
 
     def frames(self):
-        print("TRIAL NUMBER " + str(self.trial))
         fieldsize_x = self.size_x * self.density
         fieldsize_y = self.size_y * self.density
         libpath = visual_stimulus.__file__.replace("/visual_stimulus.pyc", "") + "/textureLib" #path to the image processing library

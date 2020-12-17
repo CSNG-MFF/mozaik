@@ -131,7 +131,7 @@ class Plotting(ParametrizedObject):
                 p.update(fp)
             param = p
             if isinstance(pl,SimplePlot):
-                # print check whether all user_parameters have been nipped to minimum 
+                # check whether all user_parameters have been nipped to minimum 
                 pl(gs,param,self)
             elif isinstance(pl,Plotting):
                 pl._handle_parameters_and_execute_plots(param,up,gs)     
