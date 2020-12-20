@@ -5,7 +5,7 @@
                 'name':'Inh_Layer',
                 'sx': ref('sheets.exc_layer.params.sx'),
                 'sy': ref('sheets.exc_layer.params.sy'),
-                'density': 800.0,
+                'density': 2500.0,
                 'mpi_safe' : False,
                 'magnification_factor': ref('sheets.exc_layer.params.magnification_factor'),
                 'cell': ref('sheets.exc_layer.params.cell'),

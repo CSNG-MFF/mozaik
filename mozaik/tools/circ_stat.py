@@ -49,7 +49,7 @@ def circ_mean(matrix, weights=None, axis=None, low=0, high=pi*2,
               The min and max values that will be mapped onto the periodic interval of (0, 2pi).
               
     axis : int, optional
-         Numpy axis along which to compute the circular mean. 
+         Numpy axis along which to compute the circular mean. Default is 0.
     
     
     normalize : bool
@@ -82,13 +82,14 @@ def circ_mean(matrix, weights=None, axis=None, low=0, high=pi*2,
         else:
             weights = numpy.transpose(weights) / row_sums[:, numpy.newaxis]
             weights = weights.T
-            
+
     if isinstance(weights,numpy.ndarray):
         z = numpy.multiply(m,weights)
         m = numpy.mean(z, axis=axis)
     else:
         m = numpy.mean(m, axis=axis)
-    
+
     a,b = ((angle_to_pi(m) / (pi*2))*(high-low) + low, abs(m))
+
     return a,b
     

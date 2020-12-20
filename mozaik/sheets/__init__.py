@@ -203,7 +203,7 @@ class Sheet(BaseComponent):
         if not self._pop:
             logger.error('Population has not been yet set in sheet: ' + self.name + '!')
         if not self._neuron_annotations[neuron_number].has_key(key):
-            print "ERROR, annotation does not exist:",self.name,neuron_number,key,self._neuron_annotations[neuron_number].keys()
+            logger.error("ERROR, annotation does not exist:",self.name,neuron_number,key,self._neuron_annotations[neuron_number].keys())
         return self._neuron_annotations[neuron_number][key][1]
 
     def get_neuron_annotations(self):
