@@ -41,6 +41,7 @@ flexible use in nesting via the subplot.
 import pylab
 import numpy
 import time
+import os
 import quantities as pq
 import matplotlib.cm as cm
 import matplotlib.gridspec as gridspec
@@ -174,7 +175,12 @@ class Plotting(ParametrizedObject):
             #if there were animations, save them
             if self.animation_update_functions != []:
                 logger.info(str(animation.writers.list()))
-                self.animation.save(Global.root_directory+self.plot_file_name+'.mp4', writer='ffmpeg', fps=30,bitrate=5000, extra_args=['--verbose-debug']) 
+                cwd = os.getcwd()
+                os.chdir(Global.root_directory)
+                # use this save command variant if you want movie for html, otherwise the pillow output for animated gif. Output through ffmpeg is extremely unstable. 
+                self.animation.save(self.plot_file_name+'.html', writer='html', fps=30,bitrate=5000, extra_args=['--verbose-debug'])
+                #self.animation.save(self.plot_file_name+'.gif', writer='pillow', fps=30,bitrate=5000, extra_args=['--verbose-debug']) 
+                os.chdir(cwd)
             else:
                 # save the analysis plot
                 pylab.savefig(Global.root_directory+self.plot_file_name,transparent=True)       
