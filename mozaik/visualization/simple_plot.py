@@ -566,6 +566,7 @@ class StandardStyleAnimatedPlot(StandardStyle):
     @staticmethod  # hack to make it compatible with FuncAnimation - we have to make it static
     def _plot_next_frame(self):
         a = self.plot_next_frame()
+        print "A"
         return a,
 
     def post_plot(self):

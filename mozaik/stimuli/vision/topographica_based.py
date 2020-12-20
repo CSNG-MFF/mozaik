@@ -43,7 +43,7 @@ class SparseNoise(TopographicaBasedVisualStimulus):
 
     def __init__(self,**params):
         TopographicaBasedVisualStimulus.__init__(self, **params)
-        assert (self.time_per_image/self.frame_duration) % 1.0 == 0.0
+        assert (self.time_per_image/self.frame_duration) % 1.0 == 0.0, "The duration of image presentation should be multiple of frame duration."
                 
     def frames(self):
   
@@ -58,7 +58,7 @@ class SparseNoise(TopographicaBasedVisualStimulus):
                                       random_generator=numpy.random.RandomState(seed=self.experiment_seed))
         while True:
             aux2 = aux()
-            for i in range(self.time_per_image/self.frame_duration):
+            for i in range(int(self.time_per_image/self.frame_duration)):
                 yield (aux2,[0])
             
 

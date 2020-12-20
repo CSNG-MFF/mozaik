@@ -168,13 +168,13 @@ class Plotting(ParametrizedObject):
                                       repeat=False,
                                       fargs=(self,),
                                       interval=self.frame_duration,
-                                      blit=False,save_count=0)
+                                      blit=False)
         gs.tight_layout(self.fig)
         if self.plot_file_name:
             #if there were animations, save them
             if self.animation_update_functions != []:
-		logger.info(str(animation.writers))
-                self.animation.save(Global.root_directory+self.plot_file_name+'.mov', writer='avconv_file', fps=30,bitrate=5000, extra_args=['--verbose-debug']) 
+                logger.info(str(animation.writers.list()))
+                self.animation.save(Global.root_directory+self.plot_file_name+'.mp4', writer='ffmpeg', fps=30,bitrate=5000, extra_args=['--verbose-debug']) 
             else:
                 # save the analysis plot
                 pylab.savefig(Global.root_directory+self.plot_file_name,transparent=True)       
@@ -190,6 +190,11 @@ class Plotting(ParametrizedObject):
 
     def register_animation_update_function(self,auf,parent):
         self.animation_update_functions.append((auf,parent))
+
+    @staticmethod
+    def progress(current_frame, total_frames):
+        print("Frame %d/%d\n" % (current_frame,total_frames)) 
+
 
     @staticmethod
     def update_animation_function(b,self):
