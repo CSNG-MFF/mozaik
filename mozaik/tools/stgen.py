@@ -4,6 +4,8 @@ This file contains code extracted from the NeuroTools package (http://neuralense
 from numpy import array, log
 import numpy
 
+import mozaik
+logger = mozaik.getMozaikLogger()
 
 class SpikeTrain(object):
     """
@@ -249,7 +251,7 @@ class StGen:
             spikes = numpy.concatenate((spikes,extra_spikes))
 
             if debug:
-                print "ISI buf overrun handled. len(spikes)=%d, len(extra_spikes)=%d" % (len(spikes),len(extra_spikes))
+                logger.info("ISI buf overrun handled. len(spikes)=%d, len(extra_spikes)=%d" % (len(spikes),len(extra_spikes)))
 
 
         else:

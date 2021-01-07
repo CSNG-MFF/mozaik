@@ -350,13 +350,6 @@ class V1CorrelationBasedConnectivity(ModularConnectorFunction):
                                                                                      target_size,target_posx,target_posy,target_ar,target_or,target_freq,target_phase)
                                                                                      
         assert numpy.all(corr >= -1.0) and numpy.all(corr <= 1.000001), ("The correlation is %f %f" % (numpy.min(corr),numpy.max(corr)))
-        #import pylab   
-        #pylab.figure()             
-        #if self.flag:                                                                                     
-        #    print corr
-        #    pylab.hist(corr,bins=30)
-        #self.flag = False
-        # pylab.show()
         
         if self.parameters.target_synapses == 'excitatory':
             corr_gauss = normal_function(corr,mean=1,sigma=self.parameters.sigma)

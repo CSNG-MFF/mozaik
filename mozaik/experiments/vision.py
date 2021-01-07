@@ -2,7 +2,6 @@ import mozaik
 from mozaik.experiments import Experiment
 from parameters import ParameterSet
 import mozaik.stimuli.vision.topographica_based as topo
-#import mozaik.stimuli.vision.texture_based as textu #vf
 import numpy
 from mozaik.stimuli import InternalStimulus
 from mozaik.tools.distribution_parametrization import ParameterWithUnitsAndPeriod, MozaikExtendedParameterSet
@@ -1474,7 +1473,6 @@ class MeasureTextureSensitivityFullfield(VisualExperiment):
             for ty, t in enumerate(self.parameters.types):
              for i in xrange(0, self.parameters.num_images):                
                  for k in xrange(0, self.parameters.num_trials):
-                    print("TRIAL vision NUMBER " + str(k))
                     im = textu.PSTextureStimulus(
                             frame_duration = self.frame_duration,
                             duration=self.parameters.image_duration,

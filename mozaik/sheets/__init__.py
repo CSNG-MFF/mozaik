@@ -203,7 +203,7 @@ class Sheet(BaseComponent):
         if not self._pop:
             logger.error('Population has not been yet set in sheet: ' + self.name + '!')
         if not self._neuron_annotations[neuron_number].has_key(key):
-            print "ERROR, annotation does not exist:",self.name,neuron_number,key,self._neuron_annotations[neuron_number].keys()
+            logger.error("ERROR, annotation does not exist:",self.name,neuron_number,key,self._neuron_annotations[neuron_number].keys())
         return self._neuron_annotations[neuron_number][key][1]
 
     def get_neuron_annotations(self):
@@ -269,7 +269,7 @@ class Sheet(BaseComponent):
             return cmp(a.annotations['source_id'], b.annotations['source_id'])
 	
 
-	self.msc = numpy.mean([numpy.sum(st) for st in s.spiketrains])
+        self.msc = numpy.mean([numpy.sum(st)/(st.t_stop-st.t_start)/1000 for st in s.spiketrains])
         s.spiketrains = sorted(s.spiketrains, compare)
         if stimulus_duration != None:        
            for st in s.spiketrains:
@@ -283,8 +283,7 @@ class Sheet(BaseComponent):
         return s
 
     def mean_spike_count(self):
-	logger.info(self.msc)
-	return self.msc
+        return self.msc
 
     def prepare_artificial_stimulation(self, duration, offset,additional_stimulators):
         """

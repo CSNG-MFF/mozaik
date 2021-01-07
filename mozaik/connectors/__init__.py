@@ -86,23 +86,12 @@ class Connector(BaseComponent):
         xi = numpy.linspace(min(x), max(x), 100)
         yi = numpy.linspace(min(y), max(y), 100)
         zi = griddata(x, y, w, xi, yi)
-        #pylab.figure()
-        #pylab.imshow(zi)
-        #pylab.scatter(x,y,marker='o',c=w,s=50)
-        #pylab.xlim(-self.source.parameters.sx/2,self.source.parameters.sx/2)
-        #pylab.ylim(-self.source.parameters.sy/2,self.source.parameters.sy/2)
-        #pylab.colorbar()
-        #pylab.title('Connection field from %s to %s of neuron %d' % (self.source.name,
-        #                                                             self.target.name,
-        #                                                             index))
-        #pylab.colorbar()
 
     def store_connections(self, datastore):
         from mozaik.analysis.data_structures import Connections
         
         weights = self.proj.get('weight', format='list', gather=True)
         delays = self.proj.get('delay', format='list', gather=True)
-        print self.name
         datastore.add_analysis_result(
             Connections(weights,delays,
                         source_size=(self.source.size_x,self.source.size_y),
