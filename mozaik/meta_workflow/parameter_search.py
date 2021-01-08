@@ -484,6 +484,7 @@ def parameter_search_run_script_distributed_slurm_UK(simulation_name,master_resu
                             '#!/bin/bash',
                             '#SBATCH -J MozaikParamSearchAnalysis',
                             '#SBATCH -c ' + str(core_number),
+                            '#SBATCH --hint=nomultithread',
                             'source /home/antolikjan/virt_env/mozaik/bin/activate',
                             'cd ' + os.getcwd(),
                             ' '.join(["python",run_script,"'"+rdn+"'"]  +['>']  + ["'"+rdn +'/OUTFILE_analysis'+str(time.time()) + "'"]),
