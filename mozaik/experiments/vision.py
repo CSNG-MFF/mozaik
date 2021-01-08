@@ -5,6 +5,8 @@ import mozaik.stimuli.vision.topographica_based as topo
 import numpy
 from mozaik.stimuli import InternalStimulus
 from mozaik.tools.distribution_parametrization import ParameterWithUnitsAndPeriod, MozaikExtendedParameterSet
+from mozaik.sheets.direct_stimulator import Depolarization
+
 
 logger = mozaik.getMozaikLogger()
 
@@ -155,6 +157,104 @@ class MeasureSparse(VisualExperiment):
    
     def do_analysis(self, data_store):
         pass
+
+
+class MeasureSparseWithCurrentInjection(VisualExperiment):
+    """
+    Sparse noise stimulation experiments (identical to MeasureSparse) with concomitant current injection.
+
+    This experiment will show a series of images formed by a single 
+    circle (dot) which will be presented in a random position in each trial.
+    
+    Parameter
+    ----------
+    model : Model
+        The model on which to execute the experiment.
+
+    Other parameters
+    ----------------
+
+    time_per_image : float
+        The time it takes for the experiment to change single images 
+        Every time_per_image a new instance of sparse noise will be 
+        presented
+
+    total_number_images : int
+        The total number of images that will be presented
+    
+    num_trials : int
+           Number of trials each each stimulus is shown.
+           
+    grid_size: int
+           the grid will have grid_size x grid_size spots
+           
+    experiment_seed : int
+     sets a particular seed at the beginning of each experiment
+     
+    grid: bool
+     If true makes the patterns stick to a grid, otherwise the 
+     center of the pattern is distribuited randomly
+
+    stimulation_configuration : ParameterSet
+                              The parameter set for direct stimulation specifying neurons to which the kick will be administered.
+
+    stimulation_sheet : sheet
+               The sheet in which to do stimulation
+
+    stimulation_current : float (mA)
+                     The current to inject into selected neurons.
+
+    """
+    
+    required_parameters = ParameterSet({
+            'time_per_image': float, 
+            'total_number_of_images' : int, 
+            'num_trials' : int,
+            'experiment_seed' : int,
+            'stim_size' : float,
+            'grid_size' : int,
+            'grid' : bool,
+            'stimulation_configuration' : ParameterSet,
+            'stimulation_sheet' : str,
+            'stimulation_current' : float,
+      
+    })
+    
+    def __init__(self,model,parameters):
+        VisualExperiment.__init__(self, model,parameters)
+    
+        for k in xrange(0, self.parameters.num_trials):
+            self.stimuli.append(topo.SparseNoise(
+                frame_duration = self.frame_duration,
+                            time_per_image = self.parameters.time_per_image,
+                            duration = self.parameters.total_number_of_images * self.parameters.time_per_image,  
+                            size_x=self.parameters.stim_size,
+                            size_y=self.parameters.stim_size,
+                            location_x=0.0,
+                            location_y=0.0, 
+                            background_luminance=self.background_luminance,
+                            density=self.density,
+                            trial = k,
+                            experiment_seed = self.parameters.experiment_seed,
+                            grid_size = self.parameters.grid_size,
+                            grid = self.parameters.grid
+                          ))
+            
+        for k in xrange(0, self.parameters.num_trials):
+            d  = {}
+            p = ParameterSet({
+                                'population_selector' : self.parameters.stimulation_configuration
+                                'current' : self.parameters.stimulation_current
+                               })
+
+            d[sheet] = [Depolarization(model.sheets[self.parameters.sheet],p)]
+            
+            self.direct_stimulation.append(d)       
+             
+
+    def do_analysis(self, data_store):
+        pass
+
 
 class MeasureDense(VisualExperiment):
     """
