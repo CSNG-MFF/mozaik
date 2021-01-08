@@ -1,0 +1,19 @@
+dist: bionic
+
+language: python
+python:
+- "2.7"
+
+before_install:
+- sudo apt-get -y install python-dev python-pip python-nose subversion git libopenmpi-dev g++ libjpeg8 libjpeg8-dev libfreetype6 libfreetype6-dev zlib1g-dev libpng++-dev libncurses5 libncurses5-dev libreadline-dev liblapack-dev libblas-dev gfortran libgsl0-dev openmpi-bin python-tk cmake
+- git clone https://github.com/antolikjan/imagen.git && cd imagen && python setup.py install && cd .. # Hacky solution until imagen gets added as submodule
+- python setup.py install
+
+install:
+- pip install -r requirements.txt
+
+script:
+- pytest --cov=mozaik
+
+after_success:
+- codecov
