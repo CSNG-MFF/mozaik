@@ -222,6 +222,20 @@ class MeasureSparseWithCurrentInjection(VisualExperiment):
     
     def __init__(self,model,parameters):
         VisualExperiment.__init__(self, model,parameters)
+
+        self.direct_stimulation = []
+
+        for k in xrange(0, self.parameters.num_trials):
+            d  = {}
+            p = MozaikExtendedParameterSet({
+                                'population_selector' : self.parameters.stimulation_configuration,
+                                'current' : self.parameters.stimulation_current
+                               })
+
+            d[self.parameters.stimulation_sheet] = [Depolarization(model.sheets[self.parameters.stimulation_sheet],p)]
+            
+            self.direct_stimulation.append(d)       
+
     
         for k in xrange(0, self.parameters.num_trials):
             self.stimuli.append(topo.SparseNoise(
@@ -237,19 +251,11 @@ class MeasureSparseWithCurrentInjection(VisualExperiment):
                             trial = k,
                             experiment_seed = self.parameters.experiment_seed,
                             grid_size = self.parameters.grid_size,
-                            grid = self.parameters.grid
+                            grid = self.parameters.grid,
+                            direct_stimulation_name='Injection',
+                            direct_stimulation_parameters = p
                           ))
             
-        for k in xrange(0, self.parameters.num_trials):
-            d  = {}
-            p = ParameterSet({
-                                'population_selector' : self.parameters.stimulation_configuration
-                                'current' : self.parameters.stimulation_current
-                               })
-
-            d[sheet] = [Depolarization(model.sheets[self.parameters.sheet],p)]
-            
-            self.direct_stimulation.append(d)       
              
 
     def do_analysis(self, data_store):
