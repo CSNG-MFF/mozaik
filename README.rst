@@ -146,12 +146,12 @@ Now we can install *Nest* (always in the virtual environment):
 
     - download the latest version from their `website <http://www.nest-initiative.org/index.php/Software:Download>`_
         
-        wget https://github.com/nest/nest-simulator/archive/v2.18.0.tar.gz
+        wget https://github.com/nest/nest-simulator/archive/v2.20.1.tar.gz
         
     - untar and cd into it::
 
-        tar xvfz v2.18.0.tar.gz
-        cd nest-simulator-2.18.0
+        tar xvfz v2.20.1.tar.gz
+        cd nest-simulator-2.20.1
     
     - then configure, choose if you want mpi::
     
