@@ -13,6 +13,8 @@ import math
 import numpy
 import mozaik
 
+logger = mozaik.getMozaikLogger()
+
 class PopulationSelector(ParametrizedObject):
     """
     The PopulationSelector specifies which cells should be selected from population. 
@@ -138,6 +140,7 @@ class RCGrid(PopulationSelector):
                   xx,yy = self.sheet.cs_2_vf(x,y)
                   picked.append(z[numpy.argmin(numpy.power(self.sheet.pop.positions[0] - xx,2) +  numpy.power(self.sheet.pop.positions[1] - yy,2))])
           
+          logger.info("RCGrid> picked neurons: " + str(picked))
           return list(set(picked))
 
 class SimilarAnnotationSelector(PopulationSelector):

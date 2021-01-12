@@ -234,7 +234,9 @@ class MeasureSparseWithCurrentInjection(VisualExperiment):
 
             d[self.parameters.stimulation_sheet] = [Depolarization(model.sheets[self.parameters.stimulation_sheet],p)]
             
-            self.direct_stimulation.append(d)       
+            self.direct_stimulation.append(d)     
+
+        p['sheet'] = self.parameters.stimulation_sheet
 
     
         for k in xrange(0, self.parameters.num_trials):
