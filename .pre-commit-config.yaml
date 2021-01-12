@@ -1,0 +1,16 @@
+repos:
+  - repo: local
+    hooks:
+      - id: pytest-check
+        name: pytest-check
+        entry: pytest
+        language: system
+        types: [python]
+        pass_filenames: false
+        always_run: true
+  - repo: https://github.com/ambv/black
+    rev: stable
+    hooks:
+    - id: black
+      entry: black --check .
+      language_version: python3

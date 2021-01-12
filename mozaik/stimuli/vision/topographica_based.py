@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+# TODO: Remove this once we switch to Python 3
 """
 The file contains stimuli that use topographica to generate the stimulus
 
