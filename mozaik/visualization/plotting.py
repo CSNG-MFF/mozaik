@@ -382,9 +382,6 @@ class PlotTuningCurve(Plotting):
                     
                 par,val = zip(*sorted(zip(numpy.array(par),val)))
 		
-		logger.info("PLOT TUNING CURVE " + str(period) + " " + str(pi))
-		logger.info("PLOT TUNING CURVE " + str(type(period)) + " " + str(type(pi)))
-
                 # if we have a period of pi or 2*pi
                 if period != None and numpy.isclose(period,pi) and self.parameters.centered==False:
                    par = [(p-pi if p > pi/2 else p) for p in par]

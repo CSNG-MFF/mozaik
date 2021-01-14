@@ -176,7 +176,7 @@ class PoissonNetworkKick(Experiment):
 class InjTest(Experiment):
     required_parameters = ParameterSet({
             'duration': float,
-            'current'
+            'current' : float,
             'sheet_list' : list,
             'stimulation_configuration' : ParameterSet,
         })
@@ -189,7 +189,7 @@ class InjTest(Experiment):
             d  = {}
             for i,sheet in enumerate(self.parameters.sheet_list):
                 p = MozaikExtendedParameterSet({
-                                                'current' : self.parameters.stimulation_configuration,
+                                                'current' : self.parameters.current,
                                                 'population_selector' : self.parameters.stimulation_configuration})
 
                 d[sheet] = [Depolarization(model.sheets[sheet],p)]
