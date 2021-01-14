@@ -172,6 +172,39 @@ class PoissonNetworkKick(Experiment):
                                             direct_stimulation_parameters = p
                                          )
                                 )
+
+class InjTest(Experiment):
+    required_parameters = ParameterSet({
+            'duration': float,
+            'current'
+            'sheet_list' : list,
+            'stimulation_configuration' : ParameterSet,
+        })
+
+    
+    def __init__(self,model,parameters):
+            Experiment.__init__(self, model,parameters)
+            from mozaik.sheets.direct_stimulator import Depolarization
+
+            d  = {}
+            for i,sheet in enumerate(self.parameters.sheet_list):
+                p = MozaikExtendedParameterSet({
+                                                'current' : self.parameters.stimulation_configuration,
+                                                'population_selector' : self.parameters.stimulation_configuration})
+
+                d[sheet] = [Depolarization(model.sheets[sheet],p)]
+            
+            self.direct_stimulation = [d]
+            self.stimuli.append(
+                        InternalStimulus(   
+                                            frame_duration=self.parameters.duration, 
+                                            duration=self.parameters.duration,
+                                            trial=0,
+                                            direct_stimulation_name='Injection',
+                                            direct_stimulation_parameters = p
+                                         )
+                                )
+
         
 class NoStimulation(Experiment):
     """ 
