@@ -116,8 +116,8 @@ class SlurmSequentialBackend(object):
                             'cd ' + os.getcwd(),
                             ' '.join(["python",run_script, simulator_name, str(self.num_threads) ,parameters_url]+modified_parameters+[simulation_run_name]+['>']  + [parameters['results_dir'][1:-1] +'/OUTFILE'+str(time.time())]),
                         ]) 
-         print p.communicate(input=data)[0]                  
-         print data
+         print(p.communicate(input=data)[0])
+         print(data)
          p.stdin.close()
 
 
@@ -274,8 +274,8 @@ def parameter_search_run_script_distributed_slurm(simulation_name,master_results
                             'echo "DSADSA"',                            
                             ' '.join(["mpirun"," --mca mtl ^psm python",run_script,"'"+rdn+"'"]  +['>']  + ["'"+rdn +'/OUTFILE_analysis'+str(time.time()) + "'"]),
                         ]) 
-        print p.communicate(input=data)[0]                  
-        print data
+        print(p.communicate(input=data)[0])
+        print(data)
         p.stdin.close()
 
 
@@ -318,8 +318,8 @@ def parameter_search_run_script_distributed_slurm_IoV(simulation_name,master_res
                             'echo "DSADSA"',                            
                             ' '.join(["python",run_script,"'"+rdn+"'"]  +['>']  + ["'"+rdn +'/OUTFILE_analysis'+str(time.time()) + "'"]),
                         ]) 
-        print p.communicate(input=data)[0]                  
-        print data
+        print(p.communicate(input=data)[0])
+        print(data)
         p.stdin.close()
 
 def parameter_search_run_script_distributed_slurm_UK(simulation_name,master_results_dir,run_script,core_number):
@@ -356,11 +356,12 @@ def parameter_search_run_script_distributed_slurm_UK(simulation_name,master_resu
                             '#!/bin/bash',
                             '#SBATCH -J MozaikParamSearchAnalysis',
                             '#SBATCH -c ' + str(core_number),
+                            '#SBATCH --hint=nomultithread',
                             'source /home/antolikjan/virt_env/mozaik/bin/activate',
                             'cd ' + os.getcwd(),
                             ' '.join(["python",run_script,"'"+rdn+"'"]  +['>']  + ["'"+rdn +'/OUTFILE_analysis'+str(time.time()) + "'"]),
                         ]) 
-        print p.communicate(input=data)[0]                  
-        print data
+        print(p.communicate(input=data)[0])
+        print(data)
         p.stdin.close()
 

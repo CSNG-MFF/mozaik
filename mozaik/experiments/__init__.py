@@ -163,7 +163,7 @@ class PoissonNetworkKick(Experiment):
                 d[sheet] = [Kick(model.sheets[sheet],p)]
             
             self.direct_stimulation = [d]
-	    self.stimuli.append(
+            self.stimuli.append(
                         InternalStimulus(   
                                             frame_duration=self.parameters.duration, 
                                             duration=self.parameters.duration,
