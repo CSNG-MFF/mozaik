@@ -235,15 +235,14 @@ class SlurmSequentialBackendUK(object):
         
      
          from subprocess import Popen, PIPE, STDOUT
+         # use sbatch to queue job with params as in  slurm options (except job-geometry)
          p = Popen(['sbatch'] + self.slurm_options +  ['-o',parameters['results_dir'][2:-2]+"/slurm-%j.out"],stdin=PIPE,stdout=PIPE,stderr=PIPE)
          
-         # THIS IS A BIT OF A HACK, have to add customization for other people ...            
+         # pass jobfile: sets slurm job geometry, sources env and starts simulation job from cwd 
          data = '\n'.join([
                             '#!/bin/bash',
-                            '#SBATCH -J MozaikParamSearch',
                             '#SBATCH -n ' + str(self.num_mpi),
                             '#SBATCH -c ' + str(self.num_threads),
-                            '#SBATCH --hint=nomultithread',
                             'source ' + str(self.path_to_mozaik_env),
                             'cd ' + os.getcwd(),
                             ' '.join(["python",run_script, simulator_name, str(self.num_threads) ,parameters_url]+modified_parameters+[simulation_run_name]+['>']  + [parameters['results_dir'][1:-1] +'/OUTFILE'+str(time.time())]),
