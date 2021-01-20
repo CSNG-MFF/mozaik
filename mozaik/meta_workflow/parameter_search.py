@@ -52,6 +52,7 @@ class LocalSequentialBackend(object):
          subprocess.call(' '.join(["python", run_script, simulator_name, '1', parameters_url]+modified_parameters+['ParameterSearch']),shell=True)
 
 
+
 class SlurmSequentialBackend(object):
     """
     This is a back end that runs each simulation run as a slurm job. 
@@ -64,72 +65,8 @@ class SlurmSequentialBackend(object):
     num_mpi : int
                   Number of mpi processes to spawn per job.
                   
-    slurm_options : list(string), optional 
-                  List of strings that will be passed to slurm sbatch command as options.  
-    Note:
-    -----
-    -----
-    The most common usage of slurm_options is to let slurm know how many mpi processed to spawn per job, and how to allocates resources to them.
-    """
-    def __init__(self,num_threads,num_mpi,slurm_options=None):
-        self.num_threads = num_threads
-        self.num_mpi = num_mpi
-        if slurm_options==None:
-           self.slurm_options=[]
-        else:
-           self.slurm_options=slurm_options 
-        
-        
-        
-        
-    def execute_job(self,run_script,simulator_name,parameters_url,parameters,simulation_run_name):
-         """
-         This function recevies the list of parameters to modify and their values, and has to 
-         execute the corresponding mozaik simulation.
-         
-         Parameters
-         ----------
-         parameters : dict
-                    The dictionary holding the names of parameters to be modified as keys, and the values to set them to as the corresponding values. 
-         """
-         modified_parameters = []
-         for k in parameters.keys():
-             modified_parameters.append(k)
-             modified_parameters.append(str(parameters[k]))
-        
-     
-         from subprocess import Popen, PIPE, STDOUT
-         #'--exclude=node[01-04]',
-         p = Popen(['sbatch','--exclude=node08'] + self.slurm_options +  ['-o',parameters['results_dir'][2:-2]+"/slurm-%j.out"],stdin=PIPE,stdout=PIPE,stderr=PIPE)
-         
-         # THIS IS A BIT OF A HACK, have to add customization for other people ...            
-         data = '\n'.join([
-                            '#!/bin/bash',
-                            '#SBATCH -J MozaikParamSearch',
-                            '#SBATCH -n ' + str(self.num_mpi),
-                            '#SBATCH -c ' + str(self.num_threads),
-                            'source /opt/software/mpi/openmpi-1.6.3-gcc/env',
-                            'source /home/antolikjan/env/mozaiknew/bin/activate',
-                            'cd ' + os.getcwd(),
-                            ' '.join(["mpirun"," --mca mtl ^psm python",run_script, simulator_name, str(self.num_threads) ,parameters_url]+modified_parameters+[simulation_run_name]+['>']  + [parameters['results_dir'][1:-1] +'/OUTFILE'+str(time.time())]),
-                        ]) 
-         print(p.communicate(input=data)[0])
-         print(data)
-         p.stdin.close()
-
-
-
-class SlurmSequentialBackendIoV(object):
-    """
-    This is a back end that runs each simulation run as a slurm job. 
-    
-    Parameters
-    ----------
-    num_threads : int
-                  Number of threads per mpi process.
-
-    num_mpi : int
-                  Number of mpi processes to spawn per job.
+    path_to_mozaik_env : string
+                  Path to virtual environment in which mozaik is installed.                  
                   
     slurm_options : list(string), optional 
                   List of strings that will be passed to slurm sbatch command as options.  
@@ -138,9 +75,10 @@ class SlurmSequentialBackendIoV(object):
     -----
     The most common usage of slurm_options is to let slurm know how many mpi processed to spawn per job, and how to allocates resources to them.
     """
-    def __init__(self,num_threads,num_mpi,slurm_options=None):
+    def __init__(self,num_threads,num_mpi, path_to_mozaik_env, slurm_options=None):
         self.num_threads = num_threads
         self.num_mpi = num_mpi
+        self.path_to_mozaik_env = path_to_mozaik_env
         if slurm_options==None:
            self.slurm_options=[]
         else:
@@ -166,81 +104,15 @@ class SlurmSequentialBackendIoV(object):
         
      
          from subprocess import Popen, PIPE, STDOUT
-         p = Popen(['sbatch','--exclude=node08'] + self.slurm_options +  ['-o',parameters['results_dir'][2:-2]+"/slurm-%j.out"],stdin=PIPE,stdout=PIPE,stderr=PIPE)
-         
-         # THIS IS A BIT OF A HACK, have to add customization for other people ...            
-         data = '\n'.join([
-                            '#!/bin/bash',
-                            '#SBATCH -J MozaikParamSearch',
-                            '#SBATCH -n ' + str(self.num_mpi),
-                            '#SBATCH -c ' + str(self.num_threads),
-                            'source /home/jantolik/virt_env/mozaiknew/bin/activate',
-                            'cd ' + os.getcwd(),
-                            ' '.join(["mpirun python",run_script, simulator_name, str(self.num_threads) ,parameters_url]+modified_parameters+[simulation_run_name]+['>']  + [parameters['results_dir'][1:-1] +'/OUTFILE'+str(time.time())]),
-                        ]) 
-         print(p.communicate(input=data)[0])
-         print(data)
-         p.stdin.close()
-
-
-
-class SlurmSequentialBackendUK(object):
-    """
-    This is a back end that runs each simulation run as a slurm job. 
-    
-    Parameters
-    ----------
-    num_threads : int
-                  Number of threads per mpi process.
-
-    num_mpi : int
-                  Number of mpi processes to spawn per job.
-                  
-    slurm_options : list(string), optional 
-                  List of strings that will be passed to slurm sbatch command as options.  
-    Note:
-    -----
-    -----
-    The most common usage of slurm_options is to let slurm know how many mpi processed to spawn per job, and how to allocates resources to them.
-    """
-    def __init__(self,num_threads,num_mpi,slurm_options=None):
-        self.num_threads = num_threads
-        self.num_mpi = num_mpi
-        if slurm_options==None:
-           self.slurm_options=[]
-        else:
-           self.slurm_options=slurm_options 
-        
-        
-        
-        
-    def execute_job(self,run_script,simulator_name,parameters_url,parameters,simulation_run_name):
-         """
-         This function recevies the list of parameters to modify and their values, and has to 
-         execute the corresponding mozaik simulation.
-         
-         Parameters
-         ----------
-         parameters : dict
-                    The dictionary holding the names of parameters to be modified as keys, and the values to set them to as the corresponding values. 
-         """
-         modified_parameters = []
-         for k in parameters.keys():
-             modified_parameters.append(k)
-             modified_parameters.append(str(parameters[k]))
-        
-     
-         from subprocess import Popen, PIPE, STDOUT
+         # use sbatch to queue job with params as in  slurm options (except job-geometry)
          p = Popen(['sbatch'] + self.slurm_options +  ['-o',parameters['results_dir'][2:-2]+"/slurm-%j.out"],stdin=PIPE,stdout=PIPE,stderr=PIPE)
          
-         # THIS IS A BIT OF A HACK, have to add customization for other people ...            
+         # pass jobfile: sets slurm job geometry, sources env and starts simulation job from cwd 
          data = '\n'.join([
                             '#!/bin/bash',
-                            '#SBATCH -J MozaikParamSearch',
                             '#SBATCH -n ' + str(self.num_mpi),
                             '#SBATCH -c ' + str(self.num_threads),
-                            '#SBATCH --hint=nomultithread',
-                            'source /home/antolikjan/virt_env/mozaik/bin/activate',
+                            'source ' + str(self.path_to_mozaik_env),
                             'cd ' + os.getcwd(),
                             ' '.join(["python",run_script, simulator_name, str(self.num_threads) ,parameters_url]+modified_parameters+[simulation_run_name]+['>']  + [parameters['results_dir'][1:-1] +'/OUTFILE'+str(time.time())]),
                         ]) 
