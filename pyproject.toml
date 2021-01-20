@@ -1,3 +1,8 @@
+[tool.pytest.ini_options]
+markers = [
+    "model: tests that need to run a full mozaik model to execute. Can be extremely slow.",
+]
+
 [tool.black]
 exclude = '''
 
