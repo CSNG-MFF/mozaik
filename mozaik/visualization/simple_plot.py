@@ -914,8 +914,6 @@ class StandardStyleLinePlot(StandardStyle):
                 ymax = self.y[i] + self.error[i]
                 self.axis.fill_between(self.x[i], ymax, ymin, color=p['color'], alpha=0.2)
 
-            pylab.hold('on')
-
             tmin = min(tmin, self.x[i][0])
             tmax = max(tmax, self.x[i][-1])
 
