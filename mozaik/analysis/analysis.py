@@ -109,6 +109,7 @@ class TrialAveragedFiringRate(Analysis):
             units = munits.spike / qt.s
             logger.debug('Adding PerNeuronValue containing trial averaged firing rates to datastore')
             for mr, vr, st in zip(_mean_rates,_var_rates, s):
+              
                 self.datastore.full_datastore.add_analysis_result(
                     PerNeuronValue(mr,segs[0].get_stored_spike_train_ids(),units,
                                    stimulus_id=str(st),
@@ -117,6 +118,7 @@ class TrialAveragedFiringRate(Analysis):
                                    tags=self.tags,
                                    analysis_algorithm=self.__class__.__name__,
                                    period=None))
+
                 self.datastore.full_datastore.add_analysis_result(
                     PerNeuronValue(vr,segs[0].get_stored_spike_train_ids(),units,
                                    stimulus_id=str(st),

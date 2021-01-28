@@ -308,9 +308,6 @@ class Depolarization(DirectStimulator):
         
         population_selector = load_component(self.parameters.population_selector.component)
         ids = population_selector(sheet,self.parameters.population_selector.params).generate_idd_list_of_neurons()
-
-        logger.info('Current will be injected  to following neurons: ' + str(ids))
-
         d = dict((j,i) for i,j in enumerate(self.sheet.pop.all_cells))
         to_stimulate_indexes = [d[i] for i in ids]
         
@@ -319,11 +316,9 @@ class Depolarization(DirectStimulator):
             self.sheet.pop.all_cells[i].inject(self.scs)
 
     def prepare_stimulation(self,duration,offset):
-        logger.info("injecting current: " + str(self.parameters.current) + "at time " + str(offset+self.sheet.dt*3) +". Duration:" + str(duration))
         self.scs.set_parameters(times=[offset+self.sheet.dt*3], amplitudes=[self.parameters.current],copy=False)
         
     def inactivate(self,offset):
-        logger.info("de-injecting current: " + "at time " + str(offset+self.sheet.dt*3))
         self.scs.set_parameters(times=[offset+self.sheet.dt*3], amplitudes=[0.0],copy=False)
 
 
