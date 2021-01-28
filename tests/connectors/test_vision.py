@@ -26,7 +26,8 @@ class TestV1CorrelationBasedConnectivity:
     """
 
     num_tests = 100
-    absolute_error_tolerance = 0.5
+    relative_error_tolerance = 0.02
+    absolute_error_tolerance = 0.0002
 
     def gabor_params(length=1):
         """
@@ -114,6 +115,7 @@ class TestV1CorrelationBasedConnectivity:
         np.testing.assert_allclose(
             empir,
             anal,
+            rtol=self.relative_error_tolerance,
             atol=self.absolute_error_tolerance,
             err_msg="The integral of multiplication of two gabors with parameters %s and %s does not match. Empirical value: %g, analytical value: %g."
             % (p1, p2, empir, anal),
@@ -143,6 +145,7 @@ class TestV1CorrelationBasedConnectivity:
         np.testing.assert_allclose(
             empir,
             anal,
+            rtol=self.relative_error_tolerance,
             atol=self.absolute_error_tolerance,
             err_msg="The correlation of two gabors with parameters %s and %s does not match. Empirical value: %g, analytical value: %g."
             % (p1, p2, empir, anal),
@@ -174,6 +177,7 @@ class TestV1CorrelationBasedConnectivity:
         np.testing.assert_allclose(
             empir,
             anal,
+            rtol=self.relative_error_tolerance,
             atol=self.absolute_error_tolerance,
             err_msg="The correlation of two gabors with a gaussian used for connections with parameters %s and %s does not match. Empirical value: %g, analytical value: %g."
             % (p1, p2, empir, anal),
@@ -205,6 +209,7 @@ class TestV1CorrelationBasedConnectivity:
             np.testing.assert_allclose(
                 m,
                 v,
+                rtol=self.relative_error_tolerance,
                 atol=self.absolute_error_tolerance,
                 err_msg="The integral of multiplication of two gabors with parameters %s and %s does not match. Matrix version: %g, vectorized version: %g."
                 % (param1[i], param2[i], m, v),
