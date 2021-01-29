@@ -27,7 +27,7 @@ class TestV1CorrelationBasedConnectivity:
 
     num_tests = 100
     relative_error_tolerance = 0.02
-    absolute_error_tolerance = 0.0002
+    absolute_error_tolerance = 0.002
 
     def gabor_params(length=1):
         """
