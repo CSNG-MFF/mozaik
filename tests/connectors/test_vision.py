@@ -7,6 +7,8 @@ import itertools
 
 import pytest
 
+np.random.seed(1024)  # Make random tests deterministic
+
 
 class TestMapDependentModularConnectorFunction:
     pass
@@ -26,7 +28,8 @@ class TestV1CorrelationBasedConnectivity:
     """
 
     num_tests = 100
-    absolute_error_tolerance = 0.5
+    relative_error_tolerance = 0.02
+    absolute_error_tolerance = 0.002
 
     def gabor_params(length=1):
         """
@@ -41,7 +44,8 @@ class TestV1CorrelationBasedConnectivity:
             x0 = -5 + np.random.rand() * 5
             y0 = -5 + np.random.rand() * 5
             omega = np.random.rand() * np.pi
-            theta = omega  # in vision we always work with the special case where the orientation of the gaussian is the same as orientation along which the grating varies
+            # in vision we always work with the special case where the orientation of the gaussian is the same as orientation along which the grating varies
+            theta = omega
             p = np.random.rand() * np.pi * 2
             params.append([k, a, b, x0, y0, theta, f, omega, p])
         return params
@@ -114,6 +118,7 @@ class TestV1CorrelationBasedConnectivity:
         np.testing.assert_allclose(
             empir,
             anal,
+            rtol=self.relative_error_tolerance,
             atol=self.absolute_error_tolerance,
             err_msg="The integral of multiplication of two gabors with parameters %s and %s does not match. Empirical value: %g, analytical value: %g."
             % (p1, p2, empir, anal),
@@ -143,6 +148,7 @@ class TestV1CorrelationBasedConnectivity:
         np.testing.assert_allclose(
             empir,
             anal,
+            rtol=self.relative_error_tolerance,
             atol=self.absolute_error_tolerance,
             err_msg="The correlation of two gabors with parameters %s and %s does not match. Empirical value: %g, analytical value: %g."
             % (p1, p2, empir, anal),
@@ -151,8 +157,7 @@ class TestV1CorrelationBasedConnectivity:
     @pytest.mark.parametrize(
         "p1, p2",
         itertools.izip_longest(
-            gabor_relative_params(num_tests),
-            gabor_relative_params(num_tests),
+            gabor_relative_params(num_tests), gabor_relative_params(num_tests)
         ),
     )
     def test_gabor_correlation_with_gaussian_used_for_connections(self, p1, p2):
@@ -174,6 +179,7 @@ class TestV1CorrelationBasedConnectivity:
         np.testing.assert_allclose(
             empir,
             anal,
+            rtol=self.relative_error_tolerance,
             atol=self.absolute_error_tolerance,
             err_msg="The correlation of two gabors with a gaussian used for connections with parameters %s and %s does not match. Empirical value: %g, analytical value: %g."
             % (p1, p2, empir, anal),
@@ -205,6 +211,7 @@ class TestV1CorrelationBasedConnectivity:
             np.testing.assert_allclose(
                 m,
                 v,
+                rtol=self.relative_error_tolerance,
                 atol=self.absolute_error_tolerance,
                 err_msg="The integral of multiplication of two gabors with parameters %s and %s does not match. Matrix version: %g, vectorized version: %g."
                 % (param1[i], param2[i], m, v),
