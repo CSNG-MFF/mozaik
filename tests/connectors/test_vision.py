@@ -7,6 +7,7 @@ import itertools
 
 import pytest
 
+np.random.seed(1024) # Make random tests deterministic
 
 class TestMapDependentModularConnectorFunction:
     pass
