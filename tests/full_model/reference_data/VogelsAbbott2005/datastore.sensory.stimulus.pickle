@@ -1,0 +1,12 @@
+ccollections
+OrderedDict
+p1
+((lp2
+(lp3
+S'{"module_path" :"mozaik.stimuli","direct_stimulation_name":\'Kick\', "direct_stimulation_parameters":MozaikExtendedParameterSet({\'drive_period\': 56.0, \'exc_weight\': 0.1, \'population_selector\': {\'component\': \'mozaik.sheets.population_selector.RCRandomPercentage\', \'params\': {\'percentage\': 20.0}}, \'exc_firing_rate\': 100.0}), "duration":56, "frame_duration":56, "name":\'InternalStimulus\', "trial":0}'
+p4
+aNaa(lp5
+S'{"module_path" :"mozaik.stimuli","direct_stimulation_name":None, "direct_stimulation_parameters":None, "duration":13500.0, "frame_duration":13500.0, "name":\'InternalStimulus\', "trial":0}'
+p6
+aNaatRp7
+.
