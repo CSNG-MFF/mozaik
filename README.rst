@@ -196,7 +196,7 @@ Simple Installation with Docker
 
 Run the following commands to build a Docker container with Mozaik::
 
-  git clone https://github.com/antolikjan/mozaik.git
+  git clone https://github.com/CSNG-MFF/imagen.git
   cd mozaik
   docker build --tag antolikjan/mozaik --target prod .
 
