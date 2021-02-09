@@ -138,7 +138,7 @@ place, where you will download and install from the packages.
 
 First we will install *imagen* package::
 
-  git clone https://github.com/antolikjan/imagen.git
+  git clone https://github.com/CSNG-MFF/imagen.git
   cd imagen
   python setup.py install
 
@@ -172,7 +172,7 @@ Now we can install *Nest* (always in the virtual environment):
 
 And, finally, Mozaik::
     
-    git clone https://github.com/antolikjan/mozaik.git
+    git clone https://github.com/CSNG-MFF/mozaik.git
     cd mozaik
     python setup.py install
     
@@ -196,7 +196,7 @@ Simple Installation with Docker
 
 Run the following commands to build a Docker container with Mozaik::
 
-  git clone https://github.com/CSNG-MFF/imagen.git
+  git clone https://github.com/CSNG-MFF/mozaik.git
   cd mozaik
   docker build --tag antolikjan/mozaik --target prod .
 
