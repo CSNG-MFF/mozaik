@@ -215,16 +215,29 @@ To run tests::
   docker run --rm -v "`pwd`:/app" antolikjan/mozaik:dev pytest
 
 Testing, Autoformat, Continuous Integration
--------------------------------
+-------------------------------------------
 
-In case you want to contribute to the project, you need to make sure your code passes all unit tests and is formatted with the Black autoformatter. You can make sure this is the case by running `pytest && black --check .` from the project directory. Travis-CI will run the same steps for your pull request once you submit it to the project.
+In case you want to contribute to the project, you need to make sure your code passes all unit tests and is formatted with the Black autoformatter. You can make sure this is the case by running from the project directory::
 
-To install pytest and black:
+  pytest && black --check .
+
+This command will run all tests that it can find recursively under the current directory, as well as check all non-blacklisted files for formatting. Travis-CI will run the same steps for your pull request once you submit it to the project. To install pytest and black::
 
   pip install pytest pytest-cov pytest-randomly coverage
   sudo apt-get -y install python3-dev python3-pip python3-setuptools
   pip3 install black
 
+There are additional useful options for pytests that you can use during development:
+
+    - You may exclude tests running the model by adding the option::
+
+        pytest -m "not model"
+    - You can run the tests in a single file by::
+
+        pytest path/to/file
+    - Pytest doesn't, print to :code:`stdout` by default, you can enable this by::
+
+        pytest -s
 
 :copyright: Copyright 2011-2013 by the *mozaik* team, see AUTHORS.
 :license: `CECILL <http://www.cecill.info/>`_, see LICENSE for details.

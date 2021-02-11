@@ -35,10 +35,7 @@ class TestModel(object):
         return PickledDataStore(
             load=True,
             parameters=ParameterSet(
-                {
-                    "root_directory": base_dir,
-                    "store_stimuli": False,
-                }
+                {"root_directory": base_dir, "store_stimuli": False}
             ),
             replace=False,
         )
@@ -180,7 +177,7 @@ class TestVogelsAbbott2005(TestModel):
         if os.path.exists(cls.result_path):
             os.system("rm -r " + cls.result_path)
         os.system(
-            "cd examples/VogelsAbbott2005 && mpirun python run.py nest 2 param/defaults 'pytest' && cd ../.."
+            "cd examples/VogelsAbbott2005 && python run.py nest 2 param/defaults 'pytest' && cd ../.."
         )
 
         # Load DataStore of recordings from the model that just ran
