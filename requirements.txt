@@ -7,7 +7,7 @@ neo==0.5.2
 numpy==1.16.6
 param==1.5.1
 parameters==0.2.1
-Pillow==7.1.0
+Pillow==6.2.2
 psutil==5.7.0
 PyNN==0.9.5
 quantities==0.12.4
