@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 This module contains classes with tests for mozaik/stimuli/vision/topographica_based.py
 """
@@ -10,11 +11,13 @@ import param
 from imagen.image import BoundingBox
 import pickle
 import numpy
+import numpy as np
 from mozaik.tools.mozaik_parametrized import SNumber, SString
 from mozaik.tools.units import cpd
 from numpy import pi
 from quantities import Hz, rad, degrees, ms, dimensionless
 import mozaik.stimuli.vision.topographica_based as topo
+from collections import namedtuple
 
 import pytest
 
@@ -281,3 +284,300 @@ class TestDenseNoise(TestNoise):
             background_luminance=background_luminance,
             density=density,
         )
+
+
+class TestFullfieldDriftingSinusoidalGrating(TopographicaBasedVisualStimulusTester):
+    pass
+
+
+class TestFullfieldDriftingSquareGrating(TopographicaBasedVisualStimulusTester):
+    pass
+
+
+class TestFullfieldDriftingSinusoidalGratingA(TopographicaBasedVisualStimulusTester):
+    pass
+
+
+class TestFlashingSquares(TopographicaBasedVisualStimulusTester):
+    pass
+
+
+class TestNull(TopographicaBasedVisualStimulusTester):
+    pass
+
+
+class TestMaximumDynamicRange(TransferFn):
+    pass
+
+
+class TestNaturalImageWithEyeMovement(TopographicaBasedVisualStimulusTester):
+    pass
+
+
+class TestDriftingGratingWithEyeMovement(TopographicaBasedVisualStimulusTester):
+    pass
+
+
+class TestDriftingSinusoidalGratingDisk(TopographicaBasedVisualStimulusTester):
+    pass
+
+
+class TestFlatDisk(TopographicaBasedVisualStimulusTester):
+    pass
+
+
+class TestFlashedBar(TopographicaBasedVisualStimulusTester):
+    pass
+
+
+class TestDriftingSinusoidalGratingCenterSurroundStimulus(
+    TopographicaBasedVisualStimulusTester
+):
+    pass
+
+
+class TestDriftingSinusoidalGratingRing(TopographicaBasedVisualStimulusTester):
+    pass
+
+
+class TestFlashedInterruptedBar(TopographicaBasedVisualStimulusTester):
+    pass
+
+
+class TestFlashedInterruptedCorner(TopographicaBasedVisualStimulusTester):
+    pass
+
+
+class TestVonDerHeydtIllusoryBar(TopographicaBasedVisualStimulusTester):
+    pass
+
+
+class SimpleGaborPatch(TopographicaBasedVisualStimulusTester):
+    pass
+
+
+class TwoStrokeGaborPatch(TopographicaBasedVisualStimulusTester):
+    pass
+
+
+default_gabor = {
+    "orientation": 0,
+    "phase": 0,
+    "spatial_frequency": 1,
+    "size": 5,
+    "flash_duration": 1,
+    "relative_luminance": 1,
+    "x": 0,
+    "y": 0,
+    "grid": False,
+}
+
+default_cont_mov_jump = {
+    "movement_length": 4,
+    "movement_angle": 0,
+    "movement_duration": 10,
+    "flash_duration": 4,
+    "moving_gabor_orientation_radial": True,
+}
+
+
+class TestContinuousGaborMovementAndJump:
+
+    num_tests = 100
+    saved_frames = dict()
+
+    def generate_frame_params(length=1):
+        """
+        Generate random parameters for ContinuousGaborMovementAndJump class instances
+        """
+        np.random.seed(0)
+        params = []
+        for i in xrange(0, length):
+            x = (np.random.rand() - 0.5) * default_topo["size_x"] / 2
+            y = (np.random.rand() - 0.5) * default_topo["size_y"] / 2
+            size = 1 + np.random.rand() * 4
+            orientation = np.random.rand() * np.pi
+            movement_length = np.random.rand() * 4
+            movement_angle = np.random.rand() * 2 * np.pi
+            movement_duration = (
+                2 * default_topo["frame_duration"] + np.random.rand() * 30
+            )
+            flash_duration = default_topo["frame_duration"] + np.random.rand() * 5
+
+            moving_gabor_orientation_radial = np.random.rand() > 0.5
+            params.append(
+                (
+                    x,
+                    y,
+                    size,
+                    orientation,
+                    movement_length,
+                    movement_angle,
+                    movement_duration,
+                    flash_duration,
+                    moving_gabor_orientation_radial,
+                )
+            )
+        return params
+
+    def get_frames(self, **kwargs):
+        """
+        Generate stimulus, pop frames from its generator and save them into a dictionary
+        If the frames have already been used in some different test, just get them from
+        the dictionary instead.
+        """
+        stim = self.get_stimulus(**kwargs)
+        kwargs_t = tuple(kwargs.values())
+        if kwargs_t in self.saved_frames:
+            frames = self.saved_frames[kwargs_t]
+        else:
+            num_frames = (
+                int(kwargs["movement_duration"] + kwargs["flash_duration"])
+                / default_topo["frame_duration"]
+                + 2
+            )
+            frames = self.pop_frames(stim, num_frames)
+            self.saved_frames[kwargs_t] = frames
+        return frames
+
+    def pop_frames(self, stimulus, num_frames):
+        return [stimulus._frames.next()[0] for i in range(num_frames)]
+
+    def get_stimulus(
+        self,
+        x,
+        y,
+        size,
+        orientation,
+        movement_length,
+        movement_angle,
+        movement_duration,
+        flash_duration,
+        moving_gabor_orientation_radial,
+    ):
+        """
+        Return a ContinuousGaborMovementAndJump stimulus with the specified parameters.
+        """
+        cgb = topo.ContinuousGaborMovementAndJump(
+            duration=default_topo["duration"],
+            frame_duration=default_topo["frame_duration"],
+            background_luminance=default_topo["background_luminance"],
+            density=default_topo["density"],
+            location_x=default_topo["location_x"],
+            location_y=default_topo["location_y"],
+            size_x=default_topo["size_x"],
+            size_y=default_topo["size_y"],
+            orientation=orientation,
+            phase=default_gabor["phase"],
+            spatial_frequency=default_gabor["spatial_frequency"],
+            size=size,
+            movement_duration=movement_duration,
+            center_flash_duration=flash_duration,
+            moving_relative_luminance=default_gabor["relative_luminance"],
+            center_relative_luminance=default_gabor["relative_luminance"],
+            x=x,
+            y=y,
+            movement_length=movement_length,
+            movement_angle=movement_angle,
+            moving_gabor_orientation_radial=moving_gabor_orientation_radial,
+        )
+        return cgb
+
+    def get_nonblank_mask(self, frame, baseline=0):
+        """
+        Returns a boolean numpy array, that is false where the input frame is different
+        from a specified baseline value.
+        """
+        base = np.ones(frame.shape) * baseline
+        mask = np.isclose(frame, baseline)
+        return mask
+
+    @pytest.mark.parametrize(
+        "x, y, size, orientation, movement_length, movement_angle, movement_duration, flash_duration, moving_gabor_orientation_radial",
+        generate_frame_params(num_tests),
+    )
+    def test_no_overlap(
+        self,
+        x,
+        y,
+        size,
+        orientation,
+        movement_length,
+        movement_angle,
+        movement_duration,
+        flash_duration,
+        moving_gabor_orientation_radial,
+    ):
+        """
+        Test that there is no overlap between the moving Gabor patch and the Gabor
+        patch flashed at center
+        """
+        frames = self.get_frames(
+            x=x,
+            y=y,
+            size=size,
+            orientation=orientation,
+            movement_length=movement_length,
+            movement_angle=movement_angle,
+            movement_duration=movement_duration,
+            flash_duration=flash_duration,
+            moving_gabor_orientation_radial=moving_gabor_orientation_radial,
+        )
+
+        movement_num_frames = int(movement_duration / default_topo["frame_duration"])
+        movement_mask = numpy.full(frames[0].shape, True, dtype=bool)
+        for i in range(movement_num_frames):
+            movement_mask = np.logical_and(
+                movement_mask,
+                self.get_nonblank_mask(frames[i], default_topo["background_luminance"]),
+            )
+
+        flash_mask = numpy.full(frames[0].shape, True, dtype=bool)
+        for i in range(movement_num_frames, len(frames)):
+            flash_mask = np.logical_and(
+                flash_mask,
+                self.get_nonblank_mask(frames[i], default_topo["background_luminance"]),
+            )
+
+        overlap = np.logical_or(movement_mask, flash_mask)
+        assert np.all(
+            overlap
+        ), "There is overlap between movement and center flash Gabors"
+
+    @pytest.mark.parametrize(
+        "x, y, size, orientation, movement_length, movement_angle, movement_duration, flash_duration, moving_gabor_orientation_radial",
+        generate_frame_params(num_tests),
+    )
+    def test_is_blank_after_stimulus_end(
+        self,
+        x,
+        y,
+        size,
+        orientation,
+        movement_length,
+        movement_angle,
+        movement_duration,
+        flash_duration,
+        moving_gabor_orientation_radial,
+    ):
+        """
+        Check if class returns blank frames after stimulus duration
+        """
+        frames = self.get_frames(
+            x=x,
+            y=y,
+            size=size,
+            orientation=orientation,
+            movement_length=movement_length,
+            movement_angle=movement_angle,
+            movement_duration=movement_duration,
+            flash_duration=flash_duration,
+            moving_gabor_orientation_radial=moving_gabor_orientation_radial,
+        )
+        stimulus_duration = movement_duration + flash_duration
+        stimulus_end_id = int(stimulus_duration / default_topo["frame_duration"])
+        blank = np.full(
+            frames[0].shape, default_topo["background_luminance"], dtype=np.float64
+        )
+        for i in range(stimulus_end_id, len(frames)):
+            np.testing.assert_allclose(frames[i], blank)
