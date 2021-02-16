@@ -33,6 +33,18 @@ class TestTopographicaBasedVisualStimulus:
         assert not t.transparent
 
 
+default_topo = {
+    "duration": 100,
+    "frame_duration": 1,
+    "background_luminance": 50.0,
+    "density": 10.0,
+    "location_x": 0.0,
+    "location_y": 0.0,
+    "size_x": 11.0,
+    "size_y": 11.0,
+}
+
+
 class TopographicaBasedVisualStimulusTester(object):
     """
     Parent class containing convenience functions for testing stimulus generators in
@@ -42,16 +54,6 @@ class TopographicaBasedVisualStimulusTester(object):
     # Number of frames to test
     num_frames = 100
     # Default parameters for generating TopographicaBasedVisualStimuli frames
-    default_topo = {
-        "duration": 100,
-        "frame_duration": 1,
-        "background_luminance": 50.0,
-        "density": 10.0,
-        "location_x": 0.0,
-        "location_y": 0.0,
-        "size_x": 11.0,
-        "size_y": 11.0,
-    }
 
     def reference_frames(self, **params):
         """
@@ -105,10 +107,12 @@ class TopographicaBasedVisualStimulusTester(object):
         pytest.skip("Must be implemented in child class and call check_frames.")
 
 
+default_noise = {"grid_size": 11, "grid": False, "time_per_image": 2}
+
+
 class TestNoise(TopographicaBasedVisualStimulusTester):
 
     experiment_seed = 0
-    default_noise = {"grid_size": 11, "grid": False, "time_per_image": 2}
 
     @pytest.mark.parametrize("grid_size", [-1, 0, 0.9, 0.9999999999])
     def test_min_grid_size(self, grid_size):
@@ -141,15 +145,15 @@ class TestSparseNoise(TestNoise):
 
     def reference_frames(
         self,
-        grid_size=TestNoise.default_noise["grid_size"],
-        size_x=TestNoise.default_topo["size_x"],
-        grid=TestNoise.default_noise["grid"],
-        background_luminance=TestNoise.default_topo["background_luminance"],
-        density=TestNoise.default_topo["density"],
+        grid_size=default_noise["grid_size"],
+        size_x=default_topo["size_x"],
+        grid=default_noise["grid"],
+        background_luminance=default_topo["background_luminance"],
+        density=default_topo["density"],
     ):
 
-        time_per_image = self.default_noise["time_per_image"]
-        frame_duration = self.default_topo["frame_duration"]
+        time_per_image = default_noise["time_per_image"]
+        frame_duration = default_topo["frame_duration"]
         aux = imagen.random.SparseNoise(
             grid_density=grid_size * 1.0 / size_x,
             grid=grid,
@@ -167,11 +171,11 @@ class TestSparseNoise(TestNoise):
 
     def topo_frames(
         self,
-        grid_size=TestNoise.default_noise["grid_size"],
-        size_x=TestNoise.default_topo["size_x"],
-        grid=TestNoise.default_noise["grid"],
-        background_luminance=TestNoise.default_topo["background_luminance"],
-        density=TestNoise.default_topo["density"],
+        grid_size=default_noise["grid_size"],
+        size_x=default_topo["size_x"],
+        grid=default_noise["grid"],
+        background_luminance=default_topo["background_luminance"],
+        density=default_topo["density"],
     ):
         snclass = topo.SparseNoise(
             grid_size=grid_size,
@@ -179,11 +183,11 @@ class TestSparseNoise(TestNoise):
             background_luminance=background_luminance,
             density=density,
             size_x=size_x,
-            size_y=self.default_topo["size_y"],
-            location_x=self.default_topo["location_x"],
-            location_y=self.default_topo["location_y"],
-            time_per_image=self.default_noise["time_per_image"],
-            frame_duration=self.default_topo["frame_duration"],
+            size_y=default_topo["size_y"],
+            location_x=default_topo["location_x"],
+            location_y=default_topo["location_y"],
+            time_per_image=default_noise["time_per_image"],
+            frame_duration=default_topo["frame_duration"],
             experiment_seed=self.experiment_seed,
         )
         return snclass._frames
@@ -224,13 +228,13 @@ class TestDenseNoise(TestNoise):
 
     def reference_frames(
         self,
-        grid_size=TestNoise.default_noise["grid_size"],
-        size_x=TestNoise.default_topo["size_x"],
-        background_luminance=TestNoise.default_topo["background_luminance"],
-        density=TestNoise.default_topo["density"],
+        grid_size=default_noise["grid_size"],
+        size_x=default_topo["size_x"],
+        background_luminance=default_topo["background_luminance"],
+        density=default_topo["density"],
     ):
-        time_per_image = TestNoise.default_noise["time_per_image"]
-        frame_duration = TestNoise.default_topo["frame_duration"]
+        time_per_image = default_noise["time_per_image"]
+        frame_duration = default_topo["frame_duration"]
         aux = imagen.random.DenseNoise(
             grid_density=grid_size * 1.0 / size_x,
             offset=0,
@@ -247,10 +251,10 @@ class TestDenseNoise(TestNoise):
 
     def topo_frames(
         self,
-        grid_size=TestNoise.default_noise["grid_size"],
-        size_x=TestNoise.default_topo["size_x"],
-        background_luminance=TestNoise.default_topo["background_luminance"],
-        density=TestNoise.default_topo["density"],
+        grid_size=default_noise["grid_size"],
+        size_x=default_topo["size_x"],
+        background_luminance=default_topo["background_luminance"],
+        density=default_topo["density"],
     ):
         snclass = topo.DenseNoise(
             grid_size=grid_size,
@@ -258,11 +262,11 @@ class TestDenseNoise(TestNoise):
             background_luminance=background_luminance,
             density=density,
             size_x=size_x,
-            size_y=self.default_topo["size_y"],
-            location_x=self.default_topo["location_x"],
-            location_y=self.default_topo["location_y"],
-            time_per_image=self.default_noise["time_per_image"],
-            frame_duration=self.default_topo["frame_duration"],
+            size_y=default_topo["size_y"],
+            location_x=default_topo["location_x"],
+            location_y=default_topo["location_y"],
+            time_per_image=default_noise["time_per_image"],
+            frame_duration=default_topo["frame_duration"],
             experiment_seed=self.experiment_seed,
         )
         return snclass._frames
