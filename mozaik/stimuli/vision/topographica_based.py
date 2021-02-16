@@ -13,6 +13,7 @@ import param
 from imagen.image import BoundingBox
 import pickle
 import numpy
+import numpy as np
 from mozaik.tools.mozaik_parametrized import SNumber, SString
 from mozaik.tools.units import cpd
 from numpy import pi
@@ -1074,3 +1075,94 @@ class TwoStrokeGaborPatch(TopographicaBasedVisualStimulus):
         center = grid.shape[0]/2
         return 1-grid.T
 
+
+class ContinuousGaborMovementAndJump(TopographicaBasedVisualStimulus):
+    """
+    Continuously move a Gabor patch towards a specified center position, then jump into
+    the center position once the moving gabor would overlap with the Gabor patch in the
+    center position. The size*, *phase*, *spatial_frequency* of the moving and center
+    patches are the same, their relative luminances can be specified separately. The
+    orientation of the center patch is set by *orientation*; the orientation of the
+    moving Gabor can be radial or tangential (set by *moving_gabor_orientation_radial*)
+
+    The speed of movement is simply given by *movement_length* / *movement_duration*.
+    The continuous movement is made up of *movement_duration* / *frame_duration* Gabor
+    positions, evenly spaced along the movement line.
+
+    After the movement and flash are finished, until the *duration* of the
+    stimulus, constant *background_luminance* is displayed.
+    """
+
+    orientation = SNumber(rad, period=pi, bounds=[0,pi], doc="Gabor patch orientation")
+    phase = SNumber(rad, period=2*pi, bounds=[0,2*pi], doc="Gabor patch phase")
+    spatial_frequency = SNumber(cpd, doc="Spatial frequency of the grating")
+    size = SNumber(degrees, doc="Size of the Gabor patch")
+    center_relative_luminance = SNumber(dimensionless,bounds=[0,1.0], doc="The scale of the center stimulus. 0 is dark, 1.0 is double the background luminance")
+    moving_relative_luminance = SNumber(dimensionless,bounds=[0,1.0], doc="The scale of the moving stimulus. 0 is dark, 1.0 is double the background luminance")
+    x = SNumber(degrees, doc="x coordinate of center patch")
+    y = SNumber(degrees, doc="y coordinate of center patch")
+    movement_duration = SNumber(ms, doc="Duration of the Gabor patch movement.")
+    movement_length = SNumber(degrees, bounds=[0,np.inf], doc="Length of the Gabor patch movement")
+    movement_angle = SNumber(rad, period=2*pi, bounds=[0,2*pi], doc="Incidence angle of the moving patch to the center patch.")
+    moving_gabor_orientation_radial = SNumber(dimensionless, doc = "Boolean string, radial or cross patch")
+    center_flash_duration = SNumber(ms, doc="Duration of flashing the Gabor patch in the center.")
+
+    def getGabor(self,x,y,orientation,phase,spatial_frequency,size,background_luminance, relative_luminance):
+        disk_width_sd = 2.5 # how many standard deviations(of Gabor Gaussian)
+                            # wide should the disk (given by "size") be
+        gabor = imagen.Gabor(
+                    aspect_ratio = 1, # Ratio of pattern width to height.
+                                      # Set since the patch has to be round
+                    mask_shape=imagen.Disk(smoothing=0, size=disk_width_sd),
+                        # Gabor patch should fit inside tide/circle
+                        # the size is rescalled according to the size
+                        # of Gabor patch
+                    frequency = spatial_frequency,
+                    phase = phase, # Initial phase of the sinusoid
+                    bounds = BoundingBox(radius=self.size_x/2.0),
+                        # BoundingBox of the area in which the pattern is
+                        # generated, radius=1: box with side length 2!
+                    size = size / disk_width_sd, # size = 2*standard_deviation
+                        # => on the radius r=size, the intensity is ~0.14
+                    orientation=orientation, # In radians
+                    x = x,  # x-coordinate of Gabor patch center
+                    y = y,  # y-coordinate of Gabor patch center
+                    xdensity=self.density, # Number of points in one unit
+                                           # of length in x direction
+                    ydensity=self.density, # Number of points in one unit
+                                           # of length in y direction
+                    scale=2.0*background_luminance*relative_luminance
+                            # Difference between maximal and minimal value
+                            # => min value = -scale/2, max value = scale/2
+                            )()
+
+        gabor = gabor+self.background_luminance
+        return gabor
+ 
+    def frames(self):
+        assert self.movement_duration >= 2*self.frame_duration, "Movement must be at least 2 frames long"
+        assert self.center_flash_duration >= self.frame_duration, "Flash in center must be at least 1 frame long"
+
+        x_start = self.x + (self.size + self.movement_length) * np.cos(self.movement_angle)
+        y_start = self.y + (self.size + self.movement_length) * np.sin(self.movement_angle)
+        x_end = self.x + self.size * np.cos(self.movement_angle)
+        y_end = self.y + self.size * np.sin(self.movement_angle)
+
+        n_pos = int(self.movement_duration / self.frame_duration)
+        x_pos = np.linspace(x_start,x_end,n_pos)
+        y_pos = np.linspace(y_start,y_end,n_pos)
+
+        blank = imagen.Constant(scale=self.background_luminance,
+                                bounds=BoundingBox(radius=self.size_x/2),
+                                xdensity=self.density,
+                                ydensity=self.density)()
+
+        for x,y in zip(x_pos,y_pos):
+            angle = self.movement_angle if self.moving_gabor_orientation_radial else self.movement_angle + np.pi/2
+            yield (self.getGabor(x,y,angle,self.phase,self.spatial_frequency,self.size,self.background_luminance, self.moving_relative_luminance),[1])
+
+        for i in xrange(int(self.center_flash_duration / self.frame_duration)):
+            yield (self.getGabor(self.x,self.y,self.orientation,self.phase,self.spatial_frequency,self.size,self.background_luminance, self.center_relative_luminance),[1])
+
+        while True:
+            yield (blank, [0])
