@@ -1562,6 +1562,9 @@ class MeasureTextureSensitivityFullfield(VisualExperiment):
     image_duration : float
                       The duration of single presentation of an image.
     
+    duration : float
+                      The total duration of the trial, including the blank stimulus presented at the end
+    
     types : list(int) 
               List of types indicating which statistics to match:
                 0 - original image
@@ -1577,6 +1580,7 @@ class MeasureTextureSensitivityFullfield(VisualExperiment):
             'folder_path' : str,
             'images': list,
             'image_duration' : float,
+            'duration' : float,
             'types' : list,
             'num_trials' : int, #n. of same instance
             #'offset_time' : float,
@@ -1593,15 +1597,18 @@ class MeasureTextureSensitivityFullfield(VisualExperiment):
                  for k in xrange(0, self.parameters.num_trials):
                     im = textu.PSTextureStimulus(
                             frame_duration = self.frame_duration,
-                            duration=self.parameters.image_duration,
+                            duration=self.parameters.duration,
+                            stimulus_duration=self.parameters.image_duration,
                             trial=k,
                             background_luminance=self.background_luminance,
                             density=self.density,
                             location_x=0.0,
                             location_y=0.0,
+                            sample=i,
                             size_x=model.visual_field.size_x,
                             size_y=model.visual_field.size_y,
                             texture_path = self.parameters.folder_path+image,
+                            texture = image.replace(".pgm",""),
                             stats_type = t,
                             seed = 523*(i+1)+5113*(ty+1))
                     self.stimuli.append(im)
