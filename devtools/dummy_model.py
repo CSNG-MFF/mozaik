@@ -19,7 +19,7 @@ class DummyModel:
 
 class DummyObject:
     """
-    Optionally recursive dummy object, to mimic specific structure of the model, 
+    Optionally recursive dummy object, to mimic specific structure of the model,
     such as input_layer.parameters.receptive_field.spatial_resolution
     """
 

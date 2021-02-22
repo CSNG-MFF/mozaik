@@ -64,14 +64,14 @@ def show_stimulus(
     """
     Shows the stimulus as an animation, for a specified duration. Parameters
     of the extent of visual space, etc. are extracted from the stimulus instance.
-    
+
     Parameters
     ----------
 
     stimulus : VisualStimulus instance from mozaik.stimuli.vision.visual_stimulus
     duration : float (ms)
                Stimulus plot duration in ms - we plot duration / frame_duration frames,
-               where frame_duration is a field of the stimulus instance. 
+               where frame_duration is a field of the stimulus instance.
                Defaults to the duration field of the stimulus instance
     frame_delay : float (ms)
                   How long to show each frame. Defaults to the frame_duration field of
@@ -94,14 +94,14 @@ def show_stimulus(
 def show_frame(frame, params=None, grid=None):
     """
     Plot a frame of the stimulus.
-    
+
     Parameters
     ----------
 
     frame : numpy ndarray
             The frame to plot
     params : dictionary of stimulus parameters. These parameters are given to stimulus
-             instance on instantiation. The fields used for plotting are: size_x, 
+             instance on instantiation. The fields used for plotting are: size_x,
              size_y, location_x, location_y
     grid : None or int
            Plot a red grid with "grid" ticks for each visual angle. Disabled by default.
@@ -120,14 +120,14 @@ def show_frames(
 ):
     """
     Show a list of frames as an animation.
-    
+
     Parameters
     ----------
 
     frames : list(numpy ndarray)
              List of frames to plot
     params : dictionary of stimulus parameters. These parameters are given to stimulus
-             instance on instantiation. The fields used for plotting are: size_x, 
+             instance on instantiation. The fields used for plotting are: size_x,
              size_y, location_x, location_y, frame_duration
     animate : bool
               Show a fluid animation of the stimulus, or each frame one by one.
