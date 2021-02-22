@@ -14,12 +14,13 @@ import pickle
 import numpy
 from mozaik.tools.mozaik_parametrized import SNumber, SString
 from mozaik.tools.units import cpd
+from mozaik.controller import Global
 from numpy import pi
 from quantities import Hz, rad, degrees, ms, dimensionless
 from oct2py import octave #octave interface
 import scipy.misc #for testing
+from PIL import Image #for testing
 import os
-
 
 class TextureBasedVisualStimulus(VisualStimulus):
     """
@@ -29,6 +30,8 @@ class TextureBasedVisualStimulus(VisualStimulus):
     We require a path to the image from which we generate stimuli
     """
     texture_path = SString(doc="path to the image from which we generate stimuli")
+    texture = SString(doc="name of the original texture from which we generate stimuli")
+
 
     def __init__(self,**params):
         VisualStimulus.__init__(self,**params)
@@ -41,7 +44,10 @@ class TextureBasedVisualStimulus(VisualStimulus):
 class PSTextureStimulus(TextureBasedVisualStimulus):
     """
     A stimulus generated using the Portilla-Simoncelli algorithm (see textureLib/textureBasedStimulus.m)
-    with statistics matched to the original image according to the Type. 
+    with statistics matched to the original image according to the Type.
+    It is presented for *stimulus_duration* milliseconds. For the remaining time, 
+    until the *duration* of the stimulus, constant *background_luminance* 
+    is displayed.. 
      
     Types:
         0 - original image
@@ -59,11 +65,15 @@ class PSTextureStimulus(TextureBasedVisualStimulus):
     """
 
     stats_type = SNumber(dimensionless,bounds=[0,3],doc="Type of statistial matching of the stimulus")
-    seed = int
+    sample = SNumber(dimensionless,doc="Index of the stimulus in its texture family")
+    stimulus_duration = SNumber(ms, doc="The duration of the stumulus presentation.")
+
+    seed = SNumber(dimensionless, doc="The seed used for this stimulus")
 
     def frames(self):
         fieldsize_x = self.size_x * self.density
         fieldsize_y = self.size_y * self.density
+        folder_name = Global.root_directory + "/TextureImagesStimuli"
         libpath = visual_stimulus.__file__.replace("/visual_stimulus.pyc", "") + "/textureLib" #path to the image processing library
         matlabPyrToolspath = os.path.join(libpath,"textureSynth","matlabPyrTools")
         if not os.path.isdir(matlabPyrToolspath):
@@ -76,13 +86,26 @@ class PSTextureStimulus(TextureBasedVisualStimulus):
                                          fieldsize_x, 
                                          fieldsize_y,
                                          libpath)
+        scale = 2. * self.background_luminance/ (numpy.max(im) - numpy.min(im))
+        im = (im - numpy.min(im)) * scale
+        im = im.astype(numpy.uint8)
 
-        im = im / 255* 2*self.background_luminance
-        #scipy.misc.toimage(im, cmin=0.0, cmax=2*self.background_luminance).save('/home/kaktus/Documents/mozaik/examples/img' + str(self.trial) + '.jpg')
-        scipy.misc.toimage(im, cmin=0.0, cmax=2*self.background_luminance).save('img' + str(len(self.texture_path)) + "type" + str(self.stats_type) + '.jpg')
+        if not os.path.exists(folder_name): 
+            os.mkdir(folder_name)
+
+        IM = Image.fromarray(im)
+        IM.save(folder_name + "/" + self.texture + "sample" + str(self.sample) + "type" + str(self.stats_type) + '.jpg')
+        #scipy.misc.toimage(im, cmin=0.0, cmax=2*self.background_luminance).save(folder_name + "/" + self.texture + "sample" + str(self.sample) + "type" + str(self.stats_type) + '.jpg')
         assert (im.shape == (fieldsize_x, fieldsize_y)), "Image dimensions do not correspond to visual field size"
+
+        blank = imagen.Constant(scale=self.background_luminance,
+                                bounds=BoundingBox(radius=self.size_x/2),
+                                xdensity=self.density,
+                                ydensity=self.density)()
+        num_frames = 0
         while True:
-            yield (im, [0])
-
-
-
+            num_frames += 1
+            if (num_frames-1) * self.frame_duration < self.stimulus_duration: 
+                yield (im, [0])
+            else:
+                yield (blank, [0])
