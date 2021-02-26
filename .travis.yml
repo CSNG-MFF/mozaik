@@ -12,7 +12,7 @@ before_install:
 - git clone https://github.com/antolikjan/imagen.git && cd imagen && python setup.py install && cd .. # Hacky solution until imagen gets added as submodule
 # Install Nest
 - pip install --upgrade distribute
-- pip install numpy scipy mpi4py matplotlib==2.1.1 quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.5.2 cython pynn psutil
+- pip install numpy scipy mpi4py matplotlib==2.1.1 quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.8.0 cython pynn psutil
 - cd .. && wget https://github.com/nest/nest-simulator/archive/v2.20.1.tar.gz && tar xvfz v2.20.1.tar.gz && cd nest-simulator-2.20.1 && cmake -Dwith-mpi=OFF -Dwith-boost=ON -DCMAKE_INSTALL_PREFIX:PATH=/home/travis/virtualenv/python2.7.17 -Dwith-optimize='-O3' ./ && make && make install && make installcheck && cd ../mozaik
 - python -c 'import nest'
 # Install mozaik
