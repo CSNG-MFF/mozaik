@@ -34,6 +34,11 @@ class PyNNDistribution(RandomDistribution):
           self._first = True
           RandomDistribution.__init__(self,name,rng=mozaik.pynn_rng,**params)
 
+      def __str__(self):
+          ps = ','.join([str(k) + '=' + str(self.parameters[k]) for k in self.parameters.keys()])
+          return "PyNNDistribution(name=" + '\'' + self.name + '\',' +  ps + ')'
+
+
 class ParameterWithUnitsAndPeriod():
     """
     This is a parameter that allows us add Units and Period to a given parameter.
@@ -57,6 +62,7 @@ class MozaikExtendedParameterSet(ParameterSet):
         global_dict.update(dict(ParameterRange=ParameterRange,
                                 ParameterTable=ParameterTable,
                                 PyNNDistribution = PyNNDistribution,
+                                RandomDistribution = RandomDistribution,
                                 NumpyRNG=NumpyRNG,
                                 ParameterWithUnitsAndPeriod=ParameterWithUnitsAndPeriod,
                                 pi=numpy.pi))
