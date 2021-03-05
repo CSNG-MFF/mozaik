@@ -322,6 +322,7 @@ class Depolarization(DirectStimulator):
         self.scs.set_parameters(times=[offset+self.sheet.dt*3], amplitudes=[0.0],copy=False)
 
 
+
 class LocalStimulatorArray(DirectStimulator):
     """
     This class assumes there is a regular grid of stimulators (parameters `size` and `spacing` control

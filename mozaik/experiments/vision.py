@@ -107,6 +107,9 @@ class MeasureSparse(VisualExperiment):
         Every time_per_image a new instance of sparse noise will be 
         presented
 
+    blank_time : float
+        The duration of the blank stimulus between image presentations
+
     total_number_images : int
         The total number of images that will be presented
     
@@ -126,6 +129,7 @@ class MeasureSparse(VisualExperiment):
     
     required_parameters = ParameterSet({
             'time_per_image': float, 
+            'blank_time' : float,
             'total_number_of_images' : int, 
             'num_trials' : int,
             'experiment_seed' : int,
@@ -140,9 +144,10 @@ class MeasureSparse(VisualExperiment):
         for k in xrange(0, self.parameters.num_trials):
            
             self.stimuli.append(topo.SparseNoise(
-			    frame_duration = self.frame_duration,
+            frame_duration = self.frame_duration,
                             time_per_image = self.parameters.time_per_image,
-                            duration = self.parameters.total_number_of_images * self.parameters.time_per_image,  
+                            blank_time = self.parameters.blank_time,
+                            duration = self.parameters.total_number_of_images * (self.parameters.time_per_image + self.parameters.blank_time),  
                             size_x=self.parameters.stim_size,
                             size_y=self.parameters.stim_size,
                             location_x=0.0,
@@ -157,7 +162,6 @@ class MeasureSparse(VisualExperiment):
    
     def do_analysis(self, data_store):
         pass
-
 
 class MeasureSparseWithCurrentInjection(VisualExperiment):
     """
@@ -178,6 +182,9 @@ class MeasureSparseWithCurrentInjection(VisualExperiment):
         The time it takes for the experiment to change single images 
         Every time_per_image a new instance of sparse noise will be 
         presented
+
+    blank_time : float
+        The duration of the blank stimulus between image presentations
 
     total_number_images : int
         The total number of images that will be presented
@@ -208,6 +215,7 @@ class MeasureSparseWithCurrentInjection(VisualExperiment):
     
     required_parameters = ParameterSet({
             'time_per_image': float, 
+            'blank_time' : float,
             'total_number_of_images' : int, 
             'num_trials' : int,
             'experiment_seed' : int,
@@ -243,7 +251,8 @@ class MeasureSparseWithCurrentInjection(VisualExperiment):
             self.stimuli.append(topo.SparseNoise(
                 frame_duration = self.frame_duration,
                             time_per_image = self.parameters.time_per_image,
-                            duration = self.parameters.total_number_of_images * self.parameters.time_per_image,  
+                            blank_time = self.parameters.blank_time,
+                            duration = self.parameters.total_number_of_images * (self.parameters.time_per_image + self.parameters.blank_time),  
                             size_x=self.parameters.stim_size,
                             size_y=self.parameters.stim_size,
                             location_x=0.0,
@@ -262,6 +271,7 @@ class MeasureSparseWithCurrentInjection(VisualExperiment):
 
     def do_analysis(self, data_store):
         pass
+
 
 
 class MeasureDense(VisualExperiment):

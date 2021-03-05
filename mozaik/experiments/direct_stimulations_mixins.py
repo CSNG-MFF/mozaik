@@ -24,7 +24,5 @@ def add_per_stimulus_current_injection(exp,stimulation_configuration,stimulation
             p['sheet'] = stimulation_sheet
             s.direct_stimulation_name='Injection'
             s.direct_stimulation_parameters = p
-                            
-    return exp
 
-    
+    return exp

@@ -41,6 +41,7 @@ class SparseNoise(TopographicaBasedVisualStimulus):
     experiment_seed = SNumber(dimensionless, doc="The seed of a given experiment")
     duration = SNumber(ms, doc="Total duration of the frames")
     time_per_image = SNumber(ms, doc ="Duration of one image")
+    blank_time = SNumber(ms, doc ="Duration of blank screen between image presentations")
     grid_size = SNumber(dimensionless, doc = "Grid Size ")
     grid = SNumber(dimensionless, doc = "Boolean string to decide whether there is grid or not")
 
@@ -59,10 +60,15 @@ class SparseNoise(TopographicaBasedVisualStimulus):
                                       xdensity=self.density,
                                       ydensity=self.density,
                                       random_generator=numpy.random.RandomState(seed=self.experiment_seed))
+
+
         while True:
             aux2 = aux()
+            blank = aux2*0+self.background_luminance
             for i in range(int(self.time_per_image/self.frame_duration)):
                 yield (aux2,[0])
+            for i in range(int(self.blank_time/self.frame_duration)):
+                yield (blank,[0])
             
 
 class DenseNoise(TopographicaBasedVisualStimulus):
