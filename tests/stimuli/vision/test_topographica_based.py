@@ -363,8 +363,8 @@ class TwoStrokeGaborPatch(TopographicaBasedVisualStimulusTester):
 default_gabor = {
     "orientation": 0,
     "phase": 0,
-    "spatial_frequency": 1,
-    "size": 5,
+    "spatial_frequency": 2,
+    "sigma": 1.0 / 3.0,
     "flash_duration": 1,
     "relative_luminance": 1,
     "x": 0,
@@ -372,53 +372,12 @@ default_gabor = {
     "grid": False,
 }
 
-default_cont_mov_jump = {
-    "movement_length": 4,
-    "movement_angle": 0,
-    "movement_duration": 10,
-    "flash_duration": 4,
-    "moving_gabor_orientation_radial": True,
-}
 
-
-class TestContinuousGaborMovementAndJump:
-
-    num_tests = 100
+class TestGabor:
     saved_frames = dict()
 
-    def generate_frame_params(length=1):
-        """
-        Generate random parameters for ContinuousGaborMovementAndJump class instances
-        """
-        np.random.seed(0)
-        params = []
-        for i in xrange(0, length):
-            x = (np.random.rand() - 0.5) * default_topo["size_x"] / 2
-            y = (np.random.rand() - 0.5) * default_topo["size_y"] / 2
-            size = 1 + np.random.rand() * 4
-            orientation = np.random.rand() * np.pi
-            movement_length = np.random.rand() * 4
-            movement_angle = np.random.rand() * 2 * np.pi
-            movement_duration = (
-                2 * default_topo["frame_duration"] + np.random.rand() * 30
-            )
-            flash_duration = default_topo["frame_duration"] + np.random.rand() * 5
-
-            moving_gabor_orientation_radial = np.random.rand() > 0.5
-            params.append(
-                (
-                    x,
-                    y,
-                    size,
-                    orientation,
-                    movement_length,
-                    movement_angle,
-                    movement_duration,
-                    flash_duration,
-                    moving_gabor_orientation_radial,
-                )
-            )
-        return params
+    def get_stimulus():
+        pass
 
     def get_frames(self, **kwargs):
         """
@@ -432,9 +391,7 @@ class TestContinuousGaborMovementAndJump:
             frames = self.saved_frames[kwargs_t]
         else:
             num_frames = (
-                int(kwargs["movement_duration"] + kwargs["flash_duration"])
-                / default_topo["frame_duration"]
-                + 2
+                int(getattr(stim, "duration") / getattr(stim, "frame_duration")) + 2
             )
             frames = self.pop_frames(stim, num_frames)
             self.saved_frames[kwargs_t] = frames
@@ -443,11 +400,67 @@ class TestContinuousGaborMovementAndJump:
     def pop_frames(self, stimulus, num_frames):
         return [stimulus._frames.next()[0] for i in range(num_frames)]
 
+    def get_nonblank_mask(self, frame, baseline=0):
+        """
+        Returns a boolean numpy array, that is false where the input frame is different
+        from a specified baseline value.
+        """
+        base = np.ones(frame.shape) * baseline
+        mask = np.isclose(frame, baseline)
+        return mask
+
+
+default_cont_mov_jump = {
+    "movement_length": 4,
+    "movement_angle": 0,
+    "movement_duration": 10,
+    "flash_duration": 4,
+    "moving_gabor_orientation_radial": True,
+}
+
+
+class TestContinuousGaborMovementAndJump(TestGabor):
+    num_tests = 100
+
+    def generate_frame_params(length=1):
+        """
+        Generate random parameters for ContinuousGaborMovementAndJump class instances
+        """
+        np.random.seed(0)
+        params = []
+        for i in xrange(0, length):
+            x = (np.random.rand() - 0.5) * default_topo["size_x"] / 2
+            y = (np.random.rand() - 0.5) * default_topo["size_y"] / 2
+            sigma = 1 / 3 + np.random.rand() * 4 / 3
+            orientation = np.random.rand() * np.pi
+            movement_length = np.random.rand() * 4
+            movement_angle = np.random.rand() * 2 * np.pi
+            movement_duration = (
+                2 * default_topo["frame_duration"] + np.random.rand() * 30
+            )
+            flash_duration = default_topo["frame_duration"] + np.random.rand() * 5
+
+            moving_gabor_orientation_radial = np.random.rand() > 0.5
+            params.append(
+                (
+                    x,
+                    y,
+                    sigma,
+                    orientation,
+                    movement_length,
+                    movement_angle,
+                    movement_duration,
+                    flash_duration,
+                    moving_gabor_orientation_radial,
+                )
+            )
+        return params
+
     def get_stimulus(
         self,
         x,
         y,
-        size,
+        sigma,
         orientation,
         movement_length,
         movement_angle,
@@ -470,7 +483,7 @@ class TestContinuousGaborMovementAndJump:
             orientation=orientation,
             phase=default_gabor["phase"],
             spatial_frequency=default_gabor["spatial_frequency"],
-            size=size,
+            sigma=sigma,
             movement_duration=movement_duration,
             center_flash_duration=flash_duration,
             moving_relative_luminance=default_gabor["relative_luminance"],
@@ -483,24 +496,15 @@ class TestContinuousGaborMovementAndJump:
         )
         return cgb
 
-    def get_nonblank_mask(self, frame, baseline=0):
-        """
-        Returns a boolean numpy array, that is false where the input frame is different
-        from a specified baseline value.
-        """
-        base = np.ones(frame.shape) * baseline
-        mask = np.isclose(frame, baseline)
-        return mask
-
     @pytest.mark.parametrize(
-        "x, y, size, orientation, movement_length, movement_angle, movement_duration, flash_duration, moving_gabor_orientation_radial",
+        "x, y, sigma, orientation, movement_length, movement_angle, movement_duration, flash_duration, moving_gabor_orientation_radial",
         generate_frame_params(num_tests),
     )
     def test_no_overlap(
         self,
         x,
         y,
-        size,
+        sigma,
         orientation,
         movement_length,
         movement_angle,
@@ -512,17 +516,9 @@ class TestContinuousGaborMovementAndJump:
         Test that there is no overlap between the moving Gabor patch and the Gabor
         patch flashed at center
         """
-        frames = self.get_frames(
-            x=x,
-            y=y,
-            size=size,
-            orientation=orientation,
-            movement_length=movement_length,
-            movement_angle=movement_angle,
-            movement_duration=movement_duration,
-            flash_duration=flash_duration,
-            moving_gabor_orientation_radial=moving_gabor_orientation_radial,
-        )
+        args = locals()
+        args.pop("self")
+        frames = self.get_frames(**args)
 
         movement_num_frames = int(movement_duration / default_topo["frame_duration"])
         movement_mask = numpy.full(frames[0].shape, True, dtype=bool)
@@ -538,21 +534,20 @@ class TestContinuousGaborMovementAndJump:
                 flash_mask,
                 self.get_nonblank_mask(frames[i], default_topo["background_luminance"]),
             )
-
         overlap = np.logical_or(movement_mask, flash_mask)
         assert np.all(
             overlap
         ), "There is overlap between movement and center flash Gabors"
 
     @pytest.mark.parametrize(
-        "x, y, size, orientation, movement_length, movement_angle, movement_duration, flash_duration, moving_gabor_orientation_radial",
+        "x, y, sigma, orientation, movement_length, movement_angle, movement_duration, flash_duration, moving_gabor_orientation_radial",
         generate_frame_params(num_tests),
     )
     def test_is_blank_after_stimulus_end(
         self,
         x,
         y,
-        size,
+        sigma,
         orientation,
         movement_length,
         movement_angle,
@@ -563,17 +558,9 @@ class TestContinuousGaborMovementAndJump:
         """
         Check if class returns blank frames after stimulus duration
         """
-        frames = self.get_frames(
-            x=x,
-            y=y,
-            size=size,
-            orientation=orientation,
-            movement_length=movement_length,
-            movement_angle=movement_angle,
-            movement_duration=movement_duration,
-            flash_duration=flash_duration,
-            moving_gabor_orientation_radial=moving_gabor_orientation_radial,
-        )
+        args = locals()
+        args.pop("self")
+        frames = self.get_frames(**args)
         stimulus_duration = movement_duration + flash_duration
         stimulus_end_id = int(stimulus_duration / default_topo["frame_duration"])
         blank = np.full(
