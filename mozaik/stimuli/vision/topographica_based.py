@@ -1197,3 +1197,160 @@ class ContinuousGaborMovementAndJump(GaborStimulus):
 
         while True:
             yield (blank, [0])
+
+
+class RadialGaborApparentMotion(GaborStimulus):
+    """
+    Multiple Gabor patches moving in flashes of apparent motion, either radially inward
+    or outward. The number of radially moving Gabor patches is set with *n_gabors*
+    and their angular spread is set with *start_angle* and *end_angle*. The distance
+    between the eccentricities of flashes is equal to the diameter of the gabor patch,
+    which is *sigma* x *n_sigmas*.
+
+    If the *random* option is turned on, the locations and times of Gabor flashes
+    are shuffled, such that the overall number and duration of flashes is kept the
+    same, every location is flashed exactly once.
+
+    If during drawing two Gabors would overlap, only the one on the orientation axis or
+    the axis perpendicular remains. If neither are one those axes, neither are drawn.
+    """
+    x = SNumber(degrees, doc="x coordinate of the center Gabor patch")
+    y = SNumber(degrees, doc="y coordinate of the center Gabor patch")
+    orientation = SNumber(rad, period=pi, bounds=[0,pi], doc="Orientation of the center Gabor patch")
+    phase = SNumber(rad, period=2*pi, bounds=[0,2*pi], doc="Phase of Gabor patches")
+    spatial_frequency = SNumber(cpd, doc="Spatial frequency of Gabor patches")
+    sigma = SNumber(degrees, doc="Standard deviation of the Gaussian in the Gabor patch")
+    n_sigmas = SNumber(degrees, default = 3, doc="Number of standard deviations to which we sample the Gabor function.")
+    center_relative_luminance = SNumber(dimensionless,bounds=[0,1.0], doc="The scale of the center stimulus. 0 is dark, 1.0 is double the background luminance.")
+    surround_relative_luminance = SNumber(dimensionless,bounds=[0,1.0], doc="The scale of the stimuli around the center stimulus (at nonzero eccentricity). 0 is dark, 1.0 is double the background luminance.")
+    flash_duration = SNumber(ms, doc="Apparent motion flash duration")
+    start_angle = SNumber(degrees, period=2*pi, doc="Starting angle between which the Gabor patches are equally spaced.")
+    end_angle = SNumber(degrees, period=2*pi, doc="Ending angle between which the Gabor patches are equally spaced.")
+    n_gabors = SNumber(dimensionless, doc="Number of Gabors in the previously specified angle range.")
+    n_circles = SNumber(degrees, doc="Number of eccentricities at which Gabor patches are flashed.")
+    symmetric = SNumber(dimensionless, doc = "Boolean string - if True, draw a centrally symmetric pair for each patch.")
+    surround_gabor_orientation_radial = SNumber(dimensionless, doc = "Boolean string - if True, the orientation of surround Gabor patches is radial, otherwise tangential.")
+    random = SNumber(dimensionless, default=False, doc = "Boolean string - if True, random shuffle the locations and flash times of Gabor patches.")
+    flash_center = SNumber(dimensionless, doc = "Boolean string, flash in center or not")
+    centrifugal = SNumber(dimensionless, default=False, doc = "Boolean string - if True, patches move out from the center, rather than towards it.")
+
+    def is_overlapping(self,x0, y0, x1, y1, diameter):
+        return (x0-x1)**2 + (y0-y1)**2 < diameter**2
+
+    def set_overlap_to_nan(self, x_pos, y_pos, angles, gabor_diameter, allowed_orientation_axes):
+        """
+        Sets positions of overlapping Gabors to NaN, except ones
+        """
+        # Test overlap of patches on same eccentricity
+        for i in range(x_pos.shape[0]):
+            for j in range(x_pos.shape[1]):
+                # Check if overlapping from one side
+                overlap_0 = self.is_overlapping(
+                    x_pos[i, j],
+                    y_pos[i, j],
+                    x_pos[i, (j + 1) % x_pos.shape[1]],
+                    y_pos[i, (j + 1) % x_pos.shape[1]],
+                    gabor_diameter,
+                )
+                # Check if overlapping from the other side
+                overlap_1 = self.is_overlapping(
+                    x_pos[i, j],
+                    y_pos[i, j],
+                    x_pos[i, (j - 1) % x_pos.shape[1]],
+                    y_pos[i, (j - 1) % x_pos.shape[1]],
+                    gabor_diameter,
+                )
+                allowed_orientation = np.any(
+                    np.isclose(angles[j] % np.pi, allowed_orientation_axes)
+                )
+                if (overlap_0 or overlap_1) and not allowed_orientation:
+                    x_pos[i, j] = np.nan
+                    y_pos[i, j] = np.nan
+        return x_pos, y_pos
+
+    def frames(self):
+        # Generate angles
+        angles = np.linspace(self.start_angle, self.end_angle, self.n_gabors)
+        if self.symmetric:
+            angles = np.append(angles, angles + np.pi)
+
+        # Calculate Gabor positions, create an array with an angle for each
+        # This angle array is useful for randomizing locations
+        radii = range(self.n_circles, 0, -1)
+        gabor_diameter = 2 * self.sigma * self.n_sigmas
+        x_pos = self.x + gabor_diameter * np.outer(radii, np.cos(angles))
+        y_pos = self.y + gabor_diameter * np.outer(radii, np.sin(angles))
+        n_radii, n_angles = x_pos.shape
+        angles_mat = np.vstack([angles] * n_radii)
+
+        # Set overlapping Gabor locations to NaN, except the ones we allow,
+        # which are the ones with same or perpendicular orientation as the center
+        # NaN positions are excluded from drawing
+        allowed_orientation_axes = [self.orientation, self.orientation + np.pi / 2]
+        x_pos, y_pos = self.set_overlap_to_nan(x_pos, y_pos, angles, gabor_diameter, allowed_orientation_axes)
+
+        if self.random:
+            # Shuffle x, y, angles arrays identically
+            rng_state = np.random.get_state()
+            np.random.shuffle(x_pos.flat)
+            np.random.set_state(rng_state)
+            np.random.shuffle(y_pos.flat)
+            np.random.set_state(rng_state)
+            np.random.shuffle(angles_mat.flat)
+
+        if self.centrifugal:
+            # Reverse order of positions
+            x_pos = np.flip(x_pos)
+            y_pos = np.flip(y_pos)
+            angles_mat = np.flip(angles_mat)
+            # Flash center in the beginning
+            if self.flash_center:
+                for i in xrange(int(self.flash_duration / self.frame_duration)):
+                    yield (self.get_gabor(relative_luminance=self.center_relative_luminance), [1])
+
+        # Draw Gabor patches from x,y position and angles matrix
+        for i in range(n_radii):
+            for t in xrange(int(self.flash_duration / self.frame_duration)):
+                # Start with empty frame
+                frame = imagen.Constant(
+                    scale=0,
+                    bounds=BoundingBox(radius=self.size_x / 2),
+                    xdensity=self.density,
+                    ydensity=self.density,
+                )()
+                for j in range(n_angles):
+                    # Exclude NaN locations
+                    if np.isnan(x_pos[i, j]):
+                        continue
+
+                    # Set radial or tangential orientation
+                    if self.surround_gabor_orientation_radial:
+                        gabor_angle = angles_mat[i, j]
+                    else:
+                        gabor_angle = angles_mat[i, j] + np.pi / 2
+                    # We subtract background luminance so we can combine Gabor frames
+                    frame = (
+                        frame - self.background_luminance
+                        + self.get_gabor(
+                            x=x_pos[i, j],
+                            y=y_pos[i, j],
+                            orientation=gabor_angle,
+                            relative_luminance=self.surround_relative_luminance)
+                    )
+                yield (frame + self.background_luminance, [1])
+
+        # Flash in center if not centrifugal or explicitly disallowed
+        if not self.centrifugal and self.flash_center:
+            for i in xrange(int(self.flash_duration / self.frame_duration)):
+                yield (self.get_gabor(relative_luminance=self.center_relative_luminance), [1])
+
+        # Return blank frames after stimulus end
+        blank = imagen.Constant(
+            scale=self.background_luminance,
+            bounds=BoundingBox(radius=self.size_x / 2),
+            xdensity=self.density,
+            ydensity=self.density,
+        )()
+
+        while True:
+            yield (blank, [0])

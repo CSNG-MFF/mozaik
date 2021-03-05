@@ -568,3 +568,130 @@ class TestContinuousGaborMovementAndJump(TestGabor):
         )
         for i in range(stimulus_end_id, len(frames)):
             np.testing.assert_allclose(frames[i], blank)
+
+
+default_apparent_motion = {
+    "duration": 150,
+    "flash_duration": 20,
+    "n_gabors": 12,
+    "n_circles": 5,
+    "start_angle": 0,
+    "center_relative_luminance": 0.5,
+    "surround_relative_luminance": 0.7,
+    "end_angle": np.pi * 2 - np.pi / 6,
+    "surround_gabor_orientation_radial": True,
+    "flash_center": True,
+    "random": False,
+    "symmetric": False,
+    "centrifugal": False,
+}
+
+
+class TestRadialGaborApparentMotion(TestGabor):
+    num_tests = 100
+
+    def generate_frame_params(length=1):
+        """
+        Generate random parameters for ContinuousGaborMovementAndJump class instances
+        """
+        np.random.seed(0)
+        params = []
+        for i in xrange(0, length):
+            x = (np.random.rand() - 0.5) * default_topo["size_x"] / 4
+            y = (np.random.rand() - 0.5) * default_topo["size_y"] / 4
+            sigma = 0.25 / 3 + np.random.rand() * 1 / 3
+            orientation = np.random.rand() * np.pi
+            flash_duration = default_topo["frame_duration"] + np.random.rand() * 50
+            # Do not want overlap with symmetric
+            start_angle = np.random.rand() * np.pi / 6
+            end_angle = np.pi / 6 + np.random.rand() * np.pi / 3
+            n_gabors = 1 + int(round(np.random.rand() * 3))
+            n_circles = 1 + int(round(np.random.rand() * 3))
+            symmetric = bool(round(np.random.rand()))
+            random = bool(round(np.random.rand()))
+            flash_center = bool(round(np.random.rand()))
+            centrifugal = bool(round(np.random.rand()))
+            params.append(
+                (
+                    x,
+                    y,
+                    sigma,
+                    orientation,
+                    flash_duration,
+                    start_angle,
+                    end_angle,
+                    n_gabors,
+                    n_circles,
+                    symmetric,
+                    random,
+                    flash_center,
+                    centrifugal,
+                )
+            )
+        return params
+
+    def get_stimulus(self, **kwargs):
+        params = default_topo.copy()
+        params.update(default_gabor)
+        params.update(default_apparent_motion)
+        params.pop("relative_luminance")
+        params.update(kwargs)
+        stim = topo.RadialGaborApparentMotion(**params)
+        return stim
+
+    @pytest.mark.parametrize(
+        "x, y, sigma, orientation, flash_duration, start_angle, end_angle, n_gabors, n_circles, symmetric, random, flash_center, centrifugal",
+        generate_frame_params(num_tests),
+    )
+    def test_no_overlap(
+        self,
+        x,
+        y,
+        sigma,
+        orientation,
+        flash_duration,
+        start_angle,
+        end_angle,
+        n_gabors,
+        n_circles,
+        symmetric,
+        random,
+        flash_center,
+        centrifugal,
+    ):
+        """
+        Gabor functions between flashes should never overlap. Given that the *random*
+        switch is one of the parameters, this tests that Gabors both in a single
+        flash and between flashes don't overlap.
+        """
+        args = locals()
+        args.pop("self")
+        frames = self.get_frames(**args)
+
+        num_flashes = n_circles + flash_center
+        flash_num_frames = int(flash_duration / default_topo["frame_duration"])
+
+        if num_flashes < 2:
+            return  # One flash cannot overlap
+
+        flash_masks = []
+        for i in range(num_flashes):
+            flash_mask = numpy.full(frames[0].shape, True, dtype=bool)
+            for j in range(flash_num_frames):
+                frame_idx = i * flash_num_frames + j
+                if frame_idx >= len(frames):
+                    break
+                flash_mask = np.logical_and(
+                    flash_mask,
+                    self.get_nonblank_mask(
+                        frames[frame_idx],
+                        default_topo["background_luminance"],
+                    ),
+                )
+            flash_masks.append(flash_mask)
+
+        overlap = flash_masks[0]
+        for mask in flash_masks:
+            overlap = np.logical_or(overlap, flash_mask)
+
+        assert np.all(overlap), "There is overlap between apparent motion Gabors"
