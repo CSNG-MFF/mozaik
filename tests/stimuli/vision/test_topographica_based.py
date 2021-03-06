@@ -128,9 +128,9 @@ class TestNoise(TopographicaBasedVisualStimulusTester):
 # grid_size, size_x, grid, background_luminance, density
 sparse_noise_params = [
     # Some basic parameter combinations
-    (10, 10, True, 50, 5.0),
-    (15, 15, False, 60, 6.0),
-    (5, 5, False, 0.0, 15),
+    (10, 10, True, 50, 5.0, 7),
+    (15, 15, False, 60, 6.0, 14),
+    (5, 5, False, 0.0, 15, 28),
 ]
 
 
@@ -151,6 +151,7 @@ class TestSparseNoise(TestNoise):
         grid_size=default_noise["grid_size"],
         size_x=default_topo["size_x"],
         grid=default_noise["grid"],
+        blank_time=17,
         background_luminance=default_topo["background_luminance"],
         density=default_topo["density"],
     ):
@@ -169,14 +170,18 @@ class TestSparseNoise(TestNoise):
         )
         while True:
             aux2 = aux()
-            for i in range(time_per_image / frame_duration):
-                yield (aux2, [0])
+            blank = aux2*0+background_luminance
+            for i in range(int(time_per_image/frame_duration)):
+                yield (aux2,[0])
+            for i in range(int(blank_time/frame_duration)):
+                yield (blank,[0])
 
     def topo_frames(
         self,
         grid_size=default_noise["grid_size"],
         size_x=default_topo["size_x"],
         grid=default_noise["grid"],
+        blank_time=17,
         background_luminance=default_topo["background_luminance"],
         density=default_topo["density"],
     ):
@@ -190,21 +195,23 @@ class TestSparseNoise(TestNoise):
             location_x=default_topo["location_x"],
             location_y=default_topo["location_y"],
             time_per_image=default_noise["time_per_image"],
+            blank_time=blank_time,
             frame_duration=default_topo["frame_duration"],
             experiment_seed=self.experiment_seed,
         )
         return snclass._frames
 
     @pytest.mark.parametrize(
-        "grid_size, size_x, grid, background_luminance, density", sparse_noise_params
+        "grid_size, size_x, grid, background_luminance, density, blank_time", sparse_noise_params
     )
-    def test_frames(self, grid_size, size_x, grid, background_luminance, density):
+    def test_frames(self, grid_size, size_x, grid, background_luminance, density,blank_time):
         self.check_frames(
             grid_size=grid_size,
             size_x=size_x,
             grid=grid,
             background_luminance=background_luminance,
             density=density,
+            blank_time=blank_time
         )
 
 
