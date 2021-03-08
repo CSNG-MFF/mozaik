@@ -1579,6 +1579,10 @@ class MeasureTextureSensitivityFullfield(VisualExperiment):
             'num_images': int, #n. of images of each type, different synthesized instances
             'folder_path' : str,
             'images': list,
+<<<<<<< HEAD
+=======
+            #'image_duration' : float,
+>>>>>>> Changes in texture experiment and texture analysis
             'duration' : float,
             'types' : list,
             'num_trials' : int, #n. of same instance
@@ -1597,6 +1601,10 @@ class MeasureTextureSensitivityFullfield(VisualExperiment):
                     im = textu.PSTextureStimulus(
                             frame_duration = self.frame_duration,
                             duration=self.parameters.duration,
+<<<<<<< HEAD
+=======
+                            #stimulus_duration=self.parameters.image_duration,
+>>>>>>> Changes in texture experiment and texture analysis
                             trial=k,
                             background_luminance=self.background_luminance,
                             density=self.density,

@@ -66,6 +66,10 @@ class PSTextureStimulus(TextureBasedVisualStimulus):
 
     stats_type = SNumber(dimensionless,bounds=[0,3],doc="Type of statistial matching of the stimulus")
     sample = SNumber(dimensionless,doc="Index of the stimulus in its texture family")
+<<<<<<< HEAD
+=======
+    #stimulus_duration = SNumber(ms, doc="The duration of the stumulus presentation.")
+>>>>>>> Changes in texture experiment and texture analysis
 
     seed = SNumber(dimensionless, doc="The seed used for this stimulus")
 
@@ -96,6 +100,24 @@ class PSTextureStimulus(TextureBasedVisualStimulus):
         IM.save(folder_name + "/" + self.texture + "sample" + str(self.sample) + "type" + str(self.stats_type) + '.jpg')
         #scipy.misc.toimage(im, cmin=0.0, cmax=2*self.background_luminance).save(folder_name + "/" + self.texture + "sample" + str(self.sample) + "type" + str(self.stats_type) + '.jpg')
         assert (im.shape == (fieldsize_x, fieldsize_y)), "Image dimensions do not correspond to visual field size"
+<<<<<<< HEAD
 
         while True:
             yield (im, [0])
+=======
+        while True:
+            yield (im, [0])
+        """
+        blank = imagen.Constant(scale=self.background_luminance,
+                                bounds=BoundingBox(radius=self.size_x/2),
+                                xdensity=self.density,
+                                ydensity=self.density)()
+        num_frames = 0
+        while True:
+            num_frames += 1
+            if (num_frames-1) * self.frame_duration < self.stimulus_duration: 
+                yield (im, [0])
+            else:
+                yield (blank, [0])
+        """
+>>>>>>> Changes in texture experiment and texture analysis
