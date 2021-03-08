@@ -36,10 +36,14 @@ class TextureModulation(Analysis):
 
             for texture in textures:
 <<<<<<< HEAD
+<<<<<<< HEAD
                 #First we calculate the modulation for each sample of each original image
 =======
                 #First we calculate the modulation ratio for each sample of each original image
 >>>>>>> Changes in texture experiment and texture analysis
+=======
+                #First we calculate the modulation for each sample of each original image
+>>>>>>> Small changes in the texture analysis
                 for sample in samples:
                     pnv_noise = queries.param_filter_query(self.datastore,identifier='PerNeuronValue',value_name=self.parameters.firing_rate_value_name,sheet_name=sheet,st_sample=sample,st_texture=texture,st_stats_type=2).get_analysis_result()[0]
                     pnv_texture = queries.param_filter_query(self.datastore,identifier='PerNeuronValue',value_name=self.parameters.firing_rate_value_name,sheet_name=sheet,st_sample=sample,st_texture=texture,st_stats_type=1).get_analysis_result()[0]
@@ -52,10 +56,14 @@ class TextureModulation(Analysis):
                
 
 <<<<<<< HEAD
+<<<<<<< HEAD
                 #Then we calculate the modulation for each texture family by averaging the firing rates accross samples
 =======
                 #Then we calculate the modulation ratio for each texture family by averaging the firing rates accross samples
 >>>>>>> Changes in texture experiment and texture analysis
+=======
+                #Then we calculate the modulation for each texture family by averaging the firing rates accross samples
+>>>>>>> Small changes in the texture analysis
                 pnvs_noise = queries.param_filter_query(self.datastore,identifier='PerNeuronValue',value_name=self.parameters.firing_rate_value_name,sheet_name=sheet,st_texture=texture,st_stats_type=2).get_analysis_result()
                 pnvs_texture = queries.param_filter_query(self.datastore,identifier='PerNeuronValue',value_name=self.parameters.firing_rate_value_name,sheet_name=sheet,st_texture=texture,st_stats_type=1).get_analysis_result()
                 mean_rates_noise = [pnv.get_value_by_id(pnvs_noise[0].ids) for pnv in pnvs_noise]
@@ -70,10 +78,14 @@ class TextureModulation(Analysis):
                 self.datastore.full_datastore.add_analysis_result(PerNeuronValue(modulation,pnv_texture.ids,None,value_name = "Texture Modulation of " + pnv_texture.value_name ,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))
 
 <<<<<<< HEAD
+<<<<<<< HEAD
             #Finally  we calculate the global modulation by averaging the firing rates accross texture families 
 =======
             #Finally  we calculate the global modulation ratio by averaging the firing rates accross texture families 
 >>>>>>> Changes in texture experiment and texture analysis
+=======
+            #Finally  we calculate the global modulation by averaging the firing rates accross texture families 
+>>>>>>> Small changes in the texture analysis
             pnvs_noise = queries.param_filter_query(self.datastore,value_name=self.parameters.firing_rate_value_name,identifier='PerNeuronValue',sheet_name=sheet,st_stats_type=2).get_analysis_result()
             pnvs_texture = queries.param_filter_query(self.datastore,value_name=self.parameters.firing_rate_value_name,identifier='PerNeuronValue',sheet_name=sheet,st_stats_type=1).get_analysis_result()
             mean_rates_noise = [pnv.get_value_by_id(pnvs_noise[0].ids) for pnv in pnvs_noise]
@@ -237,16 +249,21 @@ class TextureVarianceRatio(Analysis):
 class PercentageNeuronsModulated(Analysis):
     """
 <<<<<<< HEAD
+<<<<<<< HEAD
     Calculates the percentage of neurons positively modulated, negatively modulated, and not modulated by synthetic texture stimuli in comparison to spectrally-matched noise
 =======
     Calculates the modulation of the response to texture stimuli compared to the response to spectrally-matched noise
 >>>>>>> Creation of the analysis specific to texture stimulation
+=======
+    Calculates the percentage of neurons positively modulated, negatively modulated, and not modulated by synthetic texture stimuli in comparison to spectrally-matched noise
+>>>>>>> Small changes in the texture analysis
     """
     required_parameters = ParameterSet({
         'sheet_list' : list,
         'texture_list' : list,
     })
 
+<<<<<<< HEAD
 <<<<<<< HEAD
     #Randomization test, returns 1 if the neurons is significantly modulated, 0 otherwise
     def randomization_test(self, response_noise, response_texture, modulation):
@@ -256,15 +273,24 @@ class PercentageNeuronsModulated(Analysis):
             _tmp = numpy.concatenate((response_noise,  response_texture))
             #Shuffle the list and split it in 2
 =======
+=======
+    #Randomization test, returns 1 if the neurons is significantly modulated, 0 otherwise
+>>>>>>> Small changes in the texture analysis
     def randomization_test(self, response_noise, response_texture, modulation):
         count_more_modulated = 0
-        for _ in range(10):
+        for _ in range(10000):
+            #Concatenate the mean responses for every samples of the synthetic texture stimuli and the spectrally-matched noise stimuli
             _tmp = numpy.concatenate((response_noise,  response_texture))
+<<<<<<< HEAD
 >>>>>>> Creation of the analysis specific to texture stimulation
+=======
+            #Shuffle the list and split it in 2
+>>>>>>> Small changes in the texture analysis
             numpy.random.shuffle(_tmp)
             tmp = numpy.split(_tmp,2)
             mean1 = numpy.mean(tmp[1])
             mean0 = numpy.mean(tmp[0])
+<<<<<<< HEAD
 <<<<<<< HEAD
             #If the modulation in this null distribution exceeds the original modulation, increase the counter ny one
             if abs(modulation) < numpy.abs(numpy.nan_to_num((mean1 - mean0)/(mean1 + mean0))):
@@ -274,6 +300,12 @@ class PercentageNeuronsModulated(Analysis):
             if abs(modulation) < abs((mean1 - mean0)/(mean1 + mean0)):
                 count_more_modulated += 1
 >>>>>>> Creation of the analysis specific to texture stimulation
+=======
+            #If the modulation in this null distribution exceeds the original modulation, increase the counter ny one
+            if abs(modulation) < numpy.abs(numpy.nan_to_num((mean1 - mean0)/(mean1 + mean0))):
+                count_more_modulated += 1
+        #If less than 5% of the computed null distributions showed a modulation larger than the original one, the neuron is considered as significantly modulated
+>>>>>>> Small changes in the texture analysis
         if count_more_modulated >= 500:
             modulated = 0
         else:
@@ -283,9 +315,13 @@ class PercentageNeuronsModulated(Analysis):
     def perform_analysis(self):
         for sheet in self.parameters.sheet_list:
 <<<<<<< HEAD
+<<<<<<< HEAD
             #Obtain the average firing rate for each neuron and each samples of the stimuli, separately for the spectrally matched noise and synthetic texture stimuli
 =======
 >>>>>>> Creation of the analysis specific to texture stimulation
+=======
+            #Obtain the average firing rate for each neuron and each samples of the stimuli, separately for the spectrally matched noise and synthetic texture stimuli
+>>>>>>> Small changes in the texture analysis
             dsv_noise = queries.param_filter_query(self.datastore,identifier='PerNeuronValue',sheet_name=sheet, st_texture = self.parameters.texture_list, value_name = "Firing rate", st_stats_type = 2)
             dsv_texture = queries.param_filter_query(self.datastore,identifier='PerNeuronValue',sheet_name=sheet, st_texture = self.parameters.texture_list, value_name = "Firing rate", st_stats_type = 1)
             pnvs_noise = dsv_noise.get_analysis_result()
@@ -299,9 +335,13 @@ class PercentageNeuronsModulated(Analysis):
             count_negatively_modulated = 0
 
 <<<<<<< HEAD
+<<<<<<< HEAD
             #For every neuron, check if it is significantly modulated through a randomization test
 =======
 >>>>>>> Creation of the analysis specific to texture stimulation
+=======
+            #For every neuron, check if it is significantly modulated through a randomization test
+>>>>>>> Small changes in the texture analysis
             for i in range (firing_rates_noise.shape[1]):
                 mean_response_texture = numpy.mean(firing_rates_texture[:,i])
                 mean_response_noise = numpy.mean(firing_rates_noise[:,i])
@@ -324,10 +364,14 @@ class PercentageNeuronsModulated(Analysis):
 class TextureModulationFromPSTH(Analysis):
     """
 <<<<<<< HEAD
+<<<<<<< HEAD
     Calculate the time-course of the modulation of the neurons using the PSTH of the synthetic texture stimuli and of the spectrally-matched noise stimuli 
 =======
     Calculates the modulation of the response to texture stimuli compared to the response to spectrally-matched noise
 >>>>>>> Creation of the analysis specific to texture stimulation
+=======
+    Calculate the time-course of the modulation of the neurons using the PSTH of the synthetic texture stimuli and of the spectrally-matched noise stimuli 
+>>>>>>> Small changes in the texture analysis
     """
     required_parameters = ParameterSet({
         'sheet_list' : list,
@@ -348,6 +392,7 @@ class TextureModulationFromPSTH(Analysis):
                 averaged_texture_psths_null = []
                 modulation_list_null = []
 <<<<<<< HEAD
+<<<<<<< HEAD
             
             #First, we compute the time-course of the modulation for every individual texture
             for texture in self.parameters.texture_list:
@@ -356,6 +401,12 @@ class TextureModulationFromPSTH(Analysis):
 
             for texture in self.parameters.texture_list:
 >>>>>>> Creation of the analysis specific to texture stimulation
+=======
+            
+            #First, we compute the time-course of the modulation for every individual texture
+            for texture in self.parameters.texture_list:
+                #Get the PSTHs for both the spectrallu-matched noise and the synthetic texture stimuli 
+>>>>>>> Small changes in the texture analysis
                 psths_noise = queries.param_filter_query(self.datastore,identifier='AnalogSignalList',sheet_name=sheet, analysis_algorithm = "PSTH", st_stats_type = 2, st_texture = texture).get_analysis_result()
                 psths_texture = queries.param_filter_query(self.datastore,identifier='AnalogSignalList',sheet_name=sheet, analysis_algorithm = "PSTH", st_stats_type = 1, st_texture = texture).get_analysis_result()
                 ids = psths_noise[0].ids
@@ -367,6 +418,7 @@ class TextureModulationFromPSTH(Analysis):
                 asls_texture = [psth.get_asl_by_id(ids) for psth in psths_texture]
 
 <<<<<<< HEAD
+<<<<<<< HEAD
                 #For every neuron, compute the average of the PSTHs for both type of stimuli
                 noise_psth = numpy.mean(asls_noise, axis = 0)
                 texture_psth = numpy.mean(asls_texture, axis = 0)
@@ -375,10 +427,19 @@ class TextureModulationFromPSTH(Analysis):
 
                 #Store the values obtained for this texture in some lists
 =======
+=======
+                #For every neuron, compute the average of the PSTHs for both type of stimuli
+>>>>>>> Small changes in the texture analysis
                 noise_psth = numpy.mean(asls_noise, axis = 0)
                 texture_psth = numpy.mean(asls_texture, axis = 0)
+                #Then calculate the modulation for every time step
                 modulation = numpy.nan_to_num((texture_psth - noise_psth)/(texture_psth + noise_psth))
+<<<<<<< HEAD
 >>>>>>> Creation of the analysis specific to texture stimulation
+=======
+
+                #Store the values obtained for this texture in some lists
+>>>>>>> Small changes in the texture analysis
                 averaged_noise_psths.append(noise_psth)
                 averaged_texture_psths.append(texture_psth)
                 modulation_list.append(modulation)
@@ -397,9 +458,13 @@ class TextureModulationFromPSTH(Analysis):
                 setattr(st_modulation,'stats_type',None)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
                 #Store both the averaged PSTHs, and the time-course of the modulation for every neuron in the population
 =======
 >>>>>>> Creation of the analysis specific to texture stimulation
+=======
+                #Store both the averaged PSTHs, and the time-course of the modulation for every neuron in the population
+>>>>>>> Small changes in the texture analysis
                 self.datastore.full_datastore.add_analysis_result(
                     AnalogSignalList(averaged_noise_asls,
                                          ids,
@@ -485,10 +550,14 @@ class TextureModulationFromPSTH(Analysis):
                                              stimulus_id=str(st_modulation)))
 
 <<<<<<< HEAD
+<<<<<<< HEAD
             #Compute the average accross textures families of the time course of the modulation and of the PSTHs for both type of stimuli 
 =======
 
 >>>>>>> Creation of the analysis specific to texture stimulation
+=======
+            #Compute the average accross textures families of the time course of the modulation and of the PSTHs for both type of stimuli 
+>>>>>>> Small changes in the texture analysis
             noise_psth = numpy.mean(averaged_noise_psths, axis = 0)
             texture_psth = numpy.mean(averaged_texture_psths, axis = 0)
             modulation = numpy.mean(modulation_list, axis = 0)
