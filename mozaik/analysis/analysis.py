@@ -129,6 +129,34 @@ class TrialAveragedFiringRate(Analysis):
                                    period=None))
 
 
+class FiringRate(Analysis):
+    """
+    This analysis takes each recording in DSV that has been done in response to stimulus type 'stimulus_type' 
+    and calculates the average (over trials) number of spikes. For each set of equal recordings (except trial) it creates one PerNeuronValue 
+    `AnalysisDataStructure` instance containing the firing rate per each recorded 
+    neuron for each trial.
+    """
+    def perform_analysis(self):
+
+        for sheet in self.datastore.sheets():
+            dsv1 = queries.param_filter_query(self.datastore, sheet_name=sheet)
+            segs = dsv1.get_segments()
+            st = [MozaikParametrized.idd(s) for s in dsv1.get_stimuli()]
+            # transform spike trains due to stimuly to mean_rates
+            mean_rates = [numpy.array(s.mean_rates()) for s in segs]
+            units = munits.spike / qt.s
+            logger.debug('Adding PerNeuronValue containing trial firing rates to datastore')
+            for mr, s in zip(mean_rates, st):
+                self.datastore.full_datastore.add_analysis_result(
+                    PerNeuronValue(mr,segs[0].get_stored_spike_train_ids(),units,
+                                   stimulus_id=str(s),
+                                   value_name='Trial Firing rate',
+                                   sheet_name=sheet,
+                                   tags=self.tags,
+                                   analysis_algorithm=self.__class__.__name__,
+                                   period=None))
+
+
 
 
 
@@ -864,6 +892,7 @@ class PSTH(Analysis):
       """  
       required_parameters = ParameterSet({
         'bin_length': float,  # the bin length of the PSTH
+        'analyze_blank_stimuli': bool, # True if we want to also analyze the blank stimuli, False otherwise
       })
       def perform_analysis(self):
             # make sure spiketrains are also order in the same way
@@ -881,6 +910,21 @@ class PSTH(Analysis):
                                          tags=self.tags,
                                          analysis_algorithm=self.__class__.__name__,
                                          stimulus_id=str(st)))
+
+                if self.parameters.analyze_blank_stimuli:
+                    for st,seg in zip([MozaikParametrized.idd(s) for s in dsv.get_stimuli(null=True)],dsv.get_segments(null=True)):
+                        psths = psth(seg.get_spiketrain(seg.get_stored_spike_train_ids()), self.parameters.bin_length)
+                        self.datastore.full_datastore.add_analysis_result(
+                            AnalogSignalList(psths,
+                                             seg.get_stored_spike_train_ids(),
+                                             psths[0].units,
+                                             x_axis_name='time',
+                                             y_axis_name='psth null (bin=' + str(self.parameters.bin_length) + ')',
+                                             sheet_name=sheet,
+                                             tags=self.tags,
+                                             analysis_algorithm=self.__class__.__name__+'_null',
+                                             stimulus_id=str(st)))
+
 
 
 class SpikeCount(Analysis):
@@ -1092,19 +1136,33 @@ class PopulationMeanAndVar(Analysis):
       
       This list is likely to grow in future.
       """
+
+      required_parameters = ParameterSet({
+        'ignore_nan_and_inf': bool,  # if true, ignore the values equal to nan or inf when calculating the mean and the variance.
+      })
+
       def perform_analysis(self):
           dsv = queries.param_filter_query(self.datastore,identifier=['PerNeuronPairValue','PerNeuronValue'])
           for ads in dsv.get_analysis_result():
               if ads.period == None:
                  if len(ads.values) != 0: 
-                     m = numpy.mean(ads.values)
-                     v = numpy.var(ads.values)
+                     if self.parameters.ignore_nan_and_inf:
+                         m = numpy.mean(numpy.ma.masked_invalid(ads.values))
+                         v = numpy.var(numpy.ma.masked_invalid(ads.values))
+                     else:
+                         m = numpy.mean(ads.values)
+                         v = numpy.var(ads.values)
                  else:
                      m = float('nan')
                      v = float('nan')
               else:
-                 m = circ_mean(ads.values.flatten(),high=ads.period)[0]
-                 v = None
+                 if self.parameters.ignore_nan_and_inf:
+                     m = circ_mean(numpy.ma.masked_invalid(ads.values.flatten()),high=ads.period)[0]
+                     v = None
+                 else:
+                     m = circ_mean(ads.values.flatten(),high=ads.period)[0]
+                     v = None
+
               self.datastore.full_datastore.add_analysis_result(SingleValue(value=m,period=ads.period,value_name = 'Mean(' +ads.value_name + ')',sheet_name=ads.sheet_name,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=ads.stimulus_id))        
               if v!=None:
                     self.datastore.full_datastore.add_analysis_result(SingleValue(value=v,period=ads.period,value_name = 'Var(' +ads.value_name + ')',sheet_name=ads.sheet_name,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=ads.stimulus_id))        
