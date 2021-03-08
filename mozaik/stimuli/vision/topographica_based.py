@@ -842,6 +842,7 @@ class SimpleGaborPatch(TopographicaBasedVisualStimulus):
     x = SNumber(degrees, doc="The x location of the center of the Gabor patch.")
     y = SNumber(degrees, doc="The y location of the center of the Gabor patch.")
     grid = SNumber(dimensionless, doc = "Boolean string to decide whether there is grid or not")
+    n_sigmas = SNumber(dimensionless, default = 3., doc="Number of standard deviations to sample the Gabor function for.")
 
 
     def frames(self):
@@ -852,7 +853,7 @@ class SimpleGaborPatch(TopographicaBasedVisualStimulus):
             gabor = imagen.Gabor(
                         aspect_ratio = 1, # Ratio of pattern width to height.
                                           # Set since the patch has to be round
-                        mask_shape=imagen.Disk(smoothing=0, size=3*self.size),
+                        mask_shape=imagen.Disk(smoothing=0, size=self.n_sigmas),
                             # Gabor patch should fit inside tide/circle
                             # the size is rescalled according to the size
                             # of Gabor patch
@@ -862,7 +863,7 @@ class SimpleGaborPatch(TopographicaBasedVisualStimulus):
                             # BoundingBox of the
                             # area in which the pattern is generated,
                             # radius=1: box with side length 2!
-                        size = self.size/3, # size = 2*standard_deviation
+                        size = self.size/self.n_sigmas, # size = 2*standard_deviation
                             # => on the radius r=size, the intensity is ~0.14
                         orientation=self.orientation, # In radians
                         x = self.x,  # x-coordinate of Gabor patch center
@@ -968,6 +969,7 @@ class TwoStrokeGaborPatch(TopographicaBasedVisualStimulus):
     x_direction = SNumber(degrees, doc="The x direction for the second stroke.")
     y_direction = SNumber(degrees, doc="The y direction for the second stroke.")
     grid = SNumber(dimensionless, doc = "Boolean string to decide whether there is grid or not")
+    n_sigmas = SNumber(dimensionless, default = 3., doc="Number of standard deviations to sample the Gabor function for.")
 
 
     def frames(self):
@@ -980,7 +982,7 @@ class TwoStrokeGaborPatch(TopographicaBasedVisualStimulus):
             gabor = imagen.Gabor(
                         aspect_ratio = 1, # Ratio of pattern width to height.
                                           # Set since the patch has to be round
-                        mask_shape=imagen.Disk(smoothing=0, size=3*self.size),
+                        mask_shape=imagen.Disk(smoothing=0, size=self.n_sigmas),
                             # Gabor patch should fit inside tide/circle
                             # the size is rescalled according to the size
                             # of Gabor patch
@@ -989,7 +991,7 @@ class TwoStrokeGaborPatch(TopographicaBasedVisualStimulus):
                         bounds = BoundingBox(radius=self.size_x/2), 
                             # BoundingBox of the area in which the pattern is
                             # generated, radius=1: box with side length 2!
-                        size = self.size/3, # size = 2*standard_deviation
+                        size = self.size/self.n_sigmas, # size = 2*standard_deviation
                             # => on the radius r=size, the intensity is ~0.14
                         orientation=self.orientation, # In radians
                         x = self.x,  # x-coordinate of Gabor patch center
