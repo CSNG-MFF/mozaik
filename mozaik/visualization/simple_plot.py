@@ -1129,6 +1129,7 @@ class HistogramPlot(StandardStyle):
         self.values = values
         self.parameters["num_bins"] = 15.0
         self.parameters["log"] = False
+        self.parameters["log_xscale"] = False
         self.parameters["labels"] = labels
         self.parameters["colors"] = None
         self.parameters["mark_mean"] = False
@@ -1144,11 +1145,16 @@ class HistogramPlot(StandardStyle):
         else:
            colors = None
         
-        if self.parameters["log"]:
-            self.axis.hist(numpy.log10(self.values),bins=int(self.num_bins),range=self.x_lim,edgecolor='none',color=colors)
+        if self.parameters["log_xscale"]:
+            bins = np.geomspace(self.x_lim[0], self.x_lim[1], int(self.num_bins))
         else:
-            self.axis.hist(self.values,bins=int(self.num_bins),range=self.x_lim,rwidth=1,edgecolor='none',color=colors)
-            
+            bins = int(self.num_bins)
+
+        if self.parameters["log"]:
+            self.axis.hist(numpy.log10(self.values),bins=bins,range=self.x_lim,edgecolor='none',color=colors)
+        else:
+            self.axis.hist(self.values,bins=bins,range=self.x_lim,rwidth=1,edgecolor='none',color=colors)
+
         if self.mark_mean:
            for i,a in enumerate(self.values):
                 if self.colors==None:

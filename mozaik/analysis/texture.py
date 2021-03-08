@@ -26,28 +26,30 @@ class TextureModulation(Analysis):
     """
     required_parameters = ParameterSet({
         'sheet_list' : list,
+        'firing_rate_value_name': str, #The value_name parameter of the firing rates we want to query
     })
 
     def perform_analysis(self):
         for sheet in self.parameters.sheet_list:
             textures = list(set([MozaikParametrized.idd(ads.stimulus_id).texture for ads in self.datastore.get_analysis_result()]))
             samples = list(set([MozaikParametrized.idd(ads.stimulus_id).sample for ads in self.datastore.get_analysis_result()]))
+
             for texture in textures:
+                #First we calculate the modulation ratio for each sample of each original image
                 for sample in samples:
-                    pnv_noise = queries.param_filter_query(self.datastore,identifier='PerNeuronValue',sheet_name=sheet, st_sample = sample, st_texture=texture, st_stats_type = 2).get_analysis_result()[0]
-                    pnv_texture = queries.param_filter_query(self.datastore,identifier='PerNeuronValue',sheet_name=sheet, st_sample = sample, st_texture=texture, st_stats_type = 1).get_analysis_result()[0]
+                    pnv_noise = queries.param_filter_query(self.datastore,identifier='PerNeuronValue',value_name=self.parameters.firing_rate_value_name,sheet_name=sheet,st_sample=sample,st_texture=texture,st_stats_type=2).get_analysis_result()[0]
+                    pnv_texture = queries.param_filter_query(self.datastore,identifier='PerNeuronValue',value_name=self.parameters.firing_rate_value_name,sheet_name=sheet,st_sample=sample,st_texture=texture,st_stats_type=1).get_analysis_result()[0]
                     modulation=[]
                     for texture_firing_rate,noise_firing_rate in zip(pnv_texture.get_value_by_id(pnv_texture.ids),pnv_noise.get_value_by_id(pnv_noise.ids)):
-                        if texture_firing_rate + noise_firing_rate > 0:
-                            modulation.append((texture_firing_rate - noise_firing_rate)/(texture_firing_rate + noise_firing_rate))
-                        else:
-                            modulation.append(0)
+                            modulation.append(numpy.nan_to_num((texture_firing_rate - noise_firing_rate)/(texture_firing_rate + noise_firing_rate)))
                     st = MozaikParametrized.idd(pnv_texture.stimulus_id)
                     setattr(st,'stats_type',None)
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(modulation,pnv_texture.ids,None,value_name = "Sample Modulation of " + pnv_texture.value_name, sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))
+               
 
-                pnvs_noise = queries.param_filter_query(self.datastore,identifier='PerNeuronValue',sheet_name=sheet, st_texture = texture, st_stats_type = 2).get_analysis_result()
-                pnvs_texture = queries.param_filter_query(self.datastore,identifier='PerNeuronValue',sheet_name=sheet, st_texture = texture, st_stats_type = 1).get_analysis_result()
+                #Then we calculate the modulation ratio for each texture family by averaging the firing rates accross samples
+                pnvs_noise = queries.param_filter_query(self.datastore,identifier='PerNeuronValue',value_name=self.parameters.firing_rate_value_name,sheet_name=sheet,st_texture=texture,st_stats_type=2).get_analysis_result()
+                pnvs_texture = queries.param_filter_query(self.datastore,identifier='PerNeuronValue',value_name=self.parameters.firing_rate_value_name,sheet_name=sheet,st_texture=texture,st_stats_type=1).get_analysis_result()
                 mean_rates_noise = [pnv.get_value_by_id(pnvs_noise[0].ids) for pnv in pnvs_noise]
                 mean_rates_texture = [pnv.get_value_by_id(pnvs_noise[0].ids) for pnv in pnvs_texture]
                 _mean_rates_noise = numpy.mean(mean_rates_noise,axis=0)
@@ -59,8 +61,9 @@ class TextureModulation(Analysis):
                 setattr(st,'sample',None)
                 self.datastore.full_datastore.add_analysis_result(PerNeuronValue(modulation,pnv_texture.ids,None,value_name = "Texture Modulation of " + pnv_texture.value_name ,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))
 
-            pnvs_noise = queries.param_filter_query(self.datastore,identifier='PerNeuronValue',sheet_name=sheet, st_stats_type = 2).get_analysis_result()
-            pnvs_texture = queries.param_filter_query(self.datastore,identifier='PerNeuronValue',sheet_name=sheet, st_stats_type = 1).get_analysis_result()
+            #Finally  we calculate the global modulation ratio by averaging the firing rates accross texture families 
+            pnvs_noise = queries.param_filter_query(self.datastore,value_name=self.parameters.firing_rate_value_name,identifier='PerNeuronValue',sheet_name=sheet,st_stats_type=2).get_analysis_result()
+            pnvs_texture = queries.param_filter_query(self.datastore,value_name=self.parameters.firing_rate_value_name,identifier='PerNeuronValue',sheet_name=sheet,st_stats_type=1).get_analysis_result()
             mean_rates_noise = [pnv.get_value_by_id(pnvs_noise[0].ids) for pnv in pnvs_noise]
             mean_rates_texture = [pnv.get_value_by_id(pnvs_noise[0].ids) for pnv in pnvs_texture]
             _mean_rates_noise = numpy.mean(mean_rates_noise,axis=0)
@@ -77,54 +80,60 @@ class TextureModulation(Analysis):
 
 class TextureVarianceRatio(Analysis):
     """
-    Calculates the ratio of the variance inter-texture families on the variance intra-texture families of the response to texture stimuli compared to the response to spectrally-matched noise
+    Calculates the ratio of the variance inter-texture families on the variance intra-texture families of the response to texture stimuli compared to the response to spectrally-matched noise.
+    This is similar as calculating the F statistic for a nested Anova
+    This analysis also store the R-squared (the percentage of variation) for each factor and the residuals
     """
     required_parameters = ParameterSet({
         'sheet_list' : list,
+        'firing_rate_value_name': str, #The value_name parameter of the firing rates we want to query
     })
 
     def perform_analysis(self):
         for sheet in self.parameters.sheet_list:
-            textures = list(set([MozaikParametrized.idd(ads.stimulus_id).texture for ads in self.datastore.get_analysis_result()]))
-            samples = list(set([MozaikParametrized.idd(ads.stimulus_id).sample for ads in self.datastore.get_analysis_result()]))
-            trials = list(set([MozaikParametrized.idd(ads.stimulus_id).trial for ads in self.datastore.get_analysis_result()]))
-            mean_rates = []
+            dsv = queries.param_filter_query(self.datastore,value_name=self.parameters.firing_rate_value_name,sheet_name=sheet)
+            textures = list(set([MozaikParametrized.idd(ads.stimulus_id).texture for ads in dsv.get_analysis_result()]))
+            samples = list(set([MozaikParametrized.idd(ads.stimulus_id).sample for ads in dsv.get_analysis_result()]))
+            trials = list(set([MozaikParametrized.idd(ads.stimulus_id).trial for ads in dsv.get_analysis_result()]))
+
+            mean_rates = [] #This is a 4D array where we will store the firing rates of each neurons for each trial of each sample of each texture family
             for texture in textures:
                 mean_rates_texture = []
                 for sample in samples:
                     mean_rates_sample = []
                     for trial in trials:
-
-                        pnv = queries.param_filter_query(self.datastore,identifier='PerNeuronValue',sheet_name=sheet, st_sample = sample, st_texture=texture, st_trial = trial, st_stats_type = 1).get_analysis_result()[0]
+                        pnv = queries.param_filter_query(dsv,identifier='PerNeuronValue',st_sample=sample,st_texture=texture,st_trial=trial,st_stats_type=1).get_analysis_result()[0]
                         mean_rates_sample.append(pnv.values)
                     mean_rates_texture.append(mean_rates_sample)
                 mean_rates.append(mean_rates_texture)
 
-            global_averaged_rates = numpy.mean(mean_rates, axis = (0,1,2))
-            textures_averaged_rates = numpy.mean(mean_rates, axis = (1,2))
-            samples_averaged_rates = numpy.mean(mean_rates, axis = 2)
-            SStextures = len(trials) * len(samples) * numpy.sum((textures_averaged_rates - global_averaged_rates)**2, axis=0)
-            SSsamples = len(trials) * numpy.sum((numpy.transpose(samples_averaged_rates,(1,0,2)) - textures_averaged_rates)**2, axis=(0,1))
-            SStrials = numpy.sum((numpy.transpose(mean_rates,(2,0,1,3)) - samples_averaged_rates)**2, axis=(0,1,2))
+            global_averaged_rates = numpy.mean(mean_rates, axis = (0,1,2)) #Calculating the global averaged firing rates for each neurons accross each texture family, samples and trials
+            textures_averaged_rates = numpy.mean(mean_rates, axis = (1,2)) #Calculating the firing rates of each neurons for each texture family by averaging accross samples and trials
+            samples_averaged_rates = numpy.mean(mean_rates, axis = 2) #Calculating the firing rates of each neurons for each sample by averaging accross trials
+
+            SStextures = len(trials) * len(samples) * numpy.sum((textures_averaged_rates - global_averaged_rates)**2, axis=0) #Compute the Anova sum of squares accross texture families
+            SSsamples = len(trials) * numpy.sum((numpy.transpose(samples_averaged_rates,(1,0,2)) - textures_averaged_rates)**2, axis=(0,1))  #Compute the Anova sum of squares accross samples
+            SStrials = numpy.sum((numpy.transpose(mean_rates,(2,0,1,3)) - samples_averaged_rates)**2, axis=(0,1,2))  #Compute the Anova sum of squares accross trials (residuals)
+            SStotal = numpy.sum((mean_rates - global_averaged_rates)**2, axis=(0,1,2)) #Compute tha Anova total sum of squares
+
+            #We compute the mean squares of the nested Anova
             MStextures = SStextures/(len(textures)-1)
             MSsamples = SSsamples/(len(textures) * (len(samples) - 1))
             MStrials = SStrials/(len(textures) * len(samples) * (len(trials) - 1))
-            SStotal = SStextures + SSsamples + SStrials
+
+            #We compute the R-squared for each factor and for the residuals
             RsquaredTextures = SStextures/SStotal
             RsquaredSamples = SSsamples/SStotal
             RsquaredTrials = SStrials/SStotal
-
+            
+            #The variance ratio is the F statistic of the nested Anova
             varianceRatio = MStextures/MSsamples
+
             st = MozaikParametrized.idd(pnv.stimulus_id)
-            arg = numpy.argmax(varianceRatio)
-            #varianceRatio[numpy.isnan(varianceRatio)] = 1
-            #varianceRatio[numpy.isinf(varianceRatio)] = numpy.max(numpy.ma.masked_invalid(varianceRatio))
             setattr(st,'stats_type',None)
             setattr(st,'trial',None)
             setattr(st,'sample',None)
             setattr(st,'texture',None)
-
-
 
             self.datastore.full_datastore.add_analysis_result(PerNeuronValue(varianceRatio,pnv.ids,None,value_name = "Texture variance ratio",sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))
             self.datastore.full_datastore.add_analysis_result(PerNeuronValue(RsquaredTextures * 100,pnv.ids,value_units=qt.percent,value_name = "Texture r-squared",sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))
