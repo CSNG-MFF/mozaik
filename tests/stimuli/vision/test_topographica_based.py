@@ -170,11 +170,11 @@ class TestSparseNoise(TestNoise):
         )
         while True:
             aux2 = aux()
-            blank = aux2*0+background_luminance
-            for i in range(int(time_per_image/frame_duration)):
-                yield (aux2,[0])
-            for i in range(int(blank_time/frame_duration)):
-                yield (blank,[0])
+            blank = aux2 * 0 + background_luminance
+            for i in range(int(time_per_image / frame_duration)):
+                yield (aux2, [0])
+            for i in range(int(blank_time / frame_duration)):
+                yield (blank, [0])
 
     def topo_frames(
         self,
@@ -202,16 +202,19 @@ class TestSparseNoise(TestNoise):
         return snclass._frames
 
     @pytest.mark.parametrize(
-        "grid_size, size_x, grid, background_luminance, density, blank_time", sparse_noise_params
+        "grid_size, size_x, grid, background_luminance, density, blank_time",
+        sparse_noise_params,
     )
-    def test_frames(self, grid_size, size_x, grid, background_luminance, density,blank_time):
+    def test_frames(
+        self, grid_size, size_x, grid, background_luminance, density, blank_time
+    ):
         self.check_frames(
             grid_size=grid_size,
             size_x=size_x,
             grid=grid,
             background_luminance=background_luminance,
             density=density,
-            blank_time=blank_time
+            blank_time=blank_time,
         )
 
 
