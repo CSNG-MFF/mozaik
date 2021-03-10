@@ -62,6 +62,7 @@ class MozaikExtendedParameterSet(ParameterSet):
         global_dict.update(dict(ParameterRange=ParameterRange,
                                 ParameterTable=ParameterTable,
                                 PyNNDistribution = PyNNDistribution,
+                                RandomDistribution = RandomDistribution,
                                 NumpyRNG=NumpyRNG,
                                 ParameterWithUnitsAndPeriod=ParameterWithUnitsAndPeriod,
                                 pi=numpy.pi))

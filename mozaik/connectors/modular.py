@@ -143,6 +143,7 @@ class ModularSamplingProbabilisticConnector(ModularConnector):
         for i in numpy.nonzero(self.target.pop._mask_local)[0]:
             weights = self._obtain_weights(i)
             delays = self._obtain_delays(i)
+                
             co = Counter(sample_from_bin_distribution(weights, int(self.parameters.num_samples.next())))
             v = v + numpy.sum(co.values())
             k = co.keys()
@@ -248,6 +249,7 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(ModularConnect
             samples = self.target.get_neuron_annotation(i,self.parameters.annotation_reference_name)
             weights = self._obtain_weights(i)
             delays = self._obtain_delays(i)
+            
             if self.parameters.num_samples == 0:
                 co = Counter(sample_from_bin_distribution(weights, int(samples)))
             else:

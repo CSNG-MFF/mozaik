@@ -5,6 +5,10 @@ from parameters import ParameterSet
 from mozaik.tools.distribution_parametrization import PyNNDistribution
 from mozaik.tools.misc import *
 from parameters import ParameterSet
+import mozaik
+
+logger = mozaik.getMozaikLogger()
+
 
 class ModularConnectorFunction(ParametrizedObject):
     """

@@ -1411,20 +1411,20 @@ class ConnectivityPlot(Plotting):
         ty = self.connected_neuron_position[idx][1]
         if not self.parameters.reversed:
             index = self.datastore.get_sheet_indexes(self.connections[idx].source_name,self.parameters.neuron)
-            ix = numpy.flatnonzero(numpy.array(self.connections[idx].weights)[:,0]==index)
-            ix = numpy.array(self.connections[idx].weights)[:,1][ix].astype(int)
+            ixa = numpy.flatnonzero(numpy.array(self.connections[idx].weights)[:,0]==index)
+            ix = numpy.array(self.connections[idx].weights)[:,1][ixa].astype(int)
         else:
             index = self.datastore.get_sheet_indexes(self.connections[idx].target_name,self.parameters.neuron)
-            ix = numpy.flatnonzero(numpy.array(self.connections[idx].weights)[:,1]==index)
-            ix = numpy.array(self.connections[idx].weights)[:,0][ix].astype(int)
+            ixa = numpy.flatnonzero(numpy.array(self.connections[idx].weights)[:,1]==index)
+            ix = numpy.array(self.connections[idx].weights)[:,0][ixa].astype(int)
         
         assert all(numpy.array(self.connections[idx].weights)[:,0] == numpy.array(self.connections[idx].delays)[:,0])
         assert all(numpy.array(self.connections[idx].weights)[:,1] == numpy.array(self.connections[idx].delays)[:,1])
         
         sx = self.connecting_neurons_positions[idx][0][ix]
         sy = self.connecting_neurons_positions[idx][1][ix]
-        w = numpy.array(self.connections[idx].weights)[ix,2]
-        d = numpy.array(self.connections[idx].delays)[ix,2]
+        w = numpy.array(self.connections[idx].weights)[ixa,2]
+        d = numpy.array(self.connections[idx].delays)[ixa,2]
 
         assert numpy.shape(w) == numpy.shape(d)
         # pick the right PerNeuronValue to show
