@@ -66,8 +66,6 @@ class PSTextureStimulus(TextureBasedVisualStimulus):
 
     stats_type = SNumber(dimensionless,bounds=[0,3],doc="Type of statistial matching of the stimulus")
     sample = SNumber(dimensionless,doc="Index of the stimulus in its texture family")
-    #stimulus_duration = SNumber(ms, doc="The duration of the stumulus presentation.")
-
     seed = SNumber(dimensionless, doc="The seed used for this stimulus")
 
     def frames(self):
@@ -95,20 +93,69 @@ class PSTextureStimulus(TextureBasedVisualStimulus):
 
         IM = Image.fromarray(im)
         IM.save(folder_name + "/" + self.texture + "sample" + str(self.sample) + "type" + str(self.stats_type) + '.jpg')
-        #scipy.misc.toimage(im, cmin=0.0, cmax=2*self.background_luminance).save(folder_name + "/" + self.texture + "sample" + str(self.sample) + "type" + str(self.stats_type) + '.jpg')
         assert (im.shape == (fieldsize_x, fieldsize_y)), "Image dimensions do not correspond to visual field size"
         while True:
             yield (im, [0])
-        """
-        blank = imagen.Constant(scale=self.background_luminance,
-                                bounds=BoundingBox(radius=self.size_x/2),
-                                xdensity=self.density,
-                                ydensity=self.density)()
-        num_frames = 0
+
+class PSTextureStimulusDisk(TextureBasedVisualStimulus):
+    """
+    A stimulus generated using the Portilla-Simoncelli algorithm (see textureLib/textureBasedStimulus.m)
+    with statistics matched to the original image according to the Type.
+    It is confined to an aperture of specific radius
+    """
+
+    radius = SNumber(degrees, doc="The radius of the disk - in degrees of visual field")
+    stats_type = SNumber(dimensionless,bounds=[0,3],doc="Type of statistial matching of the stimulus")
+    sample = SNumber(dimensionless,doc="Index of the stimulus in its texture family")
+    seed = SNumber(dimensionless, doc="The seed used for this stimulus")
+
+    def frames(self):
+        fieldsize_x = self.size_x * self.density
+        fieldsize_y = self.size_y * self.density
+        folder_name = Global.root_directory + "/TextureImagesStimuli"
+        libpath = visual_stimulus.__file__.replace("/visual_stimulus.pyc", "") + "/textureLib" #path to the image processing library
+        matlabPyrToolspath = os.path.join(libpath,"textureSynth","matlabPyrTools")
+        if not os.path.isdir(matlabPyrToolspath):
+            raise IOError("matlabPyrTools should be downloaded from https://github.com/LabForComputationalVision/matlabPyrTools and its content should be put in the directory "+matlabPyrToolspath)
+
+        octave.addpath(libpath)
+        im = octave.textureBasedStimulus(self.texture_path,
+                                         self.stats_type,
+                                         self.seed,
+                                         fieldsize_x,
+                                         fieldsize_y,
+                                         libpath)
+        scale = 2. * self.background_luminance/ (numpy.max(im) - numpy.min(im))
+        im = (im - numpy.min(im)) * scale
+        #im = im.astype(numpy.uint8)
+        print(im)
+
+        if not os.path.exists(folder_name):
+            os.mkdir(folder_name)
+
+        assert (im.shape == (fieldsize_x, fieldsize_y)), "Image dimensions do not correspond to visual field size"
+
+        b = imagen.Constant(scale=self.background_luminance,
+                            bounds=BoundingBox(radius=self.size_x/2),
+                            xdensity=self.density,
+                            ydensity=self.density)()
+        c = imagen.Disk(smoothing=0.0,
+                            size=self.radius*2,
+                            scale=1.0,
+                            bounds=BoundingBox(radius=self.size_x/2),
+                            xdensity=self.density,
+                            ydensity=self.density)()
+
+        d1 = numpy.multiply(im,c)
+        d2 = numpy.multiply(b,-(c-1.0))
+        d =  numpy.add.reduce([d1,d2])
+        print(d)
+
+        d = d.astype(numpy.uint8)
+        print(d)
+        IM = Image.fromarray(d)
+        IM.save(folder_name + "/" + self.texture + "sample" + str(self.sample) + "type" + str(self.stats_type) + 'radius' + str(self.radius) + '.jpg')
+
         while True:
-            num_frames += 1
-            if (num_frames-1) * self.frame_duration < self.stimulus_duration: 
-                yield (im, [0])
-            else:
-                yield (blank, [0])
-        """
+            yield (d, [0])
+
