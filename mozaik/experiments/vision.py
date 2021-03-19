@@ -1550,20 +1550,17 @@ class MeasureTextureSensitivityFullfield(VisualExperiment):
           The model on which to execute the experiment.
     Other parameters
     ----------------
-    num_images : int
-          Number of images of each type to present.
-    
-    folder_path: str
-                    Path to the folder containing the initial images
+    num_images: int
+               The number of samples generated for each texture family
 
-    images : list
-                      List of the names of the initial image files.
-    
-    image_duration : float
-                      The duration of single presentation of an image.
-    
+    folder_path: str
+               The path of of the folder containing the original naturalistic images
+
+    images: list
+               The names of the pgm files containing the original naturalistic images
+
     duration : float
-                      The total duration of the trial, including the blank stimulus presented at the end
+               The duration of the presentation of a single image
     
     types : list(int) 
               List of types indicating which statistics to match:
@@ -1580,14 +1577,15 @@ class MeasureTextureSensitivityFullfield(VisualExperiment):
             'folder_path' : str,
             'images': list,
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
             #'image_duration' : float,
 >>>>>>> Changes in texture experiment and texture analysis
+=======
+>>>>>>> Adding texture size tuning protocol
             'duration' : float,
             'types' : list,
             'num_trials' : int, #n. of same instance
-            #'offset_time' : float,
-            #'onset_time' : float,
     })  
 
     def __init__(self,model,parameters):
@@ -1602,9 +1600,12 @@ class MeasureTextureSensitivityFullfield(VisualExperiment):
                             frame_duration = self.frame_duration,
                             duration=self.parameters.duration,
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
                             #stimulus_duration=self.parameters.image_duration,
 >>>>>>> Changes in texture experiment and texture analysis
+=======
+>>>>>>> Adding texture size tuning protocol
                             trial=k,
                             background_luminance=self.background_luminance,
                             density=self.density,
@@ -1623,6 +1624,108 @@ class MeasureTextureSensitivityFullfield(VisualExperiment):
         pass         
 
 
+
+class MeasureTextureSizeTuning(VisualExperiment):
+    """
+    Size tuning experiment.
+
+    This experiment will show a series of synthetic texture spectrally-matched noise stimuli
+    confined to an apparature whose radius will vary.
+
+    
+    Parameters
+    ----------
+    model : Model
+          The model on which to execute the experiment.
+
+    Other parameters
+    ----------------
+
+    num_sizes : int
+              Number of sizes to present.
+    
+    max_size : float (degrees of visual field)
+             Maximum size to present.
+    
+    duration : float
+                      The duration of single presentation of a grating.
+    
+    num_trials : int
+               Number of trials each each stimulus is shown.
+    
+    log_spacing : bool
+               Whether use logarithmic spaced sizes. By default False, meaning linear spacing 
+
+    num_images: int
+               The number of samples generated for each texture family
+
+    folder_path: str
+               The path of of the folder containing the original naturalistic images
+    
+    images: list
+               The names of the pgm files containing the original naturalistic images
+               
+    types : list(int)
+          List of types indicating which statistics to match:
+            0 - original image
+            1 - naturalistic texture image (matched higher order statistics)
+            2 - spectrally matched noise (matched marginal statistics only).
+
+    """
+
+    required_parameters = ParameterSet({
+            'num_sizes' : int,
+            'max_size' : float,
+            'duration' : float,
+            'num_trials' : int,
+            'log_spacing' : bool,
+            'num_images': int, 
+            'folder_path' : str,
+            'images': list,
+            'types': list,
+
+    })  
+
+    def __init__(self,model,parameters):
+        # we place this import here to avoid the need for octave dependency unless this experiment is actually used.
+        import mozaik.stimuli.vision.texture_based as textu #vf
+
+        VisualExperiment.__init__(self, model,parameters)
+            
+        # linear or logarithmic spaced sizes
+        if self.parameters.log_spacing:
+            base2max = numpy.log2(self.parameters.max_size)
+            sizes = numpy.logspace(start=-3.0, stop=base2max, num=self.parameters.num_sizes, base=2.0) 
+        else:
+            sizes = numpy.linspace(0, self.parameters.max_size,self.parameters.num_sizes)                     
+            
+        # stimuli creation        
+        for image in self.parameters.images:
+            for ty, t in enumerate(self.parameters.types):
+             for i in xrange(0, self.parameters.num_images):
+                 for s in sizes:
+                     for k in xrange(0, self.parameters.num_trials):
+                         im = textu.PSTextureStimulusDisk(
+                                frame_duration = self.frame_duration,
+                                duration=self.parameters.duration,
+                                trial=k,
+                                background_luminance=self.background_luminance,
+                                density=self.density,
+                                location_x=0.0,
+                                location_y=0.0,
+                                sample=i,
+                                size_x=model.visual_field.size_x,
+                                size_y=model.visual_field.size_y,
+                                texture_path = self.parameters.folder_path+image,
+                                texture = image.replace(".pgm",""),
+                                stats_type = t,
+                                radius=s,
+                                seed = 523*(i+1)+5113*(ty+1))
+
+                         self.stimuli.append(im)
+
+    def do_analysis(self, data_store):
+        pass
 
 
 class MapResponseToInterruptedBarStimulus(VisualExperiment):

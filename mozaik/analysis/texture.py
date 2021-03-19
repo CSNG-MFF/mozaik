@@ -376,7 +376,6 @@ class TextureModulationFromPSTH(Analysis):
     required_parameters = ParameterSet({
         'sheet_list' : list,
         'texture_list' : list,
-        'analyze_blank_stimuli' : bool, #If true, perform the analysis also on the psth computed for the blank stimuli
     })
 
     def perform_analysis(self):
@@ -387,6 +386,7 @@ class TextureModulationFromPSTH(Analysis):
             averaged_texture_psths = []
             modulation_list = []
 
+<<<<<<< HEAD
             if self.parameters.analyze_blank_stimuli:
                 averaged_noise_psths_null = []
                 averaged_texture_psths_null = []
@@ -407,6 +407,11 @@ class TextureModulationFromPSTH(Analysis):
             for texture in self.parameters.texture_list:
                 #Get the PSTHs for both the spectrallu-matched noise and the synthetic texture stimuli 
 >>>>>>> Small changes in the texture analysis
+=======
+            #First, we compute the time-course of the modulation for every individual texture
+            for texture in self.parameters.texture_list:
+                #Get the PSTHs for both the spectrally-matched noise and the synthetic texture stimuli 
+>>>>>>> Adding texture size tuning protocol
                 psths_noise = queries.param_filter_query(self.datastore,identifier='AnalogSignalList',sheet_name=sheet, analysis_algorithm = "PSTH", st_stats_type = 2, st_texture = texture).get_analysis_result()
                 psths_texture = queries.param_filter_query(self.datastore,identifier='AnalogSignalList',sheet_name=sheet, analysis_algorithm = "PSTH", st_stats_type = 1, st_texture = texture).get_analysis_result()
                 ids = psths_noise[0].ids
@@ -496,59 +501,8 @@ class TextureModulationFromPSTH(Analysis):
                                          analysis_algorithm=self.__class__.__name__,
                                          stimulus_id=str(st_modulation)))
 
-                if self.parameters.analyze_blank_stimuli:
-                    
-                    psths_noise_null = queries.param_filter_query(self.datastore,identifier='AnalogSignalList',sheet_name=sheet, analysis_algorithm = "PSTH_null", st_stats_type = 2, st_texture = texture).get_analysis_result()
-                    psths_texture_null = queries.param_filter_query(self.datastore,identifier='AnalogSignalList',sheet_name=sheet, analysis_algorithm = "PSTH_null", st_stats_type = 1, st_texture = texture).get_analysis_result()
-                    ids = psths_noise_null[0].ids
-                    t_start_null = psths_noise_null[0].asl[0].t_start
-                    sampling_period_null = psths_noise_null[0].asl[0].sampling_period
-                    assert len(psths_noise_null) == len(psths_texture_null)
-                    asls_noise = [psth.get_asl_by_id(ids) for psth in psths_noise_null]
-                    asls_texture = [psth.get_asl_by_id(ids) for psth in psths_texture_null]
 
-                    noise_psth = numpy.mean(asls_noise, axis = 0)
-                    texture_psth = numpy.mean(asls_texture, axis = 0)
-                    modulation = numpy.nan_to_num((texture_psth - noise_psth)/(texture_psth + noise_psth))
-                    averaged_noise_psths_null.append(noise_psth)
-                    averaged_texture_psths_null.append(texture_psth)
-                    modulation_list_null.append(modulation)
-
-                    averaged_noise_asls = [NeoAnalogSignal(asl, t_start=t_start_null, sampling_period=sampling_period_null,units = units) for asl in noise_psth]
-                    averaged_texture_asls = [NeoAnalogSignal(asl, t_start=t_start_null, sampling_period=sampling_period_null,units = units) for asl in texture_psth]
-                    modulation_asls = [NeoAnalogSignal(asl, t_start=t_start_null, sampling_period=sampling_period_null,units = qt.dimensionless) for asl in modulation]
-
-                    self.datastore.full_datastore.add_analysis_result(
-                        AnalogSignalList(averaged_noise_asls,
-                                             ids,
-                                             psths_noise_null[0].y_axis_units,
-                                             x_axis_name='time',
-                                             y_axis_name='Noise null ' + psths_noise[0].y_axis_name + ' samples averaged',
-                                             sheet_name=sheet,
-                                             tags=self.tags,
-                                             analysis_algorithm=self.__class__.__name__,
-                                             stimulus_id=str(st_noise)))
-                    self.datastore.full_datastore.add_analysis_result(
-                        AnalogSignalList(averaged_texture_asls,
-                                             ids,
-                                             psths_noise_null[0].y_axis_units,
-                                             x_axis_name='time',
-                                             y_axis_name='Texture null ' + psths_noise[0].y_axis_name + ' samples averaged',
-                                             sheet_name=sheet,
-                                             tags=self.tags,
-                                             analysis_algorithm=self.__class__.__name__,
-                                             stimulus_id=str(st_texture)))
-                    self.datastore.full_datastore.add_analysis_result(
-                        AnalogSignalList(modulation_asls,
-                                             ids,
-                                             qt.dimensionless,
-                                             x_axis_name='time',
-                                             y_axis_name='Modulation null ' + psths_noise[0].y_axis_name + ' samples averaged',
-                                             sheet_name=sheet,
-                                             tags=self.tags,
-                                             analysis_algorithm=self.__class__.__name__,
-                                             stimulus_id=str(st_modulation)))
-
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
             #Compute the average accross textures families of the time course of the modulation and of the PSTHs for both type of stimuli 
@@ -556,11 +510,22 @@ class TextureModulationFromPSTH(Analysis):
 
 >>>>>>> Creation of the analysis specific to texture stimulation
 =======
+=======
+            #Normalize the PSTHs
+            max_firing_rates = numpy.max(numpy.concatenate((averaged_noise_psths,  averaged_texture_psths)), axis = (0,2,3))
+            averaged_noise_psths = numpy.transpose(numpy.transpose(averaged_noise_psths,(0,2,3,1))/max_firing_rates, (0,3,1,2))
+            averaged_texture_psths = numpy.transpose(numpy.transpose(averaged_texture_psths,(0,2,3,1))/max_firing_rates, (0,3,1,2))
+
+            max_firing_rates = numpy.max(numpy.concatenate((averaged_noise_psths,  averaged_texture_psths)), axis = 0)
+            averaged_noise_psths = averaged_noise_psths/max_firing_rates
+            averaged_texture_psths = averaged_texture_psths/max_firing_rates
+>>>>>>> Adding texture size tuning protocol
             #Compute the average accross textures families of the time course of the modulation and of the PSTHs for both type of stimuli 
 >>>>>>> Small changes in the texture analysis
             noise_psth = numpy.mean(averaged_noise_psths, axis = 0)
             texture_psth = numpy.mean(averaged_texture_psths, axis = 0)
             modulation = numpy.mean(modulation_list, axis = 0)
+
 
             var_noise_psth = numpy.var(averaged_noise_psths, axis = 0)
             var_texture_psth = numpy.var(averaged_texture_psths, axis = 0)
@@ -626,75 +591,4 @@ class TextureModulationFromPSTH(Analysis):
                                          tags=self.tags,
                                          analysis_algorithm=self.__class__.__name__,
                                          stimulus_id=str(st_modulation)))
-
-            if self.parameters.analyze_blank_stimuli:
-
-                noise_psth = numpy.mean(averaged_noise_psths_null, axis = 0)
-                texture_psth = numpy.mean(averaged_texture_psths_null, axis = 0)
-                modulation = numpy.mean(modulation_list_null, axis = 0)
-
-                var_noise_psth = numpy.var(averaged_noise_psths_null, axis = 0)
-                var_texture_psth = numpy.var(averaged_texture_psths_null, axis = 0)
-
-                averaged_noise_asls = [NeoAnalogSignal(asl, t_start=t_start_null, sampling_period=sampling_period_null,units = units) for asl in noise_psth]
-                averaged_texture_asls = [NeoAnalogSignal(asl, t_start=t_start_null, sampling_period=sampling_period_null,units = units) for asl in texture_psth]
-                modulation_asls = [NeoAnalogSignal(asl, t_start=t_start_null, sampling_period=sampling_period_null,units = qt.dimensionless) for asl in modulation]
-
-                var_noise_asls = [NeoAnalogSignal(asl, t_start=t_start_null, sampling_period=sampling_period_null,units = units) for asl in var_noise_psth]
-                var_texture_asls = [NeoAnalogSignal(asl, t_start=t_start_null, sampling_period=sampling_period_null,units = units) for asl in var_texture_psth]
-
-                setattr(st_noise,'texture',None)
-                setattr(st_texture,'texture',None)
-                setattr(st_modulation,'texture',None)
-
-                self.datastore.full_datastore.add_analysis_result(
-                        AnalogSignalList(averaged_noise_asls,
-                                             ids,
-                                             psths_noise_null[0].y_axis_units,
-                                             x_axis_name='time',
-                                             y_axis_name='Noise null ' + psths_noise[0].y_axis_name + ' textures averaged',
-                                             sheet_name=sheet,
-                                             tags=self.tags,
-                                             analysis_algorithm=self.__class__.__name__,
-                                             stimulus_id=str(st_noise)))
-                self.datastore.full_datastore.add_analysis_result(
-                        AnalogSignalList(averaged_texture_asls,
-                                             ids,
-                                             psths_noise_null[0].y_axis_units,
-                                             x_axis_name='time',
-                                             y_axis_name='Texture null ' + psths_noise[0].y_axis_name + ' textures averaged',
-                                             sheet_name=sheet,
-                                             tags=self.tags,
-                                             analysis_algorithm=self.__class__.__name__,
-                                             stimulus_id=str(st_texture)))
-                self.datastore.full_datastore.add_analysis_result(
-                        AnalogSignalList(var_noise_asls,
-                                             ids,
-                                             psths_noise_null[0].y_axis_units,
-                                             x_axis_name='time',
-                                             y_axis_name='Noise null ' + psths_noise[0].y_axis_name + ' textures var',
-                                             sheet_name=sheet,
-                                             tags=self.tags,
-                                             analysis_algorithm=self.__class__.__name__,
-                                             stimulus_id=str(st_noise)))
-                self.datastore.full_datastore.add_analysis_result(
-                        AnalogSignalList(var_texture_asls,
-                                             ids,
-                                             psths_noise_null[0].y_axis_units,
-                                             x_axis_name='time',
-                                             y_axis_name='Texture null ' + psths_noise[0].y_axis_name + ' textures var',
-                                             sheet_name=sheet,
-                                             tags=self.tags,
-                                             analysis_algorithm=self.__class__.__name__,
-                                             stimulus_id=str(st_texture)))
-                self.datastore.full_datastore.add_analysis_result(
-                        AnalogSignalList(modulation_asls,
-                                             ids,
-                                             qt.dimensionless,
-                                             x_axis_name='time',
-                                             y_axis_name='Modulation null ' + psths_noise[0].y_axis_name + ' textures averaged',
-                                             sheet_name=sheet,
-                                             tags=self.tags,
-                                             analysis_algorithm=self.__class__.__name__,
-                                             stimulus_id=str(st_modulation)))
 

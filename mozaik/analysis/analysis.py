@@ -892,7 +892,6 @@ class PSTH(Analysis):
       """  
       required_parameters = ParameterSet({
         'bin_length': float,  # the bin length of the PSTH
-        'analyze_blank_stimuli': bool, # True if we want to also analyze the blank stimuli, False otherwise
       })
       def perform_analysis(self):
             # make sure spiketrains are also order in the same way
@@ -910,21 +909,6 @@ class PSTH(Analysis):
                                          tags=self.tags,
                                          analysis_algorithm=self.__class__.__name__,
                                          stimulus_id=str(st)))
-
-                if self.parameters.analyze_blank_stimuli:
-                    for st,seg in zip([MozaikParametrized.idd(s) for s in dsv.get_stimuli(null=True)],dsv.get_segments(null=True)):
-                        psths = psth(seg.get_spiketrain(seg.get_stored_spike_train_ids()), self.parameters.bin_length)
-                        self.datastore.full_datastore.add_analysis_result(
-                            AnalogSignalList(psths,
-                                             seg.get_stored_spike_train_ids(),
-                                             psths[0].units,
-                                             x_axis_name='time',
-                                             y_axis_name='psth null (bin=' + str(self.parameters.bin_length) + ')',
-                                             sheet_name=sheet,
-                                             tags=self.tags,
-                                             analysis_algorithm=self.__class__.__name__+'_null',
-                                             stimulus_id=str(st)))
-
 
 
 class SpikeCount(Analysis):
@@ -1169,8 +1153,8 @@ class PopulationMeanAndVar(Analysis):
                     
           dsv = queries.param_filter_query(self.datastore,identifier=['AnalogSignalList'])
           for ads in dsv.get_analysis_result():
-              nas_m = NeoAnalogSignal(ads.mean(),t_start=ads.asl[0].t_start,sampling_period=ads.asl[0].sampling_period,units=ads.asl[0].units)
-              nas_v = NeoAnalogSignal(ads.var(),t_start=ads.asl[0].t_start,sampling_period=ads.asl[0].sampling_period,units=ads.asl[0].units)
+              nas_m = NeoAnalogSignal(ads.mean(ignore_invalid=self.parameters.ignore_nan_and_inf),t_start=ads.asl[0].t_start,sampling_period=ads.asl[0].sampling_period,units=ads.asl[0].units)
+              nas_v = NeoAnalogSignal(ads.var(ignore_invalid=self.parameters.ignore_nan_and_inf),t_start=ads.asl[0].t_start,sampling_period=ads.asl[0].sampling_period,units=ads.asl[0].units)
               
               self.datastore.full_datastore.add_analysis_result(AnalogSignal(nas_m,
                                                                 ads.y_axis_units,
