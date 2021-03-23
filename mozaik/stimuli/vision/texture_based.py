@@ -66,14 +66,6 @@ class PSTextureStimulus(TextureBasedVisualStimulus):
 
     stats_type = SNumber(dimensionless,bounds=[0,3],doc="Type of statistial matching of the stimulus")
     sample = SNumber(dimensionless,doc="Index of the stimulus in its texture family")
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-    #stimulus_duration = SNumber(ms, doc="The duration of the stumulus presentation.")
->>>>>>> Changes in texture experiment and texture analysis
-
-=======
->>>>>>> Adding texture size tuning protocol
     seed = SNumber(dimensionless, doc="The seed used for this stimulus")
 
     def frames(self):
@@ -102,11 +94,7 @@ class PSTextureStimulus(TextureBasedVisualStimulus):
         IM = Image.fromarray(im)
         IM.save(folder_name + "/" + self.texture + "sample" + str(self.sample) + "type" + str(self.stats_type) + '.jpg')
         assert (im.shape == (fieldsize_x, fieldsize_y)), "Image dimensions do not correspond to visual field size"
-<<<<<<< HEAD
 
-        while True:
-            yield (im, [0])
-=======
         while True:
             yield (im, [0])
 
@@ -120,8 +108,6 @@ class PSTextureStimulusDisk(TextureBasedVisualStimulus):
     radius = SNumber(degrees, doc="The radius of the disk - in degrees of visual field")
     stats_type = SNumber(dimensionless,bounds=[0,3],doc="Type of statistial matching of the stimulus")
     sample = SNumber(dimensionless,doc="Index of the stimulus in its texture family")
-    seed = SNumber(dimensionless, doc="The seed used for this stimulus")
-
     def frames(self):
         fieldsize_x = self.size_x * self.density
         fieldsize_y = self.size_y * self.density
@@ -140,8 +126,6 @@ class PSTextureStimulusDisk(TextureBasedVisualStimulus):
                                          libpath)
         scale = 2. * self.background_luminance/ (numpy.max(im) - numpy.min(im))
         im = (im - numpy.min(im)) * scale
-        #im = im.astype(numpy.uint8)
-        print(im)
 
         if not os.path.exists(folder_name):
             os.mkdir(folder_name)
@@ -162,23 +146,10 @@ class PSTextureStimulusDisk(TextureBasedVisualStimulus):
         d1 = numpy.multiply(im,c)
         d2 = numpy.multiply(b,-(c-1.0))
         d =  numpy.add.reduce([d1,d2])
-        print(d)
 
         d = d.astype(numpy.uint8)
-        print(d)
         IM = Image.fromarray(d)
         IM.save(folder_name + "/" + self.texture + "sample" + str(self.sample) + "type" + str(self.stats_type) + 'radius' + str(self.radius) + '.jpg')
 
         while True:
-<<<<<<< HEAD
-            num_frames += 1
-            if (num_frames-1) * self.frame_duration < self.stimulus_duration: 
-                yield (im, [0])
-            else:
-                yield (blank, [0])
-        """
->>>>>>> Changes in texture experiment and texture analysis
-=======
             yield (d, [0])
-
->>>>>>> Adding texture size tuning protocol

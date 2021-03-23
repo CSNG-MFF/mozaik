@@ -211,6 +211,34 @@ class FiringRate(Analysis):
                                    period=None))
 
 
+class FiringRate(Analysis):
+    """
+    This analysis takes each recording in DSV that has been done in response to stimulus type 'stimulus_type' 
+    and calculates the average (over trials) number of spikes. For each set of equal recordings (except trial) it creates one PerNeuronValue 
+    `AnalysisDataStructure` instance containing the firing rate per each recorded 
+    neuron for each trial.
+    """
+    def perform_analysis(self):
+
+        for sheet in self.datastore.sheets():
+            dsv1 = queries.param_filter_query(self.datastore, sheet_name=sheet)
+            segs = dsv1.get_segments()
+            st = [MozaikParametrized.idd(s) for s in dsv1.get_stimuli()]
+            # transform spike trains due to stimuly to mean_rates
+            mean_rates = [numpy.array(s.mean_rates()) for s in segs]
+            units = munits.spike / qt.s
+            logger.debug('Adding PerNeuronValue containing trial firing rates to datastore')
+            for mr, s in zip(mean_rates, st):
+                self.datastore.full_datastore.add_analysis_result(
+                    PerNeuronValue(mr,segs[0].get_stored_spike_train_ids(),units,
+                                   stimulus_id=str(s),
+                                   value_name='Trial Firing rate',
+                                   sheet_name=sheet,
+                                   tags=self.tags,
+                                   analysis_algorithm=self.__class__.__name__,
+                                   period=None))
+
+
 
 
 
