@@ -91,7 +91,11 @@ class TrialAveragedFiringRate(Analysis):
     `AnalysisDataStructure` instance containing the trial averaged firing rate per each recorded 
     neuron.
     """
-    
+ 
+    required_parameters = ParameterSet({
+        'release_segments': bool,  # the bin length of the PSTH
+    })
+
     def perform_analysis(self):
         
         for sheet in self.datastore.sheets():
@@ -99,7 +103,7 @@ class TrialAveragedFiringRate(Analysis):
             segs = dsv1.get_segments()
             st = [MozaikParametrized.idd(s) for s in dsv1.get_stimuli()]
             # transform spike trains due to stimuly to mean_rates
-            mean_rates = [numpy.array(s.mean_rates()) for s in segs]
+            mean_rates = [numpy.array(s.mean_rates(release_segments=self.parameters.release_segments)) for s in segs]
             # collapse against all parameters other then trial            
             (mean_rates, s) = colapse(mean_rates, st, parameter_list=['trial'])
             # take a sum of each
@@ -128,14 +132,18 @@ class TrialAveragedFiringRate(Analysis):
                                    analysis_algorithm=self.__class__.__name__,
                                    period=None))
 
-
-class FiringRate(Analysis):
+class ParameterAveragedFiringRate(Analysis):
     """
     This analysis takes each recording in DSV that has been done in response to stimulus type 'stimulus_type' 
-    and calculates the average (over trials) number of spikes. For each set of equal recordings (except trial) it creates one PerNeuronValue 
-    `AnalysisDataStructure` instance containing the firing rate per each recorded 
-    neuron for each trial.
+    and calculates the average (over the set of parameters specified) number of spikes. For each set of equal recordings (except the specified parameters) it creates one PerNeuronValue 
+    `AnalysisDataStructure` instance containing the trial averaged firing rate per each recorded 
+    neuron.
     """
+
+    required_parameters = ParameterSet({
+        'parameter_list': list,  # The name of the parameters through which to average when calculating the averaged firing rate
+    })
+
     def perform_analysis(self):
 
         for sheet in self.datastore.sheets():
@@ -144,8 +152,54 @@ class FiringRate(Analysis):
             st = [MozaikParametrized.idd(s) for s in dsv1.get_stimuli()]
             # transform spike trains due to stimuly to mean_rates
             mean_rates = [numpy.array(s.mean_rates()) for s in segs]
+            # collapse against all parameters other than those specified         
+            (mean_rates, s) = colapse(mean_rates, st, parameter_list=self.parameters.parameter_list)
+            # take a sum of each
+            _mean_rates = [numpy.squeeze(numpy.mean(a,axis=0)) for a in mean_rates]
+            _var_rates = [numpy.squeeze(numpy.var(a,axis=0)) for a in mean_rates]
+            #JAHACK make sure that mean_rates() return spikes per second
             units = munits.spike / qt.s
-            logger.debug('Adding PerNeuronValue containing trial firing rates to datastore')
+            logger.debug('Adding PerNeuronValue containing parameter averaged firing rates to datastore')
+            for mr, vr, st in zip(_mean_rates,_var_rates, s):
+
+                self.datastore.full_datastore.add_analysis_result(
+                    PerNeuronValue(mr,segs[0].get_stored_spike_train_ids(),units,
+                                   stimulus_id=str(st),
+                                   value_name='Parameter Averaged Firing rate ~ ' + str(self.parameters.parameter_list),
+                                   sheet_name=sheet,
+                                   tags=self.tags,
+                                   analysis_algorithm=self.__class__.__name__,
+                                   period=None))
+
+                self.datastore.full_datastore.add_analysis_result(
+                    PerNeuronValue(vr,segs[0].get_stored_spike_train_ids(),units,
+                                   stimulus_id=str(st),
+                                   value_name='Parameter Var of Firing rate ~ ' + str(self.parameters.parameter_list),
+                                   sheet_name=sheet,
+                                   tags=self.tags,
+                                   analysis_algorithm=self.__class__.__name__,
+                                   period=None))
+
+class FiringRate(Analysis):
+    """
+    This analysis takes each recording in DSV that has been done in response to stimulus type 'stimulus_type' 
+    and calculates the average number of spikes. For each set of equal recordings it creates one PerNeuronValue 
+    `AnalysisDataStructure` instance containing the firing rate per each recorded 
+    neuron for each trial.
+    """
+    required_parameters = ParameterSet({
+        'release_segments': bool,  # the bin length of the PSTH
+    })
+    def perform_analysis(self):
+
+        for sheet in self.datastore.sheets():
+            dsv1 = queries.param_filter_query(self.datastore, sheet_name=sheet)
+            segs = dsv1.get_segments()
+            st = [MozaikParametrized.idd(s) for s in dsv1.get_stimuli()]
+            # transform spike trains due to stimuly to mean_rates
+            mean_rates = [numpy.array(s.mean_rates(release_segments=self.parameters.release_segments)) for s in segs]
+            units = munits.spike / qt.s
+            logger.debug('Adding PerNeuronValue containing firing rates to datastore')
             for mr, s in zip(mean_rates, st):
                 self.datastore.full_datastore.add_analysis_result(
                     PerNeuronValue(mr,segs[0].get_stored_spike_train_ids(),units,
@@ -892,6 +946,7 @@ class PSTH(Analysis):
       """  
       required_parameters = ParameterSet({
         'bin_length': float,  # the bin length of the PSTH
+        'release_segments': bool,  # the bin length of the PSTH
       })
       def perform_analysis(self):
             # make sure spiketrains are also order in the same way
@@ -909,6 +964,8 @@ class PSTH(Analysis):
                                          tags=self.tags,
                                          analysis_algorithm=self.__class__.__name__,
                                          stimulus_id=str(st)))
+                    if self.parameters.release_segments:
+                        seg.release()
 
 
 class SpikeCount(Analysis):
