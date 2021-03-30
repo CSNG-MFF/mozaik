@@ -481,7 +481,7 @@ class MeasureSizeTuning(VisualExperiment):
     Size tuning experiment.
 
     This experiment will show a series of sinusoidal gratings or constant flat stimuli 
-    (see *with_flat* parameter) confined to an apparature whose radius will vary.
+    (see *with_flat* parameter) confined to an aperture whose radius will vary.
 
     
     Parameters
@@ -568,6 +568,98 @@ class MeasureSizeTuning(VisualExperiment):
     def do_analysis(self, data_store):
         pass
 
+
+class MeasureSizeTuningRing(VisualExperiment):
+    """
+    Size tuning experiment.
+
+    This experiment will show a series of sinusoidal gratings confined to a ring which outer
+    radius stays constant and which inner radius will varry.
+
+    
+    Parameters
+    ----------
+    model : Model
+          The model on which to execute the experiment.
+
+    Other parameters
+    ----------------
+
+    num_inner_radius : int
+              Number of different inner radius to present.
+    
+    outer_radius : float (degrees of visual field)
+             The outside radius of the grating ring - in degrees of visual field.
+    
+    orientation : float
+                The orientation (in radians) at which to measure the size tuning. (in future this will become automated)
+                
+    spatial_frequency : float
+                      Spatial frequency of the grating.
+                      
+    temporal_frequency : float
+                      Temporal frequency of the grating.
+
+    grating_duration : float
+                      The duration of single presentation of a grating.
+    
+    contrasts : list(float) 
+              List of contrasts (expressed as % : 0-100%) at which to measure the orientation tuning.
+    
+    num_trials : int
+               Number of trials each each stimulus is shown.
+    
+    log_spacing : bool
+               Whether use logarithmic spaced sizes. By default False, meaning linear spacing 
+    
+    """
+
+    required_parameters = ParameterSet({
+            'num_inner_radius' : int,
+            'outer_radius' : float,
+            'orientation' : float,
+            'spatial_frequency' : float,
+            'temporal_frequency' : float,
+            'grating_duration' : float,
+            'contrasts' : list,
+            'num_trials' : int,
+            'log_spacing' : bool,
+    })
+
+
+    def __init__(self,model,parameters):
+        VisualExperiment.__init__(self, model,parameters)
+
+        # linear or logarithmic spaced sizes
+        if self.parameters.log_spacing:
+            base2max = numpy.log2(self.parameters.outer_radius)
+            inner_radius = numpy.logspace(start=-3.0, stop=base2max, num=self.parameters.num_inner_radius, base=2.0)
+        else:
+            inner_radius = numpy.linspace(0, self.parameters.outer_radius,self.parameters.num_inner_radius)
+
+        # stimuli creation        
+        for c in self.parameters.contrasts:
+            for r in inner_radius:
+                for k in xrange(0, self.parameters.num_trials):
+                    self.stimuli.append(topo.DriftingSinusoidalGratingRing(
+                                    frame_duration = self.frame_duration,
+                                    size_x=model.visual_field.size_x,
+                                    size_y=model.visual_field.size_y,
+                                    location_x=0.0,
+                                    location_y=0.0,
+                                    background_luminance=self.background_luminance,
+                                    contrast = c,
+                                    duration=self.parameters.grating_duration,
+                                    density=self.density,
+                                    trial=k,
+                                    orientation=self.parameters.orientation,
+                                    inner_aperture_radius=r,
+                                    outer_aperture_radius=self.parameters.outer_radius,
+                                    spatial_frequency=self.parameters.spatial_frequency,
+                                    temporal_frequency=self.parameters.temporal_frequency))
+
+    def do_analysis(self, data_store):
+        pass
 
 class MeasureContrastSensitivity(VisualExperiment):
     """

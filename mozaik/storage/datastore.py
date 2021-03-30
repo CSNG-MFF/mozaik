@@ -513,7 +513,6 @@ class PickledDataStore(Hdf5DataStore):
     """
 
     def load(self):
-
         f = open(self.parameters.root_directory + '/datastore.recordings.pickle',  'rb')
         self.block = cPickle.load(f)
         for s in self.block.segments:
@@ -574,3 +573,9 @@ class PickledDataStore(Hdf5DataStore):
             f = open(self.parameters.root_directory + '/' + 'Segment'
                      + str(len(self.block.segments) - 1) + ".pickle", 'wb')
             cPickle.dump(s, f)
+
+    def purge_segments(self):
+        """Purge all segments contained in the datastore from their spiketrains and analogsignals"""
+        for s in self.block.segments:
+            if s.full:
+                s.release()

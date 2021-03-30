@@ -26,12 +26,10 @@ class TextureModulation(Analysis):
     """
     required_parameters = ParameterSet({
         'sheet_list' : list,
-        'firing_rate_value_name': str, #The value_name parameter of the firing rates we want to query
     })
 
     def perform_analysis(self):
 
-        dsv = queries.param_filter_query(self.datastore,identifier='PerNeuronValue',value_name=self.parameters.firing_rate_value_name)
         textures = list(set([MozaikParametrized.idd(ads.stimulus_id).texture for ads in dsv.get_analysis_result()]))
         samples = list(set([MozaikParametrized.idd(ads.stimulus_id).sample for ads in dsv.get_analysis_result()]))
 
@@ -88,12 +86,10 @@ class TextureVarianceRatio(Analysis):
     """
     required_parameters = ParameterSet({
         'sheet_list' : list,
-        'firing_rate_value_name': str, #The value_name parameter of the firing rates we want to query
     })
 
     def perform_analysis(self):
         for sheet in self.parameters.sheet_list:
-            dsv = queries.param_filter_query(self.datastore,value_name=self.parameters.firing_rate_value_name,sheet_name=sheet)
             textures = list(set([MozaikParametrized.idd(ads.stimulus_id).texture for ads in dsv.get_analysis_result()]))
             samples = list(set([MozaikParametrized.idd(ads.stimulus_id).sample for ads in dsv.get_analysis_result()]))
             trials = list(set([MozaikParametrized.idd(ads.stimulus_id).trial for ads in dsv.get_analysis_result()]))

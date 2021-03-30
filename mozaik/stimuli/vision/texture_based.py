@@ -108,6 +108,8 @@ class PSTextureStimulusDisk(TextureBasedVisualStimulus):
     radius = SNumber(degrees, doc="The radius of the disk - in degrees of visual field")
     stats_type = SNumber(dimensionless,bounds=[0,3],doc="Type of statistial matching of the stimulus")
     sample = SNumber(dimensionless,doc="Index of the stimulus in its texture family")
+    seed = SNumber(dimensionless, doc="The seed used for this stimulus")
+
     def frames(self):
         fieldsize_x = self.size_x * self.density
         fieldsize_y = self.size_y * self.density
