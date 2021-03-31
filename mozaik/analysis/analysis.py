@@ -161,7 +161,7 @@ class ParameterAveragedFiringRate(Analysis):
                 self.datastore.full_datastore.add_analysis_result(
                     PerNeuronValue(mr,segs[0].get_stored_spike_train_ids(),units,
                                    stimulus_id=str(st),
-                                   value_name='Parameter Averaged Firing rate ~ ' + str(self.parameters.parameter_list),
+                                   value_name='Parameter Averaged Firing rate ~ ' + str(self.parameters.parameter_list).replace("'",""),
                                    sheet_name=sheet,
                                    tags=self.tags,
                                    analysis_algorithm=self.__class__.__name__,
@@ -170,7 +170,7 @@ class ParameterAveragedFiringRate(Analysis):
                 self.datastore.full_datastore.add_analysis_result(
                     PerNeuronValue(vr,segs[0].get_stored_spike_train_ids(),units,
                                    stimulus_id=str(st),
-                                   value_name='Parameter Var of Firing rate ~ ' + str(self.parameters.parameter_list),
+                                   value_name='Parameter Var of Firing rate ~ ' + str(self.parameters.parameter_list).replace("'",""),
                                    sheet_name=sheet,
                                    tags=self.tags,
                                    analysis_algorithm=self.__class__.__name__,

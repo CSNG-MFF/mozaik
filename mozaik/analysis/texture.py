@@ -30,6 +30,7 @@ class TextureModulation(Analysis):
 
     def perform_analysis(self):
 
+        dsv = queries.param_filter_query(self.datastore, identifier='PerNeuronValue')
         textures = list(set([MozaikParametrized.idd(ads.stimulus_id).texture for ads in dsv.get_analysis_result()]))
         samples = list(set([MozaikParametrized.idd(ads.stimulus_id).sample for ads in dsv.get_analysis_result()]))
 
@@ -89,6 +90,11 @@ class TextureVarianceRatio(Analysis):
     })
 
     def perform_analysis(self):
+        dsv = queries.param_filter_query(self.datastore, identifier='PerNeuronValue')
+        if len(dsv.get_analysis_result()) == 0: return
+        assert queries.ads_with_equal_stimulus_type(dsv)
+        assert queries.equal_ads(dsv,except_params=['stimulus_id', 'sheet_name'])
+
         for sheet in self.parameters.sheet_list:
             textures = list(set([MozaikParametrized.idd(ads.stimulus_id).texture for ads in dsv.get_analysis_result()]))
             samples = list(set([MozaikParametrized.idd(ads.stimulus_id).sample for ads in dsv.get_analysis_result()]))
