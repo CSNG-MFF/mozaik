@@ -102,8 +102,8 @@ class TrialAveragedFiringRate(Analysis):
             st = [MozaikParametrized.idd(s) for s in dsv1.get_stimuli()]
             # transform spike trains due to stimuly to mean_rates
             mean_rates = [numpy.array(s.mean_rates()) for s in segs]
-            # collapse against all parameters other then trial
-            
+            # collapse against all parameters other then trial            
+
             (mean_rates, s) = colapse(mean_rates, st, parameter_list=['trial'])
             # take a sum of each
             _mean_rates = [numpy.squeeze(numpy.mean(a,axis=0)) for a in mean_rates]
@@ -112,6 +112,7 @@ class TrialAveragedFiringRate(Analysis):
             units = munits.spike / qt.s
             logger.debug('Adding PerNeuronValue containing trial averaged firing rates to datastore')
             for mr, vr, st in zip(_mean_rates,_var_rates, s):
+              
                 self.datastore.full_datastore.add_analysis_result(
                     PerNeuronValue(mr,segs[0].get_stored_spike_train_ids(),units,
                                    stimulus_id=str(st),
@@ -120,6 +121,7 @@ class TrialAveragedFiringRate(Analysis):
                                    tags=self.tags,
                                    analysis_algorithm=self.__class__.__name__,
                                    period=None))
+
                 self.datastore.full_datastore.add_analysis_result(
                     PerNeuronValue(vr,segs[0].get_stored_spike_train_ids(),units,
                                    stimulus_id=str(st),
@@ -415,6 +417,7 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
               sheet_params = dsv.get_sheet_parameters(sheet_name=sheet)
               lower_range = [ -(sheet_params['sx']/2), -(sheet_params['sx']/2)+self.parameters.size ]
               higher_range = [ (sheet_params['sx']/2)-self.parameters.size, (sheet_params['sx']/2) ]
+
               # Get sheet indexes from ids of recorded neurons
               rec_idd_idx = zip( self.parameters.neurons, dsv.get_sheet_indexes(sheet_name=sheet,neuron_ids=self.parameters.neurons) )
               # get positions in the sheet of the recorded neurons
@@ -479,6 +482,7 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
                   xcorr = [] # local storage
                   # loop over raw_xcorr[trial] source_ids and anothertrial same source_ids
                   anothertrial = (trial+1)%len(list(raw_xcorr.keys()))
+
                   for rcorr in raw_xcorr[trial] :
                       # compute the xcorr if the references and targets of spiketrains of different trials corresponds to those of the raw_xcorr 
                       for ref in dsvs_spiketrains[trial] :
@@ -802,17 +806,27 @@ class GaussianTuningCurveFit(Analysis):
           p0 = [0, 1.0, 0.5,0.0] # Initial guess for the parameters
           p0[0] = numpy.min(Y)
           p0[1] = numpy.max(Y)-p0[0]
+          
+          logger.info(str(X))
+          logger.info(str(Y))
+          logger.info(str(numpy.shape(X)))
+          logger.info(str(numpy.shape(Y)))
+
           if period != None:
-            p0[3] = circ_mean(numpy.array([X]),weights=numpy.array([Y]),axis=1,low=0,high=period,normalize=True)[0]
+            p0[3] = circ_mean(numpy.array([X]),weights=numpy.array([Y]),axis=1,low=0,high=period,normalize=True)[0][0]
           else:
             p0[3] = numpy.average(numpy.array(X),weights=numpy.array(Y))[0]
-            
-          p1, success = scipy.optimize.leastsq(errfunc, p0[:], args=(X,Y))      
+
+          logger.info(str(numpy.array(p0[:])))
+          logger.info(type(numpy.array(p0)))
+          logger.info(str(numpy.array(X)))
+          logger.info(type(numpy.array(X)))
+          logger.info(str(numpy.array(X)))
+          logger.info(type(numpy.array(X)))
+
+
+          p1, success = scipy.optimize.leastsq(errfunc, numpy.array(p0[:]), args=(numpy.array(X),numpy.array(Y)))
           p1[2]  = abs(p1[2])
-          if numpy.linalg.norm(Y-numpy.mean(Y),2) != 0:
-            err = numpy.linalg.norm(fitfunc(p1,X)-Y,2)/numpy.linalg.norm(Y-numpy.mean(Y),2)          
-          else:
-            err = 0
 
           #if the fit is very bad - error greater than 30% of the Y magnitude
           #if err > 0.2:
@@ -1035,7 +1049,6 @@ class Irregularity(Analysis):
                     to_delete = [i for i, x in enumerate(cv_isi) if (x == None or x.magnitude == 0.0)]
                     ids=numpy.delete(seg.get_stored_spike_train_ids(),to_delete)
                     cv_isi=numpy.delete(cv_isi,to_delete)
-                    logger.info(str(numpy.shape(cv_isi)))
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(cv_isi,ids,qt.dimensionless,value_name = 'CV of ISI squared',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))
            
 
@@ -1082,8 +1095,12 @@ class PopulationMeanAndVar(Analysis):
           dsv = queries.param_filter_query(self.datastore,identifier=['PerNeuronPairValue','PerNeuronValue'])
           for ads in dsv.get_analysis_result():
               if ads.period == None:
-                 m = numpy.mean(ads.values)
-                 v = numpy.var(ads.values)
+                 if len(ads.values) != 0: 
+                     m = numpy.mean(ads.values)
+                     v = numpy.var(ads.values)
+                 else:
+                     m = float('nan')
+                     v = float('nan')
               else:
                  m = circ_mean(ads.values.flatten(),high=ads.period)[0]
                  v = None
@@ -1288,7 +1305,6 @@ class AnalogSignal_PerNeuronBetweenSignalCorrelation(Analysis):
                 dsv = queries.param_filter_query(self.datastore, sheet_name=sheet,name='AnalogSignalList',y_axis_name=[self.parameters.value_name1,self.parameters.value_name2])
                 dsvs_by_valuename = queries.partition_analysis_results_by_parameters_query(dsv,parameter_list=["y_axis_name"])
                 for dsv1 in dsvs_by_valuename:
-                   dsv1.print_content(full_ADS=True) 
                    asl1 = dsv1.get_analysis_result(y_axis_name=self.parameters.value_name1)[0]
                    asl2 = dsv1.get_analysis_result(y_axis_name=self.parameters.value_name2)[0]
                    vs =[]

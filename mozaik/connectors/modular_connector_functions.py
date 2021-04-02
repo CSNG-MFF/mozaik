@@ -4,7 +4,11 @@ from mozaik.core import ParametrizedObject
 from parameters import ParameterSet
 from mozaik.tools.distribution_parametrization import PyNNDistribution
 from mozaik.tools.misc import *
-from parameters import ParameterSet, ParameterDist
+from parameters import ParameterSet
+import mozaik
+
+logger = mozaik.getMozaikLogger()
+
 
 class ModularConnectorFunction(ParametrizedObject):
     """
@@ -114,12 +118,12 @@ class LinearModularConnectorFunction1(DistanceDependentModularConnectorFunction)
     Corresponds to: distance*linear_scaler + constant_scaler, where distance is in micrometers
     """
     required_parameters = ParameterSet({
-        'constant_scaler': ParameterDist,    # the aditive constant of the decay
-        'linear_scaler': ParameterDist,    # the scaler of the linear decay
+        'constant_scaler': PyNNDistribution,    # the aditive constant of the decay
+        'linear_scaler': PyNNDistribution,    # the scaler of the linear decay
     })
     
     def distance_dependent_function(self,distance):
-        return self.parameters.linear_scaler.next()[0]*distance + self.parameters.constant_scaler.next()[0]
+        return self.parameters.linear_scaler.next()*distance + self.parameters.constant_scaler.next()
 
 
 class HyperbolicModularConnectorFunction(DistanceDependentModularConnectorFunction):

@@ -10,10 +10,10 @@ from past.builtins import basestring
 from urllib.parse import urlparse
 from parameters import ParameterSet, ParameterRange, ParameterTable, ParameterReference
 from pyNN.random import RandomDistribution, NumpyRNG
-import copy, warnings, numpy, numpy.random  # to be replaced with srblib
-import sys
 import requests
-from parameters.random import ParameterDist, GammaDist, UniformDist, NormalDist
+import urllib, copy, warnings, numpy, numpy.random  # to be replaced with srblib
+from urlparse import urlparse
+import mozaik
 
 def load_parameters(parameter_url,modified_parameters):
     """
@@ -34,20 +34,13 @@ class PyNNDistribution(RandomDistribution):
       For the rest of the parameters see pyNN.random.RandomDistribution
       """
       def __init__(self,name,**params):
-          RandomDistribution.__init__(self,name,**params)  
+          self._first = True
+          RandomDistribution.__init__(self,name,rng=mozaik.pynn_rng,**params)
 
-class LogNormalDistribution(ParameterDist):
-    """
-    We will add another kind of distirbution to the param package.
-    """
+      def __str__(self):
+          ps = ','.join([str(k) + '=' + str(self.parameters[k]) for k in self.parameters.keys()])
+          return "PyNNDistribution(name=" + '\'' + self.name + '\',' +  ps + ')'
 
-    def __init__(self, mean=0.0, std=1.0):
-        ParameterDist.__init__(self, mean=mean, std=std)
-        self.dist_name = 'LogNormalDist'
-
-    def next(self, n=1):
-        return numpy.random.lognormal(mean=self.params['mean'], sigma=self.params['std'], size=n)
-    
 
 class ParameterWithUnitsAndPeriod():
     """
@@ -65,21 +58,17 @@ class MozaikExtendedParameterSet(ParameterSet):
     """
     This is an extension to `ParameterSet` class which adds the PyNNDistribution as a possible type of a parameter.
     """
-    
+
     @staticmethod
     def read_from_str(s,update_namespace=None):
         global_dict = dict(ref=ParameterReference,url=MozaikExtendedParameterSet,ParameterSet=ParameterSet)
         global_dict.update(dict(ParameterRange=ParameterRange,
                                 ParameterTable=ParameterTable,
-                                GammaDist=GammaDist,
-                                UniformDist=UniformDist,
-                                NormalDist=NormalDist,
                                 PyNNDistribution = PyNNDistribution,
                                 RandomDistribution = RandomDistribution,
                                 NumpyRNG=NumpyRNG,
                                 ParameterWithUnitsAndPeriod=ParameterWithUnitsAndPeriod,
-                                pi=numpy.pi,
-                                LogNormalDistribution=LogNormalDistribution))
+                                pi=numpy.pi))
         if update_namespace:
             global_dict.update(update_namespace)
         

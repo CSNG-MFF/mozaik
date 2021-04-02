@@ -85,7 +85,7 @@ class VisualStimulus(BaseStimulus):
                 assert img_pixel_size[0] == img_pixel_size[1]
                 
                 # necessary instead of == comparison due to the floating math rounding errors
-                if abs(pixel_size-img_pixel_size[0])<0.0001:
+                if abs(pixel_size-img_pixel_size[0])<0.01:
                     img = self.img
                 else:
                     if self.first_resolution_mismatch_display:

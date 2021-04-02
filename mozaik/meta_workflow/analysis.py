@@ -37,7 +37,6 @@ def load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir
     number_of_unloadable_datastores = 0
     print("Number of combinations: " + str(len(combinations)))
     for i,combination in enumerate(combinations):
-        print(i + " "  + combination)
         rdn = result_directory_name('ParameterSearch',simulation_name,combination)
         try:
             data_store = PickledDataStore(load=True,parameters=ParameterSet({'root_directory': master_results_dir + '/' + rdn,'store_stimuli' : False}),replace=False)
@@ -55,9 +54,6 @@ def load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir
             number_of_unloadable_datastores = number_of_unloadable_datastores + 1
             print("EOError: loading datastore: " + rdn)            
 
-    print(len(datastore))
-    print(number_of_unloadable_datastores)
-    print("Finished loading parameter search")
 
     return (parameters,datastore,number_of_unloadable_datastores)
 

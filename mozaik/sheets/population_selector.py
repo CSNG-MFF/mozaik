@@ -13,6 +13,8 @@ import math
 import numpy
 import mozaik
 
+logger = mozaik.getMozaikLogger()
+
 class PopulationSelector(ParametrizedObject):
     """
     The PopulationSelector specifies which cells should be selected from population. 
@@ -138,6 +140,7 @@ class RCGrid(PopulationSelector):
                   xx,yy = self.sheet.cs_2_vf(x,y)
                   picked.append(z[numpy.argmin(numpy.power(self.sheet.pop.positions[0] - xx,2) +  numpy.power(self.sheet.pop.positions[1] - yy,2))])
           
+          logger.info("RCGrid> picked neurons: " + str(picked))
           return list(set(picked))
 
 class SimilarAnnotationSelector(PopulationSelector):
@@ -233,7 +236,11 @@ class SimilarAnnotationSelectorRegion(SimilarAnnotationSelector):
       
       def generate_idd_list_of_neurons(self):
           picked_or = set(self.pick_close_to_annotation())
-          picked_region = set(numpy.arange(0,len(self.sheet.pop.positions[0]))[numpy.logical_and((abs(numpy.array(self.sheet.pop.positions[0]) - self.parameters.offset_x) < self.parameters.size/2.0) , (abs(numpy.array(self.sheet.pop.positions[1]) - self.parameters.offset_y) < self.parameters.size/2.0))])
+          xx,yy = self.sheet.cs_2_vf(self.sheet.pop.positions[0],self.sheet.pop.positions[1])
+          picked_region = set(numpy.arange(0,len(xx))[numpy.logical_and(
+                                                                         abs(numpy.array(xx - self.parameters.offset_x)) < self.parameters.size/2.0,
+                                                                         abs(numpy.array(yy - self.parameters.offset_y)) < self.parameters.size/2.0
+                                                      )])
           picked = list(picked_or & picked_region)  
           mozaik.rng.shuffle(picked)
           z = self.sheet.pop.all_cells.astype(int)

@@ -1,0 +1,35 @@
+[tool.pytest.ini_options]
+markers = [
+    "model: tests that need to run a full mozaik model to execute. Can be extremely slow.",
+]
+
+[tool.black]
+exclude = '''
+
+(
+# Remove progressively as unit tests get added
+# We do not want to refactor without checking functionality
+ setup.py
+ | mozaik/core.py
+ | mozaik/cli.py
+ | mozaik/space.py
+ | mozaik/controller.py
+ | mozaik/__init__.py
+ | mozaik/meta_workflow
+ | mozaik/connectors
+ | mozaik/tools
+ | mozaik/experiments
+ | mozaik/visualization
+ | mozaik/models
+ | mozaik/storage
+ | mozaik/analysis
+ | mozaik/sheets
+ | mozaik/stimuli
+ | examples/VogelsAbbott2005
+ | examples/TextureModel
+| build
+| doc
+| imagen
+| \.git
+)
+'''

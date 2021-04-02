@@ -11,18 +11,13 @@ def create_experiments(model):
                            #NoStimulation(model,ParameterSet({'duration' : 147*7})),
                            
                            MeasureTextureSensitivityFullfield(model,ParameterSet({
-                                                                                 'num_images' : 2,
-                                                                                 'image_path' : "/home/kaktus/Documents/mozaik/mozaik/stimuli/vision/textureLib/textureSynth/metal.pgm",
-                                                                                 'image_duration' : 147*7,
-                                                                                 'types' : [0, 1, 2],
-                                                                                 'num_trials' : 3})),
-                           MeasureTextureSensitivityFullfield(model,ParameterSet({
-                                                                                 'num_images' : 2,
-                                                                                 'image_path' : "/home/kaktus/Documents/mozaik/mozaik/stimuli/vision/textureLib/textureSynth/reptil_skin.pgm",
-                                                                                 'image_duration' : 147*7,
-                                                                                 'types' : [0, 1, 2],
-                                                                                 'num_trials' : 3})),
-                       
+                                                                                "num_images":2, 
+                                                                                "folder_path": "textureInitialImages/", 
+                                                                                "images":["reptil_skin.pgm","sawtooth.pgm"], 
+                                                                                "image_duration":147*7, 
+                                                                                "types":[0,1,2], 
+                                                                                "num_trials":3}))
+
 
                            #GRATINGS
                            #MeasureOrientationTuningFullfield(model,ParameterSet({

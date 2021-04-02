@@ -41,6 +41,7 @@ flexible use in nesting via the subplot.
 import pylab
 import numpy
 import time
+import os
 import quantities as pq
 import matplotlib.cm as cm
 import matplotlib.gridspec as gridspec
@@ -132,7 +133,7 @@ class Plotting(ParametrizedObject):
                 p.update(fp)
             param = p
             if isinstance(pl,SimplePlot):
-                # print check whether all user_parameters have been nipped to minimum 
+                # check whether all user_parameters have been nipped to minimum 
                 pl(gs,param,self)
             elif isinstance(pl,Plotting):
                 pl._handle_parameters_and_execute_plots(param,up,gs)     
@@ -169,13 +170,18 @@ class Plotting(ParametrizedObject):
                                       repeat=False,
                                       fargs=(self,),
                                       interval=self.frame_duration,
-                                      blit=False,save_count=0)
+                                      blit=False)
         gs.tight_layout(self.fig)
         if self.plot_file_name:
             #if there were animations, save them
             if self.animation_update_functions != []:
-                logger.info(str(animation.writers))
-                self.animation.save(Global.root_directory+self.plot_file_name+'.mov', writer='avconv_file', fps=30,bitrate=5000, extra_args=['--verbose-debug']) 
+                logger.info(str(animation.writers.list()))
+                cwd = os.getcwd()
+                os.chdir(Global.root_directory)
+                # use this save command variant if you want movie for html, otherwise the pillow output for animated gif. Output through ffmpeg is extremely unstable. 
+                self.animation.save(self.plot_file_name+'.html', writer='html', fps=30,bitrate=5000, extra_args=['--verbose-debug'])
+                #self.animation.save(self.plot_file_name+'.gif', writer='pillow', fps=30,bitrate=5000, extra_args=['--verbose-debug']) 
+                os.chdir(cwd)
             else:
                 # save the analysis plot
                 pylab.savefig(Global.root_directory+self.plot_file_name,transparent=True)       
@@ -191,6 +197,11 @@ class Plotting(ParametrizedObject):
 
     def register_animation_update_function(self,auf,parent):
         self.animation_update_functions.append((auf,parent))
+
+    @staticmethod
+    def progress(current_frame, total_frames):
+        print("Frame %d/%d\n" % (current_frame,total_frames)) 
+
 
     @staticmethod
     def update_animation_function(b,self):
@@ -371,10 +382,6 @@ class PlotTuningCurve(Plotting):
                     
                     
                 par,val = zip(*sorted(zip(numpy.array(par),val)))
-
-                logger.info("PLOT TUNING CURVE " + str(period) + " " + str(pi))
-                logger.info("PLOT TUNING CURVE " + str(type(period)) + " " + str(type(pi)))
-
                 # if we have a period of pi or 2*pi
                 if period != None and numpy.isclose(period,pi) and self.parameters.centered==False:
                    par = [(p-pi if p > pi/2 else p) for p in par]
@@ -1404,20 +1411,20 @@ class ConnectivityPlot(Plotting):
         ty = self.connected_neuron_position[idx][1]
         if not self.parameters.reversed:
             index = self.datastore.get_sheet_indexes(self.connections[idx].source_name,self.parameters.neuron)
-            ix = numpy.flatnonzero(numpy.array(self.connections[idx].weights)[:,0]==index)
-            ix = numpy.array(self.connections[idx].weights)[:,1][ix].astype(int)
+            ixa = numpy.flatnonzero(numpy.array(self.connections[idx].weights)[:,0]==index)
+            ix = numpy.array(self.connections[idx].weights)[:,1][ixa].astype(int)
         else:
             index = self.datastore.get_sheet_indexes(self.connections[idx].target_name,self.parameters.neuron)
-            ix = numpy.flatnonzero(numpy.array(self.connections[idx].weights)[:,1]==index)
-            ix = numpy.array(self.connections[idx].weights)[:,0][ix].astype(int)
+            ixa = numpy.flatnonzero(numpy.array(self.connections[idx].weights)[:,1]==index)
+            ix = numpy.array(self.connections[idx].weights)[:,0][ixa].astype(int)
         
         assert all(numpy.array(self.connections[idx].weights)[:,0] == numpy.array(self.connections[idx].delays)[:,0])
         assert all(numpy.array(self.connections[idx].weights)[:,1] == numpy.array(self.connections[idx].delays)[:,1])
         
         sx = self.connecting_neurons_positions[idx][0][ix]
         sy = self.connecting_neurons_positions[idx][1][ix]
-        w = numpy.array(self.connections[idx].weights)[ix,2]
-        d = numpy.array(self.connections[idx].delays)[ix,2]
+        w = numpy.array(self.connections[idx].weights)[ixa,2]
+        d = numpy.array(self.connections[idx].delays)[ixa,2]
 
         assert numpy.shape(w) == numpy.shape(d)
         # pick the right PerNeuronValue to show

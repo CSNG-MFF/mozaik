@@ -39,9 +39,7 @@ class ModulationRatio(Analysis):
         for sheet in self.datastore.sheets():
             # Load up spike trains for the right sheet and the corresponding
             # stimuli, and transform spike trains into psth
-            self.datastore.print_content()
             dsv = queries.param_filter_query(self.datastore,identifier='AnalogSignalList',sheet_name=sheet,analysis_algorithm='PSTH',st_name='FullfieldDriftingSinusoidalGrating')
-            dsv.print_content()
             assert queries.equal_ads(dsv,except_params=['stimulus_id']) , "It seems PSTH computed in different ways are present in datastore, ModulationRatio can accept only one"
             psths = dsv.get_analysis_result()
             st = [MozaikParametrized.idd(p.stimulus_id) for p in psths]
@@ -65,6 +63,7 @@ class ModulationRatio(Analysis):
             for s in st:
                 ps[MozaikParametrized.idd(s).orientation] = True
             ps = list(ps.keys())
+
             # now find the closest presented orientations
             closest_presented_orientation = []
             for i in range(0, len(or_pref.values)):
@@ -92,7 +91,7 @@ class ModulationRatio(Analysis):
                     for j in numpy.nonzero(orr == closest_presented_orientation)[0]:
                         if or_pref.ids[j] in ppsth.ids:
                             a = or_pref.ids[j]
-                            mr,F0,F1 = self._calculate_MR(ppsth.get_asl_by_id(or_pref.ids[j]),frequency)
+                            mr,F0,F1 = self._calculate_MR(ppsth.get_asl_by_id(or_pref.ids[j]).flatten(),frequency)
                             modulation_ratio.append(mr)
                             f0.append(F0)
                             f1.append(F1)

@@ -309,16 +309,20 @@ class Depolarization(DirectStimulator):
         DirectStimulator.__init__(self, sheet,parameters)
         
         population_selector = load_component(self.parameters.population_selector.component)
-        self.ids = population_selector(sheet,self.parameters.population_selector.params).generate_idd_list_of_neurons()
+        ids = population_selector(sheet,self.parameters.population_selector.params).generate_idd_list_of_neurons()
+        d = dict((j,i) for i,j in enumerate(self.sheet.pop.all_cells))
+        to_stimulate_indexes = [d[i] for i in ids]
+        
         self.scs = self.sheet.sim.StepCurrentSource(times=[0.0], amplitudes=[0.0])
-        for cell in self.sheet.pop.all_cells:
-            cell.inject(self.scs)
+        for i in to_stimulate_indexes:
+            self.sheet.pop.all_cells[i].inject(self.scs)
 
     def prepare_stimulation(self,duration,offset):
-        self.scs.set_parameters(times=[offset+self.sheet.dt*2], amplitudes=[self.parameters.current])
+        self.scs.set_parameters(times=[offset+self.sheet.dt*3], amplitudes=[self.parameters.current],copy=False)
         
     def inactivate(self,offset):
-        self.scs.set_parameters(times=[offset+self.sheet.dt*2], amplitudes=[0.0])
+        self.scs.set_parameters(times=[offset+self.sheet.dt*3], amplitudes=[0.0],copy=False)
+
 
 
 class LocalStimulatorArray(DirectStimulator):

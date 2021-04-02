@@ -131,14 +131,14 @@ ____________
 Now you can install in this protected environment all other dependencies::
 
   pip install --upgrade distribute
-  pip install numpy scipy mpi4py matplotlib==2.1.1 quantities lazyarray interval Pillow param parameters neo==0.5.2 cython pynn psutil
+  pip install numpy scipy mpi4py matplotlib==2.1.1 quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.8.0 cython pynn psutil
 
 Now we will manually install several packages. It is probably the best if you create a separate directory in an appropriate
 place, where you will download and install from the packages.
 
 First we will install *imagen* package::
 
-  git clone https://github.com/antolikjan/imagen.git
+  git clone https://github.com/CSNG-MFF/imagen.git
   cd imagen
   python setup.py install
 
@@ -146,12 +146,12 @@ Now we can install *Nest* (always in the virtual environment):
 
     - download the latest version from their `website <http://www.nest-initiative.org/index.php/Software:Download>`_
         
-        wget https://github.com/nest/nest-simulator/archive/v2.18.0.tar.gz
+        wget https://github.com/nest/nest-simulator/archive/v2.20.1.tar.gz
         
     - untar and cd into it::
 
-        tar xvfz v2.18.0.tar.gz
-        cd nest-simulator-2.18.0
+        tar xvfz v2.20.1.tar.gz
+        cd nest-simulator-2.20.1
     
     - then configure, choose if you want mpi::
     
@@ -172,7 +172,7 @@ Now we can install *Nest* (always in the virtual environment):
 
 And, finally, Mozaik::
     
-    git clone https://github.com/antolikjan/mozaik.git
+    git clone https://github.com/CSNG-MFF/mozaik.git
     cd mozaik
     python setup.py install
     
@@ -188,6 +188,56 @@ Go to the examples directory in the mozaik cloned from github (see above) and la
   python run.py nest 2 param/defaults 'test'
   
 This will launch the example with the nest simulator, on 2 nodes with each node using 2 threads, using the parameter param/defaults. Last, 'test' is the name of this run.
+
+.. _ref-docker:
+
+Simple Installation with Docker
+-------------------------------
+
+Run the following commands to build a Docker container with Mozaik::
+
+  git clone https://github.com/CSNG-MFF/mozaik.git
+  cd mozaik
+  docker build --tag antolikjan/mozaik --target prod .
+
+To run the examples::
+
+  cd examples
+  cd VogelsAbbott2005
+  docker run --rm -v "`pwd`:/app" antolikjan/mozaik run.py nest 2 param/defaults 'test'
+
+To build a development container::
+
+  docker build --tag antolikjan/mozaik:dev --target dev .
+
+To run tests::
+
+  docker run --rm -v "`pwd`:/app" antolikjan/mozaik:dev pytest
+
+Testing, Autoformat, Continuous Integration
+-------------------------------------------
+
+In case you want to contribute to the project, you need to make sure your code passes all unit tests and is formatted with the Black autoformatter. You can make sure this is the case by running from the project directory::
+
+  pytest && black --check .
+
+This command will run all tests that it can find recursively under the current directory, as well as check all non-blacklisted files for formatting. Travis-CI will run the same steps for your pull request once you submit it to the project. To install pytest and black::
+
+  pip install pytest pytest-cov pytest-randomly coverage
+  sudo apt-get -y install python3-dev python3-pip python3-setuptools
+  pip3 install black
+
+There are additional useful options for pytests that you can use during development:
+
+    - You may exclude tests running the model by adding the option::
+
+        pytest -m "not model"
+    - You can run the tests in a single file by::
+
+        pytest path/to/file
+    - Pytest doesn't, print to :code:`stdout` by default, you can enable this by::
+
+        pytest -s
 
 :copyright: Copyright 2011-2013 by the *mozaik* team, see AUTHORS.
 :license: `CECILL <http://www.cecill.info/>`_, see LICENSE for details.

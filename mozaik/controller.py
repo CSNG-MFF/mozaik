@@ -1,6 +1,7 @@
 """
 This is the nexus of workflow execution controll of *mozaik*.
 """
+from mozaik.cli import parse_workflow_args
 from mozaik.storage.datastore import Hdf5DataStore, PickledDataStore
 from mozaik.tools.distribution_parametrization import MozaikExtendedParameterSet, load_parameters
 from mozaik.tools.misc import result_directory_name
@@ -72,116 +73,122 @@ def setup_logging():
                      console_level=logging.INFO, mpi_rank=mozaik.mpi_comm.rank)  
     else:
         init_logging(Global.root_directory + "log", file_level=logging.INFO,
-	             console_level=logging.INFO)  
+                 console_level=logging.INFO)  
+
+
+def prepare_workflow(simulation_name, model_class):
+    """
+    Executes the following preparatory steps for simulation workflow:
+        - Load simulation parameters
+        - Initialize random seeds
+        - Create directory for results
+        - Store loaded parameters
+        - Setup logging
+        - Store some initial info about the simulation
+    Returns
+    -------
+    sim : module
+          NEST module, to use for simulation
+    num_threads : int
+                 Number of threads to use for the simulation
+    parameters : dict
+                 Loaded parameters to initialize the simulation and model with
+    """
+    (
+        simulation_run_name,
+        simulator_name,
+        num_threads,
+        parameters_url,
+        modified_parameters,
+    ) = parse_workflow_args()
+
+
+    # First we load the parameters just to retrieve seeds. We will throw them away, because at this stage the PyNNDistribution values were not yet initialized correctly.
+    parameters = load_parameters(parameters_url,modified_parameters)
+    p={}
+    if parameters.has_key('mozaik_seed') : p['mozaik_seed'] = parameters['mozaik_seed']
+    if parameters.has_key('pynn_seed') : p['pynn_seed'] = parameters['pynn_seed']
+
+    # Now initialize mpi with the seeds
+    print "START MPI"
+    mozaik.setup_mpi(**p)
+
+    # Now really load parameters
+    print "Loading parameters";
+    parameters = load_parameters(parameters_url,modified_parameters)
+    print "Finished loading parameters";
+
+    exec "import pyNN.nest as sim" in  globals(), locals()
+
+    # Create results directory
+    timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
+
+    ddir  = result_directory_name(simulation_run_name,simulation_name,modified_parameters)
+
+    if mozaik.mpi_comm and mozaik.mpi_comm.rank != 0:
+        Global.root_directory = parameters.results_dir + ddir + '/' + str(mozaik.mpi_comm.rank) + '/'
+        mozaik.mpi_comm.barrier()
+    else:
+        Global.root_directory = parameters.results_dir + ddir + '/'
+
+
+    os.makedirs(Global.root_directory)
+    if mozaik.mpi_comm and mozaik.mpi_comm.rank == 0:
+        mozaik.mpi_comm.barrier()
+
+
+    if mozaik.mpi_comm.rank == 0:
+        # Let's store the full and modified parameters, if we are the 0 rank process
+        parameters.save(Global.root_directory + "parameters", expand_urls=True)
+        import pickle
+        f = open(Global.root_directory+"modified_parameters","w")
+        pickle.dump(modified_parameters,f)
+        f.close()
+
+    setup_logging()
+
+    if mozaik.mpi_comm.rank == 0:
+        # Let's store some basic info about the simulation run
+        f = open(Global.root_directory+"info","w")
+        f.write(str({'model_class' : str(model_class), 'model_docstring' : model_class.__doc__,'simulation_run_name' : simulation_run_name, 'model_name' : simulation_name, 'creation_data' : datetime.now().strftime('%d/%m/%Y-%H:%M:%S')}))
+        f.close()
+    return sim, num_threads, parameters
 
 def run_workflow(simulation_name, model_class, create_experiments):
     """
-    This is the main function that executes a workflow. 
-    
+    This is the main function that executes a workflow.
     It expects it gets the simulation, class of the model, and a function that will create_experiments.
-    The create experiments function get a instance of a model as the only parameter and it is expected to return 
+    The create experiments function get a instance of a model as the only parameter and it is expected to return
     a list of Experiment instances that should be executed over the model.
-    
-    The run workflow will automatically parse the command line to determine the simulator to be used and the path to the root parameter file. 
+    The run workflow will automatically parse the command line to determine the simulator to be used and the path to the root parameter file.
     It will also accept . (point) delimited path to parameteres in the configuration tree, and corresponding values. It will replace each such provided
-    parameter's value with the provided one on the command line. 
-    
+    parameter's value with the provided one on the command line.
     Parameters
     ----------
     simulation_name : str
                     The name of the simulation.
-    
     model_class : class
                 The class from which the model instance will be created from.
-    
     create_experiments : func
                        The function that returns the list of experiments that will be executed on the model.
-    
     Examples
     --------
     The intended syntax of the commandline is as follows (note that the simulation run name is the last argument):
-    
     >>> python userscript simulator_name num_threads parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n simulation_run_name
     """
-    if len(sys.argv) > 4 and len(sys.argv)%2 == 1:
-        simulation_run_name = sys.argv[-1]    
-        simulator_name = sys.argv[1]
-        num_threads = sys.argv[2]
-        parameters_url = sys.argv[3]
-        modified_parameters = { sys.argv[i*2+4] : eval(sys.argv[i*2+5])  for i in range(0,(len(sys.argv)-5)//2)}
-    else:
-        raise ValueError("Usage: runscript simulator_name num_threads parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n simulation_run_name")
 
-    print("Loading parameters");
-    parameters = load_parameters(parameters_url,modified_parameters)
-    print("Finished loading parameters");
-
-    p={}
-    if 'mozaik_seed' in parameters : p['mozaik_seed'] = parameters['mozaik_seed']
-    if 'pynn_seed' in parameters : p['pynn_seed'] = parameters['pynn_seed']
-
-    print("START MPI")
-
-    mozaik.setup_mpi(**p)
-    # Read parameters
-    # JAHACK!!!!!!!!!!!!
-    #exec("import pyNN.nest as sim",  globals(), locals())
-    import pyNN.nest as sim
-
-    # Create results directory
-    timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
-    
-    ddir  = result_directory_name(simulation_run_name,simulation_name,modified_parameters)
-    
-    if mozaik.mpi_comm and mozaik.mpi_comm.rank != 0:
-        Global.root_directory = parameters.results_dir + ddir + '/' + str(mozaik.mpi_comm.rank) + '/'
-        mozaik.mpi_comm.barrier()                                  
-    else:
-        Global.root_directory = parameters.results_dir + ddir + '/'
-    
-    
-    os.makedirs(Global.root_directory)
-    if mozaik.mpi_comm and mozaik.mpi_comm.rank == 0:
-        mozaik.mpi_comm.barrier()
-    
-    if mozaik.mpi_comm.rank == 0:
-        #let's store the full and modified parameters, if we are the 0 rank process
-        parameters.save(Global.root_directory + "parameters", expand_urls=True)        
-        import pickle
-        f = open(Global.root_directory+"modified_parameters","wb")
-        pickle.dump(str(modified_parameters),f)
-        f.close()        
-
-    setup_logging()
-    
+    # Prepare workflow - read parameters, setup logging, etc.
+    sim, num_threads, parameters = prepare_workflow(simulation_name, model_class)
+    # Prepare model to run experiments on
     model = model_class(sim,num_threads,parameters)
-
-
-    if mozaik.mpi_comm.rank == 0:
-        #let's store some basic info about the simulation run
-        f = open(Global.root_directory+"info","w")
-        f.write(str({'model_class' : str(model_class), 'model_docstring' : model_class.__doc__,'simulation_run_name' : simulation_run_name, 'model_name' : simulation_name, 'creation_data' : datetime.now().strftime('%d/%m/%Y-%H:%M:%S')}))
-        f.close()
-
-
-    #import cProfile
-    #cProfile.run('run_experiments(model,create_experiments(model),parameters)','stats_new')
-
+    # Run experiments with previously read parameters on the prepared model
     data_store = run_experiments(model,create_experiments(model),parameters)
 
     if mozaik.mpi_comm.rank == 0:
-	    data_store.save()
-
+        data_store.save()
     import resource
-    print("Final memory usage: %iMB" % (resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/(1024)))
-    return (data_store,model)
-
-def result_directory_name(simulation_run_name,simulation_name,modified_parameters):
-    modified_params_str = '_'.join([str(k) + ":" + str(modified_parameters[k]) for k in sorted(modified_parameters.keys()) if k!='results_dir'])
-    if len(modified_params_str) > 100:
-        modified_params_str = '_'.join([str(k).split('.')[-1] + ":" + str(modified_parameters[k]) for k in sorted(modified_parameters.keys()) if k!='results_dir'])
-    
-    return simulation_name + '_' + simulation_run_name + '_____' + modified_params_str
+    print "Final memory usage: %iMB" % (resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/(1024))
+    return (data_store, model)
 
 def run_experiments(model,experiment_list,parameters,load_from=None):
     """

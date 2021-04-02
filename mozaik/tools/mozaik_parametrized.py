@@ -419,12 +419,10 @@ def _colapse(dd, param):
 
         setattr(s1,param,None)
         s1 = str(s1)
-
         if s1 in d:
            d[s1].extend(dd[s])
         else:
            d[s1] = dd[s]
-            
     return d
 
 
@@ -508,7 +506,7 @@ def varying_parameters(parametrized_objects):
     varying_params = collections.OrderedDict()
     for n in parametrized_objects[0].getParams().keys():
         for o in parametrized_objects:
-            if isinstance(getattr(o,n),numbers.Number):
+            if isinstance(o.getParamValue(n),numbers.Number):
                     if not numpy.isclose(o.getParamValue(n),parametrized_objects[0].getParamValue(n)):
                         varying_params[n] = True
                         break

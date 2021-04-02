@@ -261,12 +261,12 @@ class PartitionByStimulusParamterQuery(Query):
 def partition_analysis_results_by_parameters_query(dsv,parameter_list=None,excpt=False):
         """
         This query will take all analysis results and return list of DataStoreViews
-        each holding analysis results that have the same values of
-        the parameters in parameter_list.
+        each holding analysis results that have the same values of the parameters 
+        except those in in parameter_list.
 
         Note that in most cases one wants to do this only against datastore holding
         only single analysis results type! In that case the datastore is partitioned into
-        subsets each holding recordings to the same stimulus with the same paramter
+        subsets each holding recordings to the same stimulus with the same paramters
         values, with the exception to the parameters in parameter_list.
         
         Parameters
