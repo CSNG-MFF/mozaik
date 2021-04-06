@@ -10,6 +10,7 @@ import mozaik
 from mozaik.core import ParametrizedObject
 from neo_neurotools_wrapper import MozaikSegment, PickledDataStoreNeoWrapper
 from mozaik.tools.mozaik_parametrized import  MozaikParametrized,filter_query
+from mozaik.tools.distribution_parametrization import PyNNDistribution
 import cPickle
 import collections
 import os.path
