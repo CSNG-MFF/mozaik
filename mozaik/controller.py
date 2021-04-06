@@ -106,19 +106,19 @@ def prepare_workflow(simulation_name, model_class):
     # First we load the parameters just to retrieve seeds. We will throw them away, because at this stage the PyNNDistribution values were not yet initialized correctly.
     parameters = load_parameters(parameters_url,modified_parameters)
     p={}
-    if parameters.has_key('mozaik_seed') : p['mozaik_seed'] = parameters['mozaik_seed']
-    if parameters.has_key('pynn_seed') : p['pynn_seed'] = parameters['pynn_seed']
+    if 'mozaik_seed' in parameters : p['mozaik_seed'] = parameters['mozaik_seed']
+    if 'pynn_seed' in parameters : p['pynn_seed'] = parameters['pynn_seed']
 
     # Now initialize mpi with the seeds
-    print "START MPI"
+    print("START MPI")
     mozaik.setup_mpi(**p)
 
     # Now really load parameters
-    print "Loading parameters";
+    print("Loading parameters")
     parameters = load_parameters(parameters_url,modified_parameters)
-    print "Finished loading parameters";
+    print("Finished loading parameters")
 
-    exec "import pyNN.nest as sim" in  globals(), locals()
+    import pyNN.nest as sim
 
     # Create results directory
     timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
@@ -141,8 +141,8 @@ def prepare_workflow(simulation_name, model_class):
         # Let's store the full and modified parameters, if we are the 0 rank process
         parameters.save(Global.root_directory + "parameters", expand_urls=True)
         import pickle
-        f = open(Global.root_directory+"modified_parameters","w")
-        pickle.dump(modified_parameters,f)
+        f = open(Global.root_directory+"modified_parameters","wb")
+        pickle.dump(str(modified_parameters),f)
         f.close()
 
     setup_logging()
@@ -187,7 +187,7 @@ def run_workflow(simulation_name, model_class, create_experiments):
     if mozaik.mpi_comm.rank == 0:
         data_store.save()
     import resource
-    print "Final memory usage: %iMB" % (resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/(1024))
+    print("Final memory usage: %iMB" % (resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/(1024)))
     return (data_store, model)
 
 def run_experiments(model,experiment_list,parameters,load_from=None):

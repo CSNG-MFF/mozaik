@@ -12,7 +12,6 @@ from parameters import ParameterSet, ParameterRange, ParameterTable, ParameterRe
 from pyNN.random import RandomDistribution, NumpyRNG
 import requests
 import urllib, copy, warnings, numpy, numpy.random  # to be replaced with srblib
-from urlparse import urlparse
 import mozaik
 
 def load_parameters(parameter_url,modified_parameters):

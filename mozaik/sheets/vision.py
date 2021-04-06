@@ -169,9 +169,12 @@ class VisualCorticalUniformSheet(SheetWithMagnificationFactor):
     def __init__(self, model, parameters):
         SheetWithMagnificationFactor.__init__(self, model, parameters)
         dx, dy = self.cs_2_vf(parameters.sx, parameters.sy)
+
+        from pyNN.random import NumpyRNG
+
         rs = space.RandomStructure(boundary=space.Cuboid(dx, dy, 0),
                                    origin=(0.0, 0.0, 0.0),
-                                   rng=mozaik.pynn_rng)
+                                   rng=NumpyRNG(seed=13))
 
         self.pop = self.sim.Population(int(parameters.sx*parameters.sy/1000000*parameters.density),
                                        getattr(self.model.sim, self.parameters.cell.model),
