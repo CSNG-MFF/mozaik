@@ -181,7 +181,7 @@ class VisualCorticalUniformSheet(SheetWithMagnificationFactor):
                                        structure=rs,
                                        initial_values=self.parameters.cell.initial_values,
                                        label=self.name)
-
+        logger.info(self.pop.positions)
 
 class VisualCorticalUniformSheet3D(VisualCorticalUniformSheet):
     """
