@@ -30,6 +30,7 @@ exclude = '''
 | build
 | doc
 | imagen
+| nest-simulator-2.20.1
 | \.git
 )
 '''
