@@ -9,6 +9,8 @@ from parameters import ParameterSet
 from mozaik.tools.misc import sample_from_bin_distribution, normal_function
 from mozaik import load_component
 from mozaik.tools.distribution_parametrization import PyNNDistribution
+from collections import OrderedDict
+
 
 
 
@@ -63,8 +65,8 @@ class ModularConnector(Connector):
       Connector.__init__(self, network, name, source,target,parameters)
       
       # lets load up the weight ModularConnectorFunction's
-      self.weight_functions = {}
-      self.delay_functions = {}
+      self.weight_functions = OrderedDict()
+      self.delay_functions = OrderedDict()
       self.simulator_time_step = self.sim.get_time_step()
       # lets determine the list of variables in weight expressions
       v = ExpVisitor()
@@ -86,7 +88,7 @@ class ModularConnector(Connector):
         """
         This function calculates the combined weights from the ModularConnectorFunction in weight_functions
         """
-        evaled = {}
+        evaled = OrderedDict()
        
         for k in self.weight_function_names:
             evaled[k] = self.weight_functions[k].evaluate(i)
@@ -96,7 +98,7 @@ class ModularConnector(Connector):
         """
         This function calculates the combined weights from the ModularConnectorFunction in weight_functions
         """
-        evaled = {}
+        evaled = OrderedDict()
         for k in self.delay_function_names:
             evaled[k] = self.delay_functions[k].evaluate(i)
         

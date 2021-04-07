@@ -13,6 +13,7 @@ from param.parameterized import Parameterized
 from param import Number, Integer, String, produce_value, ClassSelector
 from sets import Set
 from parameters import ParameterSet
+from collections import OrderedDict
 import logging
 import inspect
 import numbers
@@ -132,7 +133,7 @@ class MozaikParametrized(Parameterized):
     name = SString(doc="String identifier for this object that is set to it's class name DO NOT TOUCH!")
     
     # we will chache imported modules due to the idd statement here, as module imports seem to be extremely costly.
-    _module_cache = {}
+    _module_cache = OrderedDict()
     
     def __init__(self, **params):
         
@@ -650,7 +651,7 @@ def colapse_to_dictionary(value_list, parametrized_objects, parameter_name):
         else:
             d[str(s)] = ([val], [v])
 
-    dd = {}
+    dd =OrderedDict()
     for k in d:
         (a, b) = d[k]
         dd[k] = (a, b)

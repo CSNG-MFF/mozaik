@@ -1,5 +1,7 @@
 from mozaik.tools.distribution_parametrization import ParameterWithUnitsAndPeriod, MozaikExtendedParameterSet
 from mozaik.sheets.direct_stimulator import Depolarization
+from collections import OrderedDict
+
 
 
 def add_per_stimulus_current_injection(exp,stimulation_configuration,stimulation_sheet,stimulation_current):
@@ -11,7 +13,7 @@ def add_per_stimulus_current_injection(exp,stimulation_configuration,stimulation
     assert exp.direct_stimulation==None
     exp.direct_stimulation = []
     for s in exp.stimuli:
-            d  = {}
+            d  = OrderedDict()
             p = MozaikExtendedParameterSet({
                                 'population_selector' : stimulation_configuration,
                                 'current' : stimulation_current

@@ -4,6 +4,7 @@ Module containing the experiment API.
 import numpy
 import resource
 import mozaik
+from collections import OrderedDict
 from mozaik.stimuli import InternalStimulus
 from parameters import ParameterSet
 from mozaik.core import ParametrizedObject
@@ -87,7 +88,7 @@ class Experiment(ParametrizedObject):
             s = self.stimuli[i]
             logger.debug('Presenting stimulus: ' + str(s) + '\n')
             if self.direct_stimulation == None:
-               ds = {}
+               ds = OrderedDict()
             else:
                ds = self.direct_stimulation[i]
             (segments,null_segments,input_stimulus,simulator_run_time) = self.model.present_stimulus_and_record(s,ds)
@@ -153,7 +154,7 @@ class PoissonNetworkKick(Experiment):
             Experiment.__init__(self, model,parameters)
             from mozaik.sheets.direct_stimulator import Kick
 
-            d  = {}
+            d  = OrderedDict()
             for i,sheet in enumerate(self.parameters.sheet_list):
                 p = MozaikExtendedParameterSet({'exc_firing_rate' : self.parameters.lambda_list[i],
                                                       'exc_weight' : self.parameters.weight_list[i],
@@ -186,7 +187,7 @@ class InjTest(Experiment):
             Experiment.__init__(self, model,parameters)
             from mozaik.sheets.direct_stimulator import Depolarization
 
-            d  = {}
+            d  = OrderedDict()
             for i,sheet in enumerate(self.parameters.sheet_list):
                 p = MozaikExtendedParameterSet({
                                                 'current' : self.parameters.current,

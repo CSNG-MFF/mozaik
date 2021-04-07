@@ -9,6 +9,8 @@ from parameters import ParameterSet, ParameterRange, ParameterTable, ParameterRe
 from pyNN.random import RandomDistribution, NumpyRNG
 import urllib, copy, warnings, numpy, numpy.random  # to be replaced with srblib
 from urlparse import urlparse
+from collections import OrderedDict
+
 
 import mozaik
 
@@ -77,11 +79,11 @@ class MozaikExtendedParameterSet(ParameterSet):
         except NameError as e:
             raise NameError("%s\n%s" % (s,e))
             
-        return D or {}
+        return D or OrderedDict()
     
     def __init__(self, initialiser, label=None, update_namespace=None):
         if update_namespace == None:
-           update_namespace = {}
+           update_namespace = OrderedDict()
         update_namespace['PyNNDistribution'] = PyNNDistribution
 
         def walk(d, label):

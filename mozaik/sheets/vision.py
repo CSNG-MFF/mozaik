@@ -173,7 +173,7 @@ class VisualCorticalUniformSheet(SheetWithMagnificationFactor):
         from pyNN.random import NumpyRNG
         rs = space.RandomStructure(boundary=space.Cuboid(dx, dy, 0),
                                    origin=(0.0, 0.0, 0.0),
-                                   rng=NumpyRNG(seed=13))
+                                   rng=mozaik.pynn_rng)
 
         self.pop = self.sim.Population(int(parameters.sx*parameters.sy/1000000*parameters.density),
                                        getattr(self.model.sim, self.parameters.cell.model),
@@ -181,7 +181,6 @@ class VisualCorticalUniformSheet(SheetWithMagnificationFactor):
                                        structure=rs,
                                        initial_values=self.parameters.cell.initial_values,
                                        label=self.name)
-        logger.info(self.pop.positions)
 
 class VisualCorticalUniformSheet3D(VisualCorticalUniformSheet):
     """

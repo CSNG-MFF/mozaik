@@ -5,6 +5,7 @@ Module containing the implementation of sheets - one of the basic building block
 
 import numpy
 import mozaik
+from collections import OrderedDict
 from mozaik.core import BaseComponent
 from mozaik import load_component
 from mozaik.tools.distribution_parametrization import PyNNDistribution
@@ -97,11 +98,11 @@ class Sheet(BaseComponent):
         self._pop = None
         self.size_x = size_x
         self.size_y = size_y
-	self.msc=0
+        self.msc=0
         # We want to be able to define in cell.params the cell parameters as also PyNNDistributions so we can get variably parametrized populations
         # The problem is that the pyNN.Population can accept only scalar parameters. There fore we will remove from cell.params all parameters
         # that are PyNNDistributions, and will initialize them later just after the population is initialized (in property pop())
-        self.dist_params = {}
+        self.dist_params = OrderedDict()
         for k in self.parameters.cell.params.keys():
             if isinstance(self.parameters.cell.params[k],PyNNDistribution):
                self.dist_params[k]=self.parameters.cell.params[k]
@@ -112,7 +113,7 @@ class Sheet(BaseComponent):
         """
         Set up the recording configuration.
         """
-        self.to_record = {}
+        self.to_record = OrderedDict()
         for k in  self.parameters.recorders.keys():
             recording_configuration = load_component(self.parameters.recorders[k].component)
             l = recording_configuration(self,self.parameters.recorders[k].params).generate_idd_list_of_neurons()
@@ -147,7 +148,7 @@ class Sheet(BaseComponent):
             l = value.all_cells.astype(int)
 
 	    
-	    self._neuron_annotations = [{} for i in xrange(0, len(value))]
+	    self._neuron_annotations = [OrderedDict() for i in xrange(0, len(value))]
             self.setup_artificial_stimulation()
             self.setup_initial_values()
 
@@ -212,7 +213,7 @@ class Sheet(BaseComponent):
 
         anns = []
         for i in xrange(0, len(self.pop)):
-            d = {}
+            d = OrderedDict()
             for (k, v) in self._neuron_annotations[i].items():
                 d[k] = v[1]
             anns.append(d)

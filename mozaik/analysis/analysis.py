@@ -20,6 +20,8 @@ from mozaik.analysis.data_structures import AnalogSignalList
 from mozaik.analysis.data_structures import PerNeuronValue
 from mozaik.analysis.data_structures import PerNeuronPairValue
 from mozaik.analysis.data_structures import PerNeuronPairAnalogSignalList
+from collections import OrderedDict
+
                                         
 from mozaik.analysis.helper_functions import psth
 from mozaik.core import ParametrizedObject
@@ -441,7 +443,7 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
               # get a list of DSV each holding analog signals that have the same values of stimulus parameters in parameter_list
               dsvs = queries.partition_by_stimulus_paramter_query( dsv, parameter_list=['trial'] )
               # get spiketrains by trial
-              dsvs_spiketrains = {} 
+              dsvs_spiketrains = OrderedDict()
               #neurons_ids = []
               # dsvs_spiketrains will have keys labeled after trial number, containing each the spiketrains from each recorded neuron (source_id)
               for dsv in dsvs :
@@ -451,7 +453,7 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
               # RAW CROSS-CORRELATION
               # raw_xcorr will have keys labeled after trial number, containing all combinations with no repetition (and considering that cross-correlation is simmetric)
               # each raw_xcorr analogsignal will have an annotation 'xcorr_ids' with the list of target and source of the xcorr
-              raw_xcorr = {}
+              raw_xcorr = OrderedDict()
               for trial in dsvs_spiketrains.keys() :
                   xcorr = [] # local storage
                   for ref in dsvs_spiketrains[trial] :
@@ -473,7 +475,7 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
                   raw_xcorr[trial] = xcorr
               # SHIFT PREDICTOR CROSS-CORRELATION
               # for each raw_xcorr analogsignal take the reference and change the target to the same source_id but different trial
-              shift_xcorr = {}
+              shift_xcorr = OrderedDict()
               # the two dictionaries in the end must be identical by indexes in order to do a one-by-one subtraction
               for trial in raw_xcorr.keys() :
                   xcorr = [] # local storage

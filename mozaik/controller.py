@@ -5,6 +5,7 @@ from mozaik.cli import parse_workflow_args
 from mozaik.storage.datastore import Hdf5DataStore, PickledDataStore
 from mozaik.tools.distribution_parametrization import MozaikExtendedParameterSet, load_parameters
 from mozaik.tools.misc import result_directory_name
+from collections import OrderedDict
 import sys
 import os
 import mozaik
@@ -106,7 +107,7 @@ def prepare_workflow(simulation_name, model_class):
 
     # First we load the parameters just to retrieve seeds. We will throw them away, because at this stage the PyNNDistribution values were not yet initialized correctly.
     parameters = load_parameters(parameters_url,modified_parameters)
-    p={}
+    p=OrderedDict()
     if parameters.has_key('mozaik_seed') : p['mozaik_seed'] = parameters['mozaik_seed']
     if parameters.has_key('pynn_seed') : p['pynn_seed'] = parameters['pynn_seed']
 

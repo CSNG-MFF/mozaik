@@ -10,6 +10,7 @@ from parameters.random import UniformDist
 import mozaik
 from mozaik.tools.distribution_parametrization import PyNNDistribution
 from string import Template
+from collections import OrderedDict
 
 
 logger = mozaik.getMozaikLogger()
@@ -56,7 +57,7 @@ class ParametrizedObject(object):
                     assert isinstance(P[k], v) or (v == ParameterSet and P[k] == None) or (v == float and isinstance(P[k],int)) or (v == int and isinstance(P[k],float)), "Type mismatch for parameter %s: %s != %s " % (k, v, P[k])
         try:
             # we first need to collect the required parameters from all the classes along the parent path
-            new_param_dict = {}
+            new_param_dict = OrderedDict()
             for cls in self.__class__.__mro__:
             # some parents might not define required_parameters
             # if they do not require one or they are the object class
