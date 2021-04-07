@@ -238,8 +238,8 @@ def run_experiments(model,experiment_list,parameters,load_from=None):
     data_store.set_neuron_ids(model.neuron_ids())
     data_store.set_neuron_positions(model.neuron_positions())
     data_store.set_neuron_annotations(model.neuron_annotations())
-    data_store.set_model_parameters(str(parameters))
-    data_store.set_sheet_parameters(str(model.sheet_parameters()))
+    data_store.set_model_parameters(parameters.pretty(expand_urls=True))
+    data_store.set_sheet_parameters(MozaikExtendedParameterSet(model.sheet_parameters()).pretty(expand_urls=True))
     data_store.set_experiment_parametrization_list([(str(exp.__class__),str(exp.parameters)) for exp in experiment_list])
     
     t0 = time.time()
