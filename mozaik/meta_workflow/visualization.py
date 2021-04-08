@@ -4,6 +4,7 @@ import math
 from scipy.interpolate import griddata
 import matplotlib.cm as cm
 from analysis import load_fixed_parameter_set_parameter_search
+from collections import OrderedDict
 import pickle
 from builtins import zip
         
@@ -71,7 +72,7 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
     
     pylab.figure(figsize=(12*cols, 6*rows), dpi=300, facecolor='w', edgecolor='k')
                 
-    res = {}
+    res = OrderedDict()
     for i,value_name in enumerate(value_names): 
         pylab.subplot(rows,cols,i+1)
         if len(parameters) == 1:
@@ -177,7 +178,7 @@ def fixed_point_visualization(simulation_name,rate_name,master_results_dir,query
 
     parameter_indexes = [0,1,2]
     #parameter_indexes = parameter_indexes[]
-    values = {}
+    values = OrderedDict()
 
     #for (param_values,datastore) in datastores: 
         
@@ -235,7 +236,7 @@ def multi_curve_visualzition(simulation_name,master_results_dir,x_axis_parameter
     mmax = numpy.max(a,axis=0)
     mmin = numpy.min(a,axis=0)
     
-    d = {}
+    d = OrderedDict()
     for (param_values,datastore) in datastores: 
         key = param_values[:]
         key.pop(x_axis_parameter_index)

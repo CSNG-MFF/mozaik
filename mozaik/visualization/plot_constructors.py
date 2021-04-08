@@ -8,6 +8,7 @@ from param.parameterized import Parameterized
 from mozaik.storage.queries import partition_by_stimulus_paramter_query, partition_analysis_results_by_stimulus_parameters_query,param_filter_query
 import matplotlib.gridspec as gridspec
 from mozaik.tools.mozaik_parametrized import MozaikParametrized, varying_parameters, parameter_value_list
+from collections import OrderedDict
 import mozaik
 import numpy
 
@@ -70,9 +71,8 @@ class LinePlot(Parameterized):
                 gs = gridspec.GridSpecFromSubplotSpec(1, l, subplot_spec=subplotspec)
             else:
                 gs = gridspec.GridSpecFromSubplotSpec(l, 1, subplot_spec=subplotspec)
-            
-            d = {}
-            params = {}
+            d = OrderedDict()
+            params = OrderedDict()
             for idx in range(0, l):
                 if idx > 0 and self.shared_axis and self.horizontal:
                     params["y_label"]=None
@@ -308,10 +308,17 @@ class ADSGridPlot(Parameterized):
        
         gs = gridspec.GridSpecFromSubplotSpec(len(self.y_axis_values),len(self.x_axis_values),subplot_spec=subplotspec)
         
+<<<<<<< HEAD
         params = {}
         d = {}
         for i in range(0,len(self.x_axis_values)):
             for j in range(0,len(self.y_axis_values)):
+=======
+        params = OrderedDict()
+        d = OrderedDict()
+        for i in xrange(0,len(self.x_axis_values)):
+            for j in xrange(0,len(self.y_axis_values)):
+>>>>>>> 2665695a92c663072f3fab8b5544e9fc23b7fe90
                 if i > 0 and self.shared_axis:
                     params["y_label"]=None
                     if self.shared_lim:

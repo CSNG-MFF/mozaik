@@ -13,12 +13,10 @@ from mozaik.core import SensoryInputComponent
 from mozaik.sheets.vision import RetinalUniformSheet
 from mozaik.tools.mozaik_parametrized import MozaikParametrized
 from parameters import ParameterSet
-
 from builtins import zip
+from collections import OrderedDict
 
 logger = mozaik.getMozaikLogger()
-
-
 
 
 def meshgrid3D(x, y, z):
@@ -383,15 +381,15 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
     def __init__(self, model, parameters):
         SensoryInputComponent.__init__(self, model, parameters)
         self.shape = (self.parameters.density,self.parameters.density)
-        self.sheets = {}
+        self.sheets = OrderedDict()
         self._built = False
         self.rf_types = ('X_ON', 'X_OFF')
         sim = self.model.sim
-        self.pops = {}
-        self.scs = {}
-        self.ncs = {}
-        self.ncs_rng = {}
-        self.internal_stimulus_cache = {}
+        self.pops = OrderedDict()
+        self.scs = OrderedDict()
+        self.ncs = OrderedDict()
+        self.ncs_rng = OrderedDict()
+        self.internal_stimulus_cache = OrderedDict()
         for rf_type in self.rf_types:
             p = RetinalUniformSheet(model,
                                     ParameterSet({'sx': self.parameters.size[0],
@@ -399,7 +397,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                                                   'density': self.parameters.density,
                                                   'cell': self.parameters.cell,
                                                   'name': rf_type,
-                                                  'artificial_stimulators' : {},
+                                                  'artificial_stimulators' : OrderedDict(),
                                                   'recorders' : self.parameters.recorders,
                                                   'recording_interval'  :  self.parameters.recording_interval,
                                                   'mpi_safe': False}))
@@ -463,7 +461,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
             return None
 
         if not os.path.isfile(self.parameters.cache_path + '/' + 'stimuli.st'):
-            self.cached_stimuli = {}
+            self.cached_stimuli = OrderedDict()
             return None
         else:
             f1 = open(self.parameters.cache_path + '/' + 'stimuli.st', 'r')
@@ -624,7 +622,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         zers = times*0
         ts = self.model.sim.get_time_step()
         
-        input_cells = {}
+        input_cells = OrderedDict()
         for rf_type in self.rf_types:
             input_cells[rf_type] = CellWithReceptiveField(self.sheets[rf_type].pop.positions[0][0],
                                               self.sheets[rf_type].pop.positions[1][0],
@@ -662,7 +660,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         # create population of CellWithReceptiveFields, setting the receptive
         # field centres based on the size/location of self
         logger.debug("Creating population of `CellWithReceptiveField`s")
-        input_cells = {}
+        input_cells = OrderedDict()
         #effective_visual_field_width, effective_visual_field_height = self.parameters.size
         #x_values = numpy.linspace(-effective_visual_field_width/2.0, effective_visual_field_width/2.0, self.shape[0])
         #y_values = numpy.linspace(-effective_visual_field_height/2.0, effective_visual_field_height/2.0, self.shape[1])
@@ -717,7 +715,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                 im = None
             retinal_input.append(im)
 
-        input_currents = {}
+        input_currents = OrderedDict()
         for rf_type in self.rf_types:
             input_currents[rf_type] = [cell.response_current()
                                        for cell in input_cells[rf_type]]

@@ -35,7 +35,6 @@ simulation_run_name, _, _, _, modified_parameters = parse_workflow_args()
 if True:
     data_store,model = run_workflow(simulation_name,VogelsAbbott,create_experiments)
     model.connectors['ExcExcConnection'].store_connections(data_store)    
-
 else: 
     setup_logging()
     data_store = PickledDataStore(

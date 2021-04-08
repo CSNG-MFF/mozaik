@@ -8,6 +8,8 @@ import mozaik
 from PIL import Image
 from parameters import ParameterSet
 from mozaik.core import ParametrizedObject
+from collections import OrderedDict
+
 
 from mozaik import __version__
 
@@ -45,7 +47,7 @@ class InputSpace(ParametrizedObject):
 
     def __init__(self, params):
         ParametrizedObject.__init__(self, params)
-        self.content = {}
+        self.content = OrderedDict()
         self.input = None
 
     def add_object(self, name, input_object):  
@@ -66,7 +68,7 @@ class InputSpace(ParametrizedObject):
         """
         Reset the input space and clear stimuli in it.
         """
-        self.content = {}
+        self.content = OrderedDict()
         self.input = None
         self.reset()
 
@@ -145,7 +147,7 @@ class VisualSpace(InputSpace):
         InputSpace.__init__(self, params)  # InputSpace requires only the update interval
         self.background_luminance = self.parameters.background_luminance
         self.update_interval = self.parameters.update_interval
-        self.content = {}
+        self.content = OrderedDict()
         self.frame_number = 0
         self.input = None
 

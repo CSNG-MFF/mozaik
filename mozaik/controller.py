@@ -5,6 +5,7 @@ from mozaik.cli import parse_workflow_args
 from mozaik.storage.datastore import Hdf5DataStore, PickledDataStore
 from mozaik.tools.distribution_parametrization import MozaikExtendedParameterSet, load_parameters
 from mozaik.tools.misc import result_directory_name
+from collections import OrderedDict
 import sys
 import os
 import mozaik
@@ -105,7 +106,7 @@ def prepare_workflow(simulation_name, model_class):
 
     # First we load the parameters just to retrieve seeds. We will throw them away, because at this stage the PyNNDistribution values were not yet initialized correctly.
     parameters = load_parameters(parameters_url,modified_parameters)
-    p={}
+    p=OrderedDict()
     if 'mozaik_seed' in parameters : p['mozaik_seed'] = parameters['mozaik_seed']
     if 'pynn_seed' in parameters : p['pynn_seed'] = parameters['pynn_seed']
 
@@ -229,8 +230,8 @@ def run_experiments(model,experiment_list,parameters,load_from=None):
     data_store.set_neuron_ids(model.neuron_ids())
     data_store.set_neuron_positions(model.neuron_positions())
     data_store.set_neuron_annotations(model.neuron_annotations())
-    data_store.set_model_parameters(str(parameters))
-    data_store.set_sheet_parameters(str(model.sheet_parameters()))
+    data_store.set_model_parameters(parameters.pretty(expand_urls=True))
+    data_store.set_sheet_parameters(MozaikExtendedParameterSet(model.sheet_parameters()).pretty(expand_urls=True))
     data_store.set_experiment_parametrization_list([(str(exp.__class__),str(exp.parameters)) for exp in experiment_list])
     
     t0 = time.time()

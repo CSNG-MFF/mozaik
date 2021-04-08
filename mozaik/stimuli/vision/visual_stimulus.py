@@ -9,6 +9,8 @@ from mozaik.space import TRANSPARENT, xy2ij, VisualRegion
 from mozaik.tools.mozaik_parametrized import SNumber
 from mozaik.tools.units import lux
 from scipy.ndimage import interpolation
+from collections import OrderedDict
+
 
 logger = mozaik.getMozaikLogger()
 
@@ -35,8 +37,8 @@ class VisualStimulus(BaseStimulus):
 
     def __init__(self, **params):
         BaseStimulus.__init__(self, **params)
-        self._zoom_cache = {}
-        self.region_cache = {}
+        self._zoom_cache = OrderedDict()
+        self.region_cache = OrderedDict()
         self.is_visible = True
         self.transparent = True # And efficiency flag. It should be set to false by the stimulus if there are no transparent points in it. 
                                 # This will avoid all the code related to transparency which is very expensive.
@@ -167,7 +169,7 @@ class VisualStimulus(BaseStimulus):
         else:
             assert self.img.min() >= 0 or self.img.min() == TRANSPARENT, "frame minimum is less than zero: %g" % self.img.min()
             assert self.img.max() <= 2*self.background_luminance, "frame maximum (%g) is greater than the maximum luminance (%g)" % (self.img.max(), 2*self.background_luminance)
-        self._zoom_cache = {}
+        self._zoom_cache = OrderedDict()
 
     def reset(self):
         """

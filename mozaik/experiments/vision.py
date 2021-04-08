@@ -6,6 +6,8 @@ import numpy
 from mozaik.stimuli import InternalStimulus
 from mozaik.tools.distribution_parametrization import ParameterWithUnitsAndPeriod, MozaikExtendedParameterSet
 from mozaik.sheets.direct_stimulator import Depolarization
+from collections import OrderedDict
+
 
 
 logger = mozaik.getMozaikLogger()
@@ -234,7 +236,7 @@ class MeasureSparseWithCurrentInjection(VisualExperiment):
         self.direct_stimulation = []
 
         for k in xrange(0, self.parameters.num_trials):
-            d  = {}
+            d  = OrderedDict()
             p = MozaikExtendedParameterSet({
                                 'population_selector' : self.parameters.stimulation_configuration,
                                 'current' : self.parameters.stimulation_current
@@ -1297,7 +1299,7 @@ class CorticalStimulationWithStimulatorArrayAndHomogeneousOrientedStimulus(Exper
             Experiment.__init__(self, model,parameters)
             from mozaik.sheets.direct_stimulator import LocalStimulatorArrayChR
             
-            d  = {}
+            d  = OrderedDict()
             for sheet in self.parameters.sheet_list:
                 d[sheet] = [LocalStimulatorArrayChR(model.sheets[sheet],self.parameters.localstimulationarray_parameters)]
             
@@ -1361,7 +1363,7 @@ class CorticalStimulationWithStimulatorArrayAndOrientationTuningProtocol(Experim
                     p = MozaikExtendedParameterSet(self.parameters.localstimulationarray_parameters.tree_copy().as_dict())
                     p.stimulating_signal_parameters.orientation = ParameterWithUnitsAndPeriod(numpy.pi/self.parameters.num_orientations * i,period=numpy.pi)
                     p.stimulating_signal_parameters.scale =       ParameterWithUnitsAndPeriod(float(s),period=None)
-                    d  = {}
+                    d  = OrderedDict()
                     if first:
                         for sheet in self.parameters.sheet_list:
                             d[sheet] = [LocalStimulatorArrayChR(model.sheets[sheet],p)]
@@ -1429,7 +1431,7 @@ class CorticalStimulationWithStimulatorArrayAndOrientationTuningProtocol_Contras
                     p = MozaikExtendedParameterSet(self.parameters.localstimulationarray_parameters.tree_copy().as_dict())
                     p.stimulating_signal_parameters.orientation = ParameterWithUnitsAndPeriod(numpy.pi/self.parameters.num_orientations * i,period=numpy.pi)
                     p.stimulating_signal_parameters.contrast =       ParameterWithUnitsAndPeriod(float(c),period=None)
-                    d  = {}
+                    d  = OrderedDict()
                     if first:
                         for sheet in self.parameters.sheet_list:
                             d[sheet] = [LocalStimulatorArrayChR(model.sheets[sheet],p)]

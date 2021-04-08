@@ -14,6 +14,7 @@ from mozaik.storage import queries
 from mozaik.tools.circ_stat import circ_mean, circular_dist
 from mozaik.tools.neo_object_operations import neo_mean, neo_sum
 from builtins import zip
+from collections import OrderedDict
 
 logger = mozaik.getMozaikLogger()
 
@@ -59,7 +60,7 @@ class ModulationRatio(Analysis):
             or_pref = pnvs[0]
             # find closest orientation of grating to a given orientation preference of a neuron
             # first find all the different presented stimuli:
-            ps = {}
+            ps = OrderedDict()
             for s in st:
                 ps[MozaikParametrized.idd(s).orientation] = True
             ps = list(ps.keys())
@@ -390,7 +391,7 @@ class OCTCTuningAnalysis(Analysis):
                             
                             ors = self.tc_dict[k][0]
                             values = numpy.array([a[i] for a in self.tc_dict[k][1]])
-                            d={}
+                            d=OrderedDict()
                             for o,v in zip(ors,values):
                                 d[o] = v
                             sis.append(d[0] / d[numpy.pi/2])

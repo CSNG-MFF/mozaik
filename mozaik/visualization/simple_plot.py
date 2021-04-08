@@ -10,6 +10,8 @@ import mozaik.tools.units
 import quantities as pq
 from matplotlib.colors import *
 from cycler import cycler
+from collections import OrderedDict
+
 
 from builtins import zip
 
@@ -72,7 +74,7 @@ class SimplePlot(object):
         raise NotImplementedError
 
     def __init__(self,subplot_kw=None):
-        self.parameters = {}  # the common modifiable parameter dictionary
+        self.parameters = OrderedDict()  # the common modifiable parameter dictionary
         self.subplot_kw = subplot_kw
 
 
@@ -126,7 +128,7 @@ class SimplePlot(object):
                 raise AttributeError("Error, unknown parameter supplied %s, known parameters: %s" % (key,
                                                                                                      self.__dict__['parameters'].keys()))
         self.__dict__['parameters'].update(params)
-        self.modified = {}
+        self.modified = OrderedDict()
         for k in self.__dict__['parameters']:
             self.modified[k] = False
         for k in params:
@@ -873,9 +875,9 @@ class StandardStyleLinePlot(StandardStyle):
                     m = self.y[i]
                 else:
                     m = m + self.y[i]
-
-            p = {}
-
+            
+            p = OrderedDict()
+            
             if self.labels != None:
                 p['label'] =self.labels[i]
 

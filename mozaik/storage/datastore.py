@@ -11,6 +11,7 @@ from mozaik.core import ParametrizedObject
 from .neo_neurotools_wrapper import MozaikSegment, PickledDataStoreNeoWrapper
 from mozaik.tools.mozaik_parametrized import  MozaikParametrized,filter_query
 import pickle
+from collections import OrderedDict
 import collections
 import os.path
 
@@ -240,7 +241,7 @@ class DataStoreView(ParametrizedObject):
         """
         logger.info("DSV info:")
         logger.info("   Number of recordings: " + str(len(self.block.segments)))
-        d = {}
+        d = OrderedDict()
         for st in [s.annotations['stimulus'] for s in self.block.segments]:
             d[MozaikParametrized.idd(st).name] = d.get(MozaikParametrized.idd(st).name, 0) + 1
 
@@ -248,7 +249,7 @@ class DataStoreView(ParametrizedObject):
             logger.info("     " + str(k) + " : " + str(d[k]))
 
         logger.info("   Number of ADS: " + str(len(self.analysis_results)))
-        d = {}
+        d = OrderedDict()
         for ads in self.analysis_results:
             d[ads.identifier] = d.get(ads.identifier, 0) + 1
 
@@ -530,7 +531,7 @@ class PickledDataStore(Hdf5DataStore):
             f = open(self.parameters.root_directory + '/datastore.sensory.stimulus.pickle', 'rb')
             self.sensory_stimulus = pickle.load(f)
         else:
-            self.sensory_stimulus = {}
+            self.sensory_stimulus = OrderedDict()
 
     def save(self):
         f = open(self.parameters.root_directory + '/datastore.recordings.pickle', 'wb')
