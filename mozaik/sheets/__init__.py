@@ -146,7 +146,7 @@ class Sheet(BaseComponent):
                 raise Exception("Error population has already been set. It is not allowed to do this twice!")
             self._pop = value
             l = value.all_cells.astype(int)
-            self._neuron_annotations = [OrderedDict() for i in xrange(0, len(value))]
+            self._neuron_annotations = [OrderedDict() for i in range(0, len(value))]
             self.setup_artificial_stimulation()
             self.setup_initial_values()
 

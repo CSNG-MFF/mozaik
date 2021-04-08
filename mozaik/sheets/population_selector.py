@@ -72,9 +72,6 @@ class RCRandomN(PopulationSelector):
         
       def generate_idd_list_of_neurons(self):
           z = self.sheet.pop.all_cells.astype(int)
-          logger.info("R1: " + str(z[:10]))
-          mozaik.rng.shuffle(z)
-          logger.info("R1: " + str(z[:10]))
           return z[:self.parameters.num_of_cells]
 
 class RCRandomPercentage(PopulationSelector):

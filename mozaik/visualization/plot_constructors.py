@@ -308,17 +308,10 @@ class ADSGridPlot(Parameterized):
        
         gs = gridspec.GridSpecFromSubplotSpec(len(self.y_axis_values),len(self.x_axis_values),subplot_spec=subplotspec)
         
-<<<<<<< HEAD
-        params = {}
-        d = {}
-        for i in range(0,len(self.x_axis_values)):
-            for j in range(0,len(self.y_axis_values)):
-=======
         params = OrderedDict()
         d = OrderedDict()
-        for i in xrange(0,len(self.x_axis_values)):
-            for j in xrange(0,len(self.y_axis_values)):
->>>>>>> 2665695a92c663072f3fab8b5544e9fc23b7fe90
+        for i in range(0,len(self.x_axis_values)):
+            for j in range(0,len(self.y_axis_values)):
                 if i > 0 and self.shared_axis:
                     params["y_label"]=None
                     if self.shared_lim:
