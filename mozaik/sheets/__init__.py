@@ -211,13 +211,8 @@ class Sheet(BaseComponent):
             logger.error('Population has not been yet set in sheet: ' +  self.name + '!')
 
         anns = []
-<<<<<<< HEAD
         for i in range(0, len(self.pop)):
-            d = {}
-=======
-        for i in xrange(0, len(self.pop)):
             d = OrderedDict()
->>>>>>> 2665695a92c663072f3fab8b5544e9fc23b7fe90
             for (k, v) in self._neuron_annotations[i].items():
                 d[k] = v[1]
             anns.append(d)
