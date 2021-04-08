@@ -241,3 +241,4 @@ There are additional useful options for pytests that you can use during developm
 
 :copyright: Copyright 2011-2013 by the *mozaik* team, see AUTHORS.
 :license: `CECILL <http://www.cecill.info/>`_, see LICENSE for details.
+
