@@ -121,8 +121,8 @@ class GaborConnector(BaseComponent):
 
         phase_map = None
         if self.parameters.phase_map:
-            f = open(self.parameters.phase_map_location, 'r')
-            phase_map = pickle.load(f)
+            f = open(self.parameters.phase_map_location, 'rb')
+            phase_map = pickle.load(f, encoding="latin1")
             coords_x = numpy.linspace(-t_size[0]/2.0,
                                       t_size[0]/2.0,
                                       numpy.shape(phase_map)[0])
