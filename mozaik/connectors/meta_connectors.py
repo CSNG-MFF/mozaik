@@ -102,8 +102,8 @@ class GaborConnector(BaseComponent):
         or_map = None
         if self.parameters.or_map:
 
-            f = open(self.parameters.or_map_location, 'r')
-            or_map = pickle.load(f)*numpy.pi
+            f = open(self.parameters.or_map_location, 'rb')
+            or_map = pickle.load(f, encoding="latin1")*numpy.pi
             #or_map = pickle.load(f)*numpy.pi*2
             #or_map = numpy.cos(or_map) + 1j*numpy.sin(or_map)
             
@@ -115,11 +115,8 @@ class GaborConnector(BaseComponent):
                                       numpy.shape(or_map)[1])
                                       
             X, Y = numpy.meshgrid(coords_x, coords_y)
-            
-            or_map = NearestNDInterpolator(zip(X.flatten(), Y.flatten()),
+            or_map = NearestNDInterpolator(list(zip(X.flatten(), Y.flatten())),
                                            or_map.flatten())
-            #or_map = CloughTocher2DInterpolator(zip(X.flatten(), Y.flatten()),
-            #                               or_map.flatten())
 
 
         phase_map = None
@@ -140,10 +137,6 @@ class GaborConnector(BaseComponent):
             if or_map:
                 orientation = or_map(target.pop.positions[0][j],
                                      target.pop.positions[1][j])
-                                     
-                #orientation = (numpy.angle(or_map(target.pop.positions[0][j],
-                #                     target.pop.positions[1][j]))+numpy.pi)/2.0
-                                     
             else:
                 orientation = parameters.orientation_preference.next()
 
@@ -173,8 +166,6 @@ class GaborConnector(BaseComponent):
             else:
                 target.add_neuron_annotation(j, 'LGNAfferentX', parameters.rf_jitter.next(), protected=True)
                 target.add_neuron_annotation(j, 'LGNAfferentY', parameters.rf_jitter.next(), protected=True)
-        
-        
 
         ps = ParameterSet({   'target_synapses' : 'excitatory',               
                               'weight_functions' : {  'f1' : {

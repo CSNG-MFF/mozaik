@@ -335,7 +335,7 @@ class NaturalImageWithEyeMovement(TopographicaBasedVisualStimulus):
     def frames(self):
         self.time = 0
         f = open(self.eye_path_location, 'r')
-        self.eye_path = pickle.load(f)
+        self.eye_path = pickle.load(f, encoding="latin1")
         self.pattern_sampler = imagen.image.PatternSampler(
                                     size_normalization='fit_longest',
                                     whole_pattern_output_fns=[MaximumDynamicRange()])
@@ -380,7 +380,7 @@ class DriftingGratingWithEyeMovement(TopographicaBasedVisualStimulus):
     def frames(self):
         
         f = open(self.eye_path_location, 'r')
-        self.eye_path = pickle.load(f)
+        self.eye_path = pickle.load(f, encoding="latin1")
         self.time = 0
         self.current_phase = 0
         while True:

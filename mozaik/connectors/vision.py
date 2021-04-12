@@ -31,7 +31,7 @@ class MapDependentModularConnectorFunction(ModularConnectorFunction):
         ModularConnectorFunction.__init__(self, source,target, parameters)
         t_size = target.size_in_degrees()
         f = open(self.parameters.map_location, 'r')
-        mmap = pickle.load(f)
+        mmap = pickle.load(f, encoding="latin1")
         coords_x = numpy.linspace(-t_size[0]/2.0,
                                   t_size[0]/2.0,
                                   numpy.shape(mmap)[0])
@@ -376,7 +376,7 @@ class CoCircularModularConnectorFunction(ModularConnectorFunction):
         ModularConnectorFunction.__init__(self, source,target, parameters)
         t_size = target.size_in_degrees()
         f = open(self.parameters.or_map_location, 'r')
-        mmap = pickle.load(f)
+        mmap = pickle.load(f, encoding="latin1")
         coords_x = numpy.linspace(-t_size[0]/2.0,
                                   t_size[0]/2.0,
                                   numpy.shape(mmap)[0])
