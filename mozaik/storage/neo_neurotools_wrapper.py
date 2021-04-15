@@ -98,8 +98,10 @@ class MozaikSegment(Segment):
 
             for a in self.analogsignals:
                 if a.name == 'v':
-			
-                    return a[:, a.annotations['source_ids'].tolist().index(neuron_id)]
+                    if isinstance(neuron_id, list) or isinstance(neuron_id, numpy.ndarray):
+                        return [a[:,a.annotations['source_ids'].tolist().index(i)] for i in neuron_id]
+                    else:
+                        return a[:, a.annotations['source_ids'].tolist().index(neuron_id)]
 
         def get_esyn(self,neuron_id):
             """
@@ -119,7 +121,10 @@ class MozaikSegment(Segment):
                 self.load_full()
             for a in self.analogsignals:
                 if a.name == 'gsyn_exc':
-                    return a[:, a.annotations['source_ids'].tolist().index(neuron_id)]
+                    if isinstance(neuron_id, list) or isinstance(neuron_id, numpy.ndarray):
+                        return [a[:,a.annotations['source_ids'].tolist().index(i)] for i in neuron_id]
+                    else:
+                        return a[:, a.annotations['source_ids'].tolist().index(neuron_id)]
 
         def get_isyn(self,neuron_id):
             """
@@ -140,7 +145,10 @@ class MozaikSegment(Segment):
                 self.load_full()
             for a in self.analogsignals:
                 if a.name == 'gsyn_inh':
-                    return a[:, a.annotations['source_ids'].tolist().index(neuron_id)]
+                    if isinstance(neuron_id, list) or isinstance(neuron_id, numpy.ndarray):
+                        return [a[:,a.annotations['source_ids'].tolist().index(i)] for i in neuron_id]
+                    else:
+                        return a[:, a.annotations['source_ids'].tolist().index(neuron_id)]
 
         def load_full(self):
             pass
