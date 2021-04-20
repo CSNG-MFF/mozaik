@@ -147,7 +147,7 @@ class ModulationRatio(Analysis):
         period = 1/frequency
         period = period.rescale(signal.t_start.units)
         cycles = duration / period
-        first_har = int(round(cycles.magnitude[0]))
+        first_har = int(round(float(cycles.magnitude)))
 
         fft = numpy.fft.fft(signal)
 
