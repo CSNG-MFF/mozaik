@@ -809,26 +809,18 @@ class GaussianTuningCurveFit(Analysis):
           p0[0] = numpy.min(Y)
           p0[1] = numpy.max(Y)-p0[0]
           
-          logger.info(str(X))
-          logger.info(str(Y))
-          logger.info(str(numpy.shape(X)))
-          logger.info(str(numpy.shape(Y)))
-
           if period != None:
             p0[3] = circ_mean(numpy.array([X]),weights=numpy.array([Y]),axis=1,low=0,high=period,normalize=True)[0][0]
           else:
             p0[3] = numpy.average(numpy.array(X),weights=numpy.array(Y))[0]
 
-          logger.info(str(numpy.array(p0[:])))
-          logger.info(type(numpy.array(p0)))
-          logger.info(str(numpy.array(X)))
-          logger.info(type(numpy.array(X)))
-          logger.info(str(numpy.array(X)))
-          logger.info(type(numpy.array(X)))
-
-
           p1, success = scipy.optimize.leastsq(errfunc, numpy.array(p0[:]), args=(numpy.array(X),numpy.array(Y)))
           p1[2]  = abs(p1[2])
+
+          if numpy.linalg.norm(Y-numpy.mean(Y),2) != 0:
+                err = numpy.linalg.norm(fitfunc(p1,X)-Y,2)/numpy.linalg.norm(Y-numpy.mean(Y),2)          
+          else:
+                err = 0
 
           #if the fit is very bad - error greater than 30% of the Y magnitude
           #if err > 0.2:

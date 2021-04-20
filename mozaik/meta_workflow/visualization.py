@@ -57,8 +57,7 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
        value_names = set([])
        for d in datastores:
          value_names.update(set([ads.value_name for ads in param_filter_query(d[1],identifier='SingleValue').get_analysis_result()]))
-        
-	  value_names = set(sorted(value_names))
+       value_names = set(sorted(value_names))
     
     # Lets first make sure that the value_names uniqly identify a SingleValue ADS in each DataStore and 
     # that they exist in each DataStore.

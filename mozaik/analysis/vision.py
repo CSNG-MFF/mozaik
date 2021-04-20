@@ -147,14 +147,9 @@ class ModulationRatio(Analysis):
         period = 1/frequency
         period = period.rescale(signal.t_start.units)
         cycles = duration / period
-        first_har = int(round(cycles.magnitude))
+        first_har = int(round(cycles.magnitude[0]))
 
         fft = numpy.fft.fft(signal)
-        logger.info("MR: " + str(cycles))
-        logger.info("MR: " + str(first_har))
-        logger.info("MR: " + str(type(first_har)))
-        logger.info("MR: " + str(duration) + " " +  str(period))
-        logger.info("MR: " + str(fft[0]) + " " + str(fft[first_har]))
 
         if abs(fft[0]) != 0:
             return 2*abs(fft[first_har])/abs(fft[0]),abs(fft[0]),2*abs(fft[first_har]),
@@ -221,6 +216,8 @@ class Analog_F0andF1(Analysis):
 
                     signals = asl.asl
                     first_analog_signal = signals[0]
+                    logger.info(str(first_analog_signal.t_start))
+                    logger.info(str(first_analog_signal.t_stop))
                     duration = first_analog_signal.t_stop - first_analog_signal.t_start
                     frequency = MozaikParametrized.idd(asl.stimulus_id).temporal_frequency * MozaikParametrized.idd(asl.stimulus_id).getParams()['temporal_frequency'].units
                     period = 1/frequency

@@ -348,7 +348,7 @@ def parameter_search_run_script_distributed_slurm_UK(simulation_name,master_resu
     from subprocess import Popen, PIPE, STDOUT
     for i,combination in enumerate(combinations):
         rdn = master_results_dir+'/'+result_directory_name('ParameterSearch',simulation_name,combination)    
-        p = Popen(['sbatch'] +  ['-o',master_directory_nameresults_dir+"/slurm_analysis-%j.out" ],stdin=PIPE,stdout=PIPE,stderr=PIPE,text=True)
+        p = Popen(['sbatch'] +  ['-o',master_results_dir+"/slurm_analysis-%j.out" ],stdin=PIPE,stdout=PIPE,stderr=PIPE,text=True)
          
         # THIS IS A BIT OF A HACK, have to add customization for other people ...            
         data = '\n'.join([
@@ -356,7 +356,7 @@ def parameter_search_run_script_distributed_slurm_UK(simulation_name,master_resu
                             '#SBATCH -J MozaikParamSearchAnalysis',
                             '#SBATCH -c ' + str(core_number),
                             '#SBATCH --hint=nomultithread',
-                            'source /home/antolikjan/virt_env/mozaik/bin/activate',
+                            'source /home/antolikjan/virt_env/mozaik-python3/bin/activate',
                             'cd ' + os.getcwd(),
                             ' '.join(["python",run_script,"'"+rdn+"'"]  +['>']  + ["'"+rdn +'/OUTFILE_analysis'+str(time.time()) + "'"]),
                         ]) 

@@ -334,7 +334,7 @@ class NaturalImageWithEyeMovement(TopographicaBasedVisualStimulus):
 
     def frames(self):
         self.time = 0
-        f = open(self.eye_path_location, 'r')
+        f = open(self.eye_path_location, 'rb')
         self.eye_path = pickle.load(f, encoding="latin1")
         self.pattern_sampler = imagen.image.PatternSampler(
                                     size_normalization='fit_longest',

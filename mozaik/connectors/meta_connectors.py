@@ -130,8 +130,8 @@ class GaborConnector(BaseComponent):
                                       t_size[1]/2.0,
                                       numpy.shape(phase_map)[1])
             X, Y = numpy.meshgrid(coords_x, coords_y)
-            phase_map = NearestNDInterpolator(zip(X.flatten(), Y.flatten()),
-                                              phase_map.flatten())
+            phase_map = NearestNDInterpolator(list(zip(X.flatten(), Y.flatten()),
+                                              phase_map.flatten()))
         
         for (j, neuron2) in enumerate(target.pop.all()):
             if or_map:

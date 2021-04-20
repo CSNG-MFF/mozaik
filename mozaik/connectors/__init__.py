@@ -140,7 +140,7 @@ class SpecificArborization(Connector):
         # This is due to native synapses models (which we currently use as the short term synaptic plasticity model) 
         # do not apply the 1000 factor scaler as the pyNN synaptic models
         self.connection_matrix = self.connection_matrix * self.weight_scaler
-        self.connection_list = zip(numpy.array(X).flatten(),numpy.array(Y).flatten(),self.connection_matrix.flatten(),self.delay_matrix.flatten())
+        self.connection_list = list(zip(numpy.array(X).flatten(),numpy.array(Y).flatten(),self.connection_matrix.flatten(),self.delay_matrix.flatten()))
         # get rid of very weak synapses
         z = numpy.max(self.connection_matrix.flatten())
         self.connection_list = [(int(a),int(b),c,d) for (a,b,c,d) in self.connection_list if c>(z/100.0)]

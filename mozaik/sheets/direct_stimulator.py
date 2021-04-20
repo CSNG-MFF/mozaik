@@ -580,7 +580,7 @@ def test_stimulating_function(sheet,coor_x,coor_y,current_update_interval,parame
     pylab.hold(True)
     #pylab.scatter(coor_x.flatten(),coor_y.flatten(),c='k',cmap='hsv')
 
-    ors = scipy.interpolate.griddata(zip(px,py), vals, (coor_x, coor_y), method='nearest')
+    ors = scipy.interpolate.griddata(list(zip(px,py)), vals, (coor_x, coor_y), method='nearest')
 
     pylab.subplot(152)
     pylab.title('Orientatin preference (stimulators)')
@@ -613,7 +613,7 @@ def test_stimulating_function_Naka(sheet,coor_x,coor_y,current_update_interval,p
     pylab.scatter(px,py,c=vals/numpy.pi,cmap='hsv')
     pylab.hold(True)
 
-    ors = scipy.interpolate.griddata(zip(px,py), vals, (coor_x, coor_y), method='nearest')
+    ors = scipy.interpolate.griddata(list(zip(px,py)), vals, (coor_x, coor_y), method='nearest')
 
     pylab.subplot(152)
     pylab.title('Orientatin preference (stimulators)')

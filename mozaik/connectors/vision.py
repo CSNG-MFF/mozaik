@@ -39,7 +39,7 @@ class MapDependentModularConnectorFunction(ModularConnectorFunction):
                                   t_size[1]/2.0,
                                   numpy.shape(mmap)[1])
         X, Y = numpy.meshgrid(coords_x, coords_y)
-        self.mmap = NearestNDInterpolator(zip(X.flatten(), Y.flatten()),
+        self.mmap = NearestNDInterpolator(list(zip(X.flatten(), Y.flatten())),
                                        mmap.flatten())    
         self.val_source=self.mmap(numpy.transpose(numpy.array([self.source.pop.positions[0],self.source.pop.positions[1]]))) * numpy.pi
         
@@ -384,7 +384,7 @@ class CoCircularModularConnectorFunction(ModularConnectorFunction):
                                   t_size[1]/2.0,
                                   numpy.shape(mmap)[1])
         X, Y = numpy.meshgrid(coords_x, coords_y)
-        self.mmap = NearestNDInterpolator(zip(X.flatten(), Y.flatten()),
+        self.mmap = NearestNDInterpolator(list(zip(X.flatten(), Y.flatten())),
                                        mmap.flatten())    
         self.or_source=self.mmap(numpy.transpose(numpy.array([self.source.pop.positions[0],self.source.pop.positions[1]]))) * numpy.pi
 
