@@ -639,6 +639,8 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
 
                 for i, (scs, ncs) in enumerate(zip(self.scs[rf_type],self.ncs[rf_type])):
                     scs.set_parameters(times=times,amplitudes=zers+amplitude,copy=False)
+                    logger.info("null input times: " + str(times))
+                    logger.info("null input amplitude: " + str(amplitude))
                     if self.parameters.mpi_reproducible_noise:
                         t = numpy.arange(0, duration, ts) + offset
 
