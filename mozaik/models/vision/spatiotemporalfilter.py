@@ -99,8 +99,8 @@ class SpatioTemporalReceptiveField(object):
         #x = numpy.arange(0.0, width, dx)  + dx/2.0 - width/2.0
         #y = numpy.arange(0.0, height, dy) + dy/2.0 - height/2.0
 
-        x = numpy.linspace(0.0, width - dx, int(width/dx)) + int(dx/2.0 - width/2.0)
-        y = numpy.linspace(0.0, height - dy, int(height/dy)) + int(dx/2.0 - height/2.0)
+        x = numpy.linspace(0.0, width - dx, int(width/dx)) + dx/2.0 - width/2.0
+        y = numpy.linspace(0.0, height - dy, int(height/dy)) + dx/2.0 - height/2.0
 
         # t is the time at the beginning of each timestep
         t = numpy.arange(0.0, duration, dt)
@@ -117,8 +117,6 @@ class SpatioTemporalReceptiveField(object):
         self.spatial_resolution = dx
         self.temporal_resolution = dt
         self.reshaped_kernel = self.kernel.reshape(-1,numpy.shape(self.kernel)[2]).T
-        import pdb
-        pdb.set_trace()
 
     @property
     def kernel_duration(self):
@@ -441,12 +439,6 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         dt = P_rf.temporal_resolution
         for rf in rf_ON, rf_OFF:
             rf.quantize(dx, dy, dt)
-
-        logger.info(str(numpy.sum(rf_ON.kernel))) 
-        logger.info(str(numpy.sum(rf_OFF.kernel))) 
-        0/0
-
-
         self.rf = {'X_ON': rf_ON, 'X_OFF': rf_OFF}                
 
     def get_cache(self, stimulus_id):
@@ -639,23 +631,6 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
             input_cells[rf_type].initialize(visual_space.background_luminance, duration)
         
         for rf_type in self.rf_types:
-
-                logger.info("null input times: " + str(self.parameters.linear_scaler))
-
-                logger.info("null input times: " + str(self.parameters.gain_control.non_linear_gain.luminance_gain))
-                logger.info("null input times: " + str(self.parameters.linear_scaler))
-                logger.info("null input times: " + str(visual_space.background_luminance))
-                logger.info("null input times: " + str((self.parameters.gain_control.non_linear_gain.luminance_scaler*visual_space.background_luminance+1.0)
-))
-                logger.info("null input times: " + str(visual_space.background_luminance/(self.parameters.gain_control.non_linear_gain.luminance_scaler*visual_space.background_luminance+1.0)
-))
-                logger.info("null input times: " + str(numpy.sum(input_cells[rf_type].receptive_field.kernel.flatten())))
-                logger.info("null input amplitude: " + str(numpy.sum(input_cells[rf_type].receptive_field.kernel.flatten())*visual_space.background_luminance / (self.parameters.gain_control.non_linear_gain.luminance_scaler*visual_space.background_luminance+1.0)
-))
-                logger.info("null input times: " + str(times))
-                logger.info("null input amplitude: " + str(amplitude))
-
-
                 if self.parameters.gain_control.non_linear_gain != None:
                         amplitude = self.parameters.linear_scaler * self.parameters.gain_control.non_linear_gain.luminance_gain * numpy.sum(input_cells[rf_type].receptive_field.kernel.flatten())*visual_space.background_luminance / (self.parameters.gain_control.non_linear_gain.luminance_scaler*visual_space.background_luminance+1.0)   
                 else:
