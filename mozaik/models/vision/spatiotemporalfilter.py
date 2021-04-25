@@ -437,14 +437,15 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                                               P_rf.width, P_rf.height,
                                               P_rf.duration)
 
-        logger.info(str(numpy.sum(rf_ON.kernel))) 
-        logger.info(str(numpy.sum(rf_OFF.kernel))) 
-        0/0
-
         dx = dy = P_rf.spatial_resolution
         dt = P_rf.temporal_resolution
         for rf in rf_ON, rf_OFF:
             rf.quantize(dx, dy, dt)
+
+        logger.info(str(numpy.sum(rf_ON.kernel))) 
+        logger.info(str(numpy.sum(rf_OFF.kernel))) 
+        0/0
+
         self.rf = {'X_ON': rf_ON, 'X_OFF': rf_OFF}                
 
     def get_cache(self, stimulus_id):
