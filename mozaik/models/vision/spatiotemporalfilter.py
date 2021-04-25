@@ -100,8 +100,8 @@ class SpatioTemporalReceptiveField(object):
         #x = numpy.arange(0.0, width, dx)  + dx/2.0 - width/2.0
         #y = numpy.arange(0.0, height, dy) + dy/2.0 - height/2.0
 
-        x = numpy.linspace(0.0, width - dx, width/dx) + dx/2.0 - width/2.0
-        y = numpy.linspace(0.0, height - dy, height/dy) + dx/2.0 - height/2.0
+        x = numpy.linspace(0.0, width - dx, int(width/dx)) + dx/2.0 - width/2.0
+        y = numpy.linspace(0.0, height - dy, int(width/dx)) + dx/2.0 - height/2.0
 
         # t is the time at the beginning of each timestep
         t = numpy.arange(0.0, duration, dt)
@@ -118,6 +118,8 @@ class SpatioTemporalReceptiveField(object):
         self.spatial_resolution = dx
         self.temporal_resolution = dt
         self.reshaped_kernel = self.kernel.reshape(-1,numpy.shape(self.kernel)[2]).T
+        import pdb
+        pdb.set_trace()
 
     @property
     def kernel_duration(self):
