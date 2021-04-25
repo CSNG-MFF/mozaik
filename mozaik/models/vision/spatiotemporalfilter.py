@@ -117,6 +117,8 @@ class SpatioTemporalReceptiveField(object):
         self.spatial_resolution = dx
         self.temporal_resolution = dt
         self.reshaped_kernel = self.kernel.reshape(-1,numpy.shape(self.kernel)[2]).T
+        import pdb
+        pdb.set_trace()
 
     @property
     def kernel_duration(self):
@@ -439,6 +441,12 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         dt = P_rf.temporal_resolution
         for rf in rf_ON, rf_OFF:
             rf.quantize(dx, dy, dt)
+
+        logger.info(str(numpy.sum(rf_ON.kernel))) 
+        logger.info(str(numpy.sum(rf_OFF.kernel))) 
+        0/0
+
+
         self.rf = {'X_ON': rf_ON, 'X_OFF': rf_OFF}                
 
     def get_cache(self, stimulus_id):
