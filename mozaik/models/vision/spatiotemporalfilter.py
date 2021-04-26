@@ -642,19 +642,6 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                 else:
                         amplitude = self.parameters.linear_scaler * self.parameters.gain_control.gain * numpy.sum(input_cells[rf_type].receptive_field.kernel.flatten())*visual_space.background_luminance
 
-                logger.info("null input times: " + str(self.parameters.linear_scaler))
-
-                logger.info("null input times: " + str(self.parameters.gain_control.non_linear_gain.luminance_gain))
-                logger.info("null input times: " + str(self.parameters.linear_scaler))
-                logger.info("null input times: " + str(visual_space.background_luminance))
-                logger.info("null input times: " + str((self.parameters.gain_control.non_linear_gain.luminance_scaler*visual_space.background_luminance+1.0)
-))
-                logger.info("null input times: " + str(visual_space.background_luminance/(self.parameters.gain_control.non_linear_gain.luminance_scaler*visual_space.background_luminance+1.0)
-))
-                logger.info("null input times: " + str(numpy.sum(input_cells[rf_type].receptive_field.kernel.flatten())))
-
-                logger.info("null input amplitude: " + str(numpy.sum(input_cells[rf_type].receptive_field.kernel.flatten())*visual_space.background_luminance / (self.parameters.gain_control.non_linear_gain.luminance_scaler*visual_space.background_luminance+1.0)
-))
                 logger.info("null input times: " + str(times))
                 logger.info("null input amplitude: " + str(amplitude))
 

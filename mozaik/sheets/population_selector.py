@@ -244,5 +244,7 @@ class SimilarAnnotationSelectorRegion(SimilarAnnotationSelector):
           picked = list(picked_or & picked_region)  
           mozaik.rng.shuffle(picked)
           z = self.sheet.pop.all_cells.astype(int)
+          import pdb
+          pdb.set_trace()
           return z[picked[:self.parameters.num_of_cells]]
            
