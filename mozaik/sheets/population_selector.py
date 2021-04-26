@@ -241,7 +241,7 @@ class SimilarAnnotationSelectorRegion(SimilarAnnotationSelector):
                                                                          abs(numpy.array(xx - self.parameters.offset_x)) < self.parameters.size/2.0,
                                                                          abs(numpy.array(yy - self.parameters.offset_y)) < self.parameters.size/2.0
                                                       )])
-          picked = list(picked_or & picked_region)  
+          picked = sorted(list(picked_or & picked_region))
           mozaik.rng.shuffle(picked)
           z = self.sheet.pop.all_cells.astype(int)
           return z[picked[:self.parameters.num_of_cells]]
