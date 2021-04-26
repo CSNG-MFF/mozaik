@@ -188,7 +188,7 @@ class SimilarAnnotationSelector(PopulationSelector):
           return picked
       
       def generate_idd_list_of_neurons(self):
-          picked = self.pick_close_to_annotation()
+          picked = sorted(self.pick_close_to_annotation())
           mozaik.rng.shuffle(picked)
           return z[picked[:self.parameters.num_of_cells]]
           
@@ -241,10 +241,8 @@ class SimilarAnnotationSelectorRegion(SimilarAnnotationSelector):
                                                                          abs(numpy.array(xx - self.parameters.offset_x)) < self.parameters.size/2.0,
                                                                          abs(numpy.array(yy - self.parameters.offset_y)) < self.parameters.size/2.0
                                                       )])
-          picked = list(picked_or & picked_region)  
+          picked = sorted(list(picked_or & picked_region))
           mozaik.rng.shuffle(picked)
           z = self.sheet.pop.all_cells.astype(int)
-          import pdb
-          pdb.set_trace()
           return z[picked[:self.parameters.num_of_cells]]
            
