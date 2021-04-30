@@ -188,7 +188,7 @@ class SimilarAnnotationSelector(PopulationSelector):
           return picked
       
       def generate_idd_list_of_neurons(self):
-          picked = self.pick_close_to_annotation()
+          picked = sorted(self.pick_close_to_annotation())
           mozaik.rng.shuffle(picked)
           return z[picked[:self.parameters.num_of_cells]]
           

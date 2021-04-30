@@ -435,10 +435,13 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                                               P_rf.func_params,
                                               P_rf.width, P_rf.height,
                                               P_rf.duration)
+
         dx = dy = P_rf.spatial_resolution
         dt = P_rf.temporal_resolution
         for rf in rf_ON, rf_OFF:
             rf.quantize(dx, dy, dt)
+
+
         self.rf = {'X_ON': rf_ON, 'X_OFF': rf_OFF}                
 
     def get_cache(self, stimulus_id):
@@ -630,6 +633,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                                               self.parameters.gain_control,visual_space)
             input_cells[rf_type].initialize(visual_space.background_luminance, duration)
         
+
         for rf_type in self.rf_types:
                 if self.parameters.gain_control.non_linear_gain != None:
                         amplitude = self.parameters.linear_scaler * self.parameters.gain_control.non_linear_gain.luminance_gain * numpy.sum(input_cells[rf_type].receptive_field.kernel.flatten())*visual_space.background_luminance / (self.parameters.gain_control.non_linear_gain.luminance_scaler*visual_space.background_luminance+1.0)   
@@ -640,7 +644,6 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                     scs.set_parameters(times=times,amplitudes=zers+amplitude,copy=False)
                     if self.parameters.mpi_reproducible_noise:
                         t = numpy.arange(0, duration, ts) + offset
-
                         amplitudes = (self.parameters.noise.mean
                                         + self.parameters.noise.stdev
                                            * self.ncs_rng[rf_type][i].randn(len(t)))
