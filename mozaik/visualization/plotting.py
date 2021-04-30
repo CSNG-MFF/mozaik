@@ -534,11 +534,14 @@ class PlotTuningCurve(Plotting):
             
     def center_tc(self,val,par,period,center_index):
            # first lets make the maximum to be at zero  
-           q = center_index+len(val)/2 if center_index < len(val)/2 else center_index-len(val)/2
+           q = int(center_index+len(val)/2 if center_index < len(val)/2 else center_index-len(val)/2)
            z = par[center_index]
            c =  period/2.0
            par = numpy.array([(p - z + c) % period for p in par])  - c
            if q != 0:
+               logger.info(str(q))
+               logger.info(str(val))
+               logger.info(str(par))
                a = val[:q].copy()[:] 
                b = par[:q].copy()[:] 
                val[:-q] = val[q:].copy()[:]   
