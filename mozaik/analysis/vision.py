@@ -243,7 +243,7 @@ class LocalHomogeneityIndex(Analysis):
     def perform_analysis(self):
         sigma = self.parameters.sigma
         for sheet in self.datastore.sheets():
-            positions = self.datastore.get_neuron_postions()[sheet]
+            positions = self.datastore.get_neuron_positions()[sheet]
             for pnv in queries.param_filter_query(self.datastore,sheet_name=sheet,identifier='PerNeuronValue').get_analysis_result():
                 lhis = []
                 for x in pnv.ids:

@@ -1135,7 +1135,7 @@ class ActivityMovie(Plotting):
         #lets normalize against the maximum response for given neuron
         
 
-        pos = dsv.get_neuron_postions()[self.parameters.sheet_name]
+        pos = dsv.get_neuron_positions()[self.parameters.sheet_name]
 
         posx = pos[0,self.datastore.get_sheet_indexes(self.parameters.sheet_name,dsv.get_segments()[0].get_stored_spike_train_ids())]
         posy = pos[1,self.datastore.get_sheet_indexes(self.parameters.sheet_name,dsv.get_segments()[0].get_stored_spike_train_ids())]
@@ -1211,7 +1211,7 @@ class PerNeuronValuePlot(Plotting):
          if self.parameters.cortical_view:
             assert len(pnvs) <= 1, logger.error("We can only display single stimulus parametrization in cortical view, but you have suplied multiple in datastore.")
             pnv = pnvs[0]
-            pos = self.dsv.get_neuron_postions()[pnv.sheet_name]                            
+            pos = self.dsv.get_neuron_positions()[pnv.sheet_name]                            
             posx = pos[0,self.datastore.get_sheet_indexes(pnv.sheet_name,pnv.ids)]
             posy = pos[1,self.datastore.get_sheet_indexes(pnv.sheet_name,pnv.ids)]
             values = pnv.values
@@ -1381,8 +1381,8 @@ class ConnectivityPlot(Plotting):
             if not self.parameters.reversed and conn.source_name == self.parameters.sheet_name:
                 # add outgoing projections from sheet_name
                 self.connecting_neurons_positions.append(
-                            datastore.get_neuron_postions()[conn.target_name])
-                z = datastore.get_neuron_postions()[conn.source_name]
+                            datastore.get_neuron_positions()[conn.target_name])
+                z = datastore.get_neuron_positions()[conn.source_name]
                 idx = self.datastore.get_sheet_indexes(conn.source_name,self.parameters.neuron)
                 self.connected_neuron_position.append(
                             (z[0][idx],
@@ -1391,8 +1391,8 @@ class ConnectivityPlot(Plotting):
             elif (self.parameters.reversed and conn.target_name == self.parameters.sheet_name):
                 # add incomming projections from sheet_name
                 self.connecting_neurons_positions.append(
-                            datastore.get_neuron_postions()[conn.source_name])
-                z = datastore.get_neuron_postions()[conn.target_name]
+                            datastore.get_neuron_positions()[conn.source_name])
+                z = datastore.get_neuron_positions()[conn.target_name]
                 idx = self.datastore.get_sheet_indexes(conn.target_name,self.parameters.neuron)
                 self.connected_neuron_position.append(
                             (z[0][idx],

@@ -423,7 +423,7 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
               # Get sheet indexes from ids of recorded neurons
               rec_idd_idx = zip( self.parameters.neurons, dsv.get_sheet_indexes(sheet_name=sheet,neuron_ids=self.parameters.neurons) )
               # get positions in the sheet of the recorded neurons
-              positions = dsv.get_neuron_postions()
+              positions = dsv.get_neuron_positions()
               # initialize pair array to dummy ids, first and last recorded neurons ids
               pair_ids_idx = [ (self.parameters.neurons[0],positions[sheet][0][0]), (self.parameters.neurons[-1],positions[sheet][0][-1]) ]
               for idd,idx in rec_idd_idx:
