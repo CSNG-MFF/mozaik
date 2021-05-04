@@ -102,8 +102,8 @@ ____________
 
 Then python virtualenv and virtualenvwrapper (an handy way to manage python virtual environments)::
 
-$ sudo pip install virtualenv
-$ sudo pip install virtualenvwrapper
+$ sudo pip3 install virtualenv
+$ sudo pip3 install virtualenvwrapper
 
 To setup `virtualenvwrapper <http://virtualenvwrapper.readthedocs.org/en/latest//>`_ add the following lines at the top of ~/.bashrc ::
 
@@ -130,8 +130,8 @@ ____________
  
 Now you can install in this protected environment all other dependencies::
 
-  pip install --upgrade distribute
-  pip install numpy scipy mpi4py matplotlib==2.1.1 quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.8.0 cython pynn psutil future requests
+  pip3 install --upgrade distribute
+  pip3 install numpy scipy mpi4py matplotlib==2.1.1 quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.8.0 cython pynn psutil future requests
 
 Now we will manually install several packages. It is probably the best if you create a separate directory in an appropriate
 place, where you will download and install from the packages.
