@@ -19,6 +19,28 @@ class TestModel(object):
     are equal in two recorded datastores.
     """
 
+    model_run_command = ""
+    result_path = ""
+    ref_path = ""
+
+    ds = None  # Model run datastore
+    ds_ref = None  # Reference datastore
+
+    @classmethod
+    def setup_class(cls):
+        """
+        Runs the model and loads its result and a saved reference result
+        """
+        # Rerun test if it already ran
+        if os.path.exists(cls.result_path):
+            os.system("rm -r " + cls.result_path)
+        os.system(cls.model_run_command)
+
+        # Load DataStore of recordings from the model that just ran
+        cls.ds = cls.load_datastore(cls.result_path)
+        # Load DataStore of reference recordings
+        cls.ds_ref = cls.load_datastore(cls.ref_path)
+
     @staticmethod
     def load_datastore(base_dir):
         """
@@ -109,6 +131,7 @@ class TestModel(object):
         A 1D list of spike times recorded in neurons in the DataStore
         """
         segments = self.get_segments(data_store, sheet_name)
+        print(segments)
         return [
             v
             for segment in segments
@@ -162,35 +185,52 @@ class TestVogelsAbbott2005(TestModel):
     to a saved reference.
     """
 
+    model_run_command = "cd examples/VogelsAbbott2005 && python run.py nest 2 param/defaults 'pytest' && cd ../.."
     result_path = "examples/VogelsAbbott2005/VogelsAbbott2005_pytest_____"
     ref_path = "tests/full_model/reference_data/VogelsAbbott2005"
 
     ds = None  # Model run datastore
     ds_ref = None  # Reference datastore
 
-    @classmethod
-    def setup_class(cls):
-        """
-        Runs the VogelsAbbott2005 model and loads its result and a saved reference result
-        """
-        # Rerun test if it already ran
-        if os.path.exists(cls.result_path):
-            os.system("rm -r " + cls.result_path)
-        os.system(
-            "cd examples/VogelsAbbott2005 && python run.py nest 2 param/defaults 'pytest' && cd ../.."
-        )
-
-        # Load DataStore of recordings from the model that just ran
-        cls.ds = cls.load_datastore(cls.result_path)
-        # Load DataStore of reference recordings
-        cls.ds_ref = cls.load_datastore(cls.ref_path)
-
     @pytest.mark.model
+    @pytest.mark.VogelsAbbott2005
     @pytest.mark.parametrize("sheet_name", ["Exc_Layer", "Inh_Layer"])
     def test_spikes(self, sheet_name):
         self.check_spikes(self.ds, self.ds_ref, sheet_name)
 
     @pytest.mark.model
+    @pytest.mark.VogelsAbbott2005
     @pytest.mark.parametrize("sheet_name", ["Exc_Layer", "Inh_Layer"])
     def test_voltages(self, sheet_name):
         self.check_voltages(self.ds, self.ds_ref, sheet_name, max_neurons=5)
+
+
+class TestLSV1M(TestModel):
+    """
+    Class that runs the LSV1M model on construction from the mozaik-models repository.
+    Its testing methods compare the membrane potentials of a few neurons and the
+    spike times of all neurons to a saved reference.
+    """
+
+    model_run_command = "cd tests/full_model/models/LSV1M && python run.py nest 2 param/defaults 'pytest' && cd ../../../.."
+    result_path = "tests/full_model/models/LSV1M/LSV1M_pytest_____"
+    ref_path = "tests/full_model/reference_data/LSV1M"
+
+    ds = None  # Model run datastore
+    ds_ref = None  # Reference datastore
+
+    @pytest.mark.model
+    @pytest.mark.LSV1M
+    @pytest.mark.parametrize(
+        "sheet_name", ["V1_Exc_L4", "V1_Inh_L4", "V1_Exc_L2/3", "V1_Inh_L2/3"]
+    )
+    def test_spikes(self, sheet_name):
+        self.check_spikes(self.ds, self.ds_ref, sheet_name)
+
+    @pytest.mark.model
+    @pytest.mark.LSV1M
+    @pytest.mark.parametrize(
+        "sheet_name", ["V1_Exc_L4", "V1_Inh_L4", "V1_Exc_L2/3", "V1_Inh_L2/3"]
+    )
+    def test_voltages(self, sheet_name):
+        self.check_voltages(self.ds, self.ds_ref, sheet_name, max_neurons=25)

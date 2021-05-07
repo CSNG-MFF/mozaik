@@ -95,8 +95,8 @@ class TopographicaBasedVisualStimulusTester(object):
         Checks if the first num_frames frames of the two generators are identical.
         """
         for i in range(num_frames):
-            f0 = g0.next()
-            f1 = g1.next()
+            f0 = g0.__next__()
+            f1 = g1.__next__()
             if not (numpy.array_equal(f0[0], f1[0]) and f0[1] == f1[1]):
                 return False
         return True
@@ -116,6 +116,13 @@ default_noise = {"grid_size": 11, "grid": False, "time_per_image": 2}
 class TestNoise(TopographicaBasedVisualStimulusTester):
 
     experiment_seed = 0
+
+    def test_init_assert(self):
+        """
+        Checks the assertion in the init function of the class.
+        """
+        with pytest.raises(AssertionError):
+            t = topo.SparseNoise(time_per_image=1.4, **default_topo)
 
     @pytest.mark.parametrize("grid_size", [-1, 0, 0.9, 0.9999999999])
     def test_min_grid_size(self, grid_size):
@@ -138,13 +145,6 @@ class TestSparseNoise(TestNoise):
     """
     Tests for the SparseNoise class.
     """
-
-    def test_init_assert(self):
-        """
-        Checks the assertion in the init function of the class.
-        """
-        with pytest.raises(AssertionError):
-            t = topo.SparseNoise(time_per_image=1.4, frame_duration=1.5)
 
     def reference_frames(
         self,
@@ -232,13 +232,6 @@ class TestDenseNoise(TestNoise):
     Tests for the DenseNoise class.
     """
 
-    def test_init_assert(self):
-        """
-        Checks the assertion in the init function of the class.
-        """
-        with pytest.raises(AssertionError):
-            t = topo.DenseNoise(time_per_image=1.4, frame_duration=1.5)
-
     def reference_frames(
         self,
         grid_size=default_noise["grid_size"],
@@ -259,7 +252,7 @@ class TestDenseNoise(TestNoise):
         )
         while True:
             aux2 = aux()
-            for i in range(time_per_image / frame_duration):
+            for i in range(int(time_per_image / frame_duration)):
                 yield (aux2, [0])
 
     def topo_frames(
@@ -408,7 +401,7 @@ class TestGabor:
         return frames
 
     def pop_frames(self, stimulus, num_frames):
-        return [stimulus._frames.next()[0] for i in range(num_frames)]
+        return [stimulus._frames.__next__()[0] for i in range(num_frames)]
 
     def get_nonblank_mask(self, frame, baseline=0):
         """
@@ -438,7 +431,7 @@ class TestContinuousGaborMovementAndJump(TestGabor):
         """
         np.random.seed(0)
         params = []
-        for i in xrange(0, length):
+        for i in range(0, length):
             x = (np.random.rand() - 0.5) * default_topo["size_x"] / 2
             y = (np.random.rand() - 0.5) * default_topo["size_y"] / 2
             sigma = 1 / 3 + np.random.rand() * 4 / 3
@@ -606,7 +599,7 @@ class TestRadialGaborApparentMotion(TestGabor):
         """
         np.random.seed(0)
         params = []
-        for i in xrange(0, length):
+        for i in range(0, length):
             x = (np.random.rand() - 0.5) * default_topo["size_x"] / 4
             y = (np.random.rand() - 0.5) * default_topo["size_y"] / 4
             sigma = 0.25 / 3 + np.random.rand() * 1 / 3
