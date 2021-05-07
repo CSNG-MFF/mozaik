@@ -3,7 +3,7 @@ Installation intructions
 
 Dependencies
 ------------
-* python 2.7 or later
+* python 2.7 (or later)
 * scipy/numpy
 * nest (latest release, compiled with mpi)
 * mpi4py
@@ -94,7 +94,7 @@ fresh installation of Ubuntu (at the time of the writing the version was 16.04)
 
 First the list of ubuntu package dependencies::
 
-  sudo apt-get install python2.7 python-dev python-pip python-nose subversion git libopenmpi-dev g++ libjpeg8 libjpeg8-dev libfreetype6 libfreetype6-dev zlib1g-dev libpng++-dev libncurses5 libncurses5-dev libreadline-dev liblapack-dev libblas-dev gfortran libgsl0-dev openmpi-bin python-tk cmake
+  sudo apt-get install python3 python3-dev python3-pip python3-setuptools python-nose subversion git libopenmpi-dev g++ libjpeg8 libjpeg8-dev libfreetype6 libfreetype6-dev zlib1g-dev libpng++-dev libncurses5 libncurses5-dev libreadline-dev liblapack-dev libblas-dev gfortran libgsl0-dev openmpi-bin python-tk cmake
 
 
 Virtual env
@@ -102,8 +102,8 @@ ____________
 
 Then python virtualenv and virtualenvwrapper (an handy way to manage python virtual environments)::
 
-$ sudo pip install virtualenv
-$ sudo pip install virtualenvwrapper
+$ sudo pip3 install virtualenv
+$ sudo pip3 install virtualenvwrapper
 
 To setup `virtualenvwrapper <http://virtualenvwrapper.readthedocs.org/en/latest//>`_ add the following lines at the top of ~/.bashrc ::
 
@@ -119,7 +119,7 @@ $ source .bashrc
 
 To create a new managed virtualenv you just need to::
 
-    $ mkvirtualenv --no-site-packages mozaik
+    $ mkvirtualenv --python=/usr/bin/python3 mozaik
     $ workon mozaik
     (mozaik)$>
  
@@ -130,8 +130,8 @@ ____________
  
 Now you can install in this protected environment all other dependencies::
 
-  pip install --upgrade distribute
-  pip install numpy scipy mpi4py matplotlib==2.1.1 quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.8.0 cython pynn psutil
+  pip3 install --upgrade distribute
+  pip3 install numpy scipy mpi4py matplotlib==2.1.1 quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.8.0 cython pynn psutil future requests
 
 Now we will manually install several packages. It is probably the best if you create a separate directory in an appropriate
 place, where you will download and install from the packages.
@@ -166,7 +166,7 @@ Now we can install *Nest* (always in the virtual environment):
         
         make installcheck
     
-    - nest will reside in $HOME/virt_env/mozaik/lib/python2.7/site-packages. Check that the package is seen by python using::
+    - nest will reside in $HOME/virt_env/mozaik/lib/python3.*/site-packages. Check that the package is seen by python using::
         python -c 'import nest'
 
 
@@ -223,9 +223,7 @@ In case you want to contribute to the project, you need to make sure your code p
 
 This command will run all tests that it can find recursively under the current directory, as well as check all non-blacklisted files for formatting. Travis-CI will run the same steps for your pull request once you submit it to the project. To install pytest and black::
 
-  pip install pytest pytest-cov pytest-randomly coverage
-  sudo apt-get -y install python3-dev python3-pip python3-setuptools
-  pip3 install black
+  pip3 install pytest pytest-cov pytest-randomly coverage black
 
 There are additional useful options for pytests that you can use during development:
 
