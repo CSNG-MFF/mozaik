@@ -3,7 +3,7 @@ Installation intructions
 
 Dependencies
 ------------
-* python 2.7 (or later)
+* python 2.7 or later
 * scipy/numpy
 * nest (latest release, compiled with mpi)
 * mpi4py
