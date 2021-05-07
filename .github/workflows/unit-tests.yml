@@ -1,0 +1,30 @@
+name: Unit tests
+
+on: [push, pull_request]
+
+jobs:
+
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Pytest Unit Tests
+      uses: actions/setup-python@v2
+    - name: Install prerequisites
+      run: |
+        sudo apt-get install python3-setuptools python-nose subversion git libopenmpi-dev g++ libjpeg8 libjpeg8-dev libfreetype6 libfreetype6-dev zlib1g-dev libpng++-dev libncurses5 libncurses5-dev libreadline-dev liblapack-dev libblas-dev gfortran libgsl0-dev openmpi-bin python-tk cmake
+        pip3 install pytest pytest-cov pytest-randomly coverage black
+        pip3 install numpy scipy mpi4py matplotlib==2.1.1 quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.8.0 cython pynn psutil future requests
+
+    - name: Download and install imagen
+      run: |
+        git clone https://github.com/antolikjan/imagen.git
+        cd imagen
+        python setup.py install
+        cd ..
+
+    - name: Install mozaik
+      run: python setup.py install
+
+    - name: Test with pytest
+      run: pytest tests --cov=mozaik -m "not model"
