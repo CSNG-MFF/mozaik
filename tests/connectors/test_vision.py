@@ -36,7 +36,7 @@ class TestV1CorrelationBasedConnectivity:
         Generate random parameters of a gabor function
         """
         params = []
-        for i in xrange(0, length):
+        for i in range(0, length):
             k = 0.1 + np.random.rand() * 9.9
             a = 1 / (1 + np.random.rand() * 9)
             b = 1 / (1 + np.random.rand() * 9)
@@ -55,7 +55,7 @@ class TestV1CorrelationBasedConnectivity:
         Generate relative random parameters of a gabor function
         """
         params = []
-        for i in xrange(0, length):
+        for i in range(0, length):
             x0 = -5 + np.random.rand() * 5
             y0 = -5 + np.random.rand() * 5
             F = 0.1 + np.random.rand() * 0.3
@@ -98,7 +98,7 @@ class TestV1CorrelationBasedConnectivity:
 
     @pytest.mark.parametrize(
         "p1, p2",
-        itertools.izip_longest(gabor_params(num_tests), gabor_params(num_tests)),
+        itertools.zip_longest(gabor_params(num_tests), gabor_params(num_tests)),
     )
     def test_integral_of_gabor_multiplication(self, p1, p2):
         """
@@ -126,7 +126,7 @@ class TestV1CorrelationBasedConnectivity:
 
     @pytest.mark.parametrize(
         "p1, p2",
-        itertools.izip_longest(gabor_params(num_tests), gabor_params(num_tests)),
+        itertools.zip_longest(gabor_params(num_tests), gabor_params(num_tests)),
     )
     def test_gabor_correlation(self, p1, p2):
         """
@@ -156,7 +156,7 @@ class TestV1CorrelationBasedConnectivity:
 
     @pytest.mark.parametrize(
         "p1, p2",
-        itertools.izip_longest(
+        itertools.zip_longest(
             gabor_relative_params(num_tests), gabor_relative_params(num_tests)
         ),
     )
