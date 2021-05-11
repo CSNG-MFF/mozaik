@@ -541,6 +541,7 @@ class MeasureSizeTuning(VisualExperiment):
         # linear or logarithmic spaced sizes
         if self.parameters.log_spacing:
             base2max = numpy.log2(self.parameters.max_size)
+            #sizes = numpy.insert(numpy.logspace(start=-3.0, stop=base2max, num=self.parameters.num_inner_radius - 1, base=2.0), 0, 0)
             sizes = numpy.logspace(start=-3.0, stop=base2max, num=self.parameters.num_sizes, base=2.0) 
         else:
             sizes = numpy.linspace(0, self.parameters.max_size,self.parameters.num_sizes)                     
@@ -634,6 +635,7 @@ class MeasureSizeTuningRing(VisualExperiment):
         if self.parameters.log_spacing:
             base2max = numpy.log2(self.parameters.outer_radius)
             inner_radius = numpy.logspace(start=-3.0, stop=base2max, num=self.parameters.num_inner_radius, base=2.0)
+            inner_radius[-1] = self.parameters.outer_radius
         else:
             inner_radius = numpy.linspace(0, self.parameters.outer_radius,self.parameters.num_inner_radius)
 
@@ -1805,6 +1807,124 @@ class MeasureTextureSizeTuning(VisualExperiment):
     def do_analysis(self, data_store):
         pass
 
+class MeasureInformativePixelCorrelationStatisticsResponse(VisualExperiment):
+    """
+    Measure sensitivity to informative pixel correlations base on synthetic stimuli 
+    This experiment will show a series of synthetic stimuli  
+    that vary in pixel correlations statistics.
+    
+    Parameters
+    ----------
+    model : Model
+          The model on which to execute the experiment.
+    Other parameters
+    ----------------
+
+    duration : float
+               The duration of the presentation of a single image
+    
+    correlation_values: list(float) 
+               List of values of the pixel correlation statistics
+               that will be used to generate the stimuli
+
+    num_trials : int
+               Number of trials each each stimulus is shown.
+    """
+
+    required_parameters = ParameterSet({
+            'duration' : float,
+            'correlation_values': list,
+            'num_trials' : int, #n. of same instance
+            'spatial_frequency' : float,
+
+    })
+
+    def __init__(self,model,parameters):
+        # we place this import here to avoid the need for octave dependency unless this experiment is actually used.
+        import mozaik.stimuli.vision.texture_based as textu #vf
+        VisualExperiment.__init__(self, model,parameters)
+
+        for i in xrange(10):
+            for value in self.parameters.correlation_values:
+                pixel_statistics = [0] * 10
+                pixel_statistics[i] = value
+                for j in xrange(self.parameters.num_trials):
+                    im = textu.VictorInformativeSyntheticStimulus(
+                            frame_duration = self.frame_duration,
+                            duration=self.parameters.duration,
+                            trial=j,
+                            background_luminance=self.background_luminance,
+                            density=self.density,
+                            location_x=0.0,
+                            location_y=0.0,
+                            size_x=model.visual_field.size_x,
+                            size_y=model.visual_field.size_y,
+                            spatial_frequency=self.parameters.spatial_frequency/2,
+                            pixel_statistics = pixel_statistics,
+                            seed = 523+5113*(i+1))
+                    self.stimuli.append(im)
+
+    def do_analysis(self, data_store):
+        pass
+
+class MeasureUninformativePixelCorrelationStatisticsResponse(VisualExperiment):
+    """
+    Measure sensitivity to uninformative pixel correlations base on synthetic stimuli 
+    This experiment will show a series of synthetic stimuli  
+    that vary in pixel correlations statistics.
+    
+    Parameters
+    ----------
+    model : Model
+          The model on which to execute the experiment.
+    Other parameters
+    ----------------
+
+    duration : float
+               The duration of the presentation of a single image
+    
+    correlation_values: list(float) 
+               List of values of the pixel correlation statistics
+               that will be used to generate the stimuli
+
+    num_trials : int
+               Number of trials each each stimulus is shown.
+    """
+
+    required_parameters = ParameterSet({
+            'duration' : float,
+            'correlation_values': list,
+            'num_trials' : int, #n. of same instance
+            'spatial_frequency' : float,
+    })
+
+    def __init__(self,model,parameters):
+        # we place this import here to avoid the need for octave dependency unless this experiment is actually used.
+        import mozaik.stimuli.vision.texture_based as textu #vf
+        VisualExperiment.__init__(self, model,parameters)
+
+        for i in xrange(2):
+            for value in self.parameters.correlation_values:
+                pixel_statistics = [0] * 2
+                pixel_statistics[i] = value
+                for j in xrange(self.parameters.num_trials):
+                    im = textu.VictorUninformativeSyntheticStimulus(
+                            frame_duration = self.frame_duration,
+                            duration=self.parameters.duration,
+                            trial=j,
+                            background_luminance=self.background_luminance,
+                            density=self.density,
+                            location_x=0.0,
+                            location_y=0.0,
+                            size_x=model.visual_field.size_x,
+                            size_y=model.visual_field.size_y,
+                            spatial_frequency=self.parameters.spatial_frequency/2,
+                            pixel_statistics = pixel_statistics,
+                            seed = 523+5113*(i+1))
+                    self.stimuli.append(im)
+
+    def do_analysis(self, data_store):
+        pass
 
 class MapResponseToInterruptedBarStimulus(VisualExperiment):
     """

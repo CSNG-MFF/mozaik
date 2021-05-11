@@ -95,18 +95,18 @@ class TextureVarianceRatio(Analysis):
         assert queries.ads_with_equal_stimulus_type(dsv)
         assert queries.equal_ads(dsv,except_params=['stimulus_id', 'sheet_name'])
 
-        for sheet in self.parameters.sheet_list:
-            textures = list(set([MozaikParametrized.idd(ads.stimulus_id).texture for ads in dsv.get_analysis_result()]))
-            samples = list(set([MozaikParametrized.idd(ads.stimulus_id).sample for ads in dsv.get_analysis_result()]))
-            trials = list(set([MozaikParametrized.idd(ads.stimulus_id).trial for ads in dsv.get_analysis_result()]))
+        textures = list(set([MozaikParametrized.idd(ads.stimulus_id).texture for ads in dsv.get_analysis_result()]))
+        samples = list(set([MozaikParametrized.idd(ads.stimulus_id).sample for ads in dsv.get_analysis_result()]))
+        trials = list(set([MozaikParametrized.idd(ads.stimulus_id).trial for ads in dsv.get_analysis_result()]))
 
+        for sheet in self.parameters.sheet_list:
             mean_rates = [] #This is a 4D array where we will store the firing rates of each neurons for each trial of each sample of each texture family
             for texture in textures:
                 mean_rates_texture = []
                 for sample in samples:
                     mean_rates_sample = []
                     for trial in trials:
-                        pnv = queries.param_filter_query(dsv,identifier='PerNeuronValue',st_sample=sample,st_texture=texture,st_trial=trial,st_stats_type=1).get_analysis_result()[0]
+                        pnv = queries.param_filter_query(dsv,identifier='PerNeuronValue',sheet_name=sheet,st_sample=sample,st_texture=texture,st_trial=trial,st_stats_type=1).get_analysis_result()[0]
                         mean_rates_sample.append(pnv.values)
                     mean_rates_texture.append(mean_rates_sample)
                 mean_rates.append(mean_rates_texture)

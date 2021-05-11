@@ -1271,6 +1271,71 @@ class PopulationMedian(Analysis):
               m = numpy.median(ads.values)
               self.datastore.full_datastore.add_analysis_result(SingleValue(value=m,period=ads.period,value_name = 'Median(' + ads.value_name + ')',sheet_name=ads.sheet_name,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=ads.stimulus_id))
 
+
+class TemporalSTD(Analysis):
+      """
+      Calculates the standard deviation  of vm and conductances over time windows for each neuron, and averages them for the time course of the whole stimulus.
+      Then compute the mean and the standard deviation for each neurons over trials
+      It stores them in PerNeuronValue datastructures (one for exc. one for inh. conductances and one for vm).
+
+      Notes
+      -----
+      Only neurons for which the corresponding signals were measured will be included in the PerNeuronValue data structures.
+      """
+
+      required_parameters = ParameterSet({
+        'time_window': float,  # the length (in ms) of the time window over wich the standard deviations will be computed
+        'vm': bool,  # calculate TemporalSTD for Vm?
+        'cond_exc': bool,  # calculate TemporalSTD for excitatory conductance?
+        'cond_inh': bool,  # calculate TemporalSTD for inhibitory conductance?
+
+      })
+
+      def perform_analysis(self):
+          import pandas
+          for sheet in self.datastore.sheets():
+              dsv = queries.param_filter_query(self.datastore, sheet_name=sheet)
+              segs1, stids = colapse(dsv.get_segments(),dsv.get_stimuli(),parameter_list=['trial'],allow_non_identical_objects=True)
+              for segs,st in zip(segs1, stids):
+                  vm_ids = segs[0].get_stored_vm_ids()
+                  esyn_ids = segs[0].get_stored_esyn_ids()
+                  isyn_ids = segs[0].get_stored_isyn_ids()
+                  vm_std = []
+                  esyn_std = []
+                  isyn_std = []
+                  for seg in segs:
+                      for a in seg.analogsignals:
+                          index_window = int(a.sampling_rate * self.parameters.time_window)
+                          if a.name =='v' and self.parameters.vm:
+                              vm_std.append([numpy.mean(pandas.Series(a[:,a.annotations['source_ids'].tolist().index(nid)].reshape(-1).magnitude).rolling(index_window).std(ddof=0)) for nid in vm_ids])
+                              #vm_std.append([numpy.mean([numpy.std(a[t:t+index_window,a.annotations['source_ids'].tolist().index(nid)]) for t in range(a.shape[0] - index_window + 1)]) for nid in vm_ids])
+                          if a.name =='gsyn_exc' and self.parameters.cond_exc:
+                              isyn_std.append([numpy.mean(pandas.Series(a[:,a.annotations['source_ids'].tolist().index(nid)].reshape(-1).magnitude).rolling(index_window).std(ddof=0)) for nid in vm_ids])
+                              #esyn_std.append([numpy.mean([numpy.std(a[t:t+index_window,a.annotations['source_ids'].tolist().index(nid)]) for t in range(a.shape[0] - index_window + 1)]) for nid in vm_ids])
+                          if a.name =='gsyn_inh' and self.parameters.cond_inh:
+                              isyn_std.append([numpy.mean(pandas.Series(a[:,a.annotations['source_ids'].tolist().index(nid)].reshape(-1).magnitude).rolling(index_window).std(ddof=0)) for nid in vm_ids])
+                              #isyn_std.append([numpy.mean([numpy.std(a[t:t+index_window,a.annotations['source_ids'].tolist().index(nid)]) for t in range(a.shape[0] - index_window + 1)]) for nid in vm_ids])
+
+                  if self.parameters.vm:
+                      vm_std_mean = numpy.mean(vm_std, axis = 0)
+                      vm_std_std = numpy.std(vm_std, axis = 0)
+                      self.datastore.full_datastore.add_analysis_result(PerNeuronValue(vm_std_mean,vm_ids,segs[0].get_vm(vm_ids[0]).units,value_name = 'Temporal STD of Vm',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))
+                      self.datastore.full_datastore.add_analysis_result(PerNeuronValue(vm_std_std,vm_ids,segs[0].get_vm(vm_ids[0]).units,value_name = 'STD of Temporal STD of Vm',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))
+
+                  if self.parameters.cond_exc:
+                      esyn_std_mean = numpy.mean(esyn_std, axis = 0)
+                      esyn_std_std = numpy.std(esyn_std, axis = 0)
+                      self.datastore.full_datastore.add_analysis_result(PerNeuronValue(esyn_std_mean,esyn_ids,segs[0].get_esyn(esyn_ids[0]).units,value_name = 'Temporal STD of ECond',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))
+                      self.datastore.full_datastore.add_analysis_result(PerNeuronValue(esyn_std_std,esyn_ids,segs[0].get_esyn(esyn_ids[0]).units,value_name = 'STD of Temporal STD of Econd',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))
+
+                  if self.parameters.cond_inh:
+                      isyn_std_mean = numpy.mean(isyn_std, axis = 0)
+                      isyn_std_std = numpy.std(isyn_std, axis = 0)
+                      self.datastore.full_datastore.add_analysis_result(PerNeuronValue(isyn_std_mean,isyn_ids,segs[0].get_isyn(isyn_ids[0]).units,value_name = 'Temporal STD of ICond',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))
+                      self.datastore.full_datastore.add_analysis_result(PerNeuronValue(isyn_std_std,isyn_ids,segs[0].get_isyn(isyn_ids[0]).units,value_name = 'STD of Temporal STD of ICond',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))
+
+
+
 class Analog_MeanSTDAndFanoFactor(Analysis):
       """
       Calculates the mean, standard deviation and fano-factor of vm and conductances for each neuron, and averages them over trials. 
@@ -1293,6 +1358,11 @@ class Analog_MeanSTDAndFanoFactor(Analysis):
                     vm_mean = numpy.mean(numpy.array([numpy.array([numpy.mean(seg.get_vm(idd)) for idd in vm_ids]) for seg in segs]),axis=0)
                     esyn_mean = numpy.mean(numpy.array([numpy.array([numpy.mean(seg.get_esyn(idd)) for idd in esyn_ids]) for seg in segs]),axis=0)
                     isyn_mean = numpy.mean(numpy.array([numpy.array([numpy.mean(seg.get_isyn(idd)) for idd in isyn_ids]) for seg in segs]),axis=0)
+
+                    vm_mean_std = numpy.std(numpy.array([numpy.array([numpy.mean(seg.get_vm(idd)) for idd in vm_ids]) for seg in segs]),axis=0)
+                    esyn_mean_std = numpy.std(numpy.array([numpy.array([numpy.mean(seg.get_esyn(idd)) for idd in esyn_ids]) for seg in segs]),axis=0)
+                    isyn_mean_std = numpy.std(numpy.array([numpy.array([numpy.mean(seg.get_isyn(idd)) for idd in isyn_ids]) for seg in segs]),axis=0)
+
                     # standard deviation
                     vm_std = numpy.mean(numpy.array([numpy.array([numpy.std(seg.get_vm(idd)) for idd in vm_ids]) for seg in segs]),axis=0)
                     esyn_std = numpy.mean(numpy.array([numpy.array([numpy.std(seg.get_esyn(idd)) for idd in esyn_ids]) for seg in segs]),axis=0)
@@ -1306,12 +1376,43 @@ class Analog_MeanSTDAndFanoFactor(Analysis):
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(esyn_mean,esyn_ids,segs[0].get_esyn(esyn_ids[0]).units,value_name = 'Mean(ECond)',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(isyn_mean,isyn_ids,segs[0].get_isyn(isyn_ids[0]).units,value_name = 'Mean(ICond)',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(vm_mean,vm_ids,segs[0].get_vm(vm_ids[0]).units,value_name = 'Mean(VM)',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+                    self.datastore.full_datastore.add_analysis_result(PerNeuronValue(esyn_mean_std,esyn_ids,segs[0].get_esyn(esyn_ids[0]).units,value_name = 'STD(Mean(ECond))',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+                    self.datastore.full_datastore.add_analysis_result(PerNeuronValue(isyn_mean_std,isyn_ids,segs[0].get_isyn(isyn_ids[0]).units,value_name = 'STD(Mean(ICond))',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+                    self.datastore.full_datastore.add_analysis_result(PerNeuronValue(vm_mean_std,vm_ids,segs[0].get_vm(vm_ids[0]).units,value_name = 'STD(Mean(VM))',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(esyn_std,esyn_ids,segs[0].get_esyn(esyn_ids[0]).units,value_name = 'STD(ECond)',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(isyn_std,isyn_ids,segs[0].get_isyn(isyn_ids[0]).units,value_name = 'STD(ICond)',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(vm_std,vm_ids,segs[0].get_vm(vm_ids[0]).units,value_name = 'STD(VM)',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(esyn_fano_factor,esyn_ids,qt.dimensionless,value_name = 'FanoFactor(ECond)',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(isyn_fano_factor,isyn_ids,qt.dimensionless,value_name = 'FanoFactor(ICond)',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(vm_fano_factor,vm_ids,qt.dimensionless,value_name = 'FanoFactor(VM)',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
+
+class Analog_TrialToTrialSTD(Analysis):
+      """
+      Calculates the trial-to-trial standard deviation of vm and conductances for each neuron for each time point and average it over the whole duration of the stimulus.
+      It stores them in PerNeuronValue datastructures (one for exc. one for inh. conductances and one for vm).
+
+      Notes
+      -----
+      Only neurons for which the corresponding signals were measured will be included in the PerNeuronValue data structures.
+      """
+
+      def perform_analysis(self):
+            for sheet in self.datastore.sheets():
+                dsv = queries.param_filter_query(self.datastore, sheet_name=sheet)
+                segs1, stids = colapse(dsv.get_segments(),dsv.get_stimuli(),parameter_list=['trial'],allow_non_identical_objects=True)
+                for segs,st in zip(segs1, stids):
+                    vm_ids = segs[0].get_stored_vm_ids()
+                    esyn_ids = segs[0].get_stored_esyn_ids()
+                    isyn_ids = segs[0].get_stored_isyn_ids()
+
+                    vm_std = [numpy.mean(numpy.std([seg.get_vm(idd) for seg in segs], axis=0)) for idd in vm_ids]
+                    esyn_std = [numpy.mean(numpy.std([seg.get_esyn(idd) for seg in segs], axis=0)) for idd in esyn_ids]
+                    isyn_std = [numpy.mean(numpy.std([seg.get_isyn(idd) for seg in segs], axis=0)) for idd in isyn_ids]
+
+                    # save in datastore
+                    self.datastore.full_datastore.add_analysis_result(PerNeuronValue(esyn_std,esyn_ids,segs[0].get_esyn(esyn_ids[0]).units,value_name = 'Trial-to-Trial STD of ECond',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))
+                    self.datastore.full_datastore.add_analysis_result(PerNeuronValue(isyn_std,isyn_ids,segs[0].get_isyn(isyn_ids[0]).units,value_name = 'Trial-to-Trial STD of ICond',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))
+                    self.datastore.full_datastore.add_analysis_result(PerNeuronValue(vm_std,vm_ids,segs[0].get_vm(vm_ids[0]).units,value_name = 'Trial-to-Trial STD of VM',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))
 
 class AnalogSignal_PerNeuronMeanVar(Analysis):
       """
