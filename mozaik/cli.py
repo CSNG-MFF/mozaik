@@ -15,7 +15,7 @@ def parse_workflow_args():
         simulator_name = sys.argv[1]
         num_threads = sys.argv[2]
         parameters_url = sys.argv[3]
-        modified_parameters = { sys.argv[i*2+4] : eval(sys.argv[i*2+5])  for i in xrange(0,(len(sys.argv)-5)/2)}
+        modified_parameters = { sys.argv[int(i*2)+4] : eval(sys.argv[int(i*2)+5])  for i in range(0,int((len(sys.argv)-5)/2))}
         return (
             simulation_run_name,
             simulator_name,

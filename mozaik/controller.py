@@ -5,6 +5,7 @@ from mozaik.cli import parse_workflow_args
 from mozaik.storage.datastore import Hdf5DataStore, PickledDataStore
 from mozaik.tools.distribution_parametrization import MozaikExtendedParameterSet, load_parameters
 from mozaik.tools.misc import result_directory_name
+from collections import OrderedDict
 import sys
 import os
 import mozaik
@@ -73,7 +74,7 @@ def setup_logging():
                      console_level=logging.INFO, mpi_rank=mozaik.mpi_comm.rank)  
     else:
         init_logging(Global.root_directory + "log", file_level=logging.INFO,
-	             console_level=logging.INFO)  
+                 console_level=logging.INFO)  
 
 
 def prepare_workflow(simulation_name, model_class):
@@ -85,7 +86,6 @@ def prepare_workflow(simulation_name, model_class):
         - Store loaded parameters
         - Setup logging
         - Store some initial info about the simulation
-
     Returns
     -------
     sim : module
@@ -106,20 +106,20 @@ def prepare_workflow(simulation_name, model_class):
 
     # First we load the parameters just to retrieve seeds. We will throw them away, because at this stage the PyNNDistribution values were not yet initialized correctly.
     parameters = load_parameters(parameters_url,modified_parameters)
-    p={}
-    if parameters.has_key('mozaik_seed') : p['mozaik_seed'] = parameters['mozaik_seed']
-    if parameters.has_key('pynn_seed') : p['pynn_seed'] = parameters['pynn_seed']
+    p=OrderedDict()
+    if 'mozaik_seed' in parameters : p['mozaik_seed'] = parameters['mozaik_seed']
+    if 'pynn_seed' in parameters : p['pynn_seed'] = parameters['pynn_seed']
 
     # Now initialize mpi with the seeds
-    print "START MPI"
+    print("START MPI")
     mozaik.setup_mpi(**p)
 
     # Now really load parameters
-    print "Loading parameters";
+    print("Loading parameters")
     parameters = load_parameters(parameters_url,modified_parameters)
-    print "Finished loading parameters";
+    print("Finished loading parameters")
 
-    exec "import pyNN.nest as sim" in  globals(), locals()
+    import pyNN.nest as sim
 
     # Create results directory
     timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
@@ -142,8 +142,8 @@ def prepare_workflow(simulation_name, model_class):
         # Let's store the full and modified parameters, if we are the 0 rank process
         parameters.save(Global.root_directory + "parameters", expand_urls=True)
         import pickle
-        f = open(Global.root_directory+"modified_parameters","w")
-        pickle.dump(modified_parameters,f)
+        f = open(Global.root_directory+"modified_parameters","wb")
+        pickle.dump(str(modified_parameters),f)
         f.close()
 
     setup_logging()
@@ -158,30 +158,23 @@ def prepare_workflow(simulation_name, model_class):
 def run_workflow(simulation_name, model_class, create_experiments):
     """
     This is the main function that executes a workflow.
-
     It expects it gets the simulation, class of the model, and a function that will create_experiments.
     The create experiments function get a instance of a model as the only parameter and it is expected to return
     a list of Experiment instances that should be executed over the model.
-
     The run workflow will automatically parse the command line to determine the simulator to be used and the path to the root parameter file.
     It will also accept . (point) delimited path to parameteres in the configuration tree, and corresponding values. It will replace each such provided
     parameter's value with the provided one on the command line.
-
     Parameters
     ----------
     simulation_name : str
                     The name of the simulation.
-
     model_class : class
                 The class from which the model instance will be created from.
-
     create_experiments : func
                        The function that returns the list of experiments that will be executed on the model.
-
     Examples
     --------
     The intended syntax of the commandline is as follows (note that the simulation run name is the last argument):
-
     >>> python userscript simulator_name num_threads parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n simulation_run_name
     """
 
@@ -193,9 +186,9 @@ def run_workflow(simulation_name, model_class, create_experiments):
     data_store = run_experiments(model,create_experiments(model),parameters)
 
     if mozaik.mpi_comm.rank == 0:
-	    data_store.save()
+        data_store.save()
     import resource
-    print "Final memory usage: %iMB" % (resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/(1024))
+    print("Final memory usage: %iMB" % (resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/(1024)))
     return (data_store, model)
 
 def run_experiments(model,experiment_list,parameters,load_from=None):
@@ -237,8 +230,8 @@ def run_experiments(model,experiment_list,parameters,load_from=None):
     data_store.set_neuron_ids(model.neuron_ids())
     data_store.set_neuron_positions(model.neuron_positions())
     data_store.set_neuron_annotations(model.neuron_annotations())
-    data_store.set_model_parameters(str(parameters))
-    data_store.set_sheet_parameters(str(model.sheet_parameters()))
+    data_store.set_model_parameters(parameters.pretty(expand_urls=True))
+    data_store.set_sheet_parameters(MozaikExtendedParameterSet(model.sheet_parameters()).pretty(expand_urls=True))
     data_store.set_experiment_parametrization_list([(str(exp.__class__),str(exp.parameters)) for exp in experiment_list])
     
     t0 = time.time()

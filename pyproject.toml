@@ -1,6 +1,8 @@
 [tool.pytest.ini_options]
 markers = [
     "model: tests that need to run a full mozaik model to execute. Can be extremely slow.",
+    "VogelsAbbott2005: tests that need to run the VogelsAbbott2005 mozaik model to execute. This is the fastest of all the model run tests, but still significantly slower than normal unittests.",
+    "LSV1M: tests that need to run the LSV1M model to execute. Will be very very slow (1+ hour).",
 ]
 
 [tool.black]
@@ -30,6 +32,7 @@ exclude = '''
 | build
 | doc
 | imagen
+| nest-simulator-2.20.1
 | \.git
 )
 '''

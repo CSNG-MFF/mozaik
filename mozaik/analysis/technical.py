@@ -6,7 +6,6 @@ from mozaik.analysis.data_structures import PerNeuronValue
 from mozaik.analysis.analysis import Analysis
 from mozaik.storage import queries
 from parameters import ParameterSet
-from sets import Set
 import quantities as qt
 import numpy
 import mozaik
@@ -35,23 +34,23 @@ class NeuronAnnotationsToPerNeuronValues(Analysis):
 
         for sheet in self.datastore.sheets():
             dsv = queries.param_filter_query(self.datastore,sheet_name=sheet)
-            keys = Set([])
+            keys = set([])
 
-            for n in xrange(0, len(anns[sheet])):
+            for n in range(0, len(anns[sheet])):
                 keys = keys.union(anns[sheet][n].keys())
 
             for k in keys:
                 # first check if the key is defined for all neurons
                 key_ok = True
 
-                for n in xrange(0, len(anns[sheet])):
+                for n in range(0, len(anns[sheet])):
                     if not k in anns[sheet][n]:
                         key_ok = False
                         break
 
                 if key_ok:
                     values = []
-                    for n in xrange(0, len(anns[sheet])):
+                    for n in range(0, len(anns[sheet])):
                         values.append(anns[sheet][n][k])
 
                     period = None

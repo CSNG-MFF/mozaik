@@ -6,6 +6,8 @@ import numpy
 from mozaik.stimuli import InternalStimulus
 from mozaik.tools.distribution_parametrization import ParameterWithUnitsAndPeriod, MozaikExtendedParameterSet
 from mozaik.sheets.direct_stimulator import Depolarization
+from collections import OrderedDict
+
 
 
 logger = mozaik.getMozaikLogger()
@@ -31,7 +33,7 @@ class VisualExperiment(Experiment):
         #JAHACK: This is kind of a hack now. There needs to be generally defined interface of what is the spatial and temporal resolution of a visual input layer
         # possibly in the future we could force the visual_space to have resolution, perhaps something like native_resolution parameter!?
         self.density  = 1/self.model.input_layer.parameters.receptive_field.spatial_resolution # in pixels per degree of visual space 
-	self.frame_duration = self.model.input_space.parameters.update_interval # in pixels per degree of visual space 
+        self.frame_duration = self.model.input_space.parameters.update_interval # in pixels per degree of visual space 
 
 class MeasureFlatLuminanceSensitivity(VisualExperiment):
     """
@@ -72,9 +74,9 @@ class MeasureFlatLuminanceSensitivity(VisualExperiment):
         
         # stimuli creation        
         for l in self.parameters.luminances:
-            for k in xrange(0, self.parameters.num_trials):
+            for k in range(0, self.parameters.num_trials):
                 self.stimuli.append( topo.Null(
-		    frame_duration = self.frame_duration,
+                    frame_duration = self.frame_duration,
                     size_x=model.visual_field.size_x,
                     size_y=model.visual_field.size_y,
                     location_x=0.0,
@@ -141,10 +143,10 @@ class MeasureSparse(VisualExperiment):
     def __init__(self,model,parameters):
         VisualExperiment.__init__(self, model,parameters)
     
-        for k in xrange(0, self.parameters.num_trials):
+        for k in range(0, self.parameters.num_trials):
            
             self.stimuli.append(topo.SparseNoise(
-            frame_duration = self.frame_duration,
+                            frame_duration = self.frame_duration,
                             time_per_image = self.parameters.time_per_image,
                             blank_time = self.parameters.blank_time,
                             duration = self.parameters.total_number_of_images * (self.parameters.time_per_image + self.parameters.blank_time),  
@@ -234,7 +236,7 @@ class MeasureSparseWithCurrentInjection(VisualExperiment):
         self.direct_stimulation = []
 
         for k in xrange(0, self.parameters.num_trials):
-            d  = {}
+            d  = OrderedDict()
             p = MozaikExtendedParameterSet({
                                 'population_selector' : self.parameters.stimulation_configuration,
                                 'current' : self.parameters.stimulation_current
@@ -319,9 +321,9 @@ class MeasureDense(VisualExperiment):
     def __init__(self,model,parameters):
         VisualExperiment.__init__(self, model,parameters)
 
-        for k in xrange(0, self.parameters.num_trials):
+        for k in range(0, self.parameters.num_trials):
             self.stimuli.append(topo.DenseNoise(
-			    frame_duration = self.frame_duration,
+                            frame_duration = self.frame_duration,
                             time_per_image = self.parameters.time_per_image,
                             duration = self.parameters.total_number_of_images * self.parameters.time_per_image, 
                             size_x=model.visual_field.size_x,
@@ -385,10 +387,10 @@ class MeasureOrientationTuningFullfield(VisualExperiment):
     def __init__(self,model,parameters):
         VisualExperiment.__init__(self, model,parameters)
         for c in self.parameters.contrasts:
-            for i in xrange(0, self.parameters.num_orientations):
-                for k in xrange(0, self.parameters.num_trials):
+            for i in range(0, self.parameters.num_orientations):
+                for k in range(0, self.parameters.num_trials):
                     self.stimuli.append(topo.FullfieldDriftingSinusoidalGrating(
-				    frame_duration = self.frame_duration,
+                                    frame_duration = self.frame_duration,
                                     size_x=model.visual_field.size_x,
                                     size_y=model.visual_field.size_y,
                                     location_x=0.0,
@@ -454,8 +456,8 @@ class MeasureOrientationTuningFullfieldA(VisualExperiment):
     def __init__(self,model,parameters):
         VisualExperiment.__init__(self, model,parameters)
         for c in self.parameters.contrasts:
-            for i in xrange(0, self.parameters.num_orientations):
-                for k in xrange(0, self.parameters.num_trials):
+            for i in range(0, self.parameters.num_orientations):
+                for k in range(0, self.parameters.num_trials):
                     self.stimuli.append(topo.FullfieldDriftingSinusoidalGratingA(
                     frame_duration = self.frame_duration,
                                     size_x=model.visual_field.size_x,
@@ -549,9 +551,9 @@ class MeasureSizeTuning(VisualExperiment):
         # stimuli creation        
         for c in self.parameters.contrasts:
             for s in sizes:
-                for k in xrange(0, self.parameters.num_trials):
+                for k in range(0, self.parameters.num_trials):
                     self.stimuli.append(topo.DriftingSinusoidalGratingDisk(
-				    frame_duration = self.frame_duration,
+                                    frame_duration = self.frame_duration,
                                     size_x=model.visual_field.size_x,
                                     size_y=model.visual_field.size_y,
                                     location_x=0.0,
@@ -712,9 +714,9 @@ class MeasureContrastSensitivity(VisualExperiment):
             
         # stimuli creation        
         for c in self.parameters.contrasts:
-            for k in xrange(0, self.parameters.num_trials):
+            for k in range(0, self.parameters.num_trials):
                 self.stimuli.append(topo.FullfieldDriftingSinusoidalGrating(
-		    frame_duration = self.frame_duration,
+                    frame_duration = self.frame_duration,
                     size_x=model.visual_field.size_x,
                     size_y=model.visual_field.size_y,
                     location_x=0.0,
@@ -784,9 +786,9 @@ class MeasureContrastSensitivityA(VisualExperiment):
             
         # stimuli creation        
         for c in self.parameters.contrasts:
-            for k in xrange(0, self.parameters.num_trials):
+            for k in range(0, self.parameters.num_trials):
                 self.stimuli.append(topo.FullfieldDriftingSinusoidalGratingA(
-		    frame_duration = self.frame_duration,
+                    frame_duration = self.frame_duration,
                     size_x=model.visual_field.size_x,
                     size_y=model.visual_field.size_y,
                     location_x=0.0,
@@ -865,10 +867,10 @@ class MeasureFrequencySensitivity(VisualExperiment):
         for tf in self.parameters.temporal_frequencies:
             for sf in self.parameters.spatial_frequencies:
                 for c in self.parameters.contrasts:
-                    for k in xrange(0, self.parameters.num_trials):
+                    for k in range(0, self.parameters.num_trials):
                         if self.parameters.square:
                             self.stimuli.append(topo.FullfieldDriftingSquareGrating(
-				frame_duration = self.frame_duration,
+                                frame_duration = self.frame_duration,
                                 size_x=model.visual_field.size_x,
                                 size_y=model.visual_field.size_y,
                                 location_x=0.0,
@@ -883,7 +885,7 @@ class MeasureFrequencySensitivity(VisualExperiment):
                                 temporal_frequency=tf))
                         else:
                             self.stimuli.append(topo.FullfieldDriftingSinusoidalGrating(
-				frame_duration = self.frame_duration,
+                                frame_duration = self.frame_duration,
                                 size_x=model.visual_field.size_x,
                                 size_y=model.visual_field.size_y,
                                 location_x=0.0,
@@ -964,11 +966,11 @@ class MeasureOrientationContrastTuning(VisualExperiment):
         VisualExperiment.__init__(self, model,parameters)
         
         for c in self.parameters.contrasts:
-            for i in xrange(0, self.parameters.num_orientations):
-                for k in xrange(0, self.parameters.num_trials):
+            for i in range(0, self.parameters.num_orientations):
+                for k in range(0, self.parameters.num_trials):
                     self.stimuli.append(
                         topo.DriftingSinusoidalGratingCenterSurroundStimulus(
-				    frame_duration = self.frame_duration,
+                                    frame_duration = self.frame_duration,
                                     size_x=model.visual_field.size_x,
                                     size_y=model.visual_field.size_y,
                                     location_x=0.0,
@@ -1043,10 +1045,10 @@ class MeasureFeatureInducedCorrelation(VisualExperiment):
         orientation = 0 #numpy.pi/2
         # SQUARED GRATINGS       
         for sf in self.parameters.spatial_frequencies:
-            for k in xrange(0, self.parameters.num_trials):
+            for k in range(0, self.parameters.num_trials):
                 self.stimuli.append(
                     topo.FullfieldDriftingSquareGrating(
-			frame_duration = self.frame_duration,
+                        frame_duration = self.frame_duration,
                         size_x=model.visual_field.size_x,
                         size_y=model.visual_field.size_y,
                         location_x=0.0,
@@ -1064,10 +1066,10 @@ class MeasureFeatureInducedCorrelation(VisualExperiment):
         # FLASHING SQUARES
         # the spatial_frequencies matters because squares sizes is established using the spatial frequency as for the drifting grating
         for sf in self.parameters.spatial_frequencies:
-            for k in xrange(0, self.parameters.num_trials):
+            for k in range(0, self.parameters.num_trials):
                 self.stimuli.append(
                     topo.FlashingSquares(
-			frame_duration = self.frame_duration,
+                        frame_duration = self.frame_duration,
                         size_x=model.visual_field.size_x,
                         size_y=model.visual_field.size_y,
                         location_x=0.0,
@@ -1127,10 +1129,10 @@ class MeasureNaturalImagesWithEyeMovement(VisualExperiment):
     def __init__(self,model,parameters):
         VisualExperiment.__init__(self, model,parameters)
         
-        for k in xrange(0, self.parameters.num_trials):
+        for k in range(0, self.parameters.num_trials):
             self.stimuli.append(
                 topo.NaturalImageWithEyeMovement(
-			    frame_duration = self.frame_duration,
+                            frame_duration = self.frame_duration,
                             size_x=model.visual_field.size_x,
                             size_y=model.visual_field.size_y,
                             location_x=0.0,
@@ -1193,10 +1195,10 @@ class MeasureDriftingSineGratingWithEyeMovement(VisualExperiment):
     def __init__(self,model,parameters):
         VisualExperiment.__init__(self, model,parameters)
         
-        for k in xrange(0, self.parameters.num_trials):
+        for k in range(0, self.parameters.num_trials):
             self.stimuli.append(
                 topo.DriftingGratingWithEyeMovement(
-			    frame_duration = self.frame_duration,
+                            frame_duration = self.frame_duration,
                             size_x=model.visual_field.size_x,
                             size_y=model.visual_field.size_y,
                             location_x=0.0,
@@ -1244,10 +1246,10 @@ class MeasureSpontaneousActivity(VisualExperiment):
     def __init__(self,model,parameters):
             VisualExperiment.__init__(self, model,parameters)
             
-            for k in xrange(0,self.parameters.num_trials):
+            for k in range(0,self.parameters.num_trials):
                 self.stimuli.append(
                             topo.Null(   
-				frame_duration = self.frame_duration,
+                                frame_duration = self.frame_duration,
                                 size_x=model.visual_field.size_x,
                                 size_y=model.visual_field.size_y,
                                 location_x=0.0,
@@ -1330,11 +1332,11 @@ class MapPhaseResponseWithBarStimulus(VisualExperiment):
     
     def __init__(self, model,parameters):
         VisualExperiment.__init__(self, model,parameters)
-        for k in xrange(0, self.parameters.num_trials):
-            for s in xrange(0, self.parameters.steps):
+        for k in range(0, self.parameters.num_trials):
+            for s in range(0, self.parameters.steps):
                 self.stimuli.append(
                     topo.FlashedBar(
-				                frame_duration = self.frame_duration,
+                                frame_duration = self.frame_duration,
                                 size_x=model.visual_field.size_x,
                                 size_y=model.visual_field.size_y,
                                 location_x=0.0,
@@ -1391,13 +1393,13 @@ class CorticalStimulationWithStimulatorArrayAndHomogeneousOrientedStimulus(Exper
             Experiment.__init__(self, model,parameters)
             from mozaik.sheets.direct_stimulator import LocalStimulatorArrayChR
             
-            d  = {}
+            d  = OrderedDict()
             for sheet in self.parameters.sheet_list:
                 d[sheet] = [LocalStimulatorArrayChR(model.sheets[sheet],self.parameters.localstimulationarray_parameters)]
             
             self.direct_stimulation = []
 
-            for i in xrange(0,self.parameters.num_trials):
+            for i in range(0,self.parameters.num_trials):
                 self.direct_stimulation.append(d)
                 self.stimuli.append(
                             InternalStimulus(   
@@ -1451,11 +1453,11 @@ class CorticalStimulationWithStimulatorArrayAndOrientationTuningProtocol(Experim
             first = True
 
             for s in self.parameters.intensities:
-                for i in xrange(self.parameters.num_orientations):
+                for i in range(self.parameters.num_orientations):
                     p = MozaikExtendedParameterSet(self.parameters.localstimulationarray_parameters.tree_copy().as_dict())
                     p.stimulating_signal_parameters.orientation = ParameterWithUnitsAndPeriod(numpy.pi/self.parameters.num_orientations * i,period=numpy.pi)
                     p.stimulating_signal_parameters.scale =       ParameterWithUnitsAndPeriod(float(s),period=None)
-                    d  = {}
+                    d  = OrderedDict()
                     if first:
                         for sheet in self.parameters.sheet_list:
                             d[sheet] = [LocalStimulatorArrayChR(model.sheets[sheet],p)]
@@ -1464,7 +1466,7 @@ class CorticalStimulationWithStimulatorArrayAndOrientationTuningProtocol(Experim
                         for sheet in self.parameters.sheet_list:
                             d[sheet] = [LocalStimulatorArrayChR(model.sheets[sheet],p,shared_scs=self.direct_stimulation[0][sheet][0].scs)]
 
-                    for i in xrange(0,self.parameters.num_trials):
+                    for i in range(0,self.parameters.num_trials):
                         self.direct_stimulation.append(d)
                         self.stimuli.append(
                                     InternalStimulus(   
@@ -1519,11 +1521,11 @@ class CorticalStimulationWithStimulatorArrayAndOrientationTuningProtocol_Contras
             first = True
 
             for c in self.parameters.contrasts:
-                for i in xrange(self.parameters.num_orientations):
+                for i in range(self.parameters.num_orientations):
                     p = MozaikExtendedParameterSet(self.parameters.localstimulationarray_parameters.tree_copy().as_dict())
                     p.stimulating_signal_parameters.orientation = ParameterWithUnitsAndPeriod(numpy.pi/self.parameters.num_orientations * i,period=numpy.pi)
                     p.stimulating_signal_parameters.contrast =       ParameterWithUnitsAndPeriod(float(c),period=None)
-                    d  = {}
+                    d  = OrderedDict()
                     if first:
                         for sheet in self.parameters.sheet_list:
                             d[sheet] = [LocalStimulatorArrayChR(model.sheets[sheet],p)]
@@ -1532,7 +1534,7 @@ class CorticalStimulationWithStimulatorArrayAndOrientationTuningProtocol_Contras
                         for sheet in self.parameters.sheet_list:
                             d[sheet] = [LocalStimulatorArrayChR(model.sheets[sheet],p,shared_scs=self.direct_stimulation[0][sheet][0].scs)]
 
-                    for i in xrange(0,self.parameters.num_trials):
+                    for i in range(0,self.parameters.num_trials):
                         self.direct_stimulation.append(d)
                         self.stimuli.append(
                                     InternalStimulus(   
@@ -1606,7 +1608,7 @@ class VonDerHeydtIllusoryBarProtocol(VisualExperiment):
     
     def __init__(self, model,parameters):
         VisualExperiment.__init__(self, model,parameters)
-        for k in xrange(0, self.parameters.num_trials):
+        for k in range(0, self.parameters.num_trials):
               for obw in self.parameters.occlusion_bar_width:  
                             self.stimuli.append(
                                 topo.FlashedInterruptedBar(
@@ -2001,8 +2003,8 @@ class MapResponseToInterruptedBarStimulus(VisualExperiment):
     
     def __init__(self, model,parameters):
         VisualExperiment.__init__(self, model,parameters)
-        for k in xrange(0, self.parameters.num_trials):
-            for s in xrange(0, self.parameters.steps):
+        for k in range(0, self.parameters.num_trials):
+            for s in range(0, self.parameters.steps):
                 for r in self.parameters.relative_luminances:
                     for l in self.parameters.gap_lengths:  
                             if self.parameters.steps>1:
@@ -2105,8 +2107,8 @@ class MapResponseToInterruptedCornerStimulus(VisualExperiment):
     
     def __init__(self, model,parameters):
         VisualExperiment.__init__(self, model,parameters)
-        for k in xrange(0, self.parameters.num_trials):
-            for s in xrange(0, self.parameters.steps):
+        for k in range(0, self.parameters.num_trials):
+            for s in range(0, self.parameters.steps):
                 for r in self.parameters.relative_luminances:
                     for a in self.parameters.angles:
                             if self.parameters.steps>1:

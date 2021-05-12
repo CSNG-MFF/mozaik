@@ -4,6 +4,8 @@ docstring goes here
 """
 import numpy
 from numpy import exp, sqrt
+from collections import OrderedDict
+
 
 def meshgrid3D(x, y, z):
     """A slimmed-down version of http://www.scipy.org/scipy/numpy/attachment/ticket/966/meshgrid.py"""
@@ -17,7 +19,7 @@ def meshgrid3D(x, y, z):
            z[nax, nax, :] * mult_fact
 
 def stRF_kernel_2d(duration=200.0, dt=1000.0/120.0, size=10.0,
-                   scale_factor=10.0, p={}):
+                   scale_factor=10.0, p=OrderedDict()):
     """
     scale_factor = pixel/degree
     """
@@ -60,7 +62,7 @@ def stRF_2d(x, y, t, p):
     assert abs(fsm_area - surround_area)/max(fsm_area,surround_area) < 0.5, "Synthesized surround of RF doesn't fit the supplied sigma and amplitude (%f-%f=%f), check visual field size and model size!" % (fsm_area, surround_area, abs(fsm_area - surround_area))
 
     if p.subtract_mean:
-        for i in xrange(0,numpy.shape(rf)[2]): # lets normalize each time slice separately
+        for i in range(0,numpy.shape(rf)[2]): # lets normalize each time slice separately
             rf[:,:,i] = rf[:,:,i] - rf[:,:,i].mean()
         #rf = rf - rf.mean()
     return rf

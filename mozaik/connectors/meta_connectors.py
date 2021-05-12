@@ -8,7 +8,7 @@ from parameters import ParameterSet
 from mozaik.connectors.modular import ModularSamplingProbabilisticConnector, ModularSamplingProbabilisticConnectorAnnotationSamplesCount
 from mozaik.tools.distribution_parametrization import PyNNDistribution
 
-
+from builtins import zip
 
 """
 This file contains meta-connectors. These are classes that represent some higher-level 
@@ -71,7 +71,7 @@ class GaborConnector(BaseComponent):
         'frequency':    PyNNDistribution,  # the frequency of the gabor in degrees of visual field
         'rf_jitter' : PyNNDistribution, # The jitter to apply to the center of RF (on top of retinotopic position)
 
-	'off_bias' : float, # The bias towards off responses (it will be applied to the weight strength)
+        'off_bias' : float, # The bias towards off responses (it will be applied to the weight strength)
 
         'topological': bool,  # should the receptive field centers vary with the position of the given neurons
                               # (note positions of neurons are always stored in visual field coordinates)
@@ -102,8 +102,8 @@ class GaborConnector(BaseComponent):
         or_map = None
         if self.parameters.or_map:
 
-            f = open(self.parameters.or_map_location, 'r')
-            or_map = pickle.load(f)*numpy.pi
+            f = open(self.parameters.or_map_location, 'rb')
+            or_map = pickle.load(f, encoding="latin1")*numpy.pi
             #or_map = pickle.load(f)*numpy.pi*2
             #or_map = numpy.cos(or_map) + 1j*numpy.sin(or_map)
             
@@ -115,17 +115,14 @@ class GaborConnector(BaseComponent):
                                       numpy.shape(or_map)[1])
                                       
             X, Y = numpy.meshgrid(coords_x, coords_y)
-            
-            or_map = NearestNDInterpolator(zip(X.flatten(), Y.flatten()),
+            or_map = NearestNDInterpolator(list(zip(X.flatten(), Y.flatten())),
                                            or_map.flatten())
-            #or_map = CloughTocher2DInterpolator(zip(X.flatten(), Y.flatten()),
-            #                               or_map.flatten())
 
 
         phase_map = None
         if self.parameters.phase_map:
-            f = open(self.parameters.phase_map_location, 'r')
-            phase_map = pickle.load(f)
+            f = open(self.parameters.phase_map_location, 'rb')
+            phase_map = pickle.load(f, encoding="latin1")
             coords_x = numpy.linspace(-t_size[0]/2.0,
                                       t_size[0]/2.0,
                                       numpy.shape(phase_map)[0])
@@ -133,17 +130,13 @@ class GaborConnector(BaseComponent):
                                       t_size[1]/2.0,
                                       numpy.shape(phase_map)[1])
             X, Y = numpy.meshgrid(coords_x, coords_y)
-            phase_map = NearestNDInterpolator(zip(X.flatten(), Y.flatten()),
-                                              phase_map.flatten())
+            phase_map = NearestNDInterpolator(list(zip(X.flatten(), Y.flatten()),
+                                              phase_map.flatten()))
         
         for (j, neuron2) in enumerate(target.pop.all()):
             if or_map:
                 orientation = or_map(target.pop.positions[0][j],
                                      target.pop.positions[1][j])
-                                     
-                #orientation = (numpy.angle(or_map(target.pop.positions[0][j],
-                #                     target.pop.positions[1][j]))+numpy.pi)/2.0
-                                     
             else:
                 orientation = parameters.orientation_preference.next()
 
@@ -173,8 +166,6 @@ class GaborConnector(BaseComponent):
             else:
                 target.add_neuron_annotation(j, 'LGNAfferentX', parameters.rf_jitter.next(), protected=True)
                 target.add_neuron_annotation(j, 'LGNAfferentY', parameters.rf_jitter.next(), protected=True)
-        
-        
 
         ps = ParameterSet({   'target_synapses' : 'excitatory',               
                               'weight_functions' : {  'f1' : {

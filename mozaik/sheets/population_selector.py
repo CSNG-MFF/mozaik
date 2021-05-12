@@ -179,16 +179,16 @@ class SimilarAnnotationSelector(PopulationSelector):
       def pick_close_to_annotation(self):
           picked = []
           z = self.sheet.pop.all_cells.astype(int)
-          vals = [self.sheet.get_neuron_annotation(i,self.parameters.annotation) for i in xrange(0,len(z))]
+          vals = [self.sheet.get_neuron_annotation(i,self.parameters.annotation) for i in range(0,len(z))]
           if self.parameters.period != 0:
-            picked = numpy.array([i for i in xrange(0,len(z)) if abs(vals[i]-self.parameters.value) < self.parameters.distance])
+            picked = numpy.array([i for i in range(0,len(z)) if abs(vals[i]-self.parameters.value) < self.parameters.distance])
           else:
-            picked = numpy.array([i for i in xrange(0,len(z)) if circular_dist(vals[i],self.parameters.value,self.parameters.period) < self.parameters.distance])  
+            picked = numpy.array([i for i in range(0,len(z)) if circular_dist(vals[i],self.parameters.value,self.parameters.period) < self.parameters.distance])  
           
           return picked
       
       def generate_idd_list_of_neurons(self):
-          picked = self.pick_close_to_annotation()
+          picked = sorted(self.pick_close_to_annotation())
           mozaik.rng.shuffle(picked)
           return z[picked[:self.parameters.num_of_cells]]
           
@@ -241,7 +241,7 @@ class SimilarAnnotationSelectorRegion(SimilarAnnotationSelector):
                                                                          abs(numpy.array(xx - self.parameters.offset_x)) < self.parameters.size/2.0,
                                                                          abs(numpy.array(yy - self.parameters.offset_y)) < self.parameters.size/2.0
                                                       )])
-          picked = list(picked_or & picked_region)  
+          picked = sorted(list(picked_or & picked_region))
           mozaik.rng.shuffle(picked)
           z = self.sheet.pop.all_cells.astype(int)
           return z[picked[:self.parameters.num_of_cells]]

@@ -8,6 +8,7 @@ from parameters import ParameterSet
 from mozaik.core import BaseComponent
 from mozaik import load_component
 from mozaik.stimuli import InternalStimulus
+from collections import OrderedDict
 import mozaik
 import time
 import numpy
@@ -78,8 +79,8 @@ class Model(BaseComponent):
         self.first_time = True
         self.sim = sim
         self.node = sim.setup(timestep=self.parameters.time_step, min_delay=self.parameters.min_delay, max_delay=self.parameters.max_delay, threads=num_threads)  # should have some parameters here
-        self.sheets = {}
-        self.connectors = {}
+        self.sheets = OrderedDict()
+        self.connectors = OrderedDict()
         self.num_threads = num_threads
 
         # Set-up the input space
@@ -151,8 +152,8 @@ class Model(BaseComponent):
 
         self.first_time = False
 
-	for sheet in self.sheets.values():
-	    logger.info("Sheet %s average rate: %f" % (sheet.name,sheet.mean_spike_count()))
+        for sheet in self.sheets.values():
+           logger.info("Sheet %s average rate: %f" % (sheet.name,sheet.mean_spike_count()))
 
         
         #remove any artificial stimulators 
@@ -242,7 +243,7 @@ class Model(BaseComponent):
         """
         Returns the list of ids of neurons in the model.
         """
-        ids = {}
+        ids = OrderedDict()
         for s in self.sheets.values():
             ids[s.name] = numpy.array([int(a) for a in s.pop.all()])
         return ids
@@ -251,7 +252,7 @@ class Model(BaseComponent):
         """
         Returns the list of ids of neurons in the model.
         """
-        p = {}
+        p = OrderedDict()
         for s in self.sheets.values():
             p[s.name] = s.parameters
         return p
@@ -264,7 +265,7 @@ class Model(BaseComponent):
         corresponds to a sheet name, and the value contains a 2D array of size (2,number_of_neurons)
         containing the x and y coordinates of the neurons in the given sheet.
         """
-        pos = {}
+        pos = OrderedDict()
         for s in self.sheets.values():
             pos[s.name] = s.pop.positions
         return pos
@@ -274,7 +275,7 @@ class Model(BaseComponent):
         Returns the neuron annotations, as a dictionary with sheet names as keys, and corresponding annotation
         dictionaries as values.
         """
-        neuron_annotations = {}
+        neuron_annotations = OrderedDict()
         for s in self.sheets.values():
             neuron_annotations[s.name] = s.get_neuron_annotations()
         return neuron_annotations

@@ -11,6 +11,8 @@ from mozaik.storage.queries import *
 from mozaik.tools.mozaik_parametrized import *
 from neo import AnalogSignal
 
+from builtins import zip
+
 logger = mozaik.getMozaikLogger()
 
 
@@ -50,7 +52,7 @@ def psth(spike_list, bin_length,normalize=True):
     if normalize:
        normalizer = (bin_length/1000.0)
        
-    h = [AnalogSignal(numpy.histogram(sp, bins=num_bins, range=r)[0] /normalizer ,t_start=t_start*qt.ms,sampling_period=bin_length*qt.ms,units=munits.spike_per_sec) for sp in spike_list]
+    h = [AnalogSignal(numpy.histogram(sp, bins=num_bins, range=r)[0] /normalizer ,t_start=t_start,sampling_period=bin_length*qt.ms,units=munits.spike_per_sec) for sp in spike_list]
     return  h
 
 

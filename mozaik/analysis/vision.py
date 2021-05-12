@@ -5,7 +5,7 @@ Module containing vision specific analysis.
 import mozaik
 import numpy
 import quantities as qt
-from analysis import Analysis
+from .analysis import Analysis
 from mozaik.tools.mozaik_parametrized import colapse, colapse_to_dictionary, MozaikParametrized
 from mozaik.analysis.data_structures import PerNeuronValue
 from mozaik.analysis.helper_functions import psth
@@ -13,6 +13,8 @@ from parameters import ParameterSet
 from mozaik.storage import queries
 from mozaik.tools.circ_stat import circ_mean, circular_dist
 from mozaik.tools.neo_object_operations import neo_mean, neo_sum
+from builtins import zip
+from collections import OrderedDict
 
 logger = mozaik.getMozaikLogger()
 
@@ -58,16 +60,17 @@ class ModulationRatio(Analysis):
             or_pref = pnvs[0]
             # find closest orientation of grating to a given orientation preference of a neuron
             # first find all the different presented stimuli:
-            ps = {}
+            ps = OrderedDict()
             for s in st:
                 ps[MozaikParametrized.idd(s).orientation] = True
-            ps = ps.keys()
+            ps = list(ps.keys())
+
             # now find the closest presented orientations
             closest_presented_orientation = []
-            for i in xrange(0, len(or_pref.values)):
+            for i in range(0, len(or_pref.values)):
                 circ_d = 100000
                 idx = 0
-                for j in xrange(0, len(ps)):
+                for j in range(0, len(ps)):
                     if circ_d > circular_dist(or_pref.values[i], ps[j], numpy.pi):
                         circ_d = circular_dist(or_pref.values[i], ps[j], numpy.pi)
                         idx = j
@@ -144,19 +147,14 @@ class ModulationRatio(Analysis):
         period = 1/frequency
         period = period.rescale(signal.t_start.units)
         cycles = duration / period
-        first_har = int(round(cycles.magnitude))
+        first_har = int(round(float(cycles.magnitude)))
 
         fft = numpy.fft.fft(signal)
-	logger.info("MR: " + str(cycles))
-	logger.info("MR: " + str(first_har))
-	logger.info("MR: " + str(type(first_har)))
-	logger.info("MR: " + str(duration) + " " +  str(period))
-	logger.info("MR: " + str(fft[0]) + " " + str(fft[first_har]))
 
         if abs(fft[0]) != 0:
             return 2*abs(fft[first_har])/abs(fft[0]),abs(fft[0]),2*abs(fft[first_har]),
         else:
-	    logger.info("MR: ARGH: " + str(fft[0]) +"  " +  str(numpy.mean(signal)))
+            logger.info("MR: ARGH: " + str(fft[0]) +"  " +  str(numpy.mean(signal)))
             return 10,abs(fft[0]),2*abs(fft[first_har]),
 
 class Analog_F0andF1(Analysis):
@@ -182,7 +180,7 @@ class Analog_F0andF1(Analysis):
                 if len(dsv.get_segments()) != 0:
                   assert queries.equal_stimulus_type(self.datastore) , "Data store has to contain only recordings to the same stimulus type"
                   st = self.datastore.get_stimuli()[0]
-                  assert MozaikParametrized.idd(st).getParams().has_key('temporal_frequency'), "The stimulus has to have parameter temporal_frequency which is used as first harmonic"
+                  assert 'temporal_frequency' in MozaikParametrized.idd(st).getParams(), "The stimulus has to have parameter temporal_frequency which is used as first harmonic"
 
                   segs1, stids = colapse(dsv.get_segments(),dsv.get_stimuli(),parameter_list=['trial'],allow_non_identical_objects=True)
                   for segs,st in zip(segs1, stids):
@@ -214,10 +212,12 @@ class Analog_F0andF1(Analysis):
                 # AnalogSignalList part 
                 dsv = queries.param_filter_query(dsv, sheet_name=sheet,name='AnalogSignalList')
                 for asl in dsv.get_analysis_result():
-                    assert MozaikParametrized.idd(asl.stimulus_id).getParams().has_key('temporal_frequency'), "The stimulus has to have parameter temporal_frequency which is used as first harmonic"
+                    assert 'temporal_frequency' in MozaikParametrized.idd(asl.stimulus_id).getParams(), "The stimulus has to have parameter temporal_frequency which is used as first harmonic"
 
                     signals = asl.asl
                     first_analog_signal = signals[0]
+                    logger.info(str(first_analog_signal.t_start))
+                    logger.info(str(first_analog_signal.t_stop))
                     duration = first_analog_signal.t_stop - first_analog_signal.t_start
                     frequency = MozaikParametrized.idd(asl.stimulus_id).temporal_frequency * MozaikParametrized.idd(asl.stimulus_id).getParams()['temporal_frequency'].units
                     period = 1/frequency
@@ -243,7 +243,7 @@ class LocalHomogeneityIndex(Analysis):
     def perform_analysis(self):
         sigma = self.parameters.sigma
         for sheet in self.datastore.sheets():
-            positions = self.datastore.get_neuron_postions()[sheet]
+            positions = self.datastore.get_neuron_positions()[sheet]
             for pnv in queries.param_filter_query(self.datastore,sheet_name=sheet,identifier='PerNeuronValue').get_analysis_result():
                 lhis = []
                 for x in pnv.ids:
@@ -304,7 +304,7 @@ class SizeTuningAnalysis(Analysis):
                         csis = []
                         
                         # we will do the calculation neuron by neuron
-                        for i in xrange(0,len(self.parameters.neurons)):
+                        for i in range(0,len(self.parameters.neurons)):
                             
                             rads = self.tc_dict[k][0]
                             values = numpy.array([a[i] for a in self.tc_dict[k][1]])
@@ -384,11 +384,11 @@ class OCTCTuningAnalysis(Analysis):
                         surround_tuning=[]
                         
                         # we will do the calculation neuron by neuron
-                        for i in xrange(0,len(self.parameters.neurons)):
+                        for i in range(0,len(self.parameters.neurons)):
                             
                             ors = self.tc_dict[k][0]
                             values = numpy.array([a[i] for a in self.tc_dict[k][1]])
-                            d={}
+                            d=OrderedDict()
                             for o,v in zip(ors,values):
                                 d[o] = v
                             sis.append(d[0] / d[numpy.pi/2])

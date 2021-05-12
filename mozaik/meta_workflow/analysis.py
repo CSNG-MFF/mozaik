@@ -31,11 +31,11 @@ def load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir
     # first check whether all parameter combinations contain the same parameter names
     assert len(set([tuple(set(comb.keys())) for comb in combinations])) == 1 , "The parameter search didn't occur over a fixed set of parameters"
     
-    parameters = combinations[0].keys()
+    parameters = list(combinations[0].keys())
     
     datastore = []
     number_of_unloadable_datastores = 0
-    print "Number of combinations: " + str(len(combinations))
+    print("Number of combinations: " + str(len(combinations)))
     for i,combination in enumerate(combinations):
         rdn = result_directory_name('ParameterSearch',simulation_name,combination)
         try:
@@ -45,16 +45,15 @@ def load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir
             datastore.append(([combination[k] for k in parameters],data_store))
         except IOError:
             number_of_unloadable_datastores = number_of_unloadable_datastores + 1
-            print "IOError: loading datastore: " + rdn
+            print("IOError: loading datastore: " + rdn)
         except ValueError:
-	    raise ValueError
+            raise ValueError
             number_of_unloadable_datastores = number_of_unloadable_datastores + 1
-            print "ValueError: loading datastore: " + str(ValueError)+ " : " + rdn
+            print("ValueError: loading datastore: " + str(ValueError)+ " : " + rdn)
         except EOFError:
             number_of_unloadable_datastores = number_of_unloadable_datastores + 1
-            print "EOError: loading datastore: " + rdn            
+            print("EOError: loading datastore: " + rdn)            
 
-    print "Finished loading parameter search"
 
     return (parameters,datastore,number_of_unloadable_datastores)
 
@@ -134,14 +133,14 @@ def export_SingleValues_as_matricies(simulation_name,master_results_dir,query):
         for (param_values,datastore) in datastores:
             dsv = query.query(datastore)
             for v in value_names:
-                print param_filter_query(dsv,identifier='SingleValue',value_name=v).get_analysis_result()
+                print(param_filter_query(dsv,identifier='SingleValue',value_name=v).get_analysis_result())
                 #assert len(param_filter_query(dsv,identifier='SingleValue',value_name=v).get_analysis_result()) == 1, "Error, %d ADS with value_name %s found for parameter combination:" % (len(param_filter_query(datastore,identifier='SingleValue',value_name=v).get_analysis_result()), str([str(a) + ':' + str(b) + ', ' for (a,b) in zip(parameters,param_values)]))
         
     params = numpy.array([p for p,ds in datastores])
     num_params = numpy.shape(params)[1]
     
     # lets find out unique values of each parameter set
-    param_values  = [sorted(set(params[:,i])) for i in xrange(0,num_params)]
+    param_values  = [sorted(set(params[:,i])) for i in range(0,num_params)]
     dimensions = numpy.array([len(x) for x in param_values])
     
     # lets check that the dataset has the same number of entries as the number of all combinations of parameter values
@@ -151,7 +150,7 @@ def export_SingleValues_as_matricies(simulation_name,master_results_dir,query):
             matrix = numpy.zeros(dimensions)
             matrix.fill(numpy.NAN)
             for (pv,datastore) in datastores:
-                index = [param_values[i].index(pv[i]) for i in xrange(0,len(param_values))]
+                index = [param_values[i].index(pv[i]) for i in range(0,len(param_values))]
                 dsv = query.query(datastore)
                 if len(param_filter_query(dsv,identifier='SingleValue',value_name=v).get_analysis_result()) == 1:
                     vv = param_filter_query(dsv,identifier='SingleValue',value_name=v).get_analysis_result()[0].value

@@ -61,7 +61,6 @@ class SlurmSequentialBackend(object):
     ----------
     num_threads : int
                   Number of threads per mpi process.
-
     num_mpi : int
                   Number of mpi processes to spawn per job.
                   
@@ -105,7 +104,7 @@ class SlurmSequentialBackend(object):
      
          from subprocess import Popen, PIPE, STDOUT
          # use sbatch to queue job with params as in  slurm options (except job-geometry)
-         p = Popen(['sbatch'] + self.slurm_options +  ['-o',parameters['results_dir'][2:-2]+"/slurm-%j.out"],stdin=PIPE,stdout=PIPE,stderr=PIPE)
+         p = Popen(['sbatch'] + self.slurm_options +  ['-o',parameters['results_dir'][2:-2]+"/slurm-%j.out"],stdin=PIPE,stdout=PIPE,stderr=PIPE,text=True)
          
          # pass jobfile: sets slurm job geometry, sources env and starts simulation job from cwd 
          data = '\n'.join([
@@ -194,7 +193,7 @@ class ParameterSearch(object):
             self.backend.execute_job(run_script,simulator_name,parameters_url,combination,'ParameterSearch')
             counter = counter + 1
             
-        print ("Submitted %d jobs." % counter)
+        print("Submitted %d jobs." % counter)
 
 
 class CombinationParameterSearch(ParameterSearch):
@@ -213,7 +212,7 @@ class CombinationParameterSearch(ParameterSearch):
     
     def generate_parameter_combinations(self):
         combs = []
-        for combination in parameter_combinations(self.parameter_values.values()):
+        for combination in parameter_combinations(list(self.parameter_values.values())):
             combs.append({a : b for (a,b) in zip (self.parameter_values.keys(),combination)})
         return combs    
         
@@ -261,7 +260,7 @@ def parameter_search_run_script_distributed_slurm(simulation_name,master_results
     from subprocess import Popen, PIPE, STDOUT
     for i,combination in enumerate(combinations):
         rdn = master_results_dir+'/'+result_directory_name('ParameterSearch',simulation_name,combination)    
-        p = Popen(['sbatch'] +  ['-o',master_results_dir+"/slurm_analysis-%j.out" ],stdin=PIPE,stdout=PIPE,stderr=PIPE)
+        p = Popen(['sbatch'] +  ['-o',master_results_dir+"/slurm_analysis-%j.out" ],stdin=PIPE,stdout=PIPE,stderr=PIPE,text=True)
          
         # THIS IS A BIT OF A HACK, have to add customization for other people ...            
         data = '\n'.join([
@@ -306,7 +305,7 @@ def parameter_search_run_script_distributed_slurm_IoV(simulation_name,master_res
     from subprocess import Popen, PIPE, STDOUT
     for i,combination in enumerate(combinations):
         rdn = master_results_dir+'/'+result_directory_name('ParameterSearch',simulation_name,combination)    
-        p = Popen(['sbatch'] +  ['-o',master_results_dir+"/slurm_analysis-%j.out" ],stdin=PIPE,stdout=PIPE,stderr=PIPE)
+        p = Popen(['sbatch'] +  ['-o',master_results_dir+"/slurm_analysis-%j.out" ],stdin=PIPE,stdout=PIPE,stderr=PIPE,text=True)
          
         # THIS IS A BIT OF A HACK, have to add customization for other people ...            
         data = '\n'.join([
@@ -349,7 +348,7 @@ def parameter_search_run_script_distributed_slurm_UK(simulation_name,master_resu
     from subprocess import Popen, PIPE, STDOUT
     for i,combination in enumerate(combinations):
         rdn = master_results_dir+'/'+result_directory_name('ParameterSearch',simulation_name,combination)    
-        p = Popen(['sbatch'] +  ['-o',master_results_dir+"/slurm_analysis-%j.out" ],stdin=PIPE,stdout=PIPE,stderr=PIPE)
+        p = Popen(['sbatch'] +  ['-o',master_results_dir+"/slurm_analysis-%j.out" ],stdin=PIPE,stdout=PIPE,stderr=PIPE,text=True)
          
         # THIS IS A BIT OF A HACK, have to add customization for other people ...            
         data = '\n'.join([
@@ -357,11 +356,10 @@ def parameter_search_run_script_distributed_slurm_UK(simulation_name,master_resu
                             '#SBATCH -J MozaikParamSearchAnalysis',
                             '#SBATCH -c ' + str(core_number),
                             '#SBATCH --hint=nomultithread',
-                            'source /home/antolikjan/virt_env/mozaik/bin/activate',
+                            'source /home/antolikjan/virt_env/mozaik-python3/bin/activate',
                             'cd ' + os.getcwd(),
                             ' '.join(["python",run_script,"'"+rdn+"'"]  +['>']  + ["'"+rdn +'/OUTFILE_analysis'+str(time.time()) + "'"]),
                         ]) 
         print(p.communicate(input=data)[0])
         print(data)
         p.stdin.close()
-

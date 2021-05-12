@@ -1,0 +1,170 @@
+{
+    #CorticalUniformSheet parameters
+    
+    'component': 'mozaik.sheets.vision.VisualCorticalUniformSheet',
+    
+    'params':{
+                'name':'V1_Exc_L2/3',
+                'sx':ref('sheets.l4_cortex_exc.params.sx'),
+                'sy':ref('sheets.l4_cortex_exc.params.sy'),
+                'density': ref('sheets.l4_cortex_exc.params.density'),
+       	        'mpi_safe' : False,
+                'magnification_factor': ref('sheets.l4_cortex_exc.params.magnification_factor'),
+                'cell': ref('sheets.l4_cortex_exc.params.cell'),
+                'artificial_stimulators' : ref('sheets.l4_cortex_exc.params.artificial_stimulators'),
+                'recording_interval'  :  ref('sheets.l4_cortex_exc.params.recording_interval'),                                            
+                'recorders' : url("param/l23_exc_rec"),    
+    },
+    
+    'feedback_conn_ratio' : ref('sheets.l4_cortex_exc.layer23_aff_ratio'),
+    
+    'L23ExcL23ExcConnection': {
+        'target_synapses' : 'excitatory',             
+        'short_term_plasticity': ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.short_term_plasticity'),                                            
+
+        'weight_functions' : {  'f1' : {
+                                         'component' : 'mozaik.connectors.vision.MapDependentModularConnectorFunction',
+                                         'params' : {
+                                                        'sigma' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.weight_functions.f1.params.sigma'),
+                                                        'map_location' : ref('sheets.l4_cortex_exc.AfferentConnection.or_map_location'),                                            
+                                                        'periodic' : True,
+                                                    }
+                                       }, 
+
+                                'f2' : {
+					'component' : 'mozaik.connectors.modular_connector_functions.GaussianDecayModularConnectorFunction',
+					'params' : {
+						'arborization_constant' : 270,
+						'arborization_scaler' : 1.0,
+					}
+				},
+
+                                'f3' : {
+					'component' : 'mozaik.connectors.modular_connector_functions.GaussianDecayModularConnectorFunction',
+					'params' : {
+						'arborization_constant' : 1000,
+						'arborization_scaler' : 4.0,
+					}
+				}
+                             },
+
+        'delay_functions' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.delay_functions'),
+        'weight_expression' : 'f1*f3+f2',
+        'delay_expression' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.delay_expression'),
+        'base_weight': ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.base_weight'),
+	'num_samples' : ref('sheets.l4_cortex_exc.K')*4.0/5.0*(1-ref('sheets.l23_cortex_exc.feedback_conn_ratio')),
+    },
+
+    'L23ExcL23InhConnection': {
+        'target_synapses' : 'excitatory',             
+        'short_term_plasticity': ref('sheets.l4_cortex_exc.L4ExcL4InhConnection.short_term_plasticity'),                                            
+	'weight_functions' : ref('sheets.l23_cortex_exc.L23ExcL23ExcConnection.weight_functions'),  
+        'weight_functions' : {  'f1' : {
+                                         'component' : 'mozaik.connectors.vision.MapDependentModularConnectorFunction',
+                                         'params' : {
+                                                        'sigma' : 1.4,
+                                                        'map_location' : ref('sheets.l4_cortex_exc.AfferentConnection.or_map_location'),                                            
+                                                        'periodic' : True,
+                                                    }
+                                       }, 
+                                'f2' : ref('sheets.l23_cortex_exc.L23ExcL23ExcConnection.weight_functions.f2'),                                            
+                                'f3' : ref('sheets.l23_cortex_exc.L23ExcL23ExcConnection.weight_functions.f3'),                                            
+                             },
+        'delay_functions' : ref('sheets.l4_cortex_exc.L4ExcL4InhConnection.delay_functions'),
+        'weight_expression' : ref('sheets.l23_cortex_exc.L23ExcL23ExcConnection.weight_expression'),                                            
+        'delay_expression' : ref('sheets.l4_cortex_exc.L4ExcL4InhConnection.delay_expression'),
+        'base_weight': ref('sheets.l4_cortex_exc.L4ExcL4InhConnection.base_weight'),
+	'num_samples' : ref('sheets.l23_cortex_exc.L23ExcL23ExcConnection.num_samples') * ref('sheets.l4_cortex_exc.inhibitory_connection_ratio'),
+    },
+
+
+    'L4ExcL23ExcConnection': {
+        'target_synapses' : 'excitatory',             
+        'short_term_plasticity': ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.short_term_plasticity'),
+        'weight_functions' : {  'f1' : {
+                                         'component' : 'mozaik.connectors.modular_connector_functions.HyperbolicModularConnectorFunction',
+                                         'params' : {
+                                                	            'theta':  154.45,
+	                                                            'alpha': 0.017452,
+                                                    }
+                                       },            
+				'f2' : {
+                                         'component' : 'mozaik.connectors.vision.MapDependentModularConnectorFunction',
+                                         'params' : {
+                                               	        'sigma' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.weight_functions.f1.params.sigma'),
+                                                        'map_location' : ref('sheets.l4_cortex_exc.AfferentConnection.or_map_location'),                                            
+                                                        'periodic' : True,
+                                                    }
+                                       }, 
+                            
+                                
+                             },
+
+        'delay_functions' : {},
+        'weight_expression' : 'f1*f2',
+        'delay_expression' : '1.4', 
+        
+        'base_weight': ref('sheets.l4_cortex_exc.AfferentConnection.base_weight'),
+        'num_samples' : ref('sheets.l4_cortex_exc.layer23_aff_ratio')*ref('sheets.l4_cortex_exc.K')*4.0/5.0,
+    },
+
+    'L23ExcL4ExcConnection': {
+        'target_synapses' : 'excitatory',             
+        'short_term_plasticity': None, 
+        'weight_functions' : {  'f1' : {
+                                         'component' : 'mozaik.connectors.modular_connector_functions.GaussianDecayModularConnectorFunction',
+                                         'params' : {
+                                            	            'arborization_constant': 100.0,
+                                                            'arborization_scaler': 1.0,
+                                                    }
+                                       },                                        
+
+				'f2' : {
+                                         'component' : 'mozaik.connectors.vision.MapDependentModularConnectorFunction',
+                                         'params' : {
+                                               	        'sigma' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.weight_functions.f1.params.sigma'),
+                                                        'map_location' : ref('sheets.l4_cortex_exc.AfferentConnection.or_map_location'),                                            
+                                                        'periodic' : True,
+                                                    }
+                                       }, 
+
+                             },
+
+        'delay_functions' : {},
+        'weight_expression' : 'f1*f2',
+        'delay_expression' : '1.4', 
+        
+        'base_weight': ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.base_weight'),
+        'num_samples' : ref('sheets.l4_cortex_exc.K')*4.0/5.0*ref('sheets.l23_cortex_exc.feedback_conn_ratio'),
+    },
+    
+
+    'L23ExcL4InhConnection': {
+        'target_synapses' : 'excitatory',             
+        'short_term_plasticity': None, 
+        'weight_functions' : {  'f1' : {
+                                         'component' : 'mozaik.connectors.modular_connector_functions.GaussianDecayModularConnectorFunction',
+                                         'params' : {
+                                            	            'arborization_constant': ref('sheets.l23_cortex_exc.L23ExcL4ExcConnection.weight_functions.f1.params.arborization_constant')*2.0,
+                                                            'arborization_scaler': 1.0,
+                                                    }
+                                       },                                        
+				'f2' : {
+                                         'component' : 'mozaik.connectors.vision.MapDependentModularConnectorFunction',
+                                         'params' : {
+                                               	        'sigma' : 3.0,
+                                                        'map_location' : ref('sheets.l4_cortex_exc.AfferentConnection.or_map_location'),                                            
+                                                        'periodic' : True,
+                                                    }
+                                       }, 
+
+                             },
+
+        'delay_functions' : {},
+        'weight_expression' : 'f1*f2',
+        'delay_expression' : '0.5', 
+        'base_weight': ref('sheets.l4_cortex_exc.L4ExcL4InhConnection.base_weight'),
+	'num_samples' : ref('sheets.l23_cortex_exc.L23ExcL4ExcConnection.num_samples')*ref('sheets.l4_cortex_exc.inhibitory_connection_ratio'),
+    },
+
+}

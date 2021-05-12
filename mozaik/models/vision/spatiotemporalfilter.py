@@ -7,16 +7,16 @@ import numpy
 import os.path
 import pickle
 import mozaik
-import cai97
+from  mozaik.models.vision import cai97
 from mozaik.space import VisualSpace, VisualRegion
 from mozaik.core import SensoryInputComponent
 from mozaik.sheets.vision import RetinalUniformSheet
 from mozaik.tools.mozaik_parametrized import MozaikParametrized
 from parameters import ParameterSet
+from builtins import zip
+from collections import OrderedDict
 
 logger = mozaik.getMozaikLogger()
-
-
 
 
 def meshgrid3D(x, y, z):
@@ -99,8 +99,8 @@ class SpatioTemporalReceptiveField(object):
         #x = numpy.arange(0.0, width, dx)  + dx/2.0 - width/2.0
         #y = numpy.arange(0.0, height, dy) + dy/2.0 - height/2.0
 
-        x = numpy.linspace(0.0, width - dx, width/dx) + dx/2.0 - width/2.0
-        y = numpy.linspace(0.0, height - dy, height/dy) + dx/2.0 - height/2.0
+        x = numpy.linspace(0.0, width - dx, int(width/dx)) + dx/2.0 - width/2.0
+        y = numpy.linspace(0.0, height - dy, int(height/dy)) + dx/2.0 - height/2.0
 
         # t is the time at the beginning of each timestep
         t = numpy.arange(0.0, duration, dt)
@@ -381,15 +381,15 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
     def __init__(self, model, parameters):
         SensoryInputComponent.__init__(self, model, parameters)
         self.shape = (self.parameters.density,self.parameters.density)
-        self.sheets = {}
+        self.sheets = OrderedDict()
         self._built = False
         self.rf_types = ('X_ON', 'X_OFF')
         sim = self.model.sim
-        self.pops = {}
-        self.scs = {}
-        self.ncs = {}
-        self.ncs_rng = {}
-        self.internal_stimulus_cache = {}
+        self.pops = OrderedDict()
+        self.scs = OrderedDict()
+        self.ncs = OrderedDict()
+        self.ncs_rng = OrderedDict()
+        self.internal_stimulus_cache = OrderedDict()
         for rf_type in self.rf_types:
             p = RetinalUniformSheet(model,
                                     ParameterSet({'sx': self.parameters.size[0],
@@ -397,7 +397,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                                                   'density': self.parameters.density,
                                                   'cell': self.parameters.cell,
                                                   'name': rf_type,
-                                                  'artificial_stimulators' : {},
+                                                  'artificial_stimulators' : OrderedDict(),
                                                   'recorders' : self.parameters.recorders,
                                                   'recording_interval'  :  self.parameters.recording_interval,
                                                   'mpi_safe': False}))
@@ -435,10 +435,13 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                                               P_rf.func_params,
                                               P_rf.width, P_rf.height,
                                               P_rf.duration)
+
         dx = dy = P_rf.spatial_resolution
         dt = P_rf.temporal_resolution
         for rf in rf_ON, rf_OFF:
             rf.quantize(dx, dy, dt)
+
+
         self.rf = {'X_ON': rf_ON, 'X_OFF': rf_OFF}                
 
     def get_cache(self, stimulus_id):
@@ -461,7 +464,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
             return None
 
         if not os.path.isfile(self.parameters.cache_path + '/' + 'stimuli.st'):
-            self.cached_stimuli = {}
+            self.cached_stimuli = OrderedDict()
             return None
         else:
             f1 = open(self.parameters.cache_path + '/' + 'stimuli.st', 'r')
@@ -495,7 +498,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
             return None
 
         if str(stimulus_id) not in self.cached_stimuli:
-            counter = 0 if (len(self.cached_stimuli.values()) == 0) else max(self.cached_stimuli.values()) + 1
+            counter = 0 if (len(list(self.cached_stimuli.values())) == 0) else max(self.cached_stimuli.values()) + 1
 
             self.cached_stimuli[str(stimulus_id)] = counter
 
@@ -545,7 +548,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
             # Even if we didn't find the stimulus in cache, we still check if we haven't already presented it during this simulation run.
             # This is mainly to avoid regenerating stimuli for multiple trials.
 
-            if self.internal_stimulus_cache.has_key(str(st)):
+            if str(st) in self.internal_stimulus_cache:
                (input_currents, retinal_input) =  self.internal_stimulus_cache[str(st)]
             else:
                (input_currents, retinal_input) = self._calculate_input_currents(visual_space,
@@ -622,7 +625,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         zers = times*0
         ts = self.model.sim.get_time_step()
         
-        input_cells = {}
+        input_cells = OrderedDict()
         for rf_type in self.rf_types:
             input_cells[rf_type] = CellWithReceptiveField(self.sheets[rf_type].pop.positions[0][0],
                                               self.sheets[rf_type].pop.positions[1][0],
@@ -630,8 +633,8 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                                               self.parameters.gain_control,visual_space)
             input_cells[rf_type].initialize(visual_space.background_luminance, duration)
         
-        for rf_type in self.rf_types:
 
+        for rf_type in self.rf_types:
                 if self.parameters.gain_control.non_linear_gain != None:
                         amplitude = self.parameters.linear_scaler * self.parameters.gain_control.non_linear_gain.luminance_gain * numpy.sum(input_cells[rf_type].receptive_field.kernel.flatten())*visual_space.background_luminance / (self.parameters.gain_control.non_linear_gain.luminance_scaler*visual_space.background_luminance+1.0)   
                 else:
@@ -641,7 +644,6 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                     scs.set_parameters(times=times,amplitudes=zers+amplitude,copy=False)
                     if self.parameters.mpi_reproducible_noise:
                         t = numpy.arange(0, duration, ts) + offset
-
                         amplitudes = (self.parameters.noise.mean
                                         + self.parameters.noise.stdev
                                            * self.ncs_rng[rf_type][i].randn(len(t)))
@@ -660,14 +662,14 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         # create population of CellWithReceptiveFields, setting the receptive
         # field centres based on the size/location of self
         logger.debug("Creating population of `CellWithReceptiveField`s")
-        input_cells = {}
+        input_cells = OrderedDict()
         #effective_visual_field_width, effective_visual_field_height = self.parameters.size
         #x_values = numpy.linspace(-effective_visual_field_width/2.0, effective_visual_field_width/2.0, self.shape[0])
         #y_values = numpy.linspace(-effective_visual_field_height/2.0, effective_visual_field_height/2.0, self.shape[1])
         for rf_type in self.rf_types:
             input_cells[rf_type] = []
             for i in numpy.nonzero(self.sheets[rf_type].pop._mask_local)[0]:
-            #for i in xrange(0,len(self.sheets[rf_type].pop.positions[0])):
+            #for i in range(0,len(self.sheets[rf_type].pop.positions[0])):
                 cell = CellWithReceptiveField(self.sheets[rf_type].pop.positions[0][i],
                                               self.sheets[rf_type].pop.positions[1][i],
                                               self.rf[rf_type],
@@ -706,16 +708,16 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                     cell.view()
 
 
-	    if self.model.parameters.store_stimuli == True:
+            if self.model.parameters.store_stimuli == True:
                 visual_region = VisualRegion(location_x=0, location_y=0,
                                          size_x=self.model.visual_field.size_x,
                                          size_y=self.model.visual_field.size_y)
-	        im = visual_space.view(visual_region,pixel_size=self.rf["X_ON"].spatial_resolution)
-	    else:
-		im = None
+                im = visual_space.view(visual_region,pixel_size=self.rf["X_ON"].spatial_resolution)
+            else:
+                im = None
             retinal_input.append(im)
 
-        input_currents = {}
+        input_currents = OrderedDict()
         for rf_type in self.rf_types:
             input_currents[rf_type] = [cell.response_current()
                                        for cell in input_cells[rf_type]]

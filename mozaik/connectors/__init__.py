@@ -13,6 +13,8 @@ from mozaik.tools.misc import sample_from_bin_distribution, normal_function
 from collections import Counter
 from pyNN import random, space
 
+from builtins import zip
+
 logger = mozaik.getMozaikLogger()
 
 class Connector(BaseComponent):
@@ -127,18 +129,18 @@ class SpecificArborization(Connector):
         X = numpy.zeros(self.connection_matrix.shape)
         Y = numpy.zeros(self.connection_matrix.shape)
         
-        for x in xrange(0,X.shape[0]):
-            for y in xrange(0,X.shape[1]):
+        for x in range(0,X.shape[0]):
+            for y in range(0,X.shape[1]):
                 X[x][y] = x
                 Y[x][y] = y
         
-        for i in xrange(0,self.target.pop.size):
+        for i in range(0,self.target.pop.size):
             self.connection_matrix[:,i] = self.connection_matrix[:,i] / numpy.sum(self.connection_matrix[:,i])*self.parameters.weight_factor
 
         # This is due to native synapses models (which we currently use as the short term synaptic plasticity model) 
         # do not apply the 1000 factor scaler as the pyNN synaptic models
         self.connection_matrix = self.connection_matrix * self.weight_scaler
-        self.connection_list = zip(numpy.array(X).flatten(),numpy.array(Y).flatten(),self.connection_matrix.flatten(),self.delay_matrix.flatten())
+        self.connection_list = list(zip(numpy.array(X).flatten(),numpy.array(Y).flatten(),self.connection_matrix.flatten(),self.delay_matrix.flatten()))
         # get rid of very weak synapses
         z = numpy.max(self.connection_matrix.flatten())
         self.connection_list = [(int(a),int(b),c,d) for (a,b,c,d) in self.connection_list if c>(z/100.0)]
@@ -188,7 +190,7 @@ class SpecificProbabilisticArborization(Connector):
         weights = self.connection_matrix
         delays = self.delay_matrix
         cl = []
-        for i in xrange(0,self.target.pop.size):
+        for i in range(0,self.target.pop.size):
             co = Counter(sample_from_bin_distribution(weights[:,i].flatten(), int(self.parameters.num_samples)))
             cl.extend([(int(k),int(i),wf*co[k]/self.parameters.num_samples,delays[k][i]) for k in co.keys()])
             

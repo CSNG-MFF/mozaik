@@ -5,7 +5,7 @@ The file contains stimuli that use topographica to generate the stimulus
 
 """
 
-from visual_stimulus import VisualStimulus
+from mozaik.stimuli.vision.visual_stimulus import VisualStimulus
 import imagen
 import imagen.random
 from imagen.transferfn import TransferFn
@@ -102,7 +102,7 @@ class DenseNoise(TopographicaBasedVisualStimulus):
         
         while True:
             aux2 = aux()
-            for i in range(self.time_per_image/self.frame_duration):
+            for i in range(int(self.time_per_image/self.frame_duration)):
                 yield (aux2,[0])
 
 
@@ -334,8 +334,8 @@ class NaturalImageWithEyeMovement(TopographicaBasedVisualStimulus):
 
     def frames(self):
         self.time = 0
-        f = open(self.eye_path_location, 'r')
-        self.eye_path = pickle.load(f)
+        f = open(self.eye_path_location, 'rb')
+        self.eye_path = pickle.load(f, encoding="latin1")
         self.pattern_sampler = imagen.image.PatternSampler(
                                     size_normalization='fit_longest',
                                     whole_pattern_output_fns=[MaximumDynamicRange()])
@@ -380,7 +380,7 @@ class DriftingGratingWithEyeMovement(TopographicaBasedVisualStimulus):
     def frames(self):
         
         f = open(self.eye_path_location, 'r')
-        self.eye_path = pickle.load(f)
+        self.eye_path = pickle.load(f, encoding="latin1")
         self.time = 0
         self.current_phase = 0
         while True:
@@ -1200,7 +1200,7 @@ class ContinuousGaborMovementAndJump(GaborStimulus):
             angle = self.movement_angle if self.moving_gabor_orientation_radial else self.movement_angle + np.pi/2
             yield (self.get_gabor(x=x,y=y,orientation=angle,relative_luminance=self.moving_relative_luminance),[1])
 
-        for i in xrange(int(self.center_flash_duration / self.frame_duration)):
+        for i in range(int(self.center_flash_duration / self.frame_duration)):
             yield (self.get_gabor(relative_luminance=self.center_relative_luminance),[1])
 
         while True:
@@ -1313,12 +1313,12 @@ class RadialGaborApparentMotion(GaborStimulus):
             angles_mat = np.flip(angles_mat)
             # Flash center in the beginning
             if self.flash_center:
-                for i in xrange(int(self.flash_duration / self.frame_duration)):
+                for i in range(int(self.flash_duration / self.frame_duration)):
                     yield (self.get_gabor(relative_luminance=self.center_relative_luminance), [1])
 
         # Draw Gabor patches from x,y position and angles matrix
         for i in range(n_radii):
-            for t in xrange(int(self.flash_duration / self.frame_duration)):
+            for t in range(int(self.flash_duration / self.frame_duration)):
                 # Start with empty frame
                 frame = imagen.Constant(
                     scale=0,
@@ -1349,7 +1349,7 @@ class RadialGaborApparentMotion(GaborStimulus):
 
         # Flash in center if not centrifugal or explicitly disallowed
         if not self.centrifugal and self.flash_center:
-            for i in xrange(int(self.flash_duration / self.frame_duration)):
+            for i in range(int(self.flash_duration / self.frame_duration)):
                 yield (self.get_gabor(relative_luminance=self.center_relative_luminance), [1])
 
         # Return blank frames after stimulus end

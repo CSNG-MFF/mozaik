@@ -5,6 +5,7 @@ Module containing the implementation of sheets - one of the basic building block
 
 import numpy
 import mozaik
+from collections import OrderedDict
 from mozaik.core import BaseComponent
 from mozaik import load_component
 from mozaik.tools.distribution_parametrization import PyNNDistribution
@@ -97,11 +98,11 @@ class Sheet(BaseComponent):
         self._pop = None
         self.size_x = size_x
         self.size_y = size_y
-	self.msc=0
+        self.msc=0
         # We want to be able to define in cell.params the cell parameters as also PyNNDistributions so we can get variably parametrized populations
         # The problem is that the pyNN.Population can accept only scalar parameters. There fore we will remove from cell.params all parameters
         # that are PyNNDistributions, and will initialize them later just after the population is initialized (in property pop())
-        self.dist_params = {}
+        self.dist_params = OrderedDict()
         for k in self.parameters.cell.params.keys():
             if isinstance(self.parameters.cell.params[k],PyNNDistribution):
                self.dist_params[k]=self.parameters.cell.params[k]
@@ -112,7 +113,7 @@ class Sheet(BaseComponent):
         """
         Set up the recording configuration.
         """
-        self.to_record = {}
+        self.to_record = OrderedDict()
         for k in  self.parameters.recorders.keys():
             recording_configuration = load_component(self.parameters.recorders[k].component)
             l = recording_configuration(self,self.parameters.recorders[k].params).generate_idd_list_of_neurons()
@@ -145,9 +146,7 @@ class Sheet(BaseComponent):
                 raise Exception("Error population has already been set. It is not allowed to do this twice!")
             self._pop = value
             l = value.all_cells.astype(int)
-
-	    
-	    self._neuron_annotations = [{} for i in xrange(0, len(value))]
+            self._neuron_annotations = [OrderedDict() for i in range(0, len(value))]
             self.setup_artificial_stimulation()
             self.setup_initial_values()
 
@@ -202,8 +201,9 @@ class Sheet(BaseComponent):
 
         if not self._pop:
             logger.error('Population has not been yet set in sheet: ' + self.name + '!')
-        if not self._neuron_annotations[neuron_number].has_key(key):
-            logger.error("ERROR, annotation does not exist:",self.name,neuron_number,key,self._neuron_annotations[neuron_number].keys())
+        if key not in self._neuron_annotations[neuron_number]:
+            logger.error("ERROR, annotation does not exist:" + self.name + " " + neuron_number + " " + key + " " + self._neuron_annotations[neuron_number].keys())
+
         return self._neuron_annotations[neuron_number][key][1]
 
     def get_neuron_annotations(self):
@@ -211,8 +211,8 @@ class Sheet(BaseComponent):
             logger.error('Population has not been yet set in sheet: ' +  self.name + '!')
 
         anns = []
-        for i in xrange(0, len(self.pop)):
-            d = {}
+        for i in range(0, len(self.pop)):
+            d = OrderedDict()
             for (k, v) in self._neuron_annotations[i].items():
                 d[k] = v[1]
             anns.append(d)
@@ -255,7 +255,7 @@ class Sheet(BaseComponent):
 
         try:
             block = self.pop.get_data(['spikes', 'v', 'gsyn_exc', 'gsyn_inh'],clear=True)
-        except NothingToWriteError, errmsg:
+        except (NothingToWriteError, errmsg):
             logger.debug(errmsg)
         
         if (mozaik.mpi_comm) and (mozaik.mpi_comm.rank != mozaik.MPI_ROOT):
@@ -265,19 +265,19 @@ class Sheet(BaseComponent):
 
         # lets sort spike train so that it is ordered by IDs and thus hopefully
         # population indexes
-        def compare(a, b):
-            return cmp(a.annotations['source_id'], b.annotations['source_id'])
-	
+        def key(a):
+            return a.annotations['source_id']    
 
         self.msc = numpy.mean([numpy.sum(st)/(st.t_stop-st.t_start)/1000 for st in s.spiketrains])
-        s.spiketrains = sorted(s.spiketrains, compare)
+        s.spiketrains = sorted(s.spiketrains, key=key)
+
         if stimulus_duration != None:        
            for st in s.spiketrains:
                tstart = st.t_start
                st -= tstart
                st.t_stop -= tstart
                st.t_start = 0 * pq.ms
-           for i in xrange(0, len(s.analogsignals)):
+           for i in range(0, len(s.analogsignals)):
                s.analogsignals[i].t_start = 0 * pq.ms
        
         return s

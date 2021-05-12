@@ -20,6 +20,8 @@ from mozaik.analysis.data_structures import AnalogSignalList
 from mozaik.analysis.data_structures import PerNeuronValue
 from mozaik.analysis.data_structures import PerNeuronPairValue
 from mozaik.analysis.data_structures import PerNeuronPairAnalogSignalList
+from collections import OrderedDict
+
                                         
 from mozaik.analysis.helper_functions import psth
 from mozaik.core import ParametrizedObject
@@ -29,6 +31,8 @@ from neo.core.analogsignal import AnalogSignal as NeoAnalogSignal
 from mozaik.tools.circ_stat import circ_mean, circular_dist
 from mozaik.tools.neo_object_operations import neo_mean, neo_sum, down_sample_analog_signal_average_method
 import mozaik
+
+from builtins import zip
 
 logger = mozaik.getMozaikLogger()
 
@@ -101,6 +105,7 @@ class TrialAveragedFiringRate(Analysis):
             # transform spike trains due to stimuly to mean_rates
             mean_rates = [numpy.array(s.mean_rates()) for s in segs]
             # collapse against all parameters other then trial            
+
             (mean_rates, s) = colapse(mean_rates, st, parameter_list=['trial'])
             # take a sum of each
             _mean_rates = [numpy.squeeze(numpy.mean(a,axis=0)) for a in mean_rates]
@@ -431,10 +436,10 @@ class TrialToTrialCrossCorrelationOfAnalogSignalList(Analysis):
                                          stimulus_id=str(st)))           
                 
     def cross_correlation(self,ass):
-	logger.info("TTC: " + str(numpy.shape(ass)))
+        logger.info("TTC: " + str(numpy.shape(ass)))
         cc = 0
-        for i in xrange(0,len(ass)):
-            for j in xrange(i+1,len(ass)):
+        for i in range(0,len(ass)):
+            for j in range(i+1,len(ass)):
                 sta1 = numpy.std(ass[i])
                 sta2 = numpy.std(ass[j])
                 if sta1 != 0 and sta2 != 0:
@@ -442,10 +447,10 @@ class TrialToTrialCrossCorrelationOfAnalogSignalList(Analysis):
                     cc= cc + a
                 
         cc = cc / (len(ass)*(len(ass)-1)/2)
-	logger.info("TTC: " + str(numpy.shape(ass)))
+        logger.info("TTC: " + str(numpy.shape(ass)))
         
         if type(cc) == int:
-           cc = numpy.array([0 for i in xrange(0,len(ass[0])*2-1)]) 
+           cc = numpy.array([0 for i in range(0,len(ass[0])*2-1)]) 
         
         return cc
 
@@ -494,7 +499,7 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
               # Get sheet indexes from ids of recorded neurons
               rec_idd_idx = zip( self.parameters.neurons, dsv.get_sheet_indexes(sheet_name=sheet,neuron_ids=self.parameters.neurons) )
               # get positions in the sheet of the recorded neurons
-              positions = dsv.get_neuron_postions()
+              positions = dsv.get_neuron_positions()
               # initialize pair array to dummy ids, first and last recorded neurons ids
               pair_ids_idx = [ (self.parameters.neurons[0],positions[sheet][0][0]), (self.parameters.neurons[-1],positions[sheet][0][-1]) ]
               for idd,idx in rec_idd_idx:
@@ -517,7 +522,7 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
               # get a list of DSV each holding analog signals that have the same values of stimulus parameters in parameter_list
               dsvs = queries.partition_by_stimulus_paramter_query( dsv, parameter_list=['trial'] )
               # get spiketrains by trial
-              dsvs_spiketrains = {} 
+              dsvs_spiketrains = OrderedDict()
               #neurons_ids = []
               # dsvs_spiketrains will have keys labeled after trial number, containing each the spiketrains from each recorded neuron (source_id)
               for dsv in dsvs :
@@ -527,7 +532,7 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
               # RAW CROSS-CORRELATION
               # raw_xcorr will have keys labeled after trial number, containing all combinations with no repetition (and considering that cross-correlation is simmetric)
               # each raw_xcorr analogsignal will have an annotation 'xcorr_ids' with the list of target and source of the xcorr
-              raw_xcorr = {}
+              raw_xcorr = OrderedDict()
               for trial in dsvs_spiketrains.keys() :
                   xcorr = [] # local storage
                   for ref in dsvs_spiketrains[trial] :
@@ -549,12 +554,13 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
                   raw_xcorr[trial] = xcorr
               # SHIFT PREDICTOR CROSS-CORRELATION
               # for each raw_xcorr analogsignal take the reference and change the target to the same source_id but different trial
-              shift_xcorr = {}
+              shift_xcorr = OrderedDict()
               # the two dictionaries in the end must be identical by indexes in order to do a one-by-one subtraction
               for trial in raw_xcorr.keys() :
                   xcorr = [] # local storage
                   # loop over raw_xcorr[trial] source_ids and anothertrial same source_ids
-                  anothertrial = (trial+1)%len(raw_xcorr.keys())
+                  anothertrial = (trial+1)%len(list(raw_xcorr.keys()))
+
                   for rcorr in raw_xcorr[trial] :
                       # compute the xcorr if the references and targets of spiketrains of different trials corresponds to those of the raw_xcorr 
                       for ref in dsvs_spiketrains[trial] :
@@ -576,7 +582,7 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
                   shift_xcorr[trial] = xcorr
               # Save 
               self.datastore.full_datastore.add_analysis_result( 
-                  numpy.sum([ xcorr for xcorr in shift_xcorr[trial] for trial in shift_xcorr.keys() ]).division_by_num(len(shift_xcorr.keys()))
+                  numpy.sum([ xcorr for xcorr in shift_xcorr[trial] for trial in shift_xcorr.keys() ]).division_by_num(len(list(shift_xcorr.keys())))
               )
                 
       def cross_correlation( self, reference, target, bins, bin_length ):
@@ -846,7 +852,7 @@ class GaussianTuningCurveFit(Analysis):
                         z = []
                         u = []
                         m = []
-                        for i in xrange(0,len(self.pnvs[0].values)):
+                        for i in range(0,len(self.pnvs[0].values)):
                             Y = [a[i] for a in self.tc_dict[k][1]]
                             res,err = self._fitgaussian(self.tc_dict[k][0],Y,period)
                             z.append(res)    
@@ -879,31 +885,18 @@ class GaussianTuningCurveFit(Analysis):
           p0[0] = numpy.min(Y)
           p0[1] = numpy.max(Y)-p0[0]
           
-          logger.info(str(X))
-          logger.info(str(Y))
-          logger.info(str(numpy.shape(X)))
-          logger.info(str(numpy.shape(Y)))
-
-	  if period != None:
+          if period != None:
             p0[3] = circ_mean(numpy.array([X]),weights=numpy.array([Y]),axis=1,low=0,high=period,normalize=True)[0][0]
           else:
             p0[3] = numpy.average(numpy.array(X),weights=numpy.array(Y))[0]
 
-          logger.info(str(numpy.array(p0[:])))
-          logger.info(type(numpy.array(p0)))
-          logger.info(str(numpy.array(X)))
-          logger.info(type(numpy.array(X)))
-          logger.info(str(numpy.array(X)))
-          logger.info(type(numpy.array(X)))
-
-
           p1, success = scipy.optimize.leastsq(errfunc, numpy.array(p0[:]), args=(numpy.array(X),numpy.array(Y)))
           p1[2]  = abs(p1[2])
 
-	  if numpy.linalg.norm(Y-numpy.mean(Y),2) != 0:
-	    err = numpy.linalg.norm(fitfunc(p1,X)-Y,2)/numpy.linalg.norm(Y-numpy.mean(Y),2)          
-	  else:
-	    err = 0
+          if numpy.linalg.norm(Y-numpy.mean(Y),2) != 0:
+                err = numpy.linalg.norm(fitfunc(p1,X)-Y,2)/numpy.linalg.norm(Y-numpy.mean(Y),2)          
+          else:
+                err = 0
 
           #if the fit is very bad - error greater than 30% of the Y magnitude
           #if err > 0.2:
@@ -1267,7 +1260,7 @@ class PopulationMedian(Analysis):
       def perform_analysis(self):
           dsv = queries.param_filter_query(self.datastore,identifier=['PerNeuronPairValue','PerNeuronValue'])
           for ads in dsv.get_analysis_result():
-	      assert ads.period == None ,  "PopulationMedian can only handle non-periodic quantitities"
+              assert ads.period == None ,  "PopulationMedian can only handle non-periodic quantitities"
               m = numpy.median(ads.values)
               self.datastore.full_datastore.add_analysis_result(SingleValue(value=m,period=ads.period,value_name = 'Median(' + ads.value_name + ')',sheet_name=ads.sheet_name,tags=self.tags,analysis_algorithm=self.__class__.__name__,stimulus_id=ads.stimulus_id))
 
@@ -1488,7 +1481,6 @@ class CrossCorrelationOfExcitatoryAndInhibitoryConductances(Analysis):
                 ccs = []
                 
                 dt = segs[0].get_esyn(segs[0].get_stored_esyn_ids()[0]).sampling_period
-		
 
                 for seg in segs:
                     esyn_ids = seg.get_stored_esyn_ids()
@@ -1707,7 +1699,7 @@ class TrialToTrialFanoFactorOfAnalogSignal(Analysis):
                             var = numpy.var(ass,axis=0)
                             mean = numpy.mean(ass,axis=0)
                             
-                            ff = [numpy.cov(var[i],mean[i])[0][1]/numpy.var(var[i]) for i in xrange(0,len(var))]
+                            ff = [numpy.cov(var[i],mean[i])[0][1]/numpy.var(var[i]) for i in range(0,len(var))]
                             self.datastore.full_datastore.add_analysis_result(PerNeuronValue(ff,asls[0].ids,qt.dimensionless,value_name = 'Fano Factor (' + asls[0].y_axis_name + ')' ,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))        
 
 
@@ -1762,7 +1754,7 @@ class CircularVarianceOfTuningCurve(Analysis):
                 self.tc_dict = colapse_to_dictionary([z.get_value_by_id(self.pnvs[0].ids) for z in self.pnvs],self.st,self.parameters.parameter_name)
                 for k in self.tc_dict.keys():
                         z=[]
-                        for i in xrange(0,len(self.pnvs[0].values)):
+                        for i in range(0,len(self.pnvs[0].values)):
                             angles = self.tc_dict[k][0]
                             values = [a[i] for a in self.tc_dict[k][1]]
                             
@@ -1823,7 +1815,7 @@ class NakaRushtonTuningCurveFit(Analysis):
                            return
                         z = []
                         u = []
-                        for i in xrange(0,len(self.parameters.neurons)):
+                        for i in range(0,len(self.parameters.neurons)):
                             Y = [a[i] for a in self.tc_dict[k][1]]
                             res,err = self._fitnakarushton(self.tc_dict[k][0],Y)
                             z.append(res)    

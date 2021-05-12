@@ -6,6 +6,7 @@ returns and new :class:`.DataSoreView` that is a subset of the input DSV.
 """
 from mozaik.core import ParametrizedObject
 from parameters import ParameterSet
+from collections import OrderedDict
 from mozaik.tools.mozaik_parametrized import colapse,  MozaikParametrized, filter_query, matching_parametrized_object_params
 import numpy
 import mozaik
@@ -103,7 +104,7 @@ def param_filter_query(dsv,ads_unique=False,rec_unique=False,**kwargs):
         
     ads_filtered= set(filter_query(dsv.analysis_results,**kwargs))
     
-    if st_kwargs != {}:
+    if st_kwargs != OrderedDict():
        seg_filtered_st= set(filter_query(seg_st,extra_data_list=dsv.block.segments,**st_kwargs)[1]) 
        ads_filtered_st= set(filter_query(ads_st,extra_data_list=[ads for ads in dsv.analysis_results if ads.stimulus_id != None],**st_kwargs)[1])
     else:

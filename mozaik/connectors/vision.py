@@ -3,12 +3,14 @@ Vision specific connectors.
 """
 import numpy
 import mozaik
-from modular_connector_functions import ModularConnectorFunction
+from .modular_connector_functions import ModularConnectorFunction
 from mozaik.tools.circ_stat import *
 from mozaik.tools.misc import *
 from parameters import ParameterSet
 from scipy.interpolate import NearestNDInterpolator
 from numpy import sin, cos, pi, exp
+
+from builtins import zip
 
 logger = mozaik.getMozaikLogger()
 
@@ -28,8 +30,8 @@ class MapDependentModularConnectorFunction(ModularConnectorFunction):
         import pickle
         ModularConnectorFunction.__init__(self, source,target, parameters)
         t_size = target.size_in_degrees()
-        f = open(self.parameters.map_location, 'r')
-        mmap = pickle.load(f)
+        f = open(self.parameters.map_location, 'rb')
+        mmap = pickle.load(f, encoding="latin1")
         coords_x = numpy.linspace(-t_size[0]/2.0,
                                   t_size[0]/2.0,
                                   numpy.shape(mmap)[0])
@@ -37,7 +39,7 @@ class MapDependentModularConnectorFunction(ModularConnectorFunction):
                                   t_size[1]/2.0,
                                   numpy.shape(mmap)[1])
         X, Y = numpy.meshgrid(coords_x, coords_y)
-        self.mmap = NearestNDInterpolator(zip(X.flatten(), Y.flatten()),
+        self.mmap = NearestNDInterpolator(list(zip(X.flatten(), Y.flatten())),
                                        mmap.flatten())    
         self.val_source=self.mmap(numpy.transpose(numpy.array([self.source.pop.positions[0],self.source.pop.positions[1]]))) * numpy.pi
         
@@ -100,8 +102,8 @@ class V1PushPullArborization(ModularConnectorFunction):
 
     def __init__(self, source,target, parameters):
         ModularConnectorFunction.__init__(self, source,target,  parameters)
-        self.source_or = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentOrientation') for i in xrange(0,self.source.pop.size)])
-        self.source_phase = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentPhase') for i in xrange(0,self.source.pop.size)])
+        self.source_or = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentOrientation') for i in range(0,self.source.pop.size)])
+        self.source_phase = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentPhase') for i in range(0,self.source.pop.size)])
 
     def evaluate(self,index):
         target_or = self.target.get_neuron_annotation(index, 'LGNAfferentOrientation')
@@ -219,13 +221,13 @@ class V1CorrelationBasedConnectivity(ModularConnectorFunction):
 
     def __init__(self, source,target, parameters):
         ModularConnectorFunction.__init__(self, source,target,  parameters)
-        self.source_or = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentOrientation') for i in xrange(0,self.source.pop.size)])
-        self.source_phase = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentPhase') for i in xrange(0,self.source.pop.size)])
-        self.source_ar = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentAspectRatio') for i in xrange(0,self.source.pop.size)])
-        self.source_freq = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentFrequency') for i in xrange(0,self.source.pop.size)])
-        self.source_size = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentSize') for i in xrange(0,self.source.pop.size)])
-        self.source_posx = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentX') for i in xrange(0,self.source.pop.size)])
-        self.source_posy = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentY') for i in xrange(0,self.source.pop.size)])
+        self.source_or = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentOrientation') for i in range(0,self.source.pop.size)])
+        self.source_phase = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentPhase') for i in range(0,self.source.pop.size)])
+        self.source_ar = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentAspectRatio') for i in range(0,self.source.pop.size)])
+        self.source_freq = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentFrequency') for i in range(0,self.source.pop.size)])
+        self.source_size = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentSize') for i in range(0,self.source.pop.size)])
+        self.source_posx = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentX') for i in range(0,self.source.pop.size)])
+        self.source_posy = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentY') for i in range(0,self.source.pop.size)])
         
         #import pylab
         #pylab.figure()
@@ -373,8 +375,8 @@ class CoCircularModularConnectorFunction(ModularConnectorFunction):
         import pickle
         ModularConnectorFunction.__init__(self, source,target, parameters)
         t_size = target.size_in_degrees()
-        f = open(self.parameters.or_map_location, 'r')
-        mmap = pickle.load(f)
+        f = open(self.parameters.or_map_location, 'rb')
+        mmap = pickle.load(f, encoding="latin1")
         coords_x = numpy.linspace(-t_size[0]/2.0,
                                   t_size[0]/2.0,
                                   numpy.shape(mmap)[0])
@@ -382,7 +384,7 @@ class CoCircularModularConnectorFunction(ModularConnectorFunction):
                                   t_size[1]/2.0,
                                   numpy.shape(mmap)[1])
         X, Y = numpy.meshgrid(coords_x, coords_y)
-        self.mmap = NearestNDInterpolator(zip(X.flatten(), Y.flatten()),
+        self.mmap = NearestNDInterpolator(list(zip(X.flatten(), Y.flatten())),
                                        mmap.flatten())    
         self.or_source=self.mmap(numpy.transpose(numpy.array([self.source.pop.positions[0],self.source.pop.positions[1]]))) * numpy.pi
 

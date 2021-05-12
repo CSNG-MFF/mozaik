@@ -6,10 +6,14 @@ import pylab
 import numpy
 import math
 import mozaik
-import mozaik.tools.units 
+import mozaik.tools.units
 import quantities as pq
 from matplotlib.colors import *
 from cycler import cycler
+from collections import OrderedDict
+
+
+from builtins import zip
 
 logger = mozaik.getMozaikLogger()
 
@@ -17,22 +21,22 @@ logger = mozaik.getMozaikLogger()
 class SimplePlot(object):
     """
     The low level plotting API based around matplotlib.
-    
+
     Each simple plot is assumed to create a single axis - this happens in this class.
     Each user defined low-level plotting function is supposed to derive from this class
-    and implement the four abstract methods: `pre_axis_plot`, `pre_plot`, `plot`, `post_plot`, to 
-    direct the styling and decoration of the plot, and call the actual matplotlib plotting functions in the 
+    and implement the four abstract methods: `pre_axis_plot`, `pre_plot`, `plot`, `post_plot`, to
+    direct the styling and decoration of the plot, and call the actual matplotlib plotting functions in the
     `plot` function.
-    
+
     The main policy that this API declares is that any overwriting of the standard style default
     values by the `Plotting` mechanisms should take precedence over those done
     by specific instances of `SimplePlot`. In order to enforce this precedence,
     the modifiable parameters of the classes should be stored in the common
     dictionary `parameters`. Each class derived from `SimplePlot` should add its
     modifiable parameters into the `parameters` dictionary in its constructor.
-    We will document the modifiable parameters the given class declares 
+    We will document the modifiable parameters the given class declares
     in the 'Other parameters' section.
-    
+
     The kwargs passed to the instances of `SimplePlot` from the `Plotting`
     mechanisms will be stored. At the beginning of the __call__ the dictionary
     will be updated with these stored kwargs, and the updated parameters (note
@@ -58,7 +62,7 @@ class SimplePlot(object):
 
     def plot(self):
         """
-        The function that has to perform the low level plotting. This is where the 
+        The function that has to perform the low level plotting. This is where the
         main matplotlib plot calls will happen.
         """
         raise NotImplementedError
@@ -70,10 +74,10 @@ class SimplePlot(object):
         raise NotImplementedError
 
     def __init__(self,subplot_kw=None):
-        self.parameters = {}  # the common modifiable parameter dictionary
+        self.parameters = OrderedDict()  # the common modifiable parameter dictionary
         self.subplot_kw = subplot_kw
-        
-        
+
+
     def __getattr__(self, name):
         if name == 'parameters':
             return self.__dict__[name]
@@ -124,7 +128,7 @@ class SimplePlot(object):
                 raise AttributeError("Error, unknown parameter supplied %s, known parameters: %s" % (key,
                                                                                                      self.__dict__['parameters'].keys()))
         self.__dict__['parameters'].update(params)
-        self.modified = {}
+        self.modified = OrderedDict()
         for k in self.__dict__['parameters']:
             self.modified[k] = False
         for k in params:
@@ -137,50 +141,50 @@ class StandardStyle(SimplePlot):
     def __init__(self,**param):
         """
         This is the standard SimplePlot used in this package. In most cases we recomand users to derive
-        all their plots from this class. In case users want to define their own plot styling they will 
+        all their plots from this class. In case users want to define their own plot styling they will
         want to create an analogous class as this one and then derive all their plots from it.
-        
+
         The modifiable parameters that this SimplePlot defines
-        
+
         Other parameters
         ----------------
-        
+
         fontsize : int
                  Font size to be used for tick labels and axis labels.
-                 
+
         ?_tick_style : str
                The style of ticks to be plotted. Note that the style interacts with the x_ticks and y_ticks commands in that it formats the ticks set by these
-               variables, or by the default ticks set by matplotlib. Currently available styles are: 
+               variables, or by the default ticks set by matplotlib. Currently available styles are:
                             * Min - plots three ticks, 2 on sides one in the middle (if even number of xticks supplied only the side ones will be plotted)
                             * Custom - will plot tikcs as defined by x/yticks arguments
-                            
-        x_axis  : bool 
+
+        x_axis  : bool
                 Whether to plot the x_axis (and  the ticks).
-                
+
         y_axis  : bool
                 Whether to plot the y_axis (and  the ticks).
-                
+
         x_label : str
                 What is the xlabel (None means no label will be plotted).
-                
+
         y_label : str
                 What is the ylabel (None means no label will be plotted).
-                
+
         top_right_border : bool
                          Whether to plot the top and right border of the axis.
-        
+
         left_border : bool
                     Whether to plot the left border of the axis.
-                    
+
         bottom_border  : bool
                        Whether to plot the right border of the axis.
-                       
+
         title : str
               What is the title (None means no label will be plotted)
-                       
+
         x_scale : str
               What is the scaling of the x-axis ('linear' | 'log' | 'symlog'), default is 'linear'
-              
+
         x_scale_base : int
               What is the x base of the logarithm. Active only if x_scale != to 'linear'
 
@@ -192,7 +196,7 @@ class StandardStyle(SimplePlot):
 
         y_scale : str
               What is the scaling of the y-axis ('linear' | 'log' | 'symlog'), default is 'linear'
-               
+
         y_scale_base : int
               What is the y base of the logarithm. Active only if y_scale != to 'linear'
 
@@ -204,28 +208,28 @@ class StandardStyle(SimplePlot):
 
         x_lim  : tuple
                What are the xlims (None means matplotlib will infer from data).
-               
+
         y_lim : tuple
               What are the ylims (None means matplotlib will infer from data).
-        
+
         x_ticks : list
                 What are the xticks (note that the tick style, and x_axis can override/modify these).
-                
+
         y_ticks : list
                 What are the yticks (note that the tick style, and y_axis can override/modify these).
-                
+
         x_tick_labels : list
                       What are the x tick lables (note that the tick style, and x_axis can override/modify these, and x_tick_labels have to match x_ticks)
-                      
+
         y_tick_labels : list
                       What are the y tick lables (note that the tick style, and y_axis can override/modify these, and y_tick_labels have to match y_ticks)
-        
+
         x_tick_pad  : float
                     What are the x tick padding of labels for axis.
-                    
+
         y_tick_pad  : float
                     What are the y tick padding of labels for axis.
-                    
+
         grid : bool
              Do we show grid?
         """
@@ -264,7 +268,7 @@ class StandardStyle(SimplePlot):
             "y_tick_pad": fontsize - 5,
             "grid" : False,
         }
-        
+
         self.color_cycle = {
                             'Bl':(0,0,0),
                             'Or':(.9,.6,0),
@@ -276,7 +280,7 @@ class StandardStyle(SimplePlot):
                             'rP':(.8,.6,.7),
                         }
         import matplotlib.colors
-        
+
         self.colormap = matplotlib.colors.LinearSegmentedColormap.from_list('CMcmSBVe',[self.color_cycle['SB'],self.color_cycle['Ve']])
 
     def pre_axis_plot(self):
@@ -346,7 +350,7 @@ class StandardStyle(SimplePlot):
         if self.grid:
             self.axis.grid(True)
 
-        
+
         pylab.rc('axes', linewidth=1)
         pylab.rcParams['xtick.major.pad'] = self.xtick_pad_backup
         pylab.rcParams['ytick.major.pad'] = self.ytick_pad_backup
@@ -361,13 +365,13 @@ class StandardStyle(SimplePlot):
                 else:
                     pylab.xticks(self.x_ticks)
                     phf.remove_x_tick_labels()
-            elif self.x_ticks != None:    
+            elif self.x_ticks != None:
                  pylab.xticks(self.x_ticks)
                  phf.short_tick_labels_axis(self.axis.xaxis)
             else:
                 if self.x_tick_style == 'Min':
                     phf.three_tick_axis(self.axis.xaxis,log=(self.x_scale!='linear'))
-                elif self.x_tick_style == 'Custom':                
+                elif self.x_tick_style == 'Custom':
                    phf.disable_xticks(self.axis)
                    phf.remove_x_tick_labels()
                 else:
@@ -381,13 +385,13 @@ class StandardStyle(SimplePlot):
                 else:
                     pylab.yticks(self.y_ticks)
                     phf.remove_y_tick_labels()
-            elif self.y_ticks != None:    
+            elif self.y_ticks != None:
                  pylab.yticks(self.y_ticks)
                  phf.short_tick_labels_axis(self.axis.yaxis)
             else:
                 if self.y_tick_style == 'Min':
                     phf.three_tick_axis(self.axis.yaxis,log=(self.y_scale!='linear'))
-                elif self.y_tick_style == 'Custom':                
+                elif self.y_tick_style == 'Custom':
                    phf.disable_yticks(self.axis)
                    phf.remove_y_tick_labels()
                 else:
@@ -409,20 +413,20 @@ class SpikeRasterPlot(StandardStyle):
                 over each other. They have to contain the same number of neurons. Each set
                 of spikes will be colored by the color on corresponding postion of the
                 colors parameter (matplotlib readable color formats accapted). If None all
-                colors will be set to '#848484' (gray). The second level list contains 
+                colors will be set to '#848484' (gray). The second level list contains
                 different trials of the populations responses stored in the individual SpikeList objects.
 
     Other parameters
     ----------------
     group_trials : bool
                  If is set to true - trials will be concatenated and plotted on the same line.
-    
+
     colors : list
-           The colors to assign to the different sets of spikes. 
+           The colors to assign to the different sets of spikes.
 
     Notes
     -----
-    
+
     Each trial will be plotted as a sepparate line of spikes, and these will be
     grouped by the neurons. Only neurons in the neurons parameter will be
     plotted. If neurons are None, (up to) first 10 neurons will be plotted.
@@ -435,16 +439,16 @@ class SpikeRasterPlot(StandardStyle):
 
     def plot(self):
         if self.parameters["colors"] == None:
-            colors = ['#000000' for i in xrange(0, len(self.sps))]
+            colors = ['#000000' for i in range(0, len(self.sps))]
         else:
             colors = self.colors
 
-        neurons = [i for i in xrange(0, len(self.sps[0][0]))]
-        
+        neurons = [i for i in range(0, len(self.sps[0][0]))]
+
         t_start = float(self.sps[0][0][0].t_start.rescale(pq.s))
         t_stop = float(self.sps[0][0][0].t_stop.rescale(pq.s))
-        
-        
+
+
         num_n = len(neurons)  # number of neurons
         num_t = len(self.sps[0])  # number of trials
 
@@ -454,24 +458,24 @@ class SpikeRasterPlot(StandardStyle):
                    train = []
                    for i, spike_list in enumerate(sp):
                        train.extend(spike_list[n].rescale(pq.s))
-                   self.axis.plot(train,[j for x in xrange(0, len(train))],'|',color=colors[k],mew=1)
+                   self.axis.plot(train,[j for x in range(0, len(train))],'|',color=colors[k],mew=1)
                 else:
                     for i, spike_list in enumerate(sp):
                         spike_train = spike_list[n].rescale(pq.s)
                         self.axis.plot(spike_train,
                                        [j * (num_t + 1) + i + 1
-                                          for x in xrange(0, len(spike_train))],
+                                          for x in range(0, len(spike_train))],
                                        '|',
                                        color=colors[k])
             if not self.group_trials:
-                for j in xrange(0, num_n - 1):
+                for j in range(0, num_n - 1):
                     self.axis.axhline(j * (num_t + 1) + num_t + 1, c='k')
-                    
+
         if not self.group_trials:
             self.y_lim = (0, num_n * (num_t + 1))
         else:
             self.y_lim = (0, num_n)
-        
+
         self.x_ticks = [t_start, (t_stop-t_start)/2, t_stop]
         self.x_lim = (t_start, t_stop)
         self.x_label = 'time (s)'
@@ -484,7 +488,7 @@ class SpikeRasterPlot(StandardStyle):
 class SpikeHistogramPlot(SpikeRasterPlot):
     """
     This function plots the raster plot of spikes in the spike_list argument.
-    
+
     Parameters
     ----------
     spike_list : list
@@ -496,32 +500,32 @@ class SpikeHistogramPlot(SpikeRasterPlot):
                The second level list contains different trials of the populations responses
                stored in the individual SpikeList objects.
 
-    
+
     Other parameters
     ----------------
     bin_width : bool
                  The with of the bins into which to bin the spikes.
-    
+
     colors : list
-           The colors to assign to the different sets of spikes. 
+           The colors to assign to the different sets of spikes.
 
 
     Notes
     -----
-    
+
     Each trial will be plotted as a sepparate line of spikes, and these will be
     grouped by the neurons. Only neurons in the neurons parameter will be
-    plotted. If neurons are None, the first neuron will be plotted. 
+    plotted. If neurons are None, the first neuron will be plotted.
     """
 
     def __init__(self, spike_lists,num_trials,**param):
         SpikeRasterPlot.__init__(self, spike_lists,**param)
         self.parameters["bin_width"] = 0.005
-        self.parameters["colors"] = ['#000000' for i in xrange(0, len(self.sps))]
+        self.parameters["colors"] = ['#000000' for i in range(0, len(self.sps))]
         self.num_trials = num_trials
-        
+
     def plot(self):
-        self.neurons = [i for i in xrange(0, len(self.sps[0][0]))]
+        self.neurons = [i for i in range(0, len(self.sps[0][0]))]
 
         t_stop = float(self.sps[0][0][0].t_stop.rescale(pq.s))
         t_start = float(self.sps[0][0][0].t_start.rescale(pq.s))
@@ -540,7 +544,7 @@ class SpikeHistogramPlot(SpikeRasterPlot):
                            bins=numpy.arange(0, t_stop, self.bin_width),
                            color=self.colors,
                            edgecolor='none')
-        
+
         self.y_tick_style = 'Custom'
         self.y_ticks = [0,numpy.max(n)]
         self.y_tick_labels = [0,int(math.ceil(numpy.max(n)/len(self.neurons)/self.bin_width/self.num_trials))]
@@ -576,9 +580,9 @@ class StandardStyleAnimatedPlot(StandardStyle):
 
     Parameters
     ----------
-    
+
     frame_duration : double
-                   Duration of single frame. 
+                   Duration of single frame.
     """
 
     def plot_next_frame(self):
@@ -601,15 +605,15 @@ class PixelMovie(StandardStyleAnimatedPlot):
     """
     An instatiation of StandardStyleAnimatedPlot that works with regularly sampled data - i.e. 3D matricies
     where axis are interpreted as x,y,t.
-    
+
     Parameters
     ----------
-    
+
     movie : ndarray
           3D array with axis (t,x,y) holding the data.
-          
+
     """
-    
+
     def __init__(self, movie,background_luminance,**param):
         StandardStyleAnimatedPlot.__init__(self,**param)
         self.background_luminance = background_luminance
@@ -622,7 +626,7 @@ class PixelMovie(StandardStyleAnimatedPlot):
     def plot_next_frame(self):
         if self.i == self.l:
             self.im.set_array(self.movie[0]*0)
-        else: 
+        else:
             self.im.set_array(self.movie[self.i])
             self.i = self.i + 1
 
@@ -636,20 +640,20 @@ class ScatterPlotMovie(StandardStyleAnimatedPlot):
     """
     An instatiation of StandardStyleAnimatedPlot that works with irregularly sampled data. That data
     are assumed to have constant positions throught the time.
-    
+
     Parameters
     ----------
-    
+
     x : ndarray
         1D array containing the x coordinate of the values to be displayed.
 
     y : ndarray
         1D array containing the y coordinate of the values to be displayed.
-    
+
     z : ndarray
         2D array containing the values to be displayed (t,values)
     """
-    
+
     def __init__(self, x, y, z,**param):
         StandardStyleAnimatedPlot.__init__(self,**param)
         self.z = z
@@ -676,10 +680,10 @@ class ScatterPlotMovie(StandardStyleAnimatedPlot):
     def plot(self):
         self.z = self.z / numpy.max(self.z)
         vmax = 1/2.0
-        
+
         if isinstance(self.parameters['colors'],numpy.ndarray):
             HSV = numpy.dstack((numpy.tile(self.parameters['colors'],(len(self.z),1)),numpy.ones_like(self.z)*0.8,self.z))
-            self.z = hsv_to_rgb(HSV)   
+            self.z = hsv_to_rgb(HSV)
 
             self.scatter = self.axis.scatter(self.x.flatten(), self.y.flatten(),
                                          c=self.z[0,:],
@@ -709,39 +713,39 @@ class ScatterPlot(StandardStyle):
 
     z : ndarray
       Array of the values to be plotted.
-    
+
     x : ndarray
       Array with the y positions of the neurons.
-      
+
     y : ndarray
       Array with the y positions of the neurons.
-      
-      
+
+
     periodic : bool
              If the z is a periodic value.
-             
+
     period : double
            If periodic is True the z should come from (0,period).
-    
-    
+
+
     Other parameters
     ----------------
-    
+
     identity_line : bool
-                  Should identity line be show?  
-      
+                  Should identity line be show?
+
     cmp : colormap
              The colormap to use.
-    
+
     dot_size : double
              The size of the markers in the scatter plot.
-             
+
     marker : str
            The type of marker to use in the scatter plot.
-    
+
     equal_aspect_ratio : bool
-                       If to enforce equal aspect ratio. 
-        
+                       If to enforce equal aspect ratio.
+
     mark_means : bool
                Whether to mark the means of each axis.
 
@@ -795,13 +799,13 @@ class ScatterPlot(StandardStyle):
         self.y_lim = (numpy.min(self.y),numpy.max(self.y))
 
         if self.identity_line:
-           pylab.plot([-1e10,1e10],[-1e10,1e10],'k',linewidth=2) 
+           pylab.plot([-1e10,1e10],[-1e10,1e10],'k',linewidth=2)
 
         if self.mark_means:
            self.axis.plot([numpy.mean(self.x),numpy.mean(self.x)],[-1e10,1e10],'r--')
            self.axis.plot([-1e10,1e10],[numpy.mean(self.y),numpy.mean(self.y)],'r--')
-           
-           
+
+
         if self.colorbar:
             cb = pylab.colorbar(ax, ticks=[vmin, vmax], use_gridspec=True)
             cb.set_label(self.colorbar_label)
@@ -811,7 +815,7 @@ class ScatterPlot(StandardStyle):
 class StandardStyleLinePlot(StandardStyle):
     """
     This function plots vector data in simple line plots.
-    
+
     Parameters
     ----------
     x, y : list
@@ -820,16 +824,16 @@ class StandardStyleLinePlot(StandardStyle):
 
     labels : list, optional
              Can contain the labels to be given to the individual line plots.
-           
+
     error : list, optional
             Can contain the error bars associated with y. Has to have the same shape as y.
-           
-    
 
-    
+
+
+
     Other parameters
     ----------------
-    
+
     colors : int or list or dict
            The colors of the plots. If it is one color all plots will have that same color. If it is a list its
            length should correspond to length of x and y and the corresponding colors will be assigned to the individual graphs.
@@ -847,7 +851,7 @@ class StandardStyleLinePlot(StandardStyle):
    
     mean : bool
          If the mean of the vectors should be plotted as well.
-         
+
     fill : bool
          If true the graphs bellow the lines will be filled, with the same color as the one assigned to the line but with 50% transparency
 
@@ -864,7 +868,7 @@ class StandardStyleLinePlot(StandardStyle):
         self.x = x
         self.y = y
         self.error = error
-        
+
         self.parameters["labels"] = labels
         self.parameters["colors"] = None
         self.parameters["linestyles"] = None
@@ -874,25 +878,25 @@ class StandardStyleLinePlot(StandardStyle):
         self.parameters["legend"] = False
         self.parameters["errorbars"] = False
         self.parameters["linewidth"] = 1
-    
+
         if error != None:
            assert numpy.shape(error) == numpy.shape(y)
 
         assert len(x) == len(y)
         if labels != None:
             assert len(x) == len(labels)
-        
+
         if self.mean:
-            for i in xrange(0, len(x)):
+            for i in range(0, len(x)):
                 if not numpy.all(x[i] == x[0]):
                     raise ValueError("Mean cannot be calculated from data not containing identical x axis values")
 
     def plot(self):
-        
+
         if type(self.colors) == dict:
            assert self.labels != None
            assert len(self.colors.keys()) == len(self.labels)
-        
+
         if type(self.linestyles) == dict:
            assert self.labels != None
            assert len(self.linestyles.keys()) == len(self.labels)
@@ -903,18 +907,18 @@ class StandardStyleLinePlot(StandardStyle):
         
         tmin = 10**10
         tmax = -10**10
-        for i in xrange(0, len(self.x)):
+        for i in range(0, len(self.x)):
             if self.mean:
                 if i == 0:
                     m = self.y[i]
                 else:
                     m = m + self.y[i]
             
-            p = {}
+            p = OrderedDict()
             
             if self.labels != None:
                 p['label'] =self.labels[i]
-                
+
             if type(self.colors) == list:
                 p['color'] = self.colors[i]
             elif type(self.colors) == dict:
@@ -923,8 +927,8 @@ class StandardStyleLinePlot(StandardStyle):
             elif self.colors != None:
                 p['color'] = self.colors
             elif self.colors == None:
-                p['color'] = self.axis._get_lines.prop_cycler.next()['color']
-            
+                p['color'] = next(self.axis._get_lines.prop_cycler)['color']
+
             if type(self.linestyles) == list:
                 p['linestyle'] = self.linestyles[i]
             elif type(self.linestyles) == dict:
@@ -948,12 +952,12 @@ class StandardStyleLinePlot(StandardStyle):
             self.axis.plot(self.x[i], self.y[i],
                                linewidth=self.linewidth,
                                **p)
-            
+
             if self.fill:
                d = numpy.zeros(len(self.y[i]))
                self.axis.fill_between(self.x[i],self.y[i],where=self.y[i]>=d, color=p['color'], alpha=0.2,linewidth=0)
                self.axis.fill_between(self.x[i],self.y[i],where=self.y[i]<=d, color=p['color'], alpha=0.2,linewidth=0)
-            
+
             if self.error:
                 if self.errorbars:
                     self.axis.errorbar(self.x[i], self.y[i], yerr=self.error[i], fmt=None, color=p['color'], capsize = 5)
@@ -983,14 +987,14 @@ class ConductancesPlot(StandardStyle):
 
     Parameters
     ----------
-    
+
     exc : list
          List of excitatory conductances (AnalogSignal type).
-         
+
     inh : list
         List of inhibitory conductances (AnalogSignal type).
 
-    
+
     Other parameters
     ----------------
 
@@ -1011,7 +1015,7 @@ class ConductancesPlot(StandardStyle):
         t_stop = float(self.gsyn_es[0].t_stop - sampling_period)
         t_start = float(self.gsyn_es[0].t_start)
         time_axis = numpy.arange(0, len(self.gsyn_es[0]), 1) / float(len(self.gsyn_es[0])) * abs(t_start-t_stop) + t_start
-    
+
         for e, i in zip(self.gsyn_es, self.gsyn_is):
             e = e.rescale(mozaik.tools.units.nS)
             i = i.rescale(mozaik.tools.units.nS)
@@ -1045,7 +1049,7 @@ class ConnectionPlot(StandardStyle):
 
     pos_x : ndarray
             Array with x position of the target neurons.
-    
+
     pos_y : ndarray
             Array with y position of the target neurons.
 
@@ -1068,19 +1072,19 @@ class ConnectionPlot(StandardStyle):
 
     Other parameters
     ----------------
-    
+
     line : bool
          (TODO) True means the existing connections will be displayed as lines, with their thickness indicating the strength.
-         False means the strength of connection will be indicated by the size of the circle representing the corresponding target neuron. 
+         False means the strength of connection will be indicated by the size of the circle representing the corresponding target neuron.
 
     colorbar : bool
              Should there be a colorbar ?
 
     cmp : colormap
              The colormap to use.
-    
+
     colorbar_label : label
-               The label  that will be put on the colorbar.             
+               The label  that will be put on the colorbar.
     """
 
     def __init__(self, pos_x, pos_y, source_x, source_y, weights,colors=None,period=None,**param):
@@ -1091,14 +1095,14 @@ class ConnectionPlot(StandardStyle):
         self.source_y = source_y
         self.weights = weights
         self.colors = colors
-        
+
         self.period = period
 
         if self.period != None:
             self.parameters["cmp"] = 'hsv'
         else:
             self.parameters["cmp"] = self.colormap
-        
+
         self.parameters["top_right_border"] = True
         self.parameters["colorbar"] = False
         self.parameters["colorbar_label"] = None
@@ -1108,16 +1112,16 @@ class ConnectionPlot(StandardStyle):
         self.x_lim = [numpy.min(self.pos_x),numpy.max(self.pos_x)]
         self.y_lim = [numpy.min(self.pos_y),numpy.max(self.pos_y)]
         if len(numpy.nonzero(self.weights)[0]) == 0:
-            return 
-        
-        
+            return
+
+
         self.pos_x = self.pos_x[numpy.nonzero(self.weights)[0]]
         self.pos_y = self.pos_y[numpy.nonzero(self.weights)[0]]
 
-        
+
         if isinstance(self.colors,numpy.ndarray) or isinstance(self.colors,list):
             self.colors = numpy.array(self.colors)
-            self.colors = self.colors[numpy.nonzero(self.weights)[0]] 
+            self.colors = self.colors[numpy.nonzero(self.weights)[0]]
         self.weights = self.weights[numpy.nonzero(self.weights)[0]]
 
         if not isinstance(self.colors,numpy.ndarray)  and self.colors==None:
@@ -1133,7 +1137,7 @@ class ConnectionPlot(StandardStyle):
             else:
                 vmax = self.period
                 vmin = 0
-                
+
             ax = self.axis.scatter(self.pos_x, self.pos_y, c=numpy.array(self.colors),edgecolors=None,
                                    s=self.weights/numpy.max(self.weights)*100,
                                    lw=1, cmap=self.cmp,
@@ -1155,24 +1159,24 @@ class ConnectionPlot(StandardStyle):
 class HistogramPlot(StandardStyle):
     """
     This function plots the histogram of list of value lists, coloring each independently.
-    
+
     Parameters
     ----------
     values : list
                List of numpy arrays objects.
-               The top level list corresponds to different sets of values that will be 
+               The top level list corresponds to different sets of values that will be
                plotted together.
-               
+
                Each set will be colored by the color on corresponding postion of
                the colors parameter. If None all colors will be set to '#848484' (gray).
-    
+
     Other parameters
     ----------------
     num_bins : int
                  The with of the bins into which to bin the spikes.
-    
+
     colors : list
-           The colors to assign to the different sets of spikes. 
+           The colors to assign to the different sets of spikes.
     """
 
     def __init__(self, values,labels=None,**param):
@@ -1187,22 +1191,38 @@ class HistogramPlot(StandardStyle):
         self.parameters["mark_value"] = False
         if labels != None:
             assert len(values) == len(labels)
-        
+
 
     def plot(self):
-        
+
         if self.colors != None:
            colors = [self.colors[k] for k in self.labels]
         else:
            colors = None
-        
-        if self.parameters["log_xscale"]:
+#<<<<<<< HEAD
+#        
+#        if self.parameters["log_xscale"]:
+#            bins = np.geomspace(self.x_lim[0], self.x_lim[1], int(self.num_bins))
+#        else:
+#            bins = int(self.num_bins)
+#=======
+#>>>>>>> upstream/master
+#
+#        if self.parameters["log"]:
+#            self.axis.hist(numpy.log10(self.values),bins=bins,range=self.x_lim,edgecolor='none',color=colors)
+#        else:
+#<<<<<<< HEAD
+#            self.axis.hist(self.values,bins=bins,range=self.x_lim,rwidth=1,edgecolor='none',color=colors)
+#=======
+#            self.axis.hist(self.values,bins=int(self.num_bins),range=self.x_lim,rwidth=1,edgecolor='none',color=colors)
+#>>>>>>> upstream/master
+        if self.x_scale == 'log':
             bins = np.geomspace(self.x_lim[0], self.x_lim[1], int(self.num_bins))
         else:
             bins = int(self.num_bins)
 
         if self.parameters["log"]:
-            self.axis.hist(numpy.log10(self.values),bins=bins,range=self.x_lim,edgecolor='none',color=colors)
+           self.axis.hist(numpy.log10(self.values),bins=bins,range=self.x_lim,edgecolor='none',color=colors)
         else:
             self.axis.hist(self.values,bins=bins,range=self.x_lim,rwidth=1,edgecolor='none',color=colors)
 
@@ -1215,7 +1235,7 @@ class HistogramPlot(StandardStyle):
                 elif type(self.colors) == dict:
                     assert self.labels[i] in self.colors.keys(), "Cannot find curve named %s" % (self.labels[i])
                     c = self.colors[self.labels[i]]
-                
+
                 self.axis.annotate("",
                     xy=(numpy.mean(a), (self.y_lim[1]-self.y_lim[0])*0.8), xycoords='data',
                     xytext=(numpy.mean(a), self.y_lim[1]), textcoords='data',
@@ -1230,8 +1250,8 @@ class HistogramPlot(StandardStyle):
                                     connectionstyle="arc3",linewidth=3.0,color='r'),
                         )
 
-        self.y_label = '#' 
-        
+        self.y_label = '#'
+
 class CorticalColumnSpikeRasterPlot(StandardStyle):
     """
     This function plots the raster plot of spikes in the `spike_lists` argument. It assumes
@@ -1246,21 +1266,21 @@ class CorticalColumnSpikeRasterPlot(StandardStyle):
                 from different cortical layers (or cell types within layers). Each set
                 of spikes will be colored by the color on corresponding postion of the
                 colors parameter (matplotlib readable color formats accapted). If None all
-                colors will be set to '#848484' (gray). The second level list contains 
+                colors will be set to '#848484' (gray). The second level list contains
                 different trials of the populations responses stored in the individual SpikeList objects.
 
     Other parameters
     ----------------
     colors : list
-           The colors to assign to the different sets of spikes. 
+           The colors to assign to the different sets of spikes.
     labels : list
            The list of labels to be given to the different 'layers'. This list should have the same length as
            `spike_lists`.
-           
+
 
     Notes
     -----
-    
+
     All SpikeList objects must record over the same interval.
     """
     def __init__(self, spike_lists,**param):
@@ -1271,15 +1291,15 @@ class CorticalColumnSpikeRasterPlot(StandardStyle):
 
     def plot(self):
         if self.parameters["colors"] == None:
-            colors = ['#000000' for i in xrange(0, len(self.sps))]
+            colors = ['#000000' for i in range(0, len(self.sps))]
         else:
             colors = self.colors
-            
-        assert len(self.labels) == len(self.sps) 
+
+        assert len(self.labels) == len(self.sps)
 
         t_start = float(self.sps[0][0].t_start.rescale(pq.s))
         t_stop = float(self.sps[0][0].t_stop.rescale(pq.s))
-        
+
         for l in self.sps:
             for n in l:
                 assert n.t_start.rescale(pq.s) == t_start , "Not all SpikeLists have the same t_start"
@@ -1290,14 +1310,14 @@ class CorticalColumnSpikeRasterPlot(StandardStyle):
         for k, sp in enumerate(self.sps):
             yticks.append(yticks[-1]+len(sp))
             for j, n in enumerate(sp):
-                self.axis.scatter(n.rescale(pq.s),[y for x in xrange(0, len(n))],s=7, c=colors[k], marker='o',lw=0)
+                self.axis.scatter(n.rescale(pq.s),[y for x in range(0, len(n))],s=7, c=colors[k], marker='o',lw=0)
                 y += 1
-        
-        yticks = [yticks[j-1] + (yticks[j]-yticks[j-1])/2.0 for j in xrange(1,len(yticks))]
-        
+
+        yticks = [yticks[j-1] + (yticks[j]-yticks[j-1])/2.0 for j in range(1,len(yticks))]
+
         self.x_lim = (t_start, t_stop)
         self.x_label = 'time (s)'
-        
+
         self.y_lim = (0,y)
         self.y_tick_style = 'Custom'
         self.y_ticks = yticks
@@ -1305,8 +1325,8 @@ class CorticalColumnSpikeRasterPlot(StandardStyle):
 
 class OrderedAnalogSignalListPlot(StandardStyle):
     """
-    This plots a set of signals, each associated with a value that can be ordered. 
-    
+    This plots a set of signals, each associated with a value that can be ordered.
+
     Parameters
     ----------
     signals : list
@@ -1321,7 +1341,7 @@ class OrderedAnalogSignalListPlot(StandardStyle):
 
     interpolation : str
            The interpolation to use (see imshow command in matplotlib).
-           
+
     colorbar : bool
              Should there be a colorbar?
 
@@ -1341,12 +1361,11 @@ class OrderedAnalogSignalListPlot(StandardStyle):
         self.parameters["colorbar_label"] = None
 
         assert len(signals) == len(values)
-        
+
     def plot(self):
-        
+
         ax = self.axis.imshow(self.signals,cmap=self.cmap,aspect='auto',interpolation=self.interpolation)
 
         if self.colorbar:
             cb = pylab.colorbar(ax,  use_gridspec=True)
             cb.set_label(self.colorbar_label)
-            

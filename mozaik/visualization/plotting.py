@@ -48,7 +48,7 @@ import matplotlib.gridspec as gridspec
 from scipy.interpolate import griddata
 import mozaik.tools.units 
 from parameters import ParameterSet
-
+from collections import OrderedDict
 from mozaik.tools.circ_stat import *
 from mozaik.core import ParametrizedObject
 from mozaik.storage import queries
@@ -57,14 +57,15 @@ from mozaik.tools.mozaik_parametrized import colapse_to_dictionary, MozaikParame
 from numpy import pi
 from neo.core.analogsignal import AnalogSignal as NeoAnalogSignal
 from neo.core.spiketrain import SpikeTrain as NeoSpikeTrain
-from simple_plot import StandardStyleLinePlot, SpikeRasterPlot, \
+from .simple_plot import StandardStyleLinePlot, SpikeRasterPlot, \
                         SpikeHistogramPlot, ConductancesPlot, PixelMovie, \
                         ScatterPlotMovie, ScatterPlot, ConnectionPlot, SimplePlot, HistogramPlot, CorticalColumnSpikeRasterPlot, OrderedAnalogSignalListPlot
-from plot_constructors import LinePlot, PerStimulusPlot, PerStimulusADSPlot, ADSGridPlot
+from .plot_constructors import LinePlot, PerStimulusPlot, PerStimulusADSPlot, ADSGridPlot
 
 import mozaik
 logger = mozaik.getMozaikLogger()
 
+from builtins import zip
 
 
 class Plotting(ParametrizedObject):
@@ -96,7 +97,7 @@ class Plotting(ParametrizedObject):
         self.plot_file_name = plot_file_name
         self.animation_update_functions = []
         self.frame_duration = frame_duration
-        self.fig_param = fig_param if fig_param != None else {}
+        self.fig_param = fig_param if fig_param != None else OrderedDict()
         self.caption = "Caption not specified."
 
     def subplot(self, subplotspec):
@@ -108,9 +109,9 @@ class Plotting(ParametrizedObject):
 
     
     def _nip_parameters(self,plot_name,user_params):
-        new_user_params = {}
-        params_to_update = {}
-        for (k,v) in user_params.iteritems():
+        new_user_params = OrderedDict()
+        params_to_update = OrderedDict()
+        for (k,v) in user_params.items():
             l = k.split('.')
             assert len(l) > 1, "Parameter %s not matching the simple plot" % (k)
             if l[0] == plot_name or l[0] == '*':
@@ -123,7 +124,7 @@ class Plotting(ParametrizedObject):
     
     def _handle_parameters_and_execute_plots(self,parameters,user_parameters,gs):
         d = self.subplot(gs)
-        for (k,(pl,gs,p)) in d.iteritems():
+        for (k,(pl,gs,p)) in d.items():
             p.update(parameters)
             ### THIS IS WRONG 'UP' DO NOT WORK        
             up = user_parameters
@@ -154,11 +155,11 @@ class Plotting(ParametrizedObject):
         """
         t1 = time.time()
         if params == None:
-            params = {}
+            params = OrderedDict()
         self.fig = pylab.figure(facecolor='w', **self.fig_param)
         gs = gridspec.GridSpec(1, 1)
         gs.update(left=0.05, right=0.95, top=0.95, bottom=0.05)
-        self._handle_parameters_and_execute_plots({}, params,gs[0, 0])
+        self._handle_parameters_and_execute_plots(OrderedDict(), params,gs[0, 0])
 
         # ANIMATION Handling
         if self.animation_update_functions != []:
@@ -317,7 +318,7 @@ class PlotTuningCurve(Plotting):
                period = st[0].getParams()[self.parameters.parameter_name].period
                assert period != None, "ERROR: You asked for centering of tuning curves even though the domain over which it is measured is not periodic." 
                centers = centering_pnv.get_value_by_id(self.parameters.neurons)
-               self.max_mean_response_indexes.append(numpy.array([numpy.argmin(circular_dist(par,centers[i],period)) for i in xrange(0,len(centers))]))
+               self.max_mean_response_indexes.append(numpy.array([numpy.argmin(circular_dist(par,centers[i],period)) for i in range(0,len(centers))]))
 
         if self.parameters.pool:
            assert all([p[0].value_units == self.pnvs[0][0].value_units for p in self.pnvs]), "You asked to pool tuning curves across different value_names, but the datastore contains PerNeuronValue datastructures with different units"
@@ -362,7 +363,7 @@ class PlotTuningCurve(Plotting):
                 error = None
                 if self.parameters.mean:
                     v = []
-                    for j in xrange(0,len(self.parameters.neurons)):
+                    for j in range(0,len(self.parameters.neurons)):
                         if self.parameters.centered:
                             vv,p = self.center_tc(val[:,j],par,period,self.max_mean_response_indexes[i][j])
                         else:
@@ -381,7 +382,6 @@ class PlotTuningCurve(Plotting):
                     
                     
                 par,val = zip(*sorted(zip(numpy.array(par),val)))
-		
                 # if we have a period of pi or 2*pi
                 if period != None and numpy.isclose(period,pi) and self.parameters.centered==False:
                    par = [(p-pi if p > pi/2 else p) for p in par]
@@ -486,7 +486,7 @@ class PlotTuningCurve(Plotting):
         return plots
 
     def create_params(self,value_name,units,top_row,bottom_row,period,neuron_id,number_of_curves,polar,labels,idx):
-            params={}
+            params=OrderedDict()
             
             params["x_label"] = self.parameters.parameter_name
             if idx == 0:
@@ -497,7 +497,7 @@ class PlotTuningCurve(Plotting):
                 
             params['labels']=labels
             params['linewidth'] = 2
-            #params['colors'] = [cm.jet(j/float(number_of_curves)) for j in xrange(0,number_of_curves)] 
+            #params['colors'] = [cm.jet(j/float(number_of_curves)) for j in range(0,number_of_curves)] 
             
             if top_row:
                 params["title"] =  'Neuron ID: %d' % neuron_id
@@ -534,11 +534,14 @@ class PlotTuningCurve(Plotting):
             
     def center_tc(self,val,par,period,center_index):
            # first lets make the maximum to be at zero  
-           q = center_index+len(val)/2 if center_index < len(val)/2 else center_index-len(val)/2
+           q = int(center_index+len(val)/2 if center_index < len(val)/2 else center_index-len(val)/2)
            z = par[center_index]
            c =  period/2.0
            par = numpy.array([(p - z + c) % period for p in par])  - c
            if q != 0:
+               logger.info(str(q))
+               logger.info(str(val))
+               logger.info(str(par))
                a = val[:q].copy()[:] 
                b = par[:q].copy()[:] 
                val[:-q] = val[q:].copy()[:]   
@@ -596,7 +599,7 @@ class RasterPlot(Plotting):
            sp = [RasterPlot.concat_spiketrains(sp1,sp2) for sp1,sp2 in zip(spont_sp,sp)]
            x_ticks = [float(spont_sp[0][0].t_start.rescale(pq.s)),0.0,float(sp[0][0].t_stop.rescale(pq.s)/2), float(sp[0][0].t_stop.rescale(pq.s))]
 
-        d = {} 
+        d = OrderedDict()
         if self.parameters.trial_averaged_histogram:
             gs = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=gs)
             # first the raster
@@ -736,7 +739,7 @@ class GSynPlot(Plotting):
         segs = sorted(dsv.get_segments(),key = lambda x : MozaikParametrized.idd(x.annotations['stimulus']).trial)
         gsyn_es = [s.get_esyn(self.parameters.neuron) for s in segs]
         gsyn_is = [s.get_isyn(self.parameters.neuron) for s in segs]
-        params = {}
+        params = OrderedDict()
         
         if self.parameters.spontaneous:
            segs = sorted(dsv.get_segments(null=True),key = lambda x : MozaikParametrized.idd(x.annotations['stimulus']).trial)
@@ -796,12 +799,12 @@ class OverviewPlot(Plotting):
         if len(self.parameters.sheet_activity.keys()) != 0:
             gs = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=subplotspec)
             self.parameters.sheet_activity['sheet_name'] = self.parameters.sheet_name
-            d.append(("Activity_plot",ActivityMovie(dsv,self.parameters.sheet_activity),gs[0, 0],{}))
+            d.append(("Activity_plot",ActivityMovie(dsv,self.parameters.sheet_activity),gs[0, 0],OrderedDict()))
             offset = 1
         else:
             gs = gridspec.GridSpecFromSubplotSpec(3, 1, subplot_spec=subplotspec)
 
-        params = {}
+        params = OrderedDict()
         if offset == 1:
             params['title'] = None
         params['x_label']  = None
@@ -877,7 +880,7 @@ class AnalogSignalListPlot(Plotting):
             xs = [xs[0]]
             ys = [numpy.mean(ys,axis=0)]
         
-        params = {}
+        params = OrderedDict()
         params["x_lim"] = (a.t_start.magnitude, a.t_stop.magnitude)
         params["x_label"] = self.analog_signal_list.x_axis_name + '(' + a.t_start.dimensionality.latex + ')'
         params["y_label"] = self.analog_signal_list.y_axis_name
@@ -916,7 +919,7 @@ class AnalogSignalPlot(Plotting):
         a = self.analog_signal.analog_signal
         times = numpy.linspace(a.t_start, a.t_stop, len(a))
         
-        params = {}
+        params = OrderedDict()
         params["x_lim"] = (a.t_start.magnitude, a.t_stop.magnitude)
         params["x_label"] = self.analog_signal.x_axis_name + '(' + a.t_start.dimensionality.latex + ')'
         params["y_label"] = self.analog_signal.y_axis_name
@@ -969,7 +972,7 @@ class ConductanceSignalListPlot(Plotting):
                 exc = [exc]
                 inh = [inh]
             
-        return [("ConductancePlot",ConductancesPlot(exc, inh),subplotspec,{})]
+        return [("ConductancePlot",ConductancesPlot(exc, inh),subplotspec,OrderedDict())]
 
 
 
@@ -1003,7 +1006,7 @@ class PerNeuronPairAnalogSignalListPlot(Plotting):
         # get the asl from the first tuple id pair
         asl = self.analog_signal_list.get_asl_by_id_pair( (self.analog_signal_list.ids)[0] )
         times = numpy.linspace(asl.t_start, asl.t_stop, len(asl))
-        params = {}
+        params = OrderedDict()
         params["x_lim"] = (asl.t_start.magnitude, asl.t_stop.magnitude)
         params["x_label"] = self.analog_signal_list.x_axis_name + '(' + asl.t_start.dimensionality.latex + ')'
         params["y_label"] = self.analog_signal_list.y_axis_name
@@ -1028,8 +1031,8 @@ class RetinalInputMovie(Plotting):
         self.st = datastore.sensory_stimulus.keys()
         
         # remove internal stimuli from the list 
-        self.retinal_input = [self.retinal_input[i] for i in xrange(0,len(self.st)) if MozaikParametrized.idd(self.st[i]).name != 'InternalStimulus']
-        self.st = [self.st[i]  for i in xrange(0,len(self.st)) if MozaikParametrized.idd(self.st[i]).name != 'InternalStimulus']
+        self.retinal_input = [self.retinal_input[i] for i in range(0,len(self.st)) if MozaikParametrized.idd(self.st[i]).name != 'InternalStimulus']
+        self.st = [self.st[i]  for i in range(0,len(self.st)) if MozaikParametrized.idd(self.st[i]).name != 'InternalStimulus']
         
         
         
@@ -1132,7 +1135,7 @@ class ActivityMovie(Plotting):
         #lets normalize against the maximum response for given neuron
         
 
-        pos = dsv.get_neuron_postions()[self.parameters.sheet_name]
+        pos = dsv.get_neuron_positions()[self.parameters.sheet_name]
 
         posx = pos[0,self.datastore.get_sheet_indexes(self.parameters.sheet_name,dsv.get_segments()[0].get_stored_spike_train_ids())]
         posy = pos[1,self.datastore.get_sheet_indexes(self.parameters.sheet_name,dsv.get_segments()[0].get_stored_spike_train_ids())]
@@ -1147,7 +1150,7 @@ class ActivityMovie(Plotting):
                                 self.parameters.resolution)
 
             movie = []
-            for i in xrange(0, numpy.shape(h)[1]):
+            for i in range(0, numpy.shape(h)[1]):
                 movie.append(griddata((posx, posy),
                                       h[:, i],
                                       (xi[None, :], yi[:, None]),
@@ -1208,7 +1211,7 @@ class PerNeuronValuePlot(Plotting):
          if self.parameters.cortical_view:
             assert len(pnvs) <= 1, logger.error("We can only display single stimulus parametrization in cortical view, but you have suplied multiple in datastore.")
             pnv = pnvs[0]
-            pos = self.dsv.get_neuron_postions()[pnv.sheet_name]                            
+            pos = self.dsv.get_neuron_positions()[pnv.sheet_name]                            
             posx = pos[0,self.datastore.get_sheet_indexes(pnv.sheet_name,pnv.ids)]
             posy = pos[1,self.datastore.get_sheet_indexes(pnv.sheet_name,pnv.ids)]
             values = pnv.values
@@ -1218,7 +1221,7 @@ class PerNeuronValuePlot(Plotting):
             else:
                 periodic = False
                 period = None
-            params = {}
+            params = OrderedDict()
             params["x_label"] = 'x'
             params["y_label"] = 'y'
             params["colorbar_label"] = pnv.value_units.dimensionality.latex
@@ -1227,7 +1230,7 @@ class PerNeuronValuePlot(Plotting):
             return [("ScatterPlot",ScatterPlot(posx, posy, values, periodic=periodic,period=period),gs,params)]
          else:
             assert queries.ads_with_equal_stimulus_type(dsv) , logger.error('Warning sheet name and value name does\'t seem to uniquely identify set of PerNeuronValue ADS with the same stimulus type')
-            params = {}
+            params = OrderedDict()
             params["y_label"] = '# neurons'
 
             varying_stim_parameters = sorted(varying_parameters([MozaikParametrized.idd(pnv.stimulus_id) for pnv in pnvs]))        
@@ -1264,8 +1267,8 @@ class PerNeuronValueScatterPlot(Plotting):
             pnvs = datastore.get_analysis_result(identifier='PerNeuronValue',sheet_name=sheet)
             if len(pnvs) < 2:
                raise ValueError('At least 2 DSVs have to be provided') 
-            for i in xrange(0,len(pnvs)):
-                for j in xrange(i+1,len(pnvs)):
+            for i in range(0,len(pnvs)):
+                for j in range(i+1,len(pnvs)):
                     if (pnvs[i].value_units == pnvs[j].value_units) or not self.parameters.only_matching_units:
                         if pnvs[j].value_name < pnvs[i].value_name and self.parameters.lexicographic_order:
                             self.pairs.append((pnvs[j],pnvs[i]))
@@ -1302,7 +1305,7 @@ class PerNeuronValueScatterPlot(Plotting):
             x_label += '\n' + str(p) + " = " + str(MozaikParametrized.idd(pair[0].stimulus_id).getParamValue(p))
             y_label += '\n' + str(p) + " = " + str(MozaikParametrized.idd(pair[1].stimulus_id).getParamValue(p))
         
-        params = {}
+        params = OrderedDict()
         params["x_label"] = x_label
         params["y_label"] = y_label
         params["title"] = self.sheets[idx]
@@ -1382,8 +1385,8 @@ class ConnectivityPlot(Plotting):
             if not self.parameters.reversed and conn.source_name == self.parameters.sheet_name:
                 # add outgoing projections from sheet_name
                 self.connecting_neurons_positions.append(
-                            datastore.get_neuron_postions()[conn.target_name])
-                z = datastore.get_neuron_postions()[conn.source_name]
+                            datastore.get_neuron_positions()[conn.target_name])
+                z = datastore.get_neuron_positions()[conn.source_name]
                 idx = self.datastore.get_sheet_indexes(conn.source_name,self.parameters.neuron)
                 self.connected_neuron_position.append(
                             (z[0][idx],
@@ -1392,8 +1395,8 @@ class ConnectivityPlot(Plotting):
             elif (self.parameters.reversed and conn.target_name == self.parameters.sheet_name):
                 # add incomming projections from sheet_name
                 self.connecting_neurons_positions.append(
-                            datastore.get_neuron_postions()[conn.source_name])
-                z = datastore.get_neuron_postions()[conn.target_name]
+                            datastore.get_neuron_positions()[conn.source_name])
+                z = datastore.get_neuron_positions()[conn.target_name]
                 idx = self.datastore.get_sheet_indexes(conn.target_name,self.parameters.neuron)
                 self.connected_neuron_position.append(
                             (z[0][idx],
@@ -1449,7 +1452,7 @@ class ConnectivityPlot(Plotting):
         
         # Plot the weights
         gs = gss[0,0]
-        params = {}
+        params = OrderedDict()
         
         if self.parameters.reversed:
             xs = self.connections[idx].source_size[0]
@@ -1489,7 +1492,7 @@ class ConnectivityPlot(Plotting):
 
         # Plot the delays
         gs = gss[1,0]
-        params = {}
+        params = OrderedDict()
         params["x_lim"] = (-xs/2.0,xs/2.0)
         params["y_lim"] = (-ys/2.0,ys/2.0)
         
@@ -1706,7 +1709,7 @@ class PlotTemporalTuningCurve(Plotting):
                period = st[0].getParams()[self.parameters.parameter_name].period
                assert period != None, "ERROR: You asked for centering of tuning curves even though the domain over which it is measured is not periodic." 
                centers = centering_pnv.get_value_by_id(self.parameters.neurons)
-               self.center_response_indexes.append(numpy.array([numpy.argmin(circular_dist(par,centers[i],period)) for i in xrange(0,len(centers))]))
+               self.center_response_indexes.append(numpy.array([numpy.argmin(circular_dist(par,centers[i],period)) for i in range(0,len(centers))]))
             
     def subplot(self, subplotspec):
         if self.parameters.mean:
@@ -1731,7 +1734,7 @@ class PlotTemporalTuningCurve(Plotting):
                 error = None
                 if self.parameters.mean:
                     v = []
-                    for j in xrange(0,len(self.parameters.neurons)):
+                    for j in range(0,len(self.parameters.neurons)):
                         if self.centered_response_indexes != None:
                             vv,p = self.center_tc(val[:,j],par,period,self.centered_response_indexes[i][j])
                         else:
@@ -1787,7 +1790,7 @@ class PlotTemporalTuningCurve(Plotting):
         return plots
 
     def create_params(self,y_axis_name,units,top_row,bottom_row,period,neuron_id,signal_labels,idx):
-            params={}
+            params=OrderedDict()
             
             if idx==0:
                 params["y_label"] = self.parameters.parameter_name

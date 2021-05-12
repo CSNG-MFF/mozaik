@@ -4,12 +4,15 @@ This module contains code interfacing parameters package, and pyNN distribution 
 In future pyNN plans to make an comprehensive merge between the parameters parametrization system and pyNN,
 in which case this code should become obsolete and mozaik should fully switch to such new system.
 """
-
+from future.standard_library import install_aliases
+install_aliases()
+from past.builtins import basestring
+from urllib.parse import urlparse
 from parameters import ParameterSet, ParameterRange, ParameterTable, ParameterReference
 from pyNN.random import RandomDistribution, NumpyRNG
+import requests
 import urllib, copy, warnings, numpy, numpy.random  # to be replaced with srblib
-from urlparse import urlparse
-
+from collections import OrderedDict
 import mozaik
 
 def load_parameters(parameter_url,modified_parameters):
@@ -77,11 +80,11 @@ class MozaikExtendedParameterSet(ParameterSet):
         except NameError as e:
             raise NameError("%s\n%s" % (s,e))
             
-        return D or {}
+        return D or OrderedDict()
     
     def __init__(self, initialiser, label=None, update_namespace=None):
         if update_namespace == None:
-           update_namespace = {}
+           update_namespace = OrderedDict()
         update_namespace['PyNNDistribution'] = PyNNDistribution
 
         def walk(d, label):
@@ -100,26 +103,21 @@ class MozaikExtendedParameterSet(ParameterSet):
         self._url = None
         if isinstance(initialiser, basestring): # url or str
             try:
-                # can't handle cases where authentication is required
-                # should be rewritten using urllib2 
-                #scheme, netloc, path, \
-                #        parameters, query, fragment = urlparse(initialiser)
-                f = urllib.urlopen(initialiser)
-                pstr = f.read()
+                if ':' not in initialiser:
+                   f = open(initialiser,'r')
+                   pstr=f.read()
+                   f.close()
+                else:
+                   pstr = request.urlopen(initialiser).text
                 self._url = initialiser
-
-                
             except IOError:
                 pstr = initialiser
                 self._url = None
-            else:
-                f.close()
-
 
             # is it a yaml url?
             if self._url:
-                import urlparse, os.path
-                o = urlparse.urlparse(self._url)
+                import os.path
+                o = urlparse(self._url)
                 base,ext = os.path.splitext(o.path)
                 if ext in ['.yaml','.yml']:
                     import yaml

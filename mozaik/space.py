@@ -8,6 +8,8 @@ import mozaik
 from PIL import Image
 from parameters import ParameterSet
 from mozaik.core import ParametrizedObject
+from collections import OrderedDict
+
 
 from mozaik import __version__
 
@@ -45,7 +47,7 @@ class InputSpace(ParametrizedObject):
 
     def __init__(self, params):
         ParametrizedObject.__init__(self, params)
-        self.content = {}
+        self.content = OrderedDict()
         self.input = None
 
     def add_object(self, name, input_object):  
@@ -66,7 +68,7 @@ class InputSpace(ParametrizedObject):
         """
         Reset the input space and clear stimuli in it.
         """
-        self.content = {}
+        self.content = OrderedDict()
         self.input = None
         self.reset()
 
@@ -145,7 +147,7 @@ class VisualSpace(InputSpace):
         InputSpace.__init__(self, params)  # InputSpace requires only the update interval
         self.background_luminance = self.parameters.background_luminance
         self.update_interval = self.parameters.update_interval
-        self.content = {}
+        self.content = OrderedDict()
         self.frame_number = 0
         self.input = None
 
@@ -168,13 +170,13 @@ class VisualSpace(InputSpace):
                        downsample such that one pixel has `pixel_size` degree.
         """
         # Let's make it more efficient if there is only one object in the scene that is not transparrent (which is often the case):
-        o = self.content.values()[0]
-        if len(self.content.values()) == 1 and not o.transparent and o.is_visible:
-           return o.display(region, pixel_size)
+        o = list(self.content.values())
+        if len(self.content.values()) == 1 and not o[0].transparent and o[0].is_visible:
+           return o[0].display(region, pixel_size)
 
         size_in_pixels = numpy.ceil(xy2ij((region.size_x, region.size_y)) / float(pixel_size)).astype(int)
         scene = TRANSPARENT*numpy.ones(size_in_pixels)
-        for obj in self.content.values():
+        for obj in o:
             if obj.is_visible:
                 if region.overlaps(obj.region):
                     obj_view = obj.display(region, pixel_size)
@@ -229,7 +231,7 @@ class VisualRegion(object):
 
         assert self.size_x > 0 and self.size_y > 0
 
-        half_width = self.size_x/2.0
+        half_width =	 self.size_x/2.0
         half_height = self.size_y/2.0
         self.left = self.location_x - half_width
         self.right = self.location_x + half_width
@@ -246,6 +248,9 @@ class VisualRegion(object):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    def __hash__(self):
+        return hash((self.location_x,self.location_y,self.size_x,self.size_y))
 
     def overlaps(self, another_region):
         """
