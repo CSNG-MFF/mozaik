@@ -5,7 +5,7 @@ Module containing texture specific analysis.
 import mozaik
 import numpy
 import quantities as qt
-from analysis import Analysis
+from mozaik.analysis.analysis import Analysis
 from mozaik.tools.mozaik_parametrized import colapse, colapse_to_dictionary, MozaikParametrized
 from mozaik.analysis.data_structures import SingleValue
 from mozaik.analysis.data_structures import AnalogSignal

@@ -644,7 +644,7 @@ class MeasureSizeTuningRing(VisualExperiment):
         # stimuli creation        
         for c in self.parameters.contrasts:
             for r in inner_radius:
-                for k in xrange(0, self.parameters.num_trials):
+                for k in range(0, self.parameters.num_trials):
                     self.stimuli.append(topo.DriftingSinusoidalGratingRing(
                                     frame_duration = self.frame_duration,
                                     size_x=model.visual_field.size_x,
@@ -1683,8 +1683,8 @@ class MeasureTextureSensitivityFullfield(VisualExperiment):
         VisualExperiment.__init__(self, model,parameters)
         for image in self.parameters.images:
             for ty, t in enumerate(self.parameters.types):
-             for i in xrange(0, self.parameters.num_images):                
-                 for k in xrange(0, self.parameters.num_trials):
+             for i in range(0, self.parameters.num_images):                
+                 for k in range(0, self.parameters.num_trials):
                     im = textu.PSTextureStimulus(
                             frame_duration = self.frame_duration,
                             duration=self.parameters.duration,
@@ -1784,9 +1784,9 @@ class MeasureTextureSizeTuning(VisualExperiment):
         # stimuli creation        
         for image in self.parameters.images:
             for ty, t in enumerate(self.parameters.types):
-             for i in xrange(0, self.parameters.num_images):
+             for i in range(0, self.parameters.num_images):
                  for s in sizes:
-                     for k in xrange(0, self.parameters.num_trials):
+                     for k in range(0, self.parameters.num_trials):
                          im = textu.PSTextureStimulusDisk(
                                 frame_duration = self.frame_duration,
                                 duration=self.parameters.duration,
@@ -1846,11 +1846,11 @@ class MeasureInformativePixelCorrelationStatisticsResponse(VisualExperiment):
         import mozaik.stimuli.vision.texture_based as textu #vf
         VisualExperiment.__init__(self, model,parameters)
 
-        for i in xrange(10):
+        for i in range(10):
             for value in self.parameters.correlation_values:
                 pixel_statistics = [0] * 10
                 pixel_statistics[i] = value
-                for j in xrange(self.parameters.num_trials):
+                for j in range(self.parameters.num_trials):
                     im = textu.VictorInformativeSyntheticStimulus(
                             frame_duration = self.frame_duration,
                             duration=self.parameters.duration,
@@ -1905,11 +1905,11 @@ class MeasureUninformativePixelCorrelationStatisticsResponse(VisualExperiment):
         import mozaik.stimuli.vision.texture_based as textu #vf
         VisualExperiment.__init__(self, model,parameters)
 
-        for i in xrange(2):
+        for i in range(2):
             for value in self.parameters.correlation_values:
                 pixel_statistics = [0] * 2
                 pixel_statistics[i] = value
-                for j in xrange(self.parameters.num_trials):
+                for j in range(self.parameters.num_trials):
                     im = textu.VictorUninformativeSyntheticStimulus(
                             frame_duration = self.frame_duration,
                             duration=self.parameters.duration,

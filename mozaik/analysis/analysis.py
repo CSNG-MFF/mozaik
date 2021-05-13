@@ -981,7 +981,7 @@ class PSTHLowRAM(Analysis):
                                          y_axis_name='psth (bin=' + str(self.parameters.bin_length) + ')',
                                          sheet_name=sheet,
                                          tags=self.tags,
-                                         analysis_algorithm=self.__class__.__name__,
+                                         analysis_algorithm='PSTH',
                                          stimulus_id=str(st)))
                     seg.release()
 
