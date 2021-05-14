@@ -543,7 +543,6 @@ class MeasureSizeTuning(VisualExperiment):
         # linear or logarithmic spaced sizes
         if self.parameters.log_spacing:
             base2max = numpy.log2(self.parameters.max_size)
-            #sizes = numpy.insert(numpy.logspace(start=-3.0, stop=base2max, num=self.parameters.num_inner_radius - 1, base=2.0), 0, 0)
             sizes = numpy.logspace(start=-3.0, stop=base2max, num=self.parameters.num_sizes, base=2.0) 
         else:
             sizes = numpy.linspace(0, self.parameters.max_size,self.parameters.num_sizes)                     

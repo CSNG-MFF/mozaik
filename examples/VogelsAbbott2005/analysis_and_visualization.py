@@ -19,7 +19,6 @@ def perform_analysis_and_visualization(data_store):
                    'bin_width' : 5.0,
                    'scatter' :  True,
                    'resolution' : 0
-            
             }
 
 

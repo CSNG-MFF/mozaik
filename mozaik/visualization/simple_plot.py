@@ -838,7 +838,7 @@ class StandardStyleLinePlot(StandardStyle):
            The colors of the plots. If it is one color all plots will have that same color. If it is a list its
            length should correspond to length of x and y and the corresponding colors will be assigned to the individual graphs.
            If dict, the keys should be labels, and values will be the colors that will be assigned to the lines that correspond to the labels.
-           
+
     linestyles : str or list of str or dict
            The linestyles of the plots. If it is scalar all plots will have that same linestyle. If it is a list its
            length should correspond to length of x and y and the corresponding linestyles will be assigned to the individual graphs.
@@ -1199,23 +1199,7 @@ class HistogramPlot(StandardStyle):
            colors = [self.colors[k] for k in self.labels]
         else:
            colors = None
-#<<<<<<< HEAD
-#        
-#        if self.parameters["log_xscale"]:
-#            bins = np.geomspace(self.x_lim[0], self.x_lim[1], int(self.num_bins))
-#        else:
-#            bins = int(self.num_bins)
-#=======
-#>>>>>>> upstream/master
-#
-#        if self.parameters["log"]:
-#            self.axis.hist(numpy.log10(self.values),bins=bins,range=self.x_lim,edgecolor='none',color=colors)
-#        else:
-#<<<<<<< HEAD
-#            self.axis.hist(self.values,bins=bins,range=self.x_lim,rwidth=1,edgecolor='none',color=colors)
-#=======
-#            self.axis.hist(self.values,bins=int(self.num_bins),range=self.x_lim,rwidth=1,edgecolor='none',color=colors)
-#>>>>>>> upstream/master
+
         if self.x_scale == 'log':
             bins = np.geomspace(self.x_lim[0], self.x_lim[1], int(self.num_bins))
         else:
