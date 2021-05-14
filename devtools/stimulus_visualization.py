@@ -182,7 +182,7 @@ def get_stimulus_params(stimulus):
 
 
 def pop_frames(stimulus, num_frames):
-    return [stimulus._frames.next()[0] for i in range(num_frames)]
+    return [stimulus._frames.__next__()[0] for i in range(int(num_frames))]
 
 
 def get_xlim(params):

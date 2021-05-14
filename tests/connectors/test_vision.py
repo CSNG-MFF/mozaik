@@ -1,3 +1,6 @@
+import matplotlib
+
+matplotlib.use("Agg")
 from mozaik.connectors import vision
 from mozaik.connectors.vision import V1CorrelationBasedConnectivity as V1CBC
 import numpy as np
