@@ -59,7 +59,7 @@ def ContinuousGaborMovementAndJump_default_parameters():
             "orientation": 0,
             "phase": 0,
             "spatial_frequency": 1,
-            "size": 2,
+            "sigma": 0.5,
             "center_relative_luminance": 1,
             "moving_relative_luminance": 1,
             "x": 0,
@@ -77,7 +77,13 @@ def ContinuousGaborMovementAndJump_default_parameters():
 def SparseNoise_default_parameters():
     d = visual_stim_default_parameters()
     d.update(
-        {"experiment_seed": 0, "time_per_image": 20, "grid_size": 11, "grid": True}
+        {
+            "blank_time": 0,
+            "experiment_seed": 0,
+            "time_per_image": 20,
+            "grid_size": 11,
+            "grid": True,
+        }
     )
     return d
 
