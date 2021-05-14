@@ -235,6 +235,7 @@ class TestLSV1M(TestModel):
     def test_voltages(self, sheet_name):
         self.check_voltages(self.ds, self.ds_ref, sheet_name, max_neurons=25)
 
+
 class TestLSV1MTiny(TestModel):
     """
     Class that runs the a tiny version of the LSV1M model on construction from the mozaik-models
