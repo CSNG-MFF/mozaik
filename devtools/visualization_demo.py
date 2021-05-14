@@ -1,3 +1,6 @@
+import matplotlib
+
+matplotlib.use("TkAgg")
 import mozaik.stimuli.vision.topographica_based as topo
 import mozaik.experiments.vision as exp
 import stimulus_visualization as viz
