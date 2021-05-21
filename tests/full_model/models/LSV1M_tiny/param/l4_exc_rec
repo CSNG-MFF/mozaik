@@ -1,0 +1,40 @@
+{
+    "2" : {
+      'component' :  'mozaik.sheets.population_selector.SimilarAnnotationSelectorRegion',
+      'variables' : ("spikes","v","gsyn_exc" , "gsyn_inh"),
+      'params' :  {
+                            'size': 200.0,  # the size of the grid (it is assumed to be square) - it has to be multiple of spacing (micro meters)
+                            'offset_x' : 0.0, # the x axis offset from the center of the sheet (micro meters)
+                            'offset_y' : 0.0, # the y axis offset from the center of the sheet (micro meters)
+	                    'num_of_cells' : 100,
+    		            'annotation' : 'LGNAfferentOrientation',
+            		    'distance' : 0.2,
+	                    'value': 0.0,
+    		            'period' :  3.14159265359, 
+                  }
+    },
+    "3" : {
+      'component' :  'mozaik.sheets.population_selector.RCGrid',
+      'variables' : ("spikes"),
+      'params' :  {
+                            'size': 600.0,  # the size of the grid (it is assumed to be square) - it has to be multiple of spacing (micro meters)
+                            'spacing' : 20.0, #the space between two electrodes (micro meters)
+                            'offset_x' : 0.0, # the x axis offset from the center of the sheet (micro meters)
+                            'offset_y' : 0.0, # the y axis offset from the center of the sheet (micro meters)
+
+                  }
+    },
+
+    "4" : {
+      'component' :  'mozaik.sheets.population_selector.RCGrid',
+      'variables' : ("spikes"),
+      'params' :  {
+                            'size': 2000.0,  # the size of the grid (it is assumed to be square) - it has to be multiple of spacing (micro meters)
+                            'spacing' : 100.0, #the space between two electrodes (micro meters)
+                            'offset_x' : 0.0, # the x axis offset from the center of the sheet (micro meters)
+                            'offset_y' : 0.0, # the y axis offset from the center of the sheet (micro meters)
+
+                  }
+    },
+
+}
