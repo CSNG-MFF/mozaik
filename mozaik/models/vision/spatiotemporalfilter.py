@@ -506,8 +506,8 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
 
             f1 = open(self.parameters.cache_path + '/' + 'stimuli.st', 'w')
             f = open(self.parameters.cache_path + '/' + str(counter) + '.st', 'wb')
-            pickle.dump(self.cached_stimuli, f1)
-            pickle.dump((input_currents, retinal_input), f)
+            pickle.dump(self.cached_stimuli, f1, protocol=2)
+            pickle.dump((input_currents, retinal_input), f, protocol=2)
             f.close()
             f1.close()
 

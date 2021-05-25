@@ -118,7 +118,7 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
                    res[value_name]=((parameters[sorted_parameter_indexes[0]],parameters[sorted_parameter_indexes[1]]),x,y,z)
 
                    f = open(v+'.pickle','w')
-                   pickle.dump((value_name,parameters[sorted_parameter_indexes[0]],parameters[sorted_parameter_indexes[1]],x,y,z),f)
+                   pickle.dump((value_name,parameters[sorted_parameter_indexes[0]],parameters[sorted_parameter_indexes[1]],x,y,z),f, protocol=2)
                    f.close()
                
                pylab.xlabel(parameters[sorted_parameter_indexes[0]]) 
@@ -129,7 +129,7 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
 
         import scipy
         f = open('ps_res.pickle','w')
-        pickle.dump(res,f)
+        pickle.dump(res,f, protocol=2)
         scipy.io.savemat('ps_res.mat', res)
         f.close()
 

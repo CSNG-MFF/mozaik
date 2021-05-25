@@ -485,7 +485,7 @@ class Hdf5DataStore(DataStore):
         self.block.segments = old
 
         f = open(self.parameters.root_directory + '/datastore.analysis.pickle', 'wb')
-        pickle.dump(self.analysis_results, f)
+        pickle.dump(self.analysis_results, f, protocol=2)
         f.close()
 
     def add_analysis_result(self, result):
@@ -534,15 +534,15 @@ class PickledDataStore(Hdf5DataStore):
 
     def save(self):
         f = open(self.parameters.root_directory + '/datastore.recordings.pickle', 'wb')
-        pickle.dump(self.block, f)
+        pickle.dump(self.block, f, protocol=2)
         f.close()
 
         f = open(self.parameters.root_directory + '/datastore.analysis.pickle', 'wb')
-        pickle.dump(self.analysis_results, f)
+        pickle.dump(self.analysis_results, f, protocol=2)
         f.close()
 
         f = open(self.parameters.root_directory + '/datastore.sensory.stimulus.pickle', 'wb')
-        pickle.dump(self.sensory_stimulus, f)
+        pickle.dump(self.sensory_stimulus, f, protocol=2)
         f.close()
 
     def add_recording(self, segments, stimulus):
@@ -555,7 +555,7 @@ class PickledDataStore(Hdf5DataStore):
                                            self.parameters.root_directory))
             f = open(self.parameters.root_directory + '/' + 'Segment'
                      + str(len(self.block.segments) - 1) + ".pickle", 'wb')
-            pickle.dump(s, f)
+            pickle.dump(s, f, protocol=2)
 
         self.stimulus_dict[str(stimulus)] = True
 
@@ -573,7 +573,7 @@ class PickledDataStore(Hdf5DataStore):
                                            self.parameters.root_directory,null=True))
             f = open(self.parameters.root_directory + '/' + 'Segment'
                      + str(len(self.block.segments) - 1) + ".pickle", 'wb')
-            pickle.dump(s, f)
+            pickle.dump(s, f, protocol=2)
 
     def purge_segments(self):
         """Purge all segments contained in the datastore from their spiketrains and analogsignals"""
