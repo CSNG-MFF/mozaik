@@ -1,8 +1,9 @@
 [tool.pytest.ini_options]
 markers = [
     "model: tests that need to run a full mozaik model to execute. Can be extremely slow.",
-    "VogelsAbbott2005: tests that need to run the VogelsAbbott2005 mozaik model to execute. This is the fastest of all the model run tests, but still significantly slower than normal unittests.",
+    "VogelsAbbott2005: tests that need to run the VogelsAbbott2005 mozaik model to execute.",
     "LSV1M: tests that need to run the LSV1M model to execute. Will be very very slow (1+ hour).",
+    "LSV1M_tiny: tests that need to run a tiny version of the LSV1M model to execute. Should be ",
 ]
 
 [tool.black]
