@@ -1847,8 +1847,6 @@ class MeasureInformativePixelCorrelationStatisticsResponse(VisualExperiment):
 
         for i in range(10):
             for value in self.parameters.correlation_values:
-                pixel_statistics = [0] * 10
-                pixel_statistics[i] = value
                 for j in range(self.parameters.num_trials):
                     im = textu.VictorInformativeSyntheticStimulus(
                             frame_duration = self.frame_duration,
@@ -1861,7 +1859,8 @@ class MeasureInformativePixelCorrelationStatisticsResponse(VisualExperiment):
                             size_x=model.visual_field.size_x,
                             size_y=model.visual_field.size_y,
                             spatial_frequency=self.parameters.spatial_frequency/2,
-                            pixel_statistics = pixel_statistics,
+                            pixel_statistics = value,
+                            correlation_type = i,
                             seed = 523+5113*(i+1))
                     self.stimuli.append(im)
 
@@ -1906,8 +1905,6 @@ class MeasureUninformativePixelCorrelationStatisticsResponse(VisualExperiment):
 
         for i in range(2):
             for value in self.parameters.correlation_values:
-                pixel_statistics = [0] * 2
-                pixel_statistics[i] = value
                 for j in range(self.parameters.num_trials):
                     im = textu.VictorUninformativeSyntheticStimulus(
                             frame_duration = self.frame_duration,
@@ -1920,7 +1917,8 @@ class MeasureUninformativePixelCorrelationStatisticsResponse(VisualExperiment):
                             size_x=model.visual_field.size_x,
                             size_y=model.visual_field.size_y,
                             spatial_frequency=self.parameters.spatial_frequency/2,
-                            pixel_statistics = pixel_statistics,
+                            pixel_statistics = value,
+                            correlation_type = i,
                             seed = 523+5113*(i+1))
                     self.stimuli.append(im)
 

@@ -10,7 +10,7 @@ allow None value, are instantiated and allow for definition of units and period.
 
 
 from param.parameterized import Parameterized
-from param import Number, Integer, String, List, produce_value, ClassSelector
+from param import Number, Integer, String, produce_value, ClassSelector
 from parameters import ParameterSet
 from collections import OrderedDict
 import logging
@@ -78,23 +78,6 @@ class SString(String):
                                       instantiate=True, **params)
         self.units = None
         self.period = None
-
-class SList(List):
-    """
-    A mozaik parameter that can hold a list. For the full range of options the 
-    parameter offers reffer to the `List` class in `param <http://ioam.github.io/param/>`_ package.
-    
-    This class is here for consistency reasons as it defines the units and period properties, 
-    just like SInteger and SNumber, but automatically sets them to None.
-    """
-    __slots__ = ['units','period']
-
-    def __init__(self, units, period=None, **params):
-        params.setdefault('default',None)
-        super(SList, self).__init__(allow_None=True,
-                                      instantiate=True, **params)
-        self.units = None 
-        self.period = None 
 
 class SParameterSet(ClassSelector):
     """
