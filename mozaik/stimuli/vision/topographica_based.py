@@ -604,15 +604,15 @@ class DriftingSinusoidalGratingRing(TopographicaBasedVisualStimulus):
     orientation = SNumber(rad, period=pi, bounds=[0,pi], doc="Center grating orientation")
     spatial_frequency = SNumber(cpd, doc="Spatial frequency of the grating ")
     temporal_frequency = SNumber(Hz, doc="Temporal frequency of the grating ")
-    outer_appareture_radius = SNumber(degrees, doc="The outside radius of the grating ring - in degrees of visual field")
-    inner_appareture_radius = SNumber(degrees, doc="The inside radius of the  grating ring - in degrees of visual field")
+    outer_aperture_radius = SNumber(degrees, doc="The outside radius of the grating ring - in degrees of visual field")
+    inner_aperture_radius = SNumber(degrees, doc="The inside radius of the  grating ring - in degrees of visual field")
     contrast = SNumber(dimensionless,bounds=[0,100.0],doc="Contrast of the stimulus")
 
     def frames(self):
         self.current_phase = 0
         while True:
-            r = (self.inner_appareture_radius + self.outer_appareture_radius)/2.0
-            t = (self.outer_appareture_radius - self.inner_appareture_radius)/2.0
+            r = (self.inner_aperture_radius + self.outer_aperture_radius)/2.0
+            t = (self.outer_aperture_radius - self.inner_aperture_radius)/2.0
             ring = imagen.SineGrating(mask_shape=imagen.Ring(thickness=t*2.0, smoothing=0.0, size=r*2.0),
                                           orientation=self.orientation,
                                           frequency=self.spatial_frequency,

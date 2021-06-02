@@ -483,7 +483,7 @@ class MeasureSizeTuning(VisualExperiment):
     Size tuning experiment.
 
     This experiment will show a series of sinusoidal gratings or constant flat stimuli 
-    (see *with_flat* parameter) confined to an apparature whose radius will vary.
+    (see *with_flat* parameter) confined to an aperture whose radius will vary.
 
     
     Parameters
@@ -570,6 +570,99 @@ class MeasureSizeTuning(VisualExperiment):
     def do_analysis(self, data_store):
         pass
 
+
+class MeasureSizeTuningRing(VisualExperiment):
+    """
+    Size tuning experiment.
+
+    This experiment will show a series of sinusoidal gratings confined to a ring which outer
+    radius stays constant and which inner radius will varry.
+
+    
+    Parameters
+    ----------
+    model : Model
+          The model on which to execute the experiment.
+
+    Other parameters
+    ----------------
+
+    num_inner_radius : int
+              Number of different inner radius to present.
+    
+    outer_radius : float (degrees of visual field)
+             The outside radius of the grating ring - in degrees of visual field.
+    
+    orientation : float
+                The orientation (in radians) at which to measure the size tuning. (in future this will become automated)
+                
+    spatial_frequency : float
+                      Spatial frequency of the grating.
+                      
+    temporal_frequency : float
+                      Temporal frequency of the grating.
+
+    grating_duration : float
+                      The duration of single presentation of a grating.
+    
+    contrasts : list(float) 
+              List of contrasts (expressed as % : 0-100%) at which to measure the orientation tuning.
+    
+    num_trials : int
+               Number of trials each each stimulus is shown.
+    
+    log_spacing : bool
+               Whether use logarithmic spaced sizes. By default False, meaning linear spacing 
+    
+    """
+
+    required_parameters = ParameterSet({
+            'num_inner_radius' : int,
+            'outer_radius' : float,
+            'orientation' : float,
+            'spatial_frequency' : float,
+            'temporal_frequency' : float,
+            'grating_duration' : float,
+            'contrasts' : list,
+            'num_trials' : int,
+            'log_spacing' : bool,
+    })
+
+
+    def __init__(self,model,parameters):
+        VisualExperiment.__init__(self, model,parameters)
+
+        # linear or logarithmic spaced sizes
+        if self.parameters.log_spacing:
+            base2max = numpy.log2(self.parameters.outer_radius)
+            inner_radius = numpy.logspace(start=-3.0, stop=base2max, num=self.parameters.num_inner_radius, base=2.0)
+            inner_radius[-1] = self.parameters.outer_radius
+        else:
+            inner_radius = numpy.linspace(0, self.parameters.outer_radius,self.parameters.num_inner_radius)
+
+        # stimuli creation        
+        for c in self.parameters.contrasts:
+            for r in inner_radius:
+                for k in range(0, self.parameters.num_trials):
+                    self.stimuli.append(topo.DriftingSinusoidalGratingRing(
+                                    frame_duration = self.frame_duration,
+                                    size_x=model.visual_field.size_x,
+                                    size_y=model.visual_field.size_y,
+                                    location_x=0.0,
+                                    location_y=0.0,
+                                    background_luminance=self.background_luminance,
+                                    contrast = c,
+                                    duration=self.parameters.grating_duration,
+                                    density=self.density,
+                                    trial=k,
+                                    orientation=self.parameters.orientation,
+                                    inner_aperture_radius=r,
+                                    outer_aperture_radius=self.parameters.outer_radius,
+                                    spatial_frequency=self.parameters.spatial_frequency,
+                                    temporal_frequency=self.parameters.temporal_frequency))
+
+    def do_analysis(self, data_store):
+        pass
 
 class MeasureContrastSensitivity(VisualExperiment):
     """
@@ -1552,17 +1645,17 @@ class MeasureTextureSensitivityFullfield(VisualExperiment):
           The model on which to execute the experiment.
     Other parameters
     ----------------
-    num_images : int
-          Number of images of each type to present.
-    
-    folder_path: str
-                    Path to the folder containing the initial images
+    num_images: int
+               The number of samples generated for each texture family
 
-    images : list
-                      List of the names of the initial image files.
-    
-    image_duration : float
-                      The duration of single presentation of an image.
+    folder_path: str
+               The path of of the folder containing the original naturalistic images
+
+    images: list
+               The names of the pgm files containing the original naturalistic images
+
+    duration : float
+               The duration of the presentation of a single image
     
     types : list(int) 
               List of types indicating which statistics to match:
@@ -1578,11 +1671,9 @@ class MeasureTextureSensitivityFullfield(VisualExperiment):
             'num_images': int, #n. of images of each type, different synthesized instances
             'folder_path' : str,
             'images': list,
-            'image_duration' : float,
+            'duration' : float,
             'types' : list,
             'num_trials' : int, #n. of same instance
-            #'offset_time' : float,
-            #'onset_time' : float,
     })  
 
     def __init__(self,model,parameters):
@@ -1591,19 +1682,21 @@ class MeasureTextureSensitivityFullfield(VisualExperiment):
         VisualExperiment.__init__(self, model,parameters)
         for image in self.parameters.images:
             for ty, t in enumerate(self.parameters.types):
-             for i in xrange(0, self.parameters.num_images):                
-                 for k in xrange(0, self.parameters.num_trials):
+             for i in range(0, self.parameters.num_images):                
+                 for k in range(0, self.parameters.num_trials):
                     im = textu.PSTextureStimulus(
                             frame_duration = self.frame_duration,
-                            duration=self.parameters.image_duration,
+                            duration=self.parameters.duration,
                             trial=k,
                             background_luminance=self.background_luminance,
                             density=self.density,
                             location_x=0.0,
                             location_y=0.0,
+                            sample=i,
                             size_x=model.visual_field.size_x,
                             size_y=model.visual_field.size_y,
                             texture_path = self.parameters.folder_path+image,
+                            texture = image.replace(".pgm",""),
                             stats_type = t,
                             seed = 523*(i+1)+5113*(ty+1))
                     self.stimuli.append(im)
@@ -1613,6 +1706,224 @@ class MeasureTextureSensitivityFullfield(VisualExperiment):
 
 
 
+class MeasureTextureSizeTuning(VisualExperiment):
+    """
+    Size tuning experiment.
+
+    This experiment will show a series of synthetic texture spectrally-matched noise stimuli
+    confined to an apparature whose radius will vary.
+
+    
+    Parameters
+    ----------
+    model : Model
+          The model on which to execute the experiment.
+
+    Other parameters
+    ----------------
+
+    num_sizes : int
+              Number of sizes to present.
+    
+    max_size : float (degrees of visual field)
+             Maximum size to present.
+    
+    duration : float
+                      The duration of single presentation of a grating.
+    
+    num_trials : int
+               Number of trials each each stimulus is shown.
+    
+    log_spacing : bool
+               Whether use logarithmic spaced sizes. By default False, meaning linear spacing 
+
+    num_images: int
+               The number of samples generated for each texture family
+
+    folder_path: str
+               The path of of the folder containing the original naturalistic images
+    
+    images: list
+               The names of the pgm files containing the original naturalistic images
+               
+    types : list(int)
+          List of types indicating which statistics to match:
+            0 - original image
+            1 - naturalistic texture image (matched higher order statistics)
+            2 - spectrally matched noise (matched marginal statistics only).
+
+    """
+
+    required_parameters = ParameterSet({
+            'num_sizes' : int,
+            'max_size' : float,
+            'duration' : float,
+            'num_trials' : int,
+            'log_spacing' : bool,
+            'num_images': int, 
+            'folder_path' : str,
+            'images': list,
+            'types': list,
+
+    })  
+
+    def __init__(self,model,parameters):
+        # we place this import here to avoid the need for octave dependency unless this experiment is actually used.
+        import mozaik.stimuli.vision.texture_based as textu #vf
+
+        VisualExperiment.__init__(self, model,parameters)
+            
+        # linear or logarithmic spaced sizes
+        if self.parameters.log_spacing:
+            base2max = numpy.log2(self.parameters.max_size)
+            sizes = numpy.logspace(start=-3.0, stop=base2max, num=self.parameters.num_sizes, base=2.0) 
+        else:
+            sizes = numpy.linspace(0, self.parameters.max_size,self.parameters.num_sizes)                     
+            
+        # stimuli creation        
+        for image in self.parameters.images:
+            for ty, t in enumerate(self.parameters.types):
+             for i in range(0, self.parameters.num_images):
+                 for s in sizes:
+                     for k in range(0, self.parameters.num_trials):
+                         im = textu.PSTextureStimulusDisk(
+                                frame_duration = self.frame_duration,
+                                duration=self.parameters.duration,
+                                trial=k,
+                                background_luminance=self.background_luminance,
+                                density=self.density,
+                                location_x=0.0,
+                                location_y=0.0,
+                                sample=i,
+                                size_x=model.visual_field.size_x,
+                                size_y=model.visual_field.size_y,
+                                texture_path = self.parameters.folder_path+image,
+                                texture = image.replace(".pgm",""),
+                                stats_type = t,
+                                radius=s,
+                                seed = 523*(i+1)+5113*(ty+1))
+
+                         self.stimuli.append(im)
+
+    def do_analysis(self, data_store):
+        pass
+
+class MeasureInformativePixelCorrelationStatisticsResponse(VisualExperiment):
+    """
+    Measure sensitivity to informative pixel correlations base on synthetic stimuli 
+    This experiment will show a series of synthetic stimuli  
+    that vary in pixel correlations statistics.
+    
+    Parameters
+    ----------
+    model : Model
+          The model on which to execute the experiment.
+    Other parameters
+    ----------------
+
+    duration : float
+               The duration of the presentation of a single image
+    
+    correlation_values: list(float) 
+               List of values of the pixel correlation statistics
+               that will be used to generate the stimuli
+
+    num_trials : int
+               Number of trials each each stimulus is shown.
+    """
+
+    required_parameters = ParameterSet({
+            'duration' : float,
+            'correlation_values': list,
+            'num_trials' : int, #n. of same instance
+            'spatial_frequency' : float,
+
+    })
+
+    def __init__(self,model,parameters):
+        # we place this import here to avoid the need for octave dependency unless this experiment is actually used.
+        import mozaik.stimuli.vision.texture_based as textu #vf
+        VisualExperiment.__init__(self, model,parameters)
+
+        for i in range(10):
+            for value in self.parameters.correlation_values:
+                for j in range(self.parameters.num_trials):
+                    im = textu.VictorInformativeSyntheticStimulus(
+                            frame_duration = self.frame_duration,
+                            duration=self.parameters.duration,
+                            trial=j,
+                            background_luminance=self.background_luminance,
+                            density=self.density,
+                            location_x=0.0,
+                            location_y=0.0,
+                            size_x=model.visual_field.size_x,
+                            size_y=model.visual_field.size_y,
+                            spatial_frequency=self.parameters.spatial_frequency/2,
+                            pixel_statistics = value,
+                            correlation_type = i,
+                            seed = 523+5113*(i+1))
+                    self.stimuli.append(im)
+
+    def do_analysis(self, data_store):
+        pass
+
+class MeasureUninformativePixelCorrelationStatisticsResponse(VisualExperiment):
+    """
+    Measure sensitivity to uninformative pixel correlations base on synthetic stimuli 
+    This experiment will show a series of synthetic stimuli  
+    that vary in pixel correlations statistics.
+    
+    Parameters
+    ----------
+    model : Model
+          The model on which to execute the experiment.
+    Other parameters
+    ----------------
+
+    duration : float
+               The duration of the presentation of a single image
+    
+    correlation_values: list(float) 
+               List of values of the pixel correlation statistics
+               that will be used to generate the stimuli
+
+    num_trials : int
+               Number of trials each each stimulus is shown.
+    """
+
+    required_parameters = ParameterSet({
+            'duration' : float,
+            'correlation_values': list,
+            'num_trials' : int, #n. of same instance
+            'spatial_frequency' : float,
+    })
+
+    def __init__(self,model,parameters):
+        # we place this import here to avoid the need for octave dependency unless this experiment is actually used.
+        import mozaik.stimuli.vision.texture_based as textu #vf
+        VisualExperiment.__init__(self, model,parameters)
+
+        for i in range(2):
+            for value in self.parameters.correlation_values:
+                for j in range(self.parameters.num_trials):
+                    im = textu.VictorUninformativeSyntheticStimulus(
+                            frame_duration = self.frame_duration,
+                            duration=self.parameters.duration,
+                            trial=j,
+                            background_luminance=self.background_luminance,
+                            density=self.density,
+                            location_x=0.0,
+                            location_y=0.0,
+                            size_x=model.visual_field.size_x,
+                            size_y=model.visual_field.size_y,
+                            spatial_frequency=self.parameters.spatial_frequency/2,
+                            pixel_statistics = value,
+                            correlation_type = i,
+                            seed = 523+5113*(i+1))
+                    self.stimuli.append(im)
+
+    def do_analysis(self, data_store):
+        pass
 
 class MapResponseToInterruptedBarStimulus(VisualExperiment):
     """

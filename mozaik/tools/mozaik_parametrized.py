@@ -79,24 +79,6 @@ class SString(String):
         self.units = None
         self.period = None
 
-
-class SNumber(Number):
-    """
-    A mozaik parameter that can hold a number. For the full range of options the 
-    parameter offers reffer to the `Number` class in `param <http://ioam.github.io/param/>`_ package.
-    
-    On top of the Number class it adds the ability to specify units and period in constructor.
-    The units should be `quantities.units`.
-    """
-    __slots__ = ['units','period']
-
-    def __init__(self, units, period=None, **params):
-        params.setdefault('default',None)
-        super(SNumber, self).__init__(allow_None=True,
-                                      instantiate=True, **params)
-        self.units = units
-        self.period = period
-
 class SParameterSet(ClassSelector):
     """
     A mozaik parameter that can hold a ParameterSet. Such parameter is treated in a special way: see MozaikParametrized for more details.

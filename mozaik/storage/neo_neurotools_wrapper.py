@@ -27,7 +27,8 @@ class MozaikSegment(Segment):
         def __init__(self, segment, identifier,null=False):
             """
             """
-            self.init = True
+            self.init_sp = True
+            self.init_as = True
             Segment.__init__(self, name=segment.name,
                              description=segment.description,
                              file_origin=segment.file_origin,
@@ -50,12 +51,28 @@ class MozaikSegment(Segment):
             return self._spiketrains
 
         def set_spiketrains(self, s):
-            if self.init:
-                self.init = False
+            if self.init_sp:
+                self.init_sp = False
                 return
             raise ValueError('The spiketrains property should never be directly set in MozaikSegment!!!')
 
         spiketrains = property(get_spiketrains, set_spiketrains)
+
+        def get_analogsignals(self):
+            """
+            Returns the list of AnalogSignal objects stored in this segment.
+            """
+            if not self.full:
+                self.load_full()
+            return self._analogsignals
+
+        def set_analogsignals(self, s):
+            if self.init_as:
+                self.init_as = False
+                return
+            raise ValueError('The analogsignals property should never be directly set in MozaikSegment!!!')
+
+        analogsignals = property(get_analogsignals, set_analogsignals)
 
         def get_spiketrain(self, neuron_id):
             """
@@ -246,17 +263,17 @@ class PickledDataStoreNeoWrapper(MozaikSegment):
             s = pickle.load(f)
             f.close()
             self._spiketrains = s.spiketrains
-            self.analogsignals = s.analogsignals
+            self._analogsignals = s.analogsignals
             self.full = True
 
         def __getstate__(self):
             result = self.__dict__.copy()
             if self.full:
                 del result['_spiketrains']
-                del result['analogsignals']
+                del result['_analogsignals']
             return result
         
         def release(self):
             self.full = False
             del self._spiketrains
-            del self.analogsignals
+            del self._analogsignals

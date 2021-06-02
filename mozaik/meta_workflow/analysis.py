@@ -104,7 +104,7 @@ def collect_results_from_parameter_search(simulation_name,master_results_dir,pro
     param_combs = [p for (p,d) in datastores]
     f = open(file_name,'wb')
     import pickle
-    pickle.dump((parameters,param_combs,results),f)
+    pickle.dump((parameters,param_combs,results),f, protocol=2)
     f.close()
 
     
@@ -156,7 +156,7 @@ def export_SingleValues_as_matricies(simulation_name,master_results_dir,query):
                     vv = param_filter_query(dsv,identifier='SingleValue',value_name=v).get_analysis_result()[0].value
                 matrix[tuple(index)] = vv
             f = open(v+'.txt','w')
-            pickle.dump((parameters,param_values,matrix),f)
+            pickle.dump((parameters,param_values,matrix),f, protocol=2)
         
         
         

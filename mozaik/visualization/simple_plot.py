@@ -188,11 +188,23 @@ class StandardStyle(SimplePlot):
         x_scale_base : int
               What is the x base of the logarithm. Active only if x_scale != to 'linear'
 
+        x_scale_linscale : float 
+              What is the space used for the linear range on the x axis. Active only if x_scale is 'symlog'
+
+        x_scale_linthresh : float
+              What is the range (-x, x) which the x axis is linear. Active only if x_scale is 'symlog'
+
         y_scale : str
               What is the scaling of the y-axis ('linear' | 'log' | 'symlog'), default is 'linear'
 
         y_scale_base : int
-              What is the x base of the logarithm. Active only if x_scale != to 'linear'
+              What is the y base of the logarithm. Active only if y_scale != to 'linear'
+
+        y_scale_linscale : float
+              What is the space used for the linear range on the y axis. Active only if y_scale is 'symlog'
+
+        y_scale_linthresh : float 
+              What is the range (-x, x) between which the y axis is linear. Active only if y_scale is 'symlog'
 
         x_lim  : tuple
                What are the xlims (None means matplotlib will infer from data).
@@ -240,8 +252,12 @@ class StandardStyle(SimplePlot):
             "title": None,
             "x_scale": 'linear',
             "x_scale_base": None,
+            "x_scale_linscale": None,
+            "x_scale_linthresh": None,
             "y_scale": 'linear',
             "y_scale_base": None,
+            "y_scale_linscale": None,
+            "y_scale_linthresh": None,
             "x_lim": None,
             "y_lim": None,
             "x_ticks": None,
@@ -281,20 +297,29 @@ class StandardStyle(SimplePlot):
         pass
 
     def post_plot(self):
+        x_scale_params = {}
+        y_scale_params = {}
 
         if self.title != None:
             pylab.title(self.title, fontsize=self.fontsize)
-
-
+        
         if self.x_scale:
-            pylab.xscale(self.x_scale)
             if self.x_scale_base:
-                pylab.xscale(self.x_scale, basex=self.x_scale_base)
+                x_scale_params['basex'] = self.x_scale_base
+            if self.x_scale_base:
+                x_scale_params['linthreshx'] = self.x_scale_linthresh
+            if self.x_scale_base:
+                x_scale_params['linscalex'] = self.x_scale_linscale
+            pylab.xscale(self.x_scale, **x_scale_params)
 
         if self.y_scale:
-            pylab.yscale(self.y_scale)
             if self.y_scale_base:
-                pylab.yscale(self.y_scale, basey=self.y_scale_base)
+                y_scale_params['basey'] = self.y_scale_base
+            if self.y_scale_base:
+                y_scale_params['linthreshy'] = self.y_scale_linthresh
+            if self.x_scale_base:
+                y_scale_params['linscaley'] = self.y_scale_linscale
+            pylab.yscale(self.y_scale, **y_scale_params)
 
         if not self.x_axis:
             phf.disable_xticks(self.axis)
@@ -814,16 +839,24 @@ class StandardStyleLinePlot(StandardStyle):
            length should correspond to length of x and y and the corresponding colors will be assigned to the individual graphs.
            If dict, the keys should be labels, and values will be the colors that will be assigned to the lines that correspond to the labels.
 
-    linestyles : str or list of str
+    linestyles : str or list of str or dict
            The linestyles of the plots. If it is scalar all plots will have that same linestyle. If it is a list its
            length should correspond to length of x and y and the corresponding linestyles will be assigned to the individual graphs.
            If dict, the keys should be labels, and values will be the linestyles that will be assigned to the lines that correspond to the labels.
-
+    
+    markers : str or list of str or dict
+           The markers of the plots. If it is scalar all plots will have that same marker. If it is a list its
+           length should correspond to length of x and y and the corresponding markers will be assigned to the individual graphs.
+           If dict, the keys should be labels, and values will be the markers that will be assigned to the lines that correspond to the labels.
+   
     mean : bool
          If the mean of the vectors should be plotted as well.
 
     fill : bool
          If true the graphs bellow the lines will be filled, with the same color as the one assigned to the line but with 50% transparency
+
+    errorbars : bool
+         If true the errors will be displayed as errorbars, if false they will be displayed by a filled area of the same color of the linebut  with 50% transparency
 
     legend : bool
            If true the legend will be shown
@@ -839,9 +872,11 @@ class StandardStyleLinePlot(StandardStyle):
         self.parameters["labels"] = labels
         self.parameters["colors"] = None
         self.parameters["linestyles"] = None
+        self.parameters["markers"] = None
         self.parameters["mean"] = False
         self.parameters["fill"] = False
         self.parameters["legend"] = False
+        self.parameters["errorbars"] = False
         self.parameters["linewidth"] = 1
 
         if error != None:
@@ -865,8 +900,11 @@ class StandardStyleLinePlot(StandardStyle):
         if type(self.linestyles) == dict:
            assert self.labels != None
            assert len(self.linestyles.keys()) == len(self.labels)
-
-
+                
+        if type(self.markers) == dict:
+           assert self.labels != None
+           assert len(self.markers.keys()) == len(self.labels)
+        
         tmin = 10**10
         tmax = -10**10
         for i in range(0, len(self.x)):
@@ -900,8 +938,17 @@ class StandardStyleLinePlot(StandardStyle):
                 p['linestyle'] = self.linestyles
             elif self.linestyles == None:
                 p['linestyle'] = '-'
-
-
+            
+            if type(self.markers) == list:
+                p['marker'] = self.markers[i]
+            elif type(self.markers) == dict:
+                assert self.labels[i] in self.markers.keys(), "Cannot find curve named %s %s %s" % (self.labels[i],self.markers.keys(),self.markers[self.labels[i]])
+                p['marker'] = self.markers[self.labels[i]]
+            elif self.markers != None:
+                p['marker'] = self.markers
+            elif self.markers == None:
+                p['marker'] = None
+            
             self.axis.plot(self.x[i], self.y[i],
                                linewidth=self.linewidth,
                                **p)
@@ -912,9 +959,15 @@ class StandardStyleLinePlot(StandardStyle):
                self.axis.fill_between(self.x[i],self.y[i],where=self.y[i]<=d, color=p['color'], alpha=0.2,linewidth=0)
 
             if self.error:
-                ymin = self.y[i] - self.error[i]
-                ymax = self.y[i] + self.error[i]
-                self.axis.fill_between(self.x[i], ymax, ymin, color=p['color'], alpha=0.2)
+                if self.errorbars:
+                    self.axis.errorbar(self.x[i], self.y[i], yerr=self.error[i], fmt=None, color=p['color'], capsize = 5)
+
+                else:
+                    ymin = self.y[i] - self.error[i]
+                    ymax = self.y[i] + self.error[i]
+                    self.axis.fill_between(self.x[i], ymax, ymin, color=p['color'], alpha=0.2)
+            
+            pylab.hold('on')
 
             tmin = min(tmin, self.x[i][0])
             tmax = max(tmax, self.x[i][-1])
@@ -1131,6 +1184,7 @@ class HistogramPlot(StandardStyle):
         self.values = values
         self.parameters["num_bins"] = 15.0
         self.parameters["log"] = False
+        self.parameters["log_xscale"] = False
         self.parameters["labels"] = labels
         self.parameters["colors"] = None
         self.parameters["mark_mean"] = False
@@ -1146,10 +1200,15 @@ class HistogramPlot(StandardStyle):
         else:
            colors = None
 
-        if self.parameters["log"]:
-            self.axis.hist(numpy.log10(self.values),bins=int(self.num_bins),range=self.x_lim,edgecolor='none',color=colors)
+        if self.x_scale == 'log':
+            bins = np.geomspace(self.x_lim[0], self.x_lim[1], int(self.num_bins))
         else:
-            self.axis.hist(self.values,bins=int(self.num_bins),range=self.x_lim,rwidth=1,edgecolor='none',color=colors)
+            bins = int(self.num_bins)
+
+        if self.parameters["log"]:
+           self.axis.hist(numpy.log10(self.values),bins=bins,range=self.x_lim,edgecolor='none',color=colors)
+        else:
+            self.axis.hist(self.values,bins=bins,range=self.x_lim,rwidth=1,edgecolor='none',color=colors)
 
         if self.mark_mean:
            for i,a in enumerate(self.values):

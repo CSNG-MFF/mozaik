@@ -26,7 +26,7 @@ def perform_analysis_and_visualization(data_store):
             TrialAveragedFiringRate(param_filter_query(data_store,st_direct_stimulation_name="None"),ParameterSet({})).analyse()
             Irregularity(param_filter_query(data_store,st_direct_stimulation_name="None"),ParameterSet({})).analyse()
             NeuronToNeuronAnalogSignalCorrelations(param_filter_query(data_store,analysis_algorithm='PSTH'),ParameterSet({'convert_nan_to_zero' : True})).analyse()
-            PopulationMeanAndVar(data_store,ParameterSet({})).analyse()
+            PopulationMeanAndVar(data_store,ParameterSet({'ignore_nan_and_inf': False})).analyse()
 
             data_store.print_content(full_ADS=True)
 

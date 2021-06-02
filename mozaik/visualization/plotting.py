@@ -1254,6 +1254,7 @@ class PerNeuronValueScatterPlot(Plotting):
     required_parameters = ParameterSet({
           'only_matching_units':bool,  # only plot combinations of PNVs that have the same value units.
           'ignore_nan' : bool, # if True NaNs will be removed from the data. In general if there are NaN in the data and this is False it will not be displayed correctly.
+          'lexicographic_order': bool # Whether to order the ads in each pair by the descending lexicographic order of their parameter 'value_name' before plotting
     })
     
     
@@ -1269,8 +1270,11 @@ class PerNeuronValueScatterPlot(Plotting):
             for i in range(0,len(pnvs)):
                 for j in range(i+1,len(pnvs)):
                     if (pnvs[i].value_units == pnvs[j].value_units) or not self.parameters.only_matching_units:
-                       self.pairs.append((pnvs[i],pnvs[j]))
-                       self.sheets.append(sheet) 
+                        if pnvs[j].value_name < pnvs[i].value_name and self.parameters.lexicographic_order:
+                            self.pairs.append((pnvs[j],pnvs[i]))
+                        else:
+                            self.pairs.append((pnvs[i],pnvs[j]))
+                        self.sheets.append(sheet) 
                        
         assert len(self.pairs) > 0, "Error, not pairs of PerNeuronValue ADS in datastore seem to have the same value_units"
         self.length=len(self.pairs)
