@@ -5,6 +5,7 @@ from mozaik.storage import queries
 import mozaik
 from mozaik.analysis.analysis import Analysis
 from mozaik.storage import queries
+import quantities as qt
 
 import logging
 logger = logging.getLogger("mozaik")
@@ -43,4 +44,4 @@ class SpontaneousActivityLength(Analysis):
               logger.warning(dsv_corr.get_analysis_result()[0].value)
               logger.warning(l)
                 
-              self.datastore.full_datastore.add_analysis_result(SingleValue(value=l,value_name = 'Spontaneous activity length',sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__))        
+              self.datastore.full_datastore.add_analysis_result(SingleValue(l,qt.ms,value_name = 'Spontaneous activity length',sheet_name=sheet,tags=self.tags,analysis_algorithm=self.__class__.__name__))        

@@ -225,8 +225,8 @@ class Analog_F0andF1(Analysis):
                     cycles = duration / period
                     first_har = int(round(cycles))
 
-                    f0 = [abs(numpy.fft.fft(signal)[0])/len(signal) for signal in signals]
-                    f1 = [2*abs(numpy.fft.fft(signal)[first_har])/len(signal) for signal in signals]
+                    f0 = [abs(numpy.fft.fft(signal.flatten())[0])/len(signal) for signal in signals]
+                    f1 = [2*abs(numpy.fft.fft(signal.flatten())[first_har])/len(signal) for signal in signals]
                     
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(f0,asl.ids,asl.y_axis_units,value_name = 'F0('+ asl.y_axis_name + ')',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=asl.stimulus_id))                            
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(f1,asl.ids,asl.y_axis_units,value_name = 'F1('+ asl.y_axis_name + ')',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=asl.stimulus_id))                                                

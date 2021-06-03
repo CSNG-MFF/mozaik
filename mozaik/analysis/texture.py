@@ -206,9 +206,9 @@ class PercentageNeuronsModulated(Analysis):
             setattr(st,'sample',None)
             setattr(st,'texture',None)
 
-            self.datastore.full_datastore.add_analysis_result(SingleValue(value = float(count_positively_modulated)/firing_rates_noise.shape[1] * 100, value_name = "Percentage of neurons significantly positively modulated", sheet_name=sheet, tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))
-            self.datastore.full_datastore.add_analysis_result(SingleValue(value = float(count_negatively_modulated)/firing_rates_noise.shape[1] * 100, value_name = "Percentage of neurons significantly negatively modulated", sheet_name=sheet, tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))
-            self.datastore.full_datastore.add_analysis_result(SingleValue(value = float(firing_rates_noise.shape[1] - count_positively_modulated - count_negatively_modulated)/firing_rates_noise.shape[1] * 100, value_name = "Percentage of neurons not significantly modulated", sheet_name=sheet, tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))
+            self.datastore.full_datastore.add_analysis_result(SingleValue(float(count_positively_modulated)/firing_rates_noise.shape[1] * 100, qt.percent, value_name = "Percentage of neurons significantly positively modulated", sheet_name=sheet, tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))
+            self.datastore.full_datastore.add_analysis_result(SingleValue(float(count_negatively_modulated)/firing_rates_noise.shape[1] * 100, qt.percent, value_name = "Percentage of neurons significantly negatively modulated", sheet_name=sheet, tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))
+            self.datastore.full_datastore.add_analysis_result(SingleValue(float(firing_rates_noise.shape[1] - count_positively_modulated - count_negatively_modulated)/firing_rates_noise.shape[1] * 100,qt.percent, value_name = "Percentage of neurons not significantly modulated", sheet_name=sheet, tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))
 
 class TextureModulationFromPSTH(Analysis):
     """
