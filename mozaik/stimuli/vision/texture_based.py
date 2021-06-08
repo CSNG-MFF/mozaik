@@ -115,7 +115,7 @@ class PSTextureStimulusDisk(TextureBasedVisualStimulus):
         fieldsize_x = self.size_x * self.density
         fieldsize_y = self.size_y * self.density
         folder_name = Global.root_directory + "/TextureImagesStimuli"
-        libpath = visual_stimulus.__file__.replace("/visual_stimulus.pyc", "") + "/textureLib" #path to the image processing library
+        libpath = __file__.replace("/texture_based.py", "") + "/textureLib" #path to the image processing library
         matlabPyrToolspath = os.path.join(libpath,"textureSynth","matlabPyrTools")
         if not os.path.isdir(matlabPyrToolspath):
             raise IOError("matlabPyrTools should be downloaded from https://github.com/LabForComputationalVision/matlabPyrTools and its content should be put in the directory "+matlabPyrToolspath)
