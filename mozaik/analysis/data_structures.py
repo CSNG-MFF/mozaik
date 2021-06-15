@@ -40,14 +40,19 @@ class SingleValue(AnalysisDataStructure):
     or per sheet if sheet is specified. In principle it can also be per neuron if the neuron
     parameter is specified, but in most cases you probably want to use :class:`.PerNeuronValue`
     instead.
-    """
 
-    value = SNumber(units=None,default=None,doc="The value.")
+    Parameters
+    ---------- 
+    value_unit : quantities
+                Quantities unit describing the unit of the value
+    """
     value_name = SString(doc="The name of the value.")
     period = SNumber(units=None,default=None,doc="The period of the value. If value is not periodic period=None")
     
-    def __init__(self, **params):
+    def __init__(self, value, value_units, **params):
         AnalysisDataStructure.__init__(self, identifier='SingleValue', **params)
+        self.value = value
+        self.value_units = value_units
 
 
 
@@ -264,7 +269,8 @@ class AnalogSignalList(AnalysisDataStructure1D):
             assert asl.t_start == self.asl[0].t_start, "AnalogSignalList.mean: t_start of AnalogSignal objects in the list do not match."        
 
         if ignore_invalid:
-            return numpy.mean(numpy.ma.masked_invalid(self.asl),axis=0)
+            asl = numpy.array(self.asl, dtype=float)
+            return numpy.mean(numpy.ma.masked_invalid(asl),axis=0)
         else:
             return numpy.mean(self.asl,axis=0)
 
@@ -284,7 +290,9 @@ class AnalogSignalList(AnalysisDataStructure1D):
             assert asl.t_start == self.asl[0].t_start, "AnalogSignalList.mean: t_start of AnalogSignal objects in the list do not match."        
         
         if ignore_invalid:
-            return numpy.var(numpy.ma.masked_invalid(self.asl),axis=0)
+            asl = numpy.array(self.asl, dtype=float)
+            return numpy.var(numpy.ma.masked_invalid(asl),axis=0)
+
         else:
             return numpy.var(self.asl,axis=0)
 
