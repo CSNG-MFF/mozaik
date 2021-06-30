@@ -33,13 +33,33 @@ class PyNNDistribution(RandomDistribution):
       The params is a tuple of parameters of the corresponding numpy distribution (see pyNN.random.RandomDistribution)
       For the rest of the parameters see pyNN.random.RandomDistribution
       """
-      def __init__(self,name,**params):
+      def __init__(self,name,rng=None,**params):
           self._first = True
-          RandomDistribution.__init__(self,name,rng=mozaik.pynn_rng,**params)
+          if rng == None:
+              rng = mozaik.pynn_rng
+          RandomDistribution.__init__(self,name,rng=rng,**params)
 
       def __str__(self):
           ps = ','.join([str(k) + '=' + str(self.parameters[k]) for k in self.parameters.keys()])
           return "PyNNDistribution(name=" + '\'' + self.name + '\',' +  ps + ')'
+
+      def copy(self,seed):
+          """
+          Returns a copy of the PyNNDistribution with the same parameters,
+          but with a specified seed and in initial state.
+          """
+
+          # Retrieve parameters with which the rng of this PyNNDistribution
+          # was initialized
+          import inspect
+          params = {k : self.rng.__dict__[k] for k in inspect.signature(type(self.rng).__init__).parameters.keys() if k != "self"}
+          # Some (PyNN default) rng-s need seed of int type
+          assert seed == int(seed), "Casting seed %d from %s to int, resulting in %d made seed different!" % (seed, type(seed), int(seed))
+          # Change seed in rng parameters (everything else kept the same)
+          params["seed"] = int(seed)
+          # Initialize a new rng with the different seed
+          new_rng = type(self.rng)(**params)
+          return PyNNDistribution(name=self.name,rng=new_rng,**(self.parameters))
 
 
 class ParameterWithUnitsAndPeriod():

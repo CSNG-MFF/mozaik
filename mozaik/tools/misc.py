@@ -6,7 +6,7 @@ import numpy
 import numpy.random                                                                             
 from numpy import pi, sqrt, exp, power
 
-def sample_from_bin_distribution(bins, number_of_samples):
+def sample_from_bin_distribution(bins, number_of_samples, seed):
     """
     Samples from a distribution defined by a vector the sum in. The vector doesn't have to add up to one
     it will be automatically normalized. 
@@ -20,12 +20,16 @@ def sample_from_bin_distribution(bins, number_of_samples):
       
     number_of_samples : int
                       Number of samples to generate.
+
+    seed : int
+         The seed to use to generate the RandomState
     """
     if len(bins) == 0:
         return []
 
     bins = bins / numpy.sum(bins)
-    si = numpy.random.choice(range(len(bins)),size=number_of_samples,p=bins)
+    random_generator = numpy.random.RandomState(seed=seed)
+    si = random_generator.choice(range(len(bins)), size=number_of_samples, p=bins)
 
     return si
 
