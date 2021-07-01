@@ -84,23 +84,23 @@ class ModularConnector(Connector):
       for k in self.delay_function_names:
           self.delay_functions[k] = load_component(self.parameters.delay_functions[k].component)(self.source,self.target,self.parameters.delay_functions[k].params)
     
-    def _obtain_weights(self,i):
+    def _obtain_weights(self,i,seed=None):
         """
         This function calculates the combined weights from the ModularConnectorFunction in weight_functions
         """
         evaled = OrderedDict()
        
         for k in self.weight_function_names:
-            evaled[k] = self.weight_functions[k].evaluate(i)
+            evaled[k] = self.weight_functions[k].evaluate(i) if not seed else self.weight_functions[k].evaluate(i,seed=seed)
         return numpy.zeros((self.source.pop.size,)) + eval(self.parameters.weight_expression,globals(),evaled)
         
-    def _obtain_delays(self,i):
+    def _obtain_delays(self,i,seed=None):
         """
         This function calculates the combined weights from the ModularConnectorFunction in weight_functions
         """
         evaled = OrderedDict()
         for k in self.delay_function_names:
-            evaled[k] = self.delay_functions[k].evaluate(i)
+            evaled[k] = self.delay_functions[k].evaluate(i) if not seed else self.delay_functions[k].evaluate(i,seed=seed)
         
         delays = numpy.zeros((self.source.pop.size,)) + eval(self.parameters.delay_expression,globals(),evaled)
         #round to simulation step            
@@ -140,16 +140,22 @@ class ModularSamplingProbabilisticConnector(ModularConnector):
     })
 
     def _connect(self):
+        # Generates a list of seed to ensure reproducibility with multiprocessed code
+        seeds = mozaik.get_seeds(len(numpy.nonzero(self.target.pop._mask_local)[0]))
+
         cl = []
         v = 0
-        for i in numpy.nonzero(self.target.pop._mask_local)[0]:
-            weights = self._obtain_weights(i)
-            delays = self._obtain_delays(i)
-                
-            co = Counter(sample_from_bin_distribution(weights, int(self.parameters.num_samples.next())))
+        for j, i in enumerate(numpy.nonzero(self.target.pop._mask_local)[0]):
+            weights = self._obtain_weights(i,seeds[j])
+            delays = self._obtain_delays(i, seeds[j])
+            co = Counter(
+                sample_from_bin_distribution(
+                    weights, int(self.parameters.num_samples.next()), seeds[j]
+                )
+            )
             v = v + numpy.sum(list(co.values()))
             k = list(co.keys())
-            a = numpy.array([k,numpy.zeros(len(k))+i,self.weight_scaler*numpy.multiply(self.parameters.base_weight.next(len(k)),list(co.values())),numpy.array(delays)[k]])
+            a = numpy.array([k,numpy.zeros(len(k))+i,self.weight_scaler*numpy.multiply(self.parameters.base_weight.copy(seeds[j]).next(len(k)),list(co.values())),numpy.array(delays)[k]])
             cl.append(a)
 
         cl = numpy.hstack(cl).T
@@ -229,37 +235,35 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(ModularConnect
         'base_weight' : PyNNDistribution,
     })
 
-    def worker(ref,idxs):
-        for i in idxs:
-            samples = self.target.get_neuron_annotation(i,self.parameters.annotation_reference_name)
-            weights = self._obtain_weights(i)
-            delays = self._obtain_delays(i)
-            if self.parameters.num_samples == 0:
-                co = Counter(sample_from_bin_distribution(weights, int(samples)))
-            else:
-                assert self.parameters.num_samples > 2*int(samples), ("%s: %d %d" % (self.name,self.parameters.num_samples,2*int(samples)))
-                a = sample_from_bin_distribution(weights, int(self.parameters.num_samples - 2*int(samples)))
-                co = Counter(a)
-            v = v + numpy.sum(co.values())
-            cl.extend([(int(k),int(i),self.weight_scaler*self.parameters.base_weight.next()*co[k],delays[k]) for k in co.keys()])
-        return cl
-
     def _connect(self):
         cl = []
         v = 0
-        for i in numpy.nonzero(self.target.pop._mask_local)[0]:
-            samples = self.target.get_neuron_annotation(i,self.parameters.annotation_reference_name)
-            weights = self._obtain_weights(i)
-            delays = self._obtain_delays(i)
+        # Generates a list of seed to ensure reproducibility with multiprocessed code
+        seeds = mozaik.get_seeds(len(numpy.nonzero(self.target.pop._mask_local)[0]))
+        for j, i in enumerate(numpy.nonzero(self.target.pop._mask_local)[0]):
+            samples = self.target.get_neuron_annotation(
+                i, self.parameters.annotation_reference_name
+            )
+            weights = self._obtain_weights(i,seeds[j])
+            delays = self._obtain_delays(i,seeds[j])
             
             if self.parameters.num_samples == 0:
-                co = Counter(sample_from_bin_distribution(weights, int(samples)))
+                co = Counter(
+                    sample_from_bin_distribution(weights, int(samples), seeds[j])
+                )
             else:
                 assert self.parameters.num_samples > 2*int(samples), ("%s: %d %d" % (self.name,self.parameters.num_samples,2*int(samples)))
-                co = Counter(sample_from_bin_distribution(weights, int(self.parameters.num_samples - 2*int(samples))))
+                co = Counter(
+                    sample_from_bin_distribution(
+                        weights,
+                        int(self.parameters.num_samples - 2 * int(samples)),
+                        seeds[j],
+                    )
+                )
+
             v = v + numpy.sum(list(co.values()))
             k = list(co.keys())
-            a = numpy.array([k,numpy.zeros(len(k))+i,self.weight_scaler*numpy.multiply(self.parameters.base_weight.next(len(k)),list(co.values())),numpy.array(delays)[k]])
+            a = numpy.array([k,numpy.zeros(len(k))+i,self.weight_scaler*numpy.multiply(self.parameters.base_weight.copy(seeds[j]).next(len(k)),list(co.values())),numpy.array(delays)[k]])
             cl.append(a)
 
         cl = numpy.hstack(cl).T

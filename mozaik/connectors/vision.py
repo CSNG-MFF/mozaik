@@ -47,7 +47,7 @@ class MapDependentModularConnectorFunction(ModularConnectorFunction):
             val_target=self.mmap(self.target.pop.positions[0][index],self.target.pop.positions[1][index])
             self.target.add_neuron_annotation(index,'LGNAfferentOrientation', val_target*numpy.pi, protected=False) 
             
-    def evaluate(self,index):
+    def evaluate(self,index,**params):
             val_target = self.target.get_neuron_annotation(index,'LGNAfferentOrientation')
             if self.parameters.periodic:
                 distance = circular_dist(self.val_source,val_target,pi)
@@ -105,7 +105,7 @@ class V1PushPullArborization(ModularConnectorFunction):
         self.source_or = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentOrientation') for i in range(0,self.source.pop.size)])
         self.source_phase = numpy.array([self.source.get_neuron_annotation(i, 'LGNAfferentPhase') for i in range(0,self.source.pop.size)])
 
-    def evaluate(self,index):
+    def evaluate(self,index,**params):
         target_or = self.target.get_neuron_annotation(index, 'LGNAfferentOrientation')
         target_phase = self.target.get_neuron_annotation(index, 'LGNAfferentPhase')
         assert numpy.all(self.source_or >= 0) and numpy.all(self.source_or <= pi)
@@ -157,7 +157,7 @@ class GaborArborization(ModularConnectorFunction):
         'ON' : bool,          # Whether this is gabor on ON or OFF cells.
     })
 
-    def evaluate(self,index):
+    def evaluate(self,index,**params):
         target_or = self.target.get_neuron_annotation(index, 'LGNAfferentOrientation')
         target_phase = self.target.get_neuron_annotation(index, 'LGNAfferentPhase')
         target_ar = self.target.get_neuron_annotation(index, 'LGNAfferentAspectRatio')
@@ -333,7 +333,7 @@ class V1CorrelationBasedConnectivity(ModularConnectorFunction):
         return V1CorrelationBasedConnectivity.gabor_correlation(1.0,1/(numpy.sqrt(2*numpy.pi)*width1),ar1/(numpy.sqrt(2*numpy.pi)*width1),posx1,posy1,or1,freq1,or1,phase1-numpy.pi*2*freq1*(posx1*numpy.cos(or1)+posy1*numpy.sin(or1)),
                                                                 1.0,1/(numpy.sqrt(2*numpy.pi)*width2),ar2/(numpy.sqrt(2*numpy.pi)*width2),posx2,posy2,or2,freq2,or2,phase2-numpy.pi*2*freq2*(posx2*numpy.cos(or2)+posy2*numpy.sin(or2)))
 
-    def evaluate(self,index):
+    def evaluate(self,index,**params):
 
         target_or = self.target.get_neuron_annotation(index, 'LGNAfferentOrientation')
         target_phase = self.target.get_neuron_annotation(index, 'LGNAfferentPhase')
@@ -392,7 +392,7 @@ class CoCircularModularConnectorFunction(ModularConnectorFunction):
             val_target=self.mmap(self.target.pop.positions[0][index],self.target.pop.positions[1][index])
             self.target.add_neuron_annotation(index,'ORMapOrientation', val_target*numpy.pi, protected=False) 
             
-    def evaluate(self,index):
+    def evaluate(self,index,**params):
             logger.error('EVALUATE *********************************************')
             or_target = self.target.get_neuron_annotation(index,'ORMapOrientation')
             x_target = self.target.pop.positions[0][index]
@@ -417,7 +417,7 @@ class CoCircularModularConnectorFunction(ModularConnectorFunction):
                     dy = numpy.sin(phi)*d   
                     pylab.plot([x+dx,x-dx],[y+dy,y-dy],c=color)
 	
-                idx = numpy.random.choice(numpy.arange(len(phi)),size=500)
+                idx = mozaik.rng.choice(numpy.arange(len(phi)), size=500)
                 for i in idx:
                    plot_or(self.source.pop.positions[0][i],self.source.pop.positions[1][i],2*phi[i]-or_target,'k')
 

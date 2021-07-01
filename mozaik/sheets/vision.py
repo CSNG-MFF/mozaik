@@ -49,6 +49,8 @@ class RetinalUniformSheet(Sheet):
                                            structure=rs,
                                            initial_values=self.parameters.cell.initial_values,
                                            label=self.name)
+        # Forces PyNN to generate the positions to ensure the reproducibility with multiprocessing
+        self.pop.positions
 
     def size_in_degrees(self):
         return (self.parameters.sx, self.parameters.sy)
@@ -179,6 +181,8 @@ class VisualCorticalUniformSheet(SheetWithMagnificationFactor):
                                        structure=rs,
                                        initial_values=self.parameters.cell.initial_values,
                                        label=self.name)
+        # Forces PyNN to generate the positions to ensure the reproducibility with multiprocessing
+        self.pop.positions
 
 
 class VisualCorticalUniformSheet3D(VisualCorticalUniformSheet):
@@ -227,3 +231,5 @@ class VisualCorticalUniformSheet3D(VisualCorticalUniformSheet):
                                        structure=rs,
                                        initial_values=self.parameters.cell.initial_values,
                                        label=self.name)
+        # Forces PyNN to generate the positions to ensure the reproducibility with multiprocessing
+        self.pop.positions
