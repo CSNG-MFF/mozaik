@@ -5,7 +5,7 @@ Computational neurosceince is shifting towards more heterogeneous models of neur
 
 You can read more about **Mozaik** `here <https://www.frontiersin.org/articles/10.3389/fninf.2013.00034/full>`_.
 
-Currently, **Mozaik** is being fully tested on on Ubuntu Linux distribution.
+Currently, **Mozaik** is being fully tested only on Ubuntu Linux distribution.
 
 Ubuntu installation instructions
 --------------------------------
