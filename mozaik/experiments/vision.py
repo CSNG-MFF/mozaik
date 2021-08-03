@@ -1,4 +1,5 @@
 import mozaik
+from mozaik.controller import Global
 from mozaik.experiments import Experiment
 from parameters import ParameterSet
 import mozaik.stimuli.vision.topographica_based as topo
