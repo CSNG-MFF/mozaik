@@ -850,8 +850,8 @@ class MeasureFrequencySensitivity(VisualExperiment):
 
     required_parameters = ParameterSet({
             'orientation': float, 
-            'spatial_frequency' : list, 
-            'temporal_frequency' : list,
+            'spatial_frequencies' : list, 
+            'temporal_frequencies' : list,
             'grating_duration' : float,
             'contrasts' : list,
             'num_trials' : int,
