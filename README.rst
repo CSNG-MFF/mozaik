@@ -15,7 +15,7 @@ fresh installation of Ubuntu (at the time of the writing the version was 16.04)
 
 First the list of ubuntu package dependencies::
 
-  sudo apt-get install python3 python3-dev python3-pip python3-setuptools python3-tk python-nose subversion git libopenmpi-dev g++ libjpeg8 libjpeg8-dev libfreetype6 libfreetype6-dev zlib1g-dev libpng++-dev libncurses5 libncurses5-dev libreadline-dev liblapack-dev libblas-dev gfortran libgsl0-dev openmpi-bin python-tk cmake
+  sudo apt-get install python3 python3-dev python3-pip python3-setuptools python3-tk python-nose subversion git libopenmpi-dev g++ libjpeg8 libjpeg8-dev libfreetype6 libfreetype6-dev zlib1g-dev libpng++-dev libncurses5 libncurses5-dev libreadline-dev liblapack-dev libblas-dev gfortran libgsl0-dev openmpi-bin python-tk cmake libboost-all-dev
 
 
 Virtual env
@@ -51,7 +51,7 @@ ____________
  
 Now you can install in this protected environment all other dependencies::
 
-  pip3 install numpy scipy mpi4py matplotlib==2.1.1 quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.8.0 cython pynn psutil future requests libboost-all-dev
+  pip3 install numpy scipy mpi4py matplotlib==2.1.1 quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.8.0 cython pynn psutil future requests 
 
 Next we will manually install several packages. It is probably the best if you create a separate directory in an appropriate
 place, where you will download and install the packages from.
