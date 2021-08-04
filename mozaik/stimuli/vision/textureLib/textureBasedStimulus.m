@@ -11,6 +11,8 @@ function [im] = textureBasedStimulus(impath, stats, seed, sizex, sizey, libpath)
 %       2 - spectrally matched noise (matched marginal statistics only)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% The image package should be installed in octave for this code to run
+pkg load image
 
 addpath(strcat(libpath, "/textureSynth"));
 addpath(strcat(libpath, "/textureSynth/matlabPyrTools"));
@@ -42,5 +44,4 @@ else
     Amplitude = abs(fft2(im0));
     im = real(ifft2(Amplitude .* exp(sqrt(-1) * RandomPhase)));
 end
-im = im(1:sizex, 1:sizey);
-
+im = imresize(im,[sizex sizey]);
