@@ -3,7 +3,7 @@ import mozaik
 import numpy
 import ast
 from mozaik.connectors import Connector
-from mozaik.connectors.modular_connector_functions import ModularConnectorFunction
+from mozaik.connectors.modular_connector_functions import *
 from collections import Counter
 from parameters import ParameterSet
 from mozaik.tools.misc import sample_from_bin_distribution, normal_function
@@ -84,23 +84,23 @@ class ModularConnector(Connector):
       for k in self.delay_function_names:
           self.delay_functions[k] = load_component(self.parameters.delay_functions[k].component)(self.source,self.target,self.parameters.delay_functions[k].params)
     
-    def _obtain_weights(self,i):
+    def _obtain_weights(self,i,seed=None):
         """
         This function calculates the combined weights from the ModularConnectorFunction in weight_functions
         """
         evaled = OrderedDict()
        
         for k in self.weight_function_names:
-            evaled[k] = self.weight_functions[k].evaluate(i)
+            evaled[k] = self.weight_functions[k].evaluate(i) if not seed else self.weight_functions[k].evaluate(i,seed=seed)
         return numpy.zeros((self.source.pop.size,)) + eval(self.parameters.weight_expression,globals(),evaled)
         
-    def _obtain_delays(self,i):
+    def _obtain_delays(self,i,seed=None):
         """
         This function calculates the combined weights from the ModularConnectorFunction in weight_functions
         """
         evaled = OrderedDict()
         for k in self.delay_function_names:
-            evaled[k] = self.delay_functions[k].evaluate(i)
+            evaled[k] = self.delay_functions[k].evaluate(i) if not seed else self.delay_functions[k].evaluate(i,seed=seed)
         
         delays = numpy.zeros((self.source.pop.size,)) + eval(self.parameters.delay_expression,globals(),evaled)
         #round to simulation step            
@@ -132,6 +132,7 @@ class ModularSamplingProbabilisticConnector(ModularConnector):
     connections between a pair of neurons in this sample (in which case the
     weights are set to the multiple of the base weights times the number of
     occurrences in the sample).
+    The _connect method of this class uses multiprocessing
     """
 
     required_parameters = ParameterSet({
@@ -140,17 +141,76 @@ class ModularSamplingProbabilisticConnector(ModularConnector):
     })
 
     def _connect(self):
+        # Generates a splitted and of cells indices to be passed to each subprocesses
+        seeds = mozaik.get_seeds(len(numpy.nonzero(self.target.pop._mask_local)[0]))
+        splitted_seeds = numpy.array_split(seeds, int(self.model.num_threads))
+        splitted_cell_indices = numpy.array_split(
+            numpy.nonzero(self.target.pop._mask_local)[0], int(self.model.num_threads)
+        )
+
+        # This code will be ran by each subprocess
+        import multiprocessing
+
+        def build_connector(indices, seeds, queue_cl, queue_v):
+            cli = []
+            vi = 0
+            for i in range(len(indices)):
+                weights = self._obtain_weights(indices[i],seeds[i])
+                delays = self._obtain_delays(indices[i],seeds[i])
+
+                co = Counter(
+                    sample_from_bin_distribution(
+                        weights, int(self.parameters.num_samples.next()), seeds[i]
+                    )
+                )
+                vi = vi + numpy.sum(list(co.values()))
+                k = list(co.keys())
+                a = numpy.array(
+                    [
+                        k,
+                        numpy.zeros(len(k)) + indices[i],
+                        self.weight_scaler
+                        * numpy.multiply(
+                            self.parameters.base_weight.copy(seeds[i]).next(len(k)),
+                            list(co.values())
+                        ),
+                        numpy.array(delays)[k],
+                    ]
+                )
+                cli.append(a)
+            # Add the output to the two queues to communicate it with the main process
+            queue_cl.put(cli)
+            queue_v.put(vi)
+
+        # Generate a list of subprocesses and of queues
+        processes = []
+        list_queue_cl = []
+        list_queue_v = []
+        for i in range(len(splitted_cell_indices)):
+            # Each queue will be used by the subprocesses to communicate with the main process
+            list_queue_cl.append(multiprocessing.Queue())
+            list_queue_v.append(multiprocessing.Queue())
+            proc = multiprocessing.Process(
+                target=build_connector,
+                args=(
+                    splitted_cell_indices[i],
+                    splitted_seeds[i],
+                    list_queue_cl[i],
+                    list_queue_v[i],
+                ),
+            )
+            proc.start()
+            processes.append(proc)
+
+        # Gather the output of each subprocesses
         cl = []
         v = 0
-        for i in numpy.nonzero(self.target.pop._mask_local)[0]:
-            weights = self._obtain_weights(i)
-            delays = self._obtain_delays(i)
-                
-            co = Counter(sample_from_bin_distribution(weights, int(self.parameters.num_samples.next())))
-            v = v + numpy.sum(list(co.values()))
-            k = list(co.keys())
-            a = numpy.array([k,numpy.zeros(len(k))+i,self.weight_scaler*numpy.multiply(self.parameters.base_weight.next(len(k)),list(co.values())),numpy.array(delays)[k]])
-            cl.append(a)
+        for i, p in enumerate(processes):
+            cli = list_queue_cl[i].get()
+            for clii in cli:
+                cl.append(clii)
+            v += list_queue_v[i].get()
+            p.join()
 
         cl = numpy.hstack(cl).T
         method = self.sim.FromListConnector(cl)
@@ -229,38 +289,98 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(ModularConnect
         'base_weight' : PyNNDistribution,
     })
 
-    def worker(ref,idxs):
-        for i in idxs:
-            samples = self.target.get_neuron_annotation(i,self.parameters.annotation_reference_name)
-            weights = self._obtain_weights(i)
-            delays = self._obtain_delays(i)
-            if self.parameters.num_samples == 0:
-                co = Counter(sample_from_bin_distribution(weights, int(samples)))
-            else:
-                assert self.parameters.num_samples > 2*int(samples), ("%s: %d %d" % (self.name,self.parameters.num_samples,2*int(samples)))
-                a = sample_from_bin_distribution(weights, int(self.parameters.num_samples - 2*int(samples)))
-                co = Counter(a)
-            v = v + numpy.sum(co.values())
-            cl.extend([(int(k),int(i),self.weight_scaler*self.parameters.base_weight.next()*co[k],delays[k]) for k in co.keys()])
-        return cl
-
     def _connect(self):
+        # Check if the delay function is incompatible with multiprocessing
         cl = []
         v = 0
-        for i in numpy.nonzero(self.target.pop._mask_local)[0]:
-            samples = self.target.get_neuron_annotation(i,self.parameters.annotation_reference_name)
-            weights = self._obtain_weights(i)
-            delays = self._obtain_delays(i)
-            
-            if self.parameters.num_samples == 0:
-                co = Counter(sample_from_bin_distribution(weights, int(samples)))
-            else:
-                assert self.parameters.num_samples > 2*int(samples), ("%s: %d %d" % (self.name,self.parameters.num_samples,2*int(samples)))
-                co = Counter(sample_from_bin_distribution(weights, int(self.parameters.num_samples - 2*int(samples))))
-            v = v + numpy.sum(list(co.values()))
-            k = list(co.keys())
-            a = numpy.array([k,numpy.zeros(len(k))+i,self.weight_scaler*numpy.multiply(self.parameters.base_weight.next(len(k)),list(co.values())),numpy.array(delays)[k]])
-            cl.append(a)
+        # Generates a splitted and of cells indices to be passed to each subprocesses
+        seeds = mozaik.get_seeds(len(numpy.nonzero(self.target.pop._mask_local)[0]))
+        splitted_seeds = numpy.array_split(seeds, int(self.model.num_threads))
+        splitted_cell_indices = numpy.array_split(
+            numpy.nonzero(self.target.pop._mask_local)[0], int(self.model.num_threads)
+        )
+
+        import multiprocessing
+
+        # This code will be ran by each subprocess
+        def build_connector(indices, seeds, queue_cl, queue_v):
+            cli = []
+            vi = 0
+            for i in range(len(indices)):
+                samples = self.target.get_neuron_annotation(
+                    indices[i], self.parameters.annotation_reference_name
+                )
+                weights = self._obtain_weights(indices[i],seeds[i])
+                delays = self._obtain_delays(indices[i],seeds[i])
+
+                if self.parameters.num_samples == 0:
+                    co = Counter(
+                        sample_from_bin_distribution(weights, int(samples), seeds[i])
+                    )
+                else:
+                    assert self.parameters.num_samples > 2 * int(
+                        samples
+                    ), "%s: %d %d" % (
+                        self.name,
+                        self.parameters.num_samples,
+                        2 * int(samples),
+                    )
+                    co = Counter(
+                        sample_from_bin_distribution(
+                            weights,
+                            int(self.parameters.num_samples - 2 * int(samples)),
+                            seeds[i],
+                        )
+                    )
+
+                vi = vi + numpy.sum(list(co.values()))
+                k = list(co.keys())
+                a = numpy.array(
+                    [
+                        k,
+                        numpy.zeros(len(k)) + indices[i],
+                        self.weight_scaler
+                        * numpy.multiply(
+                            self.parameters.base_weight.copy(seeds[i]).next(len(k)),
+                            list(co.values())
+                        ),
+                        numpy.array(delays)[k],
+                    ]
+                )
+                cli.append(a)
+            # Add the output to the two queues to communicate it with the main process
+            queue_cl.put(cli)
+            queue_v.put(vi)
+
+        # Generate a list of subprocesses and of queues
+        processes = []
+        list_queue_cl = []
+        list_queue_v = []
+        for i in range(len(splitted_cell_indices)):
+            # Each queue will be used by the subprocesses to communicate with the main process
+            list_queue_cl.append(multiprocessing.Queue())
+            list_queue_v.append(multiprocessing.Queue())
+            proc = multiprocessing.Process(
+                target=build_connector,
+                args=(
+                    splitted_cell_indices[i],
+                    splitted_seeds[i],
+                    list_queue_cl[i],
+                    list_queue_v[i],
+                ),
+            )
+            proc.start()
+            processes.append(proc)
+
+        # Gather the output of each subprocesses
+        cl = []
+        v = 0
+        for i, p in enumerate(processes):
+            cli = list_queue_cl[i].get()
+            for clii in cli:
+                cl.append(clii)
+            v += list_queue_v[i].get()
+            p.join()
 
         cl = numpy.hstack(cl).T
         method = self.sim.FromListConnector(cl)

@@ -33,7 +33,6 @@ jobs:
         cmake -Dwith-mpi=OFF -Dwith-boost=ON -DCMAKE_INSTALL_PREFIX:PATH=$pythonLocation -Dwith-optimize='-O3' ./
         make -j8
         make -j8 install
-        make installcheck
         cd ..
         python -c 'import nest'
 

@@ -9,6 +9,7 @@ import mozaik
 import mozaik.tools.units
 import quantities as pq
 from matplotlib.colors import *
+from matplotlib.ticker import MultipleLocator, AutoMinorLocator
 from cycler import cycler
 from collections import OrderedDict
 
@@ -230,6 +231,12 @@ class StandardStyle(SimplePlot):
         y_tick_pad  : float
                     What are the y tick padding of labels for axis.
 
+        x_tick_auto_minor_locator  : int
+                    How many minor x ticks per major x tick. If None or not specified, minor x ticks are not displayed
+
+        y_tick_auto_minor_locator  : int
+                    How many minor x ticks per major x tick. If None or not specified, minor x ticks are not displayed
+
         grid : bool
              Do we show grid?
         """
@@ -266,6 +273,8 @@ class StandardStyle(SimplePlot):
             "y_tick_labels": None,
             "x_tick_pad": fontsize - 5,
             "y_tick_pad": fontsize - 5,
+            "x_tick_auto_minor_locator": None,
+            "y_tick_auto_minor_locator": None,
             "grid" : False,
         }
 
@@ -365,9 +374,14 @@ class StandardStyle(SimplePlot):
                 else:
                     pylab.xticks(self.x_ticks)
                     phf.remove_x_tick_labels()
+                if self.x_tick_auto_minor_locator:
+                    self.axis.xaxis.set_minor_locator(AutoMinorLocator(self.x_tick_auto_minor_locator))
             elif self.x_ticks != None:
                  pylab.xticks(self.x_ticks)
                  phf.short_tick_labels_axis(self.axis.xaxis)
+                 if self.x_tick_auto_minor_locator:
+                    self.axis.xaxis.set_minor_locator(AutoMinorLocator(self.x_tick_auto_minor_locator))
+
             else:
                 if self.x_tick_style == 'Min':
                     phf.three_tick_axis(self.axis.xaxis,log=(self.x_scale!='linear'))
@@ -376,7 +390,6 @@ class StandardStyle(SimplePlot):
                    phf.remove_x_tick_labels()
                 else:
                     raise ValueError('Unknown x tick style %s', self.x_tick_style)
-
         if self.y_axis:
             if self.y_ticks != None and self.y_tick_style == 'Custom':
                 if self.y_tick_labels != None:
@@ -385,9 +398,15 @@ class StandardStyle(SimplePlot):
                 else:
                     pylab.yticks(self.y_ticks)
                     phf.remove_y_tick_labels()
+                if self.y_tick_auto_minor_locator:
+                    self.axis.yaxis.set_minor_locator(AutoMinorLocator(self.y_tick_auto_minor_locator))
+
             elif self.y_ticks != None:
-                 pylab.yticks(self.y_ticks)
-                 phf.short_tick_labels_axis(self.axis.yaxis)
+                pylab.yticks(self.y_ticks)
+                phf.short_tick_labels_axis(self.axis.yaxis)
+                if self.y_tick_auto_minor_locator:
+                    self.axis.yaxis.set_minor_locator(AutoMinorLocator(self.y_tick_auto_minor_locator))
+
             else:
                 if self.y_tick_style == 'Min':
                     phf.three_tick_axis(self.axis.yaxis,log=(self.y_scale!='linear'))
@@ -838,7 +857,7 @@ class StandardStyleLinePlot(StandardStyle):
            The colors of the plots. If it is one color all plots will have that same color. If it is a list its
            length should correspond to length of x and y and the corresponding colors will be assigned to the individual graphs.
            If dict, the keys should be labels, and values will be the colors that will be assigned to the lines that correspond to the labels.
-
+           
     linestyles : str or list of str or dict
            The linestyles of the plots. If it is scalar all plots will have that same linestyle. If it is a list its
            length should correspond to length of x and y and the corresponding linestyles will be assigned to the individual graphs.
@@ -1183,6 +1202,16 @@ class HistogramPlot(StandardStyle):
 
     colors : list
            The colors to assign to the different sets of spikes.
+
+    legend : bool
+           If true the legend will be shown
+
+    histtype : string
+           The type of Histogram to draw. Default is 'bar'
+
+    rwidth : float
+           The relative width of the bars as a fraction of the bin width
+
     """
 
     def __init__(self, values,labels=None,**param):
@@ -1195,6 +1224,10 @@ class HistogramPlot(StandardStyle):
         self.parameters["colors"] = None
         self.parameters["mark_mean"] = False
         self.parameters["mark_value"] = False
+        self.parameters["legend"] = False
+        self.parameters["histtype"] = 'bar'
+        self.parameters["rwidth"] = None
+
         if labels != None:
             assert len(values) == len(labels)
 
@@ -1205,16 +1238,15 @@ class HistogramPlot(StandardStyle):
            colors = [self.colors[k] for k in self.labels]
         else:
            colors = None
-
         if self.x_scale == 'log':
             bins = np.geomspace(self.x_lim[0], self.x_lim[1], int(self.num_bins))
         else:
             bins = int(self.num_bins)
 
         if self.parameters["log"]:
-           self.axis.hist(numpy.log10(self.values),bins=bins,range=self.x_lim,edgecolor='none',color=colors)
+            self.axis.hist(numpy.log10(self.values),bins=bins,range=self.x_lim,edgecolor='none',color=colors,histtype=self.histtype,rwidth=self.rwidth)
         else:
-            self.axis.hist(self.values,bins=bins,range=self.x_lim,rwidth=1,edgecolor='none',color=colors)
+            self.axis.hist(self.values,bins=bins,range=self.x_lim,edgecolor='none',color=colors,histtype=self.histtype,rwidth=self.rwidth)
 
         if self.mark_mean:
            for i,a in enumerate(self.values):
@@ -1239,6 +1271,9 @@ class HistogramPlot(StandardStyle):
                     arrowprops=dict(arrowstyle="->",
                                     connectionstyle="arc3",linewidth=3.0,color='r'),
                         )
+
+        if self.legend:
+            self.axis.legend()
 
         self.y_label = '#'
 

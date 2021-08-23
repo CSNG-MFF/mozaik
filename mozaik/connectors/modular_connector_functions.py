@@ -23,14 +23,14 @@ class ModularConnectorFunction(ParametrizedObject):
         self.source = source
         self.target = target
         
-    def evaluate(self,index):
+    def evaluate(self,index,**params):
         raise NotImplemented
 
 class ConstantModularConnectorFunction(ModularConnectorFunction):
       """
       Triavial modular connection function assigning each connections the same weight
       """
-      def evaluate(self,index):
+      def evaluate(self,index,**params):
           return numpy.zeros(len(self.source.pop)) + 1
 
 class PyNNDistributionConnectorFunction(ModularConnectorFunction):
@@ -42,8 +42,11 @@ class PyNNDistributionConnectorFunction(ModularConnectorFunction):
         'pynn_distribution': PyNNDistribution,  # The distribution
       })
 
-      def evaluate(self,index):
-          return self.parameters.pynn_distribution.next(len(self.source.pop))
+      def evaluate(self,index,seed=None):
+          if seed:
+              return self.parameters.pynn_distribution.copy(seed).next(len(self.source.pop))
+          else:
+              return self.parameters.pynn_distribution.next(len(self.source.pop))
 
           
 class DistanceDependentModularConnectorFunction(ModularConnectorFunction):
@@ -62,7 +65,7 @@ class DistanceDependentModularConnectorFunction(ModularConnectorFunction):
         """
         raise NotImplemented
     
-    def evaluate(self,index):
+    def evaluate(self,index,**params):
         return self.distance_dependent_function(self.source.dvf_2_dcs(numpy.sqrt(
                                 numpy.power(self.source.pop.positions[0,:]-self.target.pop.positions[0,index],2) + numpy.power(self.source.pop.positions[1,:]-self.target.pop.positions[1,index],2)
                     )))

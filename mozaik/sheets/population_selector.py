@@ -143,6 +143,50 @@ class RCGrid(PopulationSelector):
           logger.info("RCGrid> picked neurons: " + str(picked))
           return list(set(picked))
 
+class RCGridDegree(PopulationSelector):
+      """
+      Select neurons on a grid which coordinates are in degree of visual space.
+
+      This PopulationSelector assumes a grid of points ('electrodes') with a
+      given *spacing* and *size*, centered on (*offset_x*,*offset_x*) coordinates.
+      It then finds the closest neuron to each point in the grid to be
+      inserted into the list of selected neurons .
+
+      Other parameters
+      ----------------
+
+      size : float (degrees of visual space)
+           The size of the grid (it is assumed to be square) - it has to be multiple of spacing
+
+      spacing : float (degrees of visual space)
+           The space between two neighboring electrodes.
+
+      offset_x : float (degrees of visual space)
+           The x axis offset from the center of the sheet.
+
+      offset_y : float (degrees of visual space)
+           The y axis offset from the center of the sheet.
+      """
+
+      required_parameters = ParameterSet({
+        'size': float,  # the size of the grid (it is assumed to be square) - it has to be multiple of spacing (degrees)
+        'spacing' : float, #the space between two electrodes (degrees)
+        'offset_x' : float, # the x axis offset from the center of the sheet (degrees)
+        'offset_y' : float, # the y axis offset from the center of the sheet (degrees)
+      })
+
+      def generate_idd_list_of_neurons(self):
+          assert math.fmod(self.parameters.size*1000,self.parameters.spacing*1000) < 0.000000001 , "Error the size has to be multiple of spacing!"
+
+          picked = []
+          z = self.sheet.pop.all_cells.astype(int)
+          for x in self.parameters.offset_x + numpy.arange(0,self.parameters.size,self.parameters.spacing) - self.parameters.size/2.0:
+              for y in self.parameters.offset_y + numpy.arange(0,self.parameters.size,self.parameters.spacing) - self.parameters.size/2.0:
+                  picked.append(z[numpy.argmin(numpy.power(self.sheet.pop.positions[0] - x,2) +  numpy.power(self.sheet.pop.positions[1] - y,2))])
+
+          logger.info("RCGrid> picked neurons: " + str(picked))
+          return list(set(picked))
+
 class SimilarAnnotationSelector(PopulationSelector):
       """
       Choose neurons based on annotations info.

@@ -187,11 +187,16 @@ class SpecificProbabilisticArborization(Connector):
         # This is due to native synapses models (which we currently use as the short term synaptic plasticity model) 
         # do not apply the 1000 factor scaler as the pyNN synaptic models
         wf = self.parameters.weight_factor * self.weight_scaler
+        seeds = mozaik.get_seeds(self.target.pop.size)
         weights = self.connection_matrix
         delays = self.delay_matrix
         cl = []
         for i in range(0,self.target.pop.size):
-            co = Counter(sample_from_bin_distribution(weights[:,i].flatten(), int(self.parameters.num_samples)))
+            co = Counter(
+                sample_from_bin_distribution(
+                    weights[:, i].flatten(), int(self.parameters.num_samples), seeds[i]
+                )
+            )
             cl.extend([(int(k),int(i),wf*co[k]/self.parameters.num_samples,delays[k][i]) for k in co.keys()])
             
         method = self.sim.FromListConnector(cl)

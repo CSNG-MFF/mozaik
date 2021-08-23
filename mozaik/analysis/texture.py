@@ -103,10 +103,11 @@ class TextureVarianceRatio(Analysis):
             mean_rates = [] #This is a 4D array where we will store the firing rates of each neurons for each trial of each sample of each texture family
             for texture in textures:
                 mean_rates_texture = []
+                dsv_tmp = queries.param_filter_query(dsv,identifier='PerNeuronValue',sheet_name=sheet,st_texture=texture,st_stats_type=1)
                 for sample in samples:
                     mean_rates_sample = []
                     for trial in trials:
-                        pnv = queries.param_filter_query(dsv,identifier='PerNeuronValue',sheet_name=sheet,st_sample=sample,st_texture=texture,st_trial=trial,st_stats_type=1).get_analysis_result()[0]
+                        pnv = queries.param_filter_query(dsv_tmp,identifier='PerNeuronValue',st_sample=sample,st_trial=trial).get_analysis_result()[0]
                         mean_rates_sample.append(pnv.values)
                     mean_rates_texture.append(mean_rates_sample)
                 mean_rates.append(mean_rates_texture)
@@ -302,9 +303,6 @@ class TextureModulationFromPSTH(Analysis):
             averaged_noise_psths = numpy.transpose(numpy.transpose(averaged_noise_psths,(0,2,3,1))/max_firing_rates, (0,3,1,2))
             averaged_texture_psths = numpy.transpose(numpy.transpose(averaged_texture_psths,(0,2,3,1))/max_firing_rates, (0,3,1,2))
 
-            max_firing_rates = numpy.max(numpy.concatenate((averaged_noise_psths,  averaged_texture_psths)), axis = 0)
-            averaged_noise_psths = averaged_noise_psths/max_firing_rates
-            averaged_texture_psths = averaged_texture_psths/max_firing_rates
             #Compute the average accross textures families of the time course of the modulation and of the PSTHs for both type of stimuli 
             noise_psth = numpy.mean(averaged_noise_psths, axis = 0)
             texture_psth = numpy.mean(averaged_texture_psths, axis = 0)

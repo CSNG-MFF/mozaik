@@ -93,7 +93,7 @@ class PSTextureStimulus(TextureBasedVisualStimulus):
             os.mkdir(folder_name)
 
         IM = Image.fromarray(im)
-        IM.save(folder_name + "/" + self.texture + "sample" + str(self.sample) + "type" + str(self.stats_type) + '.jpg')
+        IM.save(folder_name + "/" + self.texture + "sample" + str(self.sample) + "type" + str(self.stats_type) + '.pgm')
         assert (im.shape == (fieldsize_x, fieldsize_y)), "Image dimensions do not correspond to visual field size"
 
         while True:
@@ -152,7 +152,7 @@ class PSTextureStimulusDisk(TextureBasedVisualStimulus):
 
         d = d.astype(numpy.uint8)
         IM = Image.fromarray(d)
-        IM.save(folder_name + "/" + self.texture + "sample" + str(self.sample) + "type" + str(self.stats_type) + 'radius' + str(self.radius) + '.jpg')
+        IM.save(folder_name + "/" + self.texture + "sample" + str(self.sample) + "type" + str(self.stats_type) + 'radius' + str(self.radius) + '.pgm')
 
         while True:
             yield (d, [0])
