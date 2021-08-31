@@ -106,7 +106,8 @@ class Sheet(BaseComponent):
         for k in self.parameters.cell.params.keys():
             if isinstance(self.parameters.cell.params[k],PyNNDistribution):
                self.dist_params[k]=self.parameters.cell.params[k]
-               del self.parameters.cell.params[k]
+        for dist_k in self.dist_params.keys():
+            del self.parameters.cell.params[dist_k]
         
 
     def setup_to_record_list(self):
