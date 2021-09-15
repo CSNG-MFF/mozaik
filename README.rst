@@ -73,7 +73,7 @@ Now we can install the *Nest* simulator (always in the virtual environment):
         tar xvfz v2.20.1.tar.gz
         cd nest-simulator-2.20.1
     
-    - then configure, choose if you want mpi::
+    - then configure (change path to wherever you installed your virtual environemnt)::
     
         (mozaik)$ cmake -Dwith-mpi=OFF -Dwith-boost=ON -DCMAKE_INSTALL_PREFIX:PATH=$HOME/virt_env/mozaik -Dwith-optimize='-O3' ./
        
