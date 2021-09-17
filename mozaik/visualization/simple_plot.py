@@ -812,8 +812,6 @@ class ScatterPlot(StandardStyle):
                                vmax=vmax)
         if self.equal_aspect_ratio:
             self.axis.set_aspect(aspect=1.0, adjustable='box')
-        logger.debug(numpy.min(self.x))
-        logger.debug(numpy.max(self.x))
         self.x_lim = (numpy.min(self.x),numpy.max(self.x))
         self.y_lim = (numpy.min(self.y),numpy.max(self.y))
 
@@ -985,8 +983,6 @@ class StandardStyleLinePlot(StandardStyle):
                     ymin = self.y[i] - self.error[i]
                     ymax = self.y[i] + self.error[i]
                     self.axis.fill_between(self.x[i], ymax, ymin, color=p['color'], alpha=0.2)
-            
-            pylab.hold('on')
 
             tmin = min(tmin, self.x[i][0])
             tmax = max(tmax, self.x[i][-1])
@@ -998,7 +994,6 @@ class StandardStyleLinePlot(StandardStyle):
         if self.legend:
             self.axis.legend()
         self.x_lim = (tmin, tmax)
-        logger.info(str(self.parameters))
 
 class ConductancesPlot(StandardStyle):
     """

@@ -539,9 +539,6 @@ class PlotTuningCurve(Plotting):
            c =  period/2.0
            par = numpy.array([(p - z + c) % period for p in par])  - c
            if q != 0:
-               logger.info(str(q))
-               logger.info(str(val))
-               logger.info(str(par))
                a = val[:q].copy()[:] 
                b = par[:q].copy()[:] 
                val[:-q] = val[q:].copy()[:]   
