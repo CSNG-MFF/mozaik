@@ -185,7 +185,7 @@ class ParameterSearch(object):
         combinations = self.generate_parameter_combinations()
         
         f = open(mdn + '/parameter_combinations','wb')
-        pickle.dump(combinations,f, protocol=2)
+        pickle.dump(combinations,f)
         f.close()
         
         for combination in combinations:
