@@ -30,7 +30,7 @@ class PyNNDistribution(RandomDistribution):
       This will be the wraper for the PyNN RandomDistribution
       
       The first parameter is the name of the distribution (see pyNN.random.RandomDistribution)
-       The params is a tuple of parameters of the corresponding numpy distribution (see pyNN.random.RandomDistribution)
+      The params is a tuple of parameters of the corresponding numpy distribution (see pyNN.random.RandomDistribution)
       For the rest of the parameters see pyNN.random.RandomDistribution
       """
       def __init__(self,name,rng=None,**params):
@@ -126,7 +126,6 @@ class MozaikExtendedParameterSet(ParameterSet):
             try:
                 f = open(initialiser,'r')
                 pstr=f.read()
-                f.close()
                 self._url = initialiser
             except IOError:
                 pstr = initialiser
