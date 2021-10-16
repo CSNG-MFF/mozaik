@@ -55,6 +55,27 @@ class SingleValue(AnalysisDataStructure):
         self.value_units = value_units
 
 
+class SingleValueList(AnalysisDataStructure):
+    """
+    Data structure holding a list of single values. This can be per model, if sheet parameter
+    is None, or per sheet if sheet is specified.
+
+    All values need to have the same unit.
+
+    Parameters
+    ----------
+    values : list
+                List of values
+    values_unit : quantities
+                Quantities unit describing the unit of the values
+    """
+    value_name = SString(doc="The name of the value.")
+
+    def __init__(self, values, values_unit, **params):
+        AnalysisDataStructure.__init__(self, identifier='SingleValueList', **params)
+        self.values = values
+        self.values_unit = values_unit
+
 
 class PerNeuronValue(AnalysisDataStructure):
     """
