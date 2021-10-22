@@ -1,9 +1,4 @@
-try:
-    import elephant
-except ImportError:
-    print("Python Elephant package missing.")
-
-
+import elephant
 import warnings
 import numpy as np
 import quantities as pq
