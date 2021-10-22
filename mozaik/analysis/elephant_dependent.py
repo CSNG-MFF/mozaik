@@ -26,7 +26,7 @@ class CriticalityAnalysis(Analysis):
 
     required_parameters = ParameterSet(
         {
-            "bin_length": int,  # Length of duration and size bins
+            "num_bins": int,  # Number of duration and size bins
         }
     )
 
@@ -77,29 +77,20 @@ class CriticalityAnalysis(Analysis):
             szs = szs[szs > 0]
 
             # calculate tau=exponent of size distr
-            s_distr, s_bins = self.create_hist(szs, self.parameters.bin_length)
+            s_distr, s_bins = self.create_hist(szs, self.parameters.num_bins)
             s_amp, s_slope, s_error_sq, s_error_diff = self.fit_powerlaw_distribution(
                 s_bins, s_distr, "size"
             )
             # calculate tau_t=exponent of distr of durations
-            d_distr, d_bins = self.create_hist(durs, self.parameters.bin_length)
+            d_distr, d_bins = self.create_hist(durs, self.parameters.num_bins)
             d_amp, d_slope, d_error_sq, d_error_diff = self.fit_powerlaw_distribution(
                 d_bins, d_distr, "duration"
             )
-            print(s_amp)
-            print(s_slope)
-            print(d_amp)
-            print(d_slope)
+
             # calculate the <S>(D) curve, S=size, D=duration
             [sd_amp, sd_slope], _ = curve_fit(
                 f=self.powerlaw, xdata=durs, ydata=szs, p0=[0, 0]
             )
-
-            """
-            Create function for processing avalanches
-
-            Measure average event distance in standard deviations
-            """
 
             beta = sd_slope  # for dcc calculation
             error_diff = sum(szs - self.powerlaw(durs, sd_amp, sd_slope))
@@ -274,7 +265,6 @@ class CriticalityAnalysis(Analysis):
                     )
                 )
 
-
     def create_hist(self, data, nrbins):
         distr, b = np.histogram(data, bins=nrbins, density=True)
         bs = b[1] - b[0]
@@ -306,9 +296,7 @@ class CriticalityAnalysis(Analysis):
             Mean square error of the fit
         """
         try:
-            [amp, slope], _ = curve_fit(
-                f=self.powerlaw, xdata=x, ydata=y, p0=[0, 0]
-            )
+            [amp, slope], _ = curve_fit(f=self.powerlaw, xdata=x, ydata=y, p0=[0, 0])
             error_sq = np.linalg.norm(y - self.powerlaw(x, amp, slope))
             error_diff = sum(y - self.powerlaw(x, amp, slope))
             return amp, slope, error_sq, error_diff
@@ -317,7 +305,7 @@ class CriticalityAnalysis(Analysis):
                 "While fitting the powerlaw distribution, the following exception occured: %s"
                 % e
             )
-            return 0, 0, 0
+            return 0, 0, 0, 0
 
     @staticmethod
     def powerlaw(x, amp, slope):
