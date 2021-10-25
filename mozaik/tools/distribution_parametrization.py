@@ -10,7 +10,6 @@ from past.builtins import basestring
 from urllib.parse import urlparse
 from parameters import ParameterSet, ParameterRange, ParameterTable, ParameterReference
 from pyNN.random import RandomDistribution, NumpyRNG
-import requests
 import urllib, copy, warnings, numpy, numpy.random  # to be replaced with srblib
 from collections import OrderedDict
 import mozaik
@@ -128,7 +127,7 @@ class MozaikExtendedParameterSet(ParameterSet):
                    pstr=f.read()
                    f.close()
                 else:
-                   pstr = request.urlopen(initialiser).text
+                   pstr = urllib.request.urlopen(initialiser).text
                 self._url = initialiser
             except IOError:
                 pstr = initialiser
