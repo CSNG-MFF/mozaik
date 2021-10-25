@@ -7,6 +7,7 @@ from scipy.optimize import curve_fit
 from mozaik.storage import queries
 from mozaik.analysis.analysis import Analysis
 from mozaik.analysis.data_structures import SingleValue, SingleValueList
+from mozaik.tools.distribution_parametrization import load_parameters
 
 
 class CriticalityAnalysis(Analysis):
@@ -16,7 +17,7 @@ class CriticalityAnalysis(Analysis):
     Dynamics Are Homeostatically Tuned to Criticality In Vivo, Neuron
     Computes the histogram of population activity per layer and calculates
     the distance to criticality for several intervals.
-    Can only be run on spontaneous activity.
+    Can only be run on stimuli with the same name.
     """
 
     required_parameters = ParameterSet(
@@ -34,20 +35,19 @@ class CriticalityAnalysis(Analysis):
                     % (layer, self.datastore.sheets())
                 )
                 continue
+
             # pool all spikes from the layer
             allspikes = []
-            for sheet in layer:
-                dsv = queries.param_filter_query(
-                    self.datastore, sheet_name=sheet, st_name="InternalStimulus"
-                )
-                segs = dsv.get_segments()
-                assert len(segs) == 1
-                seg = segs[0]
-                stim = dsv.get_stimuli()[0]
-                # add spikes from this sheet to the pool
+            dsv = queries.param_filter_query(self.datastore, sheet_name=layer)
+            segs = dsv.get_segments()
+            # add spikes from the layer to the pool
+            for seg in segs:
                 for st in seg.spiketrains:
                     allspikes.extend(st.magnitude)
 
+            assert (
+                len({load_parameters(str(s))["name"] for s in dsv.get_stimuli()}) == 1
+            ), "All stimuli have to have the same name!"
             # calculate specific time bin in each segment as in Fontenele2019
             dt = np.mean(np.diff(np.sort(allspikes)))
 
@@ -92,12 +92,22 @@ class CriticalityAnalysis(Analysis):
             error_sq = np.linalg.norm(szs - self.powerlaw(durs, sd_amp, sd_slope))
             crit_dist = np.abs(beta - (-d_slope - 1) / (-s_slope - 1))
 
+            stims = dsv.get_stimuli()
+            common_stim_params = load_parameters(str(stims[0]))
+            for st in stims:
+                p = load_parameters(str(st))
+                common_stim_params = {  # Inner join of 2 dicts
+                    k: v
+                    for (k, v) in p.items()
+                    if k in common_stim_params and p[k] == common_stim_params[k]
+                }
+
             for sheet in layer:
                 common_params = {
                     "sheet_name": sheet,
                     "tags": self.tags,
                     "analysis_algorithm": self.__class__.__name__,
-                    "stimulus_id": str(stim),
+                    "stimulus_id": str(common_stim_params),
                 }
                 self.datastore.full_datastore.add_analysis_result(
                     SingleValue(
