@@ -41,8 +41,11 @@ class CriticalityAnalysis(Analysis):
             dsv = queries.param_filter_query(self.datastore, sheet_name=layer)
             segs = dsv.get_segments()
             # add spikes from the layer to the pool
+            tstart = tstop = 0
             for seg in segs:
                 for st in seg.spiketrains:
+                    tstart = min(st.t_start.magnitude,tstart)
+                    tstop = max(st.t_stop.magnitude,tstop)
                     allspikes.extend(st.magnitude)
 
             assert (
@@ -52,8 +55,6 @@ class CriticalityAnalysis(Analysis):
             dt = np.mean(np.diff(np.sort(allspikes)))
 
             # case with no spikes is not taken care off!
-            tstart = seg.spiketrains[0].t_start.magnitude
-            tstop = seg.spiketrains[0].t_stop.magnitude
             bins = np.arange(tstart, tstop, dt)
             hist, bins = np.histogram(allspikes, bins)
 
@@ -76,6 +77,7 @@ class CriticalityAnalysis(Analysis):
             s_amp, s_slope, s_error_sq, s_error_diff = self.fit_powerlaw_distribution(
                 s_bins, s_distr, "size"
             )
+
             # calculate tau_t=exponent of distr of durations
             d_distr, d_bins = self.create_hist(durs, self.parameters.num_bins)
             d_amp, d_slope, d_error_sq, d_error_diff = self.fit_powerlaw_distribution(
