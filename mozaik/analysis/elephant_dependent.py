@@ -304,6 +304,8 @@ class CriticalityAnalysis(Analysis):
         """
         try:
             [amp, slope], _ = curve_fit(f=self.powerlaw, xdata=x, ydata=y, p0=[0, 0])
+            if np.isnan(amp) or np.isnan(slope):
+                raise RuntimeError("scipy.curve_fit returned nan")
             error_sq = np.linalg.norm(y - self.powerlaw(x, amp, slope))
             error_diff = sum(y - self.powerlaw(x, amp, slope))
             return amp, slope, error_sq, error_diff
