@@ -6,7 +6,7 @@
     },
     'visual_field': {
         'centre': (0.0, 0.0), # degrees (x,y)
-        'size': (11.0, 11.0), # degrees (width, height)
+        'size': (10.0, 10.0), # degrees (width, height)
     },
     'sheets' : {
         'l4_cortex_exc': url("param/l4_cortex_exc"),
