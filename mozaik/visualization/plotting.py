@@ -96,6 +96,7 @@ class Plotting(ParametrizedObject):
         self.datastore = datastore
         self.plot_file_name = plot_file_name
         self.animation_update_functions = []
+        self.animation_num_frames = None
         self.frame_duration = frame_duration
         self.fig_param = fig_param if fig_param != None else OrderedDict()
         self.caption = "Caption not specified."
@@ -166,7 +167,7 @@ class Plotting(ParametrizedObject):
           import matplotlib.animation as animation
           self.animation = animation.FuncAnimation(self.fig,
                                       Plotting.update_animation_function,
-                                      frames = 150,
+                                      frames = self.animation_num_frames,
                                       repeat=False,
                                       fargs=(self,),
                                       interval=self.frame_duration,
