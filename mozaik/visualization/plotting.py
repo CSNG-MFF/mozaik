@@ -1108,7 +1108,7 @@ class ActivityMovie(Plotting):
         if self.parameters.exp_time_constant != 0:
           etc = self.parameters.exp_time_constant*pq.ms
           etc = etc.rescale(units).magnitude
-          exp_kernel = numpy.flip(numpy.exp(-(bins[:numpy.int(numpy.floor(3*etc/bw))]-start)/etc),axis=0);
+          exp_kernel = numpy.exp(-(bins[:numpy.int(numpy.floor(3*etc/bw))]-start)/etc)
 
         for spike_trains in sp:
             hh = []
