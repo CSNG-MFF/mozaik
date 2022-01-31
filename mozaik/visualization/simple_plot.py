@@ -618,7 +618,10 @@ class StandardStyleAnimatedPlot(StandardStyle):
 
     def post_plot(self):
         assert self.l is not None, "Length of animation has to be set before plotting!"
-        self.plotting_parent.animation_num_frames = self.l
+        if self.plotting_parent.animation_num_frames:
+            assert self.plotting_parent.animation_num_frames == self.l, "The length of all recordings in a single animation must be the same!"
+        else:
+            self.plotting_parent.animation_num_frames = self.l
 
         StandardStyle.post_plot(self)
         self.plotting_parent.register_animation_update_function(StandardStyleAnimatedPlot._plot_next_frame,self)
