@@ -1153,10 +1153,11 @@ class ActivityMovie(Plotting):
                                       h[:, i],
                                       (xi[None, :], yi[:, None]),
                                       method='nearest'))
-            w = numpy.isnan(numpy.array(movie))
-            numpy.array(movie)[w]=0
+
+            movie = numpy.array(movie)
+            movie[numpy.isnan(movie)]=0
             
-            return [("PixelMovie",PixelMovie(40000.0*numpy.array(movie)),gs,{'x_axis':False, 'y_axis':False})]
+            return [("PixelMovie",PixelMovie(movie, movie.max()/2),gs,{'x_axis':False, 'y_axis':False})]
         else:
             return [("ScatterPlot",ScatterPlotMovie(posx, posy, h.T),gs,{'x_axis':False, 'y_axis':False,'dot_size':40})]
 
