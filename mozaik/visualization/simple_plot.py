@@ -724,7 +724,7 @@ class ScatterPlotMovie(StandardStyleAnimatedPlot):
                                          alpha=0.4,
                                          cmap='gray')
         pylab.axis('equal')
-        pylab.gca().set_axis_bgcolor('black')
+        pylab.gca().set_facecolor('black')
 
 class ScatterPlot(StandardStyle):
     """
