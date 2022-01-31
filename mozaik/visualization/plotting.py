@@ -1115,7 +1115,9 @@ class ActivityMovie(Plotting):
             for st in spike_trains:
                 tmp = numpy.histogram(st.magnitude, bins, (start, stop))[0]/(bw.rescale(pq.s).magnitude)
                 if self.parameters.exp_time_constant != 0:
-                  tmp = numpy.convolve(tmp,exp_kernel,mode='valid')
+                  # For the rare case where len(exp_kernel) > len(tmp)
+                  # Otherwise 'same' would be sufficient
+                  tmp = numpy.convolve(tmp,exp_kernel,mode='full')[:len(tmp)]
                 hh.append(tmp)
 
                 #lets make activity of each neuron relative to it's maximum activity
