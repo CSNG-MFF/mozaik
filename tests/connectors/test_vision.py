@@ -93,7 +93,7 @@ class TestV1CorrelationBasedConnectivity:
         XX, YY = np.ogrid[-40:40:2000j, -40:40:2000j]
         x_r = (XX - x0) * np.cos(theta) + (YY - y0) * np.sin(theta)
         y_r = -(XX - x0) * np.sin(theta) + (YY - y0) * np.cos(theta)
-        gaussian = K * np.exp(-np.pi * (a ** 2 * x_r ** 2 + b ** 2 * y_r ** 2))
+        gaussian = K * np.exp(-np.pi * (a**2 * x_r**2 + b**2 * y_r**2))
         complex_grating = np.exp(
             1j * 2 * np.pi * F * (XX * np.cos(omega) + YY * np.sin(omega)) + 1j * P
         )

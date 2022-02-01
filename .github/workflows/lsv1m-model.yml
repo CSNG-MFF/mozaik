@@ -10,6 +10,8 @@ jobs:
     - uses: actions/checkout@v2
     - name: Pytest Unit Tests
       uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
     - name: Install prerequisites
       run: |
         sudo apt-get update
@@ -26,7 +28,7 @@ jobs:
 
     - name: Install Nest
       run: |
-        pip3 install numpy scipy mpi4py matplotlib==2.1.1 quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.8.0 cython pynn psutil future requests
+        pip3 install numpy scipy mpi4py matplotlib quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.8.0 cython pynn psutil future requests
         wget https://github.com/nest/nest-simulator/archive/v2.20.1.tar.gz
         tar xvfz v2.20.1.tar.gz
         cd nest-simulator-2.20.1

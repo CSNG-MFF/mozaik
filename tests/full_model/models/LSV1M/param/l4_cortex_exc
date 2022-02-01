@@ -3,7 +3,7 @@
     'component': 'mozaik.sheets.vision.VisualCorticalUniformSheet',
     'params':{
                 'name':'V1_Exc_L4',
-                'sx':4000.0,
+                'sx':3000.0,
                 'sy':ref('sheets.l4_cortex_exc.params.sx'),
                 'density': 1500.0,
                 'mpi_safe' : False,    
