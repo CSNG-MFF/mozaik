@@ -10,7 +10,7 @@ from past.builtins import basestring
 from urllib.parse import urlparse
 from parameters import ParameterSet, ParameterRange, ParameterTable, ParameterReference
 from pyNN.random import RandomDistribution, NumpyRNG
-import requests
+from urllib import request
 import urllib, copy, warnings, numpy, numpy.random  # to be replaced with srblib
 from collections import OrderedDict
 import mozaik
@@ -121,18 +121,17 @@ class MozaikExtendedParameterSet(ParameterSet):
             return MozaikExtendedParameterSet(d, label)
         
         self._url = None
+        # We assume here that parameters won't be load via an URL
         if isinstance(initialiser, basestring): # url or str
             try:
-                if ':' not in initialiser:
-                   f = open(initialiser,'r')
-                   pstr=f.read()
-                   f.close()
-                else:
-                   pstr = request.urlopen(initialiser).text
+                f = open(initialiser,'r')
+                pstr=f.read()
                 self._url = initialiser
             except IOError:
                 pstr = initialiser
                 self._url = None
+            else:
+                f.close()
 
             # is it a yaml url?
             if self._url:

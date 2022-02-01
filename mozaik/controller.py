@@ -143,7 +143,7 @@ def prepare_workflow(simulation_name, model_class):
         parameters.save(Global.root_directory + "parameters", expand_urls=True)
         import pickle
         f = open(Global.root_directory+"modified_parameters","wb")
-        pickle.dump(str(modified_parameters),f, protocol=2)
+        pickle.dump(str(modified_parameters),f)
         f.close()
 
     setup_logging()

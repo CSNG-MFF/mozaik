@@ -169,7 +169,7 @@ def pnv_datastore_view_to_tensor(pnv_view,allow_missing=False,pickle_file=None):
     if pickle_file:
         import pickle
         f = open(Global.root_directory+'/'+pickle_file,'wb')
-        pickle.dump((tensor,params, coords,pnvs[0].ids),f, protocol=2)
+        pickle.dump((tensor,params, coords,pnvs[0].ids),f)
         f.close()
     
     return (tensor,params, coords,pnvs[0].ids)

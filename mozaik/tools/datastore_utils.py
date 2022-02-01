@@ -170,7 +170,7 @@ def merge_datastores(
                 )
                 s.spiketrains = seg.spiketrains
                 s.analogsignals = seg.analogsignals
-                pickle.dump(s, f, protocol=2)
+                pickle.dump(s, f)
 
                 # Release each segment once it has been added to the merged datastore to save memory
                 seg.release()
