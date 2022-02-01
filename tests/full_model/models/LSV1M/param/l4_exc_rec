@@ -6,7 +6,7 @@
                             'size': 200.0,  # the size of the grid (it is assumed to be square) - it has to be multiple of spacing (micro meters)
                             'offset_x' : 0.0, # the x axis offset from the center of the sheet (micro meters)
                             'offset_y' : 0.0, # the y axis offset from the center of the sheet (micro meters)
-	                    'num_of_cells' : 100,
+	                    'num_of_cells' : 10,
     		            'annotation' : 'LGNAfferentOrientation',
             		    'distance' : 0.2,
 	                    'value': 0.0,
@@ -18,7 +18,7 @@
       'variables' : ("spikes"),
       'params' :  {
                             'size': 600.0,  # the size of the grid (it is assumed to be square) - it has to be multiple of spacing (micro meters)
-                            'spacing' : 20.0, #the space between two electrodes (micro meters)
+                            'spacing' : 150.0, #the space between two electrodes (micro meters)
                             'offset_x' : 0.0, # the x axis offset from the center of the sheet (micro meters)
                             'offset_y' : 0.0, # the y axis offset from the center of the sheet (micro meters)
 
@@ -30,7 +30,7 @@
       'variables' : ("spikes"),
       'params' :  {
                             'size': 2000.0,  # the size of the grid (it is assumed to be square) - it has to be multiple of spacing (micro meters)
-                            'spacing' : 100.0, #the space between two electrodes (micro meters)
+                            'spacing' : 500.0, #the space between two electrodes (micro meters)
                             'offset_x' : 0.0, # the x axis offset from the center of the sheet (micro meters)
                             'offset_y' : 0.0, # the y axis offset from the center of the sheet (micro meters)
 

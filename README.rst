@@ -11,7 +11,7 @@ Ubuntu installation instructions
 --------------------------------
 
 Following these instruction should give you a working copy of mozaik on a 
-fresh installation of Ubuntu (at the time of the writing the version was 16.04)
+fresh installation of current Ubuntu system.
 
 First the list of ubuntu package dependencies::
 
@@ -21,7 +21,7 @@ First the list of ubuntu package dependencies::
 Virtual env
 ____________
 
-Then python virtualenv and virtualenvwrapper (an handy way to manage python virtual environments)::
+Then python virtualenv and virtualenvwrapper (a handy way to manage python virtual environments)::
 
 $ sudo pip3 install virtualenv
 $ sudo pip3 install virtualenvwrapper
@@ -34,7 +34,7 @@ To setup `virtualenvwrapper <http://virtualenvwrapper.readthedocs.org/en/latest/
     export PIP_VIRTUALENV_BASE=$WORKON_HOME
     export PIP_RESPECT_VIRTUALENV=true
 
-For the first time, run .bashrc (the next times it will be loaded by your terminal)::      
+For the first time, run .bashrc (in the future it will be loaded by your terminal)::      
 
 $ source .bashrc
 
@@ -49,20 +49,20 @@ Dependencies
 ____________
 
  
-Now you can install in this protected environment all other dependencies::
+Now you can install all other dependencies in this protected environment::
 
-  pip3 install numpy scipy mpi4py matplotlib==2.1.1 quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.9.0 cython pynn psutil future requests
+  pip3 install numpy scipy mpi4py matplotlib quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.9.0 cython pynn psutil future requests elephant
 
 Next we will manually install several packages. It is probably the best if you create a separate directory in an appropriate
 place, where you will download and install the packages from.
 
-First we will install *imagen* package::
+First install the *imagen* package::
 
   git clone https://github.com/CSNG-MFF/imagen.git
   cd imagen
   python setup.py install
 
-Now we can install the *Nest* simulator (always in the virtual environment):
+Next install the *Nest* simulator (always in the virtual environment):
 
     - download the latest version from their `website <http://www.nest-initiative.org/index.php/Software:Download>`_
         
@@ -109,13 +109,13 @@ Go to the examples directory in the mozaik cloned from github (see above) and la
   cd VogelsAbbott2005
   python run.py nest 2 param/defaults 'test'
   
-This will launch the example with the nest simulator, on 2 nodes with each node using 2 threads, using the parameter param/defaults. Last, 'test' is the name of this run.
+This will launch the example with the nest simulator running 2 MPI processes, each process running 2 threads, using the parameterization of the model rotted in param/defaults. Finally, 'test' is the name of this run.
 
 
 Testing, Autoformat, Continuous Integration
 -------------------------------------------
 
-In case you want to contribute to the project, you need to make sure your code passes all unit tests and is formatted with the Black autoformatter. You can make sure this is the case by running from the project directory::
+In case you want to contribute to the project, you need to make sure your code passes all unit tests and is formatted with the Black autoformatter. You can make sure this is the case by running following from the project directory::
 
   pytest && black --check .
 

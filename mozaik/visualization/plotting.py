@@ -96,6 +96,7 @@ class Plotting(ParametrizedObject):
         self.datastore = datastore
         self.plot_file_name = plot_file_name
         self.animation_update_functions = []
+        self.animation_num_frames = None
         self.frame_duration = frame_duration
         self.fig_param = fig_param if fig_param != None else OrderedDict()
         self.caption = "Caption not specified."
@@ -166,7 +167,7 @@ class Plotting(ParametrizedObject):
           import matplotlib.animation as animation
           self.animation = animation.FuncAnimation(self.fig,
                                       Plotting.update_animation_function,
-                                      frames = 150,
+                                      frames = self.animation_num_frames,
                                       repeat=False,
                                       fargs=(self,),
                                       interval=self.frame_duration,
@@ -1107,14 +1108,16 @@ class ActivityMovie(Plotting):
         if self.parameters.exp_time_constant != 0:
           etc = self.parameters.exp_time_constant*pq.ms
           etc = etc.rescale(units).magnitude
-          exp_kernel = numpy.flip(numpy.exp(-(bins[:numpy.int(numpy.floor(3*etc/bw))]-start)/etc),axis=0);
+          exp_kernel = numpy.exp(-(bins[:numpy.int(numpy.floor(3*etc/bw))]-start)/etc)
 
         for spike_trains in sp:
             hh = []
             for st in spike_trains:
                 tmp = numpy.histogram(st.magnitude, bins, (start, stop))[0]/(bw.rescale(pq.s).magnitude)
                 if self.parameters.exp_time_constant != 0:
-                  tmp = numpy.convolve(tmp,exp_kernel,mode='valid')
+                  # For the rare case where len(exp_kernel) > len(tmp)
+                  # Otherwise 'same' would be sufficient
+                  tmp = numpy.convolve(tmp,exp_kernel,mode='full')[:len(tmp)]
                 hh.append(tmp)
 
                 #lets make activity of each neuron relative to it's maximum activity
@@ -1152,10 +1155,11 @@ class ActivityMovie(Plotting):
                                       h[:, i],
                                       (xi[None, :], yi[:, None]),
                                       method='nearest'))
-            w = numpy.isnan(numpy.array(movie))
-            numpy.array(movie)[w]=0
+
+            movie = numpy.array(movie)
+            movie[numpy.isnan(movie)]=0
             
-            return [("PixelMovie",PixelMovie(40000.0*numpy.array(movie)),gs,{'x_axis':False, 'y_axis':False})]
+            return [("PixelMovie",PixelMovie(movie, movie.max()/2),gs,{'x_axis':False, 'y_axis':False})]
         else:
             return [("ScatterPlot",ScatterPlotMovie(posx, posy, h.T),gs,{'x_axis':False, 'y_axis':False,'dot_size':40})]
 
