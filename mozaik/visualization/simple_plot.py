@@ -183,6 +183,9 @@ class StandardStyle(SimplePlot):
         title : str
               What is the title (None means no label will be plotted)
 
+        title_loc : str
+              Location of the title (left, center, right)
+
         x_scale : str
               What is the scaling of the x-axis ('linear' | 'log' | 'symlog'), default is 'linear'
 
@@ -257,6 +260,7 @@ class StandardStyle(SimplePlot):
             "left_border": True,
             "bottom_border": True,
             "title": None,
+            "title_loc": None,
             "x_scale": 'linear',
             "x_scale_base": None,
             "x_scale_linscale": None,
@@ -310,7 +314,9 @@ class StandardStyle(SimplePlot):
         y_scale_params = {}
 
         if self.title != None:
-            pylab.title(self.title, fontsize=self.fontsize)
+            if self.title_loc == None:
+                self.title_loc = "center"
+            pylab.title(self.title, loc=self.title_loc, fontsize=self.fontsize)
         
         if self.x_scale:
             if self.x_scale_base:

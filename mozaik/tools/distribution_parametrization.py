@@ -15,7 +15,7 @@ import urllib, copy, warnings, numpy, numpy.random  # to be replaced with srblib
 from collections import OrderedDict
 import mozaik
 
-def load_parameters(parameter_url,modified_parameters):
+def load_parameters(parameter_url,modified_parameters=ParameterSet({})):
     """
     A simple function for loading parameters that replaces the values in *modified_parameters* in the loaded parameters
     and subsequently expands references.
