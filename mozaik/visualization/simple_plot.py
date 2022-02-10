@@ -1401,3 +1401,65 @@ class OrderedAnalogSignalListPlot(StandardStyle):
         if self.colorbar:
             cb = pylab.colorbar(ax,  use_gridspec=True)
             cb.set_label(self.colorbar_label)
+
+class DensityPlot(StandardStyle):
+    """
+    This function plots the density of list of value lists, coloring each independently.
+
+    Parameters
+    ----------
+    values : list
+               List of numpy arrays objects.
+               The top level list corresponds to different sets of values that will be
+               plotted together.
+
+               Each set will be colored by the color on corresponding postion of
+               the colors parameter. If None all colors will be set to '#848484' (gray).
+
+    Other parameters
+    ----------------
+    num_bins : int
+                 The with of the bins into which to calculate the density
+
+    colors : list
+           The colors to assign to the different sets of values
+
+    legend : bool
+           If true the legend will be shown
+    """
+
+    def __init__(self, values,labels=None,**param):
+        StandardStyle.__init__(self,**param)
+        self.values = values
+        self.parameters["num_bins"] = 15.0
+        self.parameters["log"] = False
+        self.parameters["log_xscale"] = False
+        self.parameters["labels"] = labels
+        self.parameters["colors"] = None
+        self.parameters["legend"] = False
+
+        if labels != None:
+            assert len(values) == len(labels)
+
+
+    def plot(self):
+
+        if self.colors != None:
+           colors = [self.colors[k] for k in self.labels]
+        else:
+           colors = None
+        if self.x_scale == 'log':
+            bins = np.geomspace(self.x_lim[0], self.x_lim[1], int(self.num_bins))
+        else:
+            bins = int(self.num_bins)
+
+        if self.parameters["log"]:
+            values, bins = numpy.histogram(numpy.log10(self.values),bins=bins,range=self.x_lim,density=True)
+        else:
+            values, bins = numpy.histogram(self.values,bins=bins,range=self.x_lim,density=True)
+
+        if self.legend:
+            self.axis.legend()
+
+        self.y_label = 'Normalized Density'
+
