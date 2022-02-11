@@ -66,16 +66,16 @@ Next install the *Nest* simulator (always in the virtual environment):
 
     - download the latest version from their `website <http://www.nest-initiative.org/index.php/Software:Download>`_
         
-        wget https://github.com/nest/nest-simulator/archive/v2.20.1.tar.gz
+        wget https://github.com/nest/nest-simulator/archive/refs/tags/v3.1.tar.gz
         
     - untar and cd into it::
 
-        tar xvfz v2.20.1.tar.gz
-        cd nest-simulator-2.20.1
+        tar xvfz v3.1.tar.gz
+        cd nest-simulator-3.1
     
     - then configure (change path to wherever you installed your virtual environemnt)::
     
-        (mozaik)$ cmake -Dwith-mpi=OFF -Dwith-boost=ON -DCMAKE_INSTALL_PREFIX:PATH=$HOME/virt_env/mozaik -Dwith-optimize='-O3' ./
+        (mozaik)$ cmake -Dwith-mpi=ON -Dwith-boost=ON -DCMAKE_INSTALL_PREFIX:PATH=$HOME/virt_env/mozaik -Dwith-optimize='-O3' ./
        
     - finally, by launching make and install, it installs PyNest in the activated virtual environment mozaik::
     
