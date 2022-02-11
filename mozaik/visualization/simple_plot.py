@@ -1437,7 +1437,7 @@ class DensityPlot(StandardStyle):
         self.parameters["labels"] = labels
         self.parameters["colors"] = None
         self.parameters["legend"] = False
-
+        print(labels)
         if labels != None:
             assert len(values) == len(labels)
 
@@ -1447,19 +1447,28 @@ class DensityPlot(StandardStyle):
         if self.colors != None:
            colors = [self.colors[k] for k in self.labels]
         else:
-           colors = None
+           colors = [None for _ in self.values] 
         if self.x_scale == 'log':
             bins = np.geomspace(self.x_lim[0], self.x_lim[1], int(self.num_bins))
         else:
             bins = int(self.num_bins)
 
-        if self.parameters["log"]:
-            values, bins = numpy.histogram(numpy.log10(self.values),bins=bins,range=self.x_lim,density=True)
-        else:
-            values, bins = numpy.histogram(self.values,bins=bins,range=self.x_lim,density=True)
+        vals = []
+        binss = []
+        for val in self.values:
+            if self.parameters["log"]:
+                v, b = numpy.histogram(numpy.log10(val),bins=bins,range=self.x_lim,density=True)
+            else:
+                v, b = numpy.histogram(val, bins=bins,range=self.x_lim,density=True)
+            vals.append(v)
+            binss.append(b)
+
+        x = [(binss[0][i]+binss[0][i+1])/2 for i in range(self.num_bins)]
+        
+        for i in range(len(vals)):
+            self.axis.plot(x, vals[i], color=colors[i])
 
         if self.legend:
             self.axis.legend()
 
-        self.y_label = 'Normalized Density'
-
+        y_label = 'Normalized Density'
