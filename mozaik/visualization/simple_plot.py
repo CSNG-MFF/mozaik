@@ -1471,4 +1471,4 @@ class DensityPlot(StandardStyle):
         if self.legend:
             self.axis.legend()
 
-        y_label = 'Normalized Density'
+        self.y_label = 'Normalized Density'
