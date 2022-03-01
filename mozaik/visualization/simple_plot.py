@@ -320,20 +320,20 @@ class StandardStyle(SimplePlot):
         
         if self.x_scale:
             if self.x_scale_base:
-                x_scale_params['basex'] = self.x_scale_base
+                x_scale_params['base'] = self.x_scale_base
             if self.x_scale_base:
-                x_scale_params['linthreshx'] = self.x_scale_linthresh
+                x_scale_params['linthresh'] = self.x_scale_linthresh
             if self.x_scale_base:
-                x_scale_params['linscalex'] = self.x_scale_linscale
+                x_scale_params['linscale'] = self.x_scale_linscale
             pylab.xscale(self.x_scale, **x_scale_params)
 
         if self.y_scale:
             if self.y_scale_base:
-                y_scale_params['basey'] = self.y_scale_base
+                y_scale_params['base'] = self.y_scale_base
             if self.y_scale_base:
-                y_scale_params['linthreshy'] = self.y_scale_linthresh
+                y_scale_params['linthresh'] = self.y_scale_linthresh
             if self.x_scale_base:
-                y_scale_params['linscaley'] = self.y_scale_linscale
+                y_scale_params['linscale'] = self.y_scale_linscale
             pylab.yscale(self.y_scale, **y_scale_params)
 
         if not self.x_axis:
@@ -989,7 +989,7 @@ class StandardStyleLinePlot(StandardStyle):
 
             if self.error:
                 if self.errorbars:
-                    self.axis.errorbar(self.x[i], self.y[i], yerr=self.error[i], fmt=None, color=p['color'], capsize = 5)
+                    self.axis.errorbar(self.x[i], self.y[i], yerr=self.error[i], fmt='none', color=p['color'], capsize = 5)
 
                 else:
                     ymin = self.y[i] - self.error[i]
