@@ -332,7 +332,7 @@ class StandardStyle(SimplePlot):
                 y_scale_params['base'] = self.y_scale_base
             if self.y_scale_base:
                 y_scale_params['linthresh'] = self.y_scale_linthresh
-            if self.x_scale_base:
+            if self.y_scale_base:
                 y_scale_params['linscale'] = self.y_scale_linscale
             pylab.yscale(self.y_scale, **y_scale_params)
 
