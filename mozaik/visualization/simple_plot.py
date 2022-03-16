@@ -1404,7 +1404,7 @@ class OrderedAnalogSignalListPlot(StandardStyle):
 
 class DensityPlot(StandardStyle):
     """
-    This function plots the density of list of value lists, coloring each independently.
+    This function plots the density of a list of value lists, coloring each independently.
 
     Parameters
     ----------
@@ -1472,3 +1472,74 @@ class DensityPlot(StandardStyle):
             self.axis.legend()
 
         self.y_label = 'Normalized Density'
+
+class CumulativeDistributionPlot(StandardStyle):
+    """
+    This function plots the cumulative distribution of a list of value lists, coloring each independently.
+
+    Parameters
+    ----------
+    values : list
+               List of numpy arrays objects.
+               The top level list corresponds to different sets of values that will be
+               plotted together.
+
+               Each set will be colored by the color on corresponding postion of
+               the colors parameter. If None all colors will be set to '#848484' (gray).
+
+    Other parameters
+    ----------------
+    num_bins : int
+                 The with of the bins into which to calculate the density
+
+    colors : list
+           The colors to assign to the different sets of values
+
+    legend : bool
+           If true the legend will be shown
+    """
+
+    def __init__(self, values,labels=None,**param):
+        StandardStyle.__init__(self,**param)
+        self.values = values
+        self.parameters["num_bins"] = 15.0
+        self.parameters["log"] = False
+        self.parameters["log_xscale"] = False
+        self.parameters["labels"] = labels
+        self.parameters["colors"] = None
+        self.parameters["legend"] = False
+        print(labels)
+        if labels != None:
+            assert len(values) == len(labels)
+
+
+    def plot(self):
+
+        if self.colors != None:
+           colors = [self.colors[k] for k in self.labels]
+        else:
+           colors = [None for _ in self.values] 
+        if self.x_scale == 'log':
+            bins = np.geomspace(self.x_lim[0], self.x_lim[1], int(self.num_bins))
+        else:
+            bins = int(self.num_bins)
+
+        vals = []
+        binss = []
+        for val in self.values:
+            if self.parameters["log"]:
+                v, b = numpy.histogram(numpy.log10(val),bins=bins,range=self.x_lim,density=True)
+            else:
+                v, b = numpy.histogram(val, bins=bins,range=self.x_lim,density=True)
+            vals.append(numpy.cumsum(v))
+            binss.append(b)
+
+        x = [(binss[0][i]+binss[0][i+1])/2 for i in range(self.num_bins)]
+        
+        for i in range(len(vals)):
+            self.axis.plot(x, vals[i], color=colors[i])
+
+        if self.legend:
+            self.axis.legend()
+
+        self.y_label = 'CDF'

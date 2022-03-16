@@ -1140,7 +1140,6 @@ class ActivityMovie(Plotting):
         posx = pos[0,self.datastore.get_sheet_indexes(self.parameters.sheet_name,dsv.get_segments()[0].get_stored_spike_train_ids())]
         posy = pos[1,self.datastore.get_sheet_indexes(self.parameters.sheet_name,dsv.get_segments()[0].get_stored_spike_train_ids())]
 
-                
         if not self.parameters.scatter:
             xi = numpy.linspace(numpy.min(posx)*1.1,
                                 numpy.max(posy)*1.1,
@@ -1158,11 +1157,61 @@ class ActivityMovie(Plotting):
 
             movie = numpy.array(movie)
             movie[numpy.isnan(movie)]=0
-            
+
             return [("PixelMovie",PixelMovie(movie, movie.max()/2),gs,{'x_axis':False, 'y_axis':False})]
         else:
             return [("ScatterPlot",ScatterPlotMovie(posx, posy, h.T),gs,{'x_axis':False, 'y_axis':False,'dot_size':40})]
 
+class PerAreaASLMovie(Plotting):
+    """
+    This plots one plot per each recording, each a unique PerAreaAnalogSignalList during that recording 
+    based on the corresponding ADS in the datastore
+
+    There has to be a unique PerAreaAnalogSignalList in the DSV for each recording
+    
+    Other parameters
+    ----------------
+    
+    resolution : int 
+               The number of pixels into which the activity will be interpolated in case scatter = False.
+               
+    sheet_name: str
+              The sheet for which to display the movie.
+
+    """     
+    
+    required_parameters = ParameterSet({
+          'resolution': int,  # the number of pixels into which the activity will be interpolated in case scatter = False
+          'sheet_name': str,  # the sheet for which to display the actvity movie
+    })
+
+    def __init__(self, datastore, parameters, plot_file_name=None,fig_param=None,frame_duration=0,spont_level_pnv=None):
+        Plotting.__init__(self, datastore, parameters, plot_file_name, fig_param,frame_duration)
+        self.spont_level_pnv = spont_level_pnv
+
+
+    def subplot(self, subplotspec):
+        dsv = queries.param_filter_query(self.datastore,sheet_name=self.parameters.sheet_name,identifier='PerAreaAnalogSignalList')
+        return PerStimulusPlot(dsv, function=self._ploter, title_style="Clever").make_line_plot(subplotspec)
+
+    def _ploter(self, dsv, gs):
+        paasl = dsv.get_analysis_result()[0].asl
+        asl = paasl.asl
+        start = asl[0][0].t_start.magnitude
+        stop = asl[0][0].t_stop.magnitude
+        units = asl[0][0].t_start.units
+        sampling_rate = asl[0][0].sampling_rate.magnitude
+
+        bins = numpy.arange(start, stop, sampling_rate)
+
+        xi = numpy.linspace(numpy.min(posx)*1.1,
+                            numpy.max(posy)*1.1,
+                            self.parameters.resolution)
+        yi = numpy.linspace(numpy.min(posx)*1.1,
+                            numpy.max(posy)*1.1,
+                            self.parameters.resolution)
+
+        return [("PixelMovie",PixelMovie(movie, movie.max()/2),gs,{'x_axis':False, 'y_axis':False})]
 
 
 class PerNeuronValuePlot(Plotting):

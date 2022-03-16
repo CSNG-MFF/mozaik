@@ -463,7 +463,7 @@ class PerAreaAnalogSignalList(AnalysisDataStructure1D):
             self,  
             asl[0][0].sampling_period.units, 
             y_axis_units,
-            identifier='AnalogSignalList',
+            identifier='PerAreaAnalogSignalList',
             **params
         )
         self.asl = asl
