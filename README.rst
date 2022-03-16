@@ -51,7 +51,7 @@ ____________
  
 Now you can install all other dependencies in this protected environment::
 
-  pip3 install numpy scipy mpi4py matplotlib quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.9.0 cython pynn psutil future requests elephant
+  pip3 install numpy scipy mpi4py matplotlib quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.9.0 cython pynn psutil future requests elephant pytest-xdist pytest-timeout junitparser
 
 Next we will manually install several packages. It is probably the best if you create a separate directory in an appropriate
 place, where you will download and install the packages from.
@@ -66,16 +66,16 @@ Next install the *Nest* simulator (always in the virtual environment):
 
     - download the latest version from their `website <http://www.nest-initiative.org/index.php/Software:Download>`_
         
-        wget https://github.com/nest/nest-simulator/archive/v2.20.1.tar.gz
+        wget https://github.com/nest/nest-simulator/archive/refs/tags/v3.1.tar.gz
         
     - untar and cd into it::
 
-        tar xvfz v2.20.1.tar.gz
-        cd nest-simulator-2.20.1
+        tar xvfz v3.1.tar.gz
+        cd nest-simulator-3.1
     
     - then configure (change path to wherever you installed your virtual environemnt)::
     
-        (mozaik)$ cmake -Dwith-mpi=OFF -Dwith-boost=ON -DCMAKE_INSTALL_PREFIX:PATH=$HOME/virt_env/mozaik -Dwith-optimize='-O3' ./
+        (mozaik)$ cmake -Dwith-mpi=ON -Dwith-boost=ON -DCMAKE_INSTALL_PREFIX:PATH=$HOME/virt_env/mozaik -Dwith-optimize='-O3' ./
        
     - finally, by launching make and install, it installs PyNest in the activated virtual environment mozaik::
     
