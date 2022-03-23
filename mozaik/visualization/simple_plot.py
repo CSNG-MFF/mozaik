@@ -1437,7 +1437,6 @@ class DensityPlot(StandardStyle):
         self.parameters["labels"] = labels
         self.parameters["colors"] = None
         self.parameters["legend"] = False
-        print(labels)
         if labels != None:
             assert len(values) == len(labels)
 
@@ -1449,9 +1448,14 @@ class DensityPlot(StandardStyle):
         else:
            colors = [None for _ in self.values] 
         if self.x_scale == 'log':
-            bins = np.geomspace(self.x_lim[0], self.x_lim[1], int(self.num_bins))
+            bins = np.geomspace(self.x_lim[0], self.x_lim[1], int(self.num_bins) + 1)
         else:
             bins = int(self.num_bins)
+
+        if self.labels != None:
+            labels = self.labels
+        else:
+            labels = [None for _ in self.values]
 
         vals = []
         binss = []
@@ -1466,7 +1470,7 @@ class DensityPlot(StandardStyle):
         x = [(binss[0][i]+binss[0][i+1])/2 for i in range(self.num_bins)]
         
         for i in range(len(vals)):
-            self.axis.plot(x, vals[i], color=colors[i])
+            self.axis.plot(x, vals[i], color=colors[i], label=labels[i])
 
         if self.legend:
             self.axis.legend()
@@ -1520,9 +1524,14 @@ class CumulativeDistributionPlot(StandardStyle):
         else:
            colors = [None for _ in self.values] 
         if self.x_scale == 'log':
-            bins = np.geomspace(self.x_lim[0], self.x_lim[1], int(self.num_bins))
+            bins = np.geomspace(self.x_lim[0], self.x_lim[1], int(self.num_bins) + 1)
         else:
             bins = int(self.num_bins)
+
+        if self.labels != None:
+            labels = self.labels
+        else:
+            labels = [None for _ in self.values]
 
         vals = []
         binss = []
@@ -1531,13 +1540,13 @@ class CumulativeDistributionPlot(StandardStyle):
                 v, b = numpy.histogram(numpy.log10(val),bins=bins,range=self.x_lim,density=True)
             else:
                 v, b = numpy.histogram(val, bins=bins,range=self.x_lim,density=True)
-            vals.append(numpy.cumsum(v))
+            vals.append(numpy.cumsum(v)/numpy.sum(v))
             binss.append(b)
 
         x = [(binss[0][i]+binss[0][i+1])/2 for i in range(self.num_bins)]
         
         for i in range(len(vals)):
-            self.axis.plot(x, vals[i], color=colors[i])
+            self.axis.plot(x, vals[i], color=colors[i], label=labels[i])
 
         if self.legend:
             self.axis.legend()

@@ -21,20 +21,16 @@ from scipy.signal import butter, lfilter, hilbert
 
 logger = mozaik.getMozaikLogger()
 
-class InstantaneousFrequencies(Analysis):
+class GeneralizedPhase(Analysis):
     """
-    Calculate the instantaneous Frequencies of all the analog signals contained in all the 
-    AnalogSignalList, PerNeuronPairAnalogSignalList and PerAreaAnalogSignalList of the dsv
+    Apply the generalized phased analysis on all the PerAreaAnalogSignalList of the dsv
+    Compute the instantaneous frequencies, phase gradient properties, wavelengths and wavespeeds
     """
 
     def perform_analysis(self):
         units = qt.Hz
         for sheet in self.datastore.sheets():
-           # Complete analysis for ASL
-           # dsv1 = queries.param_filter_query(dsv, sheet_name=sheet, identifier=['AnalogSignalList','PerNeuronPairAnalogSignalList'])
-           # for asl in dsv1.get_analysis_result():
 
-           # PerAreaAnalogSignalList part
            dsv1 = queries.param_filter_query(self.datastore, sheet_name=sheet, identifier=['PerAreaAnalogSignalList'])
            for paasl in dsv1.get_analysis_result():
                asl = paasl.asl
@@ -49,7 +45,6 @@ class InstantaneousFrequencies(Analysis):
                dur = asl[0][0].shape[0]
 
                new_t_start = t_start 
-               #new_t_start = t_start + sampling_period
 
                # calculate the instantaneous frequencies for each analog signal
                painstFreqs=[]
@@ -59,6 +54,7 @@ class InstantaneousFrequencies(Analysis):
                shuffledSig = numpy.random.permutation(numpy.array(asl)[:,:,:,0].reshape((nx*ny,dur))).reshape(nx, ny, dur)
                instFreqsShuffled = numpy.zeros((nx,ny,dur-1))
 
+               # Compute the analytic signal using Hilbert transform
                analyticSig = hilbert(numpy.array(asl)[:,:,:,0])
                shuffledAnalyticSig = hilbert(shuffledSig)
 
@@ -67,18 +63,13 @@ class InstantaneousFrequencies(Analysis):
                    shuff_row = []
                    for y in range(ny):
 
-                       # Compute the analytic signal using Hilbert transform
-                       #analyticSig = hilbert(asl[x][y].magnitude[:,0])
-                       #shuffledAnalyticSig = hilbert(shuffledSig[x,y])
-
                        # This formula for calculating instantaneous frequencies of discrete signals avoids to have to unwrap the phases
-                       #instFreqs = numpy.angle(numpy.conjugate(analyticSig[1:])*analyticSig[:-1]) 
                        instFreqs = numpy.angle(numpy.conjugate(analyticSig[x,y,:-1])*analyticSig[x,y,1:])/(2*numpy.pi * sampling_period) 
                        instFreqsShuffled[x,y,:] = numpy.angle(numpy.conjugate(shuffledAnalyticSig[x,y,:-1])*shuffledAnalyticSig[x,y,1:])/(2*numpy.pi * sampling_period) 
-                       #instFreqs = numpy.angle(numpy.conjugate(analyticSig[1:])*analyticSig[:-1]) % numpy.pi /(2*numpy.pi * sampling_period) 
                        row.append(NeoAnalogSignal(instFreqs,t_start=new_t_start, sampling_period=sampling_period, units=units))
                        positive += numpy.sum(instFreqs > 0)
                        negative += numpy.sum(instFreqs < 0)
+
                    painstFreqs.append(row)
                tot = (nx) * (ny) * (dur - 1)
                threshold = 0.9
@@ -103,6 +94,7 @@ class InstantaneousFrequencies(Analysis):
                dx_shuff = numpy.zeros((nx, ny, dur))
                dy_shuff = numpy.zeros((nx, ny, dur))
 
+               # Compute the spatial gradients at each position for each time point
                for t in range(dur):
                    tmp_dx = numpy.zeros((nx, ny))
                    tmp_dx[0,:] = numpy.angle(numpy.conjugate(analyticSig[0,:,t])*analyticSig[1,:,t])/x_ps
@@ -138,21 +130,21 @@ class InstantaneousFrequencies(Analysis):
                pm = []
                pd  = []
                wl  = []
+               swl = []
                ws  = []
                sigwl = []
 
                wl_shuff = 1/(numpy.sqrt(dx_shuff **2 + dy_shuff ** 2)/(2 * numpy.pi)) 
                thresh = numpy.sort(wl_shuff.reshape((nx * ny * dur)))[int(nx * ny * dur*99/100)+1]
-               #print(list(numpy.sort(wl_shuff.reshape((nx * ny * dur)))[int(nx * ny * dur*99/100)+1:]))
-               #print(thresh, flush = True)
-               #print(numpy.sort((1/(numpy.sqrt(dx **2 + dy ** 2)/(2 * numpy.pi))).reshape((nx * ny * dur)))[int(nx * ny * dur*99/100)+1])
 
+                # Store the gradients in the correct format for PerAreaAnalogSignalList
                for x in range(nx):
                    rdx = []
                    rdy = []
                    rpm = []
                    rpd = []
                    rwl = []
+                   rswl = []
                    rws = []
                    rsigwl = []
                    for y in range(ny):
@@ -162,9 +154,14 @@ class InstantaneousFrequencies(Analysis):
                        wl_tmp = 1/pm_tmp
                        rdx.append(NeoAnalogSignal(dx_tmp,t_start=new_t_start, sampling_period=sampling_period, units=qt.um * units))
                        rdy.append(NeoAnalogSignal(dy_tmp,t_start=new_t_start, sampling_period=sampling_period, units=qt.um * units))
+                       # Compute the gradient magnitudes
                        rpm.append(NeoAnalogSignal(pm_tmp,t_start=new_t_start, sampling_period=sampling_period, units=qt.um * units))
+                       # Compute the gradient directions 
                        rpd.append(NeoAnalogSignal(numpy.arctan2(dx_tmp, dy_tmp),t_start=new_t_start, sampling_period=sampling_period, units=qt.rad))
+                       # Compute the wavelengths
                        rwl.append(NeoAnalogSignal(wl_tmp,t_start=new_t_start, sampling_period=sampling_period, units=qt.um * units))
+                       rswl.append(NeoAnalogSignal(1/(numpy.sqrt(dx_shuff[x,y,:] **2 + dy_shuff[x,y,:] ** 2)/(2 * numpy.pi)),t_start=new_t_start, sampling_period=sampling_period, units=qt.um * units))
+                       # Compute the wave speeds
                        rws.append(NeoAnalogSignal(painstFreqs[x][y].magnitude[:,0]/pm_tmp[:-1],t_start=new_t_start, sampling_period=sampling_period, units=qt.um * units))
                        rsigwl.append(NeoAnalogSignal([1 if w > thresh else 0 for w in wl_tmp],t_start=new_t_start, sampling_period=sampling_period, units=qt.dimensionless))
                    adx.append(rdx)
@@ -172,6 +169,7 @@ class InstantaneousFrequencies(Analysis):
                    pm.append(rpm)
                    pd.append(rpd)
                    wl.append(rwl)
+                   swl.append(rswl)
                    ws.append(rws)
                    sigwl.append(rsigwl)
 
@@ -226,6 +224,14 @@ class InstantaneousFrequencies(Analysis):
                                   tags=self.tags,
                                   analysis_algorithm=self.__class__.__name__))
                self.datastore.full_datastore.add_analysis_result(
+                   PerAreaAnalogSignalList(swl,paasl.x_coords,paasl.y_coords,units,
+                                  stimulus_id=paasl.stimulus_id,
+                                  x_axis_name=paasl.x_axis_name,
+                                  y_axis_name=f'Shuffled wavelength of ({paasl.y_axis_name})',
+                                  sheet_name=sheet,
+                                  tags=self.tags,
+                                  analysis_algorithm=self.__class__.__name__))
+               self.datastore.full_datastore.add_analysis_result(
                    PerAreaAnalogSignalList(ws,paasl.x_coords,paasl.y_coords,units,
                                   stimulus_id=paasl.stimulus_id,
                                   x_axis_name=paasl.x_axis_name,
@@ -264,7 +270,7 @@ class ButterworthFiltering(Analysis):
              The high cut-off frequency, should be set for high-pass and band-pass filters
     """
     required_parameters = ParameterSet({
-      'order' : int,  # the bin length of the PSTH
+      'order' : int, 
       'type': str,
       'low_frequency': float,
       'high_frequency': float,
@@ -339,8 +345,9 @@ class LFPFromSynapticCurrents(Analysis):
     points_distance : float (micrometers)
              The distance separating each spatial points around which the LFPs will be calculated
 
-    side_length : float (micrometers)
-             The length of the side of the squares in which the LFPs will be calculated
+    cropped_length : float (micrometers)
+             The length of the side of the area that will be cropped for this analysis
+             Allows to avoid generating LFPs for spatial positions located too close to the border of the model
 
     gaussian_convolution: bool
              Whether to convolve the lfp with a gaussian kernel
@@ -350,9 +357,9 @@ class LFPFromSynapticCurrents(Analysis):
              gaussian_convolution is set to True
     """
     required_parameters = ParameterSet({
-      'downsampling' : float,  # the bin length of the PSTH
-      'points_distance' : float,  # the bin length of the PSTH
-      'side_length' : float,  # the bin length of the PSTH
+      'downsampling' : float, 
+      'points_distance' : float,
+      'cropped_length': float,
       'gaussian_convolution': bool,
       'gaussian_sigma': float,
     })
@@ -375,6 +382,13 @@ class LFPFromSynapticCurrents(Analysis):
             # Get the size of the sheet
             sx = eval(dsv1.full_datastore.block.annotations['sheet_parameters'])[sheet]['sx']
             sy = eval(dsv1.full_datastore.block.annotations['sheet_parameters'])[sheet]['sy']
+
+            # Get the size of the border
+            dx = sx - self.parameters.cropped_length
+            dy = sy - self.parameters.cropped_length
+
+            dix = int(dx/2/self.parameters.points_distance)
+            diy = int(dy/2/self.parameters.points_distance)
             
             interpoint_resolution = 1
             
@@ -448,6 +462,10 @@ class LFPFromSynapticCurrents(Analysis):
                 std = numpy.std(m)
                 m = m/std
 
+                m = m[dix:-dix,diy:-diy]
+                x_axis = x_axis[dix:-dix]
+                y_axis = y_axis[diy:-diy]
+
                 # Convert the tensor to a PerAreaAnalogSignalList and add it to the datastore
                 lfps = []
                 for x in range(m.shape[0]):
@@ -465,64 +483,3 @@ class LFPFromSynapticCurrents(Analysis):
                                    tags=self.tags,
                                    analysis_algorithm=self.__class__.__name__))
 
-
-class LFPFromSpikes(Analysis):
-    """
-    This analysis takes each recording in DSV that has been done in response to stimulus type 'stimulus_type'
-    and calculates the LFP signal using spikes as a proxy. For each set of equal recordings (except trial) it creates one PerAreaAnalogSignalList
-    `AnalysisDataStructure` instance containing the LFP signal calculated on each sub-area of the cortical space,
-    defined through the x_coords and y_coords parameters.
-
-
-    Other parameters
-    ----------------
-    bin_length : float (ms)
-               the size of bin to construct the lfp signal from
-
-    x_coords : list of float (micrometers)
-             The x coordinates of the spatial points around which the LFPs will be calculated
-
-    y_coords : list of float (micrometers)
-             The y coordinates of the spatial points around which the LFPs will be calculated
-
-    points_distance : float (micrometers)
-             The distance separating each spatial points around which the LFPs will be calculated
-
-    side_length : float (micrometers)
-             The length of the side of the squares in which the LFPs will be calculated
-
-    """
-    required_parameters = ParameterSet({
-      'bin_length' : float,  # the bin length of the PSTH
-      'points_distance' : float,  # the bin length of the PSTH
-      'side_length' : float,  # the bin length of the PSTH
-    })
-
-    # Need temoral bin, coordinates, and squares
-    def perform_analysis(self):
-        for sheet in self.datastore.sheets():
-            dsv1 = queries.param_filter_query(self.datastore, sheet_name=sheet)
-            segs = dsv1.get_segments()
-            st = [MozaikParametrized.idd(s) for s in dsv1.get_stimuli()]
-            mean_rates = [numpy.array(s.mean_rates()) for s in segs]
-
-            logger.debug('Adding PerNeuronValue containing trial averaged firing rates to datastore')
-            for mr, vr, st in zip(_mean_rates,_var_rates, s):
-
-                self.datastore.full_datastore.add_analysis_result(
-                    PerNeuronValue(mr,segs[0].get_stored_spike_train_ids(),units,
-                                   stimulus_id=str(st),
-                                   value_name='Firing rate',
-                                   sheet_name=sheet,
-                                   tags=self.tags,
-                                   analysis_algorithm=self.__class__.__name__,
-                                   period=None))
-
-                self.datastore.full_datastore.add_analysis_result(
-                    PerNeuronValue(vr,segs[0].get_stored_spike_train_ids(),units,
-                                   stimulus_id=str(st),
-                                   value_name='Tria-to-trial Var of Firing rate',
-                                   sheet_name=sheet,
-                                   tags=self.tags,
-                                   analysis_algorithm=self.__class__.__name__,
-                                   period=None))
