@@ -520,9 +520,9 @@ class PerAreaAnalogSignalList(AnalysisDataStructure1D):
         """
         for asl_y in self.asl:
             for asl in asl_y:
-            assert asl.units == self.asl[0].units, "AnalogSignalList.mean: units of AnalogSignal objects in the list do not match."
-            assert asl.sampling_rate == self.asl[0].sampling_rate, "AnalogSignalList.mean: sampling_rate of AnalogSignal objects in the list do not match"
-            assert asl.t_start == self.asl[0].t_start, "AnalogSignalList.mean: t_start of AnalogSignal objects in the list do not match."        
+                assert asl.units == self.asl[0].units, "AnalogSignalList.mean: units of AnalogSignal objects in the list do not match."
+                assert asl.sampling_rate == self.asl[0].sampling_rate, "AnalogSignalList.mean: sampling_rate of AnalogSignal objects in the list do not match"
+                assert asl.t_start == self.asl[0].t_start, "AnalogSignalList.mean: t_start of AnalogSignal objects in the list do not match."        
         
         return numpy.sum(self.asl)/len(self.asl)
         
