@@ -479,7 +479,7 @@ class PerAreaAnalogSignalList(AnalysisDataStructure1D):
         assert self.y_axis_units == other.y_axis_units
         
         new_asl = self.asl + other.asl
-        return PerNeuronPairAnalogSignalList( new_asl, self.x_coords, self.y_coords, analysis_algorithm=self.analysis_algorithm, y_axis_units=self.y_axis_units, x_axis_name=self.x_axis_name, y_axis_name=self.y_axis_name, sheet_name=self.sheet_name, stimulus_id=self.stimulus_id )
+        return PerAreaAnalogSignalList( new_asl, self.x_coords, self.y_coords, analysis_algorithm=self.analysis_algorithm, y_axis_units=self.y_axis_units, x_axis_name=self.x_axis_name, y_axis_name=self.y_axis_name, sheet_name=self.sheet_name, stimulus_id=self.stimulus_id )
 
     def __sub__(self, other):
         assert set(self.x_coords) <= set(other.x_coords) and set(self.x_coords) >= set(other.x_coords) and set(self.y_coords) <= set(other.y_coords) and set(self.y_coords) >= set(other.y_coords)
@@ -492,7 +492,7 @@ class PerAreaAnalogSignalList(AnalysisDataStructure1D):
             new_asl.append(self.get_asl_by_id_pair(idd) - other.get_asl_by_id_pair(idd))
             
         new_asl = self.asl + other.asl
-        return PerNeuronPairAnalogSignalList( new_asl, self.x_coords, self.y_coords, analysis_algorithm=self.analysis_algorithm, y_axis_units=self.y_axis_units, x_axis_name=self.x_axis_name, y_axis_name=self.y_axis_name, sheet_name=self.sheet_name, stimulus_id=self.stimulus_id )
+        return PerAreaAnalogSignalList( new_asl, self.x_coords, self.y_coords, analysis_algorithm=self.analysis_algorithm, y_axis_units=self.y_axis_units, x_axis_name=self.x_axis_name, y_axis_name=self.y_axis_name, sheet_name=self.sheet_name, stimulus_id=self.stimulus_id )
 
     def division_by_num(self, num):
         """
@@ -509,7 +509,7 @@ class PerAreaAnalogSignalList(AnalysisDataStructure1D):
         new_asl = []
         new_asl = self.asl/num
 
-        return PerNeuronPairAnalogSignalList( new_asl, self.ids, analysis_algorithm=self.analysis_algorithm, y_axis_units=self.y_axis_units, x_axis_name=self.x_axis_name, y_axis_name=self.y_axis_name, sheet_name=self.sheet_name, stimulus_id=self.stimulus_id )
+        return PerAreaAnalogSignalList( new_asl, self.x_coords, self.y_coords, analysis_algorithm=self.analysis_algorithm, y_axis_units=self.y_axis_units, x_axis_name=self.x_axis_name, y_axis_name=self.y_axis_name, sheet_name=self.sheet_name, stimulus_id=self.stimulus_id )
 
     def get_space(self):
         return numpy.meshgrid(self.x_coords, self.y_coords)
@@ -518,7 +518,8 @@ class PerAreaAnalogSignalList(AnalysisDataStructure1D):
         """
         Calculates the mean analog signal from the ones in the list.
         """
-        for asl in self.asl:
+        for asl_y in self.asl:
+            for asl in asl_y:
             assert asl.units == self.asl[0].units, "AnalogSignalList.mean: units of AnalogSignal objects in the list do not match."
             assert asl.sampling_rate == self.asl[0].sampling_rate, "AnalogSignalList.mean: sampling_rate of AnalogSignal objects in the list do not match"
             assert asl.t_start == self.asl[0].t_start, "AnalogSignalList.mean: t_start of AnalogSignal objects in the list do not match."        
