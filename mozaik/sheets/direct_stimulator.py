@@ -218,7 +218,7 @@ class Kick(DirectStimulator):
     Notes
     -----
     
-    Currently the mpi_safe version only works in nest!
+    Currently this experiment does not work with MPI
     """
     
     
@@ -240,8 +240,8 @@ class Kick(DirectStimulator):
         self.ids = population_selector(sheet,self.parameters.population_selector.params).generate_idd_list_of_neurons()
         d = dict((j,i) for i,j in enumerate(self.sheet.pop.all_cells))
         self.to_stimulate_indexes = [d[i] for i in self.ids]
-        
-        exc_syn = self.sheet.sim.StaticSynapse(weight=self.parameters.exc_weight,delay=self.sheet.model.parameters.min_delay)
+
+        exc_syn = self.sheet.sim.StaticSynapse(weight=self.parameters.exc_weight,delay=2*self.sheet.model.parameters.min_delay)
         if (self.parameters.exc_firing_rate != 0 or self.parameters.exc_weight != 0):
             self.ssae = self.sheet.sim.Population(self.sheet.pop.size,self.sheet.sim.SpikeSourceArray())
             seeds=mozaik.get_seeds((self.sheet.pop.size,))
@@ -249,18 +249,20 @@ class Kick(DirectStimulator):
             self.sheet.sim.Projection(self.ssae, self.sheet.pop,self.sheet.sim.OneToOneConnector(),synapse_type=exc_syn,receptor_type='excitatory') 
 
     def prepare_stimulation(self,duration,offset):
+
         if (self.parameters.exc_firing_rate != 0 and self.parameters.exc_weight != 0):
            for j,i in enumerate(self.to_stimulate_indexes):
-               if self.parameters.drive_period < duration:
-                   z = numpy.arange(self.parameters.drive_period+0.001,duration-100,10)
-                   times = [0] + z.tolist() 
-                   rate = [self.parameters.exc_firing_rate] + ((1.0-numpy.linspace(0,1.0,len(z)))*self.parameters.exc_firing_rate).tolist()
-               else:
-                   times = [0]  
-                   rate = [self.parameters.exc_firing_rate] 
-               pp = self.stgene[j].inh_poisson_generator(numpy.array(rate),numpy.array(times),t_stop=duration).spike_times
-               a = offset + numpy.array(pp)
-               self.ssae[i].set_parameters(spike_times=Sequence(a.astype(float)))
+                if self.ssae._mask_local[i]:
+                    if self.parameters.drive_period < duration:
+                        z = numpy.arange(self.parameters.drive_period+0.001,duration-100,10)
+                        times = [0] + z.tolist() 
+                        rate = [self.parameters.exc_firing_rate] + ((1.0-numpy.linspace(0,1.0,len(z)))*self.parameters.exc_firing_rate).tolist()
+                    else:
+                        times = [0]  
+                        rate = [self.parameters.exc_firing_rate] 
+                    pp = self.stgene[j].inh_poisson_generator(numpy.array(rate),numpy.array(times),t_stop=duration).spike_times
+                    a = offset + numpy.array(pp)
+                    self.ssae[i].set_parameters(spike_times=Sequence(a.astype(float)))
 
     def inactivate(self,offset):        
         pass
