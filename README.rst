@@ -119,6 +119,9 @@ In case you want to contribute to the project, you need to make sure your code p
 
   pytest && black --check .
 
+Note that the mpi tests are currently not working when invoking pytest in this manner. You can run these specific tests the following way::
+ pytest tests/full_model/test_models_mpi.py
+
 This command will run all tests that it can find recursively under the current directory, as well as check all non-blacklisted files for formatting. Travis-CI will run the same steps for your pull request once you submit it to the project. To install pytest and black::
 
   pip3 install pytest pytest-cov pytest-randomly coverage black

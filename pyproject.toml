@@ -4,6 +4,8 @@ markers = [
     "VogelsAbbott2005: tests that need to run the VogelsAbbott2005 mozaik model to execute.",
     "LSV1M: tests that need to run the LSV1M model to execute. Will be very very slow (1+ hour).",
     "LSV1M_tiny: tests that need to run a tiny version of the LSV1M model to execute. Should be ",
+    "merge: tests for the datastore merging",
+    "mpi: tests using mpi to run the model",
 ]
 
 [tool.black]
