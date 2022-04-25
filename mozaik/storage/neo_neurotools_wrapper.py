@@ -27,7 +27,7 @@ class MozaikSegment(Segment):
         def __init__(self, segment, identifier,null=False):
             """
             """
-            self.init_sp = True
+            self.init_sp = 2 # Hack because from neo 0.10.0 Segment.spiketrains is set 2 times
             self.init_as = True
             Segment.__init__(self, name=segment.name,
                              description=segment.description,
@@ -52,7 +52,7 @@ class MozaikSegment(Segment):
 
         def set_spiketrains(self, s):
             if self.init_sp:
-                self.init_sp = False
+                self.init_sp -= 1
                 return
             raise ValueError('The spiketrains property should never be directly set in MozaikSegment!!!')
 
