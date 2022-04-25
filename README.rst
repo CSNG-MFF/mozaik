@@ -77,14 +77,17 @@ Next install the *Nest* simulator (always in the virtual environment):
     
         (mozaik)$ cmake -Dwith-mpi=ON -Dwith-boost=ON -DCMAKE_INSTALL_PREFIX:PATH=$HOME/virt_env/mozaik -Dwith-optimize='-O3' ./
        
-    - finally, by launching make and install, it installs PyNest in the activated virtual environment mozaik::
-    
+    - finally, by launching make and install, it installs PyNest in the activated virtual environment mozaik. If you're using Slurm, run these commands through :code:`srun` ::
+
         (mozaik)$ make
         (mozaik)$ make install
         
     - Then::
         
         make installcheck
+
+      or if you are using Slurm::
+        salloc -n8 make installcheck
     
     - nest will reside in $HOME/virt_env/mozaik/lib/python3.*/site-packages. Check that the package is seen by python using::
         python -c 'import nest'

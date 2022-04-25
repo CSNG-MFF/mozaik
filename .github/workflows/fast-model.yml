@@ -28,10 +28,10 @@ jobs:
 
     - name: Install Nest
       run: |
-        pip3 install numpy scipy mpi4py matplotlib quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.9.0 cython pynn psutil future requests elephant
-        wget https://github.com/nest/nest-simulator/archive/v2.20.1.tar.gz
-        tar xvfz v2.20.1.tar.gz
-        cd nest-simulator-2.20.1
+        pip3 install numpy scipy mpi4py matplotlib quantities lazyarray interval Pillow param==1.5.1 parameters neo cython pynn psutil future requests elephant pytest-xdist pytest-timeout junitparser
+        wget https://github.com/nest/nest-simulator/archive/v3.1.tar.gz
+        tar xvfz v3.1.tar.gz
+        cd nest-simulator-3.1
         cmake -Dwith-mpi=OFF -Dwith-boost=ON -DCMAKE_INSTALL_PREFIX:PATH=$pythonLocation -Dwith-optimize='-O3' ./
         make -j8
         make -j8 install
