@@ -493,6 +493,8 @@ class PlotTuningCurve(Plotting):
             if idx == 0:
                 if units == mozaik.tools.units.uS:
                     params["y_label"] = value_name + '(nS)'
+                elif units == pq.Dimensionless:
+                    params["y_label"] = value_name
                 else:
                     params["y_label"] = value_name + '(' + units.dimensionality.latex + ')'
                 
