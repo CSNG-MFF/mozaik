@@ -13,20 +13,43 @@ logger = mozaik.getMozaikLogger()
 
 class InputAnalysis(Analysis):
     """
+    Calculate the input received by each neuron included in the analysis from each connection type projection to these neurons 
+    The input is here calculated as the sum of the product of the firing rate of the pre-synaptic neurons with the weight of the connections
+    This analysis takes into account that there could be several connections of the same type (for example several input connections), but separate
+    the input only between connection types.
+
+    Parameters
+    ------------
+    'afferent_connections': list  
+                            List of strings containing the name of the afferent connections.
+    'recurrent_connections': list
+                             List of strings containing the name of the recurrent connections.
+    'inhibitory_connections': list
+                              List of strings containing the name of the inhibitory connections.
+    'feedback_connections': list
+                            List of strings containing the name of the afferent connections.
+    'sheet_name': str
+                  Name of the sheet.
+    'neuron_ids': list
+                  List of the ids of the neurons to include in this analysis.
+    'local_connections_range': float
+                  Connection range beyond which connections would be considering as long-range.
     """
     required_parameters = ParameterSet({
-        'afferent_connections': list,  # The name of the parameters through which to average when calculating the averaged firing rate
-        'recurrent_connections': list,  # The name of the parameters through which to average when calculating the averaged firing rate
-        'inhibitory_connections': list,  # The name of the parameters through which to average when calculating the averaged firing rate
-        'feedback_connections': list,  # The name of the parameters through which to average when calculating the averaged firing rate
-        'sheet_name': str,
-        'neuron_ids': list,
-        'local_connections_range': float,
+        'afferent_connections': list,  # List of strings containing the name of the afferent connections
+        'recurrent_connections': list,  # List of strings containing the name of the recurrent connections
+        'inhibitory_connections': list,  # List of strings containing the name of the inhibitory connections
+        'feedback_connections': list,  # List of strings containing the name of the afferent connections
+        'sheet_name': str, # Name of the sheet 
+        'neuron_ids': list, # List of the ids of the neurons to include in this analysis
+        'local_connections_range': float, # Connection range beyond which connections would be considering as long-range
     })
 
     def perform_analysis(self):
+        connections = self.parameters.afferent_connections + self.parameters.recurrent_connections + self.parameters.inhibitory_connections + self.parameters.feedback_connections
 
-        connections = self.parameters.afferent_connections + self.parameters.recurrent_connections + self.parameters.feedback_connections
+        # Store the input in a different dictionary for each different type of connection
+        # The keys of the dictionaries are the stimuli corresponding the input values
         aff_dic = {}
         loc_dic = {}
         dist_dic = {}
@@ -35,16 +58,23 @@ class InputAnalysis(Analysis):
 
         for connection in connections:
             conn = self.datastore.get_analysis_result(identifier='Connections', target_name=self.parameters.sheet_name, proj_name=connection)[0]
+            # Get the firing rates of the neurons from the source sheet of the connection
             adss = queries.param_filter_query(self.datastore, sheet_name=conn.source_name, value_name='Firing rate', identifier='PerNeuronValue').get_analysis_result() 
+            # As the Firing rate is trial averaged, this loops around every stimuli without taking the different trials into account
             for ads in adss:
                 st = ads.stimulus_id
                 aff_inp = []
+                # Connections ADS work with the sheet ids of the neurosn
                 sheet_idx = self.datastore.get_sheet_indexes(self.parameters.sheet_name,self.parameters.neuron_ids)
+                
+                # For each post-synaptic neuron included in this analysis
                 for i in range(len(sheet_idx)):
-
+                    # Find the ids of its pre-synaptic neuron for the current projection
                     presyn_idx = numpy.nonzero(conn.weights[:,1].flatten()==sheet_idx[i])[0] 
                     presyn_id_sheet = conn.weights[presyn_idx,0].astype(int) 
 
+                    # If the current projection corresponds to a recurrent excitatory connection
+                    # Split the pre-synaptic neurons between local neurons and distal neurons
                     if connection in self.parameters.recurrent_connections:
                         x = self.datastore.get_neuron_positions()[self.parameters.sheet_name][0][sheet_idx[i]]
                         y = self.datastore.get_neuron_positions()[self.parameters.sheet_name][1][sheet_idx[i]]
@@ -59,9 +89,12 @@ class InputAnalysis(Analysis):
                         frs_dist = ads.get_value_by_id(self.datastore.get_sheet_ids(conn.source_name,distal_ids))
                         weights_loc = conn.weights[local_ids, 2]
                         weights_dist = conn.weights[distal_ids, 2]
+
+                        # Inputs are calculated as sum of productions of firing rates and weights
                         inp_loc = sum([frs_loc[j] * weights_loc[j] for j in range(len(local_ids))]) 
                         inp_dist = sum([frs_dist[j] * weights_dist[j] for j in range(len(distal_ids))]) 
                         
+                        # Store the inputs in the right dictionary, using the stimuli as a key
                         if st in loc_dic.keys():
                             loc_dic[st][i] += inp_loc
                         else:
@@ -77,7 +110,10 @@ class InputAnalysis(Analysis):
                         presyn_ids = self.datastore.get_sheet_ids(conn.source_name,conn.weights[presyn_id_sheet, 0].astype(int)) 
                         frs = ads.get_value_by_id(presyn_ids)
                         weights = conn.weights[presyn_id_sheet, 2]
+                        # Inputs are calculated as sum of productions of firing rates and weights
                         inp = sum([frs[j] * weights[j] for j in range(len(presyn_ids))]) 
+
+                        # Store the inputs in the right dictionary, using the stimuli as a key
                         if connection in self.parameters.afferent_connections:
                             if st in aff_dic.keys():
                                 aff_dic[st][i] += inp
