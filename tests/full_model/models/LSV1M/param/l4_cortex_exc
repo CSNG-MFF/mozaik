@@ -146,6 +146,7 @@
             'phase_map' : False,
             'phase_map_location' : './phase_map',
 	    'rf_jitter' : 0,
+            'gauss_coefficient' : 0.03,
 	    'off_bias' : 1.0,
 
             'base_weight' : 0.0016,#ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.base_weight'),
