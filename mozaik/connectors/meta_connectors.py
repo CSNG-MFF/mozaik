@@ -118,7 +118,9 @@ class GaborConnector(BaseComponent):
                                       t_size[1]/2.0,
                                       numpy.shape(or_map)[1])
                                       
-            X, Y = numpy.meshgrid(coords_x, coords_y)
+            # x is the first axis of the orientation map, so after flatten()
+            # it has to stay constant for the length of the first row
+            Y, X = numpy.meshgrid(coords_y, coords_x)
             or_map = NearestNDInterpolator(list(zip(X.flatten(), Y.flatten())),
                                            or_map.flatten())
 
@@ -133,7 +135,9 @@ class GaborConnector(BaseComponent):
             coords_y = numpy.linspace(-t_size[1]/2.0,
                                       t_size[1]/2.0,
                                       numpy.shape(phase_map)[1])
-            X, Y = numpy.meshgrid(coords_x, coords_y)
+            # x is the first axis of the phase map, so after flatten()
+            # it has to stay constant for the length of the first row
+            Y, X = numpy.meshgrid(coords_y, coords_x)
             phase_map = NearestNDInterpolator(list(zip(X.flatten(), Y.flatten()),
                                               phase_map.flatten()))
         
