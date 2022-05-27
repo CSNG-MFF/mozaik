@@ -34,6 +34,8 @@
         'delay_expression' : ref('sheets.l4_cortex_inh.L4InhL4ExcConnection.delay_expression'),
         'base_weight': ref('sheets.l4_cortex_inh.L4InhL4ExcConnection.base_weight'),
 	'num_samples' : ref('sheets.l4_cortex_inh.L4InhL4ExcConnection.num_samples'),
+        'local_module': None,
+
     },
 
     'L23InhL23InhConnection': {
@@ -55,6 +57,7 @@
         
         'base_weight': ref('sheets.l4_cortex_inh.L4InhL4InhConnection.base_weight'),
 	'num_samples' : ref('sheets.l4_cortex_inh.L4InhL4InhConnection.num_samples'),
+        'local_module': None,
     },
 
    'L4ExcL23InhConnection': {
@@ -84,5 +87,6 @@
         
         'base_weight': ref('sheets.l4_cortex_exc.AfferentConnection.base_weight')*ref('sheets.l4_cortex_inh.ExcInhAfferentRatio'),
         'num_samples' : ref('sheets.l23_cortex_exc.L4ExcL23ExcConnection.num_samples')* ref('sheets.l4_cortex_exc.inhibitory_connection_ratio'),
+        'local_module': None,
     },
 }
