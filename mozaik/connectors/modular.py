@@ -16,6 +16,7 @@ from builtins import zip
 
 logger = mozaik.getMozaikLogger()
 
+
 class ExpVisitor(ast.NodeVisitor):
     """
     AST tree visitor used for determining list of variables in the delay or weight expresions
@@ -122,7 +123,82 @@ class ModularConnector(Connector):
                                 label=self.name,
                                 receptor_type=self.parameters.target_synapses)
 
-class ModularSamplingProbabilisticConnector(ModularConnector):
+class LocalModuleConnector(ModularConnector):
+    """
+    ModularConnector which includes the possibility to define a local module.
+    Local connections projecting from neurons outside the module to neurons inside
+    the module are to be deleted and replaced by connections coming from inside the 
+    local module.
+    The local module is defined as a circle delimited by the local_module.in_radius parameter
+    Local connections projecting to the local module are considered to be any connection
+    coming from neuron laying inside a circle of radius local_module.out_radius.
+    This class serves as an interface for the modular probabilistic connectors if they're
+    supposed to implement the local module functionality.
+    """
+
+    required_parameters = ParameterSet({
+        'local_module' : ParameterSet,     # parameters of the local module which local connections would only emerge from the same local module
+                                           # none if no local module
+                                           # strucutured as follows
+                                           #            {
+                                           #                 in_radius: float (mm)
+                                           #                 out_radius: float (mm)
+                                           #             }
+    })
+
+    def __init__(self, network, name,source, target, parameters):
+        """
+        Set two numpy arrays:
+        lm_idx: List of ids of neurons within the local module.
+        l_idx: List of ids of neurons outside the local module which might send
+               local connections to the local module.
+        """
+        ModularConnector.__init__(self, network, name, source,target,parameters)
+        if self.parameters.local_module:
+            src_x = self.source.pop.positions[0]
+            src_y = self.source.pop.positions[1]
+            dist = numpy.sqrt(numpy.multiply(src_x, src_x) + numpy.multiply(src_y, src_y))
+            # Local module neurons lie from the center at less `than local_module.in_radius`
+            self.lm_idx = numpy.nonzero(dist < self.parameters.local_module.in_radius)[0]
+            # Local connections projected to the local module emerge from neurons which lie
+            # from the center at less `than local_module.out_radius`
+            self.l_idx = numpy.nonzero(numpy.logical_and(dist > self.parameters.local_module.in_radius, dist < self.parameters.local_module.out_radius))[0]
+        else:
+            self.lm_idx = None
+            self.l_idx = None
+
+    def local_module_weight_updates(self, idx, weights):
+        """ 
+        For each neuron, if it lies within the local module, delete all local 
+        connections coming from outside the local module and update its weights. 
+
+        Parameters:
+            idx: int
+                The id of the post-synaptic neuron
+
+            weights: numpy.nd_array
+                    The weights to update
+        """
+        x = self.target.pop.positions[0][idx]
+        y = self.target.pop.positions[1][idx]
+        weight_sum = 0
+        # Update the weights only if the post-synaptic neuron lies in the local module
+        if numpy.sqrt(x * x + y * y) < self.parameters.local_module.in_radius:
+            weight_sum = numpy.sum(weights[self.l_idx])
+            lm_weight_sum = numpy.sum(weights[self.lm_idx])
+            weight_ratio = (weight_sum + lm_weight_sum)/lm_weight_sum
+
+            # Set all the weights of local connections emerging from outside the local module to 0 
+            # So that no such connection is created
+            weights[self.l_idx] = 0
+
+            # Update the weights of the connection emerging from the local module
+            # So that the sum of the weights of the local connections stays constant
+            if weight_sum > 0:
+                weights[self.lm_idx] = weights[self.lm_idx] * weight_ratio
+        return weights
+
+class ModularSamplingProbabilisticConnector(LocalModuleConnector):
     """
     ModularConnector that interprets the weights as proportional probabilities of connectivity
     and for each neuron in connections it samples num_samples of
@@ -137,7 +213,7 @@ class ModularSamplingProbabilisticConnector(ModularConnector):
 
     required_parameters = ParameterSet({
         'num_samples': PyNNDistribution,
-        'base_weight' : PyNNDistribution
+        'base_weight' : PyNNDistribution,
     })
 
     def _connect(self):
@@ -156,6 +232,11 @@ class ModularSamplingProbabilisticConnector(ModularConnector):
             vi = 0
             for i in range(len(indices)):
                 weights = self._obtain_weights(indices[i],seeds[i])
+
+                # If a local module is defined, update the weights accordingly
+                if self.parameters.local_module:
+                    weights = self.local_module_weight_updates(indices[i], weights)
+
                 delays = self._obtain_delays(indices[i],seeds[i])
 
                 co = Counter(
@@ -163,6 +244,7 @@ class ModularSamplingProbabilisticConnector(ModularConnector):
                         weights, int(self.parameters.num_samples.next()), seeds[i]
                     )
                 )
+
                 vi = vi + numpy.sum(list(co.values()))
                 k = list(co.keys())
                 a = numpy.array(
@@ -271,7 +353,7 @@ class ModularSingleWeightProbabilisticConnector(ModularConnector):
 
 
 
-class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(ModularConnector):
+class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(LocalModuleConnector):
     """
     ModularConnector that interprets the weights as proportional probabilities of connectivity
     and for each neuron in connections it samples num_samples of
@@ -306,17 +388,23 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(ModularConnect
         def build_connector(indices, seeds, queue_cl, queue_v):
             cli = []
             vi = 0
+
             for i in range(len(indices)):
                 samples = self.target.get_neuron_annotation(
                     indices[i], self.parameters.annotation_reference_name
                 )
                 weights = self._obtain_weights(indices[i],seeds[i])
+                # If a local module is defined, update the weights accordingly
+                if self.parameters.local_module:
+                    weights = self.local_module_weight_updates(indices[i], weights)
+
                 delays = self._obtain_delays(indices[i],seeds[i])
 
                 if self.parameters.num_samples == 0:
                     co = Counter(
                         sample_from_bin_distribution(weights, int(samples), seeds[i])
                     )
+
                 else:
                     assert self.parameters.num_samples > 2 * int(
                         samples
@@ -351,7 +439,7 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(ModularConnect
             # Add the output to the two queues to communicate it with the main process
             queue_cl.put(cli)
             queue_v.put(vi)
-
+        
         # Generate a list of subprocesses and of queues
         processes = []
         list_queue_cl = []
@@ -397,4 +485,3 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(ModularConnect
                                 receptor_type=self.parameters.target_synapses)
         else:
             logger.warning("%s(%s): empty projection - pyNN projection not created." % (self.name,self.__class__.__name__))
-
