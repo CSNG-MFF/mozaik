@@ -61,6 +61,8 @@ class GaborConnector(BaseComponent):
     `phase_map_location` - if phase_map is True where can one find the map.
                            It has to be a file containing a single pickled 2d
                            numpy array
+    `gauss_coefficient` : float - The coefficient of the gaussian component (if any) of the meta connector
+
     """
 
     required_parameters = ParameterSet({
@@ -90,6 +92,8 @@ class GaborConnector(BaseComponent):
 
         'phase_map': bool,  # is a phase map supplied?
         'phase_map_location': str,  # if phase_map is True where can one find the map. It has to be a file containing a single pickled 2d numpy array
+        'gauss_coefficient': float, # The coefficient of the gaussian component (if any) of the meta connector
+
     })
 
     def __init__(self, network, lgn_on, lgn_off, target, parameters, name):
@@ -114,7 +118,9 @@ class GaborConnector(BaseComponent):
                                       t_size[1]/2.0,
                                       numpy.shape(or_map)[1])
                                       
-            X, Y = numpy.meshgrid(coords_x, coords_y)
+            # x is the first axis of the orientation map, so after flatten()
+            # it has to stay constant for the length of the first row
+            Y, X = numpy.meshgrid(coords_y, coords_x)
             or_map = NearestNDInterpolator(list(zip(X.flatten(), Y.flatten())),
                                            or_map.flatten())
 
@@ -129,7 +135,9 @@ class GaborConnector(BaseComponent):
             coords_y = numpy.linspace(-t_size[1]/2.0,
                                       t_size[1]/2.0,
                                       numpy.shape(phase_map)[1])
-            X, Y = numpy.meshgrid(coords_x, coords_y)
+            # x is the first axis of the phase map, so after flatten()
+            # it has to stay constant for the length of the first row
+            Y, X = numpy.meshgrid(coords_y, coords_x)
             phase_map = NearestNDInterpolator(list(zip(X.flatten(), Y.flatten()),
                                               phase_map.flatten()))
         
@@ -172,6 +180,7 @@ class GaborConnector(BaseComponent):
                                                                  'component' : 'mozaik.connectors.vision.GaborArborization',
                                                                  'params' : {
                                                                                 'ON' : True,
+                                                                                'gauss_coefficient': self.parameters.gauss_coefficient,
                                                                             }
                                                              }                                                                              
                                                    },

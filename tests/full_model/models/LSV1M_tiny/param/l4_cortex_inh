@@ -130,6 +130,7 @@
             'phase_map' : False,
             'phase_map_location' : './phase_map',
 	    'rf_jitter' : ref('sheets.l4_cortex_exc.AfferentConnection.rf_jitter'),
+            'gauss_coefficient' : ref('sheets.l4_cortex_exc.AfferentConnection.gauss_coefficient'),
 	    'off_bias' : ref('sheets.l4_cortex_exc.AfferentConnection.off_bias'),
 	    
             'base_weight' : ref('sheets.l4_cortex_exc.AfferentConnection.base_weight')*ref('sheets.l4_cortex_inh.ExcInhAfferentRatio'),

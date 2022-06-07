@@ -38,7 +38,9 @@ class MapDependentModularConnectorFunction(ModularConnectorFunction):
         coords_y = numpy.linspace(-t_size[1]/2.0,
                                   t_size[1]/2.0,
                                   numpy.shape(mmap)[1])
-        X, Y = numpy.meshgrid(coords_x, coords_y)
+        # x is the first axis of the orientation map, so after flatten()
+        # it has to stay constant for the length of the first row
+        Y, X = numpy.meshgrid(coords_y, coords_x)
         self.mmap = NearestNDInterpolator(list(zip(X.flatten(), Y.flatten())),
                                        mmap.flatten())    
         self.val_source=self.mmap(numpy.transpose(numpy.array([self.source.pop.positions[0],self.source.pop.positions[1]]))) * numpy.pi
@@ -151,10 +153,15 @@ class GaborArborization(ModularConnectorFunction):
     ----------------
     ON : bool
          Whether this is gabor on ON or OFF cells.
+
+    gauss_coefficient : float 
+         The coefficient of the gaussian component
+
     """
 
     required_parameters = ParameterSet({
         'ON' : bool,          # Whether this is gabor on ON or OFF cells.
+        'gauss_coefficient': float, # The coefficient of the gaussian component
     })
 
     def evaluate(self,index,**params):
@@ -178,9 +185,9 @@ class GaborArborization(ModularConnectorFunction):
         g = gauss(self.source.pop.positions[0],self.source.pop.positions[1],target_posx,target_posy,target_or+pi/2,target_size,target_ar)
                                        
         if self.parameters.ON:
-           return numpy.maximum(0,w) + 0.03 * g
+           return numpy.maximum(0,w) + self.parameters.gauss_coefficient * g
         else:
-           return -numpy.minimum(0,w) + 0.03 * g
+           return -numpy.minimum(0,w) + self.parameters.gauss_coefficient * g
  
 
 
@@ -383,7 +390,9 @@ class CoCircularModularConnectorFunction(ModularConnectorFunction):
         coords_y = numpy.linspace(-t_size[1]/2.0,
                                   t_size[1]/2.0,
                                   numpy.shape(mmap)[1])
-        X, Y = numpy.meshgrid(coords_x, coords_y)
+        # x is the first axis of the orientation map, so after flatten()
+        # it has to stay constant for the length of the first row
+        Y, X = numpy.meshgrid(coords_y, coords_x)
         self.mmap = NearestNDInterpolator(list(zip(X.flatten(), Y.flatten())),
                                        mmap.flatten())    
         self.or_source=self.mmap(numpy.transpose(numpy.array([self.source.pop.positions[0],self.source.pop.positions[1]]))) * numpy.pi
