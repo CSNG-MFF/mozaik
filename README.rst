@@ -51,7 +51,7 @@ ____________
  
 Now you can install all other dependencies in this protected environment::
 
-  pip3 install numpy scipy mpi4py matplotlib quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.9.0 cython pynn psutil future requests elephant pytest-xdist pytest-timeout junitparser
+  pip3 install numpy scipy mpi4py matplotlib quantities lazyarray interval Pillow param==1.5.1 parameters neo cython pynn psutil future requests elephant pytest-xdist pytest-timeout junitparser
 
 Next we will manually install several packages. It is probably the best if you create a separate directory in an appropriate
 place, where you will download and install the packages from.
@@ -77,14 +77,17 @@ Next install the *Nest* simulator (always in the virtual environment):
     
         (mozaik)$ cmake -Dwith-mpi=ON -Dwith-boost=ON -DCMAKE_INSTALL_PREFIX:PATH=$HOME/virt_env/mozaik -Dwith-optimize='-O3' ./
        
-    - finally, by launching make and install, it installs PyNest in the activated virtual environment mozaik::
-    
+    - finally, by launching make and install, it installs PyNest in the activated virtual environment mozaik. If you're using Slurm, run these commands through :code:`srun` ::
+
         (mozaik)$ make
         (mozaik)$ make install
         
     - Then::
         
         make installcheck
+
+      or if you are using Slurm::
+        salloc -n8 make installcheck
     
     - nest will reside in $HOME/virt_env/mozaik/lib/python3.*/site-packages. Check that the package is seen by python using::
         python -c 'import nest'
@@ -118,6 +121,9 @@ Testing, Autoformat, Continuous Integration
 In case you want to contribute to the project, you need to make sure your code passes all unit tests and is formatted with the Black autoformatter. You can make sure this is the case by running following from the project directory::
 
   pytest && black --check .
+
+Note that the mpi tests are currently not working when invoking pytest in this manner. You can run these specific tests the following way::
+ pytest tests/full_model/test_models_mpi.py
 
 This command will run all tests that it can find recursively under the current directory, as well as check all non-blacklisted files for formatting. Travis-CI will run the same steps for your pull request once you submit it to the project. To install pytest and black::
 
