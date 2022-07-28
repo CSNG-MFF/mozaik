@@ -25,7 +25,15 @@ class GeneralizedPhase(Analysis):
     """
     Apply the generalized phased analysis on all the PerAreaAnalogSignalList of the dsv
     Compute the instantaneous frequencies, phase gradient properties, wavelengths and wavespeeds
+
+    Other parameters
+    ----------------
+    threshold : float
+             The threshold (0.9 used in the Davis paper) used to determine whether the sign of the instantaneous frequency is significant or not
     """
+    required_parameters = ParameterSet({
+      'threshold': float,
+    })
 
     def perform_analysis(self):
         units = qt.Hz
@@ -72,17 +80,16 @@ class GeneralizedPhase(Analysis):
 
                    painstFreqs.append(row)
                tot = (nx) * (ny) * (dur - 1)
-               threshold = 0.9
-               if positive/tot > threshold:
+               if positive/tot > self.parameters.threshold:
                    sign = 1
-               elif negative/tot > threshold:
+               elif negative/tot > self.parameters.threshold:
                    sign = -1
                else:
                    sign = float("NaN") 
 
-               if numpy.sum(instFreqsShuffled > 0)/tot > threshold:
+               if numpy.sum(instFreqsShuffled > 0)/tot > self.parameters.threshold:
                    signShuffled = 1
-               elif numpy.sum(instFreqsShuffled < 0)/tot > threshold:
+               elif numpy.sum(instFreqsShuffled < 0)/tot > self.parameters.threshold:
                    signShuffled = -1
                else:
                    signShuffled = float("NaN")
@@ -137,7 +144,7 @@ class GeneralizedPhase(Analysis):
                wl_shuff = 1/(numpy.sqrt(dx_shuff **2 + dy_shuff ** 2)/(2 * numpy.pi)) 
                thresh = numpy.sort(wl_shuff.reshape((nx * ny * dur)))[int(nx * ny * dur*99/100)+1]
 
-                # Store the gradients in the correct format for PerAreaAnalogSignalList
+               # Store the gradients in the correct format for PerAreaAnalogSignalList
                for x in range(nx):
                    rdx = []
                    rdy = []
@@ -275,40 +282,66 @@ class ButterworthFiltering(Analysis):
       'low_frequency': float,
       'high_frequency': float,
     })
+    
+    def get_parameters_filter(self, sampling_period):
+        # Period corresponding to the inverse of nyquist frequency
+        nyq = 2 * sampling_period.rescale(qt.s).magnitude
+        if self.parameters.type == 'band' or self.parameters.type == 'high':
+            high = self.parameters.high_frequency * nyq
+
+        if self.parameters.type == 'band' or self.parameters.type == 'low':
+            low = self.parameters.low_frequency * nyq
+
+        # Compute the numerator and denominator polynomials of the IIR filter 
+        if self.parameters.type == 'band':
+            b, a = butter(self.parameters.order, [low, high], btype='band')
+        elif self.parameters.type == 'high':
+            b, a = butter(self.parameters.order, high, btype='high')
+        elif self.parameters.type == 'low':
+            b, a = butter(self.parameters.order, low, btype='low')
+
+        return b, a
 
     def perform_analysis(self):
-        
-
         for sheet in self.datastore.sheets():
-            # Complete analysis for ASL
-            # dsv1 = queries.param_filter_query(dsv, sheet_name=sheet, identifier=['AnalogSignalList','PerNeuronPairAnalogSignalList'])
-            # for asl in dsv1.get_analysis_result():
+            # This part of the code specific to AnalogSignalList was not tested
+            dsv1 = queries.param_filter_query(self.datastore, sheet_name=sheet, identifier=['AnalogSignalList','PerNeuronPairAnalogSignalList'])
+
+            for ads in dsv1.get_analysis_result():
+                asl = ads.asl
+                sampling_period = asl[0].sampling_period
+                t_start = asl[0].t_start
+                units = asl[0].units
+
+                # Get the parameters of the filter
+                b, a = self.get_parameters_filter(sampling_period)
+
+                # Apply the filter on each AnalogSignal
+                fasl=[]
+                for asignal in asl:
+                    fasl.append(NeoAnalogSignal(lfilter(b, a, asignal.magnitude[:,0]),t_start=t_start, sampling_period=sampling_period, units=units))
+
+                self.datastore.full_datastore.add_analysis_result(
+                    AnalogSignalList(fasl,ads.ids,units,
+                                   stimulus_id=paasl.stimulus_id,
+                                   x_axis_name=paasl.x_axis_name,
+                                   y_axis_name=f'Butterworth {self.parameters.type}-pass filtered of ({ads.y_axis_name}) freq=[{self.parameters.low_frequency},{self.parameters.high_frequency}], order = {self.parameters.order}',
+                                   sheet_name=sheet,
+                                   tags=self.tags,
+                                   analysis_algorithm=self.__class__.__name__))
+
 
             # PerAreaAnalogSignalList part
             dsv1 = queries.param_filter_query(self.datastore, sheet_name=sheet, identifier=['PerAreaAnalogSignalList'])
             for paasl in dsv1.get_analysis_result():
-
                 asl = paasl.asl
                 sampling_period = asl[0][0].sampling_period
                 t_start = asl[0][0].t_start
                 units = asl[0][0].units
                 
-                # Period corresponding to the inverse of nyquist frequency
-                nyq = 2 * sampling_period.rescale(qt.s).magnitude 
-                if self.parameters.type == 'band' or self.parameters.type == 'high':
-                    high = self.parameters.high_frequency * nyq
+                # Get the parameters of the filter
+                b, a = self.get_parameters_filter(sampling_period)
 
-                if self.parameters.type == 'band' or self.parameters.type == 'low':
-                    low = self.parameters.low_frequency * nyq
-
-                # Compute the numerator and denominator polynomials of the IIR filter 
-                if self.parameters.type == 'band':
-                    b, a = butter(self.parameters.order, [low, high], btype='band')
-                elif self.parameters.type == 'high':
-                    b, a = butter(self.parameters.order, high, btype='high')
-                elif self.parameters.type == 'low':
-                    b, a = butter(self.parameters.order, low, btype='low')
-                
                 # Apply the filter on each AnalogSignal
                 fasl=[] 
                 for x in range(len(asl)):
@@ -449,6 +482,7 @@ class LFPFromSynapticCurrents(Analysis):
                 
                 # Convolve the lfps with a gaussian kernel
                 if self.parameters.gaussian_convolution:
+                    gauss_suffix = ""
                     m_convolved = numpy.zeros((x_resolution,y_resolution,t_resolution))
                     for x in range(m.shape[0]):
                         for y in range(m.shape[1]):
@@ -456,6 +490,8 @@ class LFPFromSynapticCurrents(Analysis):
                             gauss = numpy.expand_dims(gauss, axis=2)
                             m_convolved[x,y,:] = numpy.sum(m * gauss, axis = (0,1))
                     m = m_convolved
+                else:
+                    gauss_suffix = " without convolution"
                 
                 # Not possible to use a real Z-score because the PixelMovie visualization takes only positive values
                 avg = numpy.mean(m)
@@ -473,12 +509,11 @@ class LFPFromSynapticCurrents(Analysis):
                     for y in range(m.shape[1]):
                         row.append(NeoAnalogSignal(m[x,y],t_start=t_start, sampling_period=time_step, units=qt.dimensionless))
                     lfps.append(row)
-                        
                 self.datastore.full_datastore.add_analysis_result(
                     PerAreaAnalogSignalList(lfps,x_axis,y_axis,lfps[0][0].units,
                                    stimulus_id=str(s),
                                    x_axis_name='time',
-                                   y_axis_name='LFP',
+                                   y_axis_name='LFP'+gauss_suffix,
                                    sheet_name=sheet,
                                    tags=self.tags,
                                    analysis_algorithm=self.__class__.__name__))
