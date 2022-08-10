@@ -14,6 +14,7 @@ from urllib import request
 import urllib, copy, warnings, numpy, numpy.random  # to be replaced with srblib
 from collections import OrderedDict
 import mozaik
+import sys
 
 def load_parameters(parameter_url,modified_parameters=ParameterSet({})):
     """
@@ -23,6 +24,7 @@ def load_parameters(parameter_url,modified_parameters=ParameterSet({})):
     parameters = MozaikExtendedParameterSet(parameter_url)
     parameters.replace_values(**modified_parameters)
     parameters.replace_references()
+    parameters.instanciate_objects(classes = ['PyNNDistribution'])
     return parameters
 
 class PyNNDistribution(RandomDistribution):
@@ -173,3 +175,29 @@ class MozaikExtendedParameterSet(ParameterSet):
         # for name in P.names():
         self.names = self.keys
         self.parameters = self.items
+
+    def tree_copy(self):
+        """Return a copy of the `MozaikExtendedParameterSet` tree structure.
+        Nodes are not copied, but re-referenced."""
+
+        tmp = MozaikExtendedParameterSet({})
+        for key in self:
+            value = self[key]
+            if isinstance(value, ParameterSet):
+                tmp[key] = value.tree_copy()
+            elif isinstance(value,ParameterReference):
+                tmp[key] = value.copy()
+            else:
+                tmp[key] = value
+        if tmp._is_space():
+            tmp = ParameterSpace(tmp)
+        return tmp
+
+    def instanciate_objects(self, classes):
+        for k,v in self.parameters():
+            if isinstance(v, MozaikExtendedParameterSet):
+                if 'class_name' in v.names() and v.class_name in classes:
+                    self[k] = getattr(sys.modules[__name__], v.class_name)(**v.params)
+                else:
+                    v.instanciate_objects(classes = classes)
+
