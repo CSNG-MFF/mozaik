@@ -3,10 +3,17 @@ import matplotlib
 matplotlib.use("Agg")
 from mozaik.connectors import vision
 from mozaik.connectors.vision import V1CorrelationBasedConnectivity as V1CBC
+from mozaik.tools.distribution_parametrization import (
+    MozaikExtendedParameterSet,
+    load_parameters,
+)
+import mozaik
 import numpy as np
 import numpy.linalg
 import logging
 import itertools
+import os
+from collections import OrderedDict
 
 import pytest
 
@@ -223,3 +230,55 @@ class TestV1CorrelationBasedConnectivity:
 
 class TestCoCircularModularConnectorFunction:
     pass
+
+
+class TestLocalModule:
+    def setup_class(cls):
+        os.chdir("tests/connectors/LocalModuleTest/")
+        parameters = MozaikExtendedParameterSet("param/defaults")
+        p = OrderedDict()
+        if "mozaik_seed" in parameters:
+            p["mozaik_seed"] = parameters["mozaik_seed"]
+        if "pynn_seed" in parameters:
+            p["pynn_seed"] = parameters["pynn_seed"]
+
+        mozaik.setup_mpi(**p)
+        parameters = MozaikExtendedParameterSet("param/defaults")
+        import pyNN.nest as sim
+        from tests.connectors.LocalModuleTest.model import ModelLocalModule
+
+        model = ModelLocalModule(sim, 1, parameters)
+        pos = model.sheets["sheet_lm"].pop.positions
+        cls.dist = numpy.sqrt(pos[0] * pos[0] + pos[1] * pos[1])
+        cls.weights = numpy.array(
+            model.connectors["RecurrentConnection"].proj.get(
+                "weight", format="list", gather=True
+            )
+        )[:, :]
+        cls.weights_lm = numpy.array(
+            model.connectors["RecurrentConnectionLM"].proj.get(
+                "weight", format="list", gather=True
+            )
+        )[:, :]
+        cls.in_radius = model.connectors[
+            "RecurrentConnectionLM"
+        ].parameters.local_module.in_radius
+        cls.out_radius = model.connectors[
+            "RecurrentConnectionLM"
+        ].parameters.local_module.out_radius
+        os.chdir("../../../")
+
+    def test_weights_homogeneity(self):
+        assert sum(self.weights[:, 2]) - sum(self.weights_lm[:, 2]) < 0.00001
+
+    def test_separation_local_module(self):
+        lm_ids = np.nonzero(self.dist < self.in_radius)[0]
+        border_ids = np.nonzero(
+            np.logical_and(self.dist < self.out_radius, self.dist > self.in_radius)
+        )[0]
+        num_pre = 0
+        for idd in lm_ids:
+            pre_idx = np.nonzero(self.weights_lm[:, 1] == idd)[0]
+            pre_ids = self.weights_lm[pre_idx, 0]
+            num_pre += numpy.intersect1d(pre_ids, border_ids).shape[0]
+        assert num_pre == 0

@@ -73,6 +73,7 @@
         'delay_expression' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.delay_expression'),
         'base_weight': 0.0023,
         'num_samples' : ref('sheets.l4_cortex_exc.K')/5.0,
+        'local_module': None,
     },
 
     'L4InhL4InhConnection':  {
@@ -100,6 +101,7 @@
         'delay_expression' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.delay_expression'),
         'base_weight': ref('sheets.l4_cortex_inh.L4InhL4ExcConnection.base_weight'),
         'num_samples' : ref('sheets.l4_cortex_inh.L4InhL4ExcConnection.num_samples')*ref('sheets.l4_cortex_exc.inhibitory_connection_ratio'),
+        'local_module': None,
     },
 
     
@@ -136,5 +138,6 @@
             'base_weight' : ref('sheets.l4_cortex_exc.AfferentConnection.base_weight')*ref('sheets.l4_cortex_inh.ExcInhAfferentRatio'),
             'num_samples' :  PyNNDistribution(name='uniform',low=55*0.8,high=55*0.8),
             'short_term_plasticity':  ref('sheets.l4_cortex_exc.AfferentConnection.short_term_plasticity'),
+            'local_module': None,
     }
 }
