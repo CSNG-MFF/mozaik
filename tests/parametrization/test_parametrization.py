@@ -29,6 +29,8 @@ class TestParametrization:
             "param_parametrized_PyNNDistribution/defaults"
         )
 
+        os.chdir("../../../")
+
     def test_parametrization_PyNNDistribution(self):
         assert (
             self.param_original_PyNNDistribution.num_samples.next()
