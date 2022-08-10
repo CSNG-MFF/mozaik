@@ -29,7 +29,7 @@ class TestParametrization:
             "param_parametrized_PyNNDistribution/defaults"
         )
 
-        os.chdir("../../../")
+        os.chdir("../../")
 
     def test_parametrization_PyNNDistribution(self):
         assert (
