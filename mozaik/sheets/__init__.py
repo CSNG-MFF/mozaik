@@ -79,6 +79,7 @@ class Sheet(BaseComponent):
         'cell': ParameterSet({
             'model': str,  # the cell type of the sheet
             'params': ParameterSet,
+            'receptors': ParameterSet,
             'initial_values': ParameterSet,
         }),
 
