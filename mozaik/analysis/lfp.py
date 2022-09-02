@@ -498,9 +498,10 @@ class LFPFromSynapticCurrents(Analysis):
                 std = numpy.std(m)
                 m = m/std
 
+                # Cropping
                 m = m[dix:-dix,diy:-diy]
-                x_axis = x_axis[dix:-dix]
-                y_axis = y_axis[diy:-diy]
+                x_axis_cropped = x_axis[dix:-dix]
+                y_axis_cropped = y_axis[diy:-diy]
 
                 # Convert the tensor to a PerAreaAnalogSignalList and add it to the datastore
                 lfps = []
@@ -510,7 +511,7 @@ class LFPFromSynapticCurrents(Analysis):
                         row.append(NeoAnalogSignal(m[x,y],t_start=t_start, sampling_period=time_step, units=qt.dimensionless))
                     lfps.append(row)
                 self.datastore.full_datastore.add_analysis_result(
-                    PerAreaAnalogSignalList(lfps,x_axis,y_axis,lfps[0][0].units,
+                    PerAreaAnalogSignalList(lfps,x_axis_cropped,y_axis_cropped,lfps[0][0].units,
                                    stimulus_id=str(s),
                                    x_axis_name='time',
                                    y_axis_name='LFP'+gauss_suffix,
