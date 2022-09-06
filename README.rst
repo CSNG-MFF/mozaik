@@ -87,9 +87,11 @@ Next install the *Nest* simulator (always in the virtual environment):
         make installcheck
 
       or if you are using Slurm::
+
         salloc -n8 make installcheck
     
     - nest will reside in $HOME/virt_env/mozaik/lib/python3.*/site-packages. Check that the package is seen by python using::
+
         python -c 'import nest'
 
 

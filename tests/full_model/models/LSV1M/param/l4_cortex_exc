@@ -80,7 +80,8 @@
         'delay_expression' : 'd1',
         'base_weight': 0.0005,
 	'annotation_reference_name' : 'aff_samples',
-        'num_samples' : ref('sheets.l4_cortex_exc.K')*4.0/5.0*(1-ref('sheets.l4_cortex_exc.layer23_aff_ratio'))
+        'num_samples' : ref('sheets.l4_cortex_exc.K')*4.0/5.0*(1-ref('sheets.l4_cortex_exc.layer23_aff_ratio')),
+        'local_module': None,
     },
     
     
@@ -121,6 +122,7 @@
         'base_weight': 0.0009,
 	'annotation_reference_name' : 'aff_samples',
         'num_samples' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.num_samples') * ref('sheets.l4_cortex_exc.inhibitory_connection_ratio'),
+        'local_module': ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.local_module'),
     },
 
     'AfferentConnection': {
@@ -158,6 +160,7 @@
 	 		                'tau_psc': 3.0,
 				            'tau_fac': 0.0,
                         },
+            'local_module': None,
 
 
     }        
