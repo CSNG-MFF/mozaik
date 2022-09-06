@@ -1,0 +1,74 @@
+{
+    #CorticalUniformSheet parameters
+    
+    'component': 'mozaik.sheets.vision.VisualCorticalUniformSheet',
+    
+    'params':{
+                'name':'sheet',
+                'sx':3000.0,
+                'sy':3000.0,
+                'density': 200.0,
+                'mpi_safe' : False,
+                'magnification_factor': 1000.0,
+
+                'cell': {
+                        'model': 'EIF_cond_exp_isfa_ista',
+                        'params': {
+                            'v_rest': -70,
+                            'v_reset': -55.0,
+                            'tau_refrac': 2.0,
+                            'tau_m': 17.0,
+                            'cm': 0.06,
+                            'e_rev_E': 0.0,
+                            'e_rev_I': -80.0,
+                            'tau_syn_E': 7.0,
+                            'tau_syn_I': 11.0,
+                            'a' : -0.8,
+                            'b' : 0.08,
+                            'delta_T' : 0.8,
+                            'tau_w' : 88.0,
+                            'v_thresh' : -53.0
+                        },
+
+                       'initial_values': {
+                                    'v': PyNNDistribution(name='uniform',low=-70,high=-51),
+                                },
+
+                    },
+                'artificial_stimulators' : {},
+                'recording_interval'  :  1.0,
+                'recorders' : None,
+    },
+    
+    'RecurrentConnection': {
+        'target_synapses' : 'excitatory',             
+        'short_term_plasticity': None, 
+
+        'weight_functions' : {
+                                'f1' : {
+					'component' : 'mozaik.connectors.modular_connector_functions.GaussianDecayModularConnectorFunction',
+					'params' : {
+						'arborization_constant' : 1000,
+						'arborization_scaler' : 4.0,
+					}
+				}
+                             },
+
+        'delay_functions' : {
+                                'd1' : {
+                                         'component' : 'mozaik.connectors.modular_connector_functions.LinearModularConnectorFunction',
+                                         'params' : {
+                                                        'constant_scaler': 1.4,
+                                                        'linear_scaler': 0.0033333333,
+                                                    }
+                                       },
+
+                            },
+
+        'weight_expression' : 'f1',
+        'delay_expression' : 'd1',
+        'base_weight': 0.0005,
+	'num_samples' : 200,
+        'local_module': None 
+    },
+}

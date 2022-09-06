@@ -1,0 +1,10 @@
+{
+    'num_samples' : {
+        'class_name': 'PyNNDistribution',
+        'params': {
+                'name': 'uniform',
+                'low': 25,
+                'high': 65,
+            },
+    },
+}
