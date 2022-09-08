@@ -43,23 +43,8 @@ class RetinalUniformSheet(Sheet):
                                    rng=mozaik.pynn_rng)
         
         #rs = space.Grid2D(aspect_ratio=1, dx=parameters.sx/parameters.density, dy=parameters.sy/parameters.density, x0=-parameters.sx/2,y0=-parameters.sy/2,z=0.0)
-        if self.parameters.cell.model in set(["aeif_cond_alpha_multisynapse","aeif_cond_beta_multisynapse"]):
-            
-            receptors= {}
-            for (k,v) in self.parameters.cell.receptors.items():
-                #name.append(v['name'])
-                receptors[k] = getattr(self.model.sim, v.name)(**v.params)
-                
-                
-            celltype = self.sim.PointNeuron(
-                self.sim.AdExp(tau_m=self.parameters.cell.params.tau_m, v_rest=self.parameters.cell.params.tau_m),
-                                **receptors)
-                
-                
-            self.pop = self.sim.Population(int(parameters.sx * parameters.sy * parameters.density), celltype, initial_values=self.parameters.cell.initial.values)    
         
-        else:
-            self.pop = self.sim.Population(int(parameters.sx * parameters.sy * parameters.density),
+        self.pop = self.sim.Population(int(parameters.sx * parameters.sy * parameters.density),
                                             getattr(self.model.sim, self.parameters.cell.model),
                                             self.parameters.cell.params,
                                             structure=rs,
@@ -192,12 +177,36 @@ class VisualCorticalUniformSheet(SheetWithMagnificationFactor):
                                    origin=(0.0, 0.0, 0.0),
                                    rng=mozaik.pynn_rng)
 
-        self.pop = self.sim.Population(int(parameters.sx*parameters.sy/1000000*parameters.density),
+
+        if self.parameters.cell.model in set(["aeif_cond_alpha_multisynapse","aeif_cond_beta_multisynapse"]):
+            
+            receptors= {}
+            for (k,v) in self.parameters.cell.receptors.items():
+                #name.append(v['name'])
+                receptors[k] = getattr(self.model.sim, v.name)(**v.params)
+                
+                
+            celltype = self.sim.PointNeuron(
+                self.sim.AdExp(tau_m=self.parameters.cell.params.tau_m, v_rest=self.parameters.cell.params.tau_m),
+                                **receptors)
+                
+                
+            self.pop = self.sim.Population(int(parameters.sx * parameters.sy/1000000 * parameters.density), celltype, initial_values=self.parameters.cell.initial.values)    
+        
+        else:
+            self.pop = self.sim.Population(int(parameters.sx * parameters.sy/1000000 * parameters.density),
+                                            getattr(self.model.sim, self.parameters.cell.model),
+                                            self.parameters.cell.params,
+                                            structure=rs,
+                                            initial_values=self.parameters.cell.initial_values,
+                                            label=self.name)
+
+        '''self.pop = self.sim.Population(int(parameters.sx*parameters.sy/1000000*parameters.density),
                                        getattr(self.model.sim, self.parameters.cell.model),
                                        self.parameters.cell.params,
                                        structure=rs,
                                        initial_values=self.parameters.cell.initial_values,
-                                       label=self.name)
+                                       label=self.name)'''
         # Forces PyNN to generate the positions to ensure the reproducibility with multiprocessing
         self.pop.positions
 
