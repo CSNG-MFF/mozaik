@@ -191,7 +191,7 @@ class VisualCorticalUniformSheet(SheetWithMagnificationFactor):
                                 **receptors)
                 
                 
-            self.pop = self.sim.Population(int(parameters.sx * parameters.sy/1000000 * parameters.density), celltype, initial_values=self.parameters.cell.initial.values)    
+            self.pop = self.sim.Population(int(parameters.sx * parameters.sy/1000000 * parameters.density), celltype, initial_values=self.parameters.cell.initial_values)    
         
         else:
             self.pop = self.sim.Population(int(parameters.sx * parameters.sy/1000000 * parameters.density),
