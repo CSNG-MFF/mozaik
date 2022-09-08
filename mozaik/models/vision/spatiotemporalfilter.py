@@ -360,6 +360,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         'cell': ParameterSet({
             'model': str,
             'params': ParameterSet,
+            'receptors':ParameterSet,
             'initial_values': ParameterSet,
         }),
         'gain_control' : {
