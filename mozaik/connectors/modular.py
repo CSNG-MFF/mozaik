@@ -401,6 +401,7 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(LocalModuleCon
                 delays = self._obtain_delays(indices[i],seeds[i])
 
                 if self.parameters.num_samples == 0:
+                    logger.info(weights)
                     co = Counter(
                         sample_from_bin_distribution(weights, int(samples), seeds[i])
                     )
