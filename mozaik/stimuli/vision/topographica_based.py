@@ -65,10 +65,14 @@ class SparseNoise(TopographicaBasedVisualStimulus):
         while True:
             aux2 = aux()
             blank = aux2*0+self.background_luminance
+            pos = np.where(aux2 != self.background_luminance)
+            x = int(pos[0].min())
+            y = int(pos[1].min())
+            polarity = aux2[int(x),int(y)] / self.background_luminance - 1
             for i in range(int(self.time_per_image/self.frame_duration)):
-                yield (aux2,[0])
+                yield (aux2,[x,y,polarity])
             for i in range(int(self.blank_time/self.frame_duration)):
-                yield (blank,[0])
+                yield (blank,[0,0,0])
             
 
 class DenseNoise(TopographicaBasedVisualStimulus):
