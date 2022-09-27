@@ -129,52 +129,13 @@ class TestNoise(TopographicaBasedVisualStimulusTester):
         if type(self) == TestNoise:
             pytest.skip("Only run in child classes.")
         with pytest.raises(ValueError):
-            self.check_frames(grid_size=grid_size)
-
-
-# grid_size, size_x, grid, background_luminance, density
-sparse_noise_params = [
-    # Some basic parameter combinations
-    (10, 10, True, 50, 5.0, 7),
-    (15, 15, False, 60, 6.0, 14),
-    (5, 5, False, 0.0, 15, 28),
-]
+            self.topo_frames(grid_size=grid_size).__next__()
 
 
 class TestSparseNoise(TestNoise):
     """
     Tests for the SparseNoise class.
     """
-
-    def reference_frames(
-        self,
-        grid_size=default_noise["grid_size"],
-        size_x=default_topo["size_x"],
-        grid=default_noise["grid"],
-        blank_time=17,
-        background_luminance=default_topo["background_luminance"],
-        density=default_topo["density"],
-    ):
-
-        time_per_image = default_noise["time_per_image"]
-        frame_duration = default_topo["frame_duration"]
-        aux = imagen.random.SparseNoise(
-            grid_density=grid_size * 1.0 / size_x,
-            grid=grid,
-            offset=0,
-            scale=2 * background_luminance,
-            bounds=BoundingBox(radius=size_x / 2),
-            xdensity=density,
-            ydensity=density,
-            random_generator=numpy.random.RandomState(seed=self.experiment_seed),
-        )
-        while True:
-            aux2 = aux()
-            blank = aux2 * 0 + background_luminance
-            for i in range(int(time_per_image / frame_duration)):
-                yield (aux2, [0])
-            for i in range(int(blank_time / frame_duration)):
-                yield (blank, [0])
 
     def topo_frames(
         self,
@@ -184,6 +145,7 @@ class TestSparseNoise(TestNoise):
         blank_time=17,
         background_luminance=default_topo["background_luminance"],
         density=default_topo["density"],
+        time_per_image=default_noise["time_per_image"],
     ):
         snclass = topo.SparseNoise(
             grid_size=grid_size,
@@ -194,28 +156,72 @@ class TestSparseNoise(TestNoise):
             size_y=default_topo["size_y"],
             location_x=default_topo["location_x"],
             location_y=default_topo["location_y"],
-            time_per_image=default_noise["time_per_image"],
+            time_per_image=time_per_image,
             blank_time=blank_time,
             frame_duration=default_topo["frame_duration"],
             experiment_seed=self.experiment_seed,
         )
         return snclass._frames
 
-    @pytest.mark.parametrize(
-        "grid_size, size_x, grid, background_luminance, density, blank_time",
-        sparse_noise_params,
-    )
-    def test_frames(
-        self, grid_size, size_x, grid, background_luminance, density, blank_time
-    ):
-        self.check_frames(
+    @pytest.mark.parametrize("grid_size", [5, 7, 9, 11])
+    @pytest.mark.parametrize("b_lum", [25, 50, 75])
+    def test_uniformity(self, grid_size, b_lum):
+        frames = self.topo_frames(
+            grid=True,
             grid_size=grid_size,
-            size_x=size_x,
-            grid=grid,
-            background_luminance=background_luminance,
-            density=density,
-            blank_time=blank_time,
+            size_x=grid_size,
+            blank_time=0,
+            background_luminance=b_lum,
+            time_per_image=default_topo["frame_duration"],
         )
+
+        f0, _ = frames.__next__()
+        # We separately test the positive and negative pixel coverage
+        f_pos = np.zeros_like(f0)
+        f_neg = np.zeros_like(f0)
+        n_images = 1000
+        n_pos = 0
+        for i in range(n_images):
+            f, _ = frames.__next__()
+            if f.mean() > b_lum:
+                f_pos += f
+                n_pos += 1
+            else:
+                f_neg += f
+
+        np.testing.assert_allclose(n_images / 2, n_pos, rtol=0.1)
+        f_pos /= n_pos
+        f_neg /= n_images - n_pos
+
+        # All white/black pixels have an 1/(grid_size**2) probability to appear
+        p = 1 / (grid_size * grid_size)
+        np.testing.assert_allclose(f_pos, b_lum * (1 + p), rtol=0.05)
+        np.testing.assert_allclose(f_neg, b_lum * (1 - p), rtol=0.05)
+
+    @pytest.mark.parametrize("grid_size", [5, 7, 9, 11])
+    @pytest.mark.parametrize("density", [5, 10, 15])
+    @pytest.mark.parametrize("b_lum", [25, 50, 75])
+    def test_saved_params(self, grid_size, density, b_lum):
+        frames = self.topo_frames(
+            grid=True,
+            grid_size=grid_size,
+            size_x=grid_size,
+            blank_time=0,
+            background_luminance=b_lum,
+            density=density,
+            time_per_image=default_topo["frame_duration"],
+        )
+
+        for i in range(100):
+            f, p = frames.__next__()
+            px_size = density
+            # Every position in the range of the "pixel" has a correct polarity
+            assert np.allclose(
+                f[p[0] : p[0] + px_size, p[1] : p[1] + px_size], (p[2] + 1) * b_lum
+            )
+            f[p[0] : p[0] + px_size, p[1] : p[1] + px_size] = b_lum
+            # Everywhere else is background luminance
+            assert np.all(f == b_lum)
 
 
 # grid_size, size_x, background_luminance, density
