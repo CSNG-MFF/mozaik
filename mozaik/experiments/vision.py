@@ -501,9 +501,12 @@ class MeasureSizeTuning(VisualExperiment):
     max_size : float (degrees of visual field)
              Maximum size to present.
     
-    orientation : float
-                The orientation (in radians) at which to measure the size tuning. (in future this will become automated)
-                
+    orientations : list(float)
+                The orientations (in radians) at which to measure the size tuning. (in future this will become automated)
+
+    positions : list(tuple(float,float)) 
+              List of coordinates of each of the positions where the stimulus should be shown
+
     spatial_frequency : float
                       Spatial frequency of the grating.
                       
@@ -529,7 +532,8 @@ class MeasureSizeTuning(VisualExperiment):
     required_parameters = ParameterSet({
             'num_sizes' : int,
             'max_size' : float,
-            'orientation' : float,
+            'orientations' : list,
+            'positions' : list,
             'spatial_frequency' : float, 
             'temporal_frequency' : float,
             'grating_duration' : float,
@@ -550,23 +554,25 @@ class MeasureSizeTuning(VisualExperiment):
             
         # stimuli creation        
         for c in self.parameters.contrasts:
-            for s in sizes:
-                for k in range(0, self.parameters.num_trials):
-                    self.stimuli.append(topo.DriftingSinusoidalGratingDisk(
-                                    frame_duration = self.frame_duration,
-                                    size_x=model.visual_field.size_x,
-                                    size_y=model.visual_field.size_y,
-                                    location_x=0.0,
-                                    location_y=0.0,
-                                    background_luminance=self.background_luminance,
-                                    contrast = c,
-                                    duration=self.parameters.grating_duration,
-                                    density=self.density,
-                                    trial=k,
-                                    orientation=self.parameters.orientation,
-                                    radius=s,
-                                    spatial_frequency=self.parameters.spatial_frequency,
-                                    temporal_frequency=self.parameters.temporal_frequency))
+            for o in self.parameters.orientations:
+                for x, y in self.parameters.positions:
+                    for s in sizes:
+                        for k in range(0, self.parameters.num_trials):
+                            self.stimuli.append(topo.DriftingSinusoidalGratingDisk(
+                                            frame_duration = self.frame_duration,
+                                            size_x=model.visual_field.size_x,
+                                            size_y=model.visual_field.size_y,
+                                            location_x=x,
+                                            location_y=y,
+                                            background_luminance=self.background_luminance,
+                                            contrast = c,
+                                            duration=self.parameters.grating_duration,
+                                            density=self.density,
+                                            trial=k,
+                                            orientation=o,
+                                            radius=s,
+                                            spatial_frequency=self.parameters.spatial_frequency,
+                                            temporal_frequency=self.parameters.temporal_frequency))
 
     def do_analysis(self, data_store):
         pass
