@@ -1114,6 +1114,9 @@ class MeasureNaturalImagesWithEyeMovement(VisualExperiment):
     num_trials : int
                Number of trials each each stimulus is shown.
                
+    size : float
+               The size of the image in degrees of visual field
+
     Notes
     -----
     Currently this implementation bound to have the image and the eye path saved in in files *./image_naturelle_HIGH.bmp* and *./eye_path.pickle*.
@@ -1123,6 +1126,7 @@ class MeasureNaturalImagesWithEyeMovement(VisualExperiment):
     required_parameters = ParameterSet({
             'stimulus_duration' : float,
             'num_trials' : int,
+            'size' : float,
     })  
 
     
@@ -1141,7 +1145,7 @@ class MeasureNaturalImagesWithEyeMovement(VisualExperiment):
                             duration=self.parameters.stimulus_duration,
                             density=self.density,
                             trial=k,
-                            size=60,  # x size of image
+                            size=self.parameters.size,  # x size of image
                             eye_movement_period=6.66,  # eye movement period
                             eye_path_location='./eye_path.pickle',
                             image_location='./image_naturelle_HIGHC.bmp'))
