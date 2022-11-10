@@ -66,6 +66,7 @@ class GaborConnector(BaseComponent):
     """
 
     required_parameters = ParameterSet({
+        'target_synapes': str,
         'aspect_ratio': PyNNDistribution,  # aspect ratio of the gabor
         'size':         PyNNDistribution,  # the size of the gabor  RFs in degrees of visual field
         'orientation_preference':  PyNNDistribution,  # the orientation preference of the gabor RFs
@@ -94,7 +95,7 @@ class GaborConnector(BaseComponent):
         'phase_map': bool,  # is a phase map supplied?
         'phase_map_location': str,  # if phase_map is True where can one find the map. It has to be a file containing a single pickled 2d numpy array
         'gauss_coefficient': float, # The coefficient of the gaussian component (if any) of the meta connector
-
+        'target_synapse': str, # Synapses targeted by the connection 
     })
 
     def __init__(self, network, lgn_on, lgn_off, target, parameters, name):
@@ -172,11 +173,12 @@ class GaborConnector(BaseComponent):
             if self.parameters.topological:
                 target.add_neuron_annotation(j, 'LGNAfferentX', target.pop.positions[0][j]+parameters.rf_jitter.next(), protected=True)
                 target.add_neuron_annotation(j, 'LGNAfferentY', target.pop.positions[1][j]+parameters.rf_jitter.next(), protected=True)
+                
             else:
                 target.add_neuron_annotation(j, 'LGNAfferentX', parameters.rf_jitter.next(), protected=True)
                 target.add_neuron_annotation(j, 'LGNAfferentY', parameters.rf_jitter.next(), protected=True)
 
-        ps = ParameterSet({   'target_synapses' : 'excitatory',               
+        ps = ParameterSet({   'target_synapses' : self.parameters.target_synapses,               
                               'weight_functions' : {  'f1' : {
                                                                  'component' : 'mozaik.connectors.vision.GaborArborization',
                                                                  'params' : {

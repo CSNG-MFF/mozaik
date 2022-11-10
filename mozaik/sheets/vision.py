@@ -187,11 +187,13 @@ class VisualCorticalUniformSheet(SheetWithMagnificationFactor):
                 
                 
             celltype = self.sim.PointNeuron(
-                self.sim.AdExp(tau_m=self.parameters.cell.params.tau_m, v_rest=self.parameters.cell.params.tau_m),
+                self.sim.AdExp(self.parameters.cell.params),
                                 **receptors)
                 
                 
-            self.pop = self.sim.Population(int(parameters.sx * parameters.sy/1000000 * parameters.density), celltype, initial_values=self.parameters.cell.initial_values)    
+            self.pop = self.sim.Population(int(parameters.sx * parameters.sy/1000000 * parameters.density), 
+                                            celltype,structure=rs, initial_values=self.parameters.cell.initial_values,
+                                            label= self.name)    
         
         else:
             self.pop = self.sim.Population(int(parameters.sx * parameters.sy/1000000 * parameters.density),
