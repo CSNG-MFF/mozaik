@@ -66,7 +66,7 @@ class GaborConnector(BaseComponent):
     """
 
     required_parameters = ParameterSet({
-        'target_synapes': str,
+        'target_synapses': str,
         'aspect_ratio': PyNNDistribution,  # aspect ratio of the gabor
         'size':         PyNNDistribution,  # the size of the gabor  RFs in degrees of visual field
         'orientation_preference':  PyNNDistribution,  # the orientation preference of the gabor RFs
