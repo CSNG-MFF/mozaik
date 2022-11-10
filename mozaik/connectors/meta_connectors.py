@@ -95,7 +95,7 @@ class GaborConnector(BaseComponent):
         'phase_map': bool,  # is a phase map supplied?
         'phase_map_location': str,  # if phase_map is True where can one find the map. It has to be a file containing a single pickled 2d numpy array
         'gauss_coefficient': float, # The coefficient of the gaussian component (if any) of the meta connector
-        'target_synapse': str, # Synapses targeted by the connection 
+        
     })
 
     def __init__(self, network, lgn_on, lgn_off, target, parameters, name):
