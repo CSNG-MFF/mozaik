@@ -187,7 +187,7 @@ class VisualCorticalUniformSheet(SheetWithMagnificationFactor):
                 
                 
             celltype = self.sim.PointNeuron(
-                self.sim.AdExp(self.parameters.cell.params),
+                self.sim.AdExp(**self.parameters.cell.params),
                                 **receptors)
                 
                 
