@@ -203,6 +203,7 @@ class MozaikSegment(Segment):
             if not self.full:
                 self.load_full()
             for a in self.analogsignals:
+                logger.info(a.name)
                 if a.name == name:
                    return a.annotations['source_ids']
                 

@@ -1927,10 +1927,10 @@ class ExcitatoryConductanceGenerator(Analysis):
                     all_ids.append(receptor_ids)
 
                 all_ids= set(all_ids)
-                
+                logger.info(self.parameters.excitatory_receptors[0])
                 first_id = seg.get_stored_syn_ids(self.parameters.excitatory_receptors[0] + '_gsyn')[0]
                 logger.info(first_id)
-                logger.info(self.parameters.excitatory_receptors[0])
+                
                 first_cond=seg.get_syn(first_id, self.parameters.excitatory_receptors[0] + '_gsyn')
                 logger.info(first_cond)
 
