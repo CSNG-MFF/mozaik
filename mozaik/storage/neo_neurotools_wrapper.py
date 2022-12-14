@@ -117,7 +117,30 @@ class MozaikSegment(Segment):
                 if a.name == 'v':
 			
                     return a[:, a.annotations['source_ids'].tolist().index(neuron_id)]
+                
+        def get_syn(self,neuron_id, name):
+            """
+            With a given name, it returns the recorded conductance corresponding to neurons with id(s) listed in the `neuron_id` argument.
+            
+            Parameters
+            ----------
+            name : str 
+                  A string containing the type of conductance this function should return (AMPA, GABAA, GABAB, NMDA)
 
+            neuron_id : int or list(int)
+                      An int or a list of ints containing the ids for which to return the AnalogSignal objects.
+                      
+            Returns
+            -------
+            A AnalogSignal object if neuron_id is int, or list of AnalogSignal objects if neuron_id is list, the order corresponds to the order in neuron_id argument.
+            """
+
+            if not self.full:
+                self.load_full()
+            for a in self.analogsignals:
+                if a.name == name:
+                    return a[:, a.annotations['source_ids'].tolist().index(neuron_id)]
+                
         def get_esyn(self,neuron_id):
             """
             Returns the recorded excitatory conductance corresponding to neurons with id(s) listed in the `neuron_id` argument.
@@ -168,6 +191,22 @@ class MozaikSegment(Segment):
             """
             return len(self.spiketrains)
         
+        def get_stored_syn_ids(self, name):
+            """
+            Parameters
+             name: A string containing the type of conductance for which the ids will be returned.
+
+            Returns
+
+             Returns ids of neurons for which conductance is stored in this segment.
+            """
+            if not self.full:
+                self.load_full()
+            for a in self.analogsignals:
+                if a.name == name:
+                   return a.annotations['source_ids']
+                
+
         def get_stored_isyn_ids(self):
             """
             Returns ids of neurons for which inhibitory conductance is stored in this segment.

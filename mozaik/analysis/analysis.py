@@ -36,6 +36,8 @@ from builtins import zip
 
 logger = mozaik.getMozaikLogger()
 
+
+
 class Analysis(ParametrizedObject):
     """
     The analysis interface.
@@ -1458,7 +1460,6 @@ class AnalogSignal_PerNeuronMeanVar(Analysis):
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(vvar,ads.ids,ads.y_axis_units,value_name = 'PerNeuronVar(' + ads.y_axis_name + ')',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=ads.stimulus_id))        
                     
 
-
 class TrialAveragedVarianceAndVarianceRatioOfConductances(Analysis):
       """
       Calculates the variance of the excitatory and inhibitory conductances and their ratios, and averages across trials, for all neurons and for all recordings in the datastore.
@@ -1898,3 +1899,101 @@ class NakaRushtonTuningCurveFit(Analysis):
             return p1,err
           else :
             return [-1,-1,-1],1000000000
+
+
+class ExcitatoryConductanceGenerator(Analysis):
+
+    required_parameters = ParameterSet({
+        'excitatory_receptors': list,  
+        #'inhibitory_receptors' : list,
+    })      
+    def perform_analysis(self):
+        
+        #ADS self.datastore.full_datastore.add_analysis_result(
+        #identifier: used to identify data structures of common type in storage
+        #analysis_algorithm: Name of the Analysis class that produced the ADS
+        #sheet_name: The sheet for which the analysis have been performed.
+        #neuron: List of neuron ID
+        #stimulus_id: String containing the stimulus id
+        for sheet in self.datastore.sheets():
+            dsv = queries.param_filter_query(self.datastore,sheet_name=sheet)
+            for seg in dsv.get_segments():
+                all_ids= []
+                dict_for_= {}
+                for receptor in self.parameters.excitatory_receptors:
+                    name= receptor+ '_gsyn'
+                    receptor_ids=seg.get_stored_syn_ids(name=name)
+                    dict_for_[name]= receptor_ids
+                    all_ids.append(receptor_ids)
+
+                all_ids= set(all_ids)
+                
+                first_id = seg.get_stored_syn_ids(self.parameters.excitatory_receptors[0] + '_gsyn')
+                first_cond=seg.get_syn(first_id, self.parameters.excitatory_receptors[0] + '_gsyn')
+                
+
+                # Generate excitatory conductances for all id
+                exc_conds = []
+                for id in all_ids:
+                    # Generate excitatory conductances for a specific id
+                    exc_cond = numpy.zeros(first_cond.shape)
+                    for key,value in dict_for_.items():
+                        # If we recorded a given conductance for this id, increment the excitatory conductance with this conductance values
+                        if id in value:
+                            exc_cond = exc_cond + seg.get_syn(id,key).magnitude
+                            #cond_exc= NeoAnalogSignal(numpy.mean(numpy.array(seg.get_syn(id,key)), axis=0), t_start= first_cond.t_start, sampling_period= first_cond.sampling_period, units= first_cond.units)
+                    exc_conds.append(exc_cond)
+
+                seg.analogsignals.append(NeoAnalogSignal(exc_conds, t_start= first_cond.t_start, sampling_period= first_cond.sampling_period, units= first_cond.units, name= 'gsyn_exc', source_population= sheet, source_ids = all_ids))
+                # Create analog signals from list of conductances. Each element of the list corresponds to an id
+                    
+                self.datastore.full_datastore.update_segment(seg)
+    
+
+class InhibitoryConductanceGenerator(Analysis):
+
+    required_parameters = ParameterSet({
+        #'excitatory_receptors': list,  
+        'inhibitory_receptors' : list,
+    })      
+    def perform_analysis(self):
+        
+        #ADS self.datastore.full_datastore.add_analysis_result(
+        #identifier: used to identify data structures of common type in storage
+        #analysis_algorithm: Name of the Analysis class that produced the ADS
+        #sheet_name: The sheet for which the analysis have been performed.
+        #neuron: List of neuron ID
+        #stimulus_id: String containing the stimulus id
+        for sheet in self.datastore.sheets():
+            dsv = queries.param_filter_query(self.datastore,sheet_name=sheet)
+            for seg in dsv.get_segments():
+                all_ids= []
+                dict_for_= {}
+                for receptor in self.parameters.inhibitory_receptors:
+                    name= receptor+ '_gsyn'
+                    receptor_ids=seg.get_stored_syn_ids(name=name)
+                    dict_for_[name]= receptor_ids
+                    all_ids.append(receptor_ids)
+
+                all_ids= set(all_ids)
+                
+                first_id = seg.get_stored_syn_ids(self.parameters.inhibitory_receptors[0] + '_gsyn')
+                first_cond=seg.get_syn(first_id, self.parameters.inhibitory_receptors[0] + '_gsyn')
+                
+
+                # Generate excitatory conductances for all id
+                inh_conds = []
+                for id in all_ids:
+                    # Generate excitatory conductances for a specific id
+                    inh_cond = numpy.zeros(first_cond.shape)
+                    for key,value in dict_for_.items():
+                        # If we recorded a given conductance for this id, increment the excitatory conductance with this conductance values
+                        if id in value:
+                            inh_cond = inh_cond + seg.get_syn(id,key).magnitude
+                            #cond_exc= NeoAnalogSignal(numpy.mean(numpy.array(seg.get_syn(id,key)), axis=0), t_start= first_cond.t_start, sampling_period= first_cond.sampling_period, units= first_cond.units)
+                    inh_conds.append(inh_cond)
+
+                seg.analogsignals.append(NeoAnalogSignal(inh_conds, t_start= first_cond.t_start, sampling_period= first_cond.sampling_period, units= first_cond.units, name= 'gsyn_inh', source_population= sheet, source_ids = all_ids))
+                # Create analog signals from list of conductances. Each element of the list corresponds to an id
+                    
+                self.datastore.full_datastore.update_segment(seg)
