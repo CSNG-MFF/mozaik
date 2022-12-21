@@ -416,6 +416,10 @@ class LFPFromSynapticCurrents(Analysis):
             sx = eval(dsv1.full_datastore.block.annotations['sheet_parameters'])[sheet]['sx']
             sy = eval(dsv1.full_datastore.block.annotations['sheet_parameters'])[sheet]['sy']
 
+            #Get the reversal potentials
+            e_rev_E = eval(dsv1.full_datastore.block.annotations['sheet_parameters'])[sheet]['cell']['params']['e_rev_E']
+            e_rev_I = eval(dsv1.full_datastore.block.annotations['sheet_parameters'])[sheet]['cell']['params']['e_rev_I']
+
             # Get the size of the border
             dx = sx - self.parameters.cropped_length
             dy = sy - self.parameters.cropped_length
@@ -462,13 +466,13 @@ class LFPFromSynapticCurrents(Analysis):
                     time_step = e_syn.sampling_period
                     e_syn = numpy.transpose(e_syn.magnitude,(1,0))[0]
                     i_syn = numpy.transpose(seg.get_isyn(aid).downsample(self.parameters.downsampling).magnitude,(1,0))[0]
-                    vm = -numpy.transpose(seg.get_vm(aid).downsample(self.parameters.downsampling).magnitude,(1,0))[0]
+                    vm = numpy.transpose(seg.get_vm(aid).downsample(self.parameters.downsampling).magnitude,(1,0))[0]
 
                     # This LFP proxy is optimal when excitation is lagged by 6ms compared to inhibition
                     idiff = int(6/time_step)
                     padding = numpy.zeros(idiff)
 
-                    lfp = (vm * e_syn)[:-idiff] + 1.65 * (vm * i_syn)[idiff:] #Same proxy as Davis et al., 2021 
+                    lfp = ((e_rev_E - vm) * e_syn)[:-idiff] - 1.65 * ((e_rev_I - vm) * i_syn)[idiff:] #Same proxy as Davis et al., 2021 
 
                     full_signal = lfp
                     #full_signal = numpy.concatenate((padding,lfp))
@@ -493,15 +497,15 @@ class LFPFromSynapticCurrents(Analysis):
                 else:
                     gauss_suffix = " without convolution"
                 
-                # Not possible to use a real Z-score because the PixelMovie visualization takes only positive values
-                avg = numpy.mean(m)
-                std = numpy.std(m)
-                m = m/std
-
                 # Cropping
                 m = m[dix:-dix,diy:-diy]
                 x_axis_cropped = x_axis[dix:-dix]
                 y_axis_cropped = y_axis[diy:-diy]
+
+                # Not possible to use a real Z-score because the PixelMovie visualization takes only positive values
+                avg = numpy.mean(m)
+                std = numpy.std(m)
+                m = (m - avg)/std
 
                 # Convert the tensor to a PerAreaAnalogSignalList and add it to the datastore
                 lfps = []
@@ -518,4 +522,69 @@ class LFPFromSynapticCurrents(Analysis):
                                    sheet_name=sheet,
                                    tags=self.tags,
                                    analysis_algorithm=self.__class__.__name__))
+
+class AreaOrientationLabeling:
+    required_parameters = ParameterSet({
+        'orientation_bins_width': int,
+        'orientation_bins_number': int,
+    })
+
+    def perform_analysis(self):
+        orientation_bins_center = numpy.linspace(0,180,self.parameters.orientaiton_bins_number + 1 )[:-1]
+        for sheet in self.datastore.sheets():
+            orientation_values =self.datastore.full_datastore.get_analysis_result(identifier='PerNeuronValue', value_name=['LGNAfferentOrientation', 'ORMapOrientation'], sheet_name=sheet, ads_unique=True)[0]
+            xs = data_store.get_neuron_positions()[sheet][0]
+            ys = data_store.get_neuron_positions()[sheet][1]
+           
+            dsv1 = queries.param_filter_query(self.datastore, sheet_name=sheet, identifier=['PerAreaAnalogSignalList'])
+            for paasl in dsv1.get_analysis_result():
+                orientation_matrix = [[[numpy.zeros(orientation_bins_center.shape[0])] for _ in range(len(paasl.x_coords))] for _ in range(len(paasl.y_coords))]
+
+                # Assuming spacing between two datapoints is constant
+                x_ps = paasl.x_coords[1] - paasl.x_coords[0]
+                y_ps = paasl.y_coords[1] - paasl.y_coords[0]
+               
+                for idx,val in zip(self.datastore.full_datastore.get_sheet_indexes(sheet_name=sheet, neuron_ids=orientation_values.ids), orientation_values.values):
+                    x = xs[idx]
+                    y = ys[idx]
+                    x_grid = (x - paasl.x_coords[0])//x_ps
+                    y_grid = (y - paasl.y_coords[0])//y_ps
+                    for i, orientation in enumerate(orientation_values):
+                        if val > orientation - self.parameters.orientation_bins_width or val < orientation + self.parameters.orientation_bins_width:
+                            orientation_matrix[y_grid][x_grid][i] += 1
+
+                for y_grid in len(orientation_matrix):
+                    for x_grid in len(orientation_matrix[y_grid]):
+                        orientation_matrix[y_grid][x_grid] = orientation_bins_center[numpy.argmax(orientation_matrix[y_grid][x_grid])]
+
+                self.datastore.full_datastore.add_analysis_result(
+                    PerAreaValue(orientation_matrix,paasl.x_coords,paasl.y_coords,orientation_values.value_units,
+                                   stimulus_id=paasl.stimulus_id,
+                                   value_name='Orientation label of '+paasl.y_axis_name,
+                                   sheet_name=sheet,
+                                   tags=self.tags,
+                                   analysis_algorithm=self.__class__.__name__))
+
+class SignalPropagationOrientationBias:
+    required_parameters = ParameterSet({
+    })
+
+    def perform_analysis(self):
+        for sheet in self.datastore.sheets():
+           orientations =self.datastore.full_datastore.get_analysis_result(identifier='PerNeuronValue', value_name=['LGNAfferentOrientation', 'ORMapOrientation'], sheet_name=sheet, ads_unique=True)[0]
+ 
+           dsv1 = queries.param_filter_query(self.datastore, sheet_name=sheet, identifier=['PerAreaAnalogSignalList'])
+           for paasl in dsv1.get_analysis_result():
+               asl = paasl.asl
+               # Assuming spacing between two datapoint is constant
+               x_ps = paasl.x_coords[1] - paasl.x_coords[0]
+               y_ps = paasl.y_coords[1] - paasl.y_coords[0]
+
+               nx = len(asl)
+               ny = len(asl[0])
+               sampling_period = asl[0][0].sampling_period
+               t_start = asl[0][0].t_start
+               dur = asl[0][0].shape[0]
+
+               new_t_start = t_start
 
