@@ -1923,6 +1923,8 @@ class ExcitatoryConductanceGenerator(Analysis):
                 
                 to_delete = None
                 for a in seg.analogsignals:
+                    logger.info('a.name')
+                    logger.info(a.name)
                     if a.name== 'gsyn_exc' and self.parameters.replace_if_exists:
                         to_delete=a
                         break
@@ -1937,9 +1939,11 @@ class ExcitatoryConductanceGenerator(Analysis):
                     receptor_ids=seg.get_stored_syn_ids(name=name)
                     dict_for_[name]= receptor_ids
                     all_ids.append(receptor_ids)
-
+                logger.info('all_ids')
+                logger.info(all_ids)
                 all_ids= set(all_ids)
                 logger.info(self.parameters.excitatory_receptors[0])
+
                 first_id = seg.get_stored_syn_ids(self.parameters.excitatory_receptors[0] + '_gsyn')[0]
                 logger.info(first_id)
                 
