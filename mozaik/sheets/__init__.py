@@ -269,10 +269,10 @@ class Sheet(BaseComponent):
         else:
             gsyn_names = ['gsyn_exc', 'gsyn_inh']
             
-            try:
-                block = self.pop.get_data(['spikes', 'v'] + gsyn_names,clear=True)
-            except (NothingToWriteError, errmsg):
-                logger.debug(errmsg)
+        try:
+            block = self.pop.get_data(['spikes', 'v'] + gsyn_names,clear=True)
+        except (NothingToWriteError, errmsg):
+            logger.debug(errmsg)
         if (mozaik.mpi_comm) and (mozaik.mpi_comm.rank != mozaik.MPI_ROOT):
            return None
         s = block.segments[-1]
