@@ -265,7 +265,7 @@ class Sheet(BaseComponent):
         if self.multisynapse:
             gsyn_names = []
             for k in self.parameters.cell.receptors.keys():
-                gsyn_names.append('gsyn_'+k) 
+                gsyn_names.append(k+ '_gsyn') 
         else:
             gsyn_names = ['gsyn_exc', 'gsyn_inh']
             
