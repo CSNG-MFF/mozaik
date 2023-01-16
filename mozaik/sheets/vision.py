@@ -179,7 +179,7 @@ class VisualCorticalUniformSheet(SheetWithMagnificationFactor):
 
 
         if self.parameters.cell.model in set(["aeif_cond_alpha_multisynapse","aeif_cond_beta_multisynapse"]):
-            
+            self.multisynapse = True
             receptors= {}
             for (k,v) in self.parameters.cell.receptors.items():
                 #name.append(v['name'])
