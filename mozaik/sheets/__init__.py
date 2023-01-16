@@ -262,7 +262,7 @@ class Sheet(BaseComponent):
         except (NothingToWriteError, errmsg):
             logger.debug(errmsg)
         '''
-        if self.multisynpase:
+        if self.multisynapse:
             gsyn_names = []
             for k in self.parameters.cell.receptors.keys():
                 gsyn_names.append('gsyn_'+k) 
