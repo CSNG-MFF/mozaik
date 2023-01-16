@@ -1905,6 +1905,7 @@ class ExcitatoryConductanceGenerator(Analysis):
 
     required_parameters = ParameterSet({
         'excitatory_receptors': list,  
+        'replace_if_exists': bool,
         #'inhibitory_receptors' : list,
     })      
     def perform_analysis(self):
@@ -1917,7 +1918,18 @@ class ExcitatoryConductanceGenerator(Analysis):
         #stimulus_id: String containing the stimulus id
         for sheet in self.datastore.sheets():
             dsv = queries.param_filter_query(self.datastore,sheet_name=sheet)
+            
             for seg in dsv.get_segments():
+                
+                to_delete = None
+                for a in seg.analogsignals:
+                    if a.name== 'gsyn_exc' and self.parameters.replace_if_exists:
+                        to_delete=a
+                        break
+                    elif a.name== 'gsyn_exc' and not self.parameters.replace_if_exists:
+                        raise ValueError("gsyn_exc already exists. Set replace_if_exists as True to replace")
+                if to_delete:
+                    seg.analogsignals.remove(to_delete)
                 all_ids= []
                 dict_for_= {}
                 for receptor in self.parameters.excitatory_receptors:
@@ -1954,10 +1966,12 @@ class ExcitatoryConductanceGenerator(Analysis):
 
 class InhibitoryConductanceGenerator(Analysis):
 
-    required_parameters = ParameterSet({
-        #'excitatory_receptors': list,  
+    required_parameters = ParameterSet({ 
+
         'inhibitory_receptors' : list,
+        'replace_if_exists': bool,
     })      
+
     def perform_analysis(self):
         
         #ADS self.datastore.full_datastore.add_analysis_result(
@@ -1969,6 +1983,16 @@ class InhibitoryConductanceGenerator(Analysis):
         for sheet in self.datastore.sheets():
             dsv = queries.param_filter_query(self.datastore,sheet_name=sheet)
             for seg in dsv.get_segments():
+
+                to_delete = None
+                for a in seg.analogsignals:
+                    if a.name== 'gsyn_inh' and self.parameters.replace_if_exists:
+                        to_delete=a
+                        break
+                    elif a.name== 'gsyn_inh' and not self.parameters.replace_if_exists:
+                        raise ValueError("gsyn_inh already exists. Set replace_if_exists as True to replace")
+                if to_delete:
+                    seg.analogsignals.remove(to_delete)
                 all_ids= []
                 dict_for_= {}
                 for receptor in self.parameters.inhibitory_receptors:
