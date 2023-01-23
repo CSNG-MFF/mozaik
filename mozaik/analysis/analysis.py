@@ -1929,7 +1929,7 @@ class ExcitatoryConductanceGenerator(Analysis):
                         break
                     elif a.name== 'gsyn_exc' and not self.parameters.replace_if_exists:
                         raise ValueError("gsyn_exc already exists. Set replace_if_exists as True to replace")
-                if to_delete!=None:
+                if to_delete is not None:
                     seg.analogsignals.remove(to_delete)
                 all_ids= []
                 dict_for_= {}
@@ -1995,7 +1995,7 @@ class InhibitoryConductanceGenerator(Analysis):
                         break
                     elif a.name== 'gsyn_inh' and not self.parameters.replace_if_exists:
                         raise ValueError("gsyn_inh already exists. Set replace_if_exists as True to replace")
-                if to_delete!=None:
+                if to_delete is not None:
                     seg.analogsignals.remove(to_delete)
                 all_ids= []
                 dict_for_= {}
