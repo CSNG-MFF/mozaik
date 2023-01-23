@@ -2007,7 +2007,7 @@ class InhibitoryConductanceGenerator(Analysis):
 
                 all_ids= list(set(all_ids))
                 
-                first_id = seg.get_stored_syn_ids(self.parameters.inhibitory_receptors[0] + '_gsyn')
+                first_id = seg.get_stored_syn_ids(self.parameters.inhibitory_receptors[0] + '_gsyn')[0]
                 first_cond=seg.get_syn(first_id, self.parameters.inhibitory_receptors[0] + '_gsyn')
                 
 
