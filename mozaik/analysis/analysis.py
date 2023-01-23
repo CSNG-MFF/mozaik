@@ -1940,7 +1940,7 @@ class ExcitatoryConductanceGenerator(Analysis):
                     all_ids +=list(receptor_ids)
                 logger.info('all_ids')
                 logger.info(all_ids)
-                all_ids= list(set(all_ids))
+                all_ids= numpy.array(set(all_ids))
 
                 logger.info(self.parameters.excitatory_receptors[0])
 
@@ -2005,7 +2005,7 @@ class InhibitoryConductanceGenerator(Analysis):
                     dict_for_[name]= receptor_ids
                     all_ids +=list(receptor_ids)
 
-                all_ids= list(set(all_ids))
+                all_ids= numpy.array(set(all_ids))
                 
                 first_id = seg.get_stored_syn_ids(self.parameters.inhibitory_receptors[0] + '_gsyn')[0]
                 first_cond=seg.get_syn(first_id, self.parameters.inhibitory_receptors[0] + '_gsyn')
