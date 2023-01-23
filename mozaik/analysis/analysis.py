@@ -1930,7 +1930,7 @@ class ExcitatoryConductanceGenerator(Analysis):
                     elif a.name== 'gsyn_exc' and not self.parameters.replace_if_exists:
                         raise ValueError("gsyn_exc already exists. Set replace_if_exists as True to replace")
                 if to_delete is not None:
-                    seg.analogsignals.remove(to_delete)
+                    seg.analogsignals= [x for x in seg.analogsignals if not (x==to_delete).all()]
                 all_ids= []
                 dict_for_= {}
                 for receptor in self.parameters.excitatory_receptors:
@@ -1996,7 +1996,8 @@ class InhibitoryConductanceGenerator(Analysis):
                     elif a.name== 'gsyn_inh' and not self.parameters.replace_if_exists:
                         raise ValueError("gsyn_inh already exists. Set replace_if_exists as True to replace")
                 if to_delete is not None:
-                    seg.analogsignals.remove(to_delete)
+                    seg.analogsignals= [x for x in seg.analogsignals if not (x==to_delete).all()]
+                    
                 all_ids= []
                 dict_for_= {}
                 for receptor in self.parameters.inhibitory_receptors:
