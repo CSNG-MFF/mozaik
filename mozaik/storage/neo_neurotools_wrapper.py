@@ -204,7 +204,8 @@ class MozaikSegment(Segment):
                 self.load_full()
             for a in self.analogsignals:
                 logger.info('syn_ids')
-                logger.info(a)
+                logger.info(a.name)
+                logger.info(a.annotations['source_ids'])
                 if a.name == name:
                    return a.annotations['source_ids']
                 
