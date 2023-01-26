@@ -1938,6 +1938,9 @@ class ExcitatoryConductanceGenerator(Analysis):
                     name= receptor+ '_gsyn'
                     receptor_ids=seg.get_stored_syn_ids(name=name)
                     dict_for_[name]= receptor_ids
+                    logger.info('receptor_ids')
+
+                    logger.info(receptor_ids)
                     all_ids +=list(receptor_ids)
                 logger.info('all_ids')
                 logger.info(all_ids)
