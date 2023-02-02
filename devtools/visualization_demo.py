@@ -200,7 +200,6 @@ def demo_experiment_1():
 
 
 def main():
-
     if True:
         # Try out show_stimulus arguments
         demo_stimulus_0()
