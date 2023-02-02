@@ -95,6 +95,7 @@ class Experiment(ParametrizedObject):
             srtsum += simulator_run_time
             data_store.add_recording(segments,s)
             data_store.add_stimulus(input_stimulus,s)
+            data_store.add_direct_stimulation(ds,s)
             
             if null_segments != []:
                data_store.add_null_recording(null_segments,s) 

@@ -23,7 +23,9 @@ exclude = '''
  | mozaik/meta_workflow
  | mozaik/connectors
  | mozaik/tools
- | mozaik/experiments
+ | mozaik/experiments/__init__.py
+ | mozaik/experiments/direct_stimulations_mixins.py
+ | mozaik/experiments/vision.py
  | mozaik/visualization
  | mozaik/models
  | mozaik/storage
