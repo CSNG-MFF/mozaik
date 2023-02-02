@@ -18,8 +18,8 @@ from numpy import pi
 from quantities import Hz, rad, degrees, ms, dimensionless
 import mozaik.stimuli.vision.topographica_based as topo
 from collections import namedtuple
-
 import pytest
+
 
 # Dummy class to get rid of NotImplementedError
 class DummyTBVS(topo.TopographicaBasedVisualStimulus):
@@ -114,7 +114,6 @@ default_noise = {"grid_size": 11, "grid": False, "time_per_image": 2}
 
 
 class TestNoise(TopographicaBasedVisualStimulusTester):
-
     experiment_seed = 0
 
     def test_init_assert(self):
