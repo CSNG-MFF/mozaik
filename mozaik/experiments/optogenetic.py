@@ -638,12 +638,12 @@ class OptogeneticArrayImageStimulus(CorticalStimulationWithOptogeneticArray):
             image_paths = [self.parameters.images_path]
         elif os.path.isdir(self.parameters.images_path):
             image_paths = []
-            root, files = [
-                (r, f)
-                for r, d, f in os.walk(self.parameters.images_path)
-                if f[-4:] == ".npy"
-            ][0]
-            image_paths = sorted([os.path.join(root, f) for f in files])
+            root, files = [(r, f) for r, d, f in os.walk(self.parameters.images_path)][
+                0
+            ]
+            image_paths = sorted(
+                [os.path.join(root, f) for f in files if f[-4:] == ".npy"]
+            )
         else:
             raise ValueError(
                 "images_path %s is not a file or directory!"
