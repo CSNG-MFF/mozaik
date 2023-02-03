@@ -1919,7 +1919,7 @@ class ExcitatoryConductanceGenerator(Analysis):
         for sheet in self.datastore.sheets():
             dsv = queries.param_filter_query(self.datastore,sheet_name=sheet)
             
-            for seg in dsv.get_segments():
+            for seg in dsv.get_segments()+ dsv.get_segments(null=True):
                 
                 to_delete = None
                 for idx, a in enumerate(seg.analogsignals):
@@ -1991,7 +1991,7 @@ class InhibitoryConductanceGenerator(Analysis):
         #stimulus_id: String containing the stimulus id
         for sheet in self.datastore.sheets():
             dsv = queries.param_filter_query(self.datastore,sheet_name=sheet)
-            for seg in dsv.get_segments():
+            for seg in dsv.get_segments()+ dsv.get_segments(null=True):
 
                 to_delete = None
                 for idx , a in enumerate(seg.analogsignals):
