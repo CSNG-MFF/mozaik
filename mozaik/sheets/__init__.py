@@ -78,6 +78,7 @@ class Sheet(BaseComponent):
     required_parameters = ParameterSet({
         'cell': ParameterSet({
             'model': str,  # the cell type of the sheet
+            'native_nest': bool,
             'params': ParameterSet,
             'initial_values': ParameterSet,
         }),

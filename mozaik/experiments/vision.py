@@ -1468,7 +1468,10 @@ class CorticalStimulationWithStimulatorArrayAndOrientationTuningProtocol(Experim
                         first = False
                     else:
                         for sheet in self.parameters.sheet_list:
-                            d[sheet] = [LocalStimulatorArrayChR(model.sheets[sheet],p,shared_scs=self.direct_stimulation[0][sheet][0].scs)]
+                            if self.sheet.parameters.cell.model[-3:] == '_sc': 
+                                d[sheet] = [LocalStimulatorArrayChR(model.sheets[sheet],p)]
+                            else:
+                                d[sheet] = [LocalStimulatorArrayChR(model.sheets[sheet],p,shared_scs=self.direct_stimulation[0][sheet][0].scs)]
 
                     for i in range(0,self.parameters.num_trials):
                         self.direct_stimulation.append(d)

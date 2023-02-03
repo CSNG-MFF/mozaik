@@ -44,6 +44,7 @@
         },
 
         'cell': {
+            'native_nest': False,
             'model': 'IF_cond_exp',
             'params': {
                 'v_thresh':-57.0,

@@ -10,6 +10,7 @@
                 'magnification_factor': ref('sheets.l4_cortex_exc.params.magnification_factor'),
                 'cell': {
                         'model': 'EIF_cond_exp_isfa_ista',
+                        'native_nest': False,
                         'params': {
                             'v_thresh': ref('sheets.l4_cortex_exc.params.cell.params.v_thresh'),
                             'v_rest': -70,
