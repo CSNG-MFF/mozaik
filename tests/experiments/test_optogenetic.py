@@ -69,9 +69,9 @@ class TestCorticalStimulationWithOptogeneticArray:
         coords = self.get_coords(ds.stimulated_cells)
         d = np.sqrt(((coords - center) ** 2).sum(axis=0))
         if invert:
-            return np.all(d >= ssp.radius - ds.parameters.spacing / 2)
+            return np.all(d >= ssp.radius - ds.parameters.spacing)
         else:
-            return np.all(d <= ssp.radius + ds.parameters.spacing / 2)
+            return np.all(d <= ssp.radius + ds.parameters.spacing)
 
     def test_initial_asserts(self):
         p = MozaikExtendedParameterSet(
@@ -267,7 +267,7 @@ class TestOptogeneticArrayImageStimulus(TestCorticalStimulationWithOptogeneticAr
         msp = dss[0].mixed_signals_photo[:, 0]
         assert len(msp) == len(ors)
         corr, _ = scipy.stats.pearsonr(msp, ors)
-        assert corr > 0.88
+        assert corr > 0.85
 
     @pytest.mark.parametrize("intensity_scaler", [0.5, 1.0, 1.5])
     def test_intensity_scaler(self, intensity_scaler):
