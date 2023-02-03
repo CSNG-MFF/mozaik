@@ -160,7 +160,7 @@ class MozaikSegment(Segment):
             for a in self.analogsignals:
                 logger.info('get_esyn_names')
                 logger.info(a.name)
-                logger.info(a.annotations)
+                #logger.info(a.annotations)
                 if a.name == 'gsyn_exc':
                     return a[:, a.annotations['source_ids'].tolist().index(neuron_id)]
 
