@@ -747,9 +747,7 @@ class GSynPlot(Plotting):
            spont_gsyn_is = [s.get_isyn(self.parameters.neuron) for s in segs] 
            
            gsyn_es = [GSynPlot.concat_asl(s,n) for n,s in zip(gsyn_es,spont_gsyn_es)] 
-           logger.info('plotting')
-           logger.info(gsyn_es)
-           logger.info(spont_gsyn_es)
+           
            gsyn_is = [GSynPlot.concat_asl(s,n) for n,s in zip(gsyn_is,spont_gsyn_is)] 
            t_start = - spont_gsyn_es[0].t_stop.magnitude
            t_stop = gsyn_es[0].t_stop.magnitude

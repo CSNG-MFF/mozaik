@@ -1943,17 +1943,14 @@ class ExcitatoryConductanceGenerator(Analysis):
                     dict_for_[name]= receptor_ids
                     
                     all_ids +=list(receptor_ids)
-                logger.info('all_ids')
-                logger.info(all_ids)
+                
                 all_ids= numpy.array(list(set(all_ids)))
 
-                logger.info(self.parameters.excitatory_receptors[0])
+                
 
                 first_id = seg.get_stored_syn_ids(self.parameters.excitatory_receptors[0] + '_gsyn')[0]
-                logger.info(first_id)
-                
                 first_cond=seg.get_syn(first_id, self.parameters.excitatory_receptors[0] + '_gsyn')
-                logger.info(first_cond)
+                
 
                 # Generate excitatory conductances for all id
                 exc_conds = []
