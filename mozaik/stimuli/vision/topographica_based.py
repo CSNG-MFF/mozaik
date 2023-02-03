@@ -14,7 +14,8 @@ from imagen.image import BoundingBox
 import pickle
 import numpy
 import numpy as np
-from mozaik.tools.mozaik_parametrized import SNumber, SString
+from mozaik.tools.mozaik_parametrized import SNumber, SString, SParameterSet
+from mozaik.tools.distribution_parametrization import MozaikExtendedParameterSet
 from mozaik.tools.units import cpd
 from numpy import pi
 from quantities import Hz, rad, degrees, ms, dimensionless
@@ -44,11 +45,18 @@ class SparseNoise(TopographicaBasedVisualStimulus):
     blank_time = SNumber(ms, doc ="Duration of blank screen between image presentations")
     grid_size = SNumber(dimensionless, doc = "Grid Size ")
     grid = SNumber(dimensionless, doc = "Boolean string to decide whether there is grid or not")
+    extra_params = SParameterSet(doc="Extra stimulus parameters to save in the stimulus description")
 
     def __init__(self,**params):
         TopographicaBasedVisualStimulus.__init__(self, **params)
         assert (self.time_per_image/self.frame_duration) % 1.0 == 0.0, "The duration of image presentation should be multiple of frame duration."
                 
+        if self.extra_params == None:
+            self.extra_params = MozaikExtendedParameterSet({})
+        self.extra_params.x_positions = []
+        self.extra_params.y_positions = []
+        self.extra_params.polarities = []
+
     def frames(self):
   
         aux = imagen.random.SparseNoise(
@@ -65,10 +73,17 @@ class SparseNoise(TopographicaBasedVisualStimulus):
         while True:
             aux2 = aux()
             blank = aux2*0+self.background_luminance
+            pos = np.where(aux2 != self.background_luminance)
+            x = int(pos[0].min())
+            y = int(pos[1].min())
+            polarity = aux2[int(x),int(y)] / self.background_luminance - 1
+            self.extra_params.x_positions.append(x)
+            self.extra_params.y_positions.append(y)
+            self.extra_params.polarities.append(polarity)
             for i in range(int(self.time_per_image/self.frame_duration)):
-                yield (aux2,[0])
+                yield (aux2,[x,y,polarity])
             for i in range(int(self.blank_time/self.frame_duration)):
-                yield (blank,[0])
+                yield (blank,[0,0,0])
             
 
 class DenseNoise(TopographicaBasedVisualStimulus):

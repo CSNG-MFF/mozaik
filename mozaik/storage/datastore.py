@@ -433,7 +433,7 @@ class DataStore(DataStoreView):
         """
         The DataStore interface function that adds a stimulus into the datastore.
         """
-        if self.parameters.store_stimuli:
+        if self.parameters.store_stimuli and not self.stimulus_presented(stimulus):
            self._add_stimulus(data, stimulus)
 
     def _add_stimulus(self, data, stimulus):
@@ -441,6 +441,33 @@ class DataStore(DataStoreView):
         This function adds raw sensory stimulus data that have been presented to the model into datastore. 
         """
         self.sensory_stimulus[str(stimulus)] = data
+
+
+    def add_direct_stimulation(self, direct_stimulators, stimulus):
+        """
+        The DataStore interface function that adds direct stimulation stimuli into
+        the datastore.
+        """
+        if self.parameters.store_stimuli and not self.stimulus_presented(stimulus):
+            for sheet in direct_stimulators:
+                for d in direct_stimulators[sheet]:
+                    d.save_to_datastore(self,stimulus)
+
+    def stimulus_presented(self, stim):
+        # HACK! Replace with simple check in stimulus_dict once we can deal
+        # with nested ParameterSets
+        s = str(stim).replace("MozaikExtended","")
+        p = ParameterSet(s)
+        if p.trial == 0:
+            return False
+        del p["trial"]
+        for ss in self.get_stimuli():
+            s = str(ss).replace("MozaikExtended","")
+            pp = ParameterSet(s)
+            del pp["trial"]
+            if str(pp) == str(p):
+                return True
+        return False
 
     def add_analysis_result(self, result):
         """

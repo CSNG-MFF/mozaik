@@ -1,0 +1,7 @@
+{
+    "size": 400,
+    "spacing": 10,
+    "depth_sampling_step": 10,
+    "light_source_light_propagation_data": "tests/sheets/unity_radprof.pickle",
+    "update_interval": 1,
+}

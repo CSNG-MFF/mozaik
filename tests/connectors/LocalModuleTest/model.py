@@ -12,7 +12,6 @@ import mozaik
 
 
 class ModelLocalModule(Model):
-
     required_parameters = ParameterSet(
         {
             "sheets": ParameterSet(
