@@ -276,6 +276,117 @@ class MeasureSparseWithCurrentInjection(VisualExperiment):
         pass
 
 
+class MeasureSparseBar(VisualExperiment):
+    """
+    Sparse noise stimulation experiments with bars instead of pixels.
+
+    This experiment will show a series of images formed by a single bar
+    which will be presented in a random position along the axis perpendicular
+    to the specified orientation in each trial.
+
+    If possible, given the total number of images, the number of bar presentations
+    at each position for white and black colors will be equal. If the total number
+    of images is not divisible by 2*number_of_positions, the presentations may have
+    a slight left and black bias.
+
+    Parameter
+    ----------
+    model : Model
+        The model on which to execute the experiment.
+
+    Other parameters
+    ----------------
+
+    time_per_image : float
+        The time it takes for the experiment to change single images
+        Every time_per_image a new instance of sparse noise will be
+        presented
+
+    blank_time : float
+        The duration of the blank stimulus between image presentations
+
+    total_number_images : int
+        The total number of images that will be presented. For mapping
+        a receptive field using black and white bars, it should be
+        2 * n_positions * n_presentations_per_position.
+
+    num_trials : int
+        Number of trials each each stimulus is shown.
+
+    orientation : float
+        The orientation of the bars, in radians.
+
+    bar_length : float
+        The length of the presented bars.
+
+    bar_width : float
+        The width of the presented bars.
+
+    x : float
+        x coordinate of the center of the stimulus area
+
+    y : float
+        y coordinate of the center of the stimulus area
+
+    n_positions : int
+        Number of positions to present the bars at. The positions
+        are spread symmetrically around the center.
+
+    experiment_seed : int
+        Random seed for the bar positions.
+    """
+
+    required_parameters = ParameterSet({
+            'time_per_image': float,
+            'blank_time' : float,
+            'total_number_of_images' : int,
+            'num_trials' : int,
+            'orientation' : float,
+            'bar_length' : float,
+            'bar_width' : float,
+            'x' : float,
+            'y' : float,
+            'n_positions' : int,
+            'experiment_seed' : int,
+    })
+
+    def __init__(self,model,parameters):
+        VisualExperiment.__init__(self, model,parameters)
+        common_params = {
+            "frame_duration" : self.frame_duration,
+            "size_x" : model.visual_field.size_x,
+            "size_y" : model.visual_field.size_y,
+            "location_x" : 0.0,
+            "location_y" : 0.0,
+            "background_luminance" : self.background_luminance,
+            "duration" : self.parameters.time_per_image + self.parameters.blank_time,
+            "density" : self.density,
+            "orientation" : self.parameters.orientation,
+            "width" : self.parameters.bar_width,
+            "length" : self.parameters.bar_length,
+            "flash_duration" : self.parameters.time_per_image
+        }
+        rng = numpy.random.default_rng(self.parameters.experiment_seed)
+        for trials in range(0, self.parameters.num_trials):
+
+            stims = []
+            radius = (self.parameters.n_positions / 2 - 0.5) * self.parameters.bar_width
+            x_pos = self.parameters.x + numpy.linspace(-radius,radius,self.parameters.n_positions) * numpy.sin(self.parameters.orientation)
+            y_pos = self.parameters.y - numpy.linspace(-radius,radius,self.parameters.n_positions) * numpy.cos(self.parameters.orientation)
+            l = len(x_pos)
+            for i in range(self.parameters.total_number_of_images):
+                stim = topo.FlashedBar(
+                    relative_luminance = i % (2 * l) < l,
+                    x = x_pos[i % l],
+                    y = y_pos[i % l],
+                    **common_params
+                    )
+                stims.append(stim)
+            rng.shuffle(stims)
+            self.stimuli.extend(stims)
+
+    def do_analysis(self, data_store):
+        pass
 
 class MeasureDense(VisualExperiment):
     """
