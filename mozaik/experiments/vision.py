@@ -236,7 +236,7 @@ class MeasureSparseWithCurrentInjection(VisualExperiment):
 
         self.direct_stimulation = []
 
-        for k in xrange(0, self.parameters.num_trials):
+        for k in range(0, self.parameters.num_trials):
             d  = OrderedDict()
             p = MozaikExtendedParameterSet({
                                 'population_selector' : self.parameters.stimulation_configuration,
@@ -250,7 +250,7 @@ class MeasureSparseWithCurrentInjection(VisualExperiment):
         p['sheet'] = self.parameters.stimulation_sheet
 
     
-        for k in xrange(0, self.parameters.num_trials):
+        for k in range(0, self.parameters.num_trials):
             self.stimuli.append(topo.SparseNoise(
                 frame_duration = self.frame_duration,
                             time_per_image = self.parameters.time_per_image,
