@@ -3,7 +3,7 @@ import pylab
 import math
 from scipy.interpolate import griddata
 import matplotlib.cm as cm
-from analysis import load_fixed_parameter_set_parameter_search
+from mozaik.meta_workflow.analysis import load_fixed_parameter_set_parameter_search
 from collections import OrderedDict
 import pickle
 from builtins import zip
