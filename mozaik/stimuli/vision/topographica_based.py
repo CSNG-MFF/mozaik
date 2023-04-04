@@ -319,6 +319,30 @@ class Null(TopographicaBasedVisualStimulus):
                    [self.frame_duration])
 
 
+class PixelImpulse(TopographicaBasedVisualStimulus):
+    """
+    A visual stimulus that sets the luminance of a single pixel with
+    coordinates (*x*,*y*) to *relative_luminance* times the background
+    luminance. All other pixels are set to background luminance.
+    """
+
+    relative_luminance = SNumber(dimensionless, doc="Ratio of the selected pixel luminance to the background luminance")
+    x = SNumber(dimensionless, doc="x coordinate of selected pixel")
+    y = SNumber(dimensionless, doc="y coordinate of selected pixel")
+
+    def frames(self):
+        blank = imagen.Constant(
+            scale=self.background_luminance,
+            bounds=imagen.image.BoundingBox(radius=self.size_x / 2),
+            xdensity=self.density,
+            ydensity=self.density,
+        )()
+        impulse = blank.copy()
+        impulse[self.x, self.y] *= self.relative_luminance
+        yield (impulse, [self.frame_duration])
+        while True:
+            yield (impulse, [self.frame_duration])
+
 class MaximumDynamicRange(TransferFn):
     """
     It linearly maps 0 to the minimum of the image and 1.0 to the maximum in the image.
