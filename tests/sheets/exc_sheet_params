@@ -1,0 +1,40 @@
+{
+    "name": "exc_sheet",
+    "sx": 400,
+    "sy": 400,
+    "density": 1000,
+    "mpi_safe": False,
+    "magnification_factor": 1000,
+    "cell": {
+        "model": "IF_cond_exp",
+        "params": {
+            "v_thresh": -50.0,
+            "v_rest": -60.0,
+            "v_reset": -60.0,
+            "tau_refrac": 5.0,
+            "tau_m": 1.0,
+            "cm": 0.2,
+            "e_rev_E": 0.0,
+            "e_rev_I": -80.0,
+            "tau_syn_E": 5.0,
+            "tau_syn_I": 10.0,
+        },
+        "initial_values": {
+            "v": PyNNDistribution(name="uniform", low=-60, high=-60),
+        },
+    },
+    "artificial_stimulators": {},
+    "recording_interval": 1.0,
+    "recorders": {
+        "1": {
+            "component": "mozaik.sheets.population_selector.RCGrid",
+            "variables": ("v"),
+            "params": {
+                "size": 400.0,
+                "spacing": 20.0,
+                "offset_x": 0.0,
+                "offset_y": 0.0,
+            },
+        },
+    },
+}

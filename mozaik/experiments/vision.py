@@ -1114,6 +1114,9 @@ class MeasureNaturalImagesWithEyeMovement(VisualExperiment):
     num_trials : int
                Number of trials each each stimulus is shown.
                
+    size : float
+               The size of the image in degrees of visual field
+
     Notes
     -----
     Currently this implementation bound to have the image and the eye path saved in in files *./image_naturelle_HIGH.bmp* and *./eye_path.pickle*.
@@ -1123,6 +1126,7 @@ class MeasureNaturalImagesWithEyeMovement(VisualExperiment):
     required_parameters = ParameterSet({
             'stimulus_duration' : float,
             'num_trials' : int,
+            'size' : float,
     })  
 
     
@@ -1141,7 +1145,7 @@ class MeasureNaturalImagesWithEyeMovement(VisualExperiment):
                             duration=self.parameters.stimulus_duration,
                             density=self.density,
                             trial=k,
-                            size=60,  # x size of image
+                            size=self.parameters.size,  # x size of image
                             eye_movement_period=6.66,  # eye movement period
                             eye_path_location='./eye_path.pickle',
                             image_location='./image_naturelle_HIGHC.bmp'))
@@ -1355,196 +1359,6 @@ class MapPhaseResponseWithBarStimulus(VisualExperiment):
 
     def do_analysis(self, data_store):
         pass
-
-
-
-class CorticalStimulationWithStimulatorArrayAndHomogeneousOrientedStimulus(Experiment):
-    """
-    Stimulation with artificial stimulator array simulating homogeneously
-    oriented visual stimulus.  
-
-    This experiment creates a array of artificial stimulators covering an area of 
-    cortex, and than stimulates the array based on the orientation preference of 
-    neurons around the given stimulator, such that the stimulation resambles 
-    presentation uniformly oriented stimulus, e.g. sinusoidal grating.
-    
-    This experiment does not show any actual visual stimulus.
-    
-    Parameters
-    ----------
-    model : Model
-          The model on which to execute the experiment.
-
-    Other parameters
-    ----------------
-  
-    sheet_list : int
-               The list of sheets in which to do stimulation.
-    """
-    
-    required_parameters = ParameterSet({
-            'sheet_list' : list,
-            'num_trials' : int,
-            'localstimulationarray_parameters' : ParameterSet,
-    })
-
-    
-    def __init__(self,model,parameters):
-            Experiment.__init__(self, model,parameters)
-            from mozaik.sheets.direct_stimulator import LocalStimulatorArrayChR
-            
-            d  = OrderedDict()
-            for sheet in self.parameters.sheet_list:
-                d[sheet] = [LocalStimulatorArrayChR(model.sheets[sheet],self.parameters.localstimulationarray_parameters)]
-            
-            self.direct_stimulation = []
-
-            for i in range(0,self.parameters.num_trials):
-                self.direct_stimulation.append(d)
-                self.stimuli.append(
-                            InternalStimulus(   
-                                                frame_duration=self.parameters.localstimulationarray_parameters.stimulating_signal_parameters.duration, 
-                                                duration=self.parameters.localstimulationarray_parameters.stimulating_signal_parameters.duration,
-                                                trial=i,
-                                                direct_stimulation_name='LocalStimulatorArray',
-                                                direct_stimulation_parameters=self.parameters.localstimulationarray_parameters
-                                             )
-                                    )
-
-
-class CorticalStimulationWithStimulatorArrayAndOrientationTuningProtocol(Experiment):
-    """
-    Stimulation with artificial stimulator array simulating homogeneously
-    oriented visual stimulus.  
-
-    This experiment creates a array of artificial stimulators covering an area of 
-    cortex, and than stimulates the array based on the orientation preference of 
-    neurons around the given stimulator, such that the stimulation resambles 
-    presentation uniformly oriented stimulus, e.g. sinusoidal grating.
-    
-    This experiment does not show any actual visual stimulus.
-    
-    Parameters
-    ----------
-    model : Model
-          The model on which to execute the experiment.
-
-    Other parameters
-    ----------------
-  
-    sheet_list : int
-               The list of sheets in which to do stimulation.
-    """
-    
-    required_parameters = ParameterSet({
-            'sheet_list' : list,
-            'num_trials' : int,
-            'num_orientations' : int,
-            'intensities' : list,
-            'localstimulationarray_parameters' : ParameterSet,
-    })
-
-    
-    def __init__(self,model,parameters):
-            Experiment.__init__(self, model,parameters)
-            from mozaik.sheets.direct_stimulator import LocalStimulatorArrayChR
-            
-            self.direct_stimulation = []
-            first = True
-
-            for s in self.parameters.intensities:
-                for i in range(self.parameters.num_orientations):
-                    p = MozaikExtendedParameterSet(self.parameters.localstimulationarray_parameters.tree_copy().as_dict())
-                    p.stimulating_signal_parameters.orientation = ParameterWithUnitsAndPeriod(numpy.pi/self.parameters.num_orientations * i,period=numpy.pi)
-                    p.stimulating_signal_parameters.scale =       ParameterWithUnitsAndPeriod(float(s),period=None)
-                    d  = OrderedDict()
-                    if first:
-                        for sheet in self.parameters.sheet_list:
-                            d[sheet] = [LocalStimulatorArrayChR(model.sheets[sheet],p)]
-                        first = False
-                    else:
-                        for sheet in self.parameters.sheet_list:
-                            d[sheet] = [LocalStimulatorArrayChR(model.sheets[sheet],p,shared_scs=self.direct_stimulation[0][sheet][0].scs)]
-
-                    for i in range(0,self.parameters.num_trials):
-                        self.direct_stimulation.append(d)
-                        self.stimuli.append(
-                                    InternalStimulus(   
-                                                        frame_duration=self.parameters.localstimulationarray_parameters.stimulating_signal_parameters.duration, 
-                                                        duration=self.parameters.localstimulationarray_parameters.stimulating_signal_parameters.duration,
-                                                        trial=i,
-                                                        direct_stimulation_name='LocalStimulatorArray',
-                                                        direct_stimulation_parameters=p
-                                                     )
-                                            )                
-
-
-
-class CorticalStimulationWithStimulatorArrayAndOrientationTuningProtocol_ContrastBased(Experiment):
-    """
-    Stimulation with artificial stimulator array simulating homogeneously
-    oriented visual stimulus.  
-
-    This experiment creates a array of artificial stimulators covering an area of 
-    cortex, and than stimulates the array based on the orientation preference of 
-    neurons around the given stimulator, such that the stimulation resambles 
-    presentation uniformly oriented stimulus, e.g. sinusoidal grating.
-    
-    This experiment does not show any actual visual stimulus.
-    
-    Parameters
-    ----------
-    model : Model
-          The model on which to execute the experiment.
-
-    Other parameters
-    ----------------
-  
-    sheet_list : int
-               The list of sheets in which to do stimulation.
-    """
-    
-    required_parameters = ParameterSet({
-            'sheet_list' : list,
-            'num_trials' : int,
-            'num_orientations' : int,
-            'contrasts' : list,
-            'localstimulationarray_parameters' : ParameterSet,
-    })
-
-    
-    def __init__(self,model,parameters):
-            Experiment.__init__(self, model,parameters)
-            from mozaik.sheets.direct_stimulator import LocalStimulatorArrayChR
-            
-            self.direct_stimulation = []
-            first = True
-
-            for c in self.parameters.contrasts:
-                for i in range(self.parameters.num_orientations):
-                    p = MozaikExtendedParameterSet(self.parameters.localstimulationarray_parameters.tree_copy().as_dict())
-                    p.stimulating_signal_parameters.orientation = ParameterWithUnitsAndPeriod(numpy.pi/self.parameters.num_orientations * i,period=numpy.pi)
-                    p.stimulating_signal_parameters.contrast =       ParameterWithUnitsAndPeriod(float(c),period=None)
-                    d  = OrderedDict()
-                    if first:
-                        for sheet in self.parameters.sheet_list:
-                            d[sheet] = [LocalStimulatorArrayChR(model.sheets[sheet],p)]
-                        first = False
-                    else:
-                        for sheet in self.parameters.sheet_list:
-                            d[sheet] = [LocalStimulatorArrayChR(model.sheets[sheet],p,shared_scs=self.direct_stimulation[0][sheet][0].scs)]
-
-                    for i in range(0,self.parameters.num_trials):
-                        self.direct_stimulation.append(d)
-                        self.stimuli.append(
-                                    InternalStimulus(   
-                                                        frame_duration=self.parameters.localstimulationarray_parameters.stimulating_signal_parameters.duration, 
-                                                        duration=self.parameters.localstimulationarray_parameters.stimulating_signal_parameters.duration,
-                                                        trial=i,
-                                                        direct_stimulation_name='LocalStimulatorArray',
-                                                        direct_stimulation_parameters=p
-                                                     )
-                                            )                
 
 
 class VonDerHeydtIllusoryBarProtocol(VisualExperiment):
