@@ -15,7 +15,7 @@ from mozaik.space import VisualSpace
 from mozaik.models.vision.spatiotemporalfilter import (
     CellWithReceptiveField,
     SpatioTemporalReceptiveField,
-    SpatioTemporalFilterRetinaLGN
+    SpatioTemporalFilterRetinaLGN,
 )
 from mozaik.models.vision import cai97
 from mozaik.stimuli.vision.topographica_based import PixelImpulse
@@ -123,7 +123,6 @@ base_stim_params = {
 
 
 class TestCellWithReceptiveField:
-
     receptive_field_on = None
     receptive_field_off = None
     cell_on = None
@@ -147,8 +146,7 @@ class TestCellWithReceptiveField:
         cls.receptive_field_on = SpatioTemporalReceptiveField(
             cai97.stRF_2d, ParameterSet(cls.rf_params), size, size, 200
         )
-        cls.receptive_field_on.quantize(
-            0.1, 0.1, cls.visual_space.update_interval)
+        cls.receptive_field_on.quantize(0.1, 0.1, cls.visual_space.update_interval)
         cls.receptive_field_off = SpatioTemporalReceptiveField(
             lambda x, y, t, p: -1.0 * cai97.stRF_2d(x, y, t, p),
             ParameterSet(cls.rf_params),
@@ -156,8 +154,7 @@ class TestCellWithReceptiveField:
             size,
             200,
         )
-        cls.receptive_field_off.quantize(
-            0.1, 0.1, cls.visual_space.update_interval)
+        cls.receptive_field_off.quantize(0.1, 0.1, cls.visual_space.update_interval)
         gain_params = ParameterSet({"gain": 1.0, "non_linear_gain": None})
         cls.cell_on = CellWithReceptiveField(
             0, 0, cls.receptive_field_on, gain_params, cls.visual_space
@@ -175,8 +172,7 @@ class TestCellWithReceptiveField:
         field kernel at the impulse position. This is only the case when no non-linear
         gain is applied to the response.
         """
-        stimulus = PixelImpulse(relative_luminance=2.0,
-                                x=x, y=y, **self.vs_params)
+        stimulus = PixelImpulse(relative_luminance=2.0, x=x, y=y, **self.vs_params)
         self.visual_space.clear()
         self.visual_space.add_object(str(stimulus), stimulus)
         self.visual_space.update()
@@ -193,7 +189,7 @@ class TestCellWithReceptiveField:
         # Separately test contrast and luminance response
         # Before applying nonlinear gain, they act as linear filters
         r = cell.contrast_response[: rf.kernel.shape[2]]
-        pos = y + x*rf.kernel.shape[0]
+        pos = y + x * rf.kernel.shape[0]
         np.testing.assert_allclose(r, rf.kernel_contrast_component[:, pos])
 
         # The luminance response kernel is equal at all spatial positions, so
@@ -237,8 +233,7 @@ class TestSpatioTemporalFilterRetinaLGN:
         sh = SpatioTemporalFilterRetinaLGN(
             m, parameters["sheets"]["retina_lgn"]["params"]
         )
-        dur = sh.rf["X_ON"].duration + \
-            parameters["input_space"]["update_interval"]
+        dur = sh.rf["X_ON"].duration + parameters["input_space"]["update_interval"]
 
         stim_params = base_stim_params.copy()
         stim_params["background_luminance"] = background_luminance

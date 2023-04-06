@@ -529,7 +529,7 @@ class MeasureGaborFlashDuration(VisualExperiment):
             "step": float,
             "blank_duration": float,
             "num_trials": int,
-            "neuron_id" : int,
+            "neuron_id": int,
         }
     )
 
@@ -563,7 +563,8 @@ class MeasureGaborFlashDuration(VisualExperiment):
                 )
                 for flash_duration in np.arange(
                     self.parameters.min_duration,
-                    self.parameters.max_duration+1, # arange does not include final value
+                    self.parameters.max_duration
+                    + 1,  # arange does not include final value
                     self.parameters.step,
                 )
             ]
@@ -696,8 +697,8 @@ class CompareSlowVersusFastGaborMotion(VisualExperiment):
             "moving_gabor_orientation_radial": self.parameters.moving_gabor_orientation_radial,
         }
         center_specific_params = {
-            "size" : 2*common_params["sigma"]*common_params["n_sigmas"],
-            "relative_luminance" : common_params["center_relative_luminance"],
+            "size": 2 * common_params["sigma"] * common_params["n_sigmas"],
+            "relative_luminance": common_params["center_relative_luminance"],
         }
 
         am_params = common_params.copy()
@@ -713,14 +714,21 @@ class CompareSlowVersusFastGaborMotion(VisualExperiment):
             for speed in self.parameters.movement_speeds:
                 gabor_diameter = 2.0 * self.parameters.sigma * self.parameters.n_sigmas
                 flash_duration = gabor_diameter / speed * 1000
-                flash_duration_rounded = np.round(flash_duration / self.frame_duration) * self.frame_duration
+                flash_duration_rounded = (
+                    np.round(flash_duration / self.frame_duration) * self.frame_duration
+                )
                 if trial == 0:
-                    logger.info("CompareSlowVersusFastGaborMotion: Calculated flash duration %.2f ms, must be integer multiple of the frame duration %.2f ms, modifiying it to %.2f" % (flash_duration, self.frame_duration, flash_duration_rounded))
+                    logger.info(
+                        "CompareSlowVersusFastGaborMotion: Calculated flash duration %.2f ms, must be integer multiple of the frame duration %.2f ms, modifiying it to %.2f"
+                        % (flash_duration, self.frame_duration, flash_duration_rounded)
+                    )
                 flash_duration = flash_duration_rounded
                 assert (
                     flash_duration >= self.frame_duration
                 ), "Gabor flash duration must be at least as long as the frame duration"
-                stim_duration = self.parameters.blank_duration + flash_duration * (self.parameters.n_circles + 1)
+                stim_duration = self.parameters.blank_duration + flash_duration * (
+                    self.parameters.n_circles + 1
+                )
                 am_params["duration"] = stim_duration
                 cont_mov_params["duration"] = stim_duration
                 for angle in self.parameters.angles:
@@ -933,8 +941,8 @@ class RunApparentMotionConfigurations(VisualExperiment):
             "n_circles": int,
             "random_order": bool,
             "flash_center": bool,
-            "blank_duration" : float,
-            "neuron_id" : int,
+            "blank_duration": float,
+            "neuron_id": int,
             "num_trials": int,
         }
     )
@@ -965,7 +973,8 @@ class RunApparentMotionConfigurations(VisualExperiment):
             "symmetric": True,
             "flash_center": self.parameters.flash_center,
             "duration": self.parameters.blank_duration + self.parameters.flash_duration
-            * (self.parameters.n_circles + 1), # Center & 1 flash_duration blank
+            # Center & 1 flash_duration blank
+            * (self.parameters.n_circles + 1),
             "neuron_id": self.parameters.neuron_id,
         }
 
