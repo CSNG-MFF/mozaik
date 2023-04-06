@@ -196,9 +196,13 @@ class TestCellWithReceptiveField:
         pos = y + x*rf.kernel.shape[0]
         np.testing.assert_allclose(r, rf.kernel_contrast_component[:, pos])
 
-        # Luminance response is equal at all positions
-        r = cell.luminance_response
-        np.testing.assert_allclose(r, rf.kernel_luminance_component)
+        # The luminance response kernel is equal at all spatial positions, so
+        # we don't calculate it for each position, rather multiply the 1D version
+        # of it by the mean image luminance.
+        # That is equivalent to a 3D luminance kernel which is convolved and with the
+        # image and then summed at each time point.
+        r = cell.luminance_response[: rf.kernel.shape[2]]
+        np.testing.assert_allclose(r, rf.kernel_luminance_component * cell.va.mean())
 
 
 class TestSpatioTemporalFilterRetinaLGN:
