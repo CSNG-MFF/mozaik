@@ -6,7 +6,7 @@
     },
     'visual_field': {
         'centre': (0.0, 0.0), # degrees (x,y)
-        'size': (2.0, 2.0), # degrees (width, height)
+        'size': (5.0, 5.0), # degrees (width, height)
     },
     'sheets' : {
         'l4_cortex_exc': url("param/l4_cortex_exc"),
@@ -16,17 +16,18 @@
         'retina_lgn': url("param/SpatioTemporalFilterRetinaLGN_defaults"),
     },
     'only_afferent' : False,
-    'l23' : True,
     'results_dir': '',
     'name' : 'SelfSustainedPushPullV1',
     'reset' : False,
+    #'feedback' :  False,
     'feedback' :  True,
     'null_stimulus_period' : 150.0,
-    'store_stimuli' : False,
+    'store_stimuli' : False,    
     'min_delay' : 0.1,
     'max_delay' : 100,
     'time_step' : 0.1,
-    'pynn_seed' : 936395,
+    'pynn_seed' : 995,
     'mpi_seed' : 1023,
+    'l23' : True,
     'trial' : 0,
 }
