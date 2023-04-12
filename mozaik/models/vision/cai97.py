@@ -72,8 +72,10 @@ def G(t, K1, K2, c1, c2, t1, t2, n1, n2):
     p1 = K1 * ((c1*(t - t1))**n1 * exp(-c1*(t - t1))) / ((n1**n1) * exp(-n1))
     p2 = K2 * ((c2*(t - t2))**n2 * exp(-c2*(t - t2))) / ((n2**n2) * exp(-n2))
     p3 = p1 - p2
-    ### norm to max == 1.
-    ##p3 /= p3.max()
+    # For some parameterizations, calculating function values near 0
+    # may be numerically unstable. We set these values to 0.
+    p3[p3==numpy.inf] = numpy.nan
+    p3=numpy.nan_to_num(p3)
     return p3
 
 

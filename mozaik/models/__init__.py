@@ -152,9 +152,10 @@ class Model(BaseComponent):
 
         self.first_time = False
 
-        for sheet in self.sheets.values():
-           logger.info("Sheet %s average rate: %f" % (sheet.name,sheet.mean_spike_count()))
 
+        if mozaik.mpi_comm.rank == mozaik.MPI_ROOT:
+            for sheet in self.sheets.values():
+                logger.info("Sheet %s average rate: %f" % (sheet.name,sheet.mean_spike_count()))
         
         #remove any artificial stimulators 
         for sheet in self.sheets.values():
