@@ -283,7 +283,7 @@ class Sheet(BaseComponent):
         def key(a):
             return a.annotations['source_id']    
 
-        self.msc = numpy.mean([numpy.sum(st)/(st.t_stop-st.t_start)/1000 for st in s.spiketrains])
+        self.msc = numpy.mean([len(st)/(st.t_stop-st.t_start)*1000 for st in s.spiketrains])
         s.spiketrains = sorted(s.spiketrains, key=key)
 
         if stimulus_duration != None:        
