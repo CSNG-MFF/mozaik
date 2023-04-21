@@ -1257,7 +1257,8 @@ class PerNeuronValueScatterPlot(Plotting):
     required_parameters = ParameterSet({
           'only_matching_units':bool,  # only plot combinations of PNVs that have the same value units.
           'ignore_nan' : bool, # if True NaNs will be removed from the data. In general if there are NaN in the data and this is False it will not be displayed correctly.
-          'lexicographic_order': bool # Whether to order the ads in each pair by the descending lexicographic order of their parameter 'value_name' before plotting
+          'lexicographic_order': bool, # Whether to order the ads in each pair by the descending lexicographic order of their parameter 'value_name' before plotting
+          'neuron_ids': list,
     })
     
     
@@ -1315,7 +1316,11 @@ class PerNeuronValueScatterPlot(Plotting):
         if pair[0].value_units != pair[1].value_units or pair[1].value_units == pq.dimensionless:
            params["equal_aspect_ratio"] = False
         
-        ids = list(set(pair[0].ids) & set(pair[1].ids))
+        if self.parameters.neuron_ids:
+            ids = self.parameters.neuron_ids
+        else:
+            ids = list(set(pair[0].ids) & set(pair[1].ids))
+
         x = pair[0].get_value_by_id(ids)
         y = pair[1].get_value_by_id(ids)
         if self.parameters.ignore_nan:
