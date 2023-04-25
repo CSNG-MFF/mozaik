@@ -1,0 +1,76 @@
+{
+    #CorticalUniformSheet parameters
+    
+    'component': 'mozaik.sheets.vision.VisualCorticalUniformSheet',
+    
+    'params':{
+                'name':'sheet',
+                'sx':500.0,
+                'sy':500.0,
+                'density': 200.0,
+                'mpi_safe' : False,
+                'magnification_factor': 1000.0,
+
+                'cell': {
+                        'model': 'EIF_cond_exp_isfa_ista',
+                        'params': {
+                            'v_rest': -70,
+                            'v_reset': -55.0,
+                            'tau_refrac': 2.0,
+                            'tau_m': 17.0,
+                            'cm': 0.06,
+                            'e_rev_E': 0.0,
+                            'e_rev_I': -80.0,
+                            'tau_syn_E': 7.0,
+                            'tau_syn_I': 11.0,
+                            'a' : -0.8,
+                            'b' : 0.08,
+                            'delta_T' : 0.8,
+                            'tau_w' : 88.0,
+                            'v_thresh' : -53.0
+                        },
+
+                       'initial_values': {
+                                    'v': PyNNDistribution(name='uniform',low=-70,high=-51),
+                                },
+
+                    },
+                'artificial_stimulators' : {},
+                'recording_interval'  :  1.0,
+                'recorders' : None,
+    },
+    
+    'AfferentConnection': {
+        'aspect_ratio':            0.4,
+        'size':                    0.17,
+        'orientation_preference':  PyNNDistribution(name='uniform',low=0,high=3.141592653589793),
+        'phase':                   PyNNDistribution(name='uniform',low=0,high=6.283185307179586),
+        'frequency':               0.8,
+
+        'delay_expression': "f1",
+        'delay_functions' : {
+                                "f1" : {
+                                     'component' : 'mozaik.connectors.modular_connector_functions.PyNNDistributionConnectorFunction',
+                                     'params' : {
+                                                            'pynn_distribution': PyNNDistribution(name='uniform',low=1.4,high=2.4)
+                                                }
+                                }
+                            },
+
+        'topological' : True,
+
+        'or_map' : True,
+        'or_map_location' : './or_map_8x8',
+        'or_map_stretch': 2,
+        'phase_map' : False,
+        'phase_map_location' : './phase_map',
+        'rf_jitter' : 0,
+        'off_bias' : 1.0,
+        'gauss_coefficient' : 0.1,
+
+        'base_weight' : 0.0016,
+        'num_samples' : 10,
+        'short_term_plasticity': None,
+        'local_module': None,
+    },
+}

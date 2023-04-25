@@ -56,6 +56,7 @@
                                          'params' : {
                                                         'sigma' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.weight_functions.f1.params.sigma'),
                                                         'map_location' : ref('sheets.l4_cortex_exc.AfferentConnection.or_map_location'),                                            
+                                                        'map_stretch' : ref('sheets.l4_cortex_exc.AfferentConnection.or_map_stretch'),                                            
                                                         'periodic' : True,
                                                     }
                                        }, 
@@ -94,6 +95,7 @@
                                          'params' : {
                                                         'sigma' : ref('sheets.l4_cortex_exc.L4ExcL4InhConnection.weight_functions.f1.params.sigma'),
                                                         'map_location' : ref('sheets.l4_cortex_exc.AfferentConnection.or_map_location'),                                            
+                                                        'map_stretch' : ref('sheets.l4_cortex_exc.AfferentConnection.or_map_stretch'),                                            
                                                         'periodic' : True,
                                                     }
                                        }, 
@@ -136,6 +138,7 @@
                                          'params' : {
                                                	        'sigma' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.weight_functions.f1.params.sigma'),
                                                         'map_location' : ref('sheets.l4_cortex_exc.AfferentConnection.or_map_location'),                                            
+                                                        'map_stretch' : ref('sheets.l4_cortex_exc.AfferentConnection.or_map_stretch'),                                            
                                                         'periodic' : True,
                                                     }
                                        }, 
@@ -191,6 +194,7 @@
                                          'params' : {
                                                	        'sigma' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.weight_functions.f1.params.sigma'),
                                                         'map_location' : ref('sheets.l4_cortex_exc.AfferentConnection.or_map_location'),                                            
+                                                        'map_stretch' : ref('sheets.l4_cortex_exc.AfferentConnection.or_map_stretch'),                                            
                                                         'periodic' : True,
                                                     }
                                        }, 
@@ -229,6 +233,7 @@
                                          'params' : {
                                                	        'sigma' : 3.0,
                                                         'map_location' : ref('sheets.l4_cortex_exc.AfferentConnection.or_map_location'),                                            
+                                                        'map_stretch' : ref('sheets.l4_cortex_exc.AfferentConnection.or_map_stretch'),                                            
                                                         'periodic' : True,
                                                     }
                                        }, 
