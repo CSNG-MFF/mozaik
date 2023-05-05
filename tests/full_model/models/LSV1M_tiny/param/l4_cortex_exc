@@ -82,6 +82,8 @@
                             },
         'weight_expression' : 'f1*f2',
         'delay_expression' : 'd1',
+        'num_samples_functions' : None,
+        'num_samples_expression' : '',
         'base_weight': 0.00016,
 	'annotation_reference_name' : 'aff_samples',
         'num_samples' : ref('sheets.l4_cortex_exc.K')*4.0/5.0*(1-ref('sheets.l4_cortex_exc.feedback_conn_ratio')),
@@ -123,6 +125,8 @@
 
         'weight_expression' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.weight_expression'),
         'delay_expression' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.delay_expression'),
+        'num_samples_functions' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.num_samples_functions'),
+        'num_samples_expression' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.num_samples_expression'),
         'base_weight': 0.00022,
 	'annotation_reference_name' : 'aff_samples',
         'num_samples' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.num_samples') * ref('sheets.l4_cortex_exc.inhibitory_connection_ratio'),
@@ -158,6 +162,8 @@
 	    'off_bias' : 1.0,
             'gauss_coefficient' : 0.1,
             'base_weight' : 0.0016,
+            'num_samples_functions' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.num_samples_functions'),
+            'num_samples_expression' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.num_samples_expression'),
             'num_samples' : {
                      'class_name': 'PyNNDistribution',
                      'params': {

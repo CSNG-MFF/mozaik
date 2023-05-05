@@ -79,6 +79,8 @@
 
         'weight_expression' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.weight_expression'),
         'delay_expression' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.delay_expression'),
+        'num_samples_functions' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.num_samples_functions'),
+        'num_samples_expression' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.num_samples_expression'),
         'base_weight': 0.001,
         'num_samples' : ref('sheets.l4_cortex_exc.K')/5.0,
         'local_module': None,
@@ -113,6 +115,8 @@
         'delay_functions' : ref('sheets.l4_cortex_inh.L4InhL4ExcConnection.delay_functions'),
         'weight_expression' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.weight_expression'),
         'delay_expression' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.delay_expression'),
+        'num_samples_functions' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.num_samples_functions'),
+        'num_samples_expression' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.num_samples_expression'),
         'base_weight': ref('sheets.l4_cortex_inh.L4InhL4ExcConnection.base_weight'),
         'num_samples' : ref('sheets.l4_cortex_inh.L4InhL4ExcConnection.num_samples')*ref('sheets.l4_cortex_exc.inhibitory_connection_ratio'),
         'local_module': None,
@@ -161,6 +165,8 @@
                              'high': ref('sheets.l4_cortex_inh.AfferentMean') + ref('sheets.l4_cortex_inh.AfferentVar'),
                          },
                  },
+        'num_samples_functions' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.num_samples_functions'),
+        'num_samples_expression' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.num_samples_expression'),
 
             'short_term_plasticity':  ref('sheets.l4_cortex_exc.AfferentConnection.short_term_plasticity'),
         'local_module': None,

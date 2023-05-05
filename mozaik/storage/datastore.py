@@ -15,6 +15,7 @@ from collections import OrderedDict
 import collections
 import os.path
 import os
+from mozaik.tools.distribution_parametrization import PyNNDistribution
 
 logger = mozaik.getMozaikLogger()
 
