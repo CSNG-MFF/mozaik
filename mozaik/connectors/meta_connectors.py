@@ -87,6 +87,8 @@ class GaborConnector(BaseComponent):
         'short_term_plasticity': ParameterSet,
         'base_weight' : float, # the weights of synapses
 
+        'num_samples_functions' : ParameterSet,  # the num_samples functions for ModularSamplingProbabilisticConnectorAnnotationSamplesCount (see its documentation for details)
+        'num_samples_expression': str,           # the num_samples expression for ModularSamplingProbabilisticConnectorAnnotationSamplesCount (see its documentation for details)
         'num_samples' : PyNNDistribution, # number of synapses per cortical neuron from each of the ON and OFF LGN populations (so effectively there will be 2 * num_samples LGN synapses)
 
         'or_map': bool,  # is a orientation map supplied?
@@ -188,8 +190,10 @@ class GaborConnector(BaseComponent):
                                                              }                                                                              
                                                    },
                              'delay_functions' : self.parameters.delay_functions,
+                             'num_samples_functions' : self.parameters.num_samples_functions,
                              'weight_expression' : 'f1', # a python expression that can use variables f1..fn where n is the number of functions in weight_functions, and fi corresponds to the name given to a ModularConnectorFunction in weight_function ParameterSet. It determines how are the weight functions combined to obtain the weights
                              'delay_expression' : self.parameters.delay_expression,
+                             'num_samples_expression' : self.parameters.num_samples_expression,
                              'local_module' : self.parameters.local_module,
                              'short_term_plasticity' : self.parameters.short_term_plasticity,
                              'base_weight' : self.parameters.base_weight,

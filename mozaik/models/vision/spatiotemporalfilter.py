@@ -630,9 +630,14 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                       List of 2D arrays containing the frames of luminances that were presented to the retina.
 
         """
-        times = numpy.array([offset,duration-visual_space.update_interval+offset])#numpy.arange(0, duration, visual_space.update_interval) + offset
-        zers = numpy.zeros_like(times)
+        # HAAACK!
+        # Currently, we need to set the start time of stimulation to
+        # offset + 3*timestep, until the following issue is resolved:
+        # https://github.com/NeuralEnsemble/PyNN/issues/759.
+        # TODO: Remove once this gets fixed (hopefully in PyNN 0.11.0)!
         ts = self.model.sim.get_time_step()
+        times = numpy.array([offset + 3 * ts,duration-visual_space.update_interval+offset])
+        zers = numpy.zeros_like(times)
         
         input_cells = OrderedDict()
         for rf_type in self.rf_types:
