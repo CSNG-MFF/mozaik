@@ -59,6 +59,7 @@ class TestMapDependentModularConnectorFunction:
             ann["LGNAfferentOrientation"]
             for ann in model_stretch.sheets["sheet"].get_neuron_annotations()
         ]
+        os.chdir("../../../")
 
     def test_stretch_orientation_map(self):
         corr = pearsonr(self.orr, self.orr_stretch)
@@ -108,6 +109,8 @@ class TestGaborConnector:
             ann["LGNAfferentOrientation"]
             for ann in model_stretch.sheets["sheet"].get_neuron_annotations()
         ]
+
+        os.chdir("../../../")
 
     def test_stretch_orientation_map(self):
         corr = pearsonr(self.orr, self.orr_stretch)
