@@ -119,15 +119,14 @@ class MapSimpleGabor(VisualExperiment):
         }
     )
 
-    def __init__(self, model, parameters):
-        VisualExperiment.__init__(self, model, parameters)
+    def generate_stimuli(self):
         if self.parameters.grid:
             # Grid is currently working only for special cases
             # Check if it is working
             assert self.parameters.x == 0, "X shift not yet implemented"
             assert self.parameters.y == 0, "Y shift not yet implemented"
             assert (
-                model.visual_field.size_x == model.visual_field.size_y
+                self.model.visual_field.size_x == self.model.visual_field.size_y
             ), "Different sizes not yet implemented"
         for trial in range(0, self.parameters.num_trials):
             for rot in range(0, self.parameters.rotations):
@@ -150,8 +149,8 @@ class MapSimpleGabor(VisualExperiment):
                                 frame_duration=self.frame_duration,
                                 duration=self.parameters.duration,
                                 flash_duration=self.parameters.flash_duration,
-                                size_x=model.visual_field.size_x,
-                                size_y=model.visual_field.size_y,
+                                size_x=self.model.visual_field.size_x,
+                                size_y=self.model.visual_field.size_y,
                                 background_luminance=self.background_luminance,
                                 relative_luminance=rel_lum,
                                 orientation=(
@@ -333,8 +332,7 @@ class MapTwoStrokeGabor(VisualExperiment):
         }
     )
 
-    def __init__(self, model, parameters):
-        VisualExperiment.__init__(self, model, parameters)
+    def generate_stimuli(self):
         # Assert explained in docstring
         assert self.parameters.circles < 7, "Too many circles, this won't work"
         if self.parameters.grid:
@@ -344,7 +342,7 @@ class MapTwoStrokeGabor(VisualExperiment):
             assert self.parameters.x == 0, "X shift not yet implemented"
             assert self.parameters.y == 0, "Y shift not yet implemented"
             assert (
-                model.visual_field.size_x == model.visual_field.size_y
+                self.model.visual_field.size_x == self.model.visual_field.size_y
             ), "Different sizes not yet implemented"
 
         for trial in range(0, self.parameters.num_trials):
@@ -412,8 +410,8 @@ class MapTwoStrokeGabor(VisualExperiment):
                                         frame_duration=self.frame_duration,
                                         duration=self.parameters.duration,
                                         flash_duration=self.parameters.flash_duration,
-                                        size_x=model.visual_field.size_x,
-                                        size_y=model.visual_field.size_y,
+                                        size_x=self.model.visual_field.size_x,
+                                        size_y=self.model.visual_field.size_y,
                                         background_luminance=self.background_luminance,
                                         first_relative_luminance=first_rel_lum,
                                         second_relative_luminance=second_rel_lum,
@@ -533,11 +531,10 @@ class MeasureGaborFlashDuration(VisualExperiment):
         }
     )
 
-    def __init__(self, model, parameters):
-        VisualExperiment.__init__(self, model, parameters)
+    def generate_stimuli(self):
         common_params = {
-            "size_x": model.visual_field.size_x,
-            "size_y": model.visual_field.size_y,
+            "size_x": self.model.visual_field.size_x,
+            "size_y": self.model.visual_field.size_y,
             "location_x": 0.0,
             "location_y": 0.0,
             "background_luminance": self.background_luminance,
@@ -666,12 +663,11 @@ class CompareSlowVersusFastGaborMotion(VisualExperiment):
         }
     )
 
-    def __init__(self, model, parameters):
-        VisualExperiment.__init__(self, model, parameters)
+    def generate_stimuli(self):
         logger = mozaik.getMozaikLogger()
         common_params = {
-            "size_x": model.visual_field.size_x,
-            "size_y": model.visual_field.size_y,
+            "size_x": self.model.visual_field.size_x,
+            "size_y": self.model.visual_field.size_y,
             "location_x": 0.0,
             "location_y": 0.0,
             "background_luminance": self.background_luminance,
@@ -947,11 +943,10 @@ class RunApparentMotionConfigurations(VisualExperiment):
         }
     )
 
-    def __init__(self, model, parameters):
-        VisualExperiment.__init__(self, model, parameters)
+    def generate_stimuli(self):
         common_params = {
-            "size_x": model.visual_field.size_x,
-            "size_y": model.visual_field.size_y,
+            "size_x": self.model.visual_field.size_x,
+            "size_y": self.model.visual_field.size_y,
             "location_x": 0.0,
             "location_y": 0.0,
             "background_luminance": self.background_luminance,

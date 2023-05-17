@@ -3,11 +3,14 @@ This module contains classes that assist with construction of complicated arrang
 A typical example is a class that helps with creating a line of plots with a common y axis.
 """
 
+import os
+import pylab
 import param
 from param.parameterized import Parameterized
 from mozaik.storage.queries import partition_by_stimulus_paramter_query, partition_analysis_results_by_stimulus_parameters_query,param_filter_query
 import matplotlib.gridspec as gridspec
 from mozaik.tools.mozaik_parametrized import MozaikParametrized, varying_parameters, parameter_value_list
+from mozaik.visualization.simple_plot import SimplePlot
 from collections import OrderedDict
 import mozaik
 import numpy
@@ -335,3 +338,52 @@ class ADSGridPlot(Parameterized):
                 
     def _single_plot(self, dsv,gs):
         return self.function(dsv,gs)
+
+class MultipleFilesPlot(Parameterized):
+        """
+        Plot multiple plots that will be saved in different files. The user has to specify 
+        the function. This one has to return a list of tuples, each containing:
+            * a name of a plot
+            * a Plotting or SimplePlot instance
+            * the simple_plot parameters that should be passed on
+        
+        Assuming each *function* returns a plots with names Plot
+        This class wil produce files with names:
+                    Plot.plot0 ... Plot.plotN
+        where N is defined by the length parameter.
+        """
+        length = param.Integer(default=0, instantiate=True,
+                               doc="how many plots will there be")
+        function = param.Callable(doc="The function that should be called to plot individual plots. It should accept three parameters: self, index in the line, gridspec object into which to plot the plot, the simple_plot parameters")
+
+        def save_plots(self, subplotspec, directory):
+            """
+            Call to execute the line plot.
+
+            Parameters
+            ----------
+            subplotspec : subplotspec
+                        Is the subplotspec into which the whole lineplot is to be plotted.
+            """
+            if not self.length:
+                raise ValueError('Length not specified')
+                
+            gs = gridspec.GridSpecFromSubplotSpec(1, 1, subplot_spec=subplotspec)
+
+            for idx in range(0, self.length):
+                name, pl, spgs, param, fig_param = self._single_plot(idx, gs)
+                if isinstance(pl,SimplePlot):
+                    self.fig = pylab.figure(facecolor='w', **fig_param)
+                    #spgs.update(left=0.05, right=0.95, top=0.95, bottom=0.05)
+                    pl(spgs,param,None)
+                    #spgs.tight_layout(self.fig)
+                    pylab.savefig(os.path.join(directory,name+str(idx)+'.png'),transparent=True)
+                elif isinstance(pl,Plotting):
+                    pl.fig_param = fig_param
+                    pl.plot_file_name = name+str(idx) 
+                    pl.plot(param,up,spgs)
+                else:
+                    raise TypeError("The subplot object is not of type Plotting or SimplePlot")
+                    
+        def _single_plot(self, idx, gs):
+            return self.function(idx, gs)
