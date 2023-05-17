@@ -39,23 +39,23 @@ class VisualExperiment(Experiment):
                                         'shuffle_stimuli': bool,
                                        })
 
+    def __init__(self,model,parameters):
+        Experiment.__init__(self, model,parameters)
+        self.background_luminance = self.model.input_space.background_luminance
+      
+        #JAHACK: This is kind of a hack now. There needs to be generally defined interface of what is the spatial and temporal resolution of a visual input layer
+        # possibly in the future we could force the visual_space to have resolution, perhaps something like native_resolution parameter!?
+        self.density  = 1/self.model.input_layer.parameters.receptive_field.spatial_resolution # in pixels per degree of visual space 
+        self.frame_duration = self.model.input_space.parameters.update_interval # in pixels per degree of visual space 
+
+        if self.parameters.shuffle_stimuli:
+            mozaik.rng.shuffle(self.stimuli)
+
     def generate_stimuli(self):
         """
         Experiments should implement this method and build the `self.stimuli` list there
         """
         raise NotImplementedError()
-
-    def __init__(self,model,parameters):
-        Experiment.__init__(self, model,parameters)
-        self.background_luminance = model.input_space.background_luminance
-      
-        #JAHACK: This is kind of a hack now. There needs to be generally defined interface of what is the spatial and temporal resolution of a visual input layer
-        # possibly in the future we could force the visual_space to have resolution, perhaps something like native_resolution parameter!?
-        self.density  = 1/model.input_layer.parameters.receptive_field.spatial_resolution # in pixels per degree of visual space 
-        self.frame_duration = model.input_space.parameters.update_interval # in pixels per degree of visual space 
-
-        if self.parameters.shuffle_stimuli:
-            mozaik.rng.shuffle(self.stimuli)
 
 class MeasureFlatLuminanceSensitivity(VisualExperiment):
     """
