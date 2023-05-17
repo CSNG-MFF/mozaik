@@ -48,6 +48,8 @@ class VisualExperiment(Experiment):
         self.density  = 1/self.model.input_layer.parameters.receptive_field.spatial_resolution # in pixels per degree of visual space 
         self.frame_duration = self.model.input_space.parameters.update_interval # in pixels per degree of visual space 
 
+        self.generate_stimuli()
+
         if self.parameters.shuffle_stimuli:
             mozaik.rng.shuffle(self.stimuli)
 
