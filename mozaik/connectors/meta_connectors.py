@@ -93,6 +93,7 @@ class GaborConnector(BaseComponent):
 
         'or_map': bool,  # is a orientation map supplied?
         'or_map_location': str,  # if or_map is True where can one find the map. It has to be a file containing a single pickled 2d numpy array
+        'or_map_stretch': float,  # Defines the stretch to apply to the map, allowing effectively to only use a portion of the map. Should be greater than 1
 
         'phase_map': bool,  # is a phase map supplied?
         'phase_map_location': str,  # if phase_map is True where can one find the map. It has to be a file containing a single pickled 2d numpy array
@@ -115,13 +116,13 @@ class GaborConnector(BaseComponent):
             #or_map = pickle.load(f)*numpy.pi*2
             #or_map = numpy.cos(or_map) + 1j*numpy.sin(or_map)
             
-            coords_x = numpy.linspace(-t_size[0]/2.0,
-                                      t_size[0]/2.0,
+            coords_x = numpy.linspace(-t_size[0]*self.parameters.or_map_stretch/2.0,
+                                      t_size[0]*self.parameters.or_map_stretch/2.0,
                                       numpy.shape(or_map)[0])
-            coords_y = numpy.linspace(-t_size[1]/2.0,
-                                      t_size[1]/2.0,
+            coords_y = numpy.linspace(-t_size[1]*self.parameters.or_map_stretch/2.0,
+                                      t_size[1]*self.parameters.or_map_stretch/2.0,
                                       numpy.shape(or_map)[1])
-                                      
+
             # x is the first axis of the orientation map, so after flatten()
             # it has to stay constant for the length of the first row
             Y, X = numpy.meshgrid(coords_y, coords_x)

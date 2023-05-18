@@ -10,6 +10,7 @@ from mozaik.tools.distribution_parametrization import (
 import mozaik
 import numpy as np
 import numpy.linalg
+from scipy.stats import pearsonr
 import logging
 import itertools
 import os
@@ -21,11 +22,99 @@ np.random.seed(1024)  # Make random tests deterministic
 
 
 class TestMapDependentModularConnectorFunction:
+    def setup_class(cls):
+        os.chdir("tests/connectors/MapDependentModularConnectorFunctionTest/")
+        parameters = MozaikExtendedParameterSet("param/defaults")
+        p = OrderedDict()
+        if "mozaik_seed" in parameters:
+            p["mozaik_seed"] = parameters["mozaik_seed"]
+        if "pynn_seed" in parameters:
+            p["pynn_seed"] = parameters["pynn_seed"]
+
+        mozaik.setup_mpi(**p)
+        parameters = MozaikExtendedParameterSet("param/defaults")
+        parameters_stretch = MozaikExtendedParameterSet("param_stretch/defaults")
+
+        import pyNN.nest as sim
+        from tests.connectors.MapDependentModularConnectorFunctionTest.model import (
+            ModelMapDependentModularConnectorFunction,
+            ModelMapDependentModularConnectorFunctionStretch,
+        )
+
+        model = ModelMapDependentModularConnectorFunction(sim, 1, parameters)
+        pos = model.sheets["sheet"].pop.positions
+        model_stretch = ModelMapDependentModularConnectorFunctionStretch(
+            sim,
+            1,
+            pos
+            * parameters_stretch.sheets.sheet.RecurrentConnection.weight_functions.f1.params.map_stretch,
+            parameters_stretch,
+        )
+
+        cls.orr = [
+            ann["LGNAfferentOrientation"]
+            for ann in model.sheets["sheet"].get_neuron_annotations()
+        ]
+        cls.orr_stretch = [
+            ann["LGNAfferentOrientation"]
+            for ann in model_stretch.sheets["sheet"].get_neuron_annotations()
+        ]
+        os.chdir("../../../")
+
+    def test_stretch_orientation_map(self):
+        corr = pearsonr(self.orr, self.orr_stretch)
+        assert corr.statistic > 0.99 and corr.pvalue < 0.001
+
     pass
 
 
 class TestV1PushPullArborization:
     pass
+
+
+class TestGaborConnector:
+    def setup_class(cls):
+        os.chdir("tests/connectors/GaborConnectorTest/")
+        parameters = MozaikExtendedParameterSet("param/defaults")
+        p = OrderedDict()
+        if "mozaik_seed" in parameters:
+            p["mozaik_seed"] = parameters["mozaik_seed"]
+        if "pynn_seed" in parameters:
+            p["pynn_seed"] = parameters["pynn_seed"]
+
+        mozaik.setup_mpi(**p)
+        parameters = MozaikExtendedParameterSet("param/defaults")
+        parameters_stretch = MozaikExtendedParameterSet("param_stretch/defaults")
+
+        import pyNN.nest as sim
+        from tests.connectors.GaborConnectorTest.model import (
+            ModelGaborConnector,
+            ModelGaborConnectorStretch,
+        )
+
+        model = ModelGaborConnector(sim, 1, parameters)
+        pos = model.sheets["sheet"].pop.positions
+        model_stretch = ModelGaborConnectorStretch(
+            sim,
+            1,
+            pos * parameters_stretch.sheets.sheet.AfferentConnection.or_map_stretch,
+            parameters_stretch,
+        )
+
+        cls.orr = [
+            ann["LGNAfferentOrientation"]
+            for ann in model.sheets["sheet"].get_neuron_annotations()
+        ]
+        cls.orr_stretch = [
+            ann["LGNAfferentOrientation"]
+            for ann in model_stretch.sheets["sheet"].get_neuron_annotations()
+        ]
+
+        os.chdir("../../../")
+
+    def test_stretch_orientation_map(self):
+        corr = pearsonr(self.orr, self.orr_stretch)
+        assert corr.statistic > 0.99 and corr.pvalue < 0.001
 
 
 class TestGaborArborization:

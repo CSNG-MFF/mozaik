@@ -246,6 +246,7 @@ class TestOptogeneticArrayImageStimulus(TestCorticalStimulationWithOptogeneticAr
             ParameterSet(
                 {
                     "map_location": test_dir + "/sheets/or_map",
+                    "map_stretch": 1,
                     "sigma": 0,
                     "periodic": True,
                 }
@@ -277,6 +278,7 @@ class TestOptogeneticArrayImageStimulus(TestCorticalStimulationWithOptogeneticAr
             ParameterSet(
                 {
                     "map_location": test_dir + "/sheets/or_map",
+                    "map_stretch": 1,
                     "sigma": 0,
                     "periodic": True,
                 }
@@ -326,7 +328,12 @@ class TestOptogeneticArrayStimulusOrientationTuningProtocol(
             self.sheet,
             self.sheet,
             ParameterSet(
-                {"map_location": "tests/sheets/or_map", "sigma": 0, "periodic": True}
+                {
+                    "map_location": "tests/sheets/or_map",
+                    "map_stretch": 1,
+                    "sigma": 0,
+                    "periodic": True,
+                }
             ),
         )
 

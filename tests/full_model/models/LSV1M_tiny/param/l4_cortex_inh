@@ -149,6 +149,7 @@
             
             'or_map' : True,
             'or_map_location' : ref('sheets.l4_cortex_exc.AfferentConnection.or_map_location'),
+            'or_map_stretch' : ref('sheets.l4_cortex_exc.AfferentConnection.or_map_stretch'),
             'phase_map' : False,
             'phase_map_location' : './phase_map',
             'rf_jitter' : ref('sheets.l4_cortex_exc.AfferentConnection.rf_jitter'),
