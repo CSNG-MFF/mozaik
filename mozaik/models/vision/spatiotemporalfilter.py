@@ -14,6 +14,7 @@ from mozaik.core import SensoryInputComponent
 from mozaik.sheets.vision import RetinalUniformSheet
 from mozaik.sheets.vision import VisualCorticalUniformSheet
 from mozaik.tools.mozaik_parametrized import MozaikParametrized
+from mozaik.tools.pyNN import *
 from parameters import ParameterSet
 from builtins import zip
 from collections import OrderedDict
