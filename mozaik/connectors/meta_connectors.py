@@ -81,15 +81,19 @@ class GaborConnector(BaseComponent):
         'delay_functions' : ParameterSet,  # the delay functions for ModularSamplingProbabilisticConnectorAnnotationSamplesCount (see its documentation for details)
         'delay_expression': str,           # the delay expression for ModularSamplingProbabilisticConnectorAnnotationSamplesCount (see its documentation for details)
         
-
+        
 
         'local_module': ParameterSet,
         'short_term_plasticity': ParameterSet,
         'base_weight' : float, # the weights of synapses
+
+        'num_samples_functions' : ParameterSet,  # the num_samples functions for ModularSamplingProbabilisticConnectorAnnotationSamplesCount (see its documentation for details)
+        'num_samples_expression': str,           # the num_samples expression for ModularSamplingProbabilisticConnectorAnnotationSamplesCount (see its documentation for details)
         'num_samples' : PyNNDistribution, # number of synapses per cortical neuron from each of the ON and OFF LGN populations (so effectively there will be 2 * num_samples LGN synapses)
 
         'or_map': bool,  # is a orientation map supplied?
         'or_map_location': str,  # if or_map is True where can one find the map. It has to be a file containing a single pickled 2d numpy array
+        'or_map_stretch': float,  # Defines the stretch to apply to the map, allowing effectively to only use a portion of the map. Should be greater than 1
 
         'phase_map': bool,  # is a phase map supplied?
         'phase_map_location': str,  # if phase_map is True where can one find the map. It has to be a file containing a single pickled 2d numpy array
@@ -112,13 +116,13 @@ class GaborConnector(BaseComponent):
             #or_map = pickle.load(f)*numpy.pi*2
             #or_map = numpy.cos(or_map) + 1j*numpy.sin(or_map)
             
-            coords_x = numpy.linspace(-t_size[0]/2.0,
-                                      t_size[0]/2.0,
+            coords_x = numpy.linspace(-t_size[0]*self.parameters.or_map_stretch/2.0,
+                                      t_size[0]*self.parameters.or_map_stretch/2.0,
                                       numpy.shape(or_map)[0])
-            coords_y = numpy.linspace(-t_size[1]/2.0,
-                                      t_size[1]/2.0,
+            coords_y = numpy.linspace(-t_size[1]*self.parameters.or_map_stretch/2.0,
+                                      t_size[1]*self.parameters.or_map_stretch/2.0,
                                       numpy.shape(or_map)[1])
-                                      
+
             # x is the first axis of the orientation map, so after flatten()
             # it has to stay constant for the length of the first row
             Y, X = numpy.meshgrid(coords_y, coords_x)
@@ -186,8 +190,10 @@ class GaborConnector(BaseComponent):
                                                              }                                                                              
                                                    },
                              'delay_functions' : self.parameters.delay_functions,
+                             'num_samples_functions' : self.parameters.num_samples_functions,
                              'weight_expression' : 'f1', # a python expression that can use variables f1..fn where n is the number of functions in weight_functions, and fi corresponds to the name given to a ModularConnectorFunction in weight_function ParameterSet. It determines how are the weight functions combined to obtain the weights
                              'delay_expression' : self.parameters.delay_expression,
+                             'num_samples_expression' : self.parameters.num_samples_expression,
                              'local_module' : self.parameters.local_module,
                              'short_term_plasticity' : self.parameters.short_term_plasticity,
                              'base_weight' : self.parameters.base_weight,

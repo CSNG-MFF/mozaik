@@ -111,7 +111,7 @@ def show_frame(frame, params=None, grid=None):
         plt.xlabel("x/$^\circ$")
         plt.ylabel("y/$^\circ$")
     plot_colorbar(plot_frame(frame, params, grid)[0])
-    plt.gcf().canvas.set_window_title("")
+    plt.gcf().canvas.manager.set_window_title("")
     plt.show()
 
 
@@ -243,7 +243,7 @@ def plot_frame(frame, params=None, grid=None, vmin=None, vmax=None):
     params_duration_str = (  # Print what the framerate should be
         "" if params is None else " (in params %d ms)" % params["frame_duration"]
     )
-    plt.gcf().canvas.set_window_title(
+    plt.gcf().canvas.manager.set_window_title(
         "Frame duration: %3d ms%s, fps: %6.2f"
         % (duration * 1000, params_duration_str, 1 / duration)
     )
@@ -255,8 +255,8 @@ def plot_frame(frame, params=None, grid=None, vmin=None, vmax=None):
         tick_step = 1.0 if grid is None else 1.0 / grid
         plt.xticks(np.arange(round(xmin), round(xmax), 1))
         plt.yticks(np.arange(round(ymin), round(ymax), 1))
-        plt.gca().set_xticks(np.arange(round(xmin), round(xmax), tick_step), "minor")
-        plt.gca().set_yticks(np.arange(round(ymin), round(ymax), tick_step), "minor")
+        plt.gca().set_xticks(np.arange(round(xmin), round(xmax), tick_step), minor=True)
+        plt.gca().set_yticks(np.arange(round(ymin), round(ymax), tick_step), minor=True)
     plt.axis("equal")
 
     # Draw grid
