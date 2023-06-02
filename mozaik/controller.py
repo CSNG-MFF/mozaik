@@ -246,6 +246,16 @@ def run_experiments(model,experiment_list,parameters,load_from=None):
     
     total_run_time = time.time() - t0
     mozaik_run_time = total_run_time - simulation_run_time
+
+    # Adding the state (represented by a randomly generated number) of the rng of every MPI process to the datastore
+    if mozaik.mpi_comm:
+        rngs_state = mozaik.mpi_comm.gather(float(mozaik.rng.rand(1)), root=0)
+        log = {'rngs_state': rngs_state}
+        logger.info(rngs_state)
+    else:
+        log = {}
+    data_store.set_simulation_log(log)
+
     
     logger.info('Total simulation run time: %.0fs' % total_run_time)
     logger.info('Simulator run time: %.0fs (%d%%)' % (simulation_run_time, int(simulation_run_time /total_run_time * 100)))
