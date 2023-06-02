@@ -102,8 +102,6 @@ class GaborConnector(BaseComponent):
     })
 
     def __init__(self, network, lgn_on, lgn_off, target, parameters, name):
-        from numpy import random
-        random.seed(1023)
         BaseComponent.__init__(self, network, parameters)
         self.name = name
 
