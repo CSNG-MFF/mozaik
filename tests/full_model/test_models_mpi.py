@@ -11,7 +11,7 @@ from parameters import ParameterSet
 from test_models import TestModel
 
 import pytest
-
+import mozaik
 
 class TestLSV1MTiny(TestModel):
     """
@@ -20,7 +20,7 @@ class TestLSV1MTiny(TestModel):
     spike times of all neurons to a saved reference.
     """
 
-    model_run_command = "cd tests/full_model/models/LSV1M_tiny && mpirun -np 2 python run.py nest 1 param/defaults 'pytest' && cd ../../../.."
+    model_run_command = "cd tests/full_model/models/LSV1M_tiny && mpirun -np 7 python run.py nest 1 param/defaults 'pytest' && cd ../../../.."
     result_path = "tests/full_model/models/LSV1M_tiny/LSV1M_pytest_____"
     ref_path = "tests/full_model/reference_data/LSV1M_tiny_mpi"
 
@@ -42,3 +42,8 @@ class TestLSV1MTiny(TestModel):
     )
     def test_voltages(self, sheet_name):
         self.check_voltages(self.ds, self.ds_ref, sheet_name, max_neurons=25)
+
+    def test_mozaik_rng(self):
+        rngs_state = self.ds.block.annotations['simulation_log']['rngs_state']
+        print(rngs_state)
+        assert len(set(rngs_state)) == 1
