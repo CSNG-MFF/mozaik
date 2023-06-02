@@ -398,21 +398,26 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         sim = self.model.sim
         self.pops = OrderedDict()
 
-        if self.parameters.cell.model[-3:] == '_sc':
+        elif self.parameters.cell.model[-6:] == '_sc_nc':
             self.integrated_cs = True
+            import copy
+            cell = copy.deepcopy(self.parameters.cell)
+            cell.params.update([('mean', self.parameters.noise.mean*1000), ('std', self.parameters.noise.stdev*1000), ('dt', self.model.sim.get_time_step())])
         else:
             self.integrated_cs = False
             self.scs = OrderedDict()
             self.ncs = OrderedDict()
+            cell = self.parameters.cell
 
         self.ncs_rng = OrderedDict()
         self.internal_stimulus_cache = OrderedDict()
         for rf_type in self.rf_types:
+
             p = RetinalUniformSheet(model,
                                     ParameterSet({'sx': self.parameters.size[0],
                                                   'sy': self.parameters.size[1],
                                                   'density': self.parameters.density,
-                                                  'cell': self.parameters.cell,
+                                                  'cell': cell,
                                                   'name': rf_type,
                                                   'artificial_stimulators' : OrderedDict(),
                                                   'recorders' : self.parameters.recorders,
@@ -580,13 +585,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
             (input_currents, retinal_input) = cached
 
         ts = self.model.sim.get_time_step()
-        new_offset = convert_time_pyNN_to_nest(self.model.sim,offset)
-
-        # PyNN simulate at one time step more to get data from nest
-        if offset > 0:
-            new_offset = offset + ts
-        else:
-            new_offset = offset
+        new_offset = convert_time_pyNN_to_nest(self.model.sim,offset) + ts
 
         for rf_type in self.rf_types:
             assert isinstance(input_currents[rf_type], list)
@@ -595,17 +594,11 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                                                                 zip(self.sheets[rf_type].pop,
                                                                     input_currents[rf_type])):
                     assert isinstance(input_current, dict)
-                    t = input_current['times'] + new_offset
+                    # TEST
+                    t = input_current['times'] + offset
+                    #t = input_current['times'] + new_offset
                     a = self.parameters.linear_scaler * input_current['amplitudes']
-                    tt = numpy.arange(0, duration, ts) + new_offset
-                    amplitudes = (self.parameters.noise.mean
-                                   + self.parameters.noise.stdev
-                                       * self.ncs_rng[rf_type][i].randn(len(tt)))
-                    dt_ratio = int(tt.shape[0]/t.shape[0])
-                    for j in range(len(t)):
-                        amplitudes[dt_ratio*j:dt_ratio*(j+1)] += a[j]
-
-                    lgn_cell.set_parameters(amplitude_times=tt, amplitude_values=amplitudes*1000)
+                    lgn_cell.set_parameters(amplitude_times=t[1:], amplitude_values=a[1:]*1000)
 
             else:
                 for i, (lgn_cell, input_current, scs, ncs) in enumerate(
@@ -673,9 +666,10 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         # https://github.com/NeuralEnsemble/PyNN/issues/759.
         # TODO: Remove once this gets fixed (hopefully in PyNN 0.11.0)!
         ts = self.model.sim.get_time_step()
+        # TODO DIFFERENT TIMES IF USING INTEGRATED CURRENT MODELS
         times = numpy.array([offset + 3 * ts,duration-visual_space.update_interval+offset])
         zers = numpy.zeros_like(times)
-        new_offset = convert_time_pyNN_to_nest(self.model.sim,offset)
+        new_offset = convert_time_pyNN_to_nest(self.model.sim,offset) + ts
 
         input_cells = OrderedDict()
         for rf_type in self.rf_types:
@@ -696,12 +690,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
 
             if self.integrated_cs:
                 for i, lgn_cell in enumerate(self.sheets[rf_type].pop):
-                    t = numpy.arange(0, duration, ts) + new_offset
-                    noise_amplitudes = (self.parameters.noise.mean
-                                    + self.parameters.noise.stdev
-                                       * self.ncs_rng[rf_type][i].randn(len(t)))
-
-                    lgn_cell.set_parameters(amplitude_times=t, amplitude_values=(amplitude+noise_amplitudes)*1000)
+                    lgn_cell.set_parameters(amplitude_times=times, amplitude_values=(zers+amplitude)*1000)
 
             else:
                 for i, (scs, ncs) in enumerate(zip(self.scs[rf_type],self.ncs[rf_type])):
