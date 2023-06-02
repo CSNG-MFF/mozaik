@@ -390,6 +390,13 @@ class DataStore(DataStoreView):
         """
         self.block.annotations['experiment_parameters'] = experiment_parameter_list
         
+    def set_simulation_log(self,log):
+        """
+        The simulation log is expected to be a dictionary where every pair of key/values correspond to one part
+        of the log
+        """
+        self.block.annotations['simulation_log'] = log
+
     def identify_unpresented_stimuli(self, stimuli):
         """
         This method filters out from a list of stimuli all those which have already been
