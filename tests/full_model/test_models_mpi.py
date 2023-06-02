@@ -13,6 +13,7 @@ from test_models import TestModel
 import pytest
 import mozaik
 
+
 class TestLSV1MTiny(TestModel):
     """
     Class that runs the a tiny version of the LSV1M model on construction from the mozaik-models
@@ -44,6 +45,6 @@ class TestLSV1MTiny(TestModel):
         self.check_voltages(self.ds, self.ds_ref, sheet_name, max_neurons=25)
 
     def test_mozaik_rng(self):
-        rngs_state = self.ds.block.annotations['simulation_log']['rngs_state']
+        rngs_state = self.ds.block.annotations["simulation_log"]["rngs_state"]
         print(rngs_state)
         assert len(set(rngs_state)) == 1
