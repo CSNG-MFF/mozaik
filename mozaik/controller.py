@@ -251,7 +251,6 @@ def run_experiments(model,experiment_list,parameters,load_from=None):
     if mozaik.mpi_comm:
         rngs_state = mozaik.mpi_comm.gather(float(mozaik.rng.rand(1)), root=0)
         log = {'rngs_state': rngs_state}
-        logger.info(rngs_state)
     else:
         log = {}
     data_store.set_simulation_log(log)
