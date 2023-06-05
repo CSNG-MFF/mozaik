@@ -398,7 +398,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         sim = self.model.sim
         self.pops = OrderedDict()
 
-        elif self.parameters.cell.model[-6:] == '_sc_nc':
+        if self.parameters.cell.model[-6:] == '_sc_nc':
             self.integrated_cs = True
             import copy
             cell = copy.deepcopy(self.parameters.cell)
