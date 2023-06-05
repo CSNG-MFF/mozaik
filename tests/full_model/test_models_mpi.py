@@ -21,7 +21,7 @@ class TestLSV1MTiny(TestModel):
     spike times of all neurons to a saved reference.
     """
 
-    model_run_command = "cd tests/full_model/models/LSV1M_tiny && mpirun -np 4 python run.py nest 1 param/defaults 'pytest' && cd ../../../.."
+    model_run_command = "cd tests/full_model/models/LSV1M_tiny && mpirun -np 7 python run.py nest 1 param/defaults 'pytest' && cd ../../../.."
     result_path = "tests/full_model/models/LSV1M_tiny/LSV1M_pytest_____"
     ref_path = "tests/full_model/reference_data/LSV1M_tiny_mpi"
 
