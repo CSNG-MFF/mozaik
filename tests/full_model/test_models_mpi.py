@@ -51,6 +51,7 @@ class TestLSV1MTinyMPI(TestModel):
         print(rngs_state)
         assert len(set(rngs_state)) == 1
 
+
 class TestLSV1MTinyMPI7(TestModel):
     """
     Class that runs the a tiny version of the LSV1M model on construction from the mozaik-models
