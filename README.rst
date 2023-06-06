@@ -143,6 +143,10 @@ There are additional useful options for pytests that you can use during developm
 
         pytest -s
 
+Due to the impossibility of using more than 2 cores in Github actions, the test `test_mozaik_rng_mpi7` invoking 7 MPI processes cannot be ran there. It is necessary to run it locally, using  the following command to run it locally if using slurm::
+
+  salloc -n7  pytest -m 'mpi and not_github' ./tests/full_model/test_models_mpi.py
+
 :copyright: Copyright 2011-2013 by the *mozaik* team, see AUTHORS.
 :license: `CECILL <http://www.cecill.info/>`_, see LICENSE for details.
 
