@@ -56,6 +56,11 @@ class Model(BaseComponent):
     
     time_step : float (ms)
                 Length of the single step of the simulation. 
+
+    explosion_monitoring: ParameterSet
+                        Defines the sheet to monitor and the threshold of mean rate over which the activity is 
+                        considered too high and for which the simulation should be cancelled.
+                        None if no monitoring
     """
 
     required_parameters = ParameterSet({
@@ -71,7 +76,12 @@ class Model(BaseComponent):
         'time_step' : float,
         'sheets' : ParameterSet, # can be none - in which case input_space_type is ignored
         'mpi_seed' : int,
-        'pynn_seed' : int
+        'pynn_seed' : int,
+        'explosion_monitoring': ParameterSet, # Can be None. Strucutured as follows:
+                                              #            {
+                                              #                 sheet : 'sheet_name',
+                                              #                 threshold : float_value,
+                                              #            }
     })
 
     def __init__(self, sim, num_threads, parameters):
@@ -152,10 +162,17 @@ class Model(BaseComponent):
 
         self.first_time = False
 
-
+        exploded = False
         if mozaik.mpi_comm.rank == mozaik.MPI_ROOT:
             for sheet in self.sheets.values():
-                logger.info("Sheet %s average rate: %f" % (sheet.name,sheet.mean_spike_count()))
+                msc = sheet.mean_spike_count()
+                logger.info("Sheet %s average rate: %f" % (sheet.name,msc))
+                if (self.parameters.explosion_monitoring and sheet.name == self.parameters.explosion_monitoring.sheet_name and 
+                        msc > self.parameters.explosion_monitoring.threshold):
+                    logger.info(f'The activity in {sheet.name} is too high, the datastore will be saved and the simulation will be terminated')
+                    exploded = True
+        if mozaik.mpi_comm:
+            exploded = mozaik.mpi_comm.bcast(exploded, root=mozaik.MPI_ROOT)
         
         #remove any artificial stimulators 
         for sheet in self.sheets.values():
@@ -164,7 +181,7 @@ class Model(BaseComponent):
         
         logger.info("Stimulus presentation took %.0f s, of which %.0f s was simulation time"  % (time.time() - t0,sim_run_time))
 
-        return (segments, null_segments,sensory_input,sim_run_time)
+        return (segments, null_segments,sensory_input,sim_run_time,exploded)
         
     def run(self, tstop):
         """
