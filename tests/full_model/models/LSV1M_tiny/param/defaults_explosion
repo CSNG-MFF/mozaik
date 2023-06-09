@@ -30,5 +30,8 @@
     'mpi_seed' : 1023,
     'l23' : True,
     'trial' : 0,
-    'explosion_monitoring': None,
+    'explosion_monitoring': {
+       'sheet_name': 'V1_Exc_L4',
+       'threshold': 50,
+    },
 }

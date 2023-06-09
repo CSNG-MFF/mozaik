@@ -30,4 +30,5 @@
     'mpi_seed' : 1023,
     'l23' : True,
     'trial' : 0,
+    'explosion_monitoring': None,
 }
