@@ -65,9 +65,13 @@ class TestModelExplosionMonitoringMPI(TestModel):
     ds = None  # Model run datastore
     ds_ref = None  # Reference datastore
 
+    @pytest.mark.model
+    @pytest.mark.mpi
     def test_explosion(self):
         assert self.ds.block.annotations["simulation_log"]["explosion_detected"]
 
+    @pytest.mark.model
+    @pytest.mark.mpi
     def test_fr_above_threshold(self):
         sheet_monitored = eval(self.ds.get_model_parameters())["explosion_monitoring"][
             "sheet_name"
