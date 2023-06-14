@@ -79,8 +79,8 @@ class Model(BaseComponent):
         'pynn_seed' : int,
         'explosion_monitoring': ParameterSet, # Can be None. Strucutured as follows:
                                               #            {
-                                              #                 sheet : 'sheet_name',
-                                              #                 threshold : float_value,
+                                              #                 sheet_name : str,
+                                              #                 threshold : float,
                                               #            }
     })
 
