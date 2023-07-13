@@ -21,6 +21,7 @@ def create_experiments(model):
                     "grating_duration": 1001,  # 143*7
                     "contrasts": [100],
                     "num_trials": 1,
+                    "shuffle_stimuli": False,
                 }
             ),
         ),

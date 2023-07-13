@@ -80,11 +80,17 @@ class DataStoreView(ParametrizedObject):
         self.full_datastore = full_datastore  # should be self if actually the
                                               # instance is actually DataStore
 
-    def get_segments(self,null=False):
+    def get_segments(self,null=False, ordered=False):
         """
         Returns list of all recordings (as neo segments) stored in the datastore.
+        If *null* is true then the segments correspond to the blank period before every stimulus.
+        If *ordered* is true then the stimuli are sorted chronologically
         """
-        return [s for s in self.block.segments if s.null == null]
+        segs = [s for s in self.block.segments if s.null == null]
+        if ordered:
+            return sorted(segs, key=lambda x:x.rec_datetime)
+        else:
+            return segs
         
     def sheets(self):
         """
@@ -154,7 +160,7 @@ class DataStoreView(ParametrizedObject):
         """
         return self.full_datastore.block.annotations['neuron_annotations']
 
-    def get_stimuli(self,null=False):
+    def get_stimuli(self,null=False, ordered=False):
         """
         Returns a list of stimuli (as strings). The order of the stimuli
         corresponds to the order of segments returned by the get_segments()
@@ -162,8 +168,10 @@ class DataStoreView(ParametrizedObject):
         
         If *null* is true the order corresponds to the order of segments 
         returned by get_segments(null=True).
+
+        If *ordered* is true then the stimuli are sorted chronologically 
         """
-        return [s.annotations['stimulus'] for s in self.block.segments if s.null == null]
+        return [s.annotations['stimulus'] for s in self.get_segments(null,ordered)]
 
     def get_analysis_result(self, **kwargs):
         """
