@@ -143,6 +143,16 @@ There are additional useful options for pytests that you can use during developm
 
         pytest -s
 
+Due to the impossibility of using more than 2 cores in Github actions, the test :code:`test_mozaik_rng_mpi7` invoking 7 MPI processes cannot be ran there. It is therefore necessary to run it locally, by following these steps:
+
+    - Modify the sbatch_test_RNG_MPI7.sh sbatch script to include your virtual environment after the :code:`source` command.
+
+    - Using the following command to run it locally if using slurm::
+
+        sbatch sbatch_test_RNG_MPI7.sh
+
+    - Check the slurm output file to verify whether the test passed
+
 :copyright: Copyright 2011-2013 by the *mozaik* team, see AUTHORS.
 :license: `CECILL <http://www.cecill.info/>`_, see LICENSE for details.
 
