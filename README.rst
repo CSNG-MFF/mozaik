@@ -51,7 +51,8 @@ ____________
  
 Now you can install all other dependencies in this protected environment::
 
-  pip3 install numpy==1.23.5 scipy mpi4py matplotlib quantities lazyarray interval Pillow param==1.5.1 parameters neo cython pynn==0.10.0 psutil future requests elephant pytest-xdist pytest-timeout junitparser numba
+  pip3 install numpy scipy mpi4py matplotlib quantities lazyarray interval Pillow param==1.5.1 parameters neo cython psutil future requests elephant pytest-xdist pytest-timeout junitparser numba
+  pip3 install numpy==1.23.5 scipy mpi4py matplotlib quantities lazyarray interval Pillow param==1.5.1 parameters neo cython psutil future requests elephant pytest-xdist pytest-timeout junitparser numba
 
 Next we will manually install several packages. It is probably the best if you create a separate directory in an appropriate
 place, where you will download and install the packages from.
@@ -62,16 +63,22 @@ First install the *imagen* package::
   cd imagen
   python setup.py install
 
+Then install the *PyNN* package from the PyNNStepCurrentModule branch::
+  git clone https://github.com/CSNG-MFF/PyNN.git
+  cd PyNN
+  git checkout PyNNStepCurrentModule
+  python setup.py install
+
 Next install the *Nest* simulator (always in the virtual environment):
 
     - download the latest version from their `website <http://www.nest-initiative.org/index.php/Software:Download>`_
         
-        wget https://github.com/nest/nest-simulator/archive/refs/tags/v3.1.tar.gz
+        wget https://github.com/nest/nest-simulator/archive/refs/tags/v3.4.tar.gz
         
     - untar and cd into it::
 
-        tar xvfz v3.1.tar.gz
-        cd nest-simulator-3.1
+        tar xvfz v3.4.tar.gz
+        cd nest-simulator-3.4
     
     - then configure (change path to wherever you installed your virtual environemnt)::
     
@@ -84,16 +91,35 @@ Next install the *Nest* simulator (always in the virtual environment):
         
     - Then::
         
-        make installcheck
+        (mozaik)$ make installcheck
 
       or if you are using Slurm::
 
-        salloc -n8 make installcheck
+        (mozaik)$ salloc -n8 make installcheck
     
     - nest will reside in $HOME/virt_env/mozaik/lib/python3.*/site-packages. Check that the package is seen by python using::
 
-        python -c 'import nest'
+        (mozaik)$ python -c 'import nest'
 
+Then install the  *stepcurrentmodule* Nest module:
+
+    - get the module from github and cd into it::
+        
+        https://github.com/CSNG-MFF/nest-step-current-module.git
+        cd nest-step-current-module
+
+    - then configure it relatively to your nest-config installation path (should reside in $HOME/virt_env/mozaik/bin/nest-config)::
+        
+        (mozaik)$ cmake -Dwith-mpi=ON -Dwith-boost=ON -Dwith-optimize='-O3' -Dwith-nest=NEST_CONFIG_PATH ./
+
+    - finally, by launching make and install, it installs the nest module in the activated virtual environment mozaik. If you're using Slurm, run these commands through :code:`srun` ::
+
+        (mozaik)$ make
+        (mozaik)$ make install
+
+    - Check that the package is seen by python using::
+
+        (mozaik)$ python -c 'import nest; nest.Install("stepcurrentmodule")'
 
 And, finally, Mozaik::
     

@@ -585,6 +585,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
             (input_currents, retinal_input) = cached
 
         ts = self.model.sim.get_time_step()
+        # Correcting for nest/PyNN time inconsistency + adding one ts as injected current at the current time is not taken into account
         new_offset = convert_time_pyNN_to_nest(self.model.sim,offset) + ts
 
         for rf_type in self.rf_types:
@@ -594,9 +595,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                                                                 zip(self.sheets[rf_type].pop,
                                                                     input_currents[rf_type])):
                     assert isinstance(input_current, dict)
-                    # TEST
-                    t = input_current['times'] + offset
-                    #t = input_current['times'] + new_offset
+                    t = input_current['times'] + new_offset
                     a = self.parameters.linear_scaler * input_current['amplitudes']
                     lgn_cell.set_parameters(amplitude_times=t[1:], amplitude_values=a[1:]*1000)
 
@@ -664,12 +663,15 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         # Currently, we need to set the start time of stimulation to
         # offset + 3*timestep, until the following issue is resolved:
         # https://github.com/NeuralEnsemble/PyNN/issues/759.
-        # TODO: Remove once this gets fixed (hopefully in PyNN 0.11.0)!
         ts = self.model.sim.get_time_step()
-        # TODO DIFFERENT TIMES IF USING INTEGRATED CURRENT MODELS
-        times = numpy.array([offset + 3 * ts,duration-visual_space.update_interval+offset])
-        zers = numpy.zeros_like(times)
-        new_offset = convert_time_pyNN_to_nest(self.model.sim,offset) + ts
+        if self.integrated_cs:
+            new_offset = convert_time_pyNN_to_nest(self.model.sim,offset) + ts
+            times = numpy.array([new_offset,duration-visual_space.update_interval+new_offset])
+            zers = numpy.zeros_like(times)
+        # TODO: Remove once this gets fixed (hopefully in PyNN 0.11.0)!
+        else:
+            times = numpy.array([offset + 3 * ts,duration-visual_space.update_interval+offset])
+            zers = numpy.zeros_like(times)
 
         input_cells = OrderedDict()
         for rf_type in self.rf_types:
