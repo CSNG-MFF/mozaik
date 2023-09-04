@@ -36,7 +36,6 @@ class TestModel(object):
         if os.path.exists(cls.result_path):
             os.system("rm -r " + cls.result_path)
         os.system(cls.model_run_command)
-
         # Load DataStore of recordings from the model that just ran
         cls.ds = cls.load_datastore(cls.result_path)
         # Load DataStore of reference recordings
