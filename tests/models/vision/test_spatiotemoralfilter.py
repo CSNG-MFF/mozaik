@@ -34,6 +34,7 @@ params = {
     "sheets": {
         "retina_lgn": {
             "component": "mozaik.models.vision.spatiotemporalfilter.SpatioTemporalFilterRetinaLGN",
+
             "params": {
                 "density": 10,
                 "size": (0.5, 0.5),
@@ -78,6 +79,7 @@ params = {
                 },
                 "cell": {
                     "model": "IF_cond_exp",
+                    "native_nest": False,
                     "params": {
                         "v_thresh": -57.0,
                         "v_rest": -70.0,
