@@ -34,7 +34,6 @@ params = {
     "sheets": {
         "retina_lgn": {
             "component": "mozaik.models.vision.spatiotemporalfilter.SpatioTemporalFilterRetinaLGN",
-
             "params": {
                 "density": 10,
                 "size": (0.5, 0.5),
