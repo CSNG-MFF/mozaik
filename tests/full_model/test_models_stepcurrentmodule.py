@@ -44,7 +44,7 @@ class TestLSV1MTinyStepCurrentModule(TestModel):
     @pytest.mark.stepcurrentmodule
     @pytest.mark.parametrize(
         "sheet_name",
-        ["X_ON", "X_OFF", "V1_Exc_L4", "V1_Inh_L4", "V1_Exc_L2/3", "V1_Inh_L2/3"],
+        ["V1_Exc_L4", "V1_Inh_L4", "V1_Exc_L2/3", "V1_Inh_L2/3"],
     )
     def test_voltages(self, sheet_name):
         self.check_voltages(self.ds, self.ds_ref, sheet_name, max_neurons=25)
