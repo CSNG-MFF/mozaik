@@ -64,6 +64,7 @@ First install the *imagen* package::
   python setup.py install
 
 Then install the *PyNN* package from the PyNNStepCurrentModule branch::
+
   git clone https://github.com/CSNG-MFF/PyNN.git
   cd PyNN
   git checkout PyNNStepCurrentModule
@@ -101,11 +102,11 @@ Next install the *Nest* simulator (always in the virtual environment):
 
         (mozaik)$ python -c 'import nest'
 
-Then install the  *stepcurrentmodule* Nest module:
+Then install the *stepcurrentmodule* Nest module:
 
     - get the module from github and cd into it::
         
-        https://github.com/CSNG-MFF/nest-step-current-module.git
+        git clone https://github.com/CSNG-MFF/nest-step-current-module.git
         cd nest-step-current-module
 
     - then configure it relatively to your nest-config installation path (should reside in $HOME/virt_env/mozaik/bin/nest-config)::
