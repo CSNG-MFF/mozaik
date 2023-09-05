@@ -33,7 +33,7 @@ jobs:
         git clone https://github.com/RCagnol/PyNN.git
         cd PyNN
         git checkout PyNNStepCurrentModule 
-        python setup.py install
+        pip install .
         cd ..
 
     - name: Install Nest
