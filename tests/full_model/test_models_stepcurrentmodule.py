@@ -18,7 +18,7 @@ import mozaik
 class TestLSV1MTinyStepCurrentModule(TestModel):
     """
     Class that runs the a tiny version of the LSV1M model on construction from the mozaik-models
-    repository and runs it with MPI. Its testing methods compare the membrane potentials of a
+    repository, using the stepcurrentmodule models for LGN neurons. Its testing methods compare the membrane potentials of a
     few neurons and the spike times of all neurons to a saved reference.
     """
 
