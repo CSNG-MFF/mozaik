@@ -8,7 +8,7 @@ from mozaik.stimuli import InternalStimulus
 from mozaik.tools.distribution_parametrization import ParameterWithUnitsAndPeriod, MozaikExtendedParameterSet
 from mozaik.sheets.direct_stimulator import Depolarization
 from collections import OrderedDict
-
+import os
 
 
 logger = mozaik.getMozaikLogger()
@@ -2093,6 +2093,89 @@ class MapResponseToInterruptedCornerStimulus(VisualExperiment):
                                             x = self.parameters.x + numpy.cos(self.parameters.orientation+numpy.pi/2) * (-self.parameters.max_offset + z),
                                             y = self.parameters.y + numpy.sin(self.parameters.orientation+numpy.pi/2) * (-self.parameters.max_offset + z),
                                             trial=k))
+
+    def do_analysis(self, data_store):
+        pass
+
+
+class MeasureNaturalImages(VisualExperiment):
+    """
+    Present a sequence of images loaded from a directory, in alphabetical order of
+    image filenames, interleaved by blank stimulation.
+
+    Parameters
+    ----------
+    model : Model
+            The model on which to execute the experiment.
+
+    Other parameters
+    ----------------
+    duration : float
+            The duration of single presentation of the stimulus.
+
+    images_dir : str
+            Path to the directory containing the images.
+
+    num_images : int
+            Number of images to present.
+
+    image_display_duration : float
+            The duration for which each image is displayed.
+
+    num_skipped_images : int
+            Skip the first num_skipped_images in the alphabetical order of filenames.
+
+    num_trials : int
+            Number of trials each each stimulus is shown.
+
+    size : float
+            The length of the longer axis of the image in visual degrees
+    """
+
+    required_parameters = ParameterSet(
+        {
+            "duration": float,
+            "images_dir": str,
+            "num_images": int,
+            "image_display_duration": float,
+            "num_skipped_images": int,
+            "num_trials": int,
+            "size": float,
+        }
+    )
+
+    def __init__(self, model, parameters):
+        VisualExperiment.__init__(self, model, parameters)
+        img_paths = [
+            os.path.join(self.parameters.images_dir, f)
+            for f in os.listdir(self.parameters.images_dir)
+        ]
+        img_paths.sort()
+        img_paths = img_paths[
+            self.parameters.num_skipped_images : self.parameters.num_skipped_images
+            + self.parameters.num_images
+        ]
+        for k in range(0, self.parameters.num_trials):
+            numpy.random.shuffle(img_paths)
+            for img_path in img_paths:
+                self.stimuli.append(
+                    topo.NaturalImage(
+                        frame_duration=self.frame_duration,
+                        image_path=img_path,
+                        duration=self.parameters.duration,
+                        image_duration=self.parameters.image_display_duration,
+                        blank_duration=self.parameters.duration
+                        - self.parameters.image_display_duration,
+                        size_x=model.visual_field.size_x,
+                        size_y=model.visual_field.size_y,
+                        location_x=0.0,
+                        location_y=0.0,
+                        background_luminance=self.background_luminance,
+                        density=self.density,
+                        trial=k,
+                        size=self.parameters.size,
+                    )
+                )
 
     def do_analysis(self, data_store):
         pass
