@@ -36,6 +36,8 @@ class TestModel(object):
         if os.path.exists(cls.result_path):
             os.system("rm -r " + cls.result_path)
         os.system(cls.model_run_command)
+        # Hack - For some reason MPI tests sometimes can't find the result datastore without this
+        print(os.listdir("tests/full_model/models/LSV1M_tiny/"))
         # Load DataStore of recordings from the model that just ran
         cls.ds = cls.load_datastore(cls.result_path)
         # Load DataStore of reference recordings
