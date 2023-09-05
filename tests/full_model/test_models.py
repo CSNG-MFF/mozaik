@@ -170,8 +170,8 @@ class TestModel(object):
         max_neurons : maximum number of neurons to check voltages for
         """
 
-        print(len(self.get_voltages(ds0, sheet_name, max_neurons)),flush=True)
-        print(len(self.get_voltages(ds1, sheet_name, max_neurons)),flush=True)
+        print(len(self.get_voltages(ds0, sheet_name, max_neurons)), flush=True)
+        print(len(self.get_voltages(ds1, sheet_name, max_neurons)), flush=True)
         np.testing.assert_equal(
             self.get_voltages(ds0, sheet_name, max_neurons),
             self.get_voltages(ds1, sheet_name, max_neurons),
