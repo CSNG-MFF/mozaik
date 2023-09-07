@@ -9,7 +9,7 @@ from mozaik.storage.queries import *
 from mozaik.storage.datastore import PickledDataStore
 from mozaik.tools.distribution_parametrization import PyNNDistribution
 from parameters import ParameterSet
-from test_models import TestModel
+from .test_models import TestModel
 
 import pytest
 import mozaik

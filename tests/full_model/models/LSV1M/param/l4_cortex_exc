@@ -12,6 +12,7 @@
                     
                 'cell': {
                         'model': 'EIF_cond_exp_isfa_ista',
+                        'native_nest': False,
                         'params': {
                             'v_rest': -80,
                             'v_reset': -60.0,

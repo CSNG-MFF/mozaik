@@ -7,6 +7,7 @@ markers = [
     "merge: tests for the datastore merging",
     "mpi: tests using mpi to run the model",
     "not_github: tests using mpi to run the model",
+    "stepcurrentmodule: tests using the nest stepcurrent module to run the model",
 ]
 
 [tool.black]

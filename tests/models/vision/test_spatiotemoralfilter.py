@@ -78,6 +78,7 @@ params = {
                 },
                 "cell": {
                     "model": "IF_cond_exp",
+                    "native_nest": False,
                     "params": {
                         "v_thresh": -57.0,
                         "v_rest": -70.0,
