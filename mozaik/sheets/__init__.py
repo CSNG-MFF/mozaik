@@ -78,6 +78,7 @@ class Sheet(BaseComponent):
     required_parameters = ParameterSet({
         'cell': ParameterSet({
             'model': str,  # the cell type of the sheet
+            'native_nest': bool,
             'params': ParameterSet,
             'initial_values': ParameterSet,
         }),
@@ -255,7 +256,10 @@ class Sheet(BaseComponent):
         """
 
         try:
-            block = self.pop.get_data(['spikes', 'v', 'gsyn_exc', 'gsyn_inh'],clear=True)
+            if self.parameters.cell.native_nest:
+                block = self.pop.get_data(['spikes', 'V_m', 'g_ex', 'g_in'],clear=True)
+            else:
+                block = self.pop.get_data(['spikes', 'v', 'gsyn_exc', 'gsyn_inh'],clear=True)
         except (NothingToWriteError, errmsg):
             logger.debug(errmsg)
         

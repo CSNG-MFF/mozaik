@@ -36,7 +36,8 @@ class TestModel(object):
         if os.path.exists(cls.result_path):
             os.system("rm -r " + cls.result_path)
         os.system(cls.model_run_command)
-
+        # Hack - For some reason MPI tests sometimes can't find the result datastore without this
+        print(os.listdir("tests/full_model/models/LSV1M_tiny/"))
         # Load DataStore of recordings from the model that just ran
         cls.ds = cls.load_datastore(cls.result_path)
         # Load DataStore of reference recordings
@@ -132,7 +133,6 @@ class TestModel(object):
         A 1D list of spike times recorded in neurons in the DataStore
         """
         segments = self.get_segments(data_store, sheet_name)
-        print(segments)
         return [
             v
             for segment in segments
@@ -153,7 +153,6 @@ class TestModel(object):
         sheet_name : name of neuron sheet (layer) to check spike times for
         max_neurons : maximum number of neurons to check spike times for
         """
-
         np.testing.assert_equal(
             self.get_spikes(ds0, sheet_name, max_neurons),
             self.get_spikes(ds1, sheet_name, max_neurons),
@@ -173,6 +172,8 @@ class TestModel(object):
         max_neurons : maximum number of neurons to check voltages for
         """
 
+        print(len(self.get_voltages(ds0, sheet_name, max_neurons)), flush=True)
+        print(len(self.get_voltages(ds1, sheet_name, max_neurons)), flush=True)
         np.testing.assert_equal(
             self.get_voltages(ds0, sheet_name, max_neurons),
             self.get_voltages(ds1, sheet_name, max_neurons),

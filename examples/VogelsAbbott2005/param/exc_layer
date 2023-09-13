@@ -11,6 +11,7 @@
 
                 'cell': {
                         'model': 'IF_cond_exp',
+                        'native_nest': False,
                         'params': {
                             'v_thresh':-50.0,
                             'v_rest': -60.0,
