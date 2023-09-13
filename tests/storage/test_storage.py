@@ -12,7 +12,6 @@ import pytest
 
 
 class TestDatastore:
-
     ref_path = "tests/full_model/reference_data/LSV1M_tiny"
 
     @classmethod
