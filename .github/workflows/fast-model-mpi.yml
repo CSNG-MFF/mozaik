@@ -41,4 +41,4 @@ jobs:
       run: python setup.py install
 
     - name: Test with pytest
-      run: pytest -v -s -m "mpi and not not_github" ./tests/full_model/test_models_mpi.py --cov=mozaik
+      run: pytest -m "mpi and not not_github" ./tests/full_model/test_models_mpi.py --cov=mozaik
