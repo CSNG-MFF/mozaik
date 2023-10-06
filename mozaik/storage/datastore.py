@@ -185,6 +185,30 @@ class DataStoreView(ParametrizedObject):
         """
         return filter_query(self.analysis_results,**kwargs)
 
+    def sort_analysis_results(self, key, reverse=False):
+        if key[0:3] == 'st_':
+            ads_id = []
+            ads_id_nkey = []
+            ads_nid = []
+            for ads in self.analysis_results:
+                if ads.stimulus_id is None:
+                    ads_nid.append(ads)
+                else:
+                    if hasattr(MozaikParametrized.idd(ads.stimulus_id),key[3:]):
+                        ads_id.append(ads)
+                    else:
+                        ads_id_nkey.append(ads)
+            self.analysis_results =  ads_nid + ads_id_nkey + sorted(ads_id, key= lambda x:getattr(MozaikParametrized.idd(x.stimulus_id),key[3:]),reverse=reverse)
+        else:
+            ads_key = []
+            ads_nkey = []
+            for ads in self.analysis_results:
+                if hasattr(ads,key):
+                    ads_key.append(ads)
+                else:
+                    ads_nkey.append(ads)
+            self.analysis_results = ads_nkey + sorted(ads_key, key= lambda x:getattr(x,key),reverse=reverse)
+
     def get_sensory_stimulus(self, stimuli=None):
         """
         Return the raw sensory stimulus that has been presented to the model due to stimuli specified by the stimuli argument.

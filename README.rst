@@ -51,7 +51,6 @@ ____________
  
 Now you can install all other dependencies in this protected environment::
 
-  pip3 install numpy scipy mpi4py matplotlib quantities lazyarray interval Pillow param==1.5.1 parameters neo cython psutil future requests elephant pytest-xdist pytest-timeout junitparser numba
   pip3 install numpy==1.23.5 scipy mpi4py matplotlib quantities lazyarray interval Pillow param==1.5.1 parameters neo cython psutil future requests elephant pytest-xdist pytest-timeout junitparser numba
 
 Next we will manually install several packages. It is probably the best if you create a separate directory in an appropriate
@@ -72,7 +71,7 @@ Then install the *PyNN* package from the PyNNStepCurrentModule branch::
 
 Next install the *Nest* simulator (always in the virtual environment):
 
-    - download the latest version from their `website <http://www.nest-initiative.org/index.php/Software:Download>`_
+    - download the latest version from their `website <http://www.nest-initiative.org/index.php/Software:Download>`_::
         
         wget https://github.com/nest/nest-simulator/archive/refs/tags/v3.4.tar.gz
         
@@ -109,7 +108,7 @@ Then install the *stepcurrentmodule* Nest module:
         git clone https://github.com/CSNG-MFF/nest-step-current-module.git
         cd nest-step-current-module
 
-    - then configure it relatively to your nest-config installation path (should reside in $HOME/virt_env/mozaik/bin/nest-config)::
+    - then, in the following command, replace NEST_CONFIG_PATH by your nest-config installation path (should reside in $HOME/virt_env/mozaik/bin/nest-config) and run it::
         
         (mozaik)$ cmake -Dwith-mpi=ON -Dwith-boost=ON -Dwith-optimize='-O3' -Dwith-nest=NEST_CONFIG_PATH ./
 
