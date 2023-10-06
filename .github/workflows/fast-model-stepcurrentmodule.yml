@@ -30,7 +30,7 @@ jobs:
 
     - name: Download and install PyNN 
       run: |
-        git clone https://github.com/RCagnol/PyNN.git
+        git clone https://github.com/CSNG-MFF/PyNN.git
         cd PyNN
         git checkout PyNNStepCurrentModule 
         pip install .
@@ -49,7 +49,7 @@ jobs:
 
     - name: Install stepcurrentmodule
       run: |
-        git clone https://github.com/RCagnol/nest-step-current-module.git
+        git clone https://github.com/CSNG-MFF/nest-step-current-module.git
         cd nest-step-current-module
         cmake -Dwith-mpi=ON -Dwith-boost=ON -Dwith-nest=$pythonLocation/bin/nest-config -Dwith-optimize='-O3' ./
         make -j8
