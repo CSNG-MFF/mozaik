@@ -14,7 +14,8 @@ from imagen.image import BoundingBox
 import pickle
 import numpy
 import numpy as np
-from mozaik.tools.mozaik_parametrized import SNumber, SString
+from mozaik.tools.mozaik_parametrized import SNumber, SString, SParameterSet
+from mozaik.tools.distribution_parametrization import MozaikExtendedParameterSet
 from mozaik.tools.units import cpd
 from numpy import pi
 from quantities import Hz, rad, degrees, ms, dimensionless
@@ -44,11 +45,18 @@ class SparseNoise(TopographicaBasedVisualStimulus):
     blank_time = SNumber(ms, doc ="Duration of blank screen between image presentations")
     grid_size = SNumber(dimensionless, doc = "Grid Size ")
     grid = SNumber(dimensionless, doc = "Boolean string to decide whether there is grid or not")
+    extra_params = SParameterSet(doc="Extra stimulus parameters to save in the stimulus description")
 
     def __init__(self,**params):
         TopographicaBasedVisualStimulus.__init__(self, **params)
         assert (self.time_per_image/self.frame_duration) % 1.0 == 0.0, "The duration of image presentation should be multiple of frame duration."
                 
+        if self.extra_params == None:
+            self.extra_params = MozaikExtendedParameterSet({})
+        self.extra_params.x_positions = []
+        self.extra_params.y_positions = []
+        self.extra_params.polarities = []
+
     def frames(self):
   
         aux = imagen.random.SparseNoise(
@@ -65,10 +73,17 @@ class SparseNoise(TopographicaBasedVisualStimulus):
         while True:
             aux2 = aux()
             blank = aux2*0+self.background_luminance
+            pos = np.where(aux2 != self.background_luminance)
+            x = int(pos[0].min())
+            y = int(pos[1].min())
+            polarity = aux2[int(x),int(y)] / self.background_luminance - 1
+            self.extra_params.x_positions.append(x)
+            self.extra_params.y_positions.append(y)
+            self.extra_params.polarities.append(polarity)
             for i in range(int(self.time_per_image/self.frame_duration)):
-                yield (aux2,[0])
+                yield (aux2,[x,y,polarity])
             for i in range(int(self.blank_time/self.frame_duration)):
-                yield (blank,[0])
+                yield (blank,[0,0,0])
             
 
 class DenseNoise(TopographicaBasedVisualStimulus):
@@ -303,6 +318,30 @@ class Null(TopographicaBasedVisualStimulus):
                               ydensity=self.density)(),
                    [self.frame_duration])
 
+
+class PixelImpulse(TopographicaBasedVisualStimulus):
+    """
+    A visual stimulus that sets the luminance of a single pixel with
+    coordinates (*x*,*y*) to *relative_luminance* times the background
+    luminance. All other pixels are set to background luminance.
+    """
+
+    relative_luminance = SNumber(dimensionless, doc="Ratio of the selected pixel luminance to the background luminance")
+    x = SNumber(dimensionless, doc="x coordinate of selected pixel")
+    y = SNumber(dimensionless, doc="y coordinate of selected pixel")
+
+    def frames(self):
+        blank = imagen.Constant(
+            scale=self.background_luminance,
+            bounds=imagen.image.BoundingBox(radius=self.size_x / 2),
+            xdensity=self.density,
+            ydensity=self.density,
+        )()
+        impulse = blank.copy()
+        impulse[self.x, self.y] *= self.relative_luminance
+        yield (impulse, [self.frame_duration])
+        while True:
+            yield (impulse, [self.frame_duration])
 
 class MaximumDynamicRange(TransferFn):
     """
@@ -1176,6 +1215,7 @@ class ContinuousGaborMovementAndJump(GaborStimulus):
     movement_angle = SNumber(rad, period=2*pi, bounds=[0,2*pi], doc="Incidence angle of the moving patch to the center patch.")
     moving_gabor_orientation_radial = SNumber(dimensionless, doc = "Boolean string, radial or cross patch")
     center_flash_duration = SNumber(ms, doc="Duration of flashing the Gabor patch in the center.")
+    neuron_id = SNumber(dimensionless, default=0, doc="ID of measured neuron. Required to pair recordings to stimuli.")
 
     def frames(self):
         assert self.movement_duration >= 2*self.frame_duration, "Movement must be at least 2 frames long"
@@ -1241,6 +1281,8 @@ class RadialGaborApparentMotion(GaborStimulus):
     random = SNumber(dimensionless, default=False, doc = "Boolean string - if True, random shuffle the locations and flash times of Gabor patches.")
     flash_center = SNumber(dimensionless, doc = "Boolean string, flash in center or not")
     centrifugal = SNumber(dimensionless, default=False, doc = "Boolean string - if True, patches move out from the center, rather than towards it.")
+    identifier = SString(default="", doc="Stimulus identifier, can be used for grouping stimuli at the analysis stage.")
+    neuron_id = SNumber(dimensionless, default=0, doc="ID of measured neuron. Required to pair recordings to stimuli.")
 
     def is_overlapping(self,x0, y0, x1, y1, diameter):
         return (x0-x1)**2 + (y0-y1)**2 < diameter**2
@@ -1249,6 +1291,10 @@ class RadialGaborApparentMotion(GaborStimulus):
         """
         Sets positions of overlapping Gabors to NaN, except ones
         """
+        # If start_angle == end_angle, it will overlap, but we don't want to delete it
+        if x_pos.shape[1] == 1:
+            return x_pos, y_pos
+
         # Test overlap of patches on same eccentricity
         for i in range(x_pos.shape[0]):
             for j in range(x_pos.shape[1]):
@@ -1272,6 +1318,7 @@ class RadialGaborApparentMotion(GaborStimulus):
                     np.isclose(angles[j] % np.pi, allowed_orientation_axes)
                 )
                 if (overlap_0 or overlap_1) and not allowed_orientation:
+                    print("Removing (%.2f,%.2f)" % (x_pos[i,j],y_pos[i,j]))
                     x_pos[i, j] = np.nan
                     y_pos[i, j] = np.nan
         return x_pos, y_pos
@@ -1289,7 +1336,8 @@ class RadialGaborApparentMotion(GaborStimulus):
         x_pos = self.x + gabor_diameter * np.outer(radii, np.cos(angles))
         y_pos = self.y + gabor_diameter * np.outer(radii, np.sin(angles))
         n_radii, n_angles = x_pos.shape
-        angles_mat = np.vstack([angles] * n_radii)
+        if self.n_circles > 0:
+            angles_mat = np.vstack([angles] * n_radii)
 
         # Set overlapping Gabor locations to NaN, except the ones we allow,
         # which are the ones with same or perpendicular orientation as the center
@@ -1362,3 +1410,65 @@ class RadialGaborApparentMotion(GaborStimulus):
 
         while True:
             yield (blank, [0])
+
+
+class NaturalImage(TopographicaBasedVisualStimulus):
+    """
+    A visual stimulus consisting of a static image, followed by a blank screen
+    with background luminance.
+    """
+
+    size = SNumber(
+        degrees, doc="The length of the longer axis of the image in visual degrees"
+    )
+    image_path = SString(doc="Path to the image file.")
+    image_duration = SNumber(ms, doc="Duration of the image display.")
+    blank_duration = SNumber(ms, doc="Duration of the blank screen display.")
+    duration = SNumber(ms, doc="Image + blank screen display duration.")
+
+    def __init__(self, **params):
+        TopographicaBasedVisualStimulus.__init__(self, **params)
+        assert (
+            self.image_duration / self.frame_duration
+        ) % 1.0 == 0.0, (
+            "The duration of image presentation should be multiple of frame duration."
+        )
+        assert (
+            (self.duration - self.image_duration) / self.frame_duration
+        ) % 1.0 == 0.0, (
+            "The duration of blank presentation should be multiple of frame duration."
+        )
+
+    def frames(self):
+        self.pattern_sampler = imagen.image.PatternSampler(
+            size_normalization="fit_longest",
+            whole_pattern_output_fns=[MaximumDynamicRange()],
+        )
+
+        img = imagen.image.FileImage(
+            filename=self.image_path,
+            x=0,
+            y=0,
+            orientation=0,
+            xdensity=self.density,
+            ydensity=self.density,
+            size=self.size,
+            bounds=BoundingBox(
+                points=(
+                    (-self.size_x / 2, -self.size_y / 2),
+                    (self.size_x / 2, self.size_y / 2),
+                )
+            ),
+            scale=2 * self.background_luminance,
+            pattern_sampler=self.pattern_sampler,
+        )
+
+        image = img()
+        blank = image * 0 + self.background_luminance
+        for i in range(int(self.image_duration / self.frame_duration)):
+            yield (image, [i])
+
+        for i in range(
+            int((self.duration - self.image_duration) / self.frame_duration)
+        ):
+            yield (blank, [i])

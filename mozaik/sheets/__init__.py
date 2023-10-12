@@ -78,6 +78,7 @@ class Sheet(BaseComponent):
     required_parameters = ParameterSet({
         'cell': ParameterSet({
             'model': str,  # the cell type of the sheet
+            'native_nest': bool,
             'params': ParameterSet,
             'initial_values': ParameterSet,
         }),
@@ -255,7 +256,10 @@ class Sheet(BaseComponent):
         """
 
         try:
-            block = self.pop.get_data(['spikes', 'v', 'gsyn_exc', 'gsyn_inh'],clear=True)
+            if self.parameters.cell.native_nest:
+                block = self.pop.get_data(['spikes', 'V_m', 'g_ex', 'g_in'],clear=True)
+            else:
+                block = self.pop.get_data(['spikes', 'v', 'gsyn_exc', 'gsyn_inh'],clear=True)
         except (NothingToWriteError, errmsg):
             logger.debug(errmsg)
         
@@ -269,7 +273,7 @@ class Sheet(BaseComponent):
         def key(a):
             return a.annotations['source_id']    
 
-        self.msc = numpy.mean([numpy.sum(st)/(st.t_stop-st.t_start)/1000 for st in s.spiketrains])
+        self.msc = numpy.mean([len(st)/(st.t_stop-st.t_start)*1000 for st in s.spiketrains])
         s.spiketrains = sorted(s.spiketrains, key=key)
 
         if stimulus_duration != None:        

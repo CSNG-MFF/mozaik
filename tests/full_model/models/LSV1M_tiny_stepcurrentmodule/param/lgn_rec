@@ -1,0 +1,9 @@
+{
+    "1" : {
+      'component' :  'mozaik.sheets.population_selector.RCRandomN',
+      'variables' : ("spikes","V_m","g_ex" , "g_in"),
+      'params' :  {
+                    'num_of_cells' : 5,
+                  }
+    },
+}

@@ -60,7 +60,7 @@ from neo.core.spiketrain import SpikeTrain as NeoSpikeTrain
 from .simple_plot import StandardStyleLinePlot, SpikeRasterPlot, \
                         SpikeHistogramPlot, ConductancesPlot, PixelMovie, \
                         ScatterPlotMovie, ScatterPlot, ConnectionPlot, SimplePlot, HistogramPlot, CorticalColumnSpikeRasterPlot, OrderedAnalogSignalListPlot
-from .plot_constructors import LinePlot, PerStimulusPlot, PerStimulusADSPlot, ADSGridPlot
+from .plot_constructors import LinePlot, PerStimulusPlot, PerStimulusADSPlot, ADSGridPlot, MultipleFilesPlot
 
 import mozaik
 logger = mozaik.getMozaikLogger()
@@ -1306,7 +1306,8 @@ class PerNeuronValueScatterPlot(Plotting):
     required_parameters = ParameterSet({
           'only_matching_units':bool,  # only plot combinations of PNVs that have the same value units.
           'ignore_nan' : bool, # if True NaNs will be removed from the data. In general if there are NaN in the data and this is False it will not be displayed correctly.
-          'lexicographic_order': bool # Whether to order the ads in each pair by the descending lexicographic order of their parameter 'value_name' before plotting
+          'lexicographic_order': bool, # Whether to order the ads in each pair by the descending lexicographic order of their parameter 'value_name' before plotting
+          'neuron_ids': list,
     })
     
     
@@ -1364,7 +1365,11 @@ class PerNeuronValueScatterPlot(Plotting):
         if pair[0].value_units != pair[1].value_units or pair[1].value_units == pq.dimensionless:
            params["equal_aspect_ratio"] = False
         
-        ids = list(set(pair[0].ids) & set(pair[1].ids))
+        if self.parameters.neuron_ids:
+            ids = self.parameters.neuron_ids
+        else:
+            ids = list(set(pair[0].ids) & set(pair[1].ids))
+
         x = pair[0].get_value_by_id(ids)
         y = pair[1].get_value_by_id(ids)
         if self.parameters.ignore_nan:
@@ -1897,3 +1902,71 @@ class PlotTemporalTuningCurve(Plotting):
                par[-q:] = b
            
            return val,par 
+
+class RasterPlotsStimuliOrder(Plotting):
+    """
+    Plot raster plots for every population of neurons included in `neurons_dict`, in a chronological order, and split accross different files.
+    The number of segments per file is equal to the maximum number of different values accross parameter values of the stimuli.
+
+    Parameters
+    ----------
+    neurons_dict : dict
+                   Dictionary containing a list of neurons to plot for each sheets
+    """
+
+    def __init__(self, datastore, neurons_dict, parameters, plot_file_name=None,fig_param=None,frame_duration=0):
+        Plotting.__init__(self, datastore, parameters, plot_file_name, fig_param,frame_duration)
+
+        self.neurons_dict = neurons_dict
+        self.sheets = list(self.neurons_dict.keys())
+        keys_stimulus = MozaikParametrized.idd(queries.param_filter_query(self.datastore).get_stimuli()[0]).getParams()
+        stimuli_order = [MozaikParametrized.idd(s) for s in queries.param_filter_query(self.datastore,sheet_name=self.sheets[0]).get_stimuli(ordered = True)]
+        stimuli_parameters = {}
+        for key in keys_stimulus:
+            values = list(set([getattr(MozaikParametrized.idd(s),key) for s in queries.param_filter_query(self.datastore).get_stimuli()]))
+            if len(values) > 1:
+                stimuli_parameters[key] = values
+        self.sorted_keys = sorted(stimuli_parameters.keys(),key=lambda x:len(stimuli_parameters[x]))
+        n_lists = 1
+        for key in self.sorted_keys[:-1]:
+            n_lists *= len(stimuli_parameters[key])
+        self.split_stimuli = numpy.array_split(stimuli_order, n_lists)
+
+    def subplot(self,subplotspec):
+        MultipleFilesPlot(function=self._ploter, length=len(self.split_stimuli)).save_plots(subplotspec, self.datastore.full_datastore.parameters.root_directory)
+        self.plot_file_name = None
+        return {}
+
+    def _ploter(self, idx, gs):
+        def concat_spiketrains(ssp1,ssp2):
+            l = []
+            for sp1,sp2 in zip(ssp1,ssp2):
+                assert sp1.units == sp2.units
+                assert sp2.t_start == sp1.t_start == 0
+                assert sp1.units == sp1.t_stop.units == sp1.t_start.units
+                assert sp2.units == sp2.t_stop.units == sp2.t_start.units
+
+                l.append(NeoSpikeTrain(numpy.concatenate((sp1.magnitude,sp2.magnitude+sp1.t_stop.magnitude)),t_start=0,t_stop=sp1.t_stop+sp2.t_stop,units=sp1.units))
+            return l
+
+        fontsize=15
+        colors = ['#0000FF', '#FF0000','#0000FF', '#FF0000', '#0000FF', '#FF0000']
+        list_sp = []
+        for sheet in self.sheets:
+            sp = None
+            dsv = queries.param_filter_query(self.datastore, sheet_name=sheet)
+            for stimulus in self.split_stimuli[idx]:
+                sp_null = queries.param_filter_query(dsv, **{key: value for key, value in zip(['st_'+key for key in self.sorted_keys], [getattr(stimulus,key) for key in self.sorted_keys])}).get_segments(null=True)[0].get_spiketrain(self.neurons_dict[sheet])
+                sp_st = queries.param_filter_query(dsv, **{key: value for key, value in zip(['st_'+key for key in self.sorted_keys], [getattr(stimulus,key) for key in self.sorted_keys])}).get_segments()[0].get_spiketrain(self.neurons_dict[sheet])
+                if sp:
+                    sp_tmp = concat_spiketrains(sp_null,sp_st)
+                    sp = concat_spiketrains(sp, sp_tmp)
+                else:
+                    sp = concat_spiketrains(sp_null,sp_st)
+            list_sp.append(sp)
+
+        x_ticks = list(numpy.arange(0,float(sp[0].t_stop.rescale(pq.s))-0.000001, float(sp_null[0].t_stop.rescale(pq.s)+sp_st[0].t_stop.rescale(pq.s))))
+        x_tick_labels= [' '.join([f'{getattr(stimulus,key):.3g}' if isinstance(getattr(stimulus,key), float) else f'{getattr(stimulus,key)}' for key in self.sorted_keys]) for stimulus in self.split_stimuli[idx]]
+        x_lim = (0,float(sp[0].t_stop.rescale(pq.s)))
+
+        return self.plot_file_name, CorticalColumnSpikeRasterPlot(list_sp), gs[0,0], {'x_lim':x_lim,'x_ticks':x_ticks,'x_tick_labels':x_tick_labels,'x_tick_style':'Custom','labels':self.sheets, "colors" : colors,'fontsize':fontsize}, self.fig_param

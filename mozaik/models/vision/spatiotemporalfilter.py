@@ -7,11 +7,14 @@ import numpy
 import os.path
 import pickle
 import mozaik
+from pyNN import space
 from  mozaik.models.vision import cai97
 from mozaik.space import VisualSpace, VisualRegion
 from mozaik.core import SensoryInputComponent
 from mozaik.sheets.vision import RetinalUniformSheet
+from mozaik.sheets.vision import VisualCorticalUniformSheet
 from mozaik.tools.mozaik_parametrized import MozaikParametrized
+from mozaik.tools.pyNN import *
 from parameters import ParameterSet
 from builtins import zip
 from collections import OrderedDict
@@ -72,13 +75,13 @@ class SpatioTemporalReceptiveField(object):
         Parameters
         ----------
         dx : float
-           The number of pixels along x axis.
+           Difference between pixel positions along the x axis.
         
         dy : float
-           The number of pixels along y axis.
+           Difference between pixel positions along the y axis.
         
         dy : float
-           The number of time bins along the t axis.
+           Difference between timesteps.
         
         Notes
         -----
@@ -116,7 +119,6 @@ class SpatioTemporalReceptiveField(object):
         self.kernel = kernel
         self.spatial_resolution = dx
         self.temporal_resolution = dt
-        self.reshaped_kernel = self.kernel.reshape(-1,numpy.shape(self.kernel)[2]).T
 
     @property
     def kernel_duration(self):
@@ -154,8 +156,14 @@ class CellWithReceptiveField(object):
     receptive_field : SpatioTemporalReceptiveField
           The receptive field object containing the RFs data.
           
-    gain_control : float
-         The calculated input current values will be multiplied by the gain parameter.
+    gain_control : ParameterSet
+         The calculated input current values will be multiplied by the gain
+         parameter (gain_control.gain), if gain_control.non_linear_gain is None.
+
+         Otherwise, the input current values can be further scaled by a nonlinear
+         gain function according to luminance and contrast (parameters set by
+         gain_control.non_linear_gain). This nonlinear function mimics the luminance
+         and contrast saturation effects of retina interneurons.
     
     visual_space : VisualSpace
                  The object representing the visual space.
@@ -202,27 +210,31 @@ class CellWithReceptiveField(object):
                           The duration  of the visual stimulus.
             
         """
-        # we add some extra padding to avoid having to check for index out-of-bounds in view()
-        self.response_length = int(numpy.ceil(stimulus_duration / self.receptive_field.temporal_resolution) \
-                                    + self.receptive_field.kernel_duration)
-        # we should initialize based on multiplying the kernel by the background activity
-        # R0 = K_0.I_0 + Sum[j=1,L-1] K_j.B
-        # R1 = K_0.I_1 + K_1.I_0 + Sum[j=2,L-1] K_j.B
-        # the image-dependent components will be added in view(), so we need to
-        
-        # initialize with the Sum[] k_j.B components
+        rf = self.receptive_field
+        assert rf.kernel.shape[0] == rf.kernel.shape[1], "With the current implementation, receptive fields must be symmetric!"
+        # we add some extra padding to avoid having to check for index
+        # out-of-bounds in view()
+        self.response_length = int(numpy.ceil(
+            stimulus_duration / rf.temporal_resolution) + rf.kernel_duration)
+
+        # The kernel is separated into a luminance and contrast component,
+        # which are then scaled separately by the non-linear gain.
+        # This separability is based on doi:10.1038/nn1556, although they
+        # do the separation there in a different way - multiplicatively, where
+        # the partial kernels themselves change with luminance and contrast
         self.background_luminance = background_luminance
-        self.response = numpy.zeros((self.response_length,))
-        self.std = numpy.zeros((self.response_length,))
+        self.contrast_response = numpy.zeros((self.response_length,))
+        self.luminance_response = numpy.zeros((self.response_length,))
         self.mean = numpy.zeros((self.response_length,))
-        L = self.receptive_field.kernel_duration
+        L = rf.kernel_duration
+        if not hasattr(self.receptive_field,"luminance_component"):
+            # Luminance component is the spatial mean of the kernel
+            rf.kernel_luminance_component = rf.kernel.mean(axis=(0,1))
+            # Contrast component is the remaining part of the kernel
+            rf.kernel_contrast_component = rf.kernel - rf.kernel_luminance_component
+            # Reshape from space x space x time to space x time
+            rf.kernel_contrast_component = rf.kernel_contrast_component.reshape(-1,numpy.shape(rf.kernel_contrast_component)[2]).T
         assert L <= self.response_length
-        
-        for i in range(L):
-            self.response[i] += background_luminance * self.receptive_field.kernel[:, :, i+1:L].sum()
-        
-        for i in range(L):
-            self.response[-(i+1)] += background_luminance * self.receptive_field.kernel[:, :,0:L-i].sum()
         self.i = 0
     
 
@@ -237,24 +249,40 @@ class CellWithReceptiveField(object):
            R_k = Sum[j=0,L-1] K_j.I_i'
              where i' = (k-j)//α  (// indicates integer division, discarding the
              remainder)
-        To avoid loading the entire image sequence into memory, we build up the response array one frame at a time.
+        To avoid loading the entire image sequence into memory, we build up the
+        response array one frame at a time.
         """
         view_array = self.visual_space.view(self.visual_region, pixel_size=self.receptive_field.spatial_resolution)
-        self.std[self.i:self.i+self.update_factor] = numpy.std(view_array)
         self.mean[self.i:self.i+self.update_factor] = numpy.mean(view_array)
-        time_course = numpy.dot(self.receptive_field.reshaped_kernel,view_array.reshape(-1)[:numpy.newaxis])
-
+        # We divide the input by background luminance, so that the kernel contrast
+        # response is agnostic to the overall luminance level
+        contrast_time_course = numpy.dot(self.receptive_field.kernel_contrast_component,view_array.reshape(-1)[:numpy.newaxis]  / self.background_luminance)
+        # The luminance response kernel is equal at all spatial positions, so
+        # we don't calculate it for each position, rather multiply the 1D version
+        # of it by the mean image luminance at each time point.
+        # That is equivalent to a 3D luminance kernel which is convolved and with the
+        # image and then summed
+        luminance_time_course = self.receptive_field.kernel_luminance_component * self.mean[self.i]
         self.va = view_array
 
 
+        d = self.receptive_field.kernel_duration
         if self.update_factor != 1.0:
             for j in range(self.i, self.i+self.update_factor):
-                self.response[j: j+self.receptive_field.kernel_duration] += time_course[:len(self.response[j: j+self.receptive_field.kernel_duration])] #/ self.update_factor
+                self.contrast_response[j: j+d] += contrast_time_course[:d]
+                self.luminance_response[j: j+d] += luminance_time_course[:d]
         else:
-            self.response[self.i: self.i+self.receptive_field.kernel_duration] += time_course[:len(self.response[self.i: self.i+self.receptive_field.kernel_duration])]
+            self.contrast_response[self.i: self.i+d] += contrast_time_course[:d]
+            self.luminance_response[self.i: self.i+d] += luminance_time_course[:d]
 
         self.i += self.update_factor  # we assume there is only ever 1 visual space used between initializations
 
+    def gain_function(self, response, gain, scaler):
+        """
+        Scale the response by a symmetric Naka-Rushton function to
+        achieve the variable luminance/contrast gain observed in the retina.
+        """
+        return gain * response / (numpy.abs(response) + scaler)
 
     def response_current(self):
         """
@@ -262,39 +290,21 @@ class CellWithReceptiveField(object):
         kernel values are dimensionless) by the 'gain', to produce a current in
         nA. Returns a dictionary containing 'times' and 'amplitudes'.
         """
-        k = numpy.squeeze(numpy.mean(numpy.squeeze(numpy.mean(numpy.abs(self.receptive_field.kernel),axis=0)),axis=0))
-        #self.std = numpy.convolve(self.std,k[::-1]/numpy.sqrt(numpy.power(k,2).sum()),mode='same')
-        self.std = numpy.convolve(self.std,k[::-1],mode='same')
-        
         if self.gain_control.non_linear_gain != None:
-            c = numpy.sum(self.receptive_field.kernel.flatten())*self.mean
-            L = self.receptive_field.kernel_duration
-            for i in range(L):
-                c[i] += (self.background_luminance - numpy.mean(self.mean[:L])) * self.receptive_field.kernel[:, :, i+1:L].sum()  
-            
-            for i in range(L):
-                c[-(i+1)] += (self.background_luminance - numpy.mean(self.mean[-L:])) * self.receptive_field.kernel[:, :,0:L-i].sum()
-                
-            ta = self.gain_control.gain * (self.response-c) / (self.gain_control.non_linear_gain.contrast_scaler*self.std+1.0)  
-            tb = self.gain_control.non_linear_gain.luminance_gain * c / (self.gain_control.non_linear_gain.luminance_scaler*self.mean+1.0)
-            response = (ta+tb)[:-self.receptive_field.kernel_duration]  # remove the extra padding at the end                             
-        # current response
+            # We scale the luminance and contrast components separately,
+            # and then add them
+            nlg = self.gain_control.non_linear_gain
+            contrast_response = self.gain_function(
+                self.contrast_response, nlg.contrast_gain, nlg.contrast_scaler)
+            luminance_response = self.gain_function(
+                self.luminance_response, nlg.luminance_gain, nlg.luminance_scaler)
+            response = contrast_response + luminance_response
         else:
-            response = self.gain_control.gain * self.response[:-self.receptive_field.kernel_duration]  # remove the extra padding at the end
+            response = self.gain_control.gain * self.response
+
+        # Remove extra padding at the end
+        response = response[:-self.receptive_field.kernel_duration]
         time_points = self.receptive_field.temporal_resolution * numpy.arange(0, len(response))
-
-        #ylab.figure()
-        #ylab.title(str(numpy.shape(self.receptive_field.kernel)))
-        #ylab.subplot(3,1,1)
-        #ylab.imshow(numpy.mean(self.receptive_field.kernel,axis=0))
-        #ylab.title(str(numpy.shape(self.receptive_field.kernel)))
-        #ylab.colorbar()
-        #ylab.subplot(3,1,2)
-        #ylab.imshow(self.va)
-        #ylab.colorbar()
-        #ylab.subplot(3,1,3)
-        #ylab.plot(time_points,response)
-
 
         return {'times': time_points, 'amplitudes': response}
 
@@ -360,6 +370,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         'cell': ParameterSet({
             'model': str,
             'params': ParameterSet,
+            'native_nest': bool,            
             'initial_values': ParameterSet,
         }),
         'gain_control' : {
@@ -367,9 +378,9 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                     'non_linear_gain' : ParameterSet({
                         'luminance_gain' : float,
                         'luminance_scaler' : float,
+                        'contrast_gain' : float,
                         'contrast_scaler' : float,
                     })
-                    
                 },
         'noise': ParameterSet({
             'mean': float,
@@ -386,16 +397,27 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         self.rf_types = ('X_ON', 'X_OFF')
         sim = self.model.sim
         self.pops = OrderedDict()
-        self.scs = OrderedDict()
-        self.ncs = OrderedDict()
+
+        if self.parameters.cell.model[-6:] == '_sc_nc':
+            self.integrated_cs = True
+            import copy
+            cell = copy.deepcopy(self.parameters.cell)
+            cell.params.update([('mean', self.parameters.noise.mean*1000), ('std', self.parameters.noise.stdev*1000), ('dt', self.model.sim.get_time_step())])
+        else:
+            self.integrated_cs = False
+            self.scs = OrderedDict()
+            self.ncs = OrderedDict()
+            cell = self.parameters.cell
+
         self.ncs_rng = OrderedDict()
         self.internal_stimulus_cache = OrderedDict()
         for rf_type in self.rf_types:
+
             p = RetinalUniformSheet(model,
                                     ParameterSet({'sx': self.parameters.size[0],
                                                   'sy': self.parameters.size[1],
                                                   'density': self.parameters.density,
-                                                  'cell': self.parameters.cell,
+                                                  'cell': cell,
                                                   'name': rf_type,
                                                   'artificial_stimulators' : OrderedDict(),
                                                   'recorders' : self.parameters.recorders,
@@ -404,25 +426,30 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
             self.sheets[rf_type] = p
             
         for rf_type in self.rf_types:
-            self.scs[rf_type] = []
-            self.ncs[rf_type] = []
             self.ncs_rng[rf_type] = []
             seeds=mozaik.get_seeds((self.sheets[rf_type].pop.size,))
-            for i, lgn_cell in enumerate(self.sheets[rf_type].pop.all_cells):
-                scs = sim.StepCurrentSource(times=[0.0], amplitudes=[0.0])
 
-                if not self.parameters.mpi_reproducible_noise:
-                    ncs = sim.NoisyCurrentSource(**self.parameters.noise)
-                else:
-                    ncs = sim.StepCurrentSource(times=[0.0], amplitudes=[0.0])
-                
-                if self.sheets[rf_type].pop._mask_local[i]:
-                       self.ncs_rng[rf_type].append(numpy.random.RandomState(seed=seeds[i]))
-                       self.scs[rf_type].append(scs)
-                       self.ncs[rf_type].append(ncs)
-                lgn_cell.inject(scs)
-                lgn_cell.inject(ncs)
-                    
+            if self.integrated_cs:
+                for i, lgn_cell in enumerate(self.sheets[rf_type].pop.all_cells):
+                    if self.sheets[rf_type].pop._mask_local[i]:
+                           self.ncs_rng[rf_type].append(numpy.random.RandomState(seed=seeds[i]))
+            else:
+                self.scs[rf_type] = []
+                self.ncs[rf_type] = []
+                for i, lgn_cell in enumerate(self.sheets[rf_type].pop.all_cells):
+                    scs = sim.StepCurrentSource(times=[0.0], amplitudes=[0.0])
+
+                    if not self.parameters.mpi_reproducible_noise:
+                        ncs = sim.NoisyCurrentSource(**self.parameters.noise)
+                    else:
+                        ncs = sim.StepCurrentSource(times=[0.0], amplitudes=[0.0])
+
+                    if self.sheets[rf_type].pop._mask_local[i]:
+                           self.ncs_rng[rf_type].append(numpy.random.RandomState(seed=seeds[i]))
+                           self.scs[rf_type].append(scs)
+                           self.ncs[rf_type].append(ncs)
+                    lgn_cell.inject(scs)
+                    lgn_cell.inject(ncs)                    
         
         P_rf = self.parameters.receptive_field
         rf_function = eval(P_rf.func)
@@ -558,25 +585,36 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
             (input_currents, retinal_input) = cached
 
         ts = self.model.sim.get_time_step()
+        # Correcting for nest/PyNN time inconsistency + adding one ts as injected current at the current time is not taken into account
+        new_offset = convert_time_pyNN_to_nest(self.model.sim,offset) + ts
 
         for rf_type in self.rf_types:
             assert isinstance(input_currents[rf_type], list)
-            for i, (lgn_cell, input_current, scs, ncs) in enumerate(
-                                                            zip(self.sheets[rf_type].pop,
-                                                                input_currents[rf_type],
-                                                                self.scs[rf_type],
-                                                                self.ncs[rf_type])):
-                assert isinstance(input_current, dict)
-                t = input_current['times'] + offset
-                a = self.parameters.linear_scaler * input_current['amplitudes']
-                scs.set_parameters(times=t, amplitudes=a,copy=False)
-                if self.parameters.mpi_reproducible_noise:
-                    t = numpy.arange(0, duration, ts) + offset
-                    amplitudes = (self.parameters.noise.mean
-                                   + self.parameters.noise.stdev
-                                       * self.ncs_rng[rf_type][i].randn(len(t)))
-                    ncs.set_parameters(times=t, amplitudes=amplitudes,copy=False)
+            if self.integrated_cs:
+                for i, (lgn_cell, input_current) in enumerate(
+                                                                zip(self.sheets[rf_type].pop,
+                                                                    input_currents[rf_type])):
+                    assert isinstance(input_current, dict)
+                    t = input_current['times'] + new_offset
+                    a = self.parameters.linear_scaler * input_current['amplitudes']
+                    lgn_cell.set_parameters(amplitude_times=t[1:], amplitude_values=a[1:]*1000)
 
+            else:
+                for i, (lgn_cell, input_current, scs, ncs) in enumerate(
+                                                                zip(self.sheets[rf_type].pop,
+                                                                    input_currents[rf_type],
+                                                                    self.scs[rf_type],
+                                                                    self.ncs[rf_type])):
+                    assert isinstance(input_current, dict)
+                    t = input_current['times'] + offset
+                    a = self.parameters.linear_scaler * input_current['amplitudes']
+                    scs.set_parameters(times=t, amplitudes=a,copy=False)
+                    if self.parameters.mpi_reproducible_noise:
+                        t = numpy.arange(0, duration, ts) + offset
+                        amplitudes = (self.parameters.noise.mean
+                                       + self.parameters.noise.stdev
+                                           * self.ncs_rng[rf_type][i].randn(len(t)))
+                        ncs.set_parameters(times=t, amplitudes=amplitudes,copy=False)
 
         # for debugging/testing, doesn't work with MPI !!!!!!!!!!!!
         #input_current_array = numpy.zeros((self.shape[1], self.shape[0], len(visual_space.time_points(duration))))
@@ -621,10 +659,20 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                       List of 2D arrays containing the frames of luminances that were presented to the retina.
 
         """
-        times = numpy.array([offset,duration-visual_space.update_interval+offset])#numpy.arange(0, duration, visual_space.update_interval) + offset
-        zers = times*0
+        # HAAACK!
+        # Currently, we need to set the start time of stimulation to
+        # offset + 3*timestep, until the following issue is resolved:
+        # https://github.com/NeuralEnsemble/PyNN/issues/759.
         ts = self.model.sim.get_time_step()
-        
+        if self.integrated_cs:
+            new_offset = convert_time_pyNN_to_nest(self.model.sim,offset) + ts
+            times = numpy.array([new_offset,duration-visual_space.update_interval+new_offset])
+            zers = numpy.zeros_like(times)
+        # TODO: Remove once this gets fixed (hopefully in PyNN 0.11.0)!
+        else:
+            times = numpy.array([offset + 3 * ts,duration-visual_space.update_interval+offset])
+            zers = numpy.zeros_like(times)
+
         input_cells = OrderedDict()
         for rf_type in self.rf_types:
             input_cells[rf_type] = CellWithReceptiveField(self.sheets[rf_type].pop.positions[0][0],
@@ -635,11 +683,18 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         
 
         for rf_type in self.rf_types:
-                if self.parameters.gain_control.non_linear_gain != None:
-                        amplitude = self.parameters.linear_scaler * self.parameters.gain_control.non_linear_gain.luminance_gain * numpy.sum(input_cells[rf_type].receptive_field.kernel.flatten())*visual_space.background_luminance / (self.parameters.gain_control.non_linear_gain.luminance_scaler*visual_space.background_luminance+1.0)   
-                else:
-                        amplitude = self.parameters.linear_scaler * self.parameters.gain_control.gain * numpy.sum(input_cells[rf_type].receptive_field.kernel.flatten())*visual_space.background_luminance
+            c = input_cells[rf_type]
+            nlg = c.gain_control.non_linear_gain
+            amplitude = visual_space.background_luminance * \
+                c.receptive_field.kernel_luminance_component.sum()
+            amplitude = self.parameters.linear_scaler * \
+                c.gain_function(amplitude, nlg.luminance_gain, nlg.luminance_scaler)
 
+            if self.integrated_cs:
+                for i, lgn_cell in enumerate(self.sheets[rf_type].pop):
+                    lgn_cell.set_parameters(amplitude_times=times, amplitude_values=(zers+amplitude)*1000)
+
+            else:
                 for i, (scs, ncs) in enumerate(zip(self.scs[rf_type],self.ncs[rf_type])):
                     scs.set_parameters(times=times,amplitudes=zers+amplitude,copy=False)
                     if self.parameters.mpi_reproducible_noise:

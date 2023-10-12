@@ -142,7 +142,7 @@ class PerNeuronPairValue(AnalysisDataStructure):
     period = SNumber(units=None,default=None,doc="The period of the value. If value is not periodic period=None")
 
     def __init__(self, values, idds, value_units, **params):
-        AnalysisDataStructure.__init__(self, identifier='PerNeuronValue', **params)
+        AnalysisDataStructure.__init__(self, identifier='PerNeuronPairValue', **params)
         self.value_units = value_units
         self.values = numpy.array(values)
         self.ids = list(idds)

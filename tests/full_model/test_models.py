@@ -7,6 +7,7 @@ import numpy as np
 import os
 from mozaik.storage.queries import *
 from mozaik.storage.datastore import PickledDataStore
+from mozaik.tools.distribution_parametrization import PyNNDistribution
 from parameters import ParameterSet
 
 import pytest
@@ -35,7 +36,6 @@ class TestModel(object):
         if os.path.exists(cls.result_path):
             os.system("rm -r " + cls.result_path)
         os.system(cls.model_run_command)
-
         # Load DataStore of recordings from the model that just ran
         cls.ds = cls.load_datastore(cls.result_path)
         # Load DataStore of reference recordings
@@ -131,7 +131,6 @@ class TestModel(object):
         A 1D list of spike times recorded in neurons in the DataStore
         """
         segments = self.get_segments(data_store, sheet_name)
-        print(segments)
         return [
             v
             for segment in segments
@@ -152,7 +151,6 @@ class TestModel(object):
         sheet_name : name of neuron sheet (layer) to check spike times for
         max_neurons : maximum number of neurons to check spike times for
         """
-
         np.testing.assert_equal(
             self.get_spikes(ds0, sheet_name, max_neurons),
             self.get_spikes(ds1, sheet_name, max_neurons),
@@ -172,6 +170,8 @@ class TestModel(object):
         max_neurons : maximum number of neurons to check voltages for
         """
 
+        print(len(self.get_voltages(ds0, sheet_name, max_neurons)), flush=True)
+        print(len(self.get_voltages(ds1, sheet_name, max_neurons)), flush=True)
         np.testing.assert_equal(
             self.get_voltages(ds0, sheet_name, max_neurons),
             self.get_voltages(ds1, sheet_name, max_neurons),
@@ -238,7 +238,7 @@ class TestLSV1M(TestModel):
 
 class TestLSV1MTiny(TestModel):
     """
-    Class that runs the a tiny version of the LSV1M model on construction from the mozaik-models
+    Class that runs the a tiny version of the LSV0M model on construction from the mozaik-models
     repository. Its testing methods compare the membrane potentials of a few neurons and the
     spike times of all neurons to a saved reference.
     """
@@ -265,3 +265,39 @@ class TestLSV1MTiny(TestModel):
     )
     def test_voltages(self, sheet_name):
         self.check_voltages(self.ds, self.ds_ref, sheet_name, max_neurons=25)
+
+
+class TestModelExplosionMonitoring(TestModel):
+    """
+    Tests whether the explosion monitoring works as expected
+    """
+
+    model_run_command = "cd tests/full_model/models/LSV1M_tiny && python run.py nest 2 param/defaults_explosion 'pytest' && cd ../../../.."
+    result_path = "tests/full_model/models/LSV1M_tiny/LSV1M_pytest_____"
+    ref_path = "tests/full_model/reference_data/LSV1M_tiny"
+
+    ds = None  # Model run datastore
+    ds_ref = None  # Reference datastore
+
+    def test_explosion(self):
+        assert self.ds.block.annotations["simulation_log"]["explosion_detected"]
+
+    def test_fr_above_threshold(self):
+        sheet_monitored = eval(self.ds.get_model_parameters())["explosion_monitoring"][
+            "sheet_name"
+        ]
+        threshold = eval(self.ds.get_model_parameters())["explosion_monitoring"][
+            "threshold"
+        ]
+        last_seg = param_filter_query(self.ds, sheet_name=sheet_monitored).get_segments(
+            ordered=True
+        )[-1]
+        assert (
+            numpy.mean(
+                [
+                    len(st) / (st.t_stop - st.t_start) * 1000
+                    for st in last_seg.spiketrains
+                ]
+            )
+            > threshold
+        )

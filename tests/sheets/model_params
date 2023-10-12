@@ -1,0 +1,16 @@
+{
+    "input_space_type": "",
+    "input_space": None,
+    "sheets": None,
+    "results_dir": "",
+    "name": "M",
+    "reset": False,
+    "null_stimulus_period": 150.0,
+    "store_stimuli": False,
+    "min_delay": 0.1,
+    "max_delay": 100,
+    "time_step": 0.1,
+    "pynn_seed": 936395,
+    "mpi_seed": 1023,
+    "explosion_monitoring": None,
+}

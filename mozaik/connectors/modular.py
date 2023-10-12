@@ -198,11 +198,67 @@ class LocalModuleConnector(ModularConnector):
                 weights[self.lm_idx] = weights[self.lm_idx] * weight_ratio
         return weights
 
-class ModularSamplingProbabilisticConnector(LocalModuleConnector):
+class VariableNumSamplesConnector(LocalModuleConnector):
     """
-    ModularConnector that interprets the weights as proportional probabilities of connectivity
-    and for each neuron in connections it samples num_samples of
-    connections that actually get realized according to these weights.
+    Modular connector for which the number of sample connections varies
+    accross neurons according to the num_samples_functions and 
+    num_samples_expression provided.
+    If num_samples_expression is an empty string, num_samples is fixed
+    accross neurons
+    """
+
+    required_parameters = ParameterSet({
+        'num_samples_functions' : ParameterSet, # a dictionary of ModularNumSamplesConnectorFunction's and their parameters that will be used to determine the number of sample connections.
+                                           # strucutured as follows
+                                           #            {
+                                           #                 component : 'class_name_of_the_ModularNumSamplesConnectorFunction',
+                                           #                 params : {
+                                           #                           ...
+                                           #                         }
+                                           #             }
+        'num_samples_expression' : str, # a python expression that can use variables f1..fn where n is the number of functions in num_samples_functions, and fi corresponds to the name given to a ModularNumSamplesConnectorFunction in weight_function ParameterSet. It determines the coefficient that will be multiplied with num_samples to obtain the final number of sampled connections
+        })
+
+    def __init__(self, network, name,source, target, parameters):
+        """
+        Set two numpy arrays:
+        lm_idx: List of ids of neurons within the local module.
+        l_idx: List of ids of neurons outside the local module which might send
+               local connections to the local module.
+        """
+        LocalModuleConnector.__init__(self, network, name, source,target,parameters)
+        if self.parameters.num_samples_expression:
+            self.num_samples_functions = OrderedDict()
+            # lets determine the list of variables in weight expressions
+            v = ExpVisitor()
+            v.visit(ast.parse(self.parameters.num_samples_expression))
+            self.num_samples_function_names = v.names
+
+            for k in self.num_samples_function_names:
+                self.num_samples_functions[k] = load_component(self.parameters.num_samples_functions[k].component)(self.target,self.parameters.num_samples_functions[k].params)
+                assert isinstance(self.num_samples_functions[k],ModularNumSamplesConnectorFunction)
+        else:
+            self.num_samples_functions = None
+
+    def _obtain_num_samples(self,i,samples):
+        """
+        This function calculates the combined weights from the ModularConnectorFunction in weight_functions
+        """
+        evaled = OrderedDict()
+
+        if self.num_samples_functions:
+            for k in self.num_samples_function_names:
+                evaled[k] = self.num_samples_functions[k].evaluate(i)
+            return round(samples *  eval(self.parameters.num_samples_expression,globals(),evaled))
+        else:
+            return samples
+
+class ModularSamplingProbabilisticConnector(VariableNumSamplesConnector):
+    """
+    VariableNumSampleConnector that interprets the weights as proportional probabilities of connectivity
+    and for each neuron in connections it samples num_samples 
+    (modulated for each neuron according to num_samples_functions)
+    of connections that actually get realized according to these weights.
     Each such sample connections will have weight equal to
     base_weight but note that there can be multiple
     connections between a pair of neurons in this sample (in which case the
@@ -216,9 +272,10 @@ class ModularSamplingProbabilisticConnector(LocalModuleConnector):
         'base_weight' : PyNNDistribution,
     })
 
+
     def _connect(self):
         # Generates a splitted and of cells indices to be passed to each subprocesses
-        seeds = mozaik.get_seeds(len(numpy.nonzero(self.target.pop._mask_local)[0]))
+        seeds = mozaik.get_seeds(len(self.target.pop))[numpy.nonzero(self.target.pop._mask_local)[0]]
         splitted_seeds = numpy.array_split(seeds, int(self.model.num_threads))
         splitted_cell_indices = numpy.array_split(
             numpy.nonzero(self.target.pop._mask_local)[0], int(self.model.num_threads)
@@ -239,9 +296,11 @@ class ModularSamplingProbabilisticConnector(LocalModuleConnector):
 
                 delays = self._obtain_delays(indices[i],seeds[i])
 
+                num_samples = self._obtain_num_samples(indices[i], self.parameters.num_samples.next())
+
                 co = Counter(
                     sample_from_bin_distribution(
-                        weights, int(self.parameters.num_samples.next()), seeds[i]
+                        weights, int(num_samples), seeds[i]
                     )
                 )
 
@@ -353,7 +412,7 @@ class ModularSingleWeightProbabilisticConnector(ModularConnector):
 
 
 
-class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(LocalModuleConnector):
+class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(VariableNumSamplesConnector):
     """
     ModularConnector that interprets the weights as proportional probabilities of connectivity
     and for each neuron in connections it samples num_samples of
@@ -366,9 +425,9 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(LocalModuleCon
     """
 
     required_parameters = ParameterSet({
-        'annotation_reference_name': str,
         'num_samples': int,
         'base_weight' : PyNNDistribution,
+        'annotation_reference_name': str,
     })
 
     def _connect(self):
@@ -376,7 +435,8 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(LocalModuleCon
         cl = []
         v = 0
         # Generates a splitted and of cells indices to be passed to each subprocesses
-        seeds = mozaik.get_seeds(len(numpy.nonzero(self.target.pop._mask_local)[0]))
+        seeds = mozaik.get_seeds(len(self.target.pop))[numpy.nonzero(self.target.pop._mask_local)[0]]
+
         splitted_seeds = numpy.array_split(seeds, int(self.model.num_threads))
         splitted_cell_indices = numpy.array_split(
             numpy.nonzero(self.target.pop._mask_local)[0], int(self.model.num_threads)
@@ -400,7 +460,9 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(LocalModuleCon
 
                 delays = self._obtain_delays(indices[i],seeds[i])
 
+
                 if self.parameters.num_samples == 0:
+                    samples = self._obtain_num_samples(indices[i], samples)
                     co = Counter(
                         sample_from_bin_distribution(weights, int(samples), seeds[i])
                     )
@@ -413,10 +475,11 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(LocalModuleCon
                         self.parameters.num_samples,
                         2 * int(samples),
                     )
+                    num_samples = self._obtain_num_samples(indices[i], self.parameters.num_samples - 2 * int(samples))
                     co = Counter(
                         sample_from_bin_distribution(
                             weights,
-                            int(self.parameters.num_samples - 2 * int(samples)),
+                            int(num_samples),
                             seeds[i],
                         )
                     )

@@ -11,7 +11,6 @@ from mozaik.space import VisualRegion
 
 
 class SelfSustainedPushPull(Model):
-
     required_parameters = ParameterSet(
         {
             "sheets": ParameterSet(
@@ -85,7 +84,6 @@ class SelfSustainedPushPull(Model):
 
         # initialize lateral layer 4 projections
         if not self.parameters.only_afferent:
-
             ModularSamplingProbabilisticConnectorAnnotationSamplesCount(
                 self,
                 "V1L4ExcL4ExcConnection",
@@ -117,7 +115,6 @@ class SelfSustainedPushPull(Model):
             ).connect()
 
             if self.parameters.l23:
-
                 # initialize afferent layer 4 to layer 2/3 projection
                 ModularSamplingProbabilisticConnector(
                     self,
