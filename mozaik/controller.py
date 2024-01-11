@@ -12,6 +12,7 @@ import mozaik
 import time
 from datetime import datetime
 import logging
+from mozaik.tools.json_export import save_json, get_experimental_protocols, get_recorders, get_stimuli
 
 logger = mozaik.getMozaikLogger()
 
@@ -139,20 +140,28 @@ def prepare_workflow(simulation_name, model_class):
 
 
     if mozaik.mpi_comm.rank == mozaik.MPI_ROOT:
-        # Let's store the full and modified parameters, if we are the 0 rank process
-        parameters.save(Global.root_directory + "parameters", expand_urls=True)
-        import pickle
-        f = open(Global.root_directory+"modified_parameters","wb")
-        pickle.dump(str(modified_parameters),f)
-        f.close()
+        # Store simulation run info, if we are the 0 rank process,
+        # with several components to be stored/filled in later during the simulation run
+        sim_info = {
+            'submission_date' : None,
+            'run_date': datetime.now().strftime('%d/%m/%Y-%H:%M:%S'),
+            'simulation_run_name': simulation_run_name,
+            'model_name': simulation_name,
+            "model_description": model_class.__doc__,
+            'results': {"$ref": "results.json"},
+            'stimuli': {"$ref": "stimuli.json"},
+            'recorders': {"$ref": "recorders.json"},
+            'experimental_protocols': {"$ref": "experimental_protocols.json"},
+            'parameters': {"$ref": "parameters.json"},
+        }
+        save_json(sim_info, Global.root_directory + 'sim_info.json')
+        save_json(parameters.to_dict(), Global.root_directory + 'parameters.json')
+        #save_json(modified_parameters, Global.root_directory + 'modified_parameters.json')
+        recorders = get_recorders(parameters.to_dict())
+        save_json(recorders, Global.root_directory + 'recorders.json')
 
     setup_logging()
 
-    if mozaik.mpi_comm.rank == mozaik.MPI_ROOT:
-        # Let's store some basic info about the simulation run
-        f = open(Global.root_directory+"info","w")
-        f.write(str({'model_class' : str(model_class), 'model_docstring' : model_class.__doc__,'simulation_run_name' : simulation_run_name, 'model_name' : simulation_name, 'creation_data' : datetime.now().strftime('%d/%m/%Y-%H:%M:%S')}))
-        f.close()
     return sim, num_threads, parameters
 
 def run_workflow(simulation_name, model_class, create_experiments):
@@ -264,4 +273,9 @@ def run_experiments(model,experiment_list,parameters,load_from=None):
         logger.info('Simulator run time: %.0fs (%d%%)' % (simulation_run_time, int(simulation_run_time /total_run_time * 100)))
         logger.info('Mozaik run time: %.0fs (%d%%)' % (mozaik_run_time, int(mozaik_run_time /total_run_time * 100)))
     
+    experimental_protocols = get_experimental_protocols(data_store)
+    stimuli = get_stimuli(data_store,parameters.store_stimuli, parameters.input_space)
+    save_json(experimental_protocols, Global.root_directory + 'experimental_protocols.json')
+    save_json(stimuli, Global.root_directory + 'stimuli.json')
+
     return data_store
