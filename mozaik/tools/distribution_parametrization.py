@@ -15,6 +15,7 @@ import urllib, copy, warnings, numpy, numpy.random  # to be replaced with srblib
 from collections import OrderedDict
 import mozaik
 import sys
+import json
 
 def load_parameters(parameter_url,modified_parameters=ParameterSet({})):
     """
@@ -201,3 +202,26 @@ class MozaikExtendedParameterSet(ParameterSet):
                 else:
                     v.instanciate_objects(classes = classes)
 
+    def to_dict(self):
+        """
+        Cast to json serializable dictionary while dealing with PyNNDistributions
+        and MozaikExtendedParameterSets. Use a stack to avoid explicit recursion.
+        """
+        import copy
+        d = copy.deepcopy(dict(self))
+        stack = [(d, k, v) for k, v in d.items()]
+
+        while stack:
+            parent, key, value = stack.pop()
+            if isinstance(value, dict):
+                stack.extend((value, k, v) for k, v in value.items())
+            elif isinstance(value, PyNNDistribution):
+                parent[key] = {
+                    'class_name': 'PyNNDistribution',
+                    'params': {
+                        'name': value.__dict__['name'],
+                    },
+                }
+                for pk, pv in value.__dict__['parameters'].items():
+                    parent[key]['params'][pk] = pv
+        return d
