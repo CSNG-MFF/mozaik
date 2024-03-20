@@ -1028,6 +1028,72 @@ class StandardStyleLinePlot(StandardStyle):
             self.axis.legend(fontsize=self.legend_fontsize)
         self.x_lim = (tmin, tmax)
 
+
+class ConductancePlot(StandardStyle):
+    """
+    Plots conductances of one type (either excitatory or inhibitory).
+
+    Parameters
+    ----------
+
+    cond : list
+         List of conductances (AnalogSignal type).
+
+    type_ : string
+         Whether the conductances are excitatory or inhibitory
+         Should be 'exc' or 'inh'
+
+    Other parameters
+    ----------------
+
+    legend : bool
+           Whether legend should be displayed.
+
+    smooth_means : bool
+           Whether to apply low pass filter to the mean of the conductances.
+    """
+
+    def __init__(self, cond, type_,**param):
+        StandardStyle.__init__(self,**param)
+        self.cond = cond 
+        self.parameters["legend"] = False
+        self.parameters["smooth_means"] = False
+        if type_ == 'exc':
+            self.cond_color = '#F5A9A9'
+            self.mean_color = 'r'
+        elif type_ == 'inh':
+            self.cond_color = '#A9BCF5'
+            self.mean_color = 'b'
+        else:
+            raise ValueError('%s is not an appropriate name for parameter `type_`. Only `exc` or `inh` are valid', self.type_)
+
+    def plot(self):
+        mean_cond = numpy.zeros(numpy.shape(self.cond[0]))
+        sampling_period = self.cond[0].sampling_period
+        t_stop = float(self.cond[0].t_stop - sampling_period)
+        t_start = float(self.cond[0].t_start)
+        time_axis = numpy.arange(0, len(self.cond[0]), 1) / float(len(self.cond[0])) * abs(t_start-t_stop) + t_start
+
+        for c in self.cond:
+            c = c.rescale(mozaik.tools.units.nS)
+            self.axis.plot(time_axis, c.tolist(), color=self.cond_color)
+            mean_cond = mean_cond + numpy.array(c.tolist())
+
+        mean_cond = mean_cond / len(self.cond)
+        from scipy.signal import savgol_filter
+        if self.smooth_means:
+            p1, = self.axis.plot(numpy.transpose(time_axis).flatten(), savgol_filter(numpy.transpose(mean_cond).tolist(),151,2).flatten(), color=self.mean_color, linewidth=3)
+        else:
+            p1, = self.axis.plot(time_axis, mean_cond.tolist(), color=self.mean_color, linewidth=1)
+        if self.legend:
+            self.axis.legend([p1], [type_])
+
+        self.x_lim = (t_start, t_stop)
+        #self.x_ticks = [t_start, (t_stop - t_start)/2, t_stop]
+        self.x_label = 'time (' + self.cond[0].t_start.dimensionality.latex + ')'
+        self.y_label = 'g (' + mozaik.tools.units.nS.dimensionality.latex + ')'
+
+
 class ConductancesPlot(StandardStyle):
     """
     Plots conductances.
@@ -1257,6 +1323,7 @@ class HistogramPlot(StandardStyle):
         self.parameters["mark_mean"] = False
         self.parameters["mark_value"] = False
         self.parameters["legend"] = False
+        self.parameters["legend_fontsize"] = False
         self.parameters["histtype"] = 'bar'
         self.parameters["rwidth"] = None
 
@@ -1305,7 +1372,7 @@ class HistogramPlot(StandardStyle):
                         )
 
         if self.legend:
-            self.axis.legend()
+            self.axis.legend(fontsize=self.legend_fontsize)
 
         self.y_label = '#'
 

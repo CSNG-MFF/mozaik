@@ -712,51 +712,60 @@ class GSynPlot(Plotting):
     
     spontaneous : bool
                 Whether to also show the spontaneous activity the preceded the stimulus.
-    """
     
+    separated : bool
+                Whether the excitatory and inhibitory conductances should be plotted separately.
+    """
+
     required_parameters = ParameterSet({
         'neuron': int,  # we can only plot one neuron - which one ?
         'sheet_name': str,
         'spontaneous' : bool, # whether to also show the spontaneous activity the preceded the stimulus
+        'separated': bool, # Whether the excitatory and inhibitory conductances should be plotted separately
     })
 
     def subplot(self, subplotspec):
         dsv = queries.param_filter_query(self.datastore,sheet_name=self.parameters.sheet_name)
         return PerStimulusPlot(dsv, function=self._ploter, title_style="Standard"
                                         ).make_line_plot(subplotspec)
-    
+
     @staticmethod
     def concat_asl(asl1,asl2):
         assert asl1.sampling_period == asl2.sampling_period
         assert asl1.units == asl2.units
-        
+
         return NeoAnalogSignal(numpy.concatenate((asl1.magnitude,asl2.magnitude)),t_start=-asl1.t_stop,
                             sampling_period=asl1.sampling_period,
                             units=asl1.units)
 
 
-    def _ploter(self, dsv,gs):
+    def _ploter(self, dsv, subplotspec):
+        if self.parameters.separated:
+            gs = gridspec.GridSpecFromSubplotSpec(2, 1, subplot_spec=subplotspec,hspace=0.3, wspace=0.45)
+        else:
+            gs = gridspec.GridSpecFromSubplotSpec(1, 1, subplot_spec=subplotspec)
+
         segs = sorted(dsv.get_segments(),key = lambda x : MozaikParametrized.idd(x.annotations['stimulus']).trial)
         gsyn_es = [s.get_esyn(self.parameters.neuron) for s in segs]
         gsyn_is = [s.get_isyn(self.parameters.neuron) for s in segs]
         params = OrderedDict()
-        
+
         if self.parameters.spontaneous:
            segs = sorted(dsv.get_segments(null=True),key = lambda x : MozaikParametrized.idd(x.annotations['stimulus']).trial)
-           spont_gsyn_es = [s.get_esyn(self.parameters.neuron) for s in segs] 
-           spont_gsyn_is = [s.get_isyn(self.parameters.neuron) for s in segs] 
-           
-           gsyn_es = [GSynPlot.concat_asl(s,n) for n,s in zip(gsyn_es,spont_gsyn_es)] 
-           gsyn_is = [GSynPlot.concat_asl(s,n) for n,s in zip(gsyn_is,spont_gsyn_is)] 
+           spont_gsyn_es = [s.get_esyn(self.parameters.neuron) for s in segs]
+           spont_gsyn_is = [s.get_isyn(self.parameters.neuron) for s in segs]
+
+           gsyn_es = [GSynPlot.concat_asl(s,n) for n,s in zip(gsyn_es,spont_gsyn_es)]
+           gsyn_is = [GSynPlot.concat_asl(s,n) for n,s in zip(gsyn_is,spont_gsyn_is)]
            t_start = - spont_gsyn_es[0].t_stop.magnitude
            t_stop = gsyn_es[0].t_stop.magnitude
            params = {'x_ticks' : [t_start,0, t_stop/2, t_stop]}
-        
-        return [("ConductancesPlot",ConductancesPlot(gsyn_es, gsyn_is),gs,params)]
-    
-        
-        
-        
+
+        if self.parameters.separated:
+            return [("ConductancePlotExc",ConductancePlot(gsyn_es,'exc'),gs[0,0],params),
+                    ("ConductancePlotInh",ConductancePlot(gsyn_is,'inh'),gs[1,0],params)]
+        else:
+            return [("ConductancesPlot",ConductancesPlot(gsyn_es, gsyn_is),gs[0,0],params)]
     
 
 
