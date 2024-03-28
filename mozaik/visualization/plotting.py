@@ -58,7 +58,7 @@ from numpy import pi
 from neo.core.analogsignal import AnalogSignal as NeoAnalogSignal
 from neo.core.spiketrain import SpikeTrain as NeoSpikeTrain
 from .simple_plot import StandardStyleLinePlot, SpikeRasterPlot, \
-                        SpikeHistogramPlot, ConductancesPlot, PixelMovie, \
+                        SpikeHistogramPlot, ConductancePlot, ConductancesPlot, PixelMovie, \
                         ScatterPlotMovie, ScatterPlot, ConnectionPlot, SimplePlot, HistogramPlot, CorticalColumnSpikeRasterPlot, OrderedAnalogSignalListPlot
 from .plot_constructors import LinePlot, PerStimulusPlot, PerStimulusADSPlot, ADSGridPlot, MultipleFilesPlot
 
@@ -829,7 +829,7 @@ class OverviewPlot(Plotting):
                 
                  ("Conductance_plot",GSynPlot(dsv,
                    ParameterSet({'sheet_name': self.parameters.sheet_name,'spontaneous' : self.parameters.spontaneous,
-                               'neuron': self.parameters.neuron})
+                               'separated' : False, 'neuron': self.parameters.neuron})
                  ),gs[1 + offset, 0], {'x_label' : None, 'x_tick_style' : 'Custom' , 'x_tick_labels' : None, 'title' : None}),
 
                  ("Vm_plot",VmPlot(dsv,
@@ -1195,6 +1195,9 @@ class PerNeuronValuePlot(Plotting):
     cortical_view : bool  
                 Whether to show cortical view or histogram (see class description for full detail.)
                 
+    neuron_ids : list  
+                List of neurons to plot 
+                
     Notes
     -----
     So far doesn't support the situation where several types of PerNeuronValue analysys data structures are present in the supplied
@@ -1203,6 +1206,7 @@ class PerNeuronValuePlot(Plotting):
     
     required_parameters = ParameterSet({
           'cortical_view': bool,  #Whether to show cortical view or histogram (see class description for full detail.)
+          'neuron_ids': list,
     })
     
     def __init__(self, datastore, parameters, plot_file_name=None,
@@ -1224,9 +1228,9 @@ class PerNeuronValuePlot(Plotting):
             assert len(pnvs) <= 1, logger.error("We can only display single stimulus parametrization in cortical view, but you have suplied multiple in datastore.")
             pnv = pnvs[0]
             pos = self.dsv.get_neuron_positions()[pnv.sheet_name]                            
-            posx = pos[0,self.datastore.get_sheet_indexes(pnv.sheet_name,pnv.ids)]
-            posy = pos[1,self.datastore.get_sheet_indexes(pnv.sheet_name,pnv.ids)]
-            values = pnv.values
+            posx = pos[0,self.datastore.get_sheet_indexes(pnv.sheet_name,self.parameters.neuron_ids)]
+            posy = pos[1,self.datastore.get_sheet_indexes(pnv.sheet_name,self.parameters.neuron_ids)]
+            values = pnv.get_value_by_id(self.parameters.neuron_ids)
             if pnv.period != None:
                 periodic = True
                 period = pnv.period
@@ -1249,9 +1253,9 @@ class PerNeuronValuePlot(Plotting):
             a = sorted([(','.join([p + ' : ' + str(getattr(MozaikParametrized.idd(pnv.stimulus_id),p)) for p in varying_stim_parameters]),pnv) for pnv in pnvs],key=lambda x: x[0])
             
             if len(a) > 1:
-                return [("HistogramPlot",HistogramPlot([z[1].values for z in a],labels=[z[0] for z in a]),gs,params)]
+                return [("HistogramPlot",HistogramPlot([z[1].get_value_by_id(self.parameters.neuron_ids) for z in a],labels=[z[0] for z in a]),gs,params)]
             else:
-                return [("HistogramPlot",HistogramPlot([pnvs[0].values]),gs,params)]
+                return [("HistogramPlot",HistogramPlot([pnvs[0].get_value_by_id(self.parameters.neuron_ids)]),gs,params)]
 
 
 

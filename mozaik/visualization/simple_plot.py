@@ -1058,6 +1058,7 @@ class ConductancePlot(StandardStyle):
         self.cond = cond 
         self.parameters["legend"] = False
         self.parameters["smooth_means"] = False
+        self.type = type_
         if type_ == 'exc':
             self.cond_color = '#F5A9A9'
             self.mean_color = 'r'
@@ -1086,7 +1087,7 @@ class ConductancePlot(StandardStyle):
         else:
             p1, = self.axis.plot(time_axis, mean_cond.tolist(), color=self.mean_color, linewidth=1)
         if self.legend:
-            self.axis.legend([p1], [type_])
+            self.axis.legend([p1], [self.type])
 
         self.x_lim = (t_start, t_stop)
         #self.x_ticks = [t_start, (t_stop - t_start)/2, t_stop]
