@@ -60,14 +60,14 @@ First install the *imagen* package::
 
   git clone https://github.com/CSNG-MFF/imagen.git
   cd imagen
-  python setup.py install
+  pip install .
 
 Then install the *PyNN* package from the PyNNStepCurrentModule branch::
 
   git clone https://github.com/CSNG-MFF/PyNN.git
   cd PyNN
   git checkout PyNNStepCurrentModule
-  python setup.py install
+  pip install .
 
 Next install the *Nest* simulator (always in the virtual environment):
 
@@ -125,7 +125,7 @@ And, finally, Mozaik::
     
     git clone https://github.com/CSNG-MFF/mozaik.git
     cd mozaik
-    python setup.py install
+    pip install .
     
 
 .. _ref-run:
