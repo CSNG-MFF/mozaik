@@ -58,7 +58,7 @@ from numpy import pi
 from neo.core.analogsignal import AnalogSignal as NeoAnalogSignal
 from neo.core.spiketrain import SpikeTrain as NeoSpikeTrain
 from .simple_plot import StandardStyleLinePlot, SpikeRasterPlot, \
-                        SpikeHistogramPlot, ConductancesPlot, PixelMovie, \
+                        SpikeHistogramPlot, ConductancePlot, ConductancesPlot, PixelMovie, \
                         ScatterPlotMovie, ScatterPlot, ConnectionPlot, SimplePlot, HistogramPlot, CorticalColumnSpikeRasterPlot, OrderedAnalogSignalListPlot
 from .plot_constructors import LinePlot, PerStimulusPlot, PerStimulusADSPlot, ADSGridPlot, MultipleFilesPlot
 
@@ -712,51 +712,60 @@ class GSynPlot(Plotting):
     
     spontaneous : bool
                 Whether to also show the spontaneous activity the preceded the stimulus.
-    """
     
+    separated : bool
+                Whether the excitatory and inhibitory conductances should be plotted separately.
+    """
+
     required_parameters = ParameterSet({
         'neuron': int,  # we can only plot one neuron - which one ?
         'sheet_name': str,
         'spontaneous' : bool, # whether to also show the spontaneous activity the preceded the stimulus
+        'separated': bool, # Whether the excitatory and inhibitory conductances should be plotted separately
     })
 
     def subplot(self, subplotspec):
         dsv = queries.param_filter_query(self.datastore,sheet_name=self.parameters.sheet_name)
         return PerStimulusPlot(dsv, function=self._ploter, title_style="Standard"
                                         ).make_line_plot(subplotspec)
-    
+
     @staticmethod
     def concat_asl(asl1,asl2):
         assert asl1.sampling_period == asl2.sampling_period
         assert asl1.units == asl2.units
-        
+
         return NeoAnalogSignal(numpy.concatenate((asl1.magnitude,asl2.magnitude)),t_start=-asl1.t_stop,
                             sampling_period=asl1.sampling_period,
                             units=asl1.units)
 
 
-    def _ploter(self, dsv,gs):
+    def _ploter(self, dsv, subplotspec):
+        if self.parameters.separated:
+            gs = gridspec.GridSpecFromSubplotSpec(2, 1, subplot_spec=subplotspec,hspace=0.3, wspace=0.45)
+        else:
+            gs = gridspec.GridSpecFromSubplotSpec(1, 1, subplot_spec=subplotspec)
+
         segs = sorted(dsv.get_segments(),key = lambda x : MozaikParametrized.idd(x.annotations['stimulus']).trial)
         gsyn_es = [s.get_esyn(self.parameters.neuron) for s in segs]
         gsyn_is = [s.get_isyn(self.parameters.neuron) for s in segs]
         params = OrderedDict()
-        
+
         if self.parameters.spontaneous:
            segs = sorted(dsv.get_segments(null=True),key = lambda x : MozaikParametrized.idd(x.annotations['stimulus']).trial)
-           spont_gsyn_es = [s.get_esyn(self.parameters.neuron) for s in segs] 
-           spont_gsyn_is = [s.get_isyn(self.parameters.neuron) for s in segs] 
-           
-           gsyn_es = [GSynPlot.concat_asl(s,n) for n,s in zip(gsyn_es,spont_gsyn_es)] 
-           gsyn_is = [GSynPlot.concat_asl(s,n) for n,s in zip(gsyn_is,spont_gsyn_is)] 
+           spont_gsyn_es = [s.get_esyn(self.parameters.neuron) for s in segs]
+           spont_gsyn_is = [s.get_isyn(self.parameters.neuron) for s in segs]
+
+           gsyn_es = [GSynPlot.concat_asl(s,n) for n,s in zip(gsyn_es,spont_gsyn_es)]
+           gsyn_is = [GSynPlot.concat_asl(s,n) for n,s in zip(gsyn_is,spont_gsyn_is)]
            t_start = - spont_gsyn_es[0].t_stop.magnitude
            t_stop = gsyn_es[0].t_stop.magnitude
            params = {'x_ticks' : [t_start,0, t_stop/2, t_stop]}
-        
-        return [("ConductancesPlot",ConductancesPlot(gsyn_es, gsyn_is),gs,params)]
-    
-        
-        
-        
+
+        if self.parameters.separated:
+            return [("ConductancePlotExc",ConductancePlot(gsyn_es,'exc'),gs[0,0],params),
+                    ("ConductancePlotInh",ConductancePlot(gsyn_is,'inh'),gs[1,0],params)]
+        else:
+            return [("ConductancesPlot",ConductancesPlot(gsyn_es, gsyn_is),gs[0,0],params)]
     
 
 
@@ -820,7 +829,7 @@ class OverviewPlot(Plotting):
                 
                  ("Conductance_plot",GSynPlot(dsv,
                    ParameterSet({'sheet_name': self.parameters.sheet_name,'spontaneous' : self.parameters.spontaneous,
-                               'neuron': self.parameters.neuron})
+                               'separated' : False, 'neuron': self.parameters.neuron})
                  ),gs[1 + offset, 0], {'x_label' : None, 'x_tick_style' : 'Custom' , 'x_tick_labels' : None, 'title' : None}),
 
                  ("Vm_plot",VmPlot(dsv,
@@ -1235,6 +1244,9 @@ class PerNeuronValuePlot(Plotting):
     cortical_view : bool  
                 Whether to show cortical view or histogram (see class description for full detail.)
                 
+    neuron_ids : list  
+                List of neurons to plot 
+                
     Notes
     -----
     So far doesn't support the situation where several types of PerNeuronValue analysys data structures are present in the supplied
@@ -1243,6 +1255,7 @@ class PerNeuronValuePlot(Plotting):
     
     required_parameters = ParameterSet({
           'cortical_view': bool,  #Whether to show cortical view or histogram (see class description for full detail.)
+          'neuron_ids': list,
     })
     
     def __init__(self, datastore, parameters, plot_file_name=None,
@@ -1264,9 +1277,9 @@ class PerNeuronValuePlot(Plotting):
             assert len(pnvs) <= 1, logger.error("We can only display single stimulus parametrization in cortical view, but you have suplied multiple in datastore.")
             pnv = pnvs[0]
             pos = self.dsv.get_neuron_positions()[pnv.sheet_name]                            
-            posx = pos[0,self.datastore.get_sheet_indexes(pnv.sheet_name,pnv.ids)]
-            posy = pos[1,self.datastore.get_sheet_indexes(pnv.sheet_name,pnv.ids)]
-            values = pnv.values
+            posx = pos[0,self.datastore.get_sheet_indexes(pnv.sheet_name,self.parameters.neuron_ids)]
+            posy = pos[1,self.datastore.get_sheet_indexes(pnv.sheet_name,self.parameters.neuron_ids)]
+            values = pnv.get_value_by_id(self.parameters.neuron_ids)
             if pnv.period != None:
                 periodic = True
                 period = pnv.period
@@ -1289,9 +1302,9 @@ class PerNeuronValuePlot(Plotting):
             a = sorted([(','.join([p + ' : ' + str(getattr(MozaikParametrized.idd(pnv.stimulus_id),p)) for p in varying_stim_parameters]),pnv) for pnv in pnvs],key=lambda x: x[0])
             
             if len(a) > 1:
-                return [("HistogramPlot",HistogramPlot([z[1].values for z in a],labels=[z[0] for z in a]),gs,params)]
+                return [("HistogramPlot",HistogramPlot([z[1].get_value_by_id(self.parameters.neuron_ids) for z in a],labels=[z[0] for z in a]),gs,params)]
             else:
-                return [("HistogramPlot",HistogramPlot([pnvs[0].values]),gs,params)]
+                return [("HistogramPlot",HistogramPlot([pnvs[0].get_value_by_id(self.parameters.neuron_ids)]),gs,params)]
 
 
 
