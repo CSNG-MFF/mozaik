@@ -156,7 +156,7 @@ def prepare_workflow(simulation_name, model_class):
         }
         save_json(sim_info, Global.root_directory + 'sim_info.json')
         save_json(parameters.to_dict(), Global.root_directory + 'parameters.json')
-        #save_json(modified_parameters, Global.root_directory + 'modified_parameters.json')
+        save_json(modified_parameters, Global.root_directory + 'modified_parameters.json')
         recorders = get_recorders(parameters.to_dict())
         save_json(recorders, Global.root_directory + 'recorders.json')
 
