@@ -185,7 +185,7 @@ class ParameterSearch(object):
         
         counter=0
         combinations = self.generate_parameter_combinations()
-        save_json(mdn + '/parameter_combinations.json')
+        save_json(combinations, mdn + '/parameter_combinations.json')
         
         for combination in combinations:
             combination['results_dir']='\"\'' + os.getcwd() + '/' + mdn + '/\'\"'
