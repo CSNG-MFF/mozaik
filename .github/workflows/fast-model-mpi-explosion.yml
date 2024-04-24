@@ -20,7 +20,7 @@ jobs:
         pip3 install pytest pytest-cov pytest-randomly coverage black
         # TODO: Remove fixed numpy and pynn versions after the PyNN pull request
         # https://github.com/NeuralEnsemble/PyNN/pull/762 is accepted
-        pip3 install numpy==1.23.5 scipy mpi4py matplotlib quantities lazyarray interval Pillow param==1.5.1 parameters neo cython pynn==0.10.0 psutil future requests elephant pytest-xdist pytest-timeout junitparser numba numpyencoder sphinx
+        pip3 install numpy==1.23.5 scipy mpi4py matplotlib quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.12.0 cython pynn==0.10.0 psutil future requests elephant pytest-xdist pytest-timeout junitparser numba numpyencoder sphinx
     - name: Download and install imagen
       run: |
         git clone https://github.com/antolikjan/imagen.git
