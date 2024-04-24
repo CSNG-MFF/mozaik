@@ -4,7 +4,7 @@ import json
 import numpy as np
 from numpyencoder import NumpyEncoder
 from sphinx.util import docstrings
-
+import imageio
 
 PARAMETERS_REGEX = re.compile(".*Parameters.*")
 OTHER_PARAMETER_REGEX = re.compile(".*Other\ [pP]arameters\ *\n-{15}-+")
@@ -44,7 +44,6 @@ def parse_docstring(docstring):
 
         if len(lines) > 1:
             reminder = lines[1].strip()
-            # params_returns_desc = None
             match_parameters = PARAMETERS_REGEX.search(reminder)
             if match_parameters:
                 long_desc_end = match_parameters.start()
@@ -150,17 +149,6 @@ def reduce_dicts(dicts):
     constant = {k : True for k in dicts.keys()}
     for d in dicts():
         continue
-
-#changing_parameters = {}
-#unique_stimulus_types = set([MozaikExtendedParameterSet(s).to_dict()["name"] s for s in unique_stimuli])
-#
-#for s_type in unique_stimulus_types:
-#    stim_dicts = [MozaikExtendedParameterSet(s).to_dict() for s in unique_stimuli()]
-#    stim_dicts = [d for d in stim_dicts if d["name"] == s_type]
-#    changing_parameters["name"] = reduce_dicts(stim_dicts)
-#    break
-
-import imageio
 
 def get_stimuli(data_store, store_stimuli, input_space):
     stim_docs = []
