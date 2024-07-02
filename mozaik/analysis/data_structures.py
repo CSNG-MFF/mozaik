@@ -54,6 +54,24 @@ class SingleValue(AnalysisDataStructure):
         self.value = value
         self.value_units = value_units
 
+class SingleObject(AnalysisDataStructure):
+    """
+    Data structure holding a single object, that is not handled in any specific way by the analysis or the vizualisation code
+
+    Parameters
+    ---------- 
+    value_unit : quantities
+                Quantities unit describing the unit of the value
+    """
+    object_name = SString(doc="The name of the object.")
+    period = SNumber(units=None,default=None,doc="The period of the value contained by the object. If value is not periodic period=None")
+
+    def __init__(self, obj, obj_units, **params):
+        AnalysisDataStructure.__init__(self, identifier='SingleObject', **params)
+        self.object = obj
+        self.object_units = obj_units
+
+
 
 class SingleValueList(AnalysisDataStructure):
     """
