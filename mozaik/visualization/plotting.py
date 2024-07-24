@@ -1037,7 +1037,7 @@ class RetinalInputMovie(Plotting):
         self.length = None
         # currently there is no way to check whether the sensory input is retinal
         self.retinal_input = datastore.get_sensory_stimulus()
-        self.st = datastore.sensory_stimulus.keys()
+        self.st = list(datastore.sensory_stimulus.keys())
         
         # remove internal stimuli from the list 
         self.retinal_input = [self.retinal_input[i] for i in range(0,len(self.st)) if MozaikParametrized.idd(self.st[i]).name != 'InternalStimulus']
