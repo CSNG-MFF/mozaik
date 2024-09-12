@@ -66,7 +66,8 @@ import mozaik
 logger = mozaik.getMozaikLogger()
 
 from builtins import zip
-
+import json
+from mozaik.tools.json_export import save_json
 
 class Plotting(ParametrizedObject):
     """
@@ -186,13 +187,25 @@ class Plotting(ParametrizedObject):
             else:
                 # save the analysis plot
                 pylab.savefig(Global.root_directory+self.plot_file_name,transparent=True)       
-            
-            # and store the record
-            with open(Global.root_directory+'results','a+') as f:
-                 entry = {'parameters' : self.parameters, 'file_name' : self.plot_file_name, 'class_name' : str(self.__class__)}
-                 f.write(str(entry)+'\n')
-                 f.close()
-            
+            # store the entry at the end of a list in a json file
+            entry = {
+                'code': str(self.__class__.__module__) + "." + str(self.__class__.__name__),
+                'name': ".".join(self.plot_file_name.split('.')[:-1]),
+                'caption': self.caption,
+                'parameters': self.parameters,
+                'figure': self.plot_file_name
+            }
+
+            results = []
+            results_path = Global.root_directory + 'results.json'
+
+            if os.path.exists(results_path):
+                with open(results_path, 'r', encoding='utf-8') as f:
+                    results = json.load(f)
+
+            results.append(entry)
+            save_json(results, results_path)
+
         t2 = time.time()
         logger.warning(self.__class__.__name__ + ' plotting took: ' + str(t2 - t1) + 'seconds')
 

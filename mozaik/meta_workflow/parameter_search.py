@@ -7,6 +7,8 @@ import time
 import re
 from mozaik.cli import parse_parameter_search_args
 from mozaik.tools.misc import result_directory_name
+import json
+from mozaik.tools.json_export import save_json
 
 class ParameterSearchBackend(object):
     """
@@ -183,10 +185,7 @@ class ParameterSearch(object):
         
         counter=0
         combinations = self.generate_parameter_combinations()
-        
-        f = open(mdn + '/parameter_combinations','wb')
-        pickle.dump(combinations,f)
-        f.close()
+        save_json(combinations, mdn + '/parameter_combinations.json')
         
         for combination in combinations:
             combination['results_dir']='\"\'' + os.getcwd() + '/' + mdn + '/\'\"'
@@ -250,9 +249,7 @@ def parameter_search_run_script_distributed_slurm(simulation_name,master_results
     core_number : int
                 How many cores to reserve per process.
     """
-    f = open(master_results_dir+'/parameter_combinations','rb')
-    combinations = pickle.load(f)
-    f.close()
+    combinations = json.load(master_results_dir + '/parameter_combinations.json')
     
     # first check whether all parameter combinations contain the same parameter names
     assert len(set([tuple(set(comb.keys())) for comb in combinations])) == 1 , "The parameter search didn't occur over a fixed set of parameters"
@@ -295,9 +292,7 @@ def parameter_search_run_script_distributed_slurm_IoV(simulation_name,master_res
     core_number : int
                 How many cores to reserve per process.
     """
-    f = open(master_results_dir+'/parameter_combinations','rb')
-    combinations = pickle.load(f)
-    f.close()
+    combinations = json.load(master_results_dir + '/parameter_combinations.json')
     
     # first check whether all parameter combinations contain the same parameter names
     assert len(set([tuple(set(comb.keys())) for comb in combinations])) == 1 , "The parameter search didn't occur over a fixed set of parameters"
