@@ -120,12 +120,13 @@ class MozaikSegment(Segment):
                 
         def get_syn(self,neuron_id, name):
             """
-            With a given name, it returns the recorded conductance corresponding to neurons with id(s) listed in the `neuron_id` argument.
+            Rreturns the recorded conductance corresponding to the `name` if the receptor given in input,
+            and corresponding to neurons with id(s) listed in the `neuron_id` argument.
             
             Parameters
             ----------
             name : str 
-                  A string containing the type of conductance this function should return (AMPA, GABAA, GABAB, NMDA)
+                  A string containing the name of the receptor for which this function should return the conductance (AMPA, GABAA, GABAB, NMDA)
 
             neuron_id : int or list(int)
                       An int or a list of ints containing the ids for which to return the AnalogSignal objects.
@@ -193,12 +194,14 @@ class MozaikSegment(Segment):
         
         def get_stored_syn_ids(self, name):
             """
+            Returns ids of neurons for which conductance corresponding to the receptor with name `name` is stored in this segment.
+
             Parameters
-             name: A string containing the type of conductance for which the ids will be returned.
-
+             name: string 
+                 The name of the receptor.
             Returns
-
-             Returns ids of neurons for which conductance is stored in this segment.
+            -------
+            The list of ids
             """
             if not self.full:
                 self.load_full()

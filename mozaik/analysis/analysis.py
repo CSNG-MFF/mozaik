@@ -36,8 +36,6 @@ from builtins import zip
 
 logger = mozaik.getMozaikLogger()
 
-
-
 class Analysis(ParametrizedObject):
     """
     The analysis interface.
@@ -1902,131 +1900,138 @@ class NakaRushtonTuningCurveFit(Analysis):
 
 
 class ExcitatoryConductanceGenerator(Analysis):
+      """
+      Generate excitatory conductances analogsignals into the datastore based on the
+      conductances coresponding to the receptors listed in `excitatory_receptors`. 
+
+      Other parameters
+      ------------------- 
+      excitatory_receptors : list
+                    list of receptors name which conductances will be merged into 
+                    the new excitatory conductance analog signal 
+      
+      replace_if_exists: bool
+                    If True, replace the existing excitatory conductance. If False, 
+                    raises an error if an excitatory conductance is already present. 
+      """
 
     required_parameters = ParameterSet({
         'excitatory_receptors': list,  
         'replace_if_exists': bool,
-        #'inhibitory_receptors' : list,
     })      
     def perform_analysis(self):
-        
-        #ADS self.datastore.full_datastore.add_analysis_result(
-        #identifier: used to identify data structures of common type in storage
-        #analysis_algorithm: Name of the Analysis class that produced the ADS
-        #sheet_name: The sheet for which the analysis have been performed.
-        #neuron: List of neuron ID
-        #stimulus_id: String containing the stimulus id
+
         for sheet in self.datastore.sheets():
             dsv = queries.param_filter_query(self.datastore,sheet_name=sheet)
             
-            for seg in dsv.get_segments()+ dsv.get_segments(null=True):
-                
+            # Loop over all segments 
+            for seg in dsv.get_segments() + dsv.get_segments(null=True):
                 to_delete = None
-                for idx, a in enumerate(seg.analogsignals):
-                    
-                    if a.name== 'gsyn_exc' and self.parameters.replace_if_exists:
-                        to_delete=idx
+                # Find whether an excitatory conductance already exists in the Datastore
+                for idx,a in enumerate(seg.analogsignals):
+                    if a.name == 'gsyn_exc' and self.parameters.replace_if_exists:
+                        to_delete = idx
                         break
-                    elif a.name== 'gsyn_exc' and not self.parameters.replace_if_exists:
+                    elif a.name == 'gsyn_exc' and not self.parameters.replace_if_exists:
                         raise ValueError("gsyn_exc already exists. Set replace_if_exists as True to replace")
                 if to_delete is not None:
                     del seg.analogsignals[to_delete]
 
-                all_ids= []
-                dict_for_= {}
+                all_ids = []
+                receptors_ids = {}
+                # Get for each receptor type in `excitatory_receptors` the list of ids of 
+                # neurons receiving conductance from this receptor type
                 for receptor in self.parameters.excitatory_receptors:
-                    name= receptor+ '_gsyn'
-                    
-                    receptor_ids=seg.get_stored_syn_ids(name=name)
-                   
-                    
-                    dict_for_[name]= receptor_ids
-                    
-                    all_ids +=list(receptor_ids)
+                    name = receptor + '_gsyn'
+                    receptor_ids = seg.get_stored_syn_ids(name=name)
+                    receptors_ids[name] = receptor_ids
+                    all_ids += list(receptor_ids)
                 
-                all_ids= numpy.array(list(set(all_ids)))
-
-                
-
+                all_ids = numpy.array(list(set(all_ids)))
                 first_id = seg.get_stored_syn_ids(self.parameters.excitatory_receptors[0] + '_gsyn')[0]
-                first_cond=seg.get_syn(first_id, self.parameters.excitatory_receptors[0] + '_gsyn')
-                
+                first_cond = seg.get_syn(first_id, self.parameters.excitatory_receptors[0] + '_gsyn')
 
-                # Generate excitatory conductances for all id
+                # Generate excitatory conductances for all ids
                 exc_conds = []
-                for id in all_ids:
-                    # Generate excitatory conductances for a specific id
+                for idd in all_ids:
                     exc_cond = numpy.zeros(first_cond.shape)
-                    for key,value in dict_for_.items():
-                        # If we recorded a given conductance for this id, increment the excitatory conductance with this conductance values
-                        if id in value:
-                            exc_cond = exc_cond + seg.get_syn(id,key).magnitude
-                            #cond_exc= NeoAnalogSignal(numpy.mean(numpy.array(seg.get_syn(id,key)), axis=0), t_start= first_cond.t_start, sampling_period= first_cond.sampling_period, units= first_cond.units)
+                    # Generate excitatory conductances for this specific neuron id
+                    for receptor,ids in receptors_ids.items():
+                        # If we recorded a given conductance for this id, increment the excitatory conductance with this conductance
+                        if idd in ids:
+                            exc_cond = exc_cond + seg.get_syn(idd,receptor).magnitude
                     exc_conds.append(exc_cond)
 
-                seg.analogsignals.append(NeoAnalogSignal(exc_conds, t_start= first_cond.t_start, sampling_period= first_cond.sampling_period, units= first_cond.units, name= 'gsyn_exc', source_population= sheet, source_ids = all_ids))
                 # Create analog signals from list of conductances. Each element of the list corresponds to an id
-                    
+                seg.analogsignals.append(NeoAnalogSignal(exc_conds, t_start= first_cond.t_start, sampling_period= first_cond.sampling_period, units= first_cond.units, name= 'gsyn_exc', source_population= sheet, source_ids = all_ids))
                 self.datastore.full_datastore.update_segment(seg)
     
 
 class InhibitoryConductanceGenerator(Analysis):
+      """
+      Generate inhibitory conductances analogsignals into the datastore based on the
+      conductances coresponding to the receptors listed in `inhibitory_receptors`. 
+
+      Other parameters
+      ------------------- 
+      inhibitory_receptors : list
+                    list of receptors name which conductances will be merged into 
+                    the new inhibitory conductance analog signal 
+      
+      replace_if_exists: bool
+                    If True, replace the existing inhibitory conductance. If False, 
+                    raises an error if an inhibitory conductance is already present. 
+      """
 
     required_parameters = ParameterSet({ 
-
         'inhibitory_receptors' : list,
         'replace_if_exists': bool,
     })      
 
     def perform_analysis(self):
-        
-        #ADS self.datastore.full_datastore.add_analysis_result(
-        #identifier: used to identify data structures of common type in storage
-        #analysis_algorithm: Name of the Analysis class that produced the ADS
-        #sheet_name: The sheet for which the analysis have been performed.
-        #neuron: List of neuron ID
-        #stimulus_id: String containing the stimulus id
         for sheet in self.datastore.sheets():
             dsv = queries.param_filter_query(self.datastore,sheet_name=sheet)
-            for seg in dsv.get_segments()+ dsv.get_segments(null=True):
 
+            # Loop over all segments 
+            for seg in dsv.get_segments()+ dsv.get_segments(null=True):
                 to_delete = None
-                for idx , a in enumerate(seg.analogsignals):
-                    if a.name== 'gsyn_inh' and self.parameters.replace_if_exists:
-                        to_delete= idx
+                # Find whether an inhibitory conductance already exists in the Datastore
+                for idx, a in enumerate(seg.analogsignals):
+                    if a.name == 'gsyn_inh' and self.parameters.replace_if_exists:
+                        to_delete = idx
                         break
-                    elif a.name== 'gsyn_inh' and not self.parameters.replace_if_exists:
+                    elif a.name == 'gsyn_inh' and not self.parameters.replace_if_exists:
                         raise ValueError("gsyn_inh already exists. Set replace_if_exists as True to replace")
                 if to_delete is not None:
                     del seg.analogsignals[to_delete]
                     
-                all_ids= []
-                dict_for_= {}
+                all_ids = []
+                receptors_ids = {}
+                # Get for each receptor type in `inhibitory_receptors` the list of ids of 
+                # neurons receiving conductance from this receptor type
                 for receptor in self.parameters.inhibitory_receptors:
                     name= receptor+ '_gsyn'
-                    receptor_ids=seg.get_stored_syn_ids(name=name)
-                    dict_for_[name]= receptor_ids
-                    all_ids +=list(receptor_ids)
+                    receptor_ids = seg.get_stored_syn_ids(name=name)
+                    receptors_ids[name] = receptor_ids
+                    all_ids += list(receptor_ids)
 
-                all_ids= numpy.array(list(set(all_ids)))
+                all_ids = numpy.array(list(set(all_ids)))
                 
                 first_id = seg.get_stored_syn_ids(self.parameters.inhibitory_receptors[0] + '_gsyn')[0]
-                first_cond=seg.get_syn(first_id, self.parameters.inhibitory_receptors[0] + '_gsyn')
+                first_cond = seg.get_syn(first_id, self.parameters.inhibitory_receptors[0] + '_gsyn')
                 
 
-                # Generate excitatory conductances for all id
+                # Generate inhibitory conductances for all id
                 inh_conds = []
-                for id in all_ids:
-                    # Generate excitatory conductances for a specific id
+                for idd in all_ids:
                     inh_cond = numpy.zeros(first_cond.shape)
-                    for key,value in dict_for_.items():
+                    # Generate inhibitory conductances for this specific neuron id
+                    for receptor, ids in receptors_ids.items():
                         # If we recorded a given conductance for this id, increment the excitatory conductance with this conductance values
-                        if id in value:
-                            inh_cond = inh_cond + seg.get_syn(id,key).magnitude
-                            #cond_exc= NeoAnalogSignal(numpy.mean(numpy.array(seg.get_syn(id,key)), axis=0), t_start= first_cond.t_start, sampling_period= first_cond.sampling_period, units= first_cond.units)
+                        if idd in ids:
+                            inh_cond = inh_cond + seg.get_syn(idd,receptor).magnitude
                     inh_conds.append(inh_cond)
 
-                seg.analogsignals.append(NeoAnalogSignal(inh_conds, t_start= first_cond.t_start, sampling_period= first_cond.sampling_period, units= first_cond.units, name= 'gsyn_inh', source_population= sheet, source_ids = all_ids))
                 # Create analog signals from list of conductances. Each element of the list corresponds to an id
-                    
+                seg.analogsignals.append(NeoAnalogSignal(inh_conds, t_start= first_cond.t_start, sampling_period= first_cond.sampling_period, units= first_cond.units, name= 'gsyn_inh', source_population= sheet, source_ids = all_ids))
                 self.datastore.full_datastore.update_segment(seg)

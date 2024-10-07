@@ -80,7 +80,6 @@ class ModularConnector(Connector):
       
       for k in self.weight_function_names:
           self.weight_functions[k] = load_component(self.parameters.weight_functions[k].component)(self.source,self.target,self.parameters.weight_functions[k].params)
-          #logger.info(self.weight_functions)
           assert isinstance(self.weight_functions[k],ModularConnectorFunction)
           
       for k in self.delay_function_names:
@@ -402,7 +401,6 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(LocalModuleCon
                 delays = self._obtain_delays(indices[i],seeds[i])
 
                 if self.parameters.num_samples == 0:
-                    #logger.info(weights)
                     co = Counter(
                         sample_from_bin_distribution(weights, int(samples), seeds[i])
                     )

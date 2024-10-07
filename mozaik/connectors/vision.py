@@ -183,10 +183,6 @@ class GaborArborization(ModularConnectorFunction):
                                        target_ar)
 
         g = gauss(self.source.pop.positions[0],self.source.pop.positions[1],target_posx,target_posy,target_or+pi/2,target_size,target_ar)
-        #logger.info('g value')
-        #logger.info(list(g))
-        #logger.info('w value')
-        #logger.info(list(w))
         if self.parameters.ON:
            return numpy.maximum(0,w) + self.parameters.gauss_coefficient * g
         else:
