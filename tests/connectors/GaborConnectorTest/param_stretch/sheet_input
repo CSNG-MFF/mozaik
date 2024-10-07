@@ -1,0 +1,72 @@
+{
+    'component': 'mozaik.models.vision.spatiotemporalfilter.SpatioTemporalFilterRetinaLGN',
+    'params': {
+        'density': 200, # neurons per degree squared
+        'size'  : (1.0,1.0), # the effective size of the modelled section of retina/lgn
+        'linear_scaler': 6.0,
+        'mpi_reproducible_noise' : False,
+        'cached' : False,
+        'cache_path' : 'retinal_cache/',
+        'recorders' :  None,
+        'recording_interval'  :  1.0,
+        'receptive_field': {
+            #'func': 'lambda x,y,t,p: numpy.sin(t)',
+            'func': 'cai97.stRF_2d',
+            'func_params': {
+                'Ac': 1.000000,
+                'As': 0.032473,
+                'sigma_c': 0.103253,
+                'sigma_s': 0.461558,
+                'K1': 0.979516,
+                'K2': 0.202640,
+                'c1': 1.095625,
+                'c2': 0.274145,
+                't1': -83.501129,
+                't2': -135.830829,
+                'n1': 124.130728,
+                'n2': 64.731311,
+                'td': 6.000000,
+                'subtract_mean': False,
+            },
+            'width': 3.0, # degrees
+            'height': 3.0, # degrees
+            'spatial_resolution': 0.05, # degrees
+            'temporal_resolution': 7.0, # ms
+            'duration': 200.0,
+        },
+        'gain_control' : {
+            'gain': 12,
+            'non_linear_gain' : {
+                        'contrast_gain' : 0.5,
+                        'contrast_scaler' : 0.0007,
+                        'luminance_gain' : 0.01,
+                        'luminance_scaler' : 1.0e-8,
+                    }
+        },
+        'cell': {
+            'model': 'IF_cond_exp',
+            'native_nest': False,
+            'params': {
+                'v_thresh':-57.0,
+                'v_rest': -70.0,
+                'v_reset': -70.0,
+                'tau_refrac': 2.0,
+                'tau_m': 10.0,
+                'cm': 0.29,
+                'e_rev_E': 0.0,
+                'e_rev_I': -75.0,
+                'tau_syn_E': 1.5,
+                'tau_syn_I': 10.0,
+            },
+            'initial_values': {
+                'v': -70.0,
+            },
+        },
+        
+        'noise': {
+            'mean': 0,
+            'stdev': 3.0,
+        }
+    }
+}
+

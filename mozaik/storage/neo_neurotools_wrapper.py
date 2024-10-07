@@ -114,8 +114,7 @@ class MozaikSegment(Segment):
                 self.load_full()
 
             for a in self.analogsignals:
-                if a.name == 'v':
-			
+                if a.name == 'v' or a.name == 'V_m':
                     return a[:, a.annotations['source_ids'].tolist().index(neuron_id)]
                 
         def get_syn(self,neuron_id, name):
@@ -159,7 +158,7 @@ class MozaikSegment(Segment):
             if not self.full:
                 self.load_full()
             for a in self.analogsignals:
-                if a.name == 'gsyn_exc':
+                if a.name == 'gsyn_exc' or a.name == 'g_ex':
                     return a[:, a.annotations['source_ids'].tolist().index(neuron_id)]
 
         def get_isyn(self,neuron_id):
@@ -180,7 +179,7 @@ class MozaikSegment(Segment):
             if not self.full:
                 self.load_full()
             for a in self.analogsignals:
-                if a.name == 'gsyn_inh':
+                if a.name == 'gsyn_inh' or a.name == 'g_in':
                     return a[:, a.annotations['source_ids'].tolist().index(neuron_id)]
 
         def load_full(self):
@@ -217,7 +216,7 @@ class MozaikSegment(Segment):
             if not self.full:
                 self.load_full()
             for a in self.analogsignals:
-                if a.name == 'gsyn_inh':
+                if a.name == 'gsyn_inh' or a.name == 'g_in':
                    return a.annotations['source_ids']
         
         def get_stored_esyn_ids(self):
@@ -227,7 +226,7 @@ class MozaikSegment(Segment):
             if not self.full:
                 self.load_full()
             for a in self.analogsignals:
-                if a.name == 'gsyn_exc':
+                if a.name == 'gsyn_exc' or a.name == 'g_ex':
                    return a.annotations['source_ids']
 
         def get_stored_vm_ids(self):
@@ -237,7 +236,7 @@ class MozaikSegment(Segment):
             if not self.full:
                 self.load_full()
             for a in self.analogsignals:
-                if a.name == 'v':
+                if a.name == 'v' or a.name == 'V_m':
                    return a.annotations['source_ids']
 
         def get_stored_spike_train_ids(self):

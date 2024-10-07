@@ -16,6 +16,7 @@ from collections import OrderedDict
 import collections
 import os.path
 import os
+from mozaik.tools.distribution_parametrization import PyNNDistribution
 
 logger = mozaik.getMozaikLogger()
 
@@ -80,11 +81,17 @@ class DataStoreView(ParametrizedObject):
         self.full_datastore = full_datastore  # should be self if actually the
                                               # instance is actually DataStore
 
-    def get_segments(self,null=False):
+    def get_segments(self,null=False, ordered=False):
         """
         Returns list of all recordings (as neo segments) stored in the datastore.
+        If *null* is true then the segments correspond to the blank period before every stimulus.
+        If *ordered* is true then the stimuli are sorted chronologically
         """
-        return [s for s in self.block.segments if s.null == null]
+        segs = [s for s in self.block.segments if s.null == null]
+        if ordered:
+            return sorted(segs, key=lambda x:x.rec_datetime)
+        else:
+            return segs
         
     def sheets(self):
         """
@@ -154,7 +161,7 @@ class DataStoreView(ParametrizedObject):
         """
         return self.full_datastore.block.annotations['neuron_annotations']
 
-    def get_stimuli(self,null=False):
+    def get_stimuli(self,null=False, ordered=False):
         """
         Returns a list of stimuli (as strings). The order of the stimuli
         corresponds to the order of segments returned by the get_segments()
@@ -162,8 +169,10 @@ class DataStoreView(ParametrizedObject):
         
         If *null* is true the order corresponds to the order of segments 
         returned by get_segments(null=True).
+
+        If *ordered* is true then the stimuli are sorted chronologically 
         """
-        return [s.annotations['stimulus'] for s in self.block.segments if s.null == null]
+        return [s.annotations['stimulus'] for s in self.get_segments(null,ordered)]
 
     def get_analysis_result(self, **kwargs):
         """
@@ -176,6 +185,30 @@ class DataStoreView(ParametrizedObject):
         This command should return or ADS whose identifier is *PerNeuronValue* or *SingleValue*, and are associated with sheet named *sheet* and as their value name have 'orientation preference'
         """
         return filter_query(self.analysis_results,**kwargs)
+
+    def sort_analysis_results(self, key, reverse=False):
+        if key[0:3] == 'st_':
+            ads_id = []
+            ads_id_nkey = []
+            ads_nid = []
+            for ads in self.analysis_results:
+                if ads.stimulus_id is None:
+                    ads_nid.append(ads)
+                else:
+                    if hasattr(MozaikParametrized.idd(ads.stimulus_id),key[3:]):
+                        ads_id.append(ads)
+                    else:
+                        ads_id_nkey.append(ads)
+            self.analysis_results =  ads_nid + ads_id_nkey + sorted(ads_id, key= lambda x:getattr(MozaikParametrized.idd(x.stimulus_id),key[3:]),reverse=reverse)
+        else:
+            ads_key = []
+            ads_nkey = []
+            for ads in self.analysis_results:
+                if hasattr(ads,key):
+                    ads_key.append(ads)
+                else:
+                    ads_nkey.append(ads)
+            self.analysis_results = ads_nkey + sorted(ads_key, key= lambda x:getattr(x,key),reverse=reverse)
 
     def get_sensory_stimulus(self, stimuli=None):
         """
@@ -382,6 +415,13 @@ class DataStore(DataStoreView):
         """
         self.block.annotations['experiment_parameters'] = experiment_parameter_list
         
+    def set_simulation_log(self,log):
+        """
+        The simulation log is expected to be a dictionary where every pair of key/values correspond to one part
+        of the log
+        """
+        self.block.annotations['simulation_log'] = log
+
     def identify_unpresented_stimuli(self, stimuli):
         """
         This method filters out from a list of stimuli all those which have already been

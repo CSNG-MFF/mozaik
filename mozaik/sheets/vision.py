@@ -42,14 +42,20 @@ class RetinalUniformSheet(Sheet):
                                    origin=(0.0, 0.0, 0.0),
                                    rng=mozaik.pynn_rng)
         
-        #rs = space.Grid2D(aspect_ratio=1, dx=parameters.sx/parameters.density, dy=parameters.sy/parameters.density, x0=-parameters.sx/2,y0=-parameters.sy/2,z=0.0)
-        
-        self.pop = self.sim.Population(int(parameters.sx * parameters.sy * parameters.density),
-                                            getattr(self.model.sim, self.parameters.cell.model),
-                                            self.parameters.cell.params,
-                                            structure=rs,
-                                            initial_values=self.parameters.cell.initial_values,
-                                            label=self.name)
+        if self.parameters.cell.native_nest:
+            self.pop = self.sim.Population(int(parameters.sx * parameters.sy * parameters.density),
+                                               self.sim.native_cell_type(self.parameters.cell.model),
+                                               self.parameters.cell.params,
+                                               structure=rs,
+                                               initial_values=self.parameters.cell.initial_values,
+                                               label=self.name)
+        else:
+            self.pop = self.sim.Population(int(parameters.sx * parameters.sy * parameters.density),
+                                               getattr(self.model.sim, self.parameters.cell.model),
+                                               self.parameters.cell.params,
+                                               structure=rs,
+                                               initial_values=self.parameters.cell.initial_values,
+                                               label=self.name)
         # Forces PyNN to generate the positions to ensure the reproducibility with multiprocessing
         self.pop.positions
 
@@ -176,29 +182,42 @@ class VisualCorticalUniformSheet(SheetWithMagnificationFactor):
                                    origin=(0.0, 0.0, 0.0),
                                    rng=mozaik.pynn_rng)
 
-
+        # Include nestml multisynapse neuron model name here
         if self.parameters.cell.model in set(["aeif_cond_alpha_multisynapse","aeif_cond_beta_multisynapse"]):
             self.multisynapse = True
-            receptors= {}
-            for (k,v) in self.parameters.cell.receptors.items():
-                receptors[k] = getattr(self.model.sim, v.name)(**v.params)
-                
-            celltype = self.sim.PointNeuron(
-                self.sim.AdExp(**self.parameters.cell.params),
-                                **receptors)
-                
-                
-            self.pop = self.sim.Population(int(parameters.sx * parameters.sy/1000000 * parameters.density), 
-                                            celltype,structure=rs, initial_values=self.parameters.cell.initial_values,
-                                            label= self.name)    
+            #TODO after nestml multisynapse neuron model is implemented
+            if self.parameters.cell.native_nest:
+                pass
+
+            else:
+                receptors= {}
+                for (k,v) in self.parameters.cell.receptors.items():
+                    receptors[k] = getattr(self.model.sim, v.name)(**v.params)
+                    
+                celltype = self.sim.PointNeuron(
+                    self.sim.AdExp(**self.parameters.cell.params),
+                                    **receptors)
+                    
+                    
+                self.pop = self.sim.Population(int(parameters.sx * parameters.sy/1000000 * parameters.density), 
+                                                celltype,structure=rs, initial_values=self.parameters.cell.initial_values,
+                                                label= self.name)    
         
         else:
-            self.pop = self.sim.Population(int(parameters.sx * parameters.sy/1000000 * parameters.density),
-                                            getattr(self.model.sim, self.parameters.cell.model),
-                                            self.parameters.cell.params,
-                                            structure=rs,
-                                            initial_values=self.parameters.cell.initial_values,
-                                            label=self.name)
+            if self.parameters.cell.native_nest:
+                self.pop = self.sim.Population(int(parameters.sx * parameters.sy/1000000 * parameters.density),
+                                                   self.sim.native_cell_type(self.parameters.cell.model),
+                                                   self.parameters.cell.params,
+                                                   structure=rs,
+                                                   initial_values=self.parameters.cell.initial_values,
+                                                   label=self.name)
+            else:
+                self.pop = self.sim.Population(int(parameters.sx * parameters.sy/1000000 * parameters.density),
+                                                   getattr(self.model.sim, self.parameters.cell.model),
+                                                   self.parameters.cell.params,
+                                                   structure=rs,
+                                                   initial_values=self.parameters.cell.initial_values,
+                                                   label=self.name)
 
         # Forces PyNN to generate the positions to ensure the reproducibility with multiprocessing
         self.pop.positions
@@ -244,27 +263,41 @@ class VisualCorticalUniformSheet3D(VisualCorticalUniformSheet):
                                    origin=(0.0, 0.0, origin_z),
                                    rng=mozaik.pynn_rng)
 
+        # Include nestml multisynapse neuron model name here
         if self.parameters.cell.model in set(["aeif_cond_alpha_multisynapse","aeif_cond_beta_multisynapse"]):
             self.multisynapse = True
             receptors= {}
-            for (k,v) in self.parameters.cell.receptors.items():
-                receptors[k] = getattr(self.model.sim, v.name)(**v.params)
+            #TODO after nestml multisynapse neuron model is implemented
+            if self.parameters.cell.native_nest:
+                pass
 
-            celltype = self.sim.PointNeuron(
-                self.sim.AdExp(**self.parameters.cell.params),
-                                **receptors)
+            else:
+                for (k,v) in self.parameters.cell.receptors.items():
+                    receptors[k] = getattr(self.model.sim, v.name)(**v.params)
+
+                celltype = self.sim.PointNeuron(
+                    self.sim.AdExp(**self.parameters.cell.params),
+                                    **receptors)
 
 
-            self.pop = self.sim.Population(int(parameters.sx * parameters.sy/1000000 * parameters.density),
-                                            celltype,structure=rs, initial_values=self.parameters.cell.initial_values,
-                                            label= self.name)
+                self.pop = self.sim.Population(int(parameters.sx * parameters.sy/1000000 * parameters.density),
+                                                celltype,structure=rs, initial_values=self.parameters.cell.initial_values,
+                                                label= self.name)
 
         else:
-            self.pop = self.sim.Population(int(parameters.sx*parameters.sy/1000000*parameters.density),
-                                           getattr(self.model.sim, self.parameters.cell.model),
-                                           self.parameters.cell.params,
-                                           structure=rs,
-                                           initial_values=self.parameters.cell.initial_values,
-                                           label=self.name)
+            if self.parameters.cell.native_nest:
+                self.pop = self.sim.Population(int(parameters.sx * parameters.sy/1000000 * parameters.density),
+                                                   self.sim.native_cell_type(self.parameters.cell.model),
+                                                   self.parameters.cell.params,
+                                                   structure=rs,
+                                                   initial_values=self.parameters.cell.initial_values,
+                                                   label=self.name)
+            else:
+                self.pop = self.sim.Population(int(parameters.sx * parameters.sy/1000000 * parameters.density),
+                                                   getattr(self.model.sim, self.parameters.cell.model),
+                                                   self.parameters.cell.params,
+                                                   structure=rs,
+                                                   initial_values=self.parameters.cell.initial_values,
+                                                   label=self.name)
         # Forces PyNN to generate the positions to ensure the reproducibility with multiprocessing
         self.pop.positions

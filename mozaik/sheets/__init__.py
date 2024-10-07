@@ -78,6 +78,7 @@ class Sheet(BaseComponent):
     required_parameters = ParameterSet({
         'cell': ParameterSet({
             'model': str,  # the cell type of the sheet
+            'native_nest': bool,
             'params': ParameterSet,
             'receptors': ParameterSet,
             'initial_values': ParameterSet,
@@ -257,20 +258,22 @@ class Sheet(BaseComponent):
                 The segment holding all the recorded data. See NEO documentation for detail on the format.
         """
 
-        '''try:
-            block = self.pop.get_data(['spikes', 'v', 'gsyn_exc', 'gsyn_inh'],clear=True)
-        except (NothingToWriteError, errmsg):
-            logger.debug(errmsg)
-        '''
+        if self.parameters.cell.native_nest:
+            vm_name = ['V_m']
+        else:
+            vm_name = ['v']
+
         if self.multisynapse:
             gsyn_names = []
             for k in self.parameters.cell.receptors.keys():
                 gsyn_names.append(k+ '_gsyn') 
-        else:
+        elif self.parameters.cell.native_nest:
+            gsyn_names = ['g_ex', 'g_in']
+        else: 
             gsyn_names = ['gsyn_exc', 'gsyn_inh']
             
         try:
-            block = self.pop.get_data(['spikes', 'v'] + gsyn_names,clear=True)
+            block = self.pop.get_data(['spikes'] + vm_name + gsyn_names,clear=True)
         except (NothingToWriteError, errmsg):
             logger.debug(errmsg)
         if (mozaik.mpi_comm) and (mozaik.mpi_comm.rank != mozaik.MPI_ROOT):

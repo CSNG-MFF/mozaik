@@ -12,7 +12,7 @@ logger = mozaik.getMozaikLogger()
 
 class ModularConnectorFunction(ParametrizedObject):
     """
-    Abstract class defining the interface of nodular connector functions.
+    Abstract class defining the interface of modular connector functions.
     
     Each instance has to implement the evaluate(u) function that returns the pre-synaptic weights
     of neuron i.
@@ -144,4 +144,108 @@ class HyperbolicModularConnectorFunction(DistanceDependentModularConnectorFuncti
     def distance_dependent_function(self,distance):
         return numpy.exp(-numpy.multiply(self.parameters.alpha,numpy.sqrt(numpy.power(self.parameters.theta,2) + numpy.power(distance,2))))
 
+class ModularNumSamplesConnectorFunction(ParametrizedObject):
+    """
+    Abstract class defining the interface of modular connector functions for the
+    number incoming connections.
+    
+    Each instance has to implement the evaluate(u) function that returns the number of 
+    incoming connections of neuron i.
+    """
+
+    def __init__(self, target, parameters):
+        ParametrizedObject.__init__(self, parameters)
+        self.target = target
+
+    def evaluate(self,index,**params):
+        raise NotImplemented
+
+class ThresholdLinearModularNumSamplesConnectorFunction(ModularNumSamplesConnectorFunction):
+    """
+    Number of incoming connection decreases quadratically when neurons are
+    sufficiently close to the border (distance less than threshold).
+    """
+    required_parameters = ParameterSet({
+        'threshold' : float, # see description
+        'max_decrease': float,  # For each spatial dimension, the number
+                                # of incoming connection cannot decrease
+                                # more than by that factor
+    })
+
+    def evaluate(self,index):
+        posx = self.target.pop.positions[0,index] + self.target.size_x/2
+        posy = self.target.pop.positions[1,index] + self.target.size_y/2
+        coef = 1
+        if posx < self.parameters.threshold:
+            coef *= 1/self.parameters.max_decrease + (1 - 1/self.parameters.max_decrease) * (posx/self.parameters.threshold)
+        elif self.target.size_x - posx < self.parameters.threshold:
+            coef *=  1/self.parameters.max_decrease + (1 - 1/self.parameters.max_decrease) * ((self.target.size_x - posx)/self.parameters.threshold)
+        
+
+        if posy < self.parameters.threshold:
+            coef *= 1/self.parameters.max_decrease + (1 - 1/self.parameters.max_decrease) * (posy/self.parameters.threshold)
+        elif self.target.size_y - posy < self.parameters.threshold:
+            coef *=  1/self.parameters.max_decrease + (1 - 1/self.parameters.max_decrease) * ((self.target.size_y - posy)/self.parameters.threshold)
+
+        return coef
+
+
+class ThresholdQuadraticModularNumSamplesConnectorFunction(ModularNumSamplesConnectorFunction):
+    """
+    Number of incoming connection decreases quadratically when neurons are
+    sufficiently close to the border (distance less than threshold).
+    """
+    required_parameters = ParameterSet({
+        'threshold' : float, # see description
+        'max_decrease': float,  # For each spatial dimension, the number
+                                # of incoming connection cannot decrease
+                                # more than by that factor
+    })
+
+    def evaluate(self,index):
+        posx = self.target.pop.positions[0,index] + self.target.size_x/2
+        posy = self.target.pop.positions[1,index] + self.target.size_y/2
+        coef = 1
+        if posx < self.parameters.threshold:
+            coef *= 1/self.parameters.max_decrease + (1 - 1/self.parameters.max_decrease) * numpy.sqrt(posx/self.parameters.threshold)
+        elif self.target.size_x - posx < self.parameters.threshold:
+            coef *=  1/self.parameters.max_decrease + (1 - 1/self.parameters.max_decrease) * numpy.sqrt((self.target.size_x - posx)/self.parameters.threshold)
+
+
+        if posy < self.parameters.threshold:
+            coef *= 1/self.parameters.max_decrease + (1 - 1/self.parameters.max_decrease) * numpy.sqrt(posy/self.parameters.threshold)
+        elif self.target.size_y - posy < self.parameters.threshold:
+            coef *=  1/self.parameters.max_decrease + (1 - 1/self.parameters.max_decrease) * numpy.sqrt((self.target.size_y - posy)/self.parameters.threshold)
+
+        return coef
+
+class ThresholdExponentialModularNumSamplesConnectorFunction(ModularNumSamplesConnectorFunction):
+    """
+    Number of incoming connection decreases quadratically when neurons are
+    sufficiently close to the border (distance less than threshold).
+    """
+    required_parameters = ParameterSet({
+        'threshold' : float, # see description
+        'max_decrease': float,  # For each spatial dimension, the number
+                                # of incoming connection cannot decrease
+                                # more than by that factor
+        'exponent_factor': float, #the factor of the exponential
+    })
+
+    def evaluate(self,index):
+        posx = self.target.pop.positions[0,index] + self.target.size_x/2
+        posy = self.target.pop.positions[1,index] + self.target.size_y/2
+        coef = 1
+        if posx < self.parameters.threshold:
+            coef *= 1/self.parameters.max_decrease + (1 - 1/self.parameters.max_decrease) * (-numpy.exp(-self.parameters.exponent_factor * posx/self.parameters.threshold)+1)/(-numpy.exp(-self.parameters.exponent_factor)+1)
+        elif self.target.size_x - posx < self.parameters.threshold:
+            coef *=  1/self.parameters.max_decrease + (1 - 1/self.parameters.max_decrease) *  (-numpy.exp(-self.parameters.exponent_factor * (self.target.size_x - posx)/self.parameters.threshold)+1)/(-numpy.exp(-self.parameters.exponent_factor)+1)
+
+
+        if posy < self.parameters.threshold:
+            coef *= 1/self.parameters.max_decrease + (1 - 1/self.parameters.max_decrease) * (-numpy.exp(-self.parameters.exponent_factor * posy/self.parameters.threshold)+1)/(-numpy.exp(-self.parameters.exponent_factor)+1)
+        elif self.target.size_y - posy < self.parameters.threshold:
+            coef *=  1/self.parameters.max_decrease + (1 - 1/self.parameters.max_decrease) *  (-numpy.exp(-self.parameters.exponent_factor * (self.target.size_y - posy)/self.parameters.threshold)+1)/(-numpy.exp(-self.parameters.exponent_factor)+1)
+
+        return coef
 

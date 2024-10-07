@@ -91,7 +91,7 @@ class Experiment(ParametrizedObject):
                ds = OrderedDict()
             else:
                ds = self.direct_stimulation[i]
-            (segments,null_segments,input_stimulus,simulator_run_time) = self.model.present_stimulus_and_record(s,ds)
+            (segments,null_segments,input_stimulus,simulator_run_time,model_exploded) = self.model.present_stimulus_and_record(s,ds)
             srtsum += simulator_run_time
             data_store.add_recording(segments,s)
             data_store.add_stimulus(input_stimulus,s)
@@ -101,7 +101,9 @@ class Experiment(ParametrizedObject):
                data_store.add_null_recording(null_segments,s) 
             
             logger.info('Stimulus %d/%d finished. Memory usage: %iMB' % (i+1,len(stimulus_indexes),resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/1024))
-        return srtsum
+            if model_exploded:
+                return srtsum, model_exploded
+        return srtsum, model_exploded
         
     def do_analysis(self):
         raise NotImplementedError

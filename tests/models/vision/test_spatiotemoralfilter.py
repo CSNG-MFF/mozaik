@@ -78,6 +78,7 @@ params = {
                 },
                 "cell": {
                     "model": "IF_cond_exp",
+                    "native_nest": False,
                     "params": {
                         "v_thresh": -57.0,
                         "v_rest": -70.0,
@@ -106,6 +107,7 @@ params = {
     "time_step": 0.1,
     "pynn_seed": 936395,
     "mpi_seed": 1023,
+    "explosion_monitoring": None,
 }
 
 base_stim_params = {

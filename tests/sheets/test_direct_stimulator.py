@@ -61,9 +61,9 @@ class TestOpticalStimulatorArrayChR:
         cls.sheet_params.max_depth = 400
         cls.opt_array_params = load_parameters(test_dir + "/sheets/opt_array_params")
         cls.opt_array_params["transfection_proportion"] = 1.0
-        cls.opt_array_params[
-            "stimulating_signal"
-        ] = "mozaik.sheets.direct_stimulator.stimulating_pattern_flash"
+        cls.opt_array_params["stimulating_signal"] = (
+            "mozaik.sheets.direct_stimulator.stimulating_pattern_flash"
+        )
         cls.opt_array_params["stimulating_signal_parameters"] = ParameterSet(
             {
                 "shape": "circle",

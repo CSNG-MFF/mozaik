@@ -6,6 +6,9 @@ markers = [
     "LSV1M_tiny: tests that need to run a tiny version of the LSV1M model to execute. Should be ",
     "merge: tests for the datastore merging",
     "mpi: tests using mpi to run the model",
+    "mpi_explosion: tests using mpi to run the model and tests the explosion detection",
+    "not_github: tests using mpi to run the model",
+    "stepcurrentmodule: tests using the nest stepcurrent module to run the model",
 ]
 
 [tool.black]

@@ -240,6 +240,12 @@ class StandardStyle(SimplePlot):
         y_tick_auto_minor_locator  : int
                     How many minor x ticks per major x tick. If None or not specified, minor x ticks are not displayed
 
+        x_tick_precision  : str
+                    Number of precision for major ticks on x axis 
+
+        y_tick_precision  : str
+                    Number of precision for major ticks on y axis 
+
         grid : bool
              Do we show grid?
         """
@@ -279,6 +285,8 @@ class StandardStyle(SimplePlot):
             "y_tick_pad": fontsize - 5,
             "x_tick_auto_minor_locator": None,
             "y_tick_auto_minor_locator": None,
+            "x_tick_precision": None,
+            "y_tick_precision": None,
             "grid" : False,
         }
 
@@ -382,15 +390,19 @@ class StandardStyle(SimplePlot):
                     phf.remove_x_tick_labels()
                 if self.x_tick_auto_minor_locator:
                     self.axis.xaxis.set_minor_locator(AutoMinorLocator(self.x_tick_auto_minor_locator))
+
             elif self.x_ticks != None:
-                 pylab.xticks(self.x_ticks)
-                 phf.short_tick_labels_axis(self.axis.xaxis)
-                 if self.x_tick_auto_minor_locator:
+                pylab.xticks(self.x_ticks)
+                phf.short_tick_labels_axis(self.axis.xaxis)
+                if self.x_tick_auto_minor_locator:
                     self.axis.xaxis.set_minor_locator(AutoMinorLocator(self.x_tick_auto_minor_locator))
 
             else:
                 if self.x_tick_style == 'Min':
-                    phf.three_tick_axis(self.axis.xaxis,log=(self.x_scale!='linear'))
+                    if self.x_tick_precision:
+                        phf.three_tick_axis(self.axis.xaxis,log=(self.x_scale!='linear'), precision = self.x_tick_precision)
+                    else: 
+                        phf.three_tick_axis(self.axis.xaxis,log=(self.x_scale!='linear'))
                 elif self.x_tick_style == 'Custom':
                    phf.disable_xticks(self.axis)
                    phf.remove_x_tick_labels()
@@ -407,6 +419,7 @@ class StandardStyle(SimplePlot):
                 if self.y_tick_auto_minor_locator:
                     self.axis.yaxis.set_minor_locator(AutoMinorLocator(self.y_tick_auto_minor_locator))
 
+
             elif self.y_ticks != None:
                 pylab.yticks(self.y_ticks)
                 phf.short_tick_labels_axis(self.axis.yaxis)
@@ -415,7 +428,11 @@ class StandardStyle(SimplePlot):
 
             else:
                 if self.y_tick_style == 'Min':
-                    phf.three_tick_axis(self.axis.yaxis,log=(self.y_scale!='linear'))
+                    if self.y_tick_precision:
+                        phf.three_tick_axis(self.axis.yaxis,log=(self.y_scale!='linear'), precision = self.y_tick_precision)
+                    else:
+                        phf.three_tick_axis(self.axis.yaxis,log=(self.y_scale!='linear'))
+
                 elif self.y_tick_style == 'Custom':
                    phf.disable_yticks(self.axis)
                    phf.remove_y_tick_labels()
@@ -890,6 +907,9 @@ class StandardStyleLinePlot(StandardStyle):
     legend : bool
            If true the legend will be shown
 
+    legend_fontsize : int 
+           The size of the font of the legend
+
     """
 
     def __init__(self, x, y, labels=None,error=None,**param):
@@ -905,6 +925,7 @@ class StandardStyleLinePlot(StandardStyle):
         self.parameters["mean"] = False
         self.parameters["fill"] = False
         self.parameters["legend"] = False
+        self.parameters["legend_fontsize"] = 15
         self.parameters["errorbars"] = False
         self.parameters["linewidth"] = 1
 
@@ -1004,8 +1025,75 @@ class StandardStyleLinePlot(StandardStyle):
             self.axis.plot(self.x[0], m, color='k', linewidth=2*self.linewidth)
 
         if self.legend:
-            self.axis.legend()
+            self.axis.legend(fontsize=self.legend_fontsize)
         self.x_lim = (tmin, tmax)
+
+
+class ConductancePlot(StandardStyle):
+    """
+    Plots conductances of one type (either excitatory or inhibitory).
+
+    Parameters
+    ----------
+
+    cond : list
+         List of conductances (AnalogSignal type).
+
+    type_ : string
+         Whether the conductances are excitatory or inhibitory
+         Should be 'exc' or 'inh'
+
+    Other parameters
+    ----------------
+
+    legend : bool
+           Whether legend should be displayed.
+
+    smooth_means : bool
+           Whether to apply low pass filter to the mean of the conductances.
+    """
+
+    def __init__(self, cond, type_,**param):
+        StandardStyle.__init__(self,**param)
+        self.cond = cond 
+        self.parameters["legend"] = False
+        self.parameters["smooth_means"] = False
+        self.type = type_
+        if type_ == 'exc':
+            self.cond_color = '#F5A9A9'
+            self.mean_color = 'r'
+        elif type_ == 'inh':
+            self.cond_color = '#A9BCF5'
+            self.mean_color = 'b'
+        else:
+            raise ValueError('%s is not an appropriate name for parameter `type_`. Only `exc` or `inh` are valid', self.type_)
+
+    def plot(self):
+        mean_cond = numpy.zeros(numpy.shape(self.cond[0]))
+        sampling_period = self.cond[0].sampling_period
+        t_stop = float(self.cond[0].t_stop - sampling_period)
+        t_start = float(self.cond[0].t_start)
+        time_axis = numpy.arange(0, len(self.cond[0]), 1) / float(len(self.cond[0])) * abs(t_start-t_stop) + t_start
+
+        for c in self.cond:
+            c = c.rescale(mozaik.tools.units.nS)
+            self.axis.plot(time_axis, c.tolist(), color=self.cond_color)
+            mean_cond = mean_cond + numpy.array(c.tolist())
+
+        mean_cond = mean_cond / len(self.cond)
+        from scipy.signal import savgol_filter
+        if self.smooth_means:
+            p1, = self.axis.plot(numpy.transpose(time_axis).flatten(), savgol_filter(numpy.transpose(mean_cond).tolist(),151,2).flatten(), color=self.mean_color, linewidth=3)
+        else:
+            p1, = self.axis.plot(time_axis, mean_cond.tolist(), color=self.mean_color, linewidth=1)
+        if self.legend:
+            self.axis.legend([p1], [self.type])
+
+        self.x_lim = (t_start, t_stop)
+        #self.x_ticks = [t_start, (t_stop - t_start)/2, t_stop]
+        self.x_label = 'time (' + self.cond[0].t_start.dimensionality.latex + ')'
+        self.y_label = 'g (' + mozaik.tools.units.nS.dimensionality.latex + ')'
+
 
 class ConductancesPlot(StandardStyle):
     """
@@ -1207,8 +1295,11 @@ class HistogramPlot(StandardStyle):
     num_bins : int
                  The with of the bins into which to bin the spikes.
 
-    colors : list
+    colors : dict 
            The colors to assign to the different sets of spikes.
+
+    edgecolor: str
+           The color to assign to the edges of the bars.
 
     legend : bool
            If true the legend will be shown
@@ -1229,9 +1320,11 @@ class HistogramPlot(StandardStyle):
         self.parameters["log_xscale"] = False
         self.parameters["labels"] = labels
         self.parameters["colors"] = None
+        self.parameters["edgecolor"] = 'none' 
         self.parameters["mark_mean"] = False
         self.parameters["mark_value"] = False
         self.parameters["legend"] = False
+        self.parameters["legend_fontsize"] = False
         self.parameters["histtype"] = 'bar'
         self.parameters["rwidth"] = None
 
@@ -1251,9 +1344,9 @@ class HistogramPlot(StandardStyle):
             bins = int(self.num_bins)
 
         if self.parameters["log"]:
-            self.axis.hist(numpy.log10(self.values),bins=bins,range=self.x_lim,edgecolor='none',color=colors,histtype=self.histtype,rwidth=self.rwidth)
+            self.axis.hist(numpy.log10(self.values),bins=bins,range=self.x_lim,edgecolor=self.edgecolor,color=colors,histtype=self.histtype,rwidth=self.rwidth)
         else:
-            self.axis.hist(self.values,bins=bins,range=self.x_lim,edgecolor='none',color=colors,histtype=self.histtype,rwidth=self.rwidth)
+            self.axis.hist(self.values,bins=bins,range=self.x_lim,edgecolor=self.edgecolor,color=colors,histtype=self.histtype,rwidth=self.rwidth)
 
         if self.mark_mean:
            for i,a in enumerate(self.values):
@@ -1280,7 +1373,7 @@ class HistogramPlot(StandardStyle):
                         )
 
         if self.legend:
-            self.axis.legend()
+            self.axis.legend(fontsize=self.legend_fontsize)
 
         self.y_label = '#'
 

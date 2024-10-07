@@ -12,6 +12,7 @@ import mozaik
 import time
 from datetime import datetime
 import logging
+from mozaik.tools.json_export import save_json, get_experimental_protocols, get_recorders, get_stimuli
 
 logger = mozaik.getMozaikLogger()
 
@@ -126,7 +127,7 @@ def prepare_workflow(simulation_name, model_class):
 
     ddir  = result_directory_name(simulation_run_name,simulation_name,modified_parameters)
 
-    if mozaik.mpi_comm and mozaik.mpi_comm.rank != 0:
+    if mozaik.mpi_comm and mozaik.mpi_comm.rank != mozaik.MPI_ROOT:
         Global.root_directory = parameters.results_dir + ddir + '/' + str(mozaik.mpi_comm.rank) + '/'
         mozaik.mpi_comm.barrier()
     else:
@@ -134,25 +135,33 @@ def prepare_workflow(simulation_name, model_class):
 
 
     os.makedirs(Global.root_directory)
-    if mozaik.mpi_comm and mozaik.mpi_comm.rank == 0:
+    if mozaik.mpi_comm and mozaik.mpi_comm.rank == mozaik.MPI_ROOT:
         mozaik.mpi_comm.barrier()
 
 
-    if mozaik.mpi_comm.rank == 0:
-        # Let's store the full and modified parameters, if we are the 0 rank process
-        parameters.save(Global.root_directory + "parameters", expand_urls=True)
-        import pickle
-        f = open(Global.root_directory+"modified_parameters","wb")
-        pickle.dump(str(modified_parameters),f)
-        f.close()
+    if mozaik.mpi_comm.rank == mozaik.MPI_ROOT:
+        # Store simulation run info, if we are the 0 rank process,
+        # with several components to be stored/filled in later during the simulation run
+        sim_info = {
+            'submission_date' : None,
+            'run_date': datetime.now().strftime('%d/%m/%Y-%H:%M:%S'),
+            'simulation_run_name': simulation_run_name,
+            'model_name': simulation_name,
+            "model_description": model_class.__doc__,
+            'results': {"$ref": "results.json"},
+            'stimuli': {"$ref": "stimuli.json"},
+            'recorders': {"$ref": "recorders.json"},
+            'experimental_protocols': {"$ref": "experimental_protocols.json"},
+            'parameters': {"$ref": "parameters.json"},
+        }
+        save_json(sim_info, Global.root_directory + 'sim_info.json')
+        save_json(parameters.to_dict(), Global.root_directory + 'parameters.json')
+        save_json(modified_parameters, Global.root_directory + 'modified_parameters.json')
+        recorders = get_recorders(parameters.to_dict())
+        save_json(recorders, Global.root_directory + 'recorders.json')
 
     setup_logging()
 
-    if mozaik.mpi_comm.rank == 0:
-        # Let's store some basic info about the simulation run
-        f = open(Global.root_directory+"info","w")
-        f.write(str({'model_class' : str(model_class), 'model_docstring' : model_class.__doc__,'simulation_run_name' : simulation_run_name, 'model_name' : simulation_name, 'creation_data' : datetime.now().strftime('%d/%m/%Y-%H:%M:%S')}))
-        f.close()
     return sim, num_threads, parameters
 
 def run_workflow(simulation_name, model_class, create_experiments):
@@ -185,7 +194,7 @@ def run_workflow(simulation_name, model_class, create_experiments):
     # Run experiments with previously read parameters on the prepared model
     data_store = run_experiments(model,create_experiments(model),parameters)
 
-    if mozaik.mpi_comm.rank == 0:
+    if mozaik.mpi_comm.rank == mozaik.MPI_ROOT:
         data_store.save()
     import resource
     print("Final memory usage: %iMB" % (resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/(1024)))
@@ -236,19 +245,37 @@ def run_experiments(model,experiment_list,parameters,load_from=None):
     
     t0 = time.time()
     simulation_run_time=0
+    model_exploded=False
     for i,experiment in enumerate(experiment_list):
         logger.info('Starting experiment: ' + experiment.__class__.__name__)
         stimuli = experiment.return_stimuli()
         unpresented_stimuli_indexes = data_store.identify_unpresented_stimuli(stimuli)
         logger.info('Running model')
-        simulation_run_time += experiment.run(data_store,unpresented_stimuli_indexes)
+        experiment_run_time, model_exploded = experiment.run(data_store,unpresented_stimuli_indexes)
+        simulation_run_time += experiment_run_time
+        if model_exploded:
+            break
         logger.info('Experiment %d/%d finished' % (i+1,len(experiment_list)))
     
     total_run_time = time.time() - t0
     mozaik_run_time = total_run_time - simulation_run_time
+
+    # Adding the state (represented by a randomly generated number) of the rng of every MPI process to the datastore
+    if mozaik.mpi_comm:
+        rngs_state = mozaik.mpi_comm.gather(float(mozaik.rng.rand(1)), root=0)
+        log = {'rngs_state': rngs_state, 'explosion_detected': model_exploded}
+    else:
+        log = {'explosion_detected': model_exploded}
+    data_store.set_simulation_log(log)
+
+    if not model_exploded and mozaik.mpi_comm.rank == mozaik.MPI_ROOT:
+        logger.info('Total simulation run time: %.0fs' % total_run_time)
+        logger.info('Simulator run time: %.0fs (%d%%)' % (simulation_run_time, int(simulation_run_time /total_run_time * 100)))
+        logger.info('Mozaik run time: %.0fs (%d%%)' % (mozaik_run_time, int(mozaik_run_time /total_run_time * 100)))
     
-    logger.info('Total simulation run time: %.0fs' % total_run_time)
-    logger.info('Simulator run time: %.0fs (%d%%)' % (simulation_run_time, int(simulation_run_time /total_run_time * 100)))
-    logger.info('Mozaik run time: %.0fs (%d%%)' % (mozaik_run_time, int(mozaik_run_time /total_run_time * 100)))
-    
+    experimental_protocols = get_experimental_protocols(data_store)
+    stimuli = get_stimuli(data_store,parameters.store_stimuli, parameters.input_space)
+    save_json(experimental_protocols, Global.root_directory + 'experimental_protocols.json')
+    save_json(stimuli, Global.root_directory + 'stimuli.json')
+
     return data_store

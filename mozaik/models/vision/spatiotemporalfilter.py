@@ -14,6 +14,7 @@ from mozaik.core import SensoryInputComponent
 from mozaik.sheets.vision import RetinalUniformSheet
 from mozaik.sheets.vision import VisualCorticalUniformSheet
 from mozaik.tools.mozaik_parametrized import MozaikParametrized
+from mozaik.tools.pyNN import *
 from parameters import ParameterSet
 from builtins import zip
 from collections import OrderedDict
@@ -370,6 +371,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
             'model': str,
             'params': ParameterSet,
             'receptors':ParameterSet,
+            'native_nest': bool,            
             'initial_values': ParameterSet,
         }),
         'gain_control' : {
@@ -396,16 +398,27 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         self.rf_types = ('X_ON', 'X_OFF')
         sim = self.model.sim
         self.pops = OrderedDict()
-        self.scs = OrderedDict()
-        self.ncs = OrderedDict()
+
+        if self.parameters.cell.model[-6:] == '_sc_nc':
+            self.integrated_cs = True
+            import copy
+            cell = copy.deepcopy(self.parameters.cell)
+            cell.params.update([('mean', self.parameters.noise.mean*1000), ('std', self.parameters.noise.stdev*1000), ('dt', self.model.sim.get_time_step())])
+        else:
+            self.integrated_cs = False
+            self.scs = OrderedDict()
+            self.ncs = OrderedDict()
+            cell = self.parameters.cell
+
         self.ncs_rng = OrderedDict()
         self.internal_stimulus_cache = OrderedDict()
         for rf_type in self.rf_types:
+
             p = RetinalUniformSheet(model,
                                     ParameterSet({'sx': self.parameters.size[0],
                                                   'sy': self.parameters.size[1],
                                                   'density': self.parameters.density,
-                                                  'cell': self.parameters.cell,
+                                                  'cell': cell,
                                                   'name': rf_type,
                                                   'artificial_stimulators' : OrderedDict(),
                                                   'recorders' : self.parameters.recorders,
@@ -414,25 +427,30 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
             self.sheets[rf_type] = p
             
         for rf_type in self.rf_types:
-            self.scs[rf_type] = []
-            self.ncs[rf_type] = []
             self.ncs_rng[rf_type] = []
             seeds=mozaik.get_seeds((self.sheets[rf_type].pop.size,))
-            for i, lgn_cell in enumerate(self.sheets[rf_type].pop.all_cells):
-                scs = sim.StepCurrentSource(times=[0.0], amplitudes=[0.0])
 
-                if not self.parameters.mpi_reproducible_noise:
-                    ncs = sim.NoisyCurrentSource(**self.parameters.noise)
-                else:
-                    ncs = sim.StepCurrentSource(times=[0.0], amplitudes=[0.0])
-                
-                if self.sheets[rf_type].pop._mask_local[i]:
-                       self.ncs_rng[rf_type].append(numpy.random.RandomState(seed=seeds[i]))
-                       self.scs[rf_type].append(scs)
-                       self.ncs[rf_type].append(ncs)
-                lgn_cell.inject(scs)
-                lgn_cell.inject(ncs)
-                    
+            if self.integrated_cs:
+                for i, lgn_cell in enumerate(self.sheets[rf_type].pop.all_cells):
+                    if self.sheets[rf_type].pop._mask_local[i]:
+                           self.ncs_rng[rf_type].append(numpy.random.RandomState(seed=seeds[i]))
+            else:
+                self.scs[rf_type] = []
+                self.ncs[rf_type] = []
+                for i, lgn_cell in enumerate(self.sheets[rf_type].pop.all_cells):
+                    scs = sim.StepCurrentSource(times=[0.0], amplitudes=[0.0])
+
+                    if not self.parameters.mpi_reproducible_noise:
+                        ncs = sim.NoisyCurrentSource(**self.parameters.noise)
+                    else:
+                        ncs = sim.StepCurrentSource(times=[0.0], amplitudes=[0.0])
+
+                    if self.sheets[rf_type].pop._mask_local[i]:
+                           self.ncs_rng[rf_type].append(numpy.random.RandomState(seed=seeds[i]))
+                           self.scs[rf_type].append(scs)
+                           self.ncs[rf_type].append(ncs)
+                    lgn_cell.inject(scs)
+                    lgn_cell.inject(ncs)                    
         
         P_rf = self.parameters.receptive_field
         rf_function = eval(P_rf.func)
@@ -568,25 +586,36 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
             (input_currents, retinal_input) = cached
 
         ts = self.model.sim.get_time_step()
+        # Correcting for nest/PyNN time inconsistency + adding one ts as injected current at the current time is not taken into account
+        new_offset = convert_time_pyNN_to_nest(self.model.sim,offset) + ts
 
         for rf_type in self.rf_types:
             assert isinstance(input_currents[rf_type], list)
-            for i, (lgn_cell, input_current, scs, ncs) in enumerate(
-                                                            zip(self.sheets[rf_type].pop,
-                                                                input_currents[rf_type],
-                                                                self.scs[rf_type],
-                                                                self.ncs[rf_type])):
-                assert isinstance(input_current, dict)
-                t = input_current['times'] + offset
-                a = self.parameters.linear_scaler * input_current['amplitudes']
-                scs.set_parameters(times=t, amplitudes=a,copy=False)
-                if self.parameters.mpi_reproducible_noise:
-                    t = numpy.arange(0, duration, ts) + offset
-                    amplitudes = (self.parameters.noise.mean
-                                   + self.parameters.noise.stdev
-                                       * self.ncs_rng[rf_type][i].randn(len(t)))
-                    ncs.set_parameters(times=t, amplitudes=amplitudes,copy=False)
+            if self.integrated_cs:
+                for i, (lgn_cell, input_current) in enumerate(
+                                                                zip(self.sheets[rf_type].pop,
+                                                                    input_currents[rf_type])):
+                    assert isinstance(input_current, dict)
+                    t = input_current['times'] + new_offset
+                    a = self.parameters.linear_scaler * input_current['amplitudes']
+                    lgn_cell.set_parameters(amplitude_times=t[1:], amplitude_values=a[1:]*1000)
 
+            else:
+                for i, (lgn_cell, input_current, scs, ncs) in enumerate(
+                                                                zip(self.sheets[rf_type].pop,
+                                                                    input_currents[rf_type],
+                                                                    self.scs[rf_type],
+                                                                    self.ncs[rf_type])):
+                    assert isinstance(input_current, dict)
+                    t = input_current['times'] + offset
+                    a = self.parameters.linear_scaler * input_current['amplitudes']
+                    scs.set_parameters(times=t, amplitudes=a,copy=False)
+                    if self.parameters.mpi_reproducible_noise:
+                        t = numpy.arange(0, duration, ts) + offset
+                        amplitudes = (self.parameters.noise.mean
+                                       + self.parameters.noise.stdev
+                                           * self.ncs_rng[rf_type][i].randn(len(t)))
+                        ncs.set_parameters(times=t, amplitudes=amplitudes,copy=False)
 
         # for debugging/testing, doesn't work with MPI !!!!!!!!!!!!
         #input_current_array = numpy.zeros((self.shape[1], self.shape[0], len(visual_space.time_points(duration))))
@@ -631,10 +660,20 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                       List of 2D arrays containing the frames of luminances that were presented to the retina.
 
         """
-        times = numpy.array([offset,duration-visual_space.update_interval+offset])#numpy.arange(0, duration, visual_space.update_interval) + offset
-        zers = numpy.zeros_like(times)
+        # HAAACK!
+        # Currently, we need to set the start time of stimulation to
+        # offset + 3*timestep, until the following issue is resolved:
+        # https://github.com/NeuralEnsemble/PyNN/issues/759.
         ts = self.model.sim.get_time_step()
-        
+        if self.integrated_cs:
+            new_offset = convert_time_pyNN_to_nest(self.model.sim,offset) + ts
+            times = numpy.array([new_offset,duration-visual_space.update_interval+new_offset])
+            zers = numpy.zeros_like(times)
+        # TODO: Remove once this gets fixed (hopefully in PyNN 0.11.0)!
+        else:
+            times = numpy.array([offset + 3 * ts,duration-visual_space.update_interval+offset])
+            zers = numpy.zeros_like(times)
+
         input_cells = OrderedDict()
         for rf_type in self.rf_types:
             input_cells[rf_type] = CellWithReceptiveField(self.sheets[rf_type].pop.positions[0][0],
@@ -645,12 +684,18 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         
 
         for rf_type in self.rf_types:
-                c = input_cells[rf_type]
-                nlg = c.gain_control.non_linear_gain
-                amplitude = visual_space.background_luminance * \
-                    c.receptive_field.kernel_luminance_component.sum()
-                amplitude = self.parameters.linear_scaler * \
-                    c.gain_function(amplitude, nlg.luminance_gain, nlg.luminance_scaler)
+            c = input_cells[rf_type]
+            nlg = c.gain_control.non_linear_gain
+            amplitude = visual_space.background_luminance * \
+                c.receptive_field.kernel_luminance_component.sum()
+            amplitude = self.parameters.linear_scaler * \
+                c.gain_function(amplitude, nlg.luminance_gain, nlg.luminance_scaler)
+
+            if self.integrated_cs:
+                for i, lgn_cell in enumerate(self.sheets[rf_type].pop):
+                    lgn_cell.set_parameters(amplitude_times=times, amplitude_values=(zers+amplitude)*1000)
+
+            else:
                 for i, (scs, ncs) in enumerate(zip(self.scs[rf_type],self.ncs[rf_type])):
                     scs.set_parameters(times=times,amplitudes=zers+amplitude,copy=False)
                     if self.parameters.mpi_reproducible_noise:

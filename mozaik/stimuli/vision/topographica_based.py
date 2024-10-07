@@ -1410,3 +1410,65 @@ class RadialGaborApparentMotion(GaborStimulus):
 
         while True:
             yield (blank, [0])
+
+
+class NaturalImage(TopographicaBasedVisualStimulus):
+    """
+    A visual stimulus consisting of a static image, followed by a blank screen
+    with background luminance.
+    """
+
+    size = SNumber(
+        degrees, doc="The length of the longer axis of the image in visual degrees"
+    )
+    image_path = SString(doc="Path to the image file.")
+    image_duration = SNumber(ms, doc="Duration of the image display.")
+    blank_duration = SNumber(ms, doc="Duration of the blank screen display.")
+    duration = SNumber(ms, doc="Image + blank screen display duration.")
+
+    def __init__(self, **params):
+        TopographicaBasedVisualStimulus.__init__(self, **params)
+        assert (
+            self.image_duration / self.frame_duration
+        ) % 1.0 == 0.0, (
+            "The duration of image presentation should be multiple of frame duration."
+        )
+        assert (
+            (self.duration - self.image_duration) / self.frame_duration
+        ) % 1.0 == 0.0, (
+            "The duration of blank presentation should be multiple of frame duration."
+        )
+
+    def frames(self):
+        self.pattern_sampler = imagen.image.PatternSampler(
+            size_normalization="fit_longest",
+            whole_pattern_output_fns=[MaximumDynamicRange()],
+        )
+
+        img = imagen.image.FileImage(
+            filename=self.image_path,
+            x=0,
+            y=0,
+            orientation=0,
+            xdensity=self.density,
+            ydensity=self.density,
+            size=self.size,
+            bounds=BoundingBox(
+                points=(
+                    (-self.size_x / 2, -self.size_y / 2),
+                    (self.size_x / 2, self.size_y / 2),
+                )
+            ),
+            scale=2 * self.background_luminance,
+            pattern_sampler=self.pattern_sampler,
+        )
+
+        image = img()
+        blank = image * 0 + self.background_luminance
+        for i in range(int(self.image_duration / self.frame_duration)):
+            yield (image, [i])
+
+        for i in range(
+            int((self.duration - self.image_duration) / self.frame_duration)
+        ):
+            yield (blank, [i])

@@ -22,6 +22,7 @@ class MapDependentModularConnectorFunction(ModularConnectorFunction):
     """
     required_parameters = ParameterSet({
         'map_location': str,  # It has to point to a file containing a single pickled 2d numpy array, containing values in the interval [0..1].
+        'map_stretch': float,  # Defines the stretch to apply to the map, allowing effectively to only use a portion of the map. Should be greater than 1
         'sigma': float,  # How sharply does the wieght fall off with the increasing distance between the map values (exp(-0.5*(distance/sigma)*2)/(sigma*sqrt(2*pi)))
         'periodic' : bool, # if true, the values in map will be treated as periodic (and consequently the distance between two values will be computed as circular distance).
     })
@@ -32,11 +33,11 @@ class MapDependentModularConnectorFunction(ModularConnectorFunction):
         t_size = target.size_in_degrees()
         f = open(self.parameters.map_location, 'rb')
         mmap = pickle.load(f, encoding="latin1")
-        coords_x = numpy.linspace(-t_size[0]/2.0,
-                                  t_size[0]/2.0,
+        coords_x = numpy.linspace(-t_size[0]*self.parameters.map_stretch/2.0,
+                                  t_size[0]*self.parameters.map_stretch/2.0,
                                   numpy.shape(mmap)[0])
-        coords_y = numpy.linspace(-t_size[1]/2.0,
-                                  t_size[1]/2.0,
+        coords_y = numpy.linspace(-t_size[1]*self.parameters.map_stretch/2.0,
+                                  t_size[1]*self.parameters.map_stretch/2.0,
                                   numpy.shape(mmap)[1])
         # x is the first axis of the orientation map, so after flatten()
         # it has to stay constant for the length of the first row
