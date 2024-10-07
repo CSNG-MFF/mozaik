@@ -1918,7 +1918,7 @@ class ExcitatoryConductanceGenerator(Analysis):
     required_parameters = ParameterSet({
         'excitatory_receptors': list,
         'replace_if_exists': bool,
-    })      
+    })
     def perform_analysis(self):
 
         for sheet in self.datastore.sheets():
@@ -1986,7 +1986,7 @@ class InhibitoryConductanceGenerator(Analysis):
     required_parameters = ParameterSet({ 
         'inhibitory_receptors' : list,
         'replace_if_exists': bool,
-    })      
+    })
 
     def perform_analysis(self):
         for sheet in self.datastore.sheets():
