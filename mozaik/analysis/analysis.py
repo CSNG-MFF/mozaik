@@ -1916,7 +1916,7 @@ class ExcitatoryConductanceGenerator(Analysis):
       """
 
     required_parameters = ParameterSet({
-        'excitatory_receptors': list,  
+        'excitatory_receptors': list,
         'replace_if_exists': bool,
     })      
     def perform_analysis(self):
