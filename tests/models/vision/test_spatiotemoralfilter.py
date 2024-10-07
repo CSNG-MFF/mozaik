@@ -91,6 +91,7 @@ params = {
                         "tau_syn_E": 1.5,
                         "tau_syn_I": 10.0,
                     },
+                    "receptors":None,
                     "initial_values": {"v": -70.0},
                 },
                 "noise": {"mean": 0.0, "stdev": 0.0},

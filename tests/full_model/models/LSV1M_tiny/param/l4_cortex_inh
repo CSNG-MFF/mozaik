@@ -28,6 +28,7 @@
                             'delta_T' : ref('sheets.l4_cortex_exc.params.cell.params.delta_T'),
                             'tau_w' : ref('sheets.l4_cortex_exc.params.cell.params.tau_w'),
                         }, 
+                        'receptors':None,
                         'initial_values': {
                                     'v': PyNNDistribution(name='uniform',low=-70,high=-51),
                                 },
