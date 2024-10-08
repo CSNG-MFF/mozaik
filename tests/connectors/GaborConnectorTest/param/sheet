@@ -42,6 +42,7 @@
     },
     
     'AfferentConnection': {
+        'target_synapses': 'excitatory',
         'aspect_ratio':            0.4,
         'size':                    0.17,
         'orientation_preference':  PyNNDistribution(name='uniform',low=0,high=3.141592653589793),
