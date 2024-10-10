@@ -87,8 +87,9 @@
         'num_samples_expression' : '',
         'base_weight': 0.00016,
 	'annotation_reference_name' : 'aff_samples',
+        'samples_coeff': 1,
         'num_samples' : ref('sheets.l4_cortex_exc.K')*4.0/5.0*(1-ref('sheets.l4_cortex_exc.feedback_conn_ratio')),
-            'local_module': None,
+        'local_module': None,
 },
     
     
@@ -130,6 +131,7 @@
         'num_samples_expression' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.num_samples_expression'),
         'base_weight': 0.00022,
 	'annotation_reference_name' : 'aff_samples',
+        'samples_coeff': 1,
         'num_samples' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.num_samples') * ref('sheets.l4_cortex_exc.inhibitory_connection_ratio'),
         'local_module': None,
     },

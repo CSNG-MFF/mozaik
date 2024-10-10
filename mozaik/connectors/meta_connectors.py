@@ -196,6 +196,7 @@ class GaborConnector(BaseComponent):
                              'local_module' : self.parameters.local_module,
                              'short_term_plasticity' : self.parameters.short_term_plasticity,
                              'base_weight' : self.parameters.base_weight,
+                             'samples_coeff': 1,
                              'num_samples' : 0,
                              'annotation_reference_name' : 'aff_samples',
                           })

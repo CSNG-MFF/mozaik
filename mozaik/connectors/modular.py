@@ -428,6 +428,7 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(VariableNumSam
         'num_samples': int,
         'base_weight' : PyNNDistribution,
         'annotation_reference_name': str,
+        'samples_coeff': float,
     })
 
     def _connect(self):
@@ -452,7 +453,7 @@ class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(VariableNumSam
             for i in range(len(indices)):
                 samples = self.target.get_neuron_annotation(
                     indices[i], self.parameters.annotation_reference_name
-                )
+                ) * self.parameters.samples_coeff
                 weights = self._obtain_weights(indices[i],seeds[i])
                 # If a local module is defined, update the weights accordingly
                 if self.parameters.local_module:
