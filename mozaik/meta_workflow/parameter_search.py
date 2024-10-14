@@ -249,8 +249,9 @@ def parameter_search_run_script_distributed_slurm(simulation_name,master_results
     core_number : int
                 How many cores to reserve per process.
     """
-    combinations = json.load(master_results_dir + '/parameter_combinations.json')
-    
+    with open(master_results_dir + '/parameter_combinations.json', 'r', encoding='utf-8') as f:
+        combinations = json.load(f)
+
     # first check whether all parameter combinations contain the same parameter names
     assert len(set([tuple(set(comb.keys())) for comb in combinations])) == 1 , "The parameter search didn't occur over a fixed set of parameters"
     
@@ -292,7 +293,8 @@ def parameter_search_run_script_distributed_slurm_IoV(simulation_name,master_res
     core_number : int
                 How many cores to reserve per process.
     """
-    combinations = json.load(master_results_dir + '/parameter_combinations.json')
+    with open(master_results_dir + '/parameter_combinations.json', 'r', encoding='utf-8') as f:
+        combinations = json.load(f)
     
     # first check whether all parameter combinations contain the same parameter names
     assert len(set([tuple(set(comb.keys())) for comb in combinations])) == 1 , "The parameter search didn't occur over a fixed set of parameters"
@@ -333,9 +335,8 @@ def parameter_search_run_script_distributed_slurm_UK(simulation_name,master_resu
     core_number : int
                 How many cores to reserve per process.
     """
-    f = open(master_results_dir+'/parameter_combinations','rb')
-    combinations = pickle.load(f)
-    f.close()
+    with open(master_results_dir + '/parameter_combinations.json', 'r', encoding='utf-8') as f:
+        combinations = json.load(f)
     
     # first check whether all parameter combinations contain the same parameter names
     assert len(set([tuple(set(comb.keys())) for comb in combinations])) == 1 , "The parameter search didn't occur over a fixed set of parameters"
