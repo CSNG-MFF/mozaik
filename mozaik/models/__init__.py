@@ -61,6 +61,10 @@ class Model(BaseComponent):
                         Defines the sheet to monitor and the threshold of mean rate over which the activity is 
                         considered too high and for which the simulation should be cancelled.
                         None if no monitoring
+    steps_get_data: int
+                If None, gets all the data of a given segment at once.
+                Otherwise, defines the number of neurons to get data from after each step
+                This is a solution to the fact that gather can overflow if we get too much data at once
     """
 
     required_parameters = ParameterSet({
@@ -82,6 +86,7 @@ class Model(BaseComponent):
                                               #                 sheet_name : str,
                                               #                 threshold : float,
                                               #            }
+        'steps_get_data': int,
     })
 
     def __init__(self, sim, num_threads, parameters):

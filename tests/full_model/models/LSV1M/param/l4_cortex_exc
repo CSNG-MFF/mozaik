@@ -89,7 +89,8 @@
         'base_weight': 0.00016,
 	'annotation_reference_name' : 'aff_samples',
         'num_samples' : ref('sheets.l4_cortex_exc.K')*4.0/5.0*(1-ref('sheets.l4_cortex_exc.feedback_conn_ratio')),
-            'local_module': None,
+        'self_connections': True,
+        'local_module': None,
 },
     
     
@@ -133,6 +134,7 @@
         'base_weight': 0.00022,
 	'annotation_reference_name' : 'aff_samples',
         'num_samples' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.num_samples') * ref('sheets.l4_cortex_exc.inhibitory_connection_ratio'),
+        'self_connections': ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.self_connections'),
         'local_module': None,
     },
 
@@ -140,50 +142,49 @@
     'AfferentVar' : 25,
 
     'AfferentConnection': {
-            'aspect_ratio':            0.4,
-            'size':                    0.17,
-            'orientation_preference':  PyNNDistribution(name='uniform',low=0,high=3.141592653589793),
-            'phase':                   PyNNDistribution(name='uniform',low=0,high=6.283185307179586),
-            'frequency':               0.8,
+        'aspect_ratio':            0.4,
+        'size':                    0.17,
+        'orientation_preference':  PyNNDistribution(name='uniform',low=0,high=3.141592653589793),
+        'phase':                   PyNNDistribution(name='uniform',low=0,high=6.283185307179586),
+        'frequency':               0.8,
 
-            'delay_expression': "f1",    
-            'delay_functions' : {
-                                    "f1" : {
-                                         'component' : 'mozaik.connectors.modular_connector_functions.PyNNDistributionConnectorFunction',
-                                         'params' : {
-                                                                'pynn_distribution': PyNNDistribution(name='uniform',low=1.4,high=2.4)
-                                                    }
-                                    }
-                                },
-            'topological' : True,
-	    
-            'or_map' : True,
-	    'or_map_location' : './or_map_new_6x6',
-	    'or_map_stretch' : 1,
-            'phase_map' : False,
-            'phase_map_location' : './phase_map',
-	    'rf_jitter' : 0,
-	    'off_bias' : 1.0,
-            'gauss_coefficient' : 0.1,
-            'base_weight' : 0.0016,
-            'num_samples' : {
-                     'class_name': 'PyNNDistribution',
-                     'params': {
-                             'name': 'uniform',
-                             'low': ref('sheets.l4_cortex_exc.AfferentMean') - ref('sheets.l4_cortex_exc.AfferentVar'),
-                             'high': ref('sheets.l4_cortex_exc.AfferentMean') + ref('sheets.l4_cortex_exc.AfferentVar'),
-                         },
-                 },
-            'num_samples_functions' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.num_samples_functions'),
-            'num_samples_expression' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.num_samples_expression'),
+        'delay_expression': "f1",    
+        'delay_functions' : {
+                                "f1" : {
+                                     'component' : 'mozaik.connectors.modular_connector_functions.PyNNDistributionConnectorFunction',
+                                     'params' : {
+                                                            'pynn_distribution': PyNNDistribution(name='uniform',low=1.4,high=2.4)
+                                                }
+                                }
+                            },
+        'topological' : True,
+	
+        'or_map' : True,
+	'or_map_location' : './or_map_new_6x6',
+	'or_map_stretch' : 1,
+        'phase_map' : False,
+        'phase_map_location' : './phase_map',
+	'rf_jitter' : 0,
+	'off_bias' : 1.0,
+        'gauss_coefficient' : 0.1,
+        'base_weight' : 0.0016,
+        'num_samples' : {
+                 'class_name': 'PyNNDistribution',
+                 'params': {
+                         'name': 'uniform',
+                         'low': ref('sheets.l4_cortex_exc.AfferentMean') - ref('sheets.l4_cortex_exc.AfferentVar'),
+                         'high': ref('sheets.l4_cortex_exc.AfferentMean') + ref('sheets.l4_cortex_exc.AfferentVar'),
+                     },
+             },
+        'num_samples_functions' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.num_samples_functions'),
+        'num_samples_expression' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.num_samples_expression'),
 
-            'short_term_plasticity': {
-				            'U': 0.75, 
-				            'tau_rec': 100.0, 
-	 		                'tau_psc': 3.0,
-				            'tau_fac': 0.0,
-                        },
-
+        'short_term_plasticity': {
+	    		            'U': 0.75, 
+	    		            'tau_rec': 100.0, 
+	     	                'tau_psc': 3.0,
+	    		            'tau_fac': 0.0,
+                    },
 
         'local_module': None,
     }        
