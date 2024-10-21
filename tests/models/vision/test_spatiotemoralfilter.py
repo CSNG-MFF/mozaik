@@ -108,6 +108,7 @@ params = {
     "pynn_seed": 936395,
     "mpi_seed": 1023,
     "explosion_monitoring": None,
+    'steps_get_data': 0,
 }
 
 base_stim_params = {
