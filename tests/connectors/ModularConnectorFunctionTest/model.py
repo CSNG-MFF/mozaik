@@ -31,4 +31,3 @@ class ModelMapDependentModularConnectorFunction(Model):
             sheet,
             self.parameters.sheets.sheet.RecurrentConnection,
         ).connect()
-
