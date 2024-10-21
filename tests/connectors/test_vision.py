@@ -33,7 +33,9 @@ class TestModularConnector:
 
         mozaik.setup_mpi(**p)
         parameters = MozaikExtendedParameterSet("param/defaults")
-        parameters_selfconnections = MozaikExtendedParameterSet("param_selfconnections/defaults")
+        parameters_selfconnections = MozaikExtendedParameterSet(
+            "param_selfconnections/defaults"
+        )
 
         import pyNN.nest as sim
         from tests.connectors.MapDependentModularConnectorFunctionTest.model import (
@@ -43,19 +45,21 @@ class TestModularConnector:
         model = ModelMapDependentModularConnectorFunction(sim, 1, parameters)
         pos = model.sheets["sheet"].pop.positions
         model_selfconnections = ModelMapDependentModularConnectorFunction(
-            sim,
-            1,
-            parameters_selfconnections 
+            sim, 1, parameters_selfconnections
         )
 
-        cls.weights = model.connectors["RecurrentConnection"].proj.get('weight', format='array', gather=True)
-        cls.weights_selfconnections = model_selfconnections.connectors["RecurrentConnection"].proj.get('weight', format='array', gather=True)
+        cls.weights = model.connectors["RecurrentConnection"].proj.get(
+            "weight", format="array", gather=True
+        )
+        cls.weights_selfconnections = model_selfconnections.connectors[
+            "RecurrentConnection"
+        ].proj.get("weight", format="array", gather=True)
         os.chdir("../../../")
 
     def test_no_self_connections(self):
         cnt = 0
         for i in numpy.arange(self.weights.shape[0]):
-            if not numpy.isnan(self.weights[i,i]):
+            if not numpy.isnan(self.weights[i, i]):
                 cnt += 1
                 break
         assert cnt == 0
@@ -63,12 +67,11 @@ class TestModularConnector:
     def test_self_connections(self):
         cnt = 0
         for i in numpy.arange(self.weights_selfconnections.shape[0]):
-            if not numpy.isnan(self.weights_selfconnections[i,i]):
+            if not numpy.isnan(self.weights_selfconnections[i, i]):
                 cnt += 1
         assert cnt > 0
+
     pass
-
-
 
 
 class TestMapDependentModularConnectorFunction:
@@ -713,4 +716,3 @@ class TestModularNumSamples:
                 cnt += 1
 
         assert cnt == len(self.surround)
-
