@@ -3,6 +3,7 @@ from mozaik.controller import Global
 from mozaik.experiments import Experiment
 from parameters import ParameterSet
 import mozaik.stimuli.vision.topographica_based as topo
+import mozaik.stimuli.vision.visual_stimulus as vs
 import numpy
 from mozaik.stimuli import InternalStimulus
 from mozaik.tools.distribution_parametrization import ParameterWithUnitsAndPeriod, MozaikExtendedParameterSet
@@ -2172,6 +2173,61 @@ class MeasureNaturalImages(VisualExperiment):
                         density=self.density,
                         trial=k,
                         size=self.parameters.size,
+                    )
+                )
+
+    def do_analysis(self, data_store):
+        pass
+
+
+class MeasurePixelMovieFromFile(VisualExperiment):
+    """
+    Present a sequence of images loaded from a directory, in alphabetical order of
+    image filenames, interleaved by blank stimulation.
+
+    Parameters
+    ----------
+    model : Model
+            The model on which to execute the experiment.
+
+    Other parameters
+    ----------------
+    duration : float
+            The duration of single presentation of the stimulus.
+
+    movie_path : str
+            Path to the directory containing the images.
+
+    movie_name : str
+            Name of the directory containing the images.
+
+    num_trials : int
+            Number of trials each each stimulus is shown.
+    """
+
+    required_parameters = ParameterSet(
+        {
+            "duration": float,
+            "movie_path": str,
+            "movie_name": str,
+            "num_trials": int,
+        }
+    )
+    def generate_stimuli(self):
+        for k in range(0, self.parameters.num_trials):
+                self.stimuli.append(
+                    vs.PixelMovieFromFile(
+                        frame_duration=self.frame_duration,
+                        movie_path=self.parameters.movie_path,
+                        movie_name=self.parameters.movie_name,
+                        duration=self.parameters.duration,
+                        size_x=self.model.visual_field.size_x,
+                        size_y=self.model.visual_field.size_y,
+                        location_x=0.0,
+                        location_y=0.0,
+                        background_luminance=self.background_luminance,
+                        density=self.density,
+                        trial=k
                     )
                 )
 
