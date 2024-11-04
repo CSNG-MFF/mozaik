@@ -930,7 +930,9 @@ class StandardStyleLinePlot(StandardStyle):
         self.parameters["linewidth"] = 1
 
         if error != None:
-           assert numpy.shape(error) == numpy.shape(y)
+            assert len(y) == len(error)
+            for yy, err in zip(y,error):
+                assert numpy.shape(err) == numpy.shape(yy)
 
         assert len(x) == len(y)
         if labels != None:

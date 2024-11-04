@@ -1454,7 +1454,7 @@ class NauhausAnalysis(Analysis):
             idex_coords, idey_coords = numpy.meshgrid(numpy.arange(edx,nx,e_points_spacing),numpy.arange(edy,ny,e_points_spacing))
 
             # Looping over `n_neurons` randomly selected neurons
-            for i,(spt,x,y,orr,idd) in enumerate(zip(numpy.array(spikes)[idx_chosen],numpy.array(xs)[idx_chosen],numpy.array(ys)[idx_chosen],numpy.array(orientation_values)[idx_chosen],ids_chosen)):
+            for i,(spt,x,y,orr,idd) in enumerate(zip(numpy.array(spikes,dtype=object)[idx_chosen],numpy.array(xs)[idx_chosen],numpy.array(ys)[idx_chosen],numpy.array(orientation_values)[idx_chosen],ids_chosen)):
                 x_cs = x * magnification
                 y_cs = y * magnification
 
