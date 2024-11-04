@@ -205,9 +205,9 @@ class Plotting(ParametrizedObject):
 
 
     @staticmethod
-    def update_animation_function(b,self):
+    def update_animation_function(frame,self):
         for auf,parent in self.animation_update_functions:
-            auf(parent)
+            auf(parent,frame)
 
 
 
@@ -1046,9 +1046,7 @@ class RetinalInputMovie(Plotting):
         
         
     def subplot(self, subplotspec):
-        return LinePlot(function=self._ploter,
-                 length=len(self.retinal_input)
-                 ).make_line_plot(subplotspec)
+        return LinePlot(function=self._ploter,length=len(self.retinal_input)).make_line_plot(subplotspec)
 
     def _ploter(self, idx, gs):
         stimulus = MozaikParametrized.idd(self.st[idx])
