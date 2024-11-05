@@ -169,7 +169,7 @@ There are additional useful options for pytests that you can use during developm
 
         pytest -s
 
-Due to the impossibility of using more than 2 cores in Github actions, the test :code:`test_mozaik_rng_mpi7` invoking 7 MPI processes cannot be ran there. It is therefore the responsibility of the contributor to run it locally, by following these steps:
+Due to the impossibility of using more than 2 cores in Github actions, the test :code:`test_mozaik_rng_mpi7` invoking 7 MPI processes cannot be ran there. It is therefore the responsibility of the contributor to run it locally before pushing changes, by following these steps:
 
     - Modify the sbatch_test_RNG_MPI7.sh sbatch script to include your virtual environment after the :code:`source` command.
 
