@@ -192,6 +192,7 @@ class GaborConnector(BaseComponent):
                              'weight_expression' : 'f1', # a python expression that can use variables f1..fn where n is the number of functions in weight_functions, and fi corresponds to the name given to a ModularConnectorFunction in weight_function ParameterSet. It determines how are the weight functions combined to obtain the weights
                              'delay_expression' : self.parameters.delay_expression,
                              'num_samples_expression' : self.parameters.num_samples_expression,
+                             'self_connections': False,
                              'local_module' : self.parameters.local_module,
                              'short_term_plasticity' : self.parameters.short_term_plasticity,
                              'base_weight' : self.parameters.base_weight,

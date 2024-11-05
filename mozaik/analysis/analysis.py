@@ -210,9 +210,6 @@ class FiringRate(Analysis):
 
 
 
-
-
-
 class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
     """
     Calculates a preference and selectvitiy tuning of a periodic variable via vector average method.
@@ -419,7 +416,7 @@ class TrialToTrialCrossCorrelationOfAnalogSignalList(Analysis):
                 st = str(st)
                 asl_ass = []
                 for idd in self.parameters.neurons:
-                    asl_cross = self.cross_correlation([ads.get_asl_by_id(idd).magnitude[self.parameters.window_min:self.parameters.window_max] for ads in dsv.get_analysis_result()])                                         
+                    asl_cross = self.cross_correlation([ads.get_asl_by_id(idd).magnitude[self.parameters.window_min:self.parameters.window_max] for ads in dsv.get_analysis_result()])
                     asl_ass.append(NeoAnalogSignal(asl_cross,t_start=-dsv.get_analysis_result()[0].get_asl_by_id(idd).duration,
                                          sampling_period=dsv.get_analysis_result()[0].get_asl_by_id(idd).sampling_period,
                                          units=qt.dimensionless))        
@@ -1301,14 +1298,13 @@ class TemporalSTD(Analysis):
                   for seg in segs:
                       for a in seg.analogsignals:
                           index_window = int(a.sampling_rate * self.parameters.time_window)
-                          if a.name =='v' and self.parameters.vm:
+                          if (a.name =='v' or a.name == 'V_m') and self.parameters.vm:
                               vm_std.append([numpy.mean(pandas.Series(a[:,a.annotations['source_ids'].tolist().index(nid)].reshape(-1).magnitude).rolling(index_window).std(ddof=0)) for nid in vm_ids])
 
-                          if a.name =='gsyn_exc' and self.parameters.cond_exc:
-                              isyn_std.append([numpy.mean(pandas.Series(a[:,a.annotations['source_ids'].tolist().index(nid)].reshape(-1).magnitude).rolling(index_window).std(ddof=0)) for nid in vm_ids])
-
-                          if a.name =='gsyn_inh' and self.parameters.cond_inh:
-                              isyn_std.append([numpy.mean(pandas.Series(a[:,a.annotations['source_ids'].tolist().index(nid)].reshape(-1).magnitude).rolling(index_window).std(ddof=0)) for nid in vm_ids])
+                          if (a.name =='gsyn_exc'  or a.name == 'g_ex') and self.parameters.cond_exc:
+                              esyn_std.append([numpy.mean(pandas.Series(a[:,a.annotations['source_ids'].tolist().index(nid)].reshape(-1).magnitude).rolling(index_window).std(ddof=0)) for nid in esyn_ids])
+                          if (a.name =='gsyn_inh'  or a.name == 'g_in') and self.parameters.cond_inh:
+                              isyn_std.append([numpy.mean(pandas.Series(a[:,a.annotations['source_ids'].tolist().index(nid)].reshape(-1).magnitude).rolling(index_window).std(ddof=0)) for nid in isyn_ids])
 
                   if self.parameters.vm:
                       vm_std_mean = numpy.mean(vm_std, axis = 0)
@@ -1320,7 +1316,7 @@ class TemporalSTD(Analysis):
                       esyn_std_mean = numpy.mean(esyn_std, axis = 0)
                       esyn_std_std = numpy.std(esyn_std, axis = 0)
                       self.datastore.full_datastore.add_analysis_result(PerNeuronValue(esyn_std_mean,esyn_ids,segs[0].get_esyn(esyn_ids[0]).units,value_name = 'Temporal STD of ECond',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))
-                      self.datastore.full_datastore.add_analysis_result(PerNeuronValue(esyn_std_std,esyn_ids,segs[0].get_esyn(esyn_ids[0]).units,value_name = 'STD of Temporal STD of Econd',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))
+                      self.datastore.full_datastore.add_analysis_result(PerNeuronValue(esyn_std_std,esyn_ids,segs[0].get_esyn(esyn_ids[0]).units,value_name = 'STD of Temporal STD of ECond',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))
 
                   if self.parameters.cond_inh:
                       isyn_std_mean = numpy.mean(isyn_std, axis = 0)
@@ -1559,7 +1555,7 @@ class AnalogSignal_PerNeuronBetweenSignalCorrelation(Analysis):
                    vs =[]
                    for i,(a1,a2) in enumerate(zip(asl1.get_asl_by_id(asl1.ids),asl2.get_asl_by_id(asl1.ids))):
                        from scipy.signal import savgol_filter
-                       if i == 13:
+                       if False:
                          import pylab
                          pylab.figure()
                          pylab.plot(savgol_filter(a1.magnitude.flatten()[100:],501,2),'b',savgol_filter(a2.rescale(a1.units).magnitude.flatten()[100:],501,2),'r')

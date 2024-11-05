@@ -35,6 +35,10 @@ from numba import jit
 
 from builtins import zip
 
+from mpi4py import MPI
+
+mpi_comm = MPI.COMM_WORLD
+
 
 logger = mozaik.getMozaikLogger()
 
@@ -160,12 +164,16 @@ class BackgroundActivityBombardment(DirectStimulator):
         if not self.sheet.parameters.mpi_safe:
             from pyNN.nest import native_cell_type        
             if (self.parameters.exc_firing_rate != 0 or self.parameters.exc_weight != 0):
-                self.np_exc = self.sheet.sim.Population(1, native_cell_type("poisson_generator"),{'rate': 0})
-                self.sheet.sim.Projection(self.np_exc, self.sheet.pop,self.sheet.sim.AllToAllConnector(),synapse_type=exc_syn,receptor_type='excitatory')
+                self.np_exc = self.sheet.sim.Population(len(self.sheet.pop), native_cell_type("poisson_generator"),{'rate': 0})
+                self.sheet.sim.Projection(self.np_exc, self.sheet.pop,self.sheet.sim.OneToOneConnector(),synapse_type=exc_syn,receptor_type='excitatory')
+                #self.np_exc = self.sheet.sim.Population(1, native_cell_type("poisson_generator"),{'rate': 0})
+                #self.sheet.sim.Projection(self.np_exc, self.sheet.pop,self.sheet.sim.AllToAllConnector(),synapse_type=exc_syn,receptor_type='excitatory')
 
             if (self.parameters.inh_firing_rate != 0 or self.parameters.inh_weight != 0):
-                self.np_inh = self.sheet.sim.Population(1, native_cell_type("poisson_generator"),{'rate': 0})
-                self.sheet.sim.Projection(self.np_inh, self.sheet.pop,self.sheet.sim.AllToAllConnector(),synapse_type=inh_syn,receptor_type='inhibitory')
+                self.np_inh = self.sheet.sim.Population(len(self.sheet.pop), native_cell_type("poisson_generator"),{'rate': 0})
+                self.sheet.sim.Projection(self.np_exc, self.sheet.pop,self.sheet.sim.OneToOneConnector(),synapse_type=exc_syn,receptor_type='excitatory')
+                #self.np_inh = self.sheet.sim.Population(1, native_cell_type("poisson_generator"),{'rate': 0})
+                #self.sheet.sim.Projection(self.np_inh, self.sheet.pop,self.sheet.sim.AllToAllConnector(),synapse_type=inh_syn,receptor_type='inhibitory')
         
         else:
             if (self.parameters.exc_firing_rate != 0 or self.parameters.exc_weight != 0):
@@ -182,8 +190,11 @@ class BackgroundActivityBombardment(DirectStimulator):
 
     def prepare_stimulation(self,duration,offset):
         if not self.sheet.parameters.mpi_safe:
-           self.np_exc[0].set_parameters(rate=self.parameters.exc_firing_rate)
-           self.np_inh[0].set_parameters(rate=self.parameters.inh_firing_rate)
+            for i in range(len(self.np_exc)):
+                if self.np_exc._mask_local[i]:
+                    self.np_exc[i].set_parameters(rate=self.parameters.exc_firing_rate)
+                if self.np_inh._mask_local[i]:
+                    self.np_inh[i].set_parameters(rate=self.parameters.inh_firing_rate)
         else:
            if (self.parameters.exc_firing_rate != 0 or self.parameters.exc_weight != 0):
                 for j,i in enumerate(numpy.nonzero(self.sheet.pop._mask_local)[0]):
@@ -201,8 +212,11 @@ class BackgroundActivityBombardment(DirectStimulator):
         
     def inactivate(self,offset):        
         if not self.sheet.parameters.mpi_safe:
-           self.np_exc[0].set_parameters(rate=0)
-           self.np_inh[0].set_parameters(rate=0)
+            for i in range(len(self.np_exc)):
+                if self.np_exc[i]._mask_local:
+                    self.np_exc[i].set_parameters(rate=0)
+                if self.np_inh[i]._mask_local:
+                    self.np_inh[i].set_parameters(rate=0)
             
 
 class Kick(DirectStimulator):

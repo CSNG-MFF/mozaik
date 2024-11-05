@@ -72,6 +72,7 @@
         'num_samples_expression' : '',
         'base_weight': 0.0005,
 	'num_samples' : 200,
+        'self_connections': True,
         'local_module': {
                             'in_radius': 0.1,
                             'out_radius': 0.3,
