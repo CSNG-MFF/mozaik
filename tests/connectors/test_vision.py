@@ -21,6 +21,59 @@ import pytest
 np.random.seed(1024)  # Make random tests deterministic
 
 
+class TestModularConnector:
+    def setup_class(cls):
+        os.chdir("tests/connectors/ModularConnectorFunctionTest/")
+        parameters = MozaikExtendedParameterSet("param/defaults")
+        p = OrderedDict()
+        if "mozaik_seed" in parameters:
+            p["mozaik_seed"] = parameters["mozaik_seed"]
+        if "pynn_seed" in parameters:
+            p["pynn_seed"] = parameters["pynn_seed"]
+
+        mozaik.setup_mpi(**p)
+        parameters = MozaikExtendedParameterSet("param/defaults")
+        parameters_selfconnections = MozaikExtendedParameterSet(
+            "param_selfconnections/defaults"
+        )
+
+        import pyNN.nest as sim
+        from tests.connectors.MapDependentModularConnectorFunctionTest.model import (
+            ModelMapDependentModularConnectorFunction,
+        )
+
+        model = ModelMapDependentModularConnectorFunction(sim, 1, parameters)
+        pos = model.sheets["sheet"].pop.positions
+        model_selfconnections = ModelMapDependentModularConnectorFunction(
+            sim, 1, parameters_selfconnections
+        )
+
+        cls.weights = model.connectors["RecurrentConnection"].proj.get(
+            "weight", format="array", gather=True
+        )
+        cls.weights_selfconnections = model_selfconnections.connectors[
+            "RecurrentConnection"
+        ].proj.get("weight", format="array", gather=True)
+        os.chdir("../../../")
+
+    def test_no_self_connections(self):
+        cnt = 0
+        for i in numpy.arange(self.weights.shape[0]):
+            if not numpy.isnan(self.weights[i, i]):
+                cnt += 1
+                break
+        assert cnt == 0
+
+    def test_self_connections(self):
+        cnt = 0
+        for i in numpy.arange(self.weights_selfconnections.shape[0]):
+            if not numpy.isnan(self.weights_selfconnections[i, i]):
+                cnt += 1
+        assert cnt > 0
+
+    pass
+
+
 class TestMapDependentModularConnectorFunction:
     def setup_class(cls):
         os.chdir("tests/connectors/MapDependentModularConnectorFunctionTest/")

@@ -51,7 +51,7 @@ ____________
  
 Now you can install all other dependencies in this protected environment::
 
-  pip3 install numpy==1.23.5 scipy mpi4py matplotlib quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.12.0 cython psutil future requests elephant pytest-xdist pytest-timeout junitparser numba numpyencoder sphinx imageio
+  pip3 install scipy mpi4py matplotlib quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.12.0 cython psutil future requests elephant pytest-xdist pytest-timeout junitparser numba numpyencoder sphinx imageio scikit-image
 
 Next we will manually install several packages. It is probably the best if you create a separate directory in an appropriate
 place, where you will download and install the packages from.
@@ -169,7 +169,7 @@ There are additional useful options for pytests that you can use during developm
 
         pytest -s
 
-Due to the impossibility of using more than 2 cores in Github actions, the test :code:`test_mozaik_rng_mpi7` invoking 7 MPI processes cannot be ran there. It is therefore necessary to run it locally, by following these steps:
+Due to the impossibility of using more than 2 cores in Github actions, the test :code:`test_mozaik_rng_mpi7` invoking 7 MPI processes cannot be ran there. It is therefore the responsibility of the contributor to run it locally before pushing changes, by following these steps:
 
     - Modify the sbatch_test_RNG_MPI7.sh sbatch script to include your virtual environment after the :code:`source` command.
 

@@ -254,15 +254,47 @@ class Sheet(BaseComponent):
         segment : Segment
                 The segment holding all the recorded data. See NEO documentation for detail on the format.
         """
-
-        try:
-            if self.parameters.cell.native_nest:
-                block = self.pop.get_data(['spikes', 'V_m', 'g_ex', 'g_in'],clear=True)
-            else:
-                block = self.pop.get_data(['spikes', 'v', 'gsyn_exc', 'gsyn_inh'],clear=True)
-        except (NothingToWriteError, errmsg):
-            logger.debug(errmsg)
         
+        block = None
+        steps = self.model.parameters.steps_get_data 
+        if steps:
+            for i in range(0,len(self.pop),steps):
+                try:
+                    if self.parameters.cell.native_nest:
+                        if i + steps < len(self.pop):
+                            b = self.pop[i:i+steps].get_data(['spikes', 'V_m', 'g_ex', 'g_in'],clear=False)
+                        else:
+                            b = self.pop[i:i+steps].get_data(['spikes', 'V_m', 'g_ex', 'g_in'],clear=True)
+                    else:
+                        if i + steps < len(self.pop):
+                            b = self.pop[i:i+steps].get_data(['spikes', 'v', 'gsyn_exc', 'gsyn_inh'],clear=False)
+                        else:
+                            b = self.pop[i:i+steps].get_data(['spikes', 'v', 'gsyn_exc', 'gsyn_inh'],clear=True)
+                except (NothingToWriteError, errmsg):
+                    logger.debug(errmsg)
+                if (mozaik.mpi_comm) and (mozaik.mpi_comm.rank == mozaik.MPI_ROOT):
+                    if block:
+                        # the following business with setting sig.segment is a workaround for a bug in Neo
+                        for seg, mseg in zip(b.segments, block.segments):
+                            for sig in seg.analogsignals:
+                                sig.segment = mseg
+                        block.merge(b)
+                    else:
+                        # the following business with setting sig.segment is a workaround for a bug in Neo
+                        for seg in b.segments:
+                            for sig in seg.analogsignals:
+                                sig.segment = seg
+                        block = b
+                mozaik.mpi_comm.barrier()
+        else:
+            try:
+                if self.parameters.cell.native_nest:
+                    block = self.pop.get_data(['spikes', 'V_m', 'g_ex', 'g_in'],clear=True)
+                else:
+                    block = self.pop.get_data(['spikes', 'v', 'gsyn_exc', 'gsyn_inh'],clear=True)
+            except (NothingToWriteError, errmsg):
+                logger.debug(errmsg)
+
         if (mozaik.mpi_comm) and (mozaik.mpi_comm.rank != mozaik.MPI_ROOT):
            return None
         s = block.segments[-1]
@@ -271,12 +303,12 @@ class Sheet(BaseComponent):
         # lets sort spike train so that it is ordered by IDs and thus hopefully
         # population indexes
         def key(a):
-            return a.annotations['source_id']    
+            return a.annotations['source_id']
 
         self.msc = numpy.mean([len(st)/(st.t_stop-st.t_start)*1000 for st in s.spiketrains])
         s.spiketrains = sorted(s.spiketrains, key=key)
 
-        if stimulus_duration != None:        
+        if stimulus_duration != None:
            for st in s.spiketrains:
                tstart = st.t_start
                st -= tstart
@@ -284,7 +316,7 @@ class Sheet(BaseComponent):
                st.t_start = 0 * pq.ms
            for i in range(0, len(s.analogsignals)):
                s.analogsignals[i].t_start = 0 * pq.ms
-       
+
         return s
 
     def mean_spike_count(self):

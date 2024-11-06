@@ -74,7 +74,7 @@
 
         'base_weight': 0.0005,
         'num_samples' : 200,
-        'self_connections': True,
+        'self_connections': False,
         'local_module': None,
     },
 }

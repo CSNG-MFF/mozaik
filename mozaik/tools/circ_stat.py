@@ -29,6 +29,39 @@ def angle_to_pi(array):
     """
     return (numpy.angle(array) + 4*pi) % (pi*2)
 
+def circ_len(matrix, weights=None, low=0, high=pi*2):
+    """
+    Circular length of matrix. Weighted if weights are not none.
+    Parameters
+    ----------
+
+    matrix : ndarray
+           Matrix of data for which the compute the circular mean.
+
+    weights : ndarray, optional
+            If not none, matrix of the same size as matrix. It will be used as weighting for the mean.
+
+    low, high : double, optional
+              The min and max values that will be mapped onto the periodic interval of (0, 2pi).
+
+    Returns
+    -------
+    R : float 
+            The circular length of the resulting vector.
+    """
+    # check whether matrix and weights are ndarrays
+    if weights is None:
+        weights = numpy.ones(matrix.shape)
+    assert isinstance(matrix,numpy.ndarray),'The matrix argument should be a numpy array'
+    assert isinstance(weights,numpy.ndarray),'The weights argument should be a numpy array'
+    assert matrix.shape == weights.shape,'matrix and weights should have the same dimensions'
+
+    # convert the periodic matrix to corresponding complex numbers
+    m = rad_to_complex((matrix - low)/(high - low) * pi*2)
+
+    R = numpy.abs(numpy.sum(m*weights)/numpy.sum(numpy.abs(weights)))
+
+    return R 
 
 def circ_mean(matrix, weights=None, axis=None, low=0, high=pi*2,
               normalize=False):
@@ -93,3 +126,26 @@ def circ_mean(matrix, weights=None, axis=None, low=0, high=pi*2,
 
     return a,b
     
+def circ_std(matrix, weights=None, low=0, high=pi*2):
+    """
+    Circular std of matrix. Weighted if weights are not none.
+    Parameters
+    ----------
+
+    matrix : ndarray
+           Matrix of data for which the compute the circular mean.
+
+    weights : ndarray, optional
+            If not none, matrix of the same size as matrix. It will be used as weighting for the mean.
+
+    low, high : double, optional
+              The min and max values that will be mapped onto the periodic interval of (0, 2pi).
+
+    Returns
+    -------
+    std : float 
+            The circular std of the matrix input.
+    """
+    R = circ_len(matrix, weights, low, high)
+    std = numpy.sqrt(-2 * numpy.log(R))
+    return std * (high-low)/(2*pi) 

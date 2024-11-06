@@ -20,12 +20,10 @@
                             'tau_refrac': 0.5,
                             'tau_m': ref('sheets.l4_cortex_inh.params.cell.params.tau_m'),
                             'cm': 0.03,
-                            #'cm': ref('sheets.l4_cortex_inh.params.cell.params.tau_m')/233,
                             'e_rev_E': ref('sheets.l4_cortex_exc.params.cell.params.e_rev_E'),
                             'e_rev_I': ref('sheets.l4_cortex_exc.params.cell.params.e_rev_I'),
                             'tau_syn_E': ref('sheets.l4_cortex_exc.params.cell.params.tau_syn_E'),
                             'tau_syn_I': ref('sheets.l23_cortex_exc.params.cell.params.tau_syn_I'),
-                            #'tau_syn_I': ref('sheets.l4_cortex_exc.params.cell.params.tau_syn_I'),
                             'a' : 0,
                             'b' : 0,
                             'delta_T' : ref('sheets.l4_cortex_exc.params.cell.params.delta_T'),
@@ -46,7 +44,6 @@
 
     'L23InhL23ExcConnection': {
         'target_synapses' : 'inhibitory',             
-        #'short_term_plasticity': ref('sheets.l23_cortex_exc.L23ExcL23ExcConnection.short_term_plasticity'),
         'short_term_plasticity': {
                             'U': 0.75,
                             'tau_rec': 30,
@@ -70,18 +67,13 @@
         'num_samples_expression' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.num_samples_expression'),
         'base_weight': ref('sheets.l4_cortex_inh.L4InhL4ExcConnection.base_weight'),
 	'num_samples' : ref('sheets.l23_cortex_exc.K') * 1/5,
+        'self_connections': ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.self_connections'),
         'local_module': None,
     },
 
     'L23InhL23InhConnection': {
         'target_synapses' : 'inhibitory',             
         'short_term_plasticity': ref('sheets.l23_cortex_inh.L23InhL23ExcConnection.short_term_plasticity'),
-        #'short_term_plasticity': {
-        #                    'U': 0.75,
-        #                    'tau_rec': 30,
-        #                    'tau_psc': 3.0,
-        #                    'tau_fac': 0.0,
-        #                },
         'weight_functions' : {  
                                 'f1' : {
                                          'component' : 'mozaik.connectors.modular_connector_functions.HyperbolicModularConnectorFunction',
@@ -100,6 +92,7 @@
         
         'base_weight': ref('sheets.l4_cortex_inh.L4InhL4InhConnection.base_weight'),
 	'num_samples' : ref('sheets.l23_cortex_inh.L23InhL23ExcConnection.num_samples') *  ref('sheets.l4_cortex_exc.inhibitory_connection_ratio'),
+        'self_connections': ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.self_connections'),
         'local_module': None,
     },
 
@@ -139,7 +132,6 @@
         'num_samples_expression' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.num_samples_expression'),
         
         'base_weight': ref('sheets.l23_cortex_exc.L4ExcL23ExcConnection.base_weight')*ref('sheets.l4_cortex_inh.ExcInhAfferentRatio'),
-        #'num_samples' : ref('sheets.l23_cortex_exc.L4ExcL23ExcConnection.num_samples') * ref('sheets.l23_cortex_inh.inhibitory_connection_afferent_ratio'),
         'num_samples' : { 
                  'class_name': 'PyNNDistribution',
                  'params': {
@@ -149,6 +141,7 @@
                      },
              },
 
+        'self_connections': ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.self_connections'),
         'local_module': None,
     },
 }

@@ -84,17 +84,12 @@
         'num_samples_expression' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.num_samples_expression'),
         'base_weight': 0.001,
         'num_samples' : ref('sheets.l4_cortex_exc.K')/5.0,
+        'self_connections': ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.self_connections'),
         'local_module': None,
     },
 
     'L4InhL4InhConnection':  {
         'target_synapses' : 'inhibitory',               
-        #'short_term_plasticity': {
-        #                    'U': 0.75,
-        #                    'tau_rec': 70,
-        #                    'tau_psc': 3.0,
-        #                    'tau_fac': 0.0,
-        #                },
         'short_term_plasticity': ref('sheets.l4_cortex_inh.L4InhL4ExcConnection.short_term_plasticity'),
         'weight_functions' : {  
                                 'f1' : {
@@ -120,6 +115,7 @@
         'num_samples_expression' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.num_samples_expression'),
         'base_weight': ref('sheets.l4_cortex_inh.L4InhL4ExcConnection.base_weight'),
         'num_samples' : ref('sheets.l4_cortex_inh.L4InhL4ExcConnection.num_samples')*ref('sheets.l4_cortex_exc.inhibitory_connection_ratio'),
+        'self_connections': ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.self_connections'),
         'local_module': None,
     },
 
