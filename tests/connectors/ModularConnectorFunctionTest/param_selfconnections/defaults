@@ -5,7 +5,7 @@
         'background_luminance': 50.0, # cd/m²
     },
     'sheets' : {
-        'sheet': url("param/sheet"),
+        'sheet': url("param_selfconnections/sheet"),
     },
     'results_dir': '',
     'name' : 'SelfSustainedPushPullV1',

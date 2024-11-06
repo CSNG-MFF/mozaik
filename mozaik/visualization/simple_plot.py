@@ -930,7 +930,9 @@ class StandardStyleLinePlot(StandardStyle):
         self.parameters["linewidth"] = 1
 
         if error != None:
-           assert numpy.shape(error) == numpy.shape(y)
+            assert len(y) == len(error)
+            for yy, err in zip(y,error):
+                assert numpy.shape(err) == numpy.shape(yy)
 
         assert len(x) == len(y)
         if labels != None:
@@ -1066,7 +1068,7 @@ class ConductancePlot(StandardStyle):
             self.cond_color = '#A9BCF5'
             self.mean_color = 'b'
         else:
-            raise ValueError('%s is not an appropriate name for parameter `type_`. Only `exc` or `inh` are valid', self.type_)
+            raise ValueError('%s is not an appropriate name for parameter `type_`. Only `exc` or `inh` are valid', type_)
 
     def plot(self):
         mean_cond = numpy.zeros(numpy.shape(self.cond[0]))

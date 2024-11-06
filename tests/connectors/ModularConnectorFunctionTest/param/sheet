@@ -4,9 +4,9 @@
     'component': 'mozaik.sheets.vision.VisualCorticalUniformSheet',
     
     'params':{
-                'name':'sheet_lm',
-                'sx':3000.0,
-                'sy':3000.0,
+                'name':'sheet',
+                'sx':500.0,
+                'sy':500.0,
                 'density': 200.0,
                 'mpi_safe' : False,
                 'magnification_factor': 1000.0,
@@ -30,8 +30,8 @@
                             'tau_w' : 88.0,
                             'v_thresh' : -53.0
                         },
-                        'receptors':None,
-                        'initial_values': {
+
+                       'initial_values': {
                                     'v': PyNNDistribution(name='uniform',low=-70,high=-51),
                                 },
 
@@ -41,18 +41,19 @@
                 'recorders' : None,
     },
     
-    'RecurrentConnectionLM': {
-        'target_synapses' : 'excitatory',             
-        'short_term_plasticity': None, 
+    'RecurrentConnection': {
+        'target_synapses' : 'excitatory',
+        'short_term_plasticity': None,
 
-        'weight_functions' : {
-                                'f1' : {
-					'component' : 'mozaik.connectors.modular_connector_functions.GaussianDecayModularConnectorFunction',
-					'params' : {
-						'arborization_constant' : 1000,
-						'arborization_scaler' : 4.0,
-					}
-				}
+        'weight_functions' : {  'f1' : {
+                                         'component' : 'mozaik.connectors.vision.MapDependentModularConnectorFunction',
+                                         'params' : {
+                                                        'sigma' : 1.3,
+                                                        'map_location' : './or_map_8x8',
+                                                        'map_stretch' : 1,
+                                                        'periodic' : True,
+                                                    }
+                                       },
                              },
 
         'delay_functions' : {
@@ -66,16 +67,14 @@
 
                             },
 
-        'weight_expression' : 'f1',
         'delay_expression' : 'd1',
+        'weight_expression' : 'f1',
         'num_samples_functions' : None,
         'num_samples_expression' : '',
+
         'base_weight': 0.0005,
-	'num_samples' : 200,
-        'self_connections': True,
-        'local_module': {
-                            'in_radius': 0.1,
-                            'out_radius': 0.3,
-                        },
+        'num_samples' : 200,
+        'self_connections': False,
+        'local_module': None,
     },
 }

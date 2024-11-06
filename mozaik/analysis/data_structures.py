@@ -54,6 +54,24 @@ class SingleValue(AnalysisDataStructure):
         self.value = value
         self.value_units = value_units
 
+class SingleObject(AnalysisDataStructure):
+    """
+    Data structure holding a single object, that is not handled in any specific way by the analysis or the vizualisation code
+
+    Parameters
+    ---------- 
+    value_unit : quantities
+                Quantities unit describing the unit of the value
+    """
+    object_name = SString(doc="The name of the object.")
+    period = SNumber(units=None,default=None,doc="The period of the value contained by the object. If value is not periodic period=None")
+
+    def __init__(self, obj, obj_units, **params):
+        AnalysisDataStructure.__init__(self, identifier='SingleObject', **params)
+        self.object = obj
+        self.object_units = obj_units
+
+
 
 class SingleValueList(AnalysisDataStructure):
     """
@@ -168,6 +186,36 @@ class PerNeuronPairValue(AnalysisDataStructure):
         else:
             return self.values[list(self.ids).index(idds1),list(self.ids).index(idds2)]
 
+
+class PerAreaValue(AnalysisDataStructure):
+    """
+    Data structure holding value for each sub-area in the cortical plane
+
+    values : numpy.nd_array
+           The 2D array holding the values.
+
+    value_units : quantities
+                Quantities unit describing the units of the value
+
+    x_coords : List
+           The x coordinates of the center of each sub-area
+
+    y_coords : List 
+           The y coordinates of the center of each sub-area
+    """
+    value_name = SString(doc="The name of the value.")
+    period = SNumber(units=None,default=None,doc="The period of the value. If value is not periodic period=None")
+
+    def __init__(self, values, value_units, x_coords, y_coords, **params):
+        AnalysisDataStructure.__init__(self, identifier='PerAreaValue', **params)
+        self.value_units = value_units
+        self.values = numpy.array(values)
+        self.x_coords = numpy.array(x_coords)
+        self.y_coords = numpy.array(y_coords)
+        assert values.shape == (len(y_coords), len(x_coords)), 'The values matrix dimensionis doesn\'t correspond to the dimensions of the coords matrix' 
+
+    def get_space(self):
+        return numpy.meshgrid(self.x_coords, self.y_coords)
 
 
 class AnalysisDataStructure1D(AnalysisDataStructure):
@@ -410,6 +458,91 @@ class PerNeuronPairAnalogSignalList(AnalysisDataStructure1D):
         
         return numpy.sum(self.asl)/len(self.asl)
 
+
+class PerAreaAnalogSignalList(AnalysisDataStructure1D):
+    """
+    This is a list of Neo AnalogSignal objects associated with areas in the cortical space.
+
+    Parameters
+    ---------- 
+    asl : np_array(AnalogSignal)
+         The variable containing the matrix of AnalogSignal objects, according 
+         to their position in the cortical space.
+    
+    x_coords : list
+           The x coordinates of the center of each sub-area
+
+    y_coords : list 
+           The y coordinates of the center of each sub-area
+    """
+
+    def __init__(self, asl, x_coords, y_coords, y_axis_units, **params):
+        AnalysisDataStructure1D.__init__(
+            self,  
+            asl[0][0].sampling_period.units, 
+            y_axis_units,
+            identifier='PerAreaAnalogSignalList',
+            **params
+        )
+        self.asl = asl
+        self.x_coords = numpy.array(x_coords)
+        self.y_coords = numpy.array(y_coords)
+        assert len(asl) == len(y_coords), 'The values matrix dimension don\'t correspond to the dimensions of the coords matrix'
+        assert len(asl[0]) == len(x_coords), 'The values matrix dimension don\'t correspond to the dimensions of the coords matrix'
+ 
+    def __add__(self, other):
+        assert set(self.x_coords) <= set(other.x_coords) and set(self.x_coords) >= set(other.x_coords) and set(self.y_coords) <= set(other.y_coords) and set(self.y_coords) >= set(other.y_coords)
+        assert self.x_axis_name == other.x_axis_name
+        assert self.y_axis_name == other.y_axis_name
+        assert self.y_axis_units == other.y_axis_units
+        
+        new_asl = self.asl + other.asl
+        return PerAreaAnalogSignalList( new_asl, self.x_coords, self.y_coords, analysis_algorithm=self.analysis_algorithm, y_axis_units=self.y_axis_units, x_axis_name=self.x_axis_name, y_axis_name=self.y_axis_name, sheet_name=self.sheet_name, stimulus_id=self.stimulus_id )
+
+    def __sub__(self, other):
+        assert set(self.x_coords) <= set(other.x_coords) and set(self.x_coords) >= set(other.x_coords) and set(self.y_coords) <= set(other.y_coords) and set(self.y_coords) >= set(other.y_coords)
+        assert self.x_axis_name == other.x_axis_name
+        assert self.y_axis_name == other.y_axis_name
+        assert self.y_axis_units == other.y_axis_units
+        
+        new_asl = []
+        for idd in self.ids:
+            new_asl.append(self.get_asl_by_id_pair(idd) - other.get_asl_by_id_pair(idd))
+            
+        new_asl = self.asl + other.asl
+        return PerAreaAnalogSignalList( new_asl, self.x_coords, self.y_coords, analysis_algorithm=self.analysis_algorithm, y_axis_units=self.y_axis_units, x_axis_name=self.x_axis_name, y_axis_name=self.y_axis_name, sheet_name=self.sheet_name, stimulus_id=self.stimulus_id )
+
+    def division_by_num(self, num):
+        """
+        Divides all asl by the supplied number.
+        """
+        for asl_y in self.asl:
+            for asl in asl_y:
+                assert asl.units == self.asl[0].units, "AnalogSignalList.mean: units of AnalogSignal objects in the list do not match."
+                assert asl.sampling_rate == self.asl[0].sampling_rate, "AnalogSignalList.mean: sampling_rate of AnalogSignal objects in the list do not match"
+                assert asl.t_start == self.asl[0].t_start, "AnalogSignalList.mean: t_start of AnalogSignal objects in the list do not match."        
+        
+        assert num!=0.0
+
+        new_asl = []
+        new_asl = self.asl/num
+
+        return PerAreaAnalogSignalList( new_asl, self.x_coords, self.y_coords, analysis_algorithm=self.analysis_algorithm, y_axis_units=self.y_axis_units, x_axis_name=self.x_axis_name, y_axis_name=self.y_axis_name, sheet_name=self.sheet_name, stimulus_id=self.stimulus_id )
+
+    def get_space(self):
+        return numpy.meshgrid(self.x_coords, self.y_coords)
+
+    def mean(self):
+        """
+        Calculates the mean analog signal from the ones in the list.
+        """
+        for asl_y in self.asl:
+            for asl in asl_y:
+                assert asl.units == self.asl[0].units, "AnalogSignalList.mean: units of AnalogSignal objects in the list do not match."
+                assert asl.sampling_rate == self.asl[0].sampling_rate, "AnalogSignalList.mean: sampling_rate of AnalogSignal objects in the list do not match"
+                assert asl.t_start == self.asl[0].t_start, "AnalogSignalList.mean: t_start of AnalogSignal objects in the list do not match."        
+        
+        return numpy.sum(self.asl)/len(self.asl)
         
         
 class ConductanceSignalList(AnalysisDataStructure1D):

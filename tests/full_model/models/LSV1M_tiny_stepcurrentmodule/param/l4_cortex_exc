@@ -89,6 +89,7 @@
 	'annotation_reference_name' : 'aff_samples',
         'samples_coeff': 1,
         'num_samples' : ref('sheets.l4_cortex_exc.K')*4.0/5.0*(1-ref('sheets.l4_cortex_exc.feedback_conn_ratio')),
+        'self_connections': True,
         'local_module': None,
 },
     
@@ -133,6 +134,7 @@
 	'annotation_reference_name' : 'aff_samples',
         'samples_coeff': 1,
         'num_samples' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.num_samples') * ref('sheets.l4_cortex_exc.inhibitory_connection_ratio'),
+        'self_connections': ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.self_connections'),
         'local_module': None,
     },
 

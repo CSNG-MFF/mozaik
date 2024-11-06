@@ -60,6 +60,7 @@ class ModularConnector(Connector):
         'delay_functions' : ParameterSet, # the same as weight_functions but for delays
         'weight_expression' : str, # a python expression that can use variables f1..fn where n is the number of functions in weight_functions, and fi corresponds to the name given to a ModularConnectorFunction in weight_function ParameterSet. It determines how are the weight functions combined to obtain the weights
         'delay_expression' : str, # a python expression that can use variables f1..fn where n is the number of functions in delays_functions, and fi corresponds to the name given to a ModularConnectorFunction in delays_function ParameterSet. It determines how are the delays functions combined to obtain the delays
+        'self_connections' : bool, # whether to allow self connections or not 
     })
     
     def __init__(self, network, name,source, target, parameters):
@@ -84,7 +85,7 @@ class ModularConnector(Connector):
           
       for k in self.delay_function_names:
           self.delay_functions[k] = load_component(self.parameters.delay_functions[k].component)(self.source,self.target,self.parameters.delay_functions[k].params)
-    
+
     def _obtain_weights(self,i,seed=None):
         """
         This function calculates the combined weights from the ModularConnectorFunction in weight_functions
@@ -93,7 +94,10 @@ class ModularConnector(Connector):
        
         for k in self.weight_function_names:
             evaled[k] = self.weight_functions[k].evaluate(i) if not seed else self.weight_functions[k].evaluate(i,seed=seed)
-        return numpy.zeros((self.source.pop.size,)) + eval(self.parameters.weight_expression,globals(),evaled)
+        weights = numpy.zeros((self.source.pop.size,)) + eval(self.parameters.weight_expression,globals(),evaled)
+        if not self.parameters.self_connections and self.target.name == self.source.name:
+            weights[i] = 0
+        return weights
         
     def _obtain_delays(self,i,seed=None):
         """
@@ -104,7 +108,6 @@ class ModularConnector(Connector):
             evaled[k] = self.delay_functions[k].evaluate(i) if not seed else self.delay_functions[k].evaluate(i,seed=seed)
         
         delays = numpy.zeros((self.source.pop.size,)) + eval(self.parameters.delay_expression,globals(),evaled)
-        #round to simulation step            
         delays = numpy.rint(delays / self.simulator_time_step) * self.simulator_time_step
         return delays
         
