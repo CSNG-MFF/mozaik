@@ -186,6 +186,31 @@ class Sheet(BaseComponent):
         else:
             self._neuron_annotations[neuron_number][key] = (protected, value)
 
+    def has_neuron_annotation(self, neuron_number, key):
+        """
+        Check if an annotation exists for a given neuron.
+
+        Parameters
+        ----------
+        neuron_number : int
+                      The index of the neuron in the population for which the annotation will be checked.
+
+        key : str
+            The name of the annotation
+
+        Returns
+        -------
+            value : Boolean
+                   True if the neurons has such annotation, False otherwise
+        """
+
+        if not self._pop:
+            logger.error('Population has not been yet set in sheet: ' + self.name + '!')
+        if key not in self._neuron_annotations[neuron_number]:
+            return False
+        else:
+            return True
+
     def get_neuron_annotation(self, neuron_number, key):
         """
         Retrieve annotation for a given neuron.
@@ -266,7 +291,7 @@ class Sheet(BaseComponent):
         if self.multisynapse:
             gsyn_names = []
             for k in self.parameters.cell.receptors.keys():
-                gsyn_names.append(k+ '_gsyn') 
+                gsyn_names.append(k+ '.gsyn') 
         elif self.parameters.cell.native_nest:
             gsyn_names = ['g_ex', 'g_in']
         else: 

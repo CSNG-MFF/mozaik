@@ -169,7 +169,14 @@ class GaborConnector(BaseComponent):
             target.add_neuron_annotation(j, 'LGNAfferentFrequency', frequency, protected=True)
             target.add_neuron_annotation(j, 'LGNAfferentSize', size, protected=True)
             target.add_neuron_annotation(j, 'LGNAfferentPhase', phase, protected=True)
-            target.add_neuron_annotation(j, 'aff_samples', self.parameters.num_samples.next(), protected=True)
+            increment_aff_samples = self.parameters.num_samples.next()
+            if target.has_neuron_annotation(j, 'aff_samples'):
+                current_aff_samples = target.get_neuron_annotation(j, 'aff_samples')
+                target.add_neuron_annotation(j, 'aff_samples', increment_aff_samples + current_aff_samples, protected=False)
+                target.add_neuron_annotation(j, 'aff_samples_increment', increment_aff_samples, protected=False)
+            else:
+                target.add_neuron_annotation(j, 'aff_samples', increment_aff_samples, protected=False)
+                target.add_neuron_annotation(j, 'aff_samples_increment', increment_aff_samples, protected=False)
             
             
             if self.parameters.topological:
@@ -198,7 +205,7 @@ class GaborConnector(BaseComponent):
                              'base_weight' : self.parameters.base_weight,
                              'samples_coeff': 1,
                              'num_samples' : 0,
-                             'annotation_reference_name' : 'aff_samples',
+                             'annotation_reference_name' : 'aff_samples_increment',
                           })
                           
         ModularSamplingProbabilisticConnectorAnnotationSamplesCount(network,name+'On',lgn_on,target,ps).connect()

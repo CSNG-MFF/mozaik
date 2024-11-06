@@ -1942,14 +1942,14 @@ class ExcitatoryConductanceGenerator(Analysis):
                   # Get for each receptor type in `excitatory_receptors` the list of ids of 
                   # neurons receiving conductance from this receptor type
                   for receptor in self.parameters.excitatory_receptors:
-                      name = receptor + '_gsyn'
+                      name = receptor + '.gsyn'
                       receptor_ids = seg.get_stored_syn_ids(name=name)
                       receptors_ids[name] = receptor_ids
                       all_ids += list(receptor_ids)
                   
                   all_ids = numpy.array(list(set(all_ids)))
-                  first_id = seg.get_stored_syn_ids(self.parameters.excitatory_receptors[0] + '_gsyn')[0]
-                  first_cond = seg.get_syn(first_id, self.parameters.excitatory_receptors[0] + '_gsyn')
+                  first_id = seg.get_stored_syn_ids(self.parameters.excitatory_receptors[0] + '.gsyn')[0]
+                  first_cond = seg.get_syn(first_id, self.parameters.excitatory_receptors[0] + '.gsyn')
 
                   # Generate excitatory conductances for all ids
                   exc_conds = []
@@ -1965,7 +1965,6 @@ class ExcitatoryConductanceGenerator(Analysis):
                   # Create analog signals from list of conductances. Each element of the list corresponds to an id
                   seg.analogsignals.append(NeoAnalogSignal(exc_conds, t_start= first_cond.t_start, sampling_period= first_cond.sampling_period, units= first_cond.units, name= 'gsyn_exc', source_population= sheet, source_ids = all_ids))
                   self.datastore.full_datastore.update_segment(seg)
-    
 
 class InhibitoryConductanceGenerator(Analysis):
       """
@@ -2010,15 +2009,15 @@ class InhibitoryConductanceGenerator(Analysis):
                   # Get for each receptor type in `inhibitory_receptors` the list of ids of 
                   # neurons receiving conductance from this receptor type
                   for receptor in self.parameters.inhibitory_receptors:
-                      name= receptor+ '_gsyn'
+                      name= receptor+ '.gsyn'
                       receptor_ids = seg.get_stored_syn_ids(name=name)
                       receptors_ids[name] = receptor_ids
                       all_ids += list(receptor_ids)
   
                   all_ids = numpy.array(list(set(all_ids)))
                   
-                  first_id = seg.get_stored_syn_ids(self.parameters.inhibitory_receptors[0] + '_gsyn')[0]
-                  first_cond = seg.get_syn(first_id, self.parameters.inhibitory_receptors[0] + '_gsyn')
+                  first_id = seg.get_stored_syn_ids(self.parameters.inhibitory_receptors[0] + '.gsyn')[0]
+                  first_cond = seg.get_syn(first_id, self.parameters.inhibitory_receptors[0] + '.gsyn')
                   
   
                   # Generate inhibitory conductances for all id
