@@ -51,4 +51,4 @@ jobs:
       run: python setup.py install
 
     - name: Test with pytest
-      run: pytest tests --cov=mozaik -m "LSV1M_tiny"
+      run: pytest tests --cov=mozaik -m "LSV1M_tiny or VogelsAbbott2005"
