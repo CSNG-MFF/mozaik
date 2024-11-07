@@ -148,14 +148,19 @@ Testing, Autoformat, Continuous Integration
 
 In case you want to contribute to the project, you need to make sure your code passes all unit tests and is formatted with the Black autoformatter. You can make sure this is the case by running following from the project directory::
 
-  pytest && black --check .
-
-Note that the mpi tests are currently not working when invoking pytest in this manner. You can run these specific tests the following way::
- pytest tests/full_model/test_models_mpi.py
+  pytest -m 'not mpi' && black --check .
 
 This command will run all tests that it can find recursively under the current directory, as well as check all non-blacklisted files for formatting. Travis-CI will run the same steps for your pull request once you submit it to the project. To install pytest and black::
 
   pip3 install pytest pytest-cov pytest-randomly coverage black
+
+Note that the mpi tests are currently not working when invoking pytest in this manner. You can run these specific tests the following way::
+
+  pytest -m 'not not_github' tests/full_model/test_models_mpi.py
+
+Due to the impossibility of using more than 2 cores in Github actions, the test :code:`test_mozaik_rng_mpi7` invoking 7 MPI processes cannot be ran there. Also, as it requires the allocation of 7 MPI slots it might not be possible to run in without slurm as the other MPI tests. It is therefore necessary to run it locally through slurm::
+
+  salloc -n7 pytest -m 'not_github' tests/full_model/test_models_mpi.py
 
 There are additional useful options for pytests that you can use during development:
 
@@ -168,16 +173,6 @@ There are additional useful options for pytests that you can use during developm
     - Pytest doesn't, print to :code:`stdout` by default, you can enable this by::
 
         pytest -s
-
-Due to the impossibility of using more than 2 cores in Github actions, the test :code:`test_mozaik_rng_mpi7` invoking 7 MPI processes cannot be ran there. It is therefore the responsibility of the contributor to run it locally before pushing changes, by following these steps:
-
-    - Modify the sbatch_test_RNG_MPI7.sh sbatch script to include your virtual environment after the :code:`source` command.
-
-    - Using the following command to run it locally if using slurm::
-
-        sbatch sbatch_test_RNG_MPI7.sh
-
-    - Check the slurm output file to verify whether the test passed
 
 :copyright: Copyright 2011-2013 by the *mozaik* team, see AUTHORS.
 :license: `CECILL <http://www.cecill.info/>`_, see LICENSE for details.
