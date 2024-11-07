@@ -158,7 +158,7 @@ Note that the mpi tests are currently not working when invoking pytest in this m
 
   pytest -m 'not not_github' tests/full_model/test_models_mpi.py
 
-Due to the impossibility of using more than 2 cores in Github actions, the test :code:`test_mozaik_rng_mpi7` invoking 7 MPI processes cannot be ran there. Also, as it requires the allocation of 7 MPI slots it might not be possible to run in without slurm as the other MPI tests. It is therefore necessary to run it locally through slurm::
+Due to the impossibility of using more than 2 cores in Github actions, the test :code:`test_mozaik_rng_mpi7` invoking 7 MPI processes cannot be ran there. Also, as it requires the allocation of 7 MPI slots it might not be possible to run in without slurm as the other MPI tests. It is therefore the responsibility of the contributor to run it locally through slurm before pushing changes::
 
   salloc -n7 pytest -m 'not_github' tests/full_model/test_models_mpi.py
 
