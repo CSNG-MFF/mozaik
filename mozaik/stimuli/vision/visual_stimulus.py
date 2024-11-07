@@ -187,33 +187,3 @@ class VisualStimulus(BaseStimulus):
         """For creating movies"""
         self.update()
         return [self.img]
-
-class PixelMovieFromFile(VisualStimulus):
-    """
-    A visual stimulus that consists of a movie that is loaded from a file, where it is stored as a 3D numpy matrix (npy), 
-    with the first axis the time, and 2nd and 3rd axis the visual field. The individual frames are presented one by one 
-    for the self.frame_duration. The stimulus is assumed to have pixel values in the interval [0,1].
-    """
-
-    size = SNumber(
-        degrees, doc="The length of the longer axis of the image in visual degrees"
-    )
-
-    movie_path = SString(doc="Path to the image file.")
-    movie_name = SString(doc="Name of the image file.")
-    duration = SNumber(ms, doc="Image + blank screen display duration.")
-
-    def __init__(self, **params):
-        VisualStimulus.__init__(self, **params)
-
-        import os
-        with open(os.path.join(self.movie_path,self.movie_name), 'rb') as f:
-             self.mc = numpy.load(f)
-        assert self.mc.shape[1] == self.mc.shape[2], ("The spatial shape of the pixel movie has to be square")
-        assert ( self.duration == self.frame_duration * len(self.mc)), ("The duration of the total stimulus has to be the number of frames in the movie times the frame duration.")
-        #assert ( self.mc.shape[1] == self.size_x), ("The size of the image has to match the resolution and size of the simulated visual field [%d vs %d] ." % (self.mc.shape[1],self.size_x))
- 
-
-    def frames(self):
-        for i in range(len(self.mc)):
-            yield (self.mc[i] * 2 * self.background_luminance, [i])

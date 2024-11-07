@@ -2179,11 +2179,11 @@ class MeasureNaturalImages(VisualExperiment):
     def do_analysis(self, data_store):
         pass
 
-
 class MeasurePixelMovieFromFile(VisualExperiment):
     """
-    Present a sequence of images loaded from a directory, in alphabetical order of
-    image filenames, interleaved by blank stimulation.
+    Present a sequence of images loaded from numpy 3D array stored in npy file.
+
+    The image is assumed to be square.
 
     Parameters
     ----------
@@ -2192,8 +2192,8 @@ class MeasurePixelMovieFromFile(VisualExperiment):
 
     Other parameters
     ----------------
-    duration : float
-            The duration of single presentation of the stimulus.
+    movie_frame_duration : float
+            The duration of single presentation of the movie frame.
 
     movie_path : str
             Path to the directory containing the images.
@@ -2203,31 +2203,51 @@ class MeasurePixelMovieFromFile(VisualExperiment):
 
     num_trials : int
             Number of trials each each stimulus is shown.
+
+    width : float
+            The width of the image in degrees of visual field.
+
+    global_frame_offset : int
+            The movie frame index from which to start the experiment (0 means start from beginning of the movie) 
+
+    images_per_trial : int
+            How many movie frames to show per trial
+
+    num_presentation_trials : int
+            How many trials of movie frame presentations (with images_per_trial of movie frames presented) to present. Note that each trails will have blank in between them.
     """
 
     required_parameters = ParameterSet(
         {
-            "duration": float,
             "movie_path": str,
             "movie_name": str,
             "num_trials": int,
+            "width" : float,
+            "movie_frame_duration" : int,
+            "global_frame_offset" : int,
+            "images_per_trial" : int,
+            "num_presentation_trials" : int,
         }
     )
     def generate_stimuli(self):
         for k in range(0, self.parameters.num_trials):
+            for l in range(0, self.parameters.num_presentation_trials):
                 self.stimuli.append(
-                    vs.PixelMovieFromFile(
+                    topo.PixelMovieFromFile(
                         frame_duration=self.frame_duration,
                         movie_path=self.parameters.movie_path,
                         movie_name=self.parameters.movie_name,
-                        duration=self.parameters.duration,
+                        duration=self.parameters.images_per_trial * self.parameters.movie_frame_duration,
                         size_x=self.model.visual_field.size_x,
                         size_y=self.model.visual_field.size_y,
+                        density=self.density,
                         location_x=0.0,
                         location_y=0.0,
                         background_luminance=self.background_luminance,
-                        density=self.density,
-                        trial=k
+                        trial=k,
+                        size=self.parameters.width,
+                        movie_frame_duration=self.parameters.movie_frame_duration,
+                        frame_offset=self.parameters.global_frame_offset+l*self.parameters.images_per_trial,
                     )
                 )
 
