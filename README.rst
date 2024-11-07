@@ -167,9 +167,15 @@ There are additional useful options for pytests that you can use during developm
     - You may exclude tests running the model by adding the option::
 
         pytest -m "not model"
+
+    - To avoid running the full size model, you can run a smaller version of it::
+
+        pytest -m 'LSV1M_tiny'
+
     - You can run the tests in a single file by::
 
         pytest path/to/file
+
     - Pytest doesn't, print to :code:`stdout` by default, you can enable this by::
 
         pytest -s
