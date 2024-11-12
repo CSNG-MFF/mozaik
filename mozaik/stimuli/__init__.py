@@ -108,3 +108,16 @@ class InternalStimulus(BaseStimulus):
     
     def frames(self):
         return None
+
+class EndOfSimulationBlank(InternalStimulus):
+    """
+    A special case stimulus. 
+    
+    Before each stimulus S in simulations we show blank stimulus (or reset the network).
+    Recordings of responsess to each such blank stimulus are added to the datastore, and annotated with the stimulus S as the associated stimulus.
+
+    After end of each simulationsm one additional blank stimulus is shown. This stimulusm, however, by definition does not have the 
+    subsequent stimulus S to be associated with. Instead we associate it with this special stimulus
+    """
+    def __init__(self,**params):
+        InternalStimulus.__init__(self,**params)

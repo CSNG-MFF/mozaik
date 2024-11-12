@@ -6,7 +6,7 @@
     'results_dir': '',
     'name' : 'Vogels&Abbott',
     'reset' : False,
-    'null_stimulus_period' : 0.0,
+    'null_stimulus_period' : 100.0,
     'input_space' : None,
     'input_space_type' : 'None',
     'store_stimuli' : True,

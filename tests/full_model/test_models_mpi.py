@@ -81,9 +81,7 @@ class TestModelExplosionMonitoringMPI(TestModel):
         threshold = eval(self.ds.get_model_parameters())["explosion_monitoring"][
             "threshold"
         ]
-        last_seg = param_filter_query(self.ds, sheet_name=sheet_monitored).get_segments(
-            ordered=True
-        )[-1]
+        last_seg = param_filter_query(self.ds, sheet_name=sheet_monitored).get_segments()[-1]
         assert (
             numpy.mean(
                 [
@@ -93,7 +91,6 @@ class TestModelExplosionMonitoringMPI(TestModel):
             )
             > threshold
         )
-
 
 class TestLSV1MTinyMPI7(TestModel):
     """
