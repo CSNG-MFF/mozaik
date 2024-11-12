@@ -17,9 +17,8 @@ jobs:
         sudo apt-get update
         sudo apt-get install python3-setuptools subversion git libopenmpi-dev g++ libjpeg8 libjpeg8-dev libfreetype6 libfreetype6-dev zlib1g-dev libpng++-dev libncurses5 libncurses5-dev libreadline-dev liblapack-dev libblas-dev gfortran libgsl0-dev openmpi-bin python-tk cmake
         pip3 install pytest pytest-cov pytest-randomly coverage black
-        # TODO: Remove fixed numpy and pynn versions after the PyNN pull request
-        # https://github.com/NeuralEnsemble/PyNN/pull/762 is accepted
-        pip3 install numpy==1.23.5 scipy mpi4py matplotlib quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.12.0 cython psutil future requests elephant pytest-xdist pytest-timeout junitparser numba numpyencoder sphinx imageio
+        # TODO: Add pynn once we switch from our custom to the official release
+        pip3 install numpy scipy mpi4py matplotlib quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.12.0 cython psutil future requests elephant pytest-xdist pytest-timeout junitparser numba numpyencoder sphinx imageio
 
     - name: Download and install imagen
       run: |
@@ -28,6 +27,7 @@ jobs:
         python setup.py install
         cd ..
 
+    # TODO: Remove this block once we switch from our custom pynn to the official release
     - name: Download and install PyNN 
       run: |
         git clone https://github.com/CSNG-MFF/PyNN.git
