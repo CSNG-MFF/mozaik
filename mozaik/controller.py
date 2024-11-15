@@ -264,14 +264,18 @@ def run_experiments(model,experiment_list,parameters,load_from=None):
     last_blank_run_time = 0
     # Do a reset after the last stimulus. If reset is done as blank stimulus, this makes sure we have some blank recorded also after last stimulus.
     ds =  OrderedDict()
-    s = EndOfSimulationBlank(trial=0,duration=parameters.null_stimulus_period,frame_duration=parameters.null_stimulus_period)
-    (segments,null_segments,input_stimulus,last_blank_run_time,_) = model.present_stimulus_and_record(s,ds)
-    data_store.add_recording(segments,s)
-    data_store.add_stimulus(input_stimulus,s)
-    data_store.add_direct_stimulation(ds,s)
-    if null_segments != []:
-            data_store.add_null_recording(null_segments,s) 
 
+    if parameters.null_stimulus_period != 0:
+        s = EndOfSimulationBlank(trial=0,duration=parameters.null_stimulus_period,frame_duration=parameters.null_stimulus_period)
+        (segments,null_segments,input_stimulus,last_blank_run_time,_) = model.present_stimulus_and_record(s,ds)
+        data_store.add_recording(segments,s)
+        data_store.add_stimulus(input_stimulus,s)
+        data_store.add_direct_stimulation(ds,s)
+        if null_segments != []:
+                data_store.add_null_recording(null_segments,s) 
+    else:
+        last_blank_run_time = 0
+        
     total_run_time = time.time() - t0
     mozaik_run_time = total_run_time - simulation_run_time - last_blank_run_time
 
