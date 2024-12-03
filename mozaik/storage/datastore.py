@@ -510,7 +510,8 @@ class DataStore(DataStoreView):
 
     def add_analysis_result(self, result):
         """
-        Add analysis results to data store. If there already exists ADS in the data store with the same parametrization this operation will fail.
+        Add analysis results to data store. If there already exists ADS in the data store with the same parametrization and the 'replace' flag is set to True, 
+        the new ADS will overwrite the old one. If 'replace' flag is set to False, the operation is ignored and an error is thrown.
         """
         flag = True
         for i,ads in enumerate(self.analysis_results):
