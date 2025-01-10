@@ -15,7 +15,7 @@ fresh installation of current Ubuntu system.
 
 First the list of ubuntu package dependencies::
 
-  sudo apt-get install python3 python3-dev python3-pip python3-setuptools python3-tk python-nose subversion git libopenmpi-dev g++ libjpeg8 libjpeg8-dev libfreetype6 libfreetype6-dev zlib1g-dev libpng++-dev libncurses5 libncurses5-dev libreadline-dev liblapack-dev libblas-dev gfortran libgsl0-dev openmpi-bin python-tk cmake libboost-all-dev
+  sudo apt-get install python3 python3-dev python3-pip python3-setuptools subversion git libopenmpi-dev g++ libjpeg8 libjpeg8-dev libfreetype6 libfreetype6-dev zlib1g-dev libpng++-dev libncurses5-dev libreadline-dev liblapack-dev libblas-dev gfortran libgsl0-dev openmpi-bin python-tk cmake libboost-all-dev
 
 
 Virtual env
