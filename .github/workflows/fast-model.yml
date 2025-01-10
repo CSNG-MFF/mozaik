@@ -24,7 +24,7 @@ jobs:
       run: |
         git clone https://github.com/antolikjan/imagen.git
         cd imagen
-        python setup.py install
+        pip install .
         cd ..
 
     # TODO: Remove this block once we switch from our custom pynn to the official release
