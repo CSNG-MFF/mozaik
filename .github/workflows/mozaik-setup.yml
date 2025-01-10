@@ -53,7 +53,7 @@ jobs:
         python -c 'import nest'
 
     - name: Install mozaik
-      run: python install .
+      run: pip install .
 
     - name: Run pytests
       run: pytest ${{ inputs.pytest-args }} --cov=mozaik

@@ -2,6 +2,6 @@ name: Fast model stepcurrentmodule tests
 on: [push, pull_request]
 jobs:
   fast-tests:
-    uses: ./.github/workflows/shared-setup.yml
+    uses: ./.github/workflows/mozaik-setup.yml
     with:
       pytest-args: '-m "stepcurrentmodule"'
