@@ -1,54 +1,7 @@
 name: LSV1M model tests
-
 on: [push, pull_request]
-
 jobs:
-
-  pytest:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: Pytest Unit Tests
-      uses: actions/setup-python@v3
-      with:
-        python-version: '3.12'
-    - name: Install prerequisites
-      run: |
-        sudo apt-get update
-        sudo apt-get install python3 python3-dev python3-pip python3-setuptools subversion git libopenmpi-dev g++ libjpeg8 libjpeg8-dev libfreetype6 libfreetype6-dev zlib1g-dev libpng++-dev libncurses5-dev libreadline-dev liblapack-dev libblas-dev gfortran libgsl0-dev openmpi-bin cmake libboost-all-dev
-        pip3 install pytest pytest-cov pytest-randomly coverage black
-        # TODO: Add pynn once we switch from our custom to the official release
-        pip3 install numpy scipy mpi4py matplotlib quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.12.0 cython psutil future requests elephant pytest-xdist pytest-timeout junitparser numba numpyencoder sphinx imageio
-
-    - name: Download and install imagen
-      run: |
-        git clone https://github.com/antolikjan/imagen.git
-        cd imagen
-        pip install .
-        cd ..
-
-    # TODO: Remove this block once we switch from our custom pynn to the official release
-    - name: Download and install PyNN
-      run: |
-        git clone https://github.com/CSNG-MFF/PyNN.git
-        cd PyNN
-        git checkout PyNNStepCurrentModule
-        pip install .
-        cd ..
-
-    - name: Install Nest
-      run: |
-        wget https://github.com/nest/nest-simulator/archive/v3.4.tar.gz
-        tar xvfz v3.4.tar.gz
-        cd nest-simulator-3.4
-        cmake -Dwith-mpi=ON -Dwith-boost=ON -DCMAKE_INSTALL_PREFIX:PATH=$pythonLocation -Dwith-optimize='-O3' ./
-        make -j8
-        make -j8 install
-        cd ..
-        python -c 'import nest'
-
-    - name: Install mozaik
-      run: python setup.py install
-
-    - name: Test with pytest
-      run: pytest tests --cov=mozaik -m "LSV1M"
+  fast-tests:
+    uses: ./.github/workflows/mozaik-setup.yml
+    with:
+      pytest-args: '-m "LSV1M"'
