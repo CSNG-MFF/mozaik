@@ -56,4 +56,4 @@ jobs:
       run: pip install .
 
     - name: Run pytests
-      run: pytest ${{ inputs.pytest-args }} --cov=mozaik
+      run: pytest ${{ inputs.pytest-args }} tests --cov=mozaik
