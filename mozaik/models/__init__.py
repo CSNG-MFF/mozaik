@@ -138,6 +138,7 @@ class Model(BaseComponent):
             if self.first_time:
                sheet.record()
         null_segments,sim_run_time = self.reset()
+        
         for sheet in self.sheets.values():
             sheet.prepare_artificial_stimulation(stimulus.duration,self.simulator_time,artificial_stimulators.get(sheet.name,[]))
         if self.input_space:

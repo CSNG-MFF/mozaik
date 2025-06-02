@@ -57,7 +57,7 @@ class DataStoreView(ParametrizedObject):
 
     DataStoreView also keeps a reference to a full `.Datastore` object
     from which it was originally created (this might have happened via a
-    chain of DSVs). This is on order to allow for operations that work over DSV
+    chain of DSVs). This is in order to allow for operations that work over DSV
     to insert their results into the original full datastore as this is
     (almost?) always the desired behaviours (note DSV does not actually have
     functions to add new recordings or analysis results).
@@ -77,20 +77,15 @@ class DataStoreView(ParametrizedObject):
         self.analysis_results = []
         self.replace = replace
         self.sensory_stimulus = collections.OrderedDict()
-        self.full_datastore = full_datastore  # should be self if actually the
-                                              # instance is actually DataStore
+        self.full_datastore = full_datastore  # should be self if actually the instance is actually DataStore
 
-    def get_segments(self,null=False, ordered=False):
+    def get_segments(self,null=False):
         """
         Returns list of all recordings (as neo segments) stored in the datastore.
         If *null* is true then the segments correspond to the blank period before every stimulus.
         If *ordered* is true then the stimuli are sorted chronologically
         """
-        segs = [s for s in self.block.segments if s.null == null]
-        if ordered:
-            return sorted(segs, key=lambda x:x.rec_datetime)
-        else:
-            return segs
+        return [s for s in self.block.segments if s.null == null]
         
     def sheets(self):
         """
@@ -160,7 +155,7 @@ class DataStoreView(ParametrizedObject):
         """
         return self.full_datastore.block.annotations['neuron_annotations']
 
-    def get_stimuli(self,null=False, ordered=False):
+    def get_stimuli(self,null=False):
         """
         Returns a list of stimuli (as strings). The order of the stimuli
         corresponds to the order of segments returned by the get_segments()
@@ -169,9 +164,9 @@ class DataStoreView(ParametrizedObject):
         If *null* is true the order corresponds to the order of segments 
         returned by get_segments(null=True).
 
-        If *ordered* is true then the stimuli are sorted chronologically 
+        If *ordered* is true then the stimuli are sorted chronologically according to the time of their present 
         """
-        return [s.annotations['stimulus'] for s in self.get_segments(null,ordered)]
+        return [s.annotations['stimulus'] for s in self.get_segments(null)]
 
     def get_analysis_result(self, **kwargs):
         """
@@ -311,6 +306,8 @@ class DataStoreView(ParametrizedObject):
         new_dsv.analysis_results = list(set(self.analysis_results) | set(other.analysis_results))
         new_dsv.sensory_stimulus = self.sensory_stimulus_copy()
         new_dsv.sensory_stimulus.update(other.sensory_stimulus)
+        new_dsv.segments = sorted(new_dsv.segments, key=lambda x:x.rec_datetime)
+
         return new_dsv
     
     def remove_ads_from_datastore(self):
@@ -450,13 +447,14 @@ class DataStore(DataStoreView):
 
     def add_recording(self, segments, stimulus):
         """
-        Add a recording into the datastore.
+        Add a recording into the datastore. Ensure they are sorted by their recording time.
         """
 
         # we get recordings as seg
         for s in segments:
             s.annotations['stimulus'] = str(stimulus)
             self.block.segments.append(MozaikSegment(s))
+            self.block.segments = sorted(self.block.segments, key=lambda x:x.rec_datetime)
         self.stimulus_dict[str(stimulus)] = True
 
     def add_null_recording(self, segments,stimulus):
@@ -468,6 +466,7 @@ class DataStore(DataStoreView):
             s.null = True
             s.annotations['stimulus'] = str(stimulus)
             self.block.segments.append(MozaikSegment(s,null=True))
+            self.block.segments = sorted(self.block.segments, key=lambda x:x.rec_datetime)
 
     def add_stimulus(self, data, stimulus):
         """
@@ -641,7 +640,8 @@ class PickledDataStore(Hdf5DataStore):
             f = open(self.parameters.root_directory + '/' + 'Segment'
                      + str(len(self.block.segments) - 1) + ".pickle", 'wb')
             pickle.dump(s, f)
-
+        
+        self.block.segments = sorted(self.block.segments, key=lambda x:x.rec_datetime)
         self.stimulus_dict[str(stimulus)] = True
 
 
@@ -659,9 +659,10 @@ class PickledDataStore(Hdf5DataStore):
             f = open(self.parameters.root_directory + '/' + 'Segment'
                      + str(len(self.block.segments) - 1) + ".pickle", 'wb')
             pickle.dump(s, f)
+        self.block.segments = sorted(self.block.segments, key=lambda x:x.rec_datetime)
 
     def purge_segments(self):
-        """Purge all segments contained in the datastore from their spiketrains and analogsignals"""
+        """Purge spiketrains and analogsignals of all sgements from memory (lazy loading mechanisms will ensure their reload if accessed again)."""
         for s in self.block.segments:
             if s.full:
                 s.release()

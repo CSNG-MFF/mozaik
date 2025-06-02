@@ -77,13 +77,16 @@ class TestModel(object):
         -------
         A list of all segments in a DataStore, optionally filtered for sheet name.
         """
+        dsv = param_filter_query(
+            data_store, st_name="EndOfSimulationBlank", negative=True
+        )
 
         if sheet_name is None:
             # If no sheet name specified, load all sheets
-            return data_store.get_segments()
+            return dsv.get_segments()
         else:
             return sorted(
-                param_filter_query(data_store, sheet_name=sheet_name).get_segments(),
+                param_filter_query(dsv, sheet_name=sheet_name).get_segments(),
                 key=lambda x: x.identifier,
             )
 
@@ -289,9 +292,9 @@ class TestModelExplosionMonitoring(TestModel):
         threshold = eval(self.ds.get_model_parameters())["explosion_monitoring"][
             "threshold"
         ]
-        last_seg = param_filter_query(self.ds, sheet_name=sheet_monitored).get_segments(
-            ordered=True
-        )[-1]
+        last_seg = param_filter_query(
+            self.ds, sheet_name=sheet_monitored
+        ).get_segments()[-1]
         assert (
             numpy.mean(
                 [
