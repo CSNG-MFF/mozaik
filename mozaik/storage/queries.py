@@ -40,7 +40,7 @@ class Query(ParametrizedObject):
 
 
 ########################################################################
-def param_filter_query(dsv,ads_unique=False,rec_unique=False,**kwargs):
+def param_filter_query(dsv,ads_unique=False,rec_unique=False,negative=False,**kwargs):
     """
     It will return DSV with only recordings and ADSs with mozaik parameters 
     whose values match the parameter values combinations provided in `kwargs`. 
@@ -68,7 +68,9 @@ def param_filter_query(dsv,ads_unique=False,rec_unique=False,**kwargs):
                or recordings have to match. The values of the parameters should be either directly the values to match or list of values in which
                case this list is interpreted as *one of* of the values that each returned recording or ASD has to match (thus effectively there
                is an *and* operation between the different parameters and *or* operation between the values specified for the given mozaik parameters). 
-               
+
+    negative : bool
+               If true, it will instead of keeping all data matching the keywords in the dsv, remove them from dsv.  
     Examples
     --------
     >>> datastore.param_filter_query(datastore,identifier=['PerNeuronValue','SingleValue'],sheet_name=sheet,value_name='orientation preference')
@@ -91,7 +93,7 @@ def param_filter_query(dsv,ads_unique=False,rec_unique=False,**kwargs):
     if 'sheet_name' in set(kwargs):
        if len(kwargs) == 1:
            # This means that there is only one 'non-stimulus' parameter sheet, and thus we need
-           # to filter out all recordings that are associated with that sheet (otherwsie we do not pass any recordings)
+           # to filter out all recordings that are associated with that sheet (otherwise we do not pass any recordings)
            kw = kwargs['sheet_name'] if isinstance(kwargs['sheet_name'],list) else [kwargs['sheet_name']]
            seg_filtered = set([s for s in dsv.block.segments if s.annotations['sheet_name'] in kw])
        else:
@@ -100,7 +102,7 @@ def param_filter_query(dsv,ads_unique=False,rec_unique=False,**kwargs):
         if len(kwargs) == 0:
            seg_filtered = set(dsv.block.segments)
         else:
-           seg_filtered = set([])  
+           seg_filtered = set([])
         
     ads_filtered= set(filter_query(dsv.analysis_results,**kwargs))
     
@@ -114,9 +116,14 @@ def param_filter_query(dsv,ads_unique=False,rec_unique=False,**kwargs):
     
     seg = seg_filtered_st & seg_filtered
     ads = ads_filtered_st & ads_filtered
-    
-    new_dsv.sensory_stimulus = dsv.sensory_stimulus_copy()
-    new_dsv.block.segments = list(seg)
+
+
+    if negative:
+        seg = set(dsv.block.segments) - seg
+        ads = set(dsv.analysis_results) - ads
+
+    new_dsv.sensory_stimulus = dsv.sensory_stimulus_copy()            
+    new_dsv.block.segments = sorted(list(seg), key=lambda x:x.rec_datetime)
     new_dsv.analysis_results = list(ads)
     
     if ads_unique and len(ads) != 1:
@@ -234,6 +241,7 @@ def partition_by_stimulus_paramter_query(dsv, parameter_list):
         new_dsv.analysis_results = dsv.analysis_result_copy()
         new_dsv.block.segments.extend(vals)
         dsvs.append(new_dsv)
+    new_dsv.block.segments = sorted(new_dsv.block.segments,key=lambda x:x.rec_datetime)
     return dsvs
 
 
