@@ -16,7 +16,7 @@ jobs:
     - name: Install prerequisites
       run: |
         sudo apt-get update
-        sudo apt-get install python3-setuptools subversion git libopenmpi-dev g++ libjpeg8 libjpeg8-dev libfreetype6 libfreetype6-dev zlib1g-dev libpng++-dev libncurses5 libncurses5-dev libreadline-dev liblapack-dev libblas-dev gfortran libgsl0-dev openmpi-bin python-tk cmake
+        sudo apt-get install python3-setuptools subversion git libopenmpi-dev g++ libjpeg8 libjpeg8-dev libfreetype6 libfreetype6-dev zlib1g-dev libpng++-dev libncurses5 libncurses5-dev libreadline-dev liblapack-dev libblas-dev gfortran libgsl0-dev openmpi-bin python3-tk cmake
         pip3 install pytest pytest-cov pytest-randomly coverage black
         # TODO: Add pynn once we switch from our custom to the official release
         pip3 install numpy scipy mpi4py matplotlib quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.12.0 cython psutil future requests elephant pytest-xdist pytest-timeout junitparser numba numpyencoder sphinx imageio
