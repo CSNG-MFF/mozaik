@@ -15,7 +15,7 @@ fresh installation of current Ubuntu system.
 
 First the list of ubuntu package dependencies::
 
-  sudo apt-get install python3 python3-dev python3-pip python3-setuptools subversion git libopenmpi-dev g++ libjpeg8 libjpeg8-dev libfreetype6 libfreetype6-dev zlib1g-dev libpng++-dev libncurses5-dev libreadline-dev liblapack-dev libblas-dev gfortran libgsl0-dev openmpi-bin cmake libboost-all-dev
+  sudo apt-get install python3 python3-dev python3-pip python3-setuptools python3-tk python-nose subversion git libopenmpi-dev g++ libjpeg8 libjpeg8-dev libfreetype6 libfreetype6-dev zlib1g-dev libpng++-dev libncurses6 libncurses-dev libreadline-dev liblapack-dev libblas-dev gfortran libgsl0-dev openmpi-bin python-tk cmake libboost-all-dev
 
 
 Virtual env
@@ -51,7 +51,7 @@ ____________
 
 Now you can install all other dependencies in this protected environment::
 
-  pip3 install numpy scipy mpi4py matplotlib quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.12.0 cython psutil future requests elephant pytest-xdist pytest-timeout junitparser numba numpyencoder sphinx imageio scikit-image
+  pip3 install numpy scipy mpi4py matplotlib quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.12.0 cython==3.0.10 psutil future requests elephant pytest-xdist pytest-timeout junitparser numba numpyencoder sphinx imageio scikit-image
 
 Next we will manually install several packages. It is probably the best if you create a separate directory in an appropriate
 place, where you will download and install the packages from.
