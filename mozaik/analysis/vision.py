@@ -16,6 +16,7 @@ from mozaik.tools.circ_stat import circ_mean, circular_dist
 from mozaik.tools.neo_object_operations import neo_mean, neo_sum
 from builtins import zip
 from collections import OrderedDict
+import pandas
 
 logger = mozaik.getMozaikLogger()
 
@@ -46,7 +47,7 @@ class ModulationRatio(Analysis):
             psths = dsv.get_analysis_result()
             st = [MozaikParametrized.idd(p.stimulus_id) for p in psths]
             # average across trials
-            psths, stids = colapse(psths,st,parameter_list=['trial'],func=neo_sum,allow_non_identical_objects=True)
+            psths, stids = colapse(psths,st,parameter_list=['trial'],func=neo_mean,allow_non_identical_objects=True)
 
             # retrieve the computed orientation preferences
             pnvs = self.datastore.get_analysis_result(identifier='PerNeuronValue',
@@ -165,10 +166,10 @@ class ModulationRatio(Analysis):
         fft = numpy.fft.fft(signal)
 
         if abs(fft[0]) != 0:
-            return 2*abs(fft[first_har])/abs(fft[0]),abs(fft[0]),2*abs(fft[first_har]),numpy.angle(fft[first_har])
+            return 2*abs(fft[first_har])/abs(fft[0]),abs(fft[0])/len(signal),2*abs(fft[first_har])/len(signal),numpy.angle(fft[first_har])
         else:
             logger.info("MR: ARGH: " + str(fft[0]) +"  " +  str(numpy.mean(signal)))
-            return 10,abs(fft[0]),2*abs(fft[first_har]),numpy.angle(fft[first_har])
+            return 10,abs(fft[0])/len(signal),2*abs(fft[first_har])/len(signal),numpy.angle(fft[first_har])
 
 class ModulationRatioSpecificOrientation(Analysis):
     """
@@ -201,8 +202,7 @@ class ModulationRatioSpecificOrientation(Analysis):
             psths = dsv.get_analysis_result()
             st = [MozaikParametrized.idd(p.stimulus_id) for p in psths]
             # average across trials
-            psths, stids = colapse(psths,st,parameter_list=['trial'],func=neo_sum,allow_non_identical_objects=True)
-
+            psths, stids = colapse(psths,st,parameter_list=['trial'],func=neo_mean,allow_non_identical_objects=True)
             for (psth, stid) in zip(psths, stids):
                 # here we will store the modulation ratios, one per each neuron
                 modulation_ratio = []
@@ -279,10 +279,10 @@ class ModulationRatioSpecificOrientation(Analysis):
         fft = numpy.fft.fft(signal)
 
         if abs(fft[0]) != 0:
-            return 2*abs(fft[first_har])/abs(fft[0]),abs(fft[0]),2*abs(fft[first_har]),numpy.angle(fft[first_har])
+            return 2*abs(fft[first_har])/abs(fft[0]),abs(fft[0])/len(signal),2*abs(fft[first_har])/len(signal),numpy.angle(fft[first_har])
         else:
             logger.info("MR: ARGH: " + str(fft[0]) +"  " +  str(numpy.mean(signal)))
-            return 10,abs(fft[0]),2*abs(fft[first_har]),numpy.angle(fft[first_har])
+            return 10,abs(fft[0])/len(signal),2*abs(fft[first_har])/len(signal),numpy.angle(fft[first_har])
 
 class Analog_F0andF1(Analysis):
       """
@@ -343,8 +343,6 @@ class Analog_F0andF1(Analysis):
 
                     signals = asl.asl
                     first_analog_signal = signals[0]
-                    logger.info(str(first_analog_signal.t_start))
-                    logger.info(str(first_analog_signal.t_stop))
                     duration = first_analog_signal.t_stop - first_analog_signal.t_start
                     frequency = MozaikParametrized.idd(asl.stimulus_id).temporal_frequency * MozaikParametrized.idd(asl.stimulus_id).getParams()['temporal_frequency'].units
                     period = 1/frequency
@@ -354,10 +352,11 @@ class Analog_F0andF1(Analysis):
 
                     f0 = [abs(numpy.fft.fft(signal.flatten())[0])/len(signal) for signal in signals]
                     f1 = [2*abs(numpy.fft.fft(signal.flatten())[first_har])/len(signal) for signal in signals]
-                    
+                    f1_phase = [numpy.angle(numpy.fft.fft(signal.flatten())[first_har]) for signal in signals]
+
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(f0,asl.ids,asl.y_axis_units,value_name = 'F0('+ asl.y_axis_name + ')',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=asl.stimulus_id))                            
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(f1,asl.ids,asl.y_axis_units,value_name = 'F1('+ asl.y_axis_name + ')',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=asl.stimulus_id))                                                
-
+                    self.datastore.full_datastore.add_analysis_result(PerNeuronValue(f1_phase,asl.ids,asl.y_axis_units,value_name = 'F1 phase('+ asl.y_axis_name + ')',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=asl.stimulus_id))
 
 class LocalHomogeneityIndex(Analysis):      
     """
@@ -759,3 +758,148 @@ class OCTCTuningAnalysis(Analysis):
                             
                         self.datastore.full_datastore.add_analysis_result(PerNeuronValue(sis,self.parameters.neurons,None,value_name = 'Suppression index of ' + self.pnvs[0].value_name ,sheet_name=self.parameters.sheet_name,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
 
+class F1CorrectedStandardDeviation(Analysis):
+      """
+      Calculates the standard deviation of an AnalogSignalList after removing its F1 component.
+      The F1 component had to be previous calculated with the Analog_F0andF1 analysis
+      The standard deviation is computed as the average of the standard deviation of every instance
+      of a sliding time window of duration `time_window`. To compute the STD over the whole stimulus
+      presentation, set `time_window` to 0.
+      """
+
+      required_parameters = ParameterSet({
+          'y_axis_name': str,  # Name of the y_axis of the AnalogSignalList to compute the standard deviation on
+          'parameters_sort' : list, # The names of the varying parameters in the dsv. ADS in each sub-dsv will be sorted against these parameters to ensure their order is the same
+          'time_window': float,  # the length (in ms) of the time window over wich the standard deviations will be computed. If 0, no time_window is used
+
+      })
+      def perform_analysis(self):
+          for sheet in self.datastore.sheets():
+              dsv = queries.param_filter_query(self.datastore,sheet_name=sheet)
+
+              # Get the F1 component amplitudes of the signals
+              dsv_f1 = queries.param_filter_query(dsv,value_name=f'F1({self.parameters.y_axis_name})')
+              for parameter in self.parameters.parameters_sort:
+                  dsv_f1.sort_analysis_results(parameter)
+              f1s =  dsv_f1.get_analysis_result()
+
+              # Get the F1 component phases of the signals
+              dsv_f1_phase = queries.param_filter_query(dsv,value_name=f'F1 phase({self.parameters.y_axis_name})')
+              for parameter in self.parameters.parameters_sort:
+                  dsv_f1_phase.sort_analysis_results(parameter)
+              f1_phases =  dsv_f1_phase.get_analysis_result()
+
+              # Get the signal on which to compute the STD
+              dsv_signal = queries.param_filter_query(dsv,y_axis_name=self.parameters.y_axis_name)
+              for parameter in self.parameters.parameters_sort:
+                  dsv_signal.sort_analysis_results(parameter)
+              signals =  dsv_signal.get_analysis_result()
+
+              for f1, f1_phase, signal in zip(f1s,f1_phases,signals):
+                  # Wouldn't work if ids are the same but not in the correct order.
+                  stimulus = signal.stimulus_id
+                  ids = signal.ids
+
+                  first_analog_signal = signal.asl[0]
+                  length = len(first_analog_signal)
+                  duration = first_analog_signal.t_stop - first_analog_signal.t_start
+                  frequency = MozaikParametrized.idd(f1.stimulus_id).temporal_frequency * MozaikParametrized.idd(f1.stimulus_id).getParams()['temporal_frequency'].units
+                  period = 1/frequency
+                  period = period.rescale(first_analog_signal.t_start.units)
+                  cycles = duration / period
+                  first_har = int(round(cycles))
+                  index_window = int(first_analog_signal.sampling_rate * self.parameters.time_window)
+                  stds = []
+                  # For each neuron
+                  for idd in ids:
+                      # Reconstruct the F1 component based on its amplitude and phase
+                      reconstructed_component = f1.get_value_by_id(idd) * numpy.exp(1j * f1_phase.get_value_by_id(idd))/2*length
+                      reconstructed_fft = numpy.zeros(length, dtype=complex)
+                      reconstructed_fft[first_har] = reconstructed_component
+                      reconstructed_fft[-first_har] = numpy.conj(reconstructed_component)
+                      reconstructed_signal = numpy.fft.ifft(reconstructed_fft)
+
+                      # Substract the reconstructed component to the signal and compute the STD
+                      if self.parameters.time_window != 0:
+                          # If time_window argument is great than 0, compute a rolling STD over the time window
+                          stds.append(numpy.mean(pandas.Series(signal.get_asl_by_id(idd).magnitude.flatten() - reconstructed_signal).rolling(index_window).std(ddof=0)))
+                      else:
+                          stds.append(numpy.std(signal.get_asl_by_id(idd).magnitude.flatten() - reconstructed_signal))
+
+                  self.datastore.full_datastore.add_analysis_result(PerNeuronValue(stds,signal.ids,signal.y_axis_units,value_name = 'F1 corrected STD ('+ signal.y_axis_name + ')',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=signal.stimulus_id))
+
+class LinearityIndices(Analysis):
+      """
+      Calculates the Non-linearity index and Linearity index as in Cagnol et al. 2025
+      in respect to a PerNeuronValue with name corresponding to the `value_name` argument
+      """
+
+      required_parameters = ParameterSet({
+          'value_name': str,  # Name of the PerNeuronValue to compute the linearity indices on
+      })
+
+      def perform_analysis(self):
+          inner_radius =  numpy.sort(list(set([MozaikParametrized.idd(s).inner_aperture_radius for s in queries.param_filter_query(self.datastore,st_name='DriftingSinusoidalGratingRing').get_stimuli()])))
+          radius =  numpy.sort(list(set([MozaikParametrized.idd(s).radius for s in queries.param_filter_query(self.datastore,st_name='DriftingSinusoidalGratingDisk').get_stimuli()])))
+
+          for sheet in self.datastore.sheets():
+              dsv_disk = queries.param_filter_query(self.datastore, value_name=self.parameters.value_name, st_name='DriftingSinusoidalGratingDisk', st_direct_stimulation_name=None, sheet_name=sheet)
+              dsv_ring = queries.param_filter_query(self.datastore, value_name=self.parameters.value_name, st_name='DriftingSinusoidalGratingRing', st_direct_stimulation_name=None, sheet_name=sheet)
+              ids = dsv_disk.get_analysis_result()[0].ids
+              
+              idd = []
+              nlis = []
+              lis = []
+              sts = []
+               
+              # Fore each neuron
+              for idd in ids:
+                  disk = []
+                  ring = []
+                  disk_sd = []
+                  ring_sd = []
+
+                  # For each radius of disk stimuli, compute the mean value of the PNV across trials
+                  for r in radius:
+                      dsv = queries.param_filter_query(dsv_disk, st_radius = r)
+                      stimuli = [pnv.stimulus_id for pnv in dsv.get_analysis_result()]
+                      pnvs1, stids = colapse(dsv.get_analysis_result(),stimuli,parameter_list=['trial'],allow_non_identical_objects=True)
+                      for pnvs in pnvs1:
+                          disk.append(numpy.mean([pnv.get_value_by_id(idd) for pnv in pnvs]))
+                      
+                      # Save the disk stimuli with trial=None in a stimuli list which will be used when adding LIs to the datastore
+                      if len(sts) != len(radius):
+                          sts.append(stids[0])
+    
+                  # For each inner radius of ring stimuli, compute the mean value of the PNV across trials
+                  for r in inner_radius:
+                      dsv = queries.param_filter_query(dsv_ring, st_inner_aperture_radius = r)
+                      stimuli = [pnv.stimulus_id for pnv in dsv.get_analysis_result()]
+                      pnvs1, stids = colapse(dsv.get_analysis_result(),stimuli,parameter_list=['trial'],allow_non_identical_objects=True)
+                      for pnvs in pnvs1:
+                          ring.append(numpy.mean([pnv.get_value_by_id(idd) for pnv in pnvs]))
+    
+                  disk = numpy.array(disk)
+                  ring = numpy.array(ring)
+
+                  # Compute the non-linearity index
+                  peak_dep =  max(disk-ring[-1])
+                  if peak_dep > 0:
+                      sumVm = max(disk + ring - 2*ring[-1])
+                      normsum= (sumVm-peak_dep)/peak_dep
+                      nli = normsum
+                  else:
+                      nli = numpy.nan
+                  nlis.append(nli)
+
+                  # Compute the linearity indices at each radius value
+                  lis.append(100*((disk[-1]-ring[-1] - (disk + ring - 2*ring[-1]))/(disk[-1]-ring[-1])))
+             
+              lis = numpy.array(lis)
+            
+              # Save the NLIs
+              self.datastore.full_datastore.add_analysis_result(PerNeuronValue(list(nlis), ids,None,value_name = 'NLI ' + self.parameters.value_name,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=None))
+
+              # For each disk stimulus radius, save the corresponding LI. The fact that disks are used and not rings is arbitrary
+              for i in range(len(sts)):
+                  self.datastore.full_datastore.add_analysis_result(PerNeuronValue(list(lis[:,i]), ids,None,value_name = 'LI ' + self.parameters.value_name,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(sts[i])))
