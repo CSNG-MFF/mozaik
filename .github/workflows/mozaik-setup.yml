@@ -52,6 +52,15 @@ jobs:
         cd ..
         python -c 'import nest'
 
+    - name: Install stepcurrentmodule
+      run: |
+        git clone https://github.com/CSNG-MFF/nest-step-current-module.git
+        cd nest-step-current-module
+        cmake -Dwith-mpi=ON -Dwith-boost=ON -Dwith-nest=$pythonLocation/bin/nest-config -Dwith-optimize='-O3' ./
+        make -j8
+        make -j8 install
+        cd ..
+
     - name: Install mozaik
       run: pip install .
 
