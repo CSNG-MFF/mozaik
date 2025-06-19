@@ -1,54 +1,9 @@
-
 name: Fast model MPI tests
 
 on: [push, pull_request]
 
 jobs:
-
-  pytest:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Pytest Unit Tests
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.9'
-    - name: Install prerequisites
-      run: |
-        sudo apt-get update
-        sudo apt-get install python3-setuptools subversion git libopenmpi-dev g++ libjpeg8 libjpeg8-dev libfreetype6 libfreetype6-dev zlib1g-dev libpng++-dev libncurses6 libncurses-dev libreadline-dev liblapack-dev libblas-dev gfortran libgsl0-dev openmpi-bin python3-tk cmake
-        pip3 install pytest pytest-cov pytest-randomly coverage black
-        # TODO: Add pynn once we switch from our custom to the official release
-        pip3 install numpy scipy mpi4py matplotlib quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.12.0 cython==3.0.10 psutil future requests elephant pytest-xdist pytest-timeout junitparser numba numpyencoder sphinx imageio
-    - name: Download and install imagen
-      run: |
-        git clone https://github.com/antolikjan/imagen.git
-        cd imagen
-        python setup.py install
-        cd ..
-
-    # TODO: Remove this block once we switch from our custom pynn to the official release
-    - name: Download and install PyNN
-      run: |
-        git clone https://github.com/CSNG-MFF/PyNN.git
-        cd PyNN
-        git checkout PyNNStepCurrentModule
-        pip install .
-        cd ..
-
-    - name: Install Nest
-      run: |
-        wget https://github.com/nest/nest-simulator/archive/v3.4.tar.gz
-        tar xvfz v3.4.tar.gz
-        cd nest-simulator-3.4
-        cmake -Dwith-mpi=ON -Dwith-boost=ON -DCMAKE_INSTALL_PREFIX:PATH=$pythonLocation -Dwith-optimize='-O3' ./
-        make -j8
-        make -j8 install
-        cd ..
-        python -c 'import nest'
-
-    - name: Install mozaik
-      run: python setup.py install
-
-    - name: Test with pytest
-      run: pytest -m "mpi and not not_github and not mpi_explosion" ./tests/full_model/test_models_mpi.py --cov=mozaik
+  fast-tests:
+    uses: ./.github/workflows/mozaik-setup.yml
+    with:
+      pytest-args: '-m "mpi and not not_github and not mpi_explosion"'

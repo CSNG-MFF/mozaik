@@ -10,7 +10,7 @@ Currently, **Mozaik** is being fully tested only on Ubuntu Linux distribution.
 Ubuntu installation instructions
 --------------------------------
 
-Following these instruction should give you a working copy of mozaik on a 
+Following these instruction should give you a working copy of mozaik on a
 fresh installation of current Ubuntu system.
 
 First the list of ubuntu package dependencies::
@@ -34,7 +34,7 @@ To setup `virtualenvwrapper <http://virtualenvwrapper.readthedocs.org/en/latest/
     export PIP_VIRTUALENV_BASE=$WORKON_HOME
     export PIP_RESPECT_VIRTUALENV=true
 
-For the first time, run .bashrc (in the future it will be loaded by your terminal)::      
+For the first time, run .bashrc (in the future it will be loaded by your terminal)::
 
 $ source .bashrc
 
@@ -43,12 +43,12 @@ To create a new managed virtualenv you just need to::
     $ mkvirtualenv --python=/usr/bin/python3 mozaik
     $ workon mozaik
     (mozaik)$>
- 
 
-Dependencies 
+
+Dependencies
 ____________
 
- 
+
 Now you can install all other dependencies in this protected environment::
 
   pip3 install numpy scipy mpi4py matplotlib quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.12.0 cython==3.0.10 psutil future requests elephant pytest-xdist pytest-timeout junitparser numba numpyencoder sphinx imageio scikit-image som-pbc
@@ -72,31 +72,31 @@ Then install the *PyNN* package from the PyNNStepCurrentModule branch::
 Next install the *Nest* simulator (always in the virtual environment):
 
     - download the latest version from their `website <http://www.nest-initiative.org/index.php/Software:Download>`_::
-        
+
         wget https://github.com/nest/nest-simulator/archive/refs/tags/v3.4.tar.gz
-        
+
     - untar and cd into it::
 
         tar xvfz v3.4.tar.gz
         cd nest-simulator-3.4
-    
+
     - then configure (change path to wherever you installed your virtual environemnt)::
-    
+
         (mozaik)$ cmake -Dwith-mpi=ON -Dwith-boost=ON -DCMAKE_INSTALL_PREFIX:PATH=$HOME/virt_env/mozaik -Dwith-optimize='-O3' ./
-       
+
     - finally, by launching make and install, it installs PyNest in the activated virtual environment mozaik. If you're using Slurm, run these commands through :code:`srun` ::
 
         (mozaik)$ make
         (mozaik)$ make install
-        
+
     - Then::
-        
+
         (mozaik)$ make installcheck
 
       or if you are using Slurm::
 
         (mozaik)$ salloc -n8 make installcheck
-    
+
     - nest will reside in $HOME/virt_env/mozaik/lib/python3.*/site-packages. Check that the package is seen by python using::
 
         (mozaik)$ python -c 'import nest'
@@ -104,12 +104,12 @@ Next install the *Nest* simulator (always in the virtual environment):
 Then install the *stepcurrentmodule* Nest module:
 
     - get the module from github and cd into it::
-        
+
         git clone https://github.com/CSNG-MFF/nest-step-current-module.git
         cd nest-step-current-module
 
     - then, in the following command, replace NEST_CONFIG_PATH by your nest-config installation path (should reside in $HOME/virt_env/mozaik/bin/nest-config) and run it::
-        
+
         (mozaik)$ cmake -Dwith-mpi=ON -Dwith-boost=ON -Dwith-optimize='-O3' -Dwith-nest=NEST_CONFIG_PATH ./
 
     - finally, by launching make and install, it installs the nest module in the activated virtual environment mozaik. If you're using Slurm, run these commands through :code:`srun` ::
@@ -122,11 +122,11 @@ Then install the *stepcurrentmodule* Nest module:
         (mozaik)$ python -c 'import nest; nest.Install("stepcurrentmodule")'
 
 And, finally, Mozaik::
-    
+
     git clone https://github.com/CSNG-MFF/mozaik.git
     cd mozaik
     python setup.py install
-    
+
 
 .. _ref-run:
 
@@ -139,7 +139,7 @@ Go to the examples directory in the mozaik cloned from github (see above) and la
   cd examples
   cd VogelsAbbott2005
   python run.py nest 2 param/defaults 'test'
-  
+
 This will launch the example with the nest simulator running 2 MPI processes, each process running 2 threads, using the parameterization of the model rotted in param/defaults. Finally, 'test' is the name of this run.
 
 
