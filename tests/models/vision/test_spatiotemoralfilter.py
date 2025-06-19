@@ -142,6 +142,7 @@ class TestCellWithReceptiveField:
     @classmethod
     def setup_class(cls):
         from pyNN import nest
+
         global nest
         size = 3.0
         cls.vs_params = base_stim_params.copy()
@@ -210,6 +211,7 @@ class TestSpatioTemporalFilterRetinaLGN:
     @classmethod
     def setup_class(cls):
         from pyNN import nest
+
         global nest
 
     @pytest.mark.parametrize("background_luminance", [10, 20, 40, 80])
