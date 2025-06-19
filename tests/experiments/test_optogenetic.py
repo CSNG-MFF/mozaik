@@ -26,7 +26,15 @@ class TestCorticalStimulationWithOptogeneticArray:
     @classmethod
     def setup_class(cls):
         from pyNN import nest
-        from mozaik.experiments.optogenetic import CorticalStimulationWithOptogeneticArray, SingleOptogeneticArrayStimulus, OptogeneticArrayStimulusCircles, OptogeneticArrayStimulusHexagonalTiling, OptogeneticArrayImageStimulus, OptogeneticArrayStimulusOrientationTuningProtocol
+        from mozaik.experiments.optogenetic import (
+            CorticalStimulationWithOptogeneticArray,
+            SingleOptogeneticArrayStimulus,
+            OptogeneticArrayStimulusCircles,
+            OptogeneticArrayStimulusHexagonalTiling,
+            OptogeneticArrayImageStimulus,
+            OptogeneticArrayStimulusOrientationTuningProtocol,
+        )
+
         global test_dir, CorticalStimulationWithOptogeneticArray, SingleOptogeneticArrayStimulus, OptogeneticArrayStimulusCircles, OptogeneticArrayStimulusHexagonalTiling, OptogeneticArrayImageStimulus, OptogeneticArrayStimulusOrientationTuningProtocol
         test_dir = str(pathlib.Path(__file__).parent.parent)
         model_params = load_parameters(test_dir + "/sheets/model_params")

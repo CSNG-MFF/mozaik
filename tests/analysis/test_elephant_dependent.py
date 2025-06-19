@@ -9,6 +9,7 @@ class TestCriticalityAnalysis:
     @classmethod
     def setup_class(cls):
         from mozaik.analysis.elephant_dependent import CriticalityAnalysis
+
         global CriticalityAnalysis
 
     def gen_powerlaw_distr(self, ca, a, b):

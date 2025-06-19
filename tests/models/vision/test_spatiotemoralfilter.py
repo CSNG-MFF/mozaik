@@ -142,6 +142,7 @@ class TestCellWithReceptiveField:
     @classmethod
     def setup_class(cls):
         from pyNN import nest
+
         global nest
         size = 3.0
         cls.vs_params = base_stim_params.copy()
