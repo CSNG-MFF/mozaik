@@ -51,6 +51,7 @@ class TestOpticalStimulatorArrayChR:
     def setup_class(cls):
         from pyNN import nest
         from mozaik.sheets.direct_stimulator import OpticalStimulatorArrayChR
+
         global test_dir, OpticalStimulatorArrayChR
         test_dir = str(pathlib.Path(__file__).parent.parent)
         model_params = load_parameters(test_dir + "/sheets/model_params")
