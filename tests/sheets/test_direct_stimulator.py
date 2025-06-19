@@ -1,14 +1,11 @@
 import pickle
 import pytest
 import numpy as np
-from pyNN import nest
 import quantities as qt
 from copy import deepcopy
 from mozaik.models import Model
 from parameters import ParameterSet
 from mozaik.sheets.vision import VisualCorticalUniformSheet3D
-from mozaik.sheets.direct_stimulator import *
-from mozaik.experiments.optogenetic import *
 from mozaik.tools.distribution_parametrization import (
     load_parameters,
     PyNNDistribution,
@@ -52,7 +49,9 @@ class TestOpticalStimulatorArrayChR:
 
     @classmethod
     def setup_class(cls):
-        global test_dir
+        from pyNN import nest
+        from mozaik.sheets.direct_stimulator import OpticalStimulatorArrayChR
+        global test_dir, OpticalStimulatorArrayChR
         test_dir = str(pathlib.Path(__file__).parent.parent)
         model_params = load_parameters(test_dir + "/sheets/model_params")
         model_params.null_stimulus_period = 200

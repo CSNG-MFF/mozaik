@@ -4,7 +4,6 @@ import imagen
 import pytest
 import pylab
 import numpy as np
-from pyNN import nest
 
 import mozaik
 from mozaik.models import Model
@@ -142,6 +141,7 @@ class TestCellWithReceptiveField:
 
     @classmethod
     def setup_class(cls):
+        from pyNN import nest
         size = 3.0
         cls.vs_params = base_stim_params.copy()
         cls.vs_params.update({"size_x": size, "size_y": size})
