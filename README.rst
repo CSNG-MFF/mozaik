@@ -51,7 +51,7 @@ ____________
 
 Now you can install all other dependencies in this protected environment::
 
-  pip3 install numpy scipy mpi4py matplotlib quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.12.0 cython==3.0.10 psutil future requests elephant pytest-xdist pytest-timeout junitparser numba numpyencoder sphinx imageio scikit-image
+  pip3 install numpy scipy mpi4py matplotlib quantities lazyarray interval Pillow param==1.5.1 parameters neo==0.12.0 cython==3.0.10 psutil future requests elephant pytest-xdist pytest-timeout junitparser numba numpyencoder sphinx imageio scikit-image som-pbc
 
 Next we will manually install several packages. It is probably the best if you create a separate directory in an appropriate
 place, where you will download and install the packages from.

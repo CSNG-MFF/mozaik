@@ -432,7 +432,6 @@ class ButterworthFiltering(Analysis):
                     for x in range(len(asl)):
                         row.append(NeoAnalogSignal(filtfilt(b, a, asl[y][x].magnitude[:,0]),t_start=t_start, sampling_period=sampling_period, units=units))
                     fasl.append(row)
-
                 self.datastore.full_datastore.add_analysis_result(
                     PerAreaAnalogSignalList(fasl,paasl.x_coords,paasl.y_coords,units,
                                    stimulus_id=paasl.stimulus_id,
@@ -641,7 +640,7 @@ class LFPFromPSTH(Analysis):
                     PerAreaAnalogSignalList(lfps,x_axis_cropped,y_axis_cropped,lfps[0][0].units,
                                    stimulus_id=str(s),
                                    x_axis_name='time',
-                                   y_axis_name='PSTH LFP' + cropped_suffix + gauss_suffix,
+                                   y_axis_name='LFP' + cropped_suffix + gauss_suffix + ' ' + psth.y_axis_name,
                                    sheet_name=sheet,
                                    tags=self.tags,
                                    analysis_algorithm=self.__class__.__name__))
@@ -674,6 +673,7 @@ class LFPFromSynapticCurrents(Analysis):
     gaussian_sigma: float
              The standard deviation of the gaussian kernel. A value must be assigned if
              gaussian_convolution is set to True
+             a delay in the LFP eqaution in LFPFromSynapticCurrents
     """
     required_parameters = ParameterSet({
       'downsampling' : float, 
@@ -681,6 +681,7 @@ class LFPFromSynapticCurrents(Analysis):
       'cropped_length': float,
       'gaussian_convolution': bool,
       'gaussian_sigma': float,
+      'normalization_per_channel': bool,
     })
 
     # Need temoral bin, coordinates, and squares
@@ -736,7 +737,8 @@ class LFPFromSynapticCurrents(Analysis):
                 t_start = ase.t_start + 6*qt.ms
                 
                 # temporal resolution
-                t_resolution = int((s.duration-6)/self.parameters.downsampling)
+                t_resolution = int(s.duration/self.parameters.downsampling)
+                #t_resolution = int((s.duration-6)/self.parameters.downsampling)
 
                 # Initialize the LFP tensor
                 m = numpy.zeros((x_resolution,y_resolution,t_resolution))
@@ -762,7 +764,7 @@ class LFPFromSynapticCurrents(Analysis):
                     # This LFP proxy is optimal when excitation is lagged by 6ms compared to inhibition
                     idiff = int(6/time_step)
 
-                    lfp = ((e_rev_E - vm) * e_syn)[:-idiff] - 1.65 * ((e_rev_I - vm) * i_syn)[idiff:] #Same proxy as Davis et al., 2021 
+                    lfp = ((e_rev_E - vm) * e_syn) - ((e_rev_I - vm) * i_syn) # RWS proxy as Davis et al., 2021 
 
                     full_signal = lfp
                     full_signal = numpy.expand_dims(full_signal, axis=(1,2)) 
@@ -797,9 +799,17 @@ class LFPFromSynapticCurrents(Analysis):
                     y_axis_cropped = y_axis
 
                 # Normalization of the signal 
-                avg = numpy.mean(m)
-                std = numpy.std(m)
-                m = (m - avg)/std
+                if self.parameters.normalization_per_channel:
+                    avg = numpy.mean(m,axis=2,keepdims=True)
+                    std = numpy.std(m,axis=2,keepdims=True)
+                    m = (m - avg)/std
+                    norm_suffix = ' normalized per channel'
+
+                else:
+                    avg = numpy.mean(m)
+                    std = numpy.std(m)
+                    m = (m - avg)/std
+                    norm_suffix = ''
 
                 # Convert the tensor to a PerAreaAnalogSignalList and add it to the datastore
                 lfps = []
@@ -812,523 +822,10 @@ class LFPFromSynapticCurrents(Analysis):
                     PerAreaAnalogSignalList(lfps,x_axis_cropped,y_axis_cropped,lfps[0][0].units,
                                    stimulus_id=str(s),
                                    x_axis_name='time',
-                                   y_axis_name='LFP' + cropped_suffix + gauss_suffix,
+                                   y_axis_name='LFP' + cropped_suffix + gauss_suffix + norm_suffix,
                                    sheet_name=sheet,
                                    tags=self.tags,
                                    analysis_algorithm=self.__class__.__name__))
-
-class FindSourceWave(Analysis):
-    required_parameters = ParameterSet({
-        'evaluation_phase': float, # rad. The phase of the signal for which we evaluate the crossings
-        'tolerance': float, # rad. The tolerance for detecting waves
-        'value_name': str,
-    })
-
-    def perform_analysis(self):
-
-        def divergence(x,y,fx,fy):
-            x = x[:,numpy.newaxis]
-            dfx = numpy.zeros(fx.shape)
-            dfx[:,1:-1] = (fx[:,2:] - fx[:,:-2])/(x[2:] - x[:-2]) 
-            dfx[:,0] = (fx[:,1] - fx[:,0])/(x[1] - x[0]) 
-            dfx[:,-1] = (fx[:,-1] - fx[:,-2])/(x[-1] - x[-2]) 
-
-            y = y[:,numpy.newaxis,numpy.newaxis]
-            dfy = numpy.zeros(fy.shape)
-            dfy[1:-1,:] = (fy[2:,:] - fy[:-2,:])/(y[2:] - y[:-2]) 
-            dfy[0,:] = (fy[1,:] - fy[0,:])/(y[1] - y[0]) 
-            dfy[-1,:] = (fy[-1,:] - fy[-2,:])/(y[-1] - y[-2]) 
-
-            return dfx + dfy
-
-
-        for sheet in self.datastore.sheets():
-            dsv = queries.param_filter_query(self.datastore, sheet_name=sheet, identifier=['PerAreaAnalogSignalList'])
-            signal = queries.param_filter_query(dsv, y_axis_name = f'GP of ({self.parameters.value_name})', ads_unique=True).get_analysis_result()[0]
-            gradient_x = queries.param_filter_query(dsv, y_axis_name = f'X phase gradient of ({self.parameters.value_name})', ads_unique=True).get_analysis_result()[0]
-            gradient_y = queries.param_filter_query(dsv, y_axis_name = f'Y phase gradient of ({self.parameters.value_name})', ads_unique=True).get_analysis_result()[0]
-            
-            asl = signal.asl
-            gradient_x_asl = numpy.array(gradient_x.asl)[:,:,:,0]
-            gradient_y_asl = numpy.array(gradient_y.asl)[:,:,:,0]
-
-            sampling_period = asl[0][0].sampling_period
-            t_start = asl[0][0].t_start
-            new_t_start = t_start
-
-            asl_arr = numpy.array(asl)[:,:,:,0]
-            ny = asl_arr.shape[0]
-            nx = asl_arr.shape[1]
-            dur = asl_arr.shape[2]
-            
-            spatial_sum = numpy.sum(asl_arr,axis=(0,1))/(nx*ny)
-            circular_dist_v = numpy.vectorize(circular_dist)
-            phase_diff = circular_dist_v(numpy.angle(spatial_sum),self.parameters.evaluation_phase,2*numpy.pi)
-            sign_diff = numpy.sign(phase_diff[1:] - phase_diff[:-1])
-            ts = numpy.nonzero(sign_diff[1:] - sign_diff[:-1] == 2)[0] + 1
-            ts_tol = ts[phase_diff[ts] < self.parameters.tolerance]
-
-            X, Y = numpy.meshgrid(numpy.arange(nx),numpy.arange(ny))
-
-            div_array = numpy.zeros((ny,nx,ts_tol.shape[0]))
-            source_points = numpy.zeros((2,ts_tol.shape[0]))
-            div_array = divergence(numpy.arange(nx),numpy.arange(ny),gradient_x_asl[:,:,ts_tol],gradient_y_asl[:,:,ts_tol])
-            for i in range(len(ts_tol)):
-                argmax = numpy.argmax(div_array[:,:,i])
-                source_points[0,i] = argmax//nx
-                source_points[1,i] = argmax%nx
-
-            self.datastore.full_datastore.add_analysis_result(
-                SingleObject(ts_tol*sampling_period+t_start, sampling_period.units,
-                               stimulus_id=signal.stimulus_id,
-                               object_name=f'Evaluation points of ({self.parameters.value_name})',
-                               sheet_name=sheet,
-                               tags=self.tags,
-                               analysis_algorithm=self.__class__.__name__))
-
-            self.datastore.full_datastore.add_analysis_result(
-                SingleObject(ts_tol, qt.Dimensionless,
-                               stimulus_id=signal.stimulus_id,
-                               object_name=f'Evaluation points indices of ({self.parameters.value_name})',
-                               sheet_name=sheet,
-                               tags=self.tags,
-                               analysis_algorithm=self.__class__.__name__))
-
-            self.datastore.full_datastore.add_analysis_result(
-                SingleObject(source_points, qt.Dimensionless,
-                               stimulus_id=signal.stimulus_id,
-                               object_name=f'Source points of ({self.parameters.value_name})',
-                               sheet_name=sheet,
-                               tags=self.tags,
-                               analysis_algorithm=self.__class__.__name__))
-
-
-class FindStartPropagation(Analysis):
-    """
-    This analysis takes each PerAreaAnalogSignalList in the dsv, and create a list object containing
-    the time points that are selected to analyze the start of the spatial propagation of the activity.
-
-    The following criteria apply to the selected time points:
-    1) The maximum local activity within this time point should exceed `activity_threshold`, as a 
-    fraction of the maximum activity of the signal.
-    2) For this time point, the spatial bins for which the activity exceeds a fraction (defined as
-    `spatial_bins_threshold`) of the maximum local activity should be adjacent to one another
-    3) For this time point, the number of spatial bins for which the activity exceeds a fraction 
-    4) There was no selected time point within the last `time_spacing` time points
-    (defined as `spatial_bins_threshold`) should be lower than `max_area_activity`.
-    5) The following m time points should also validate 2), with m defnined by the parameter
-    `n_ts_adjacent`
-    6) The mean activity across the n following time point should be higher than
-    `activity_threshold_next', with n defined by the parameter `n_ts_activity` 
-
-
-
-    Other parameters
-    ----------------
-    """
-    required_parameters = ParameterSet({
-        'activity_threshold': float, # The threshold of the local maximum value of activity for a time point to be selected, normalized by the maximal acitivity of the signal  
-        'spatial_bins_threshold': float, # 
-        'max_area_activity': int, # 
-        'time_spacing': int, # 
-        'n_ts_adjacent': int, # 
-        'activity_threshold_next': float, # 
-        'n_ts_activity': int, # 
-    })
-
-    def perform_analysis(self):
-        for sheet in self.datastore.sheets():
-            dsv1 = queries.param_filter_query(self.datastore, sheet_name=sheet, identifier=['PerAreaAnalogSignalList'])
-            for paasl in dsv1.get_analysis_result():
-                asl = paasl.asl
-                sampling_period = asl[0][0].sampling_period
-                t_start = asl[0][0].t_start
-                name = paasl.y_axis_name
-                signal = numpy.array(asl)[:,:,:,0] 
-                duration = signal.shape[2]
-                min_ = numpy.min(signal)
-                signal = numpy.squeeze(signal - min_)
-                max_ = numpy.max(signal)
-                
-                ts = numpy.arange(duration)[:]
-
-                # Only time points with maximal local activity higher than threshold are selected
-                ts = ts[numpy.max(signal[:,:,ts],axis=(0,1)) > max_ * self.parameters.activity_threshold]
-                
-                ts_tol = []
-                for t in ts:
-                    s = signal[:,:,t]
-
-                    # Check if any of the n_ts_adjacent time points contains multiple clusters of activity
-                    non_adjacent = False
-                    for dt in range(1,self.parameters.n_ts_adjacent + 1):
-                        mask = signal[:,:,t+dt] > numpy.max(signal[:,:,t+dt]) * self.parameters.spatial_bins_threshold
-                        _, num_labels = measure.label(mask, connectivity=2, return_num=True)
-                        if num_labels > 1:
-                            non_adjacent = True
-
-                    # Compute the number of spatial bins at time t which activity exceeds spatial_bins_threshold, and check whether they form multiple clusters
-                    mask = s > numpy.max(s) * self.parameters.spatial_bins_threshold
-                    _, num_labels = measure.label(mask, connectivity=2, return_num=True)
-
-                    # Check whether the spacing with the last selected time point is sufficient 
-                    if (len(ts_tol)==0 or t - ts_tol[-1] > self.parameters.time_spacing):
-                        sufficient_spacing = True
-                    else:
-                        sufficient_spacing = False
-
-                    # Check whether the activity in the following time points is sufficiently high
-                    if numpy.mean([numpy.max(signal[:,:,t+dt])for dt in numpy.arange(1,self.parameters.n_ts_activity)])/max_ > self.parameters.activity_threshold_next:
-                        active_following_time_points = True
-                    else: 
-                        active_following_time_points = False
-
-
-                    if num_labels == 1 and not non_adjacent and numpy.sum(mask) < self.parameters.max_area_activity and sufficient_spacing and active_following_time_points:
-                        ts_tol.append(t)    
-
-                self.datastore.full_datastore.add_analysis_result(
-                    SingleObject(ts_tol*sampling_period+t_start, sampling_period.units,
-                                   stimulus_id=paasl.stimulus_id,
-                                   object_name=f'Start propagation time points of ({name})',
-                                   sheet_name=sheet,
-                                   tags=self.tags,
-                                   analysis_algorithm=self.__class__.__name__))
-
-                self.datastore.full_datastore.add_analysis_result(
-                    SingleObject(ts_tol, qt.Dimensionless,
-                                   stimulus_id=paasl.stimulus_id,
-                                   object_name=f'Start propagation time points indices of ({name})',
-                                   sheet_name=sheet,
-                                   tags=self.tags,
-                                   analysis_algorithm=self.__class__.__name__))
-
-
-
-class SignalPropagationOrientationBias(Analysis):
-    required_parameters = ParameterSet({
-    'map_file': str,
-    'cropped_length': float,
-    'timesteps': int, 
-    'spatial_bins_threshold': float, 
-    })
-
-    def generate_surrogates(self, crop_coefficient, bins):
-        """
-        Generate surrogates based on an orientation map.
-
-        Parameters
-        ----------
-
-        crop_coefficient : float
-             Determines the size of the map that is cropped 
-
-        bins: int
-             The number of spatial bins in each axis
-        Output
-        --------
-
-        surrogates: list
-             List containing every surrogated represented as 2-D arrays of shape (bins,bins)
-        """
-
-        f = open(self.parameters.map_file, 'rb')
-        or_map = pickle.load(f, encoding="latin1")
-        f.close()
-    
-        cutout_size = int(or_map.shape[0] / crop_coefficient)
-        sz = or_map.shape[0]
-    
-        surrogates = []
-        x,y = sz/2-cutout_size/2,sz/2-cutout_size/2
-    
-        numpy.random.seed(1001)
-        for angle in [0,90,180,270]:
-            for flip in [True,False]:
-                I = Image.fromarray(or_map*255)
-                I = I.rotate(angle,fillcolor=255)
-                if flip:
-                    I = I.transpose(method=Image.FLIP_LEFT_RIGHT)
-                I = I.crop((x,y,x+cutout_size,y+cutout_size))
-                a = numpy.asarray(I)/255
-                if len(numpy.where(a == 1)[0]) == 0:
-                    coords_xa = numpy.arange(a.shape[1])
-                    coords_ya = numpy.arange(a.shape[0])
-                    Ya, Xa = numpy.meshgrid(coords_ya, coords_xa)
-                    ND = NearestNDInterpolator(list(zip(Xa.flatten(), Ya.flatten())),a.flatten())
-                    coords_xb = numpy.linspace(0,a.shape[1]-1,orientation_matrix.shape[1])
-                    coords_yb = numpy.linspace(0,a.shape[0]-1,orientation_matrix.shape[0])
-                    Yb, Xb = numpy.meshgrid(coords_yb, coords_xb)
-                    b = ND((Yb,Xb)) * numpy.pi
-                    if flip or angle!=0:
-                        surrogates.append(b)
-                    else:
-                        same = b
-        return surrogates,same
-
-    def propagation_signal(signal,signal_conv,orientation_matrix,surrogates,ts_tol):
-        min_ = numpy.min(signal)
-        signal = signal - min_
-        max_ = numpy.max(signal)
-        
-        min_conv = numpy.min(signal_conv)
-        signal_conv = signal_nconv - min_conv
-        max_conv = numpy.max(signal_conv)
-        
-        orrs_means=[]
-        surrs_means=[]
-        orrs_lens = []
-        surrs_lens = []
-        orrs_means_conv=[]
-        surrs_means_conv=[]
-        surrs_lens_conv = []
-        orrs_lens_conv = []
-        base_means=[]
-        base_lens = []
-    
-        ones = numpy.ones(orientation_matrix.shape)
-    
-        circular_dist_v = numpy.vectorize(circular_dist)
-    
-        for t_start in ts_tol:
-            orrs_mean = []
-            orrs_len = []
-            surrs_mean = []
-            surrs_len = []
-            orrs_mean_conv = []
-            orrs_len_conv = []
-            surrs_mean_conv = []
-            surrs_len_conv = []
-            base_mean = []
-            base_len = []
-    
-            sig0 = numpy.squeeze(signal[:,:,t_start])
-            sig_conv0 = numpy.squeeze(signal_conv[:,:,t_start])
-            orrs_mean_t0 = circ_mean(orientation_matrix,sig0,high=numpy.pi)[0]
-            orrs_len_t0 = circ_len(orientation_matrix,sig0,high=numpy.pi)
-            surrs_mean_t0 = [circ_mean(r,sig0,high=numpy.pi)[0] for r in surrogates]
-            surrs_len_t0 = [circ_len(r,sig,high=numpy.pi) for r in surrogates]
-            orrs_mean_conv_t0 = circ_mean(orientation_matrix,sig_conv0,high=numpy.pi)[0]
-            orrs_len_conv_t0 = circ_len(orientation_matrix,sig_conv0,high=numpy.pi)
-            surrs_mean_conv_t0 = [circ_mean(r,sig_conv0,high=numpy.pi)[0] for r in surrogates]
-            surrs_len_conv_t0 = [circ_len(r,sig_conv0,high=numpy.pi) for r in surrogates]
-            s_zone = sig_conv0 > numpy.max(sig_conv0) * self.parameters.spatial_bins_threshold 
-
-            for t in range(self.parameters.timesteps):
-                sig = numpy.squeeze(signal[:,:,t_start + t])
-                sig_conv = numpy.squeeze(signal_conv[:,:,t_start + t])
-    
-                orrs_mean.append(circ_mean(orientation_matrix[~s_zone],sig[~s_zone],high=numpy.pi)[0])
-                orrs_len.append(circ_len(orientation_matrix[~s_zone],sig[~s_zone],high=numpy.pi))
-                surrs_mean.append([circ_mean(r[~s_zone],sig[~s_zone],high=numpy.pi)[0] for r in surrogates])
-                surrs_len.append([circ_len(r[~s_zone],sig[~s_zone],high=numpy.pi) for r in surrogates])
-                orrs_mean_conv.append(circ_mean(orientation_matrix[~s_zone],sig_conv[~s_zone],high=numpy.pi)[0])
-                orrs_len_conv.append(circ_len(orientation_matrix[~s_zone],sig_conv[~s_zone],high=numpy.pi))
-                surrs_mean_conv.append([circ_mean(r[~s_zone],sig_conv[~s_zone],high=numpy.pi)[0] for r in surrogates])
-                surrs_len_conv.append([circ_len(r[~s_zone],sig_conv[~s_zone],high=numpy.pi) for r in surrogates])
-    
-            orrs_mean = numpy.array(orrs_mean)
-            diffs = numpy.abs(circular_dist(orrs_mean,orrs_mean_t0,numpy.pi))
-            orrs_means.append(diffs)
-            orrs_lens.append(orrs_len)
-            surrs_mean=numpy.array(surrs_mean)
-            surrs_mean_t0=numpy.array(surrs_mean_t0)
-            diffs_surr = numpy.abs(circular_dist_v(surrs_mean,surrs_mean_t0,numpy.pi))
-            orrs_mean_conv = numpy.array(orrs_mean_conv)
-            diffs_conv = numpy.abs(circular_dist(orrs_mean_conv,orrs_mean_conv_t0,numpy.pi))
-            orrs_means_conv.append(diffs_conv)
-            orrs_lens_conv.append(orrs_len_conv)
-            surrs_mean_conv=numpy.array(surrs_mean_conv)
-            surrs_mean_conv_t0=numpy.array(surrs_mean_conv_t0)
-            diffs_surr_conv = numpy.abs(circular_dist_v(surrs_mean_conv,surrs_mean_conv_t0,numpy.pi))
-            base_mean = numpy.array(base_mean)
-            diffs_base = numpy.abs(circular_dist(base_mean,base_mean_t0,numpy.pi))
-            surrs_avg = numpy.mean(diffs_surr, axis = 1)
-            surrs_avg_conv = numpy.mean(diffs_surr_conv,axis = 1)
-            surrs_means.append(surrs_avg)
-            surrs_means_conv.append(surrs_avg_conv)
-    
-            surrs_len=numpy.array(surrs_len)
-            surrs_len_conv=numpy.array(surrs_len_conv)
-            surrs_avg = numpy.mean(surrs_len, axis = 1)
-            surrs_avg_conv = numpy.mean(surrs_len_conv,axis = 1)
-            surrs_lens.append(surrs_avg)
-            surrs_lens_conv.append(surrs_avg_conv)
-    
-        return orrs_means, surrs_means, orrs_means_conv, surrs_means_conv, orrs_lens, surrs_lens, orrs_lens_conv, surrs_lens_conv
-
-    def perform_analysis(self):
-        for sheet in self.datastore.sheets():
-           dsv = queries.param_filter_query(self.datastore, sheet_name=sheet) 
-           sx = eval(dsv.full_datastore.block.annotations['sheet_parameters'])[sheet]['sx']
-           map_stretch = eval(dsv.full_datastore.block.annotations['sheet_parameters'])['V1_Exc_L4']['AfferentConnection']['or_map_stretch']
-           tag_cropped = f'Cropping: {self.parameters.cropped_length}'
-           tag_ncropped = f'Cropping: {sx}'
-           tags_cropped = self.tags.copy().append(tag_cropped)
-           tags_ncropped = self.tags.copy().append(tag_ncropped)
-           dsv_cropped = queries.tag_based_query(dsv, tags_cropped)
-           dsv_ncropped = queries.tag_based_query(dsv, tags_ncropped)
-           paasl_cropped = queries.param_filter_query(dsv_cropped, sheet_name=sheet, y_axis_name='LFP without convolution').get_analysis_result()[0]
-           paasl = queries.param_filter_query(dsv_ncropped, sheet_name=sheet, y_axis_name='LFP without convolution').get_analysis_result()[0]
-           paasl_conv_cropped = queries.param_filter_query(dsv_cropped, sheet_name=sheet, y_axis_name='LFP').get_analysis_result()[0]
-           paasl_conv = queries.param_filter_query(dsv_ncropped, sheet_name=sheet, y_axis_name='LFP').get_analysis_result()[0]
-
-           ts_tol = queries.param_filter_query(dsv, y_axis_name='Start propagation time points indices of (LFP)',ads_unique=True).get_analysis_result()[0].object
-
-           signal_cropped = numpy.squeeze(numpy.array(paasl_cropped.asl))
-           signal = numpy.squeeze(numpy.array(paasl.asl))
-           signal_conv_cropped = numpy.squeeze(numpy.array(paasl_conv_cropped.asl))
-           signal_conv = numpy.squeeze(numpy.array(paasl[0]))
-           ny, ny, duration = signal.shape
-           ny_cropped = signal.shape[0]
-
-           min_cropped = numpy.min(signal_cropped)
-           signal_cropped = signal_cropped - min_cropped
-           max_cropped = numpy.max(signal)
-       
-           min_conv_cropped = numpy.min(signal_conv_cropped)
-           signal_conv_cropped = signal_nconv_cropped - min_conv_cropped
-           max_conv_cropped = numpy.max(signal_conv_cropped)
-       
-           sampling_period = paasl[0][0].sampling_period
-           t_start = paasl[0][0].t_start
-
-           crop_coefficient = map_stretch 
-           crop_coefficient_cropped = map_stretch * sx / self.parameters.cropped_length  
-
-           surrogates, orientation_matrix = self.generate_surrogates(crop_coefficient,ny)
-           surrogates_cropped, orientation_matrix_cropped = self.generate_surrogates(crop_coefficient_cropped,ny_cropped)
-
-           orrs_means, surrs_means, orrs_means_conv, surrs_means_conv, orrs_lens, surrs_lens, orrs_lens_conv, surrs_lens_conv = propagation_signal(signal,signal_conv,orientation_matrix,surrogates,ts_tol)
-           orrs_means_cropped, surrs_means_cropped, orrs_means_conv_cropped, surrs_means_conv_cropped, orrs_lens_cropped, surrs_lens_cropped, orrs_lens_conv_cropped, surrs_lens_conv_cropped = propagation_signal(signal,signal_conv,orientation_matrix_cropped,surrogates_cropped,ts_tol)
-
-           self.datastore.full_datastore.add_analysis_result(
-               PerAreaValue(orientation_matrix,paasl.x_coords,paasl.y_coords,qt.rad,
-                              stimulus_id=paasl.stimulus_id,
-                              value_name='Orientation label of '+paasl.y_axis_name,
-                              sheet_name=sheet,
-                              tags=tags_ncropped,
-                              analysis_algorithm=self.__class__.__name__))
-           self.datastore.full_datastore.add_analysis_result(
-               PerAreaValue(orientation_matrix_cropped,paasl_cropped.x_coords,paasl_cropped.y_coords,qt.rad,
-                              stimulus_id=paasl_cropped.stimulus_id,
-                              value_name='Orientation label of '+paasl_cropped.y_axis_name,
-                              sheet_name=sheet,
-                              tags=tags_cropped,
-                              analysis_algorithm=self.__class__.__name__))
-           self.datastore.full_datastore.add_analysis_result(
-               SingleObject(orrs_means, qt.rad,
-                              stimulus_id=paasl.stimulus_id,
-                              object_name='Orientation differences of '+paasl.y_axis_name,
-                              sheet_name=sheet,
-                              tags=self.tags_ncropped,
-                              analysis_algorithm=self.__class__.__name__))
-           self.datastore.full_datastore.add_analysis_result(
-               SingleObject(surrs_means, qt.rad,
-                              stimulus_id=paasl.stimulus_id,
-                              object_name='Surrogates orientation differences of '+paasl.y_axis_name,
-                              sheet_name=sheet,
-                              tags=self.tags_ncropped,
-                              analysis_algorithm=self.__class__.__name__))
-           self.datastore.full_datastore.add_analysis_result(
-               SingleObject(orrs_lens, qt.Dimensionless,
-                              stimulus_id=paasl.stimulus_id,
-                              object_name='Orientation selectivity of '+paasl.y_axis_name,
-                              sheet_name=sheet,
-                              tags=self.tags_ncropped,
-                              analysis_algorithm=self.__class__.__name__))
-           self.datastore.full_datastore.add_analysis_result(
-               SingleObject(surrs_lens, qt.Dimensionless,
-                              stimulus_id=paasl.stimulus_id,
-                              object_name='Surrogates orientation selectivity of '+paasl.y_axis_name,
-                              sheet_name=sheet,
-                              tags=self.tags_ncropped,
-                              analysis_algorithm=self.__class__.__name__))
-           self.datastore.full_datastore.add_analysis_result(
-               SingleObject(orrs_means_conv, qt.rad,
-                              stimulus_id=paasl_conv.stimulus_id,
-                              object_name='Orientation differences of '+paasl_conv.y_axis_name,
-                              sheet_name=sheet,
-                              tags=self.tags_ncropped,
-                              analysis_algorithm=self.__class__.__name__))
-           self.datastore.full_datastore.add_analysis_result(
-               SingleObject(surrs_means_conv, qt.rad,
-                              stimulus_id=paasl_conv.stimulus_id,
-                              object_name='Surrogates orientation differences of '+paasl_conv.y_axis_name,
-                              sheet_name=sheet,
-                              tags=self.tags_ncropped,
-                              analysis_algorithm=self.__class__.__name__))
-           self.datastore.full_datastore.add_analysis_result(
-               SingleObject(orrs_lens_conv, qt.Dimensionless,
-                              stimulus_id=paasl_conv.stimulus_id,
-                              object_name='Orientation selectivity of '+paasl_conv.y_axis_name,
-                              sheet_name=sheet,
-                              tags=self.tags_ncropped,
-                              analysis_algorithm=self.__class__.__name__))
-           self.datastore.full_datastore.add_analysis_result(
-               SingleObject(surrs_lens_conv, qt.Dimensionless,
-                              stimulus_id=paasl_conv.stimulus_id,
-                              object_name='Surrogates orientation selectivity of '+paasl_conv.y_axis_name,
-                              sheet_name=sheet,     
-                              tags=self.tags_ncropped,      
-                              analysis_algorithm=self.__class__.__name__))
-           self.datastore.full_datastore.add_analysis_result(
-               SingleObject(orrs_means_cropped, qt.rad,
-                              stimulus_id=paasl_cropped.stimulus_id,
-                              object_name='Orientation differences of '+paasl_cropped.y_axis_name,
-                              sheet_name=sheet,
-                              tags=self.tags_cropped,
-                              analysis_algorithm=self.__class__.__name__))
-           self.datastore.full_datastore.add_analysis_result(
-               SingleObject(surrs_means_cropped, qt.rad,
-                              stimulus_id=paasl_cropped.stimulus_id,
-                              object_name='Surrogates orientation differences of '+paasl_cropped.y_axis_name,
-                              sheet_name=sheet,
-                              tags=self.tags_cropped,
-                              analysis_algorithm=self.__class__.__name__))
-           self.datastore.full_datastore.add_analysis_result(
-               SingleObject(orrs_lens_cropped, qt.Dimensionless,
-                              stimulus_id=paasl_cropped.stimulus_id,
-                              object_name='Orientation selectivity of '+paasl_cropped.y_axis_name,
-                              sheet_name=sheet,
-                              tags=self.tags_cropped,
-                              analysis_algorithm=self.__class__.__name__))
-           self.datastore.full_datastore.add_analysis_result(
-               SingleObject(surrs_lens_cropped, qt.Dimensionless,
-                              stimulus_id=paasl_cropped.stimulus_id,
-                              object_name='Surrogates orientation selectivity of '+paasl_cropped.y_axis_name,
-                              sheet_name=sheet,
-                              tags=self.tags_cropped,
-                              analysis_algorithm=self.__class__.__name__))
-           self.datastore.full_datastore.add_analysis_result(
-               SingleObject(orrs_means_conv_cropped, qt.rad,
-                              stimulus_id=paasl_conv_cropped.stimulus_id,
-                              object_name='Orientation differences of '+paasl_conv_cropped.y_axis_name,
-                              sheet_name=sheet,
-                              tags=self.tags_cropped,
-                              analysis_algorithm=self.__class__.__name__))
-           self.datastore.full_datastore.add_analysis_result(
-               SingleObject(surrs_means_conv_cropped, qt.rad,
-                              stimulus_id=paasl_conv_cropped.stimulus_id,
-                              object_name='Surrogates orientation differences of '+paasl_conv_cropped.y_axis_name,
-                              sheet_name=sheet,
-                              tags=self.tags_cropped,
-                              analysis_algorithm=self.__class__.__name__))
-           self.datastore.full_datastore.add_analysis_result(
-               SingleObject(orrs_lens_conv_cropped, qt.Dimensionless,
-                              stimulus_id=paasl_conv_cropped.stimulus_id,
-                              object_name='Orientation selectivity of '+paasl_conv_cropped.y_axis_name,
-                              sheet_name=sheet,
-                              tags=self.tags_cropped,
-                              analysis_algorithm=self.__class__.__name__))
-           self.datastore.full_datastore.add_analysis_result(
-               SingleObject(surrs_lens_conv_cropped, qt.Dimensionless,
-                              stimulus_id=paasl_conv_cropped.stimulus_id,
-                              object_name='Surrogates orientation selectivity of '+paasl_conv_cropped.y_axis_name,
-                              sheet_name=sheet,     
-                              tags=self.tags_cropped,      
-                              analysis_algorithm=self.__class__.__name__))
-
 
 class AreaOrientationLabeling(Analysis):
     required_parameters = ParameterSet({
@@ -1376,41 +873,45 @@ class NauhausAnalysis(Analysis):
     'electrodes_spacing': float,
     'n_neurons': int,
     'duration_analysis': float,
+    'paasl_name': str,
+    'time_correction': float, #Time correction (ms) to apply to take into account the fact that the excitatory current might present
     })
 
 
 
     def perform_analysis(self):
-        exp_fit = lambda x,a,b,c: a + b * numpy.exp(x/c)
-        errfunc = lambda p, x, y: numpy.linalg.norm(exp_fit_v(x,*p) - y)
-        exp_fit_v = numpy.vectorize(exp_fit)
-
-
         def exponential_fit(distance,amplitude,n_attempts=10):
+            exp_fit = lambda x,a,b,c: a + b * numpy.exp(x/c)
+            exp_fit_v = numpy.vectorize(exp_fit)
             evar_max = 0
-            p1 = [0,1,1]
+            p1 = [numpy.nan,numpy.nan,numpy.nan]
 
             for _ in range(n_attempts):
-                p0 = [numpy.max(amplitude),(numpy.random.rand()-0.5)*20,(numpy.random.rand()-0.5)*10]
+                p0 = [numpy.max(amplitude),(numpy.random.rand()-0.5)*20,(numpy.random.rand()-1)*10]
 
                 try:
                     try:
-                        p1_, success = scipy.optimize.curve_fit(exp_fit_v,distance,amplitude,p0=p0)
-                        evar = explained_variance(amplitude,exp_fit_v(distf,*p1_))
+                        p1_, success = scipy.optimize.curve_fit(exp_fit_v,distance.flatten(),amplitude.flatten(),p0=p0,bounds=([-numpy.inf,-numpy.inf,-numpy.inf],[numpy.inf,numpy.inf,0]))
+                        evar = explained_variance(amplitude,exp_fit_v(distance,*p1_))
                     except ZeroDivisionError:
-                        p1_ = [0,1,1]
+                        p1_ = [numpy.nan,numpy.nan,numpy.nan]
                         evar = 0
                     if evar > evar_max:
                         p1 = p1_
                         evar_max = evar
 
                 except RuntimeError:
-                    return None, 0
+                    return None, 0, [numpy.nan,numpy.nan,numpy.nan] 
             
-            residual_amplitudes = amp - exp_fit_v(dist/1000,*p1)
-
-            return residual_amplitudes, evar_max
+            residual_amplitudes = amplitude - exp_fit_v(distance,*p1)
+            return residual_amplitudes, evar_max, p1[2]
         
+        def linear_fit(distance,delay):
+            lin_fit = lambda x,a: x/a
+            lin_fit_v = numpy.vectorize(lin_fit)
+            p1, success = scipy.optimize.curve_fit(lin_fit_v,distance.flatten(),delay.flatten(),p0=[1])
+            return p1[0]
+
 
         for sheet in self.datastore.sheets():
             sx = eval(self.datastore.full_datastore.block.annotations['sheet_parameters'])[sheet]['sx']
@@ -1428,11 +929,13 @@ class NauhausAnalysis(Analysis):
 
             orientation_values =self.datastore.get_analysis_result(identifier='PerNeuronValue', value_name=['LGNAfferentOrientation', 'ORMapOrientation'], sheet_name=[sheet])[0].get_value_by_id(spikes_ids)
             orientation_matrix = queries.param_filter_query(self.datastore,sheet_name=sheet,identifier='PerAreaValue',value_name='Orientation label, cropped size = '+str(int(sx))).get_analysis_result()[0].values
-            paasl = queries.param_filter_query(dsv,identifier='PerAreaAnalogSignalList',y_axis_name='Butterworth band-pass filtered of (LFP) freq=[5,100], order = 4').get_analysis_result()[0]
+            #orientation_matrix = queries.param_filter_query(self.datastore,sheet_name=sheet,identifier='PerAreaValue',value_name='Orientation label, cropped size = '+str(self.parameters.cropped_length)).get_analysis_result()[0].values
+            paasl = queries.param_filter_query(dsv,identifier='PerAreaAnalogSignalList',y_axis_name=self.parameters.paasl_name).get_analysis_result()[0]
             x_coords, y_coords = numpy.meshgrid(paasl.x_coords,paasl.y_coords)
 
             sig = numpy.squeeze(numpy.array(paasl.asl))
             speeds = []
+            exp_coeffs = []
             nx,ny,duration = sig.shape
 
             iso_amps = []
@@ -1441,7 +944,6 @@ class NauhausAnalysis(Analysis):
 
             numpy.random.seed(1001)
             idx_chosen = numpy.random.choice(numpy.arange(len(spikes)),self.parameters.n_neurons,replace=False)
-            ids_chosen = self.datastore.get_sheet_ids(sheet_name=sheet, indexes=idx_chosen)
             ids_output = []
             ids_speeds = []
 
@@ -1454,7 +956,7 @@ class NauhausAnalysis(Analysis):
             idex_coords, idey_coords = numpy.meshgrid(numpy.arange(edx,nx,e_points_spacing),numpy.arange(edy,ny,e_points_spacing))
 
             # Looping over `n_neurons` randomly selected neurons
-            for i,(spt,x,y,orr,idd) in enumerate(zip(numpy.array(spikes,dtype=object)[idx_chosen],numpy.array(xs)[idx_chosen],numpy.array(ys)[idx_chosen],numpy.array(orientation_values)[idx_chosen],ids_chosen)):
+            for i,(spt,x,y,orr,idd) in enumerate(zip(numpy.array(spikes,dtype=object)[idx_chosen],numpy.array(xs)[idx_chosen],numpy.array(ys)[idx_chosen],numpy.array(orientation_values)[idx_chosen],numpy.array(spikes_ids)[idx_chosen])):
                 x_cs = x * magnification
                 y_cs = y * magnification
 
@@ -1464,37 +966,41 @@ class NauhausAnalysis(Analysis):
                 if x_cs > - self.parameters.cropped_length/2 and x_cs < self.parameters.cropped_length/2 and y_cs > - self.parameters.cropped_length/2 and y_cs < self.parameters.cropped_length/2:
                     ceiled_spt = numpy.ceil(spt.magnitude).astype(int)
                     ceiled_spt = ceiled_spt[ceiled_spt<duration-self.parameters.duration_analysis]
+                    ceiled_spt = ceiled_spt[ceiled_spt>self.parameters.time_correction]
                     stlfps = []
                     if len(ceiled_spt) >5:
                         for t in ceiled_spt:
-                            stlfps.append(sig[edx::e_points_spacing,edy::e_points_spacing,t:t+self.parameters.duration_analysis])
+                            stlfps.append(sig[edx::e_points_spacing,edy::e_points_spacing,t-self.parameters.time_correction:t+self.parameters.duration_analysis-self.parameters.time_correction])
                             
                         stlfps = numpy.array(stlfps)
                         stlfp = numpy.mean(stlfps,axis=0) 
+                        #idx, idy = int((x_cs+self.parameters.cropped_length/2)/self.parameters.points_distance),int((y_cs+self.parameters.cropped_length/2)/self.parameters.points_distance)
                         idx, idy = int((x_cs+sx/2)/self.parameters.points_distance),int((y_cs+sx/2)/self.parameters.points_distance)
-                        t_peak = numpy.argmax(stlfp,axis=2) + 1
+                        t_peak = numpy.argmax(stlfp,axis=2)
                         dist = numpy.sqrt((idey_coords-idy)**2 + (idex_coords-idx)**2) * self.parameters.points_distance
-                        speed = dist/t_peak
-                        speeds.append(numpy.mean(speed))
-                        ids_speeds.append(idd)
-                        distf = dist.flatten()/magnification
-                        t_peakf = t_peak.flatten()
+                        speed = linear_fit(dist/magnification, t_peak) 
+
+                        # Nauhaus et al. 2009 include speeds only if p value of correlation is lower than 0.001
+                        #0.42:
+                        #if scipy.stats.pearsonr(dist.flatten(), t_peak.flatten())[1] < 0.00000000000001:
+                        if scipy.stats.pearsonr(dist.flatten(), t_peak.flatten())[1] < 0.001:
+                            speeds.append(speed)
+                            ids_speeds.append(idd)
 
                         amp = numpy.max(stlfp,axis=2)
-                        ampf = amp.flatten()
+                        residual_amplitudes, evar, exp_coeff = exponential_fit(dist/magnification,amp) 
 
-                        residual_amplitudes, evar = exponential_fit(distf,ampf) 
                         if evar > 0.5:
                             orr_diff = circular_dist(orientation_matrix,orr,numpy.pi)
                             mask_iso = orr_diff < numpy.pi/6
                             mask_mid = numpy.logical_and(orr_diff < numpy.pi/3, numpy.pi/6 < orr_diff)
                             mask_ortho = numpy.pi/3 < orr_diff  
-
                             iso_amps.append(numpy.mean(residual_amplitudes[mask_iso[edx::e_points_spacing,edy::e_points_spacing]]))
                             mid_amps.append(numpy.mean(residual_amplitudes[mask_mid[edx::e_points_spacing,edy::e_points_spacing]]))
                             ortho_amps.append(numpy.mean(residual_amplitudes[mask_ortho[edx::e_points_spacing,edy::e_points_spacing]]))
                             ids_output.append(idd)
-
+                            exp_coeffs.append(-exp_coeff)
+            
             self.datastore.full_datastore.add_analysis_result(
                 PerNeuronValue(iso_amps,ids_output,qt.Dimensionless,
                                stimulus_id=paasl.stimulus_id,
@@ -1523,6 +1029,14 @@ class NauhausAnalysis(Analysis):
                 PerNeuronValue(speeds,ids_speeds,qt.um/qt.ms,
                                stimulus_id=paasl.stimulus_id,
                                value_name='Propagation speed spike-triggered LFP',
+                               sheet_name=sheet,
+                               tags=self.tags,
+                               analysis_algorithm=self.__class__.__name__,
+                               period=None))
+            self.datastore.full_datastore.add_analysis_result(
+                PerNeuronValue(exp_coeffs,ids_output,qt.um/qt.ms,
+                               stimulus_id=paasl.stimulus_id,
+                               value_name='Coeff exp fit spike-triggered LFP',
                                sheet_name=sheet,
                                tags=self.tags,
                                analysis_algorithm=self.__class__.__name__,
