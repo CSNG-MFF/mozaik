@@ -76,10 +76,17 @@ dependencies, for which it is not practical to break them down into single
     :show-inheritance:
 
 
-:mod:`visualization` Module
+:mod:`helper_functions` Module
 ---------------------------
 
-.. automodule:: mozaik.visualization
+.. automodule:: mozaik.visualization.helper_functions
     :members:
     :show-inheritance:
 
+
+:mod:`misc` Module
+---------------------------
+
+.. automodule:: mozaik.visualization.misc
+    :members:
+    :show-inheritance:

@@ -30,3 +30,11 @@ of *mozaik* models - sheets - and related concepts.
     :members:
     :undoc-members:
     :show-inheritance:
+
+:mod:`sheets.direct_simulator` Module
+----------------------------------------
+
+.. automodule:: mozaik.sheets.direct_simulator
+    :members:
+    :undoc-members:
+    :show-inheritance:

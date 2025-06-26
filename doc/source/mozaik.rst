@@ -50,4 +50,9 @@ Subpackages
     :members:
     :show-inheritance:
 
+:mod:`cli` Module
+------------------------
 
+.. automodule:: mozaik.cli
+    :members:
+    :show-inheritance:

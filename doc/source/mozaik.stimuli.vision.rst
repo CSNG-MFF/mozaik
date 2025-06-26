@@ -18,3 +18,11 @@ This package contains implementation of visual stimuli.
     :members:
     :show-inheritance:
 
+
+:mod:`stimuli.texture_based` Module
+----------------------------------------
+
+.. automodule:: mozaik.stimuli.vision.texture_based
+    :members:
+    :show-inheritance:
+

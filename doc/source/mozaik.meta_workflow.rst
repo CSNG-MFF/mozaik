@@ -21,3 +21,11 @@ parameter search is implemented.
     :members:
     :undoc-members:
     :show-inheritance:
+
+:mod:`meta_workflow.analysis` Module
+-----------------------------------------
+
+.. automodule:: mozaik.meta_workflow.analysis
+    :members:
+    :undoc-members:
+    :show-inheritance:
