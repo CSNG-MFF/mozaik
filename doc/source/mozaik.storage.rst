@@ -19,7 +19,7 @@ storage Package
 
 
 :mod:`neo_neurotools_wrapper` Module
----------------------
+------------------------------------
 
 .. automodule:: mozaik.storage.neo_neurotools_wrapper
     :members:

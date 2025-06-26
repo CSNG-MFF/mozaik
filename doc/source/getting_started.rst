@@ -5,7 +5,7 @@ Here we will discuss several general topics that the user should be familiar bef
 
 
 Parametrization
-~~~~~~~~~~~~~~~
+---------------
 
 There are two systems used to parametrize objects throughout mozaik, each with its own role.
 

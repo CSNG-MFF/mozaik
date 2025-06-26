@@ -12,7 +12,7 @@ Modules
 See the :py:mod:`mozaik.stimuli.stimulus` for more general information on stimulus handling in *mozaik*.
 
 :mod:`stimuli` Module
---------------------------------
+---------------------
 
 .. automodule:: mozaik.stimuli.__init__
     :members:

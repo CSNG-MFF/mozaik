@@ -11,7 +11,7 @@ tools Package
 
 
 :mod:`mozaik_parametrized` Module
-------------------
+---------------------------------
 
 .. automodule:: mozaik.tools.mozaik_parametrized
     :members:
@@ -19,7 +19,7 @@ tools Package
     :show-inheritance:
 
 :mod:`circ_stat` Module
-------------------
+-----------------------
 
 .. automodule:: mozaik.tools.circ_stat
     :members:
@@ -29,7 +29,7 @@ tools Package
     
 
 :mod:`distribution_parametrization` Module
-------------------
+------------------------------------------
 
 .. automodule:: mozaik.tools.distribution_parametrization
     :members:
@@ -47,7 +47,7 @@ tools Package
 
 
 :mod:`neo_object_operations` Module
-------------------
+-----------------------------------
 
 .. automodule:: mozaik.tools.neo_object_operations
     :members:
@@ -56,7 +56,7 @@ tools Package
 
 
 :mod:`units` Module
-------------------
+-------------------
 
 .. automodule:: mozaik.tools.units
     :members:

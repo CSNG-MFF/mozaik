@@ -5,7 +5,7 @@ This package defines the API for model definition in *mozaik*, and the `mozaik.m
 contains implementations for models of retina.
 
 :mod:`models` Module
--------------------
+--------------------
 
 .. automodule:: mozaik.models.__init__
     :members:

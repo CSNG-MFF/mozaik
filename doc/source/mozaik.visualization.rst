@@ -69,7 +69,7 @@ dependencies, for which it is not practical to break them down into single
     :show-inheritance:
 
 :mod:`plot_constructors` Module
-----------------------
+-------------------------------
 
 .. automodule:: mozaik.visualization.plot_constructors
     :members:
@@ -79,7 +79,7 @@ dependencies, for which it is not practical to break them down into single
 :mod:`visualization` Module
 ---------------------------
 
-.. automodule:: mozaik.visualization.visualization
+.. automodule:: mozaik.visualization
     :members:
     :show-inheritance:
 

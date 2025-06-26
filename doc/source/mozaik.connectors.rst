@@ -45,7 +45,7 @@ connector Package
 
 
 :mod:`mozaik.connectors.meta_connectors` Package
----------------------
+------------------------------------------------
 
 .. automodule:: mozaik.connectors.meta_connectors
     :members:

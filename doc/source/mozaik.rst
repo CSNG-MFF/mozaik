@@ -29,7 +29,7 @@ Subpackages
     :show-inheritance:
 
 :mod:`mozaik.core` Package
----------------------
+--------------------------
 
 .. automodule:: mozaik.core
     :members:
@@ -44,7 +44,7 @@ Subpackages
     :show-inheritance:
 
 :mod:`controller` Module
------------------------------------
+------------------------
 
 .. automodule:: mozaik.controller
     :members:

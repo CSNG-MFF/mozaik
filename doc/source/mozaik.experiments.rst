@@ -10,7 +10,7 @@ experiments Package
     :show-inheritance:
 
 :mod:`mozaik.experiments.vision` Module
---------------------------------
+---------------------------------------
 
 .. automodule:: mozaik.experiments.vision
     :members:

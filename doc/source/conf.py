@@ -11,7 +11,10 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys, os
+import sys
+import os
+import inspect
+import param
 
 AUTHORS = u'mozaik authors and contributors <>'
 
@@ -24,7 +27,12 @@ AUTHORS = u'mozaik authors and contributors <>'
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest',  'numpydoc']
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.doctest',
+    'numpydoc',
+    'sphinx.ext.napoleon'  # Added for better NumPy/SciPy docstring support
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -117,14 +125,12 @@ html_theme = 'nature'
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo ='mozaik_logo_small.svg'
-
+html_logo = 'mozaik_logo_small.svg'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
 html_favicon = None
-
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -140,9 +146,9 @@ html_static_path = ['_static']
 #html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-html_sidebars =  {'**': ['relations.html', 'sourcelink.html', 'searchbox.html']}
-
-
+html_sidebars = {
+    '**': ['globaltoc.html', 'relations.html', 'sourcelink.html', 'searchbox.html']
+}
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
@@ -183,8 +189,8 @@ htmlhelp_basename = 'mozaikdoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'mozaik.tex', u'mozaik Documentation',
-   AUTHORS, 'manual'),
+    ('index', 'mozaik.tex', u'mozaik Documentation',
+     AUTHORS, 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -204,18 +210,20 @@ latex_documents = [
 # If false, no module index is generated.
 #latex_use_modindex = True
 
-todo_include_todos = True # set to False before releasing documentation
-
+todo_include_todos = True  # set to False before releasing documentation
 
 # order api by source
 autodoc_member_order = 'bysource'
 numpydoc_show_class_members = False
+autodoc_typehints = 'description'  # Better type hints display
+autodoc_default_options = {
+    'members': True,
+    'show-inheritance': True,
+}
 
-import param
-import inspect
 
 def param_doc(app, what, name, obj, options, lines):
-    if what == 'module':\
+    if what == 'module':
         lines = ["start"]
     
     new_lines = []
@@ -223,8 +231,8 @@ def param_doc(app, what, name, obj, options, lines):
     if what == 'class':
         if isinstance(obj, param.parameterized.ParameterizedMetaclass):
             params = obj.params()
-            new_lines.extend([unicode("")])
-            new_lines.extend([unicode(":Mozaik parameters:")])
+            new_lines.extend([""])
+            new_lines.extend([":Mozaik parameters:"])
             for child in params:
                 if child in obj.__dict__.keys():
                     if child not in ["print_level", "name"]:
@@ -234,14 +242,25 @@ def param_doc(app, what, name, obj, options, lines):
                         members = inspect.getmembers(params[child])
                         params_str = ""
                         for m in members:
-                            if m[0][0] != "_" and m[0] != "doc" and m[0] != "class_" and not inspect.ismethod(m[1]) and not inspect.isfunction(m[1]) and m[0] not in ["precedence",'time_fn','pickle_default_value','instantiate','allow_None']:
+                            if (m[0][0] != "_" and m[0] != "doc" 
+                                and m[0] != "class_" 
+                                and not inspect.ismethod(m[1]) 
+                                and not inspect.isfunction(m[1]) 
+                                and m[0] not in ["precedence", 'time_fn', 
+                                                'pickle_default_value', 
+                                                'instantiate', 'allow_None']):
                                 params_str += "%s=%s, " % (m[0], m[1])
                         params_str = params_str[:-2]
-                        new_lines.extend([unicode("        **%s** : %s(%s)" % ( child, params[child].__class__.__name__, params_str)), unicode("                %s" % doc),unicode("")])
+                        new_lines.extend([
+                            "        **%s** : %s(%s)" % (child, params[child].__class__.__name__, params_str),
+                            "                %s" % doc,
+                            ""
+                        ])
                         count = count + 1
     if count != 0:
         lines.extend(new_lines)
-        
+
+
 def setup(app):
-	app.connect('autodoc-process-docstring', param_doc)
+    app.connect('autodoc-process-docstring', param_doc)
 

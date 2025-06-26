@@ -22,14 +22,15 @@ class LinePlot(Parameterized):
         """
         Plot multiple plots with common x or y axis in a row or column. The user has to specify 
         the function. This one has to return a list of tuples, each containing:
-            * a name of a plot
-            * a Plotting or SimplePlot instance
-            * the simple_plot parameters that should be passed on
+
+        * a name of a plot
+        * a Plotting or SimplePlot instance
+        * the simple_plot parameters that should be passed on
         
         Assuming each *function* returns a list of plots with names PlotA,...PlotX
         The LinePlot will create a list of plots named:
-                    PlotA.plot0 ... PlotA.plotN
-                    PlotX.plot0 ... PlotX.plotN
+        PlotA.plot0 ... PlotA.plotN
+        PlotX.plot0 ... PlotX.plotN
         where N is defined by the length parameter.
         User can this way target the plots with parameters as desribed in the Plotting class.
         """
@@ -251,16 +252,17 @@ class ADSGridPlot(Parameterized):
     Plot multiple plots with common x and y axis in a grid. 
     
     The user has to specify a plotting function (the function parameter) which has to return a list of tuples, each containing:
-        * a name of a plot
-        * a Plotting or SimplePlot instance
-        * the simple_plot parameters that should be passed on
+
+    * a name of a plot
+    * a Plotting or SimplePlot instance
+    * the simple_plot parameters that should be passed on
     
     The ADSGridPlot, automaticall filters the datastore such that the function always receives a DSV where the two parameters are already fixed to the right values.
     
     Assuming each *function* returns a list of plots with names PlotA,...PlotX
     The LinePlot will create a list of plots named:
-                PlotA.plot[0,0] ... PlotA.plot[n,m]
-                PlotX.plot[0,0] ... PlotX.plot[n,m]
+    PlotA.plot[0,0] ... PlotA.plot[n,m]
+    PlotX.plot[0,0] ... PlotX.plot[n,m]
     where n,m is defined by the number of values the x and y _xis_parameter has in the datastore.
     User can this way target the plots with parameters as desribed in the Plotting class.
     """
@@ -343,13 +345,14 @@ class MultipleFilesPlot(Parameterized):
         """
         Plot multiple plots that will be saved in different files. The user has to specify 
         the function. This one has to return a list of tuples, each containing:
-            * a name of a plot
-            * a Plotting or SimplePlot instance
-            * the simple_plot parameters that should be passed on
+        
+        * a name of a plot
+        * a Plotting or SimplePlot instance
+        * the simple_plot parameters that should be passed on
         
         Assuming each *function* returns a plots with names Plot
         This class wil produce files with names:
-                    Plot.plot0 ... Plot.plotN
+        Plot.plot0 ... Plot.plotN
         where N is defined by the length parameter.
         """
         length = param.Integer(default=0, instantiate=True,

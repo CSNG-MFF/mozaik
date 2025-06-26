@@ -7,7 +7,7 @@ of *mozaik* models - sheets - and related concepts.
 
 
 :mod:`sheets` Module
---------------------------------
+--------------------
 
 .. automodule:: mozaik.sheets.__init__
     :members:
@@ -16,7 +16,7 @@ of *mozaik* models - sheets - and related concepts.
 
 
 :mod:`sheets.vision` Module
--------------------------------------
+---------------------------
 
 .. automodule:: mozaik.sheets.vision
     :members:

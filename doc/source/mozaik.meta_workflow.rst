@@ -7,7 +7,7 @@ parameter search is implemented.
 
 
 :mod:`meta_workflow.parameter_search` Module
---------------------------------
+--------------------------------------------
 
 .. automodule:: mozaik.meta_workflow.parameter_search
     :members:
@@ -15,7 +15,7 @@ parameter search is implemented.
     :show-inheritance:
 
 :mod:`meta_workflow.visualization` Module
---------------------------------
+-----------------------------------------
 
 .. automodule:: mozaik.meta_workflow.visualization
     :members:

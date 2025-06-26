@@ -11,9 +11,11 @@ The subplot function accepts a SubplotSpec object (see matplotlib doc) as input 
 will tell it where to plot. The subplot function returns a dictionary, where each key
 is a name of a subplot it generates (and will correspond to a creation of another Plotting or 
 SimplePlot plot), and the associated value is a tuple that contains the:
-    * Plotting or SimplePlot object
-    * the SubplotSpec subregion into which the plot is supposed to be drawn
-    * dictionary of parameters that to be passed to the plot.
+
+* Plotting or SimplePlot object
+* the SubplotSpec subregion into which the plot is supposed to be drawn
+* dictionary of parameters that to be passed to the plot.
+
 This way one can nest Plotting instances and eventualy simple_plot instances as the leafs of the tree.
 
 The third element of the tuple discussed above is a dictionary of parameters that will be  passed onto the eventual call to SimplePlot class.
