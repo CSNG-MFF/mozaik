@@ -502,7 +502,7 @@ class FlatDisk(TopographicaBasedVisualStimulus):
     pre-specified *radius* flashed for the *duration* of milliseconds
     on a constant background of *background_luminance* luminance.
     The luminance of the disk is specified by the *contrast* parameter,
-    and is thus *background_luminance* + *background_luminance* \* (*self.contrast*/100.0).
+    and is thus *background_luminance* + *background_luminance* \\* (*self.contrast*/100.0).
 
     Notes
     -----
@@ -868,7 +868,8 @@ class VonDerHeydtIllusoryBar(TopographicaBasedVisualStimulus):
 
 
 class SimpleGaborPatch(TopographicaBasedVisualStimulus):
-    """A flash of a Gabor patch
+    """
+    A flash of a Gabor patch
 
     This stimulus corresponds to flashing a Gabor patch of a specific
     *orientation*, *size*, *phase*, *spatial_frequency* at a defined position
@@ -882,12 +883,11 @@ class SimpleGaborPatch(TopographicaBasedVisualStimulus):
     spatial_frequency = SNumber(cpd, doc="Spatial frequency of the grating")
     size = SNumber(degrees, doc="Size of the Gabor patch")
     flash_duration = SNumber(ms, doc="The duration of the bar presentation.")
-    relative_luminance = SNumber(dimensionless,bounds=[0,1.0],doc="The scale of the stimulus. 0 is dark, 1.0 is double the background luminance")
+    relative_luminance = SNumber(dimensionless, bounds=[0,1.0], doc="The scale of the stimulus. 0 is dark, 1.0 is double the background luminance")
     x = SNumber(degrees, doc="The x location of the center of the Gabor patch.")
     y = SNumber(degrees, doc="The y location of the center of the Gabor patch.")
-    grid = SNumber(dimensionless, doc = "Boolean string to decide whether there is grid or not")
-    n_sigmas = SNumber(dimensionless, default = 3., doc="Number of standard deviations to sample the Gabor function for.")
-
+    grid = SNumber(dimensionless, doc="Boolean string to decide whether there is grid or not")
+    n_sigmas = SNumber(dimensionless, default=3., doc="Number of standard deviations to sample the Gabor function for.")
 
     def frames(self):
         num_frames = 0
@@ -917,23 +917,25 @@ class SimpleGaborPatch(TopographicaBasedVisualStimulus):
                         scale=2*self.background_luminance*self.relative_luminance, 
                                 # Difference between maximal and minimal value 
                                 # => min value = -scale/2, max value = scale/2
-                                )()
-            gabor = gabor+self.background_luminance # rescalling
+                        )()
+            gabor = gabor + self.background_luminance # rescalling
             blank = imagen.Constant(scale=self.background_luminance,
                                     bounds=BoundingBox(radius=self.size_x/2),
                                     xdensity=self.density,
                                     ydensity=self.density)()
             if self.grid:
-                gabor = gabor*grid_pattern
-                blank = blank*grid_pattern
+                gabor = gabor * grid_pattern
+                blank = blank * grid_pattern
             num_frames += 1
             if (num_frames-1) * self.frame_duration < self.flash_duration: 
                 yield (gabor, [1])
             else:
                 yield (blank, [0])
 
+
     def hex_grid(self):
-        """Creates an 2D array representing hexagonal grid based on given parameters
+        """
+        Creates an 2D array representing hexagonal grid based on given parameters
 
         Algorithm:
             First, it creates a tide containing two lines looking like: ___/
@@ -989,7 +991,8 @@ class SimpleGaborPatch(TopographicaBasedVisualStimulus):
 
 
 class TwoStrokeGaborPatch(TopographicaBasedVisualStimulus):
-    """A flash of two consecutive Gabor patches next to each other
+    """
+    A flash of two consecutive Gabor patches next to each other
 
     This stimulus corresponds to flashing a Gabor patch of a specific
     *orientation*, *size*, *phase*, *spatial_frequency* starting at a defined
@@ -998,6 +1001,7 @@ class TwoStrokeGaborPatch(TopographicaBasedVisualStimulus):
     where is presented until the *flash_duration* milliseconds from start of
     the experiment passes. For the remaining time,  until the *duration* of the
     stimulus, constant *background_luminance* is displayed.
+
     """
 
     orientation = SNumber(rad, period=pi, bounds=[0,pi], doc="Gabor patch orientation")
@@ -1073,7 +1077,8 @@ class TwoStrokeGaborPatch(TopographicaBasedVisualStimulus):
                 yield (blank, [0])
     
     def hex_grid(self):
-        """Creates an 2D array representing hexagonal grid based on the parameters
+        """
+        Creates an 2D array representing hexagonal grid based on the parameters
 
         Algorithm:
             First, it creates a tide containing two lines looking like: ___/

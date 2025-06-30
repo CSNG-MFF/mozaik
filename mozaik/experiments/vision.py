@@ -1159,30 +1159,29 @@ class MeasureFeatureInducedCorrelation(VisualExperiment):
     """
 
     required_parameters = ParameterSet({
-            'spatial_frequencies' : list, 
-            'temporal_frequencies' : list,
-            'grating_duration' : float,
-            'contrasts' : list,
-            'separation' : float,
-            'num_trials' : int,
+        'spatial_frequencies': list, 
+        'temporal_frequencies': list,
+        'grating_duration': float,
+        'contrasts': list,
+        'separation': float,
+        'num_trials': int,
     })  
 
     def generate_stimuli(self):
-        
-         # the orientation is fixed to horizontal
-        orientation = 0 #numpy.pi/2
+        # the orientation is fixed to horizontal
+        orientation = 0  # numpy.pi/2
         # SQUARED GRATINGS       
         for sf in self.parameters.spatial_frequencies:
             for k in range(0, self.parameters.num_trials):
                 self.stimuli.append(
                     topo.FullfieldDriftingSquareGrating(
-                        frame_duration = self.frame_duration,
+                        frame_duration=self.frame_duration,
                         size_x=self.model.visual_field.size_x,
                         size_y=self.model.visual_field.size_y,
                         location_x=0.0,
                         location_y=0.0,
                         background_luminance=self.background_luminance,
-                        contrast = self.parameters.contrast,
+                        contrast=self.parameters.contrast,
                         duration=self.parameters.grating_duration,
                         density=self.density,
                         trial=k,
@@ -1197,21 +1196,21 @@ class MeasureFeatureInducedCorrelation(VisualExperiment):
             for k in range(0, self.parameters.num_trials):
                 self.stimuli.append(
                     topo.FlashingSquares(
-                        frame_duration = self.frame_duration,
+                        frame_duration=self.frame_duration,
                         size_x=self.model.visual_field.size_x,
                         size_y=self.model.visual_field.size_y,
                         location_x=0.0,
                         location_y=0.0,
                         background_luminance=self.background_luminance,
-                        contrast = self.parameters.contrast,
-                        separation = self.parameters.separation,
-                        separated = True,
-                        density = self.density,
-                        trial = k,
+                        contrast=self.parameters.contrast,
+                        separation=self.parameters.separation,
+                        separated=True,
+                        density=self.density,
+                        trial=k,
                         duration=self.parameters.grating_duration,
-                        orientation = orientation*2,
-                        spatial_frequency = sf,
-                        temporal_frequency = self.parameters.temporal_frequency
+                        orientation=orientation*2,
+                        spatial_frequency=sf,
+                        temporal_frequency=self.parameters.temporal_frequency
                     )
                 )
 

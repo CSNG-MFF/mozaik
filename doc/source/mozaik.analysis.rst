@@ -4,7 +4,7 @@ analysis Package
 This sub-package contains modules that are related to analysis.
 
 Modules
--------    
+^^^^^^^    
     * :py:mod:`mozaik.analysis.analysis` - This module provides the Mozaik analysis interface and implements various analysis algorithms for neural data processing i.e. Basic Spike Analysis, Tuning & Selectivity, Trial-to-Trial Variability & Correlations, Conductance & Membrane Potential, Population & Signal Statistics, Signal Processing & Arithmetic and Temporal dynamics.
     * :py:mod:`mozaik.analysis.data_structures` - This module defines the core AnalysisDataStructure API and implements standardized data structures (e.g., per-neuron values, analog signals, conductance pairs) for storing and manipulating analysis results in Mozaik, with support for units, metadata, and hierarchical organization.
     * :py:mod:`mozaik.analysis.helper_functions` - This module provides utility functions for neural data analysis, including PSTH calculation, trial-averaged responses, and tensor conversion of PerNeuronValue data structures for parameter-space analysis.
@@ -157,7 +157,7 @@ important API classes: :class:`mozaik.analysis.data_structures.AnalysisDataStruc
 
 
 :mod:`elephant_dependent` Module
--------------------------
+--------------------------------
 
 .. automodule:: mozaik.analysis.elephant_dependent
     :members:
@@ -166,7 +166,7 @@ important API classes: :class:`mozaik.analysis.data_structures.AnalysisDataStruc
 
 
 :mod:`lfp` Module
--------------------------
+-----------------
 
 .. automodule:: mozaik.analysis.lfp
     :members:
@@ -175,7 +175,7 @@ important API classes: :class:`mozaik.analysis.data_structures.AnalysisDataStruc
 
 
 :mod:`spontaneous_activity` Module
--------------------------
+----------------------------------
 
 .. automodule:: mozaik.analysis.spontaneous_activity
     :members:
@@ -184,7 +184,7 @@ important API classes: :class:`mozaik.analysis.data_structures.AnalysisDataStruc
 
 
 :mod:`texture` Module
--------------------------
+---------------------
 
 .. automodule:: mozaik.analysis.texture
     :members:

@@ -1,6 +1,25 @@
 tools Package
 =============
 
+Modules
+^^^^^^^    
+    * :py:mod:`mozaik.tools.misc` - This module provides utility functions for sampling, statistical calculations, neuron localization, and result directory naming within Mozaik.
+    * :py:mod:`mozaik.tools.mozaik_parametrized` - This module provides extended parameter system for Mozaik that enables unit-aware, structured parameter definitions and powerful querying/filtering of parametrized objects.
+    * :py:mod:`mozaik.tools.circ_stat` - This module provides helper functions for analyzing and computing statistics on periodic (circular) variables, including circular distance, mean, length, and standard deviation.
+    * :py:mod:`mozaik.tools.distribution_parametrization` - This module provides interface connecting Mozaik’s parameter system with PyNN distributions, enabling parameter units, periods, and extended parameter sets for flexible distribution-based parametrization.
+    * :py:mod:`mozaik.tools.neo_object_operatons` - This modules provides utility functions for processing and aggregating Neo data objects, including summation, averaging, and downsampling of analog signals.
+    * :py:mod:`mozaik.tools.units` - This module defines units used in mozaik project and not specified in the quantities package.
+    * :py:mod:`moaik.tools.debug` - This module is for debugging.
+    * :py:mod:`mozaik.tools.json_export` - This module is for exporting different files in json format.
+    * :py:mod:`mozaik.tools.pyNN` 
+    * :py:mod:`mozaik.tools.stats` - This module is for some statistics.
+    * :py:mod:`mozaik.tools.stgen` - This module contains classes extracted from NeuroTool package.
+    * :py:mod:`mozaik.tools.datastore_utils` - This module to perform various operations on mozaik datastore.
+
+
+
+
+
 :mod:`misc` Module
 ------------------
 
@@ -68,7 +87,7 @@ tools Package
 
 
 :mod:`json_export` Module
-------------------
+-------------------------
 
 .. automodule:: mozaik.tools.json_export
     :members:
@@ -88,7 +107,7 @@ tools Package
 
 
 :mod:`stats` Module
-------------------
+-------------------
 
 .. automodule:: mozaik.tools.stats
     :members:
@@ -98,7 +117,7 @@ tools Package
 
 
 :mod:`stgen` Module
-------------------
+-------------------
 
 .. automodule:: mozaik.tools.stgen
     :members:
@@ -108,7 +127,7 @@ tools Package
 
 
 :mod:`datastore_utils` Module
-------------------
+-----------------------------
 
 .. automodule:: mozaik.tools.datastore_utils
     :members:

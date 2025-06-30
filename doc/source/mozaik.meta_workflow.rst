@@ -2,8 +2,8 @@ meta-workflow Package
 =====================
 
 This peckage contains implementation of meta workflows - i.e. workflows
-involving executation of multiple simulations runs. Currently
-parameter search is implemented.
+involving executation of multiple simulations runs. Previously only
+parameter search was implemented. Now it has visualization and analysis too. 
 
 
 :mod:`meta_workflow.parameter_search` Module
@@ -23,7 +23,7 @@ parameter search is implemented.
     :show-inheritance:
 
 :mod:`meta_workflow.analysis` Module
------------------------------------------
+------------------------------------
 
 .. automodule:: mozaik.meta_workflow.analysis
     :members:

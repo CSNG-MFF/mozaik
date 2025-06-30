@@ -77,7 +77,7 @@ dependencies, for which it is not practical to break them down into single
 
 
 :mod:`helper_functions` Module
----------------------------
+------------------------------
 
 .. automodule:: mozaik.visualization.helper_functions
     :members:
@@ -85,7 +85,7 @@ dependencies, for which it is not practical to break them down into single
 
 
 :mod:`misc` Module
----------------------------
+------------------
 
 .. automodule:: mozaik.visualization.misc
     :members:

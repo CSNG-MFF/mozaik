@@ -309,7 +309,6 @@ class MapTwoStrokeGabor(VisualExperiment):
         properties of the hexagonal tiding rather a lot!
         The ISO/CROSS configuration is determined from this number, so any other
         number generates moving paterns but in directions not matching hexes.
-
     """
 
     required_parameters = ParameterSet(

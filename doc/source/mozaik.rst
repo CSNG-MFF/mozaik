@@ -17,7 +17,6 @@ Subpackages
     mozaik.tools
     mozaik.visualization
     mozaik.meta_workflow
-    mozaik.sheets
 
 
 :mod:`mozaik` Package
@@ -51,7 +50,7 @@ Subpackages
     :show-inheritance:
 
 :mod:`cli` Module
-------------------------
+-----------------
 
 .. automodule:: mozaik.cli
     :members:
