@@ -1065,7 +1065,9 @@ class OptogeneticArrayStimulusCircleWithFullfieldSquareGrating(VisualExperiment)
                         self.append_direct_stim(model, sap, stim_params)
 
     # TODO: Revise this function in CorticalStimulationWithOptogeneticArray to be more flexible
-    def append_direct_stim(self, model, stimulator_array_parameters, stimulus_parameters):
+    def append_direct_stim(
+        self, model, stimulator_array_parameters, stimulus_parameters
+    ):
         p = self.parameters
         if self.direct_stimulation == None:
             self.direct_stimulation = []
@@ -1097,7 +1099,7 @@ class OptogeneticArrayStimulusCircleWithFullfieldSquareGrating(VisualExperiment)
             self.direct_stimulation.append(d)
             self.stimuli.append(
                 FullfieldDriftingSquareGrating(
-                    frame_duration = self.frame_duration,
+                    frame_duration=self.frame_duration,
                     size_x=self.model.visual_field.size_x,
                     size_y=self.model.visual_field.size_y,
                     location_x=0.0,
