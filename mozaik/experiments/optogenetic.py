@@ -3,6 +3,8 @@ import numpy as np
 from mozaik.experiments import Experiment
 from parameters import ParameterSet
 from mozaik.stimuli import InternalStimulus
+from mozaik.stimuli.vision.topographica_based import FullfieldDriftingSquareGrating
+from mozaik.experiments.vision import VisualExperiment
 from mozaik.tools.distribution_parametrization import MozaikExtendedParameterSet
 from collections import OrderedDict
 from mozaik.sheets.direct_stimulator import OpticalStimulatorArrayChR
@@ -921,3 +923,191 @@ class OptogeneticArrayStimulusContrastBasedOrientationTuningProtocol(
         # Inverse transformation - firing rate to intensity of optogenetic stimulation
         intensity = np.power(rate * ir.c_50 / (ir.r_max - rate), 1 / ir.n)
         return intensity
+
+
+class OptogeneticArrayStimulusCircleWithFullfieldSquareGrating(VisualExperiment):
+    """
+    Optogenetic stimulation of cortical sheets with an array of light sources,
+    in the pattern of filled circles, with simultaneous visual stimulation using
+    full-field square gratings.
+
+    Parameters
+    ----------
+    model : Model
+          The model on which to execute the experiment.
+
+    Other parameters
+    ----------------
+
+    sheet_list : list(str)
+                The list of sheets in which to do stimulation.
+
+    sheet_intensity_scaler : list(float)
+                Scale the stimulation intensity of each sheet in sheet_list by the
+                constants in this list. Must have equal length to sheet_list.
+                The constants must be in the range (0,infinity)
+
+    sheet_transfection_proportion : list(float)
+                Set the proportion of transfected cells in each sheet in sheet_list.
+                Must have equal length to sheet_list. The constants must be in the
+                range (0,1) - 0 means no cells, 1 means all cells.
+
+    num_trials : int
+                Number of trials each stimulus is shown.
+
+    stimulator_array_parameters : ParameterSet
+                Parameters for the optical stimulator array:
+                    size : float (μm)
+                    spacing : float (μm)
+                    update_interval : float (ms)
+                    depth_sampling_step : float (μm)
+                    light_source_light_propagation_data : str
+                These parameters are the same as the parameters of
+                mozaik.sheets.direct_stimulator.OpticalStimulatorArrayChR class,
+                except that it must not contain the parameters
+                *stimulating_signal* and *stimulating_signal_parameters* - those
+                must be set by the specific experiments.
+
+
+    intensities : list(float)
+                Intensities of the stimulation. Uniform across the circle.
+
+    radii : list(float (μm))
+                List of circle radii (μm) to present
+
+    x_center : float (μm)
+                Circle center x coordinate.
+
+    y_center : float (μm)
+                Circle center y coordinate.
+
+    inverted: bool
+                If true, everything in the circle has value 0, everything outside has
+                the value *intensity*
+
+    duration : float (ms)
+            Overall stimulus duration
+
+    onset_time : float (ms)
+            Time point when the stimulation turns on
+
+    offset_time : float(ms)
+            Time point when the stimulation turns off
+
+    orientations : list (float)
+            The orientations (in radians) of the gratings.
+
+    spatial_frequency : float
+            The spatial frequency of the gratings
+
+    temporal_frequency : float
+            The temporal frequency of the gratings
+
+    contrasts : list(float)
+            List of contrasts (expressed as % : 0-100%) of the gratings.
+    """
+
+    required_parameters = ParameterSet(
+        {
+            "sheet_list": list,
+            "sheet_intensity_scaler": list,
+            "sheet_transfection_proportion": list,
+            "num_trials": int,
+            "stimulator_array_parameters": ParameterSet,
+            "intensities": list,
+            "radii": list,
+            "x_center": float,
+            "y_center": float,
+            "inverted": bool,
+            "duration": int,
+            "onset_time": int,
+            "offset_time": int,
+            "orientations": list,
+            "spatial_frequency": float,
+            "temporal_frequency": float,
+            "contrasts": list,
+        }
+    )
+
+    def __init__(self, model, parameters):
+        VisualExperiment.__init__(self, model, parameters)
+        CorticalStimulationWithOptogeneticArray.__init__(self, model, parameters)
+
+        sap = self.parameters.stimulator_array_parameters
+        sap["stimulating_signal"] = (
+            "mozaik.sheets.direct_stimulator.stimulating_pattern_flash"
+        )
+        sap["stimulating_signal_parameters"] = ParameterSet(
+            {
+                "shape": "circle",
+                "intensity": 0,
+                "coords": (self.parameters.x_center, self.parameters.y_center),
+                "radius": 0,
+                "inverted": self.parameters.inverted,
+                "duration": self.parameters.duration,
+                "onset_time": self.parameters.onset_time,
+                "offset_time": self.parameters.offset_time,
+            }
+        )
+
+        for intensity in self.parameters.intensities:
+            for r in self.parameters.radii:
+                for orientation in self.parameters.orientations:
+                    for contrast in self.parameters.contrasts:
+                        sap.stimulating_signal_parameters.intensity = intensity
+                        sap.stimulating_signal_parameters.radius = r
+                        stim_params = {
+                            "orientation": orientation,
+                            "spatial_frequency": self.parameters.spatial_frequency,
+                            "temporal_frequency": self.parameters.temporal_frequency,
+                            "contrast": contrast,
+                        }
+                        self.append_direct_stim(model, sap, stim_params)
+
+    # TODO: Revise this function in CorticalStimulationWithOptogeneticArray to be more flexible
+    def append_direct_stim(self, model, stimulator_array_parameters, stimulus_parameters):
+        p = self.parameters
+        if self.direct_stimulation == None:
+            self.direct_stimulation = []
+            self.shared_scs = OrderedDict((sheet, {}) for sheet in p.sheet_list)
+
+        d = OrderedDict()
+        for k in range(len(p.sheet_list)):
+            sheet = p.sheet_list[k]
+            sap = MozaikExtendedParameterSet(deepcopy(stimulator_array_parameters))
+            sap.stimulating_signal_parameters.intensity *= p.sheet_intensity_scaler[k]
+            sap.transfection_proportion = p.sheet_transfection_proportion[k]
+            d[sheet] = [
+                OpticalStimulatorArrayChR(
+                    model.sheets[sheet], sap, self.shared_scs[sheet]
+                )
+            ]
+            self.shared_scs[sheet].update(
+                {
+                    d[sheet][0].stimulated_cells[i]: d[sheet][0].scs[i]
+                    for i in range(len(d[sheet][0].scs))
+                }
+            )
+
+        sap = MozaikExtendedParameterSet(deepcopy(stimulator_array_parameters))
+        sap["sheet_list"] = p.sheet_list
+        sap["sheet_intensity_scaler"] = p.sheet_intensity_scaler
+        sap["sheet_transfection_proportion"] = p.sheet_transfection_proportion
+        for trial in range(p.num_trials):
+            self.direct_stimulation.append(d)
+            self.stimuli.append(
+                FullfieldDriftingSquareGrating(
+                    frame_duration = self.frame_duration,
+                    size_x=self.model.visual_field.size_x,
+                    size_y=self.model.visual_field.size_y,
+                    location_x=0.0,
+                    location_y=0.0,
+                    background_luminance=self.background_luminance,
+                    duration=self.parameters.duration,
+                    density=self.density,
+                    trial=trial,
+                    direct_stimulation_name="OpticalStimulatorArrayChR",
+                    direct_stimulation_parameters=sap,
+                    **stimulus_parameters,
+                )
+            )
