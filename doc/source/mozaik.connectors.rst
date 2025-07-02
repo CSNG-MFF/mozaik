@@ -1,8 +1,8 @@
 connector Package
 =================
 
-Module
-^^^^^^
+Modules
+^^^^^^^
 
     * :py:mod:`mozaik.connectors.connector` - This module provides the Interface and implementations for flexible synaptic connection strategies between neural populations 
     * :py:mod:`mozaik.connectors.fast` - This module provides high-performance mozaik connectors using backend-optimized PyNN methods but trading off flexibility for speed in establishing neural connections.

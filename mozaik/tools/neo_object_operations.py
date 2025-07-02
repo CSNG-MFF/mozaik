@@ -30,11 +30,13 @@ def down_sample_analog_signal_average_method(analog_signal,new_sampling_period):
     
     Parameters
     ----------
+    
     analog_signal : AnalogSignal
-             The analog signal to downsample
+        The analog signal to downsample
     
     new_sampling_period : float(ms)
-                        The desired new sampling period of the signal
+        The desired new sampling period of the signal
+    
     """ 
     length = analog_signal.t_stop.rescale(qt.ms) - analog_signal.t_start.rescale(qt.ms)
     
@@ -51,11 +53,13 @@ def down_sample_analog_signal2(analog_signal,new_sampling_period):
     
     Parameters
     ----------
+    
     analog_signal : AnalogSignal
-             The analog signal to downsample
+        The analog signal to downsample
     
     new_sampling_period : float(ms)
-                        The desired new sampling period of the signal
+        The desired new sampling period of the signal
+    
     """ 
     if abs(analog_signal.t_stop.rescale(qt.ms).magnitude -  new_sampling_period) > 0.000000001:
        div = round(new_sampling_period / analog_signal.sampling_period.rescale(qt.ms).magnitude)

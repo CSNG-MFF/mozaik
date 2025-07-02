@@ -23,6 +23,7 @@ def sample_from_bin_distribution(bins, number_of_samples, seed):
 
     seed : int
          The seed to use to generate the RandomState
+
     """
     if len(bins) == 0:
         return []
@@ -43,11 +44,12 @@ def normal_function(x, mean=0, sigma=1.0):
 def find_neuron(which,positions):
     """
     Finds a neuron depending on which:
-        'center' - the most central neuron in the sheet 
-        'top_right' - the top_right neuron in the sheet
-        'top_left' - the top_left neuron in the sheet
-        'bottom_left' - the bottom_left neuron in the sheet
-        'bottom_right' - the bottom_right neuron in the sheet
+    'center' - the most central neuron in the sheet 
+    'top_right' - the top_right neuron in the sheet
+    'top_left' - the top_left neuron in the sheet
+    'bottom_left' - the bottom_left neuron in the sheet
+    'bottom_right' - the bottom_right neuron in the sheet
+        
     """
     minx = numpy.min(positions[0,:])
     maxx = numpy.max(positions[0,:])

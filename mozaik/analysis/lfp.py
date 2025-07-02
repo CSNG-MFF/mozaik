@@ -35,8 +35,10 @@ class GeneralizedPhase(Analysis):
 
     Other parameters
     ----------------
+
     threshold : float
-             The threshold (0.9 used in the Davis paper) used to determine whether the sign of the instantaneous frequency is significant or not
+        The threshold (0.9 used in the Davis paper) used to determine whether the sign of the instantaneous frequency is significant or not
+    
     """
     required_parameters = ParameterSet({
       'threshold': float,
@@ -335,17 +337,19 @@ class ButterworthFiltering(Analysis):
 
     Other parameters
     ----------------
+
     order : int 
-             The order of the filter
+        The order of the filter
 
     type : str
-             Whether the filter is high-pass ('high'), low-pass ('low') or band-pass ('band')
+        Whether the filter is high-pass ('high'), low-pass ('low') or band-pass ('band')
 
     low_frequency : float (Hz)
-             The low cut-off frequency, should be set for low-pass and band-pass filters
+        The low cut-off frequency, should be set for low-pass and band-pass filters
 
     high_frequency : float (Hz)
-             The high cut-off frequency, should be set for high-pass and band-pass filters
+        The high cut-off frequency, should be set for high-pass and band-pass filters
+
     """
     required_parameters = ParameterSet({
       'order' : int, 
@@ -503,22 +507,24 @@ class LFPFromPSTH(Analysis):
 
     Other parameters
     ----------------
+
     downsampling : float (ms)
-               the downsampling of the analog signals from which the lfp signal is constructed
+        the downsampling of the analog signals from which the lfp signal is constructed
 
     points_distance : float (micrometers)
-             The distance separating each spatial points around which the LFPs will be calculated
+        The distance separating each spatial points around which the LFPs will be calculated
 
     cropped_length : float (micrometers)
-             The length of the side of the area that will be cropped for this analysis
-             Allows to avoid generating LFPs for spatial positions located too close to the border of the model
+        The length of the side of the area that will be cropped for this analysis
+        Allows to avoid generating LFPs for spatial positions located too close to the border of the model
 
     gaussian_convolution: bool
-             Whether to convolve the lfp with a gaussian kernel
+        Whether to convolve the lfp with a gaussian kernel
     
     gaussian_sigma: float
-             The standard deviation of the gaussian kernel. A value must be assigned if
-             gaussian_convolution is set to True
+        The standard deviation of the gaussian kernel. A value must be assigned if
+        gaussian_convolution is set to True
+
     """
     required_parameters = ParameterSet({
       'downsampling' : float,
@@ -657,23 +663,26 @@ class LFPFromSynapticCurrents(Analysis):
 
     Other parameters
     ----------------
+
     downsampling : float (ms)
-               the downsampling of the analog signals from which the lfp signal is constructed
+        the downsampling of the analog signals from which the lfp signal is constructed
 
     points_distance : float (micrometers)
-             The distance separating each spatial points around which the LFPs will be calculated
+        The distance separating each spatial points around which the LFPs will be calculated
 
     cropped_length : float (micrometers)
-             The length of the side of the area that will be cropped for this analysis
-             Allows to avoid generating LFPs for spatial positions located too close to the border of the model
+        The length of the side of the area that will be cropped for this analysis
+        Allows to avoid generating LFPs for spatial positions located too close to the border of the model
 
     gaussian_convolution: bool
-             Whether to convolve the lfp with a gaussian kernel
+        Whether to convolve the lfp with a gaussian kernel
     
     gaussian_sigma: float
-             The standard deviation of the gaussian kernel. A value must be assigned if
-             gaussian_convolution is set to True
-             a delay in the LFP eqaution in LFPFromSynapticCurrents
+        The standard deviation of the gaussian kernel. A value must be assigned if
+        gaussian_convolution is set to True
+        a delay in the LFP eqaution in LFPFromSynapticCurrents
+
+             
     """
     required_parameters = ParameterSet({
       'downsampling' : float, 

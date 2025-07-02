@@ -31,36 +31,36 @@ class Sheet(BaseComponent):
     ----------------
     
     cell : ParameterSet
-         The parametrization of the cell model that all neurons in this sheet will have.
+        The parametrization of the cell model that all neurons in this sheet will have.
          
     cell.model : str
-               The name of the cell model.
+        The name of the cell model.
     
     cell.params : ParameterSet
-               The set of parameters that the given model requires.
+        The set of parameters that the given model requires.
                
     cell.initial_values : ParameterSet
-                   It can contain a ParameterSet containing the initial values for some of the parameters in cell.params
+        It can contain a ParameterSet containing the initial values for some of the parameters in cell.params
                    
     mpi_safe : bool
-             Whether to set the sheet up to be reproducible in MPI environment. 
-             This is computationally less efficient that if it is set to false, but it will
-             guaruntee the same results irrespective of the number of MPI process used.
+        Whether to set the sheet up to be reproducible in MPI environment. 
+        This is computationally less efficient that if it is set to false, but it will
+        guaruntee the same results irrespective of the number of MPI process used.
              
     artificial_stimulators : ParameterSet
-             Contains a list of ParameterSet objects, one per each :class:`.direct_stimulator.DirectStimulator` object to be created.
-             Each contains a parameter 'component' that specifies which :class:`.direct_stimulator.DirectStimulator` to use, and  a 
-             parameter 'params' which is a ParameterSet to be passed to that `DirectStimulator`.
+        Contains a list of ParameterSet objects, one per each :class:`.direct_stimulator.DirectStimulator` object to be created.
+        Each contains a parameter 'component' that specifies which :class:`.direct_stimulator.DirectStimulator` to use, and  a 
+        parameter 'params' which is a ParameterSet to be passed to that `DirectStimulator`.
     
     name : str
         Name of the sheet.
     
     recorders : ParameterSet
-                Parametrization of recorders in this sheet. The recorders ParameterSet will contain as keys the names
-                of the different recording configuration user want to have in this sheet. For the format of each recording configuration see notes.
+        Parametrization of recorders in this sheet. The recorders ParameterSet will contain as keys the names
+        of the different recording configuration user want to have in this sheet. For the format of each recording configuration see notes.
 
     recording_interval : float (ms)
-                The interval at which analog signals in this sheet will be recorded. 
+        The interval at which analog signals in this sheet will be recorded. 
 
     Notes
     -----
@@ -69,10 +69,13 @@ class Sheet(BaseComponent):
     
     *variables* 
         tuple of strings specifying the variables to measure (allowd values are: 'spikes' , 'v','gsyn_exc' , 'gsyn_inh' )
+
     *componnent* 
         the path to the :class:`mozaik.sheets.population_selector.PopulationSelector` class
+
     *params*
         a ParameterSet containing the parameters for the given :class:`mozaik.sheets.population_selector.PopulationSelector` class 
+    
     """
 
     required_parameters = ParameterSet({
@@ -164,17 +167,19 @@ class Sheet(BaseComponent):
         
         Parameters
         ----------
+
         neuron_number : int
-                      The index of the neuron in the population to which the annotation will be added.  
+            The index of the neuron in the population to which the annotation will be added.  
         
         key : str
             The name of the annotation
         
         value : object
-              The value of the annotation
+            The value of the annotation
         
         protected : bool (default=True)
-                  If True, the annotation cannot be changed.
+            If True, the annotation cannot be changed.
+
         """
         if not self._pop:
             logger.error('Population has not been yet set in sheet: ' + self.name + '!')
@@ -189,16 +194,19 @@ class Sheet(BaseComponent):
         
         Parameters
         ----------
+
         neuron_number : int
-                      The index of the neuron in the population to which the annotation will be added.  
+            The index of the neuron in the population to which the annotation will be added.  
         
         key : str
             The name of the annotation
         
         Returns
         -------
-            value : object
-                  The value of the annotation
+        
+        value : object
+            The value of the annotation
+
         """
 
         if not self._pop:
@@ -246,13 +254,16 @@ class Sheet(BaseComponent):
         
         Parameters
         ----------
+
         stimulus_duration : float(ms)
-                          The length of the last stimulus presentation.
+            The length of the last stimulus presentation.
         
         Returns
         -------
+
         segment : Segment
-                The segment holding all the recorded data. See NEO documentation for detail on the format.
+            The segment holding all the recorded data. See NEO documentation for detail on the format.
+
         """
         
         block = None
@@ -331,13 +342,14 @@ class Sheet(BaseComponent):
         ----------
         
         duration : float (ms)
-                 The duration of the stimulus that will be presented.
+            The duration of the stimulus that will be presented.
         
         additional_stimulators : list
-                               List of additional stimulators, defined by the experiment that should be applied during this stimulus. 
+            List of additional stimulators, defined by the experiment that should be applied during this stimulus. 
                 
         offset : float (ms)
-               The current time of the simulation.
+            The current time of the simulation.
+               
         """
         for ds in self.artificial_stimulators + additional_stimulators:
             ds.prepare_stimulation(duration,offset)

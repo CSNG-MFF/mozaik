@@ -32,22 +32,25 @@ def angle_to_pi(array):
 def circ_len(matrix, weights=None, low=0, high=pi*2):
     """
     Circular length of matrix. Weighted if weights are not none.
+    
     Parameters
     ----------
 
     matrix : ndarray
-           Matrix of data for which the compute the circular mean.
+        Matrix of data for which the compute the circular mean.
 
     weights : ndarray, optional
-            If not none, matrix of the same size as matrix. It will be used as weighting for the mean.
+        If not none, matrix of the same size as matrix. It will be used as weighting for the mean.
 
     low, high : double, optional
-              The min and max values that will be mapped onto the periodic interval of (0, 2pi).
+        The min and max values that will be mapped onto the periodic interval of (0, 2pi).
 
     Returns
     -------
+
     R : float 
-            The circular length of the resulting vector.
+        The circular length of the resulting vector.
+
     """
     # check whether matrix and weights are ndarrays
     if weights is None:
@@ -73,27 +76,29 @@ def circ_mean(matrix, weights=None, axis=None, low=0, high=pi*2,
     ----------
     
     matrix : ndarray
-           Matrix of data for which the compute the circular mean. 
+        Matrix of data for which the compute the circular mean. 
            
     weights : ndarray, optional
-            If not none, matrix of the same size as matrix. It will be used as weighting for the mean.
+        If not none, matrix of the same size as matrix. It will be used as weighting for the mean.
     
     low, high : double, optional
-              The min and max values that will be mapped onto the periodic interval of (0, 2pi).
+        The min and max values that will be mapped onto the periodic interval of (0, 2pi).
               
     axis : int, optional
-         Numpy axis along which to compute the circular mean. Default is 0.
+        Numpy axis along which to compute the circular mean. Default is 0.
     
     
     normalize : bool
-              If True weights will be normalized along axis. If any weights
-              that are to be jointly normalized are all zero they will be
-              kept zero!
+        If True weights will be normalized along axis. If any weights
+        that are to be jointly normalized are all zero they will be
+        kept zero!
 
     Returns
     -------
+
     (angle, length) : ndarray,ndarray
-                    Where angle is the circular mean, and len is the length of the resulting mean vector.
+        Where angle is the circular mean, and len is the length of the resulting mean vector.
+
     """
     idx = numpy.nonzero(weights!=0.0)[0]
     # check whether matrix and weights are ndarrays
@@ -133,18 +138,20 @@ def circ_std(matrix, weights=None, low=0, high=pi*2):
     ----------
 
     matrix : ndarray
-           Matrix of data for which the compute the circular mean.
+        Matrix of data for which the compute the circular mean.
 
     weights : ndarray, optional
-            If not none, matrix of the same size as matrix. It will be used as weighting for the mean.
+        If not none, matrix of the same size as matrix. It will be used as weighting for the mean.
 
     low, high : double, optional
-              The min and max values that will be mapped onto the periodic interval of (0, 2pi).
+        The min and max values that will be mapped onto the periodic interval of (0, 2pi).
 
     Returns
     -------
+
     std : float 
-            The circular std of the matrix input.
+        The circular std of the matrix input.
+            
     """
     R = circ_len(matrix, weights, low, high)
     std = numpy.sqrt(-2 * numpy.log(R))

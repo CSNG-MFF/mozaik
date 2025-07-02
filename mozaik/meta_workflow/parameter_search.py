@@ -23,8 +23,10 @@ class ParameterSearchBackend(object):
          
          Parameters
          ----------
+
          parameters : dict
-                    The dictionary holding the names of parameters to be modified as keys, and the values to set them to as the corresponding values. 
+             The dictionary holding the names of parameters to be modified as keys, and the values to set them to as the corresponding values. 
+         
          """
          raise NotImplemented
 
@@ -43,8 +45,10 @@ class LocalSequentialBackend(object):
          
          Parameters
          ----------
+
          parameters : dict
-                    The dictionary holding the names of parameters to be modified as keys, and the values to set them to as the corresponding values. 
+             The dictionary holding the names of parameters to be modified as keys, and the values to set them to as the corresponding values. 
+         
          """
          modified_parameters = []
          for k in parameters.keys():
@@ -61,20 +65,23 @@ class SlurmSequentialBackend(object):
     
     Parameters
     ----------
+
     num_threads : int
-                  Number of threads per mpi process.
+        Number of threads per mpi process.
+    
     num_mpi : int
-                  Number of mpi processes to spawn per job.
+        Number of mpi processes to spawn per job.
                   
     path_to_mozaik_env : string
-                  Path to virtual environment in which mozaik is installed.                  
+        Path to virtual environment in which mozaik is installed.                  
                   
     slurm_options : list(string), optional 
-                  List of strings that will be passed to slurm sbatch command as options.  
-    Note:
-    -----
+        List of strings that will be passed to slurm sbatch command as options.  
+
+    Notes
     -----
     The most common usage of slurm_options is to let slurm know how many mpi processed to spawn per job, and how to allocates resources to them.
+    
     """
     def __init__(self,num_threads,num_mpi, path_to_mozaik_env, slurm_options=None):
         self.num_threads = num_threads
@@ -95,8 +102,10 @@ class SlurmSequentialBackend(object):
          
          Parameters
          ----------
+
          parameters : dict
-                    The dictionary holding the names of parameters to be modified as keys, and the values to set them to as the corresponding values. 
+             The dictionary holding the names of parameters to be modified as keys, and the values to set them to as the corresponding values. 
+         
          """
          modified_parameters = []
          for k in parameters.keys():
@@ -137,15 +146,18 @@ class ParameterSearch(object):
      
     Parameters
     ----------
+
     params : ParameterSearchBackend
-           The job execution backend to use. 
+        The job execution backend to use. 
            
            
     Examples
     --------
+
     The commandline usage should be:
     
     >>> parameter_search_script simulation_run_script simulator_name path_to_root_parameter_file
+
     """
     
     def __init__(self,backend):
@@ -202,8 +214,10 @@ class CombinationParameterSearch(ParameterSearch):
     
     Parameters
     ----------
+
     parameter_values : dict
-                      Dictionary containing parameter names as keys, and lists as values, each corresponding to the list of values to test for the given parameter.
+        Dictionary containing parameter names as keys, and lists as values, each corresponding to the list of values to test for the given parameter.
+    
     """
     def __init__(self,backend,parameter_values):
         ParameterSearch.__init__(self,backend)
@@ -240,14 +254,19 @@ def parameter_search_run_script_distributed_slurm(simulation_name,master_results
     
     Parameters
     ----------
+
     simulation_name : str
-                    The name of the simulation.
+        The name of the simulation.
+    
     master_results_dir : str
-                    The directory where the parameter search results are stored.
+        The directory where the parameter search results are stored.
+    
     run_script : str
-                    The name of the script to be run. The directory name of the given parameter combination datastore will be passed to it as the first command line argument.
+        The name of the script to be run. The directory name of the given parameter combination datastore will be passed to it as the first command line argument.
+    
     core_number : int
-                How many cores to reserve per process.
+        How many cores to reserve per process.
+    
     """
     with open(master_results_dir + '/parameter_combinations.json', 'r', encoding='utf-8') as f:
         combinations = json.load(f)    
@@ -284,14 +303,19 @@ def parameter_search_run_script_distributed_slurm_IoV(simulation_name,master_res
     
     Parameters
     ----------
+
     simulation_name : str
-                    The name of the simulation.
+        The name of the simulation.
+
     master_results_dir : str
-                    The directory where the parameter search results are stored.
+        The directory where the parameter search results are stored.
+
     run_script : str
-                    The name of the script to be run. The directory name of the given parameter combination datastore will be passed to it as the first command line argument.
+        The name of the script to be run. The directory name of the given parameter combination datastore will be passed to it as the first command line argument.
+    
     core_number : int
-                How many cores to reserve per process.
+        How many cores to reserve per process.
+    
     """
     with open(master_results_dir + '/parameter_combinations.json', 'r', encoding='utf-8') as f:
         combinations = json.load(f)
@@ -326,14 +350,21 @@ def parameter_search_run_script_distributed_slurm_UK(simulation_name,master_resu
     
     Parameters
     ----------
+
     simulation_name : str
-                    The name of the simulation.
+        The name of the simulation.
+
     master_results_dir : str
-                    The directory where the parameter search results are stored.
+        The directory where the parameter search results are stored.
+
     run_script : str
-                    The name of the script to be run. The directory name of the given parameter combination datastore will be passed to it as the first command line argument.
+        The name of the script to be run. 
+        The directory name of the given parameter combination datastore will be passed to it 
+        as the first command line argument.
+
     core_number : int
-                How many cores to reserve per process.
+        How many cores to reserve per process.
+    
     """
     with open(master_results_dir + '/parameter_combinations.json', 'r', encoding='utf-8') as f:
         combinations = json.load(f)

@@ -12,9 +12,12 @@ will tell it where to plot. The subplot function returns a dictionary, where eac
 is a name of a subplot it generates (and will correspond to a creation of another Plotting or 
 SimplePlot plot), and the associated value is a tuple that contains the:
 
-* Plotting or SimplePlot object
-* the SubplotSpec subregion into which the plot is supposed to be drawn
-* dictionary of parameters that to be passed to the plot.
+  * Plotting or SimplePlot object
+  * the SubplotSpec subregion into which the plot is supposed to be drawn
+  * dictionary of parameters that to be passed to the plot.
+
+
+
 
 This way one can nest Plotting instances and eventualy simple_plot instances as the leafs of the tree.
 
@@ -79,19 +82,20 @@ class Plotting(ParametrizedObject):
     ----------
     
     datastore : Datastore
-              the DataStore from which to plot the data
+        the DataStore from which to plot the data
               
     parameters : ParameterSet
-               The mozaik parameters.
+        The mozaik parameters.
                
     plot_file_name : str
-                   Either None, in which case the plot is not saved onto
-                   HD, or path to a file into which to save the file (formats
-                   accepted by matplotlib).
+        Either None, in which case the plot is not saved onto
+        HD, or path to a file into which to save the file (formats
+        accepted by matplotlib).
                    
     fig_params : dict
-               The parameters that are passed to the matplotlib figure
-               command (but note facecolor='w' is already supplied).
+        The parameters that are passed to the matplotlib figure
+        command (but note facecolor='w' is already supplied).
+
     """
 
     def  __init__(self, datastore, parameters, plot_file_name=None,fig_param=None,frame_duration=0):
@@ -153,9 +157,10 @@ class Plotting(ParametrizedObject):
         ----------
         
         params : dict
-               The dictionary of parameters modifying the defaults across the plotting hierarchy.
-               Keys are comma sepparated path in the plot hierarchy, values are values to be substituted. 
-               See the module level info for more details. 
+            The dictionary of parameters modifying the defaults across the plotting hierarchy.
+            Keys are comma sepparated path in the plot hierarchy, values are values to be substituted. 
+            See the module level info for more details. 
+
         """
         t1 = time.time()
         if params == None:
@@ -237,36 +242,39 @@ class PlotTuningCurve(Plotting):
     
     Parameters
     ----------
+
     centering_pnv : PerNeuronValue 
-                  If not none, centered has to be true. The centering_pnv has to be a PerNeuronValue containing values in the domain corresponding to 
-                  parameter `parameter_name`. The tuning curves of each neuron will be cenetered around the value in this pnv corresponding to the given neuron.
-                  This will be applied also if mean is True (so the tuning curves will be centered based on the values in centering_pnv and than averaged).
+        If not none, centered has to be true. The centering_pnv has to be a PerNeuronValue containing values in the domain corresponding to 
+        parameter `parameter_name`. The tuning curves of each neuron will be cenetered around the value in this pnv corresponding to the given neuron.
+        This will be applied also if mean is True (so the tuning curves will be centered based on the values in centering_pnv and than averaged).
     
     Other parameters
     ----------------
+
     neurons : list
-            List of neuron ids for which to plot the tuning curves.
+        List of neuron ids for which to plot the tuning curves.
             
     sheet_name : str
-               From which layer to plot the tuning curves.
+        From which layer to plot the tuning curves.
                
     parameter_name : str
-                   The parameter_name through which to plot the tuning curve.
+        The parameter_name through which to plot the tuning curve.
                    
     centered : bool
-             If True it will center each set of tuning curves on the parameter value with the larges mean response across the other parameter variations
+        If True it will center each set of tuning curves on the parameter value with the larges mean response across the other parameter variations
     
     mean : bool 
-         If True it will plot the mean tuning curve over all neurons (in case centered=True it will first center the TCs before computing the mean)
+        If True it will plot the mean tuning curve over all neurons (in case centered=True it will first center the TCs before computing the mean)
     
     pool : bool
-         If True it will not plot each different value_name found in datastore on a sepparete line of plots but pool them together.             
+        If True it will not plot each different value_name found in datastore on a sepparete line of plots but pool them together.             
     
     polar : bool
-          If True it will plot the tuning curves in polar coordinates, not that the stimulus parameter through which the tuning curves are  plotted has to be periodic, and this period will be mapped on to the (0,360) degrees interval of the polar plot.
+        If True it will plot the tuning curves in polar coordinates, not that the stimulus parameter through which the tuning curves are  plotted has to be periodic, and this period will be mapped on to the (0,360) degrees interval of the polar plot.
             
     Defines 'TuningCurve_' + value_name +  '.Plot0' ... 'TuningCurve_' + value_name +  '.Plotn'
     where n goes through number of neurons, and value_name creates one row for each value_name found in the different PerNeuron found
+
     """
 
     required_parameters = ParameterSet({
@@ -579,16 +587,17 @@ class RasterPlot(Plotting):
     ----------------
     
     sheet_name : str
-               From which layer to plot the raster plots.
+        From which layer to plot the raster plots.
                
     neurons : list
-            List of neuron ids for which to plot the tuning curves.
+        List of neuron ids for which to plot the tuning curves.
     
     trial_averaged_histogram : bool
-                             Should the plot show also the trial averaged histogram?
+        Should the plot show also the trial averaged histogram?
     
     spontaneous : bool
-                Whether to also show the spontaneous activity the preceded the stimulus.
+        Whether to also show the spontaneous activity the preceded the stimulus.
+
     """
     
     required_parameters = ParameterSet({
@@ -649,13 +658,14 @@ class VmPlot(Plotting):
     ----------------
     
     sheet_name : str
-               From which layer to plot the vms.
+        From which layer to plot the vms.
                
     neuron : int
-            Id of the neuron to plot.
+        Id of the neuron to plot.
             
     spontaneous : bool
-                Whether to also show the spontaneous activity the preceded the stimulus.
+        Whether to also show the spontaneous activity the preceded the stimulus.
+
     """
 
     required_parameters = ParameterSet({
@@ -720,16 +730,17 @@ class GSynPlot(Plotting):
     ----------------
     
     sheet_name : str
-               From which layer to plot the conductances.
+        From which layer to plot the conductances.
                
     neuron : int
-            Id of the neuron to plot.
+        Id of the neuron to plot.
     
     spontaneous : bool
-                Whether to also show the spontaneous activity the preceded the stimulus.
+        Whether to also show the spontaneous activity the preceded the stimulus.
     
     separated : bool
-                Whether the excitatory and inhibitory conductances should be plotted separately.
+        Whether the excitatory and inhibitory conductances should be plotted separately.
+
     """
 
     required_parameters = ParameterSet({
@@ -794,16 +805,17 @@ class OverviewPlot(Plotting):
     ----------------
     
     sheet_name : str
-               From which layer to plot.
+        From which layer to plot.
                
     neuron : int
-            Id of the neuron to plot.
+        Id of the neuron to plot.
             
     sheet_activity: bool
-            Whether to also show the sheet activity plot as the first row.
+        Whether to also show the sheet activity plot as the first row.
             
     spontaneous : bool
-                Whether to also show the spontaneous activity the preceded the stimulus.
+        Whether to also show the spontaneous activity the preceded the stimulus.
+
     """
     
     required_parameters = ParameterSet({
@@ -867,10 +879,10 @@ class AnalogSignalListPlot(Plotting):
     ----------------
     
     sheet_name : str
-               From which layer to plot.
+        From which layer to plot.
                
     neurons : list
-            List of neuron ids for which to plot the analog signals.
+        List of neuron ids for which to plot the analog signals.
             
     """
     
@@ -924,7 +936,8 @@ class AnalogSignalPlot(Plotting):
     ----------------
     
     sheet_name : str
-               From which layer to plot.
+        From which layer to plot.
+
     """
     
     required_parameters = ParameterSet({
@@ -964,9 +977,10 @@ class ConductanceSignalListPlot(Plotting):
     ----------------
                
     normalize_individually : bool
-                           Whether to normalize each trace individually by dividing it with its maximum.
+        Whether to normalize each trace individually by dividing it with its maximum.
                            
     neurons : list 
+
             
     """
     
@@ -1011,7 +1025,7 @@ class PerNeuronPairAnalogSignalListPlot(Plotting):
     ----------------
     
     sheet_name : str
-               From which layer to plot.
+        From which layer to plot.
             
     """
     required_parameters = ParameterSet({
@@ -1085,20 +1099,21 @@ class ActivityMovie(Plotting):
     ----------------
     
     bin_width : float (ms)
-              In ms the width of the bins into which to sample spikes.
+        In ms the width of the bins into which to sample spikes.
     
     scatter :  bool   
-            Whether to plot neurons activity into a scatter plot (if True) or as an interpolated pixel image.
+        Whether to plot neurons activity into a scatter plot (if True) or as an interpolated pixel image.
             
     resolution : int 
-               The number of pixels into which the activity will be interpolated in case scatter = False.
+        The number of pixels into which the activity will be interpolated in case scatter = False.
                
     sheet_name: str
-              The sheet for which to display the actvity movie.
+        The sheet for which to display the actvity movie.
 
     exp_time_constant: float (ms)
-              Spiking can be very irregular and bursty which makes it difficult to visualize. 
-              This parameter is the time-constant of the exponential with which the convolve psth, 0 means no convolution.
+        Spiking can be very irregular and bursty which makes it difficult to visualize. 
+        This parameter is the time-constant of the exponential with which the convolve psth, 0 means no convolution.
+
     """     
     
     required_parameters = ParameterSet({
@@ -1197,10 +1212,10 @@ class PerAreaASLMovie(Plotting):
     ----------------
     
     resolution : int 
-               The number of pixels into which the activity will be interpolated in case scatter = False.
+        The number of pixels into which the activity will be interpolated in case scatter = False.
                
     sheet_name: str
-              The sheet for which to display the movie.
+        The sheet for which to display the movie.
 
     """     
     
@@ -1255,15 +1270,17 @@ class PerNeuronValuePlot(Plotting):
     ----------------
     
     cortical_view : bool  
-                Whether to show cortical view or histogram (see class description for full detail.)
+        Whether to show cortical view or histogram (see class description for full detail.)
                 
     neuron_ids : list  
-                List of neurons to plot 
+        List of neurons to plot 
                 
     Notes
     -----
+
     So far doesn't support the situation where several types of PerNeuronValue analysys data structures are present in the supplied
     datastore.
+
     """
     
     required_parameters = ParameterSet({
@@ -1421,23 +1438,25 @@ class ConnectivityPlot(Plotting):
     ----------
     
     pnv_dsv : Datastore
-            The datastore holding PerNeuronValues - one per each sheet that will be displayed as colors for the connections.
+        The datastore holding PerNeuronValues - one per each sheet that will be displayed as colors for the connections.
             
     Other parameters
     ----------------
+
     neuron : int  
-           The target neuron whose connections are to be displayed.
+        The target neuron whose connections are to be displayed.
     
     reversed : bool
-             If false the outgoing connections from the given neuron are shown. if true the incomming connections are shown.
+        If false the outgoing connections from the given neuron are shown. if true the incomming connections are shown.
     
     sheet_name : str
-               For neuron in which sheet to display connectivity.
+        For neuron in which sheet to display connectivity.
         
     Notes
     -----
     
     One PerNeuronValue can be present per target sheet!
+
     """
 
     required_parameters = ParameterSet({
@@ -1605,7 +1624,8 @@ class PerNeuronAnalogSignalScatterPlot(Plotting):
     ----------------
     
     neurons : list
-            List of neuron ids for which to plot the tuning curves.
+        List of neuron ids for which to plot the tuning curves.
+
     """
     
     required_parameters = ParameterSet({
@@ -1644,23 +1664,25 @@ class CorticalColumnRasterPlot(Plotting):
     
     Other parameters
     ----------------
+
     spontaneous : bool
-                Whether to also show the spontaneous activity the preceded the stimulus.
+        Whether to also show the spontaneous activity the preceded the stimulus.
 
     sheet_names : list
-                the list and order in which the sheets should be plotted
+        the list and order in which the sheets should be plotted
     
     labels : list
-                the list and order in which the sheets should be plotted
+        the list and order in which the sheets should be plotted
     
     colors : list 
-           the colors to give to the spikes in the sheets. 
+        the colors to give to the spikes in the sheets. 
            
            
     NOTES
     -----
     
     spontaneous doesn't work yet
+
     """
     
     required_parameters = ParameterSet({
@@ -1723,28 +1745,31 @@ class PlotTemporalTuningCurve(Plotting):
 
     Parameters
     ----------
+
     centering_pnv : PerNeuronValue 
-                  If not none, centered has to be true. The centering_pnv has to be a PerNeuronValue containing values in the domain corresponding to 
-                  parameter `parameter_name`. The tuning curves of each neuron will be cenetered around the value in this pnv corresponding to the given neuron.
-                  This will be applied also if mean is True (so the tuning curves will be centered based on the values in centering_pnv and than averaged).
+        If not none, centered has to be true. The centering_pnv has to be a PerNeuronValue containing values in the domain corresponding to 
+        parameter `parameter_name`. The tuning curves of each neuron will be cenetered around the value in this pnv corresponding to the given neuron.
+        This will be applied also if mean is True (so the tuning curves will be centered based on the values in centering_pnv and than averaged).
     
     Other parameters
     ----------------
+
     neurons : list
-            List of neuron ids for which to plot the tuning curves.
+        List of neuron ids for which to plot the tuning curves.
             
     sheet_name : str
-            From which layer to plot the tuning curves.
+        From which layer to plot the tuning curves.
                
     parameter_name : str
-                   The parameter_name through which to plot the tuning curve.
+        The parameter_name through which to plot the tuning curve.
 
     mean : bool 
-         If True it will plot the mean tuning curve over all neurons (in case centered=True it will first center the TCs before computing the mean)
+        If True it will plot the mean tuning curve over all neurons (in case centered=True it will first center the TCs before computing the mean)
     
             
     Defines 'TuningCurve_' + value_name +  '.Plot0' ... 'TuningCurve_' + value_name +  '.Plotn'
     where n goes through number of neurons, and value_name creates one row for each value_name found in the different PerNeuron found
+
     """
 
     required_parameters = ParameterSet({
@@ -1936,8 +1961,10 @@ class RasterPlotsStimuliOrder(Plotting):
 
     Parameters
     ----------
+
     neurons_dict : dict
-                   Dictionary containing a list of neurons to plot for each sheets
+        Dictionary containing a list of neurons to plot for each sheets
+                   
     """
 
     def __init__(self, datastore, neurons_dict, parameters, plot_file_name=None,fig_param=None,frame_duration=0):

@@ -83,21 +83,29 @@ def setup_logging():
 
 def prepare_workflow(simulation_name, model_class):
     """
+    
     Executes the following preparatory steps for simulation workflow:
-        - Load simulation parameters
-        - Initialize random seeds
-        - Create directory for results
-        - Store loaded parameters
-        - Setup logging
-        - Store some initial info about the simulation
+
+    - Load simulation parameters
+    - Initialize random seeds
+    - Create directory for results
+    - Store loaded parameters
+    - Setup logging
+    - Store some initial info about the simulation
+
     Returns
     -------
+
+    
     sim : module
-          NEST module, to use for simulation
+        NEST module, to use for simulation
+
     num_threads : int
-                 Number of threads to use for the simulation
+        Number of threads to use for the simulation
+
     parameters : dict
-                 Loaded parameters to initialize the simulation and model with
+        Loaded parameters to initialize the simulation and model with
+                 
     """
     (
         simulation_run_name,
@@ -178,16 +186,22 @@ def run_workflow(simulation_name, model_class, create_experiments):
     parameter's value with the provided one on the command line.
     Parameters
     ----------
+
     simulation_name : str
-                    The name of the simulation.
+        The name of the simulation.
+
     model_class : class
-                The class from which the model instance will be created from.
+        The class from which the model instance will be created from.
+
     create_experiments : func
-                       The function that returns the list of experiments that will be executed on the model.
+        The function that returns the list of experiments that will be executed on the model.
+
     Examples
     --------
+
     The intended syntax of the commandline is as follows (note that the simulation run name is the last argument):
     >>> python userscript simulator_name num_threads parameter_file_path modified_parameter_path_1 modified_parameter_value_1 ... modified_parameter_path_n modified_parameter_value_n simulation_run_name
+    
     """
 
     # Prepare workflow - read parameters, setup logging, etc.
@@ -212,22 +226,23 @@ def run_experiments(model,experiment_list,parameters,load_from=None):
     ----------
     
     model : Model
-          The model to execute experiments on.
+        The model to execute experiments on.
     
     experiment_list : list
-          The list of experiments to execute.
+        The list of experiments to execute.
     
     parameters : ParameterSet
-               The parameters given to the simulation run.
+        The parameters given to the simulation run.
           
     load_from : str
-              If not None it will load the simulation from the specified directory.
+        If not None it will load the simulation from the specified directory.
               
     Returns
     -------
     
     data_store : DataStore
-               The data store containing the recordings.
+        The data store containing the recordings.
+               
     """
     
     # first lets run all the measurements required by the experiments

@@ -19,21 +19,30 @@ class InputAnalysis(Analysis):
     the input only between connection types.
 
     Parameters
-    ------------
+    ----------
+
     'afferent_connections': list  
-                            List of strings containing the name of the afferent connections.
+        List of strings containing the name of the afferent connections.
+
     'recurrent_connections': list
-                             List of strings containing the name of the recurrent connections.
+        List of strings containing the name of the recurrent connections.
+
     'inhibitory_connections': list
-                              List of strings containing the name of the inhibitory connections.
+        List of strings containing the name of the inhibitory connections.
+
     'feedback_connections': list
-                            List of strings containing the name of the afferent connections.
+        List of strings containing the name of the afferent connections.
+
     'sheet_name': str
-                  Name of the sheet.
+        Name of the sheet.
+
     'neuron_ids': list
-                  List of the ids of the neurons to include in this analysis.
+        List of the ids of the neurons to include in this analysis.
+
     'local_connections_range': float
-                  Connection range beyond which connections would be considering as long-range.
+        Connection range beyond which connections would be considering as long-range.
+
+                  
     """
     required_parameters = ParameterSet({
         'afferent_connections': list,  # List of strings containing the name of the afferent connections

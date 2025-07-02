@@ -1,7 +1,7 @@
 """
 This module contains the definition of the AnalysisDataStructure API and implementation of some basic analysis data structures.
 
-For more documentation refer to `mozaik.analysis`_
+For more documentation refer to :doc:`mozaik.analysis`
 """
 
 import mozaik
@@ -15,7 +15,14 @@ class AnalysisDataStructure(MozaikParametrized):
     """
     Encapsulates data that a certain Analysis class generates.
 
-    The four parameters that are common to all AnalysisDataStructure classes are `identified`, `analysis_algorithm`, `neuron`, `sheet_name` and `stimulus_id`.
+    The four parameters that are common to all :class:`AnalysisDataStructure` classes are:
+    
+    - ``identifier``
+    - ``analysis_algorithm``  
+    - ``neuron``
+    - ``sheet_name``
+    - ``stimulus_id``
+    
     """
 
     identifier = SString(doc="The identifier of the analysis data structure")
@@ -43,8 +50,11 @@ class SingleValue(AnalysisDataStructure):
 
     Parameters
     ---------- 
+
     value_unit : quantities
-                Quantities unit describing the unit of the value
+        Quantities unit describing the unit of the value
+
+
     """
     value_name = SString(doc="The name of the value.")
     period = SNumber(units=None,default=None,doc="The period of the value. If value is not periodic period=None")
@@ -60,8 +70,11 @@ class SingleObject(AnalysisDataStructure):
 
     Parameters
     ---------- 
+
     value_unit : quantities
-                Quantities unit describing the unit of the value
+        Quantities unit describing the unit of the value
+
+
     """
     object_name = SString(doc="The name of the object.")
     period = SNumber(units=None,default=None,doc="The period of the value contained by the object. If value is not periodic period=None")
@@ -82,10 +95,12 @@ class SingleValueList(AnalysisDataStructure):
 
     Parameters
     ----------
+
     values : list
-                List of values
+        List of values
     values_unit : quantities
-                Quantities unit describing the unit of the values
+        Quantities unit describing the unit of the values
+
     """
     value_name = SString(doc="The name of the value.")
 
@@ -103,13 +118,15 @@ class PerNeuronValue(AnalysisDataStructure):
     ---------- 
     
     values : list
-           The vector of values one per neuron
+        The vector of values one per neuron
 
     value_units : quantities
-                Quantities unit describing the units of the value
+        Quantities unit describing the units of the value
     
     ids : list(int)
         The ids of the neurons which are stored, in the same order as in the values
+
+
     """
     value_name = SString(doc="The name of the value.")
     period = SNumber(units=None,default=None,doc="The period of the value. If value is not periodic period=None")
@@ -125,13 +142,17 @@ class PerNeuronValue(AnalysisDataStructure):
         """
         Parameters
         ---------- 
+
         idd : int or list(int)
             The ids for which the return the values.
         
         Returns
         -------
+
         ids : AnalogSignal or list(AnalogSignal)
             List (or single) of AnalogSignal objects corresponding to ids in `idd`.
+
+
         """
         if isinstance(idds,list) or isinstance(idds,numpy.ndarray):
             return [self.values[list(self.ids).index(i)] for i in idds]
@@ -148,13 +169,15 @@ class PerNeuronPairValue(AnalysisDataStructure):
     ---------- 
     
     values : numpy.nd_array
-           The 2D array holding the values. 
+        The 2D array holding the values. 
 
     value_units : quantities
-                Quantities unit describing the units of the value
+        Quantities unit describing the units of the value
     
     ids : list(int)
         The ids of the neurons which are stored, in the same order as in the values (along both axis).
+
+
     """
     value_name = SString(doc="The name of the value.")
     period = SNumber(units=None,default=None,doc="The period of the value. If value is not periodic period=None")
@@ -170,6 +193,7 @@ class PerNeuronPairValue(AnalysisDataStructure):
         """
         Parameters
         ---------- 
+
         idds1 : int or list(int)
             The ids for which the return the values along first dimension.
         
@@ -178,8 +202,10 @@ class PerNeuronPairValue(AnalysisDataStructure):
         
         Returns
         -------
+
         ids : scaler or array
             Array or scalar of values corresponding to `idds`.
+
         """
         if (isinstance(idds1,list) or isinstance(idds1,numpy.ndarray)) and (isinstance(idds2,list) or isinstance(idds2,numpy.ndarray)):
             return numpy.array(self.values)[[list(self.ids).index(i) for i in idds1],:][:,[list(self.ids).index(i) for i in idds2]]
@@ -192,16 +218,17 @@ class PerAreaValue(AnalysisDataStructure):
     Data structure holding value for each sub-area in the cortical plane
 
     values : numpy.nd_array
-           The 2D array holding the values.
+        The 2D array holding the values.
 
     value_units : quantities
-                Quantities unit describing the units of the value
+        Quantities unit describing the units of the value
 
     x_coords : List
-           The x coordinates of the center of each sub-area
+        The x coordinates of the center of each sub-area
 
     y_coords : List 
-           The y coordinates of the center of each sub-area
+        The y coordinates of the center of each sub-area
+
     """
     value_name = SString(doc="The name of the value.")
     period = SNumber(units=None,default=None,doc="The period of the value. If value is not periodic period=None")
@@ -233,8 +260,11 @@ class AnalysisDataStructure1D(AnalysisDataStructure):
 
     Parameters
     ---------- 
+
     y_axis_units : quantities
-          The quantities units of y axis.
+        The quantities units of y axis.
+
+
     """
 
     x_axis_name = SString(doc="the name of the x axis.")
@@ -253,8 +283,10 @@ class AnalogSignal(AnalysisDataStructure1D):
 
     Parameters
     ---------- 
+
     analog_signal : AnalogSignal
-         The neo AnalogSignal
+        The neo AnalogSignal
+
     """
 
     def __init__(self, analog_signal, y_axis_units, **params):
@@ -277,13 +309,15 @@ class AnalogSignalList(AnalysisDataStructure1D):
 
     Parameters
     ---------- 
+
     asl : list(AnalogSignal)
-         The variable containing the list of AnalogSignal objects, in the order
-         corresponding to the order of neurons indexes in the indexes parameter.
+        The variable containing the list of AnalogSignal objects, in the order
+        corresponding to the order of neurons indexes in the indexes parameter.
     
     ids : list(int)
-         List of ids of neurons in the original Mozaik sheet to which the
-         AnalogSignals correspond.
+        List of ids of neurons in the original Mozaik sheet to which the
+        AnalogSignals correspond.
+
     """
 
     def __init__(self, asl, ids, y_axis_units, **params):
@@ -298,12 +332,15 @@ class AnalogSignalList(AnalysisDataStructure1D):
         """
         Parameters
         ---------- 
+
         idd : int or list(int)
         
         Returns
         -------
+
         asls : AnalogSignal or list(AnalogSignal)
             List (or single) of AnalogSignal objects corresponding to ids in `idds`.
+
         """
         if isinstance(idds,list) or isinstance(idds,numpy.ndarray):
             return [self.asl[list(self.ids).index(i)] for i in idds]
@@ -346,8 +383,10 @@ class AnalogSignalList(AnalysisDataStructure1D):
 
         Parameters
         ----------
+
         ignore_invalid : bool  
             Whether we want to ignore NaN and inf values when computed the mean
+
 
         """
         for asl in self.asl:
@@ -367,8 +406,10 @@ class AnalogSignalList(AnalysisDataStructure1D):
 
         Parameters
         ----------
+
         ignore_invalid : bool
             Whether we want to ignore NaN and inf values when computed the mean
+
 
         """
         for asl in self.asl:
@@ -391,12 +432,14 @@ class PerNeuronPairAnalogSignalList(AnalysisDataStructure1D):
 
     Parameters
     ---------- 
+
     asl : list(AnalogSignal)
-         The variable containing the list of AnalogSignal objects, in the order
-         corresponding to the order of neuron indexe pairs in the ids parameter.
+        The variable containing the list of AnalogSignal objects, in the order
+        corresponding to the order of neuron indexe pairs in the ids parameter.
     
     ids : list((int,int))
-         List of id pairs of neurons to which the AnalogSignals correspond.
+        List of id pairs of neurons to which the AnalogSignals correspond.
+
     """
 
     def __init__(self, asl, ids, y_axis_units, **params):
@@ -415,12 +458,15 @@ class PerNeuronPairAnalogSignalList(AnalysisDataStructure1D):
         """
         Parameters
         ---------- 
+        
         idd_pair : tuple of neuron ids or list of tuples of neuron ids
         
         Returns
         -------
+
         ids : AnalogSignal or list(AnalogSignal)
             List (or single) of AnalogSignal objects corresponding to id pairs specified in `idd_pair` parameter.
+
         """
         return self.asl[list(self.ids).index(idd_pair)]
 
@@ -483,15 +529,18 @@ class PerAreaAnalogSignalList(AnalysisDataStructure1D):
 
     Parameters
     ---------- 
+
     asl : np_array(AnalogSignal)
-         The variable containing the matrix of AnalogSignal objects, according 
-         to their position in the cortical space.
+        The variable containing the matrix of AnalogSignal objects, according 
+        to their position in the cortical space.
     
     x_coords : list
-           The x coordinates of the center of each sub-area
+        The x coordinates of the center of each sub-area
 
     y_coords : list 
-           The y coordinates of the center of each sub-area
+        The y coordinates of the center of each sub-area
+
+
     """
 
     def __init__(self, asl, x_coords, y_coords, y_axis_units, **params):
@@ -573,6 +622,7 @@ class ConductanceSignalList(AnalysisDataStructure1D):
 
     Parameters
     ---------- 
+
     e_asl : list(AnalogSignal)
        The variable containing the list of AnalogSignal objects corresponding
        to excitatory conductances, in the order corresponding to the order of
@@ -586,6 +636,7 @@ class ConductanceSignalList(AnalysisDataStructure1D):
     ids : list(int)
        List of ids of neurons in the original Mozaik sheet to which the
        AnalogSignals correspond.
+
     """
 
     def __init__(self, e_con, i_con, ids, **params):
@@ -607,12 +658,15 @@ class ConductanceSignalList(AnalysisDataStructure1D):
         """
         Parameters
         ---------- 
+
         idd : int or list(int)
         
         Returns
         -------
+
         ids : AnalogSignal or list(AnalogSignal)
             List (or single) of AnalogSignal objects containing excitatory conductanes corresponding to ids in `idd`.
+
         """
         return self.e_con[self.ids.index(idd)]
 
@@ -620,12 +674,15 @@ class ConductanceSignalList(AnalysisDataStructure1D):
         """
         Parameters
         ---------- 
+
         idd : int or list(int)
         
         Returns
         -------
+
         ids : AnalogSignal or list(AnalogSignal)
             List (or single) of AnalogSignal objects containing inhibitory conductanes corresponding to ids in `idd`.
+
         """
         return self.i_con[self.ids.index(idd)]
 
@@ -652,11 +709,12 @@ class Connections(AnalysisDataStructure):
 
     Parameters
     ---------- 
+    
     weights : list
-            List of tuples (i,j,w) where i is index of pre-synaptic neuron in sheet source_name and j is index of post-synaptic neuron in sheet target_name, and w is the weights.
+        List of tuples (i,j,w) where i is index of pre-synaptic neuron in sheet source_name and j is index of post-synaptic neuron in sheet target_name, and w is the weights.
     
     delays : list
-            List of tuples (i,j,d) where i is index of pre-synaptic neuron in sheet source_name and j is index of post-synaptic neuron in sheet target_name, and d is the delay.
+        List of tuples (i,j,d) where i is index of pre-synaptic neuron in sheet source_name and j is index of post-synaptic neuron in sheet target_name, and d is the delay.
     
     """
 

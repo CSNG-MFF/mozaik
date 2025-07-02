@@ -26,45 +26,48 @@ class Model(BaseComponent):
     
     Other parameters
     ----------------
+
     name : str
-         The name of the model.
+        The name of the model.
     
     results_dir : str
-                Path to a directory where to store the results.
+        Path to a directory where to store the results.
     
     reset : bool
-         If True the pyNN.reset() is used to reset the network between stimulus presentations. 
-         Otherwise a blank stimulus is shown for a period of time defined by the parameter null_stimulus_period.
+        If True the pyNN.reset() is used to reset the network between stimulus presentations. 
+        Otherwise a blank stimulus is shown for a period of time defined by the parameter null_stimulus_period.
     
     null_stimulus_period : float
-                         The length of blank stimulus presentation during the simulation.
+        The length of blank stimulus presentation during the simulation.
     
     input_space : ParameterSet
-                The parameters for the InputSpace object that will become the sensory input space for the model.
+        The parameters for the InputSpace object that will become the sensory input space for the model.
     
     sheets : ParameterSet
-                The list of sheets and their parameters from which the model is constructed. 
+        The list of sheets and their parameters from which the model is constructed. 
                 
     input_space_type : str
-                     The python class of the InputSpace object to use.
+        The python class of the InputSpace object to use.
                      
     min_delay : float (ms)
-                Minimum delay of connections allowed in the simulation. 
+        Minimum delay of connections allowed in the simulation. 
 
     max_delay : float (ms)
-                Maximum delay of connections allowed in the simulation. 
+        Maximum delay of connections allowed in the simulation. 
     
     time_step : float (ms)
-                Length of the single step of the simulation. 
+        Length of the single step of the simulation. 
 
     explosion_monitoring: ParameterSet
-                        Defines the sheet to monitor and the threshold of mean rate over which the activity is 
-                        considered too high and for which the simulation should be cancelled.
-                        None if no monitoring
+        Defines the sheet to monitor and the threshold of mean rate over which the activity is 
+        considered too high and for which the simulation should be cancelled.
+        None if no monitoring
+
     steps_get_data: int
-                If None, gets all the data of a given segment at once.
-                Otherwise, defines the number of neurons to get data from after each step
-                This is a solution to the fact that gather can overflow if we get too much data at once
+        If None, gets all the data of a given segment at once.
+        Otherwise, defines the number of neurons to get data from after each step
+        This is a solution to the fact that gather can overflow if we get too much data at once
+
     """
 
     required_parameters = ParameterSet({
@@ -115,22 +118,25 @@ class Model(BaseComponent):
         
         Parameters
         ----------
+
         stimulus : Stimulus
-                 Stimulus to be presented.
+            Stimulus to be presented.
                  
         artificial_stimulators : dict
-                               Dictionary where keys are sheet names, and values are lists of DirectStimulator instances to be applied in the corresponding sheet.
+            Dictionary where keys are sheet names, and values are lists of DirectStimulator instances to be applied in the corresponding sheet.
         
         Returns
         -------
+
         segments : list
-                 List of segments holding the recorded data, one per each sheet.
+            List of segments holding the recorded data, one per each sheet.
         
         sensory_input : object
-                 The 'raw' sensory input that has been shown to the network - the structure of this object depends on the sensory component.
+            The 'raw' sensory input that has been shown to the network - the structure of this object depends on the sensory component.
         
         sim_run_time : float (seconds)
-                     The biological time of the simulation up to this point (including blank presentations).
+            The biological time of the simulation up to this point (including blank presentations).
+
                                           
         """
         t0 = time.time()
@@ -195,13 +201,16 @@ class Model(BaseComponent):
         
         Parameters
         ----------
+
         tstop : float (seconds)
-              The duration for which to run the simulation.
+            The duration for which to run the simulation.
         
         Returns
         -------
+
         time : float (seconds)
-             The wall clock time for which the simulator ran.
+            The wall clock time for which the simulator ran.
+             
         """
         t0 = time.time()
         logger.info("Simulating the network for %s ms" % tstop)

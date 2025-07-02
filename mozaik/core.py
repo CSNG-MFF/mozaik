@@ -22,8 +22,10 @@ class ParametrizedObject(object):
     
     Parameters
     ----------
+
     parameters : dict
-               Dictionary of the parameter names and their values that has to match the required_parameters variable. 
+        Dictionary of the parameter names and their values that has to match the required_parameters variable. 
+    
     """
     required_parameters = ParameterSet({})
     version = __version__
@@ -31,12 +33,14 @@ class ParametrizedObject(object):
     def check_parameters(self, parameters):
         """
         This is a function that checks whether all required (and no other) parameters have been specified and all their values have matching types.
-        This function gets automatically executed during initialization of each :class:.ParametrizedObject object. 
+        This function gets automatically executed during initialization of each :class:`~mozaik.core.ParametrizedObject` object. 
 
         Parameters
         ----------
+
         parameters : dict
-                   Dictionary of the parameter names and their values that has to match the required_parameters variable. 
+            Dictionary of the parameter names and their values that has to match the required_parameters variable. 
+        
         """
         
         def walk(tP, P, section=None):
@@ -80,8 +84,10 @@ class BaseComponent(ParametrizedObject):
     
     Parameters
     ----------
+
     model : Model
-          Reference to the model to which the component will belong.
+        Reference to the model to which the component will belong.
+
     """
 
     def __init__(self, model, parameters):
@@ -96,7 +102,9 @@ class SensoryInputComponent(BaseComponent):
     
     See Also
     --------
+
     mozaik.models.vision : the implementation of retinal input 
+    
     """
 
     def process_input(self, input_space, stimulus_id, duration=None,

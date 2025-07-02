@@ -40,22 +40,28 @@ class SpatioTemporalReceptiveField(object):
 
     Parameters
     ----------
+
     func : function
-         should be a function of x, y, t, and a ParameterSet object
+        should be a function of x, y, t, and a ParameterSet object
+
     func_params : ParameterSet
-                ParameterSet that is passed to `func`.
+        ParameterSet that is passed to `func`.
+
     width : float (degrees)
-          x-dimension size
+        x-dimension size
 
     height : float (degrees)
-          y-dimension size
+        y-dimension size
 
     duration : float (ms)
-             length of the temporal axis of the RF
+        length of the temporal axis of the RF
              
     Notes
     -----
+
     Coordinates x = 0 and y = 0 are at the centre of the spatial kernel.
+
+    
     """
     
     def __init__(self, func, func_params, width, height, duration):
@@ -74,20 +80,24 @@ class SpatioTemporalReceptiveField(object):
         
         Parameters
         ----------
+
         dx : float
-           Difference between pixel positions along the x axis.
+            Difference between pixel positions along the x axis.
         
         dy : float
-           Difference between pixel positions along the y axis.
+            Difference between pixel positions along the y axis.
         
         dy : float
-           Difference between timesteps.
+            Difference between timesteps.
         
         Notes
         -----
+
         If `dx` does not
         divide exactly into the width, then the actual width will be slightly
         larger than the nominal width. `dx` and `dy` should be in degrees and `dt` in ms.
+
+        
         """
         assert dx == dy  # For now, at least
         nx = numpy.ceil(self.width/dx)
@@ -124,6 +134,7 @@ class SpatioTemporalReceptiveField(object):
     def kernel_duration(self):
         return self.kernel.shape[2]
 
+    
     def __str__(self):
         s = "Receptive field: width=%gº, height=%gº, duration=%g ms" % (self.width, self.height, self.duration)
         if self.kernel is not None:
@@ -150,23 +161,26 @@ class CellWithReceptiveField(object):
     
     Parameters
     ----------
+
     x , y : float
-          x and y coordinates of the center of the RF in visual space.
+        x and y coordinates of the center of the RF in visual space.
     
     receptive_field : SpatioTemporalReceptiveField
-          The receptive field object containing the RFs data.
+        The receptive field object containing the RFs data.
           
     gain_control : ParameterSet
-         The calculated input current values will be multiplied by the gain
-         parameter (gain_control.gain), if gain_control.non_linear_gain is None.
+        The calculated input current values will be multiplied by the gain
+        parameter (gain_control.gain), if gain_control.non_linear_gain is None.
 
-         Otherwise, the input current values can be further scaled by a nonlinear
-         gain function according to luminance and contrast (parameters set by
-         gain_control.non_linear_gain). This nonlinear function mimics the luminance
-         and contrast saturation effects of retina interneurons.
+        Otherwise, the input current values can be further scaled by a nonlinear
+        gain function according to luminance and contrast (parameters set by
+        gain_control.non_linear_gain). This nonlinear function mimics the luminance
+        and contrast saturation effects of retina interneurons.
     
     visual_space : VisualSpace
-                 The object representing the visual space.
+        The object representing the visual space.
+
+                 
     """
 
     def __init__(self, x, y, receptive_field, gain_control,visual_space):
@@ -204,11 +218,12 @@ class CellWithReceptiveField(object):
         ----------
         
         background_luminance : float
-                             The background luminance of the visual space.
+            The background luminance of the visual space.
         
         stimulus_duration : float (ms)
-                          The duration  of the visual stimulus.
-            
+            The duration  of the visual stimulus.
+        
+                             
         """
         rf = self.receptive_field
         assert rf.kernel.shape[0] == rf.kernel.shape[1], "With the current implementation, receptive fields must be symmetric!"
@@ -243,14 +258,13 @@ class CellWithReceptiveField(object):
         Look at the visual space and update t
         Where the kernel temporal resolution is the same as the frame duration
         (visual space update interval):
-           R_i = Sum[j=0,L-1] K_j.I_i-j
-             where L is the kernel length/duration
+        R_i = Sum[j=0,L-1] K_j.I_i-j
+        where L is the kernel length/duration
         Where the kernel temporal resolution = (frame duration)/α (α an integer)
-           R_k = Sum[j=0,L-1] K_j.I_i'
-             where i' = (k-j)//α  (// indicates integer division, discarding the
-             remainder)
-        To avoid loading the entire image sequence into memory, we build up the
-        response array one frame at a time.
+        R_k = Sum[j=0,L-1] K_j.I_i'
+        where i' = (k-j)//α  (// indicates integer division, discarding the
+        remainder)
+        To avoid loading the entire image sequence into memory, we build up the response array one frame at a time.
         """
         view_array = self.visual_space.view(self.visual_region, pixel_size=self.receptive_field.spatial_resolution)
         self.mean[self.i:self.i+self.update_factor] = numpy.mean(view_array)
@@ -317,23 +331,28 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
     ----------
     
     density : int (1/degree^2)
-              Number of neurons to simulate per square degree of visual space.
+        Number of neurons to simulate per square degree of visual space.
+
     size : tuple (degree,degree)
-         The x and y size of the visual field.
+        The x and y size of the visual field.
+
     linear_scaler : float
-                  The linear scaler that the RF output is multiplied with.
+        The linear scaler that the RF output is multiplied with.
+
     cached : bool
-           If the stimuli are chached. 
+        If the stimuli are chached. 
            
     cache_path : str
-           Path to the directory where to store the create the cache.
+        Path to the directory where to store the create the cache.
     
     mpi_reproducible_noise : bool
-           If true the background noise is generated in such a way that is reproducible accross runs using different number of mpi processes. 
-           Significant slowdown if True.
+        If true the background noise is generated in such a way that is reproducible accross runs using different number of mpi processes. 
+        Significant slowdown if True.
     
+           
     Notes
     -----
+
     If the stimulus is cached SpatioTemporalFilterRetinaLGN will write in the local directory `parameters.cache_path`
     the generated amplitudes for all the neurons in the retina (so this will be specific to the model)
     for each new presented stimulus. If it is asked to generate activities for a stimulus that already exists in the directory (it just 
@@ -342,10 +361,13 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
     so the actual current injected into the retinal neurons will not be identical to the one that was injected when 
     the stimulus was saved in the cache.
     
+
     **IMPORTANT**
     This mechanism assumes that the retinal model stays otherwise identical between 
     simulations. The moment anything is changed in the retinal model one **has** to delete 
     the retina_cache directory (which effectively resets the cache).
+
+    
     """
 
     required_parameters = ParameterSet({
@@ -477,13 +499,18 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         
         Parameters
         ----------
-            stimulus_id : StimulusID
-                        The stimulus id of the stimulus for which to return the activities
+
+        stimulus_id : StimulusID
+            The stimulus id of the stimulus for which to return the activities
         
+                
         Returns
         -------
+
         Tuple (input_currents, retinal_input)  where input_currents are the currents due to the RFs of the individual RFs and retinal_input is the 
         list of frames shown to the retina.
+
+        
         """
         
         #If the chache is switched off or we run multiprocess job switch off the cache.
@@ -511,15 +538,17 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         
         Parameters
         ----------
-                stimulus_id : StimulusID
-                        The stimulus id of the stimulus for which we will store the input currents
+
+        stimulus_id : StimulusID
+            The stimulus id of the stimulus for which we will store the input currents
                 
-                input_currents : list(ndarray)
-                               List containing the input currents that will be injected to the LGN neurons due to the neuron's RFs. One per each LGN neuron.
+        input_currents : list(ndarray)
+            List containing the input currents that will be injected to the LGN neurons due to the neuron's RFs. One per each LGN neuron.
                 
-                retinal_input : list(ndarray)
-                              List of 2D arrays containing the frames of luminances that were presented to the retina for the stimulus `stimulus_id`.
-        
+        retinal_input : list(ndarray)
+            List of 2D arrays containing the frames of luminances that were presented to the retina for the stimulus `stimulus_id`.
+
+                               
         """
         if self.parameters.cached == False:
             return None
@@ -545,22 +574,27 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         
         Parameters
         ----------
+
         visual_space : VisualSpace
-                     The visual space to which the stimuli are presented.
+            The visual space to which the stimuli are presented.
                      
         stimulus : VisualStimulus    
-                 The visual stimulus to be shown.
+            The visual stimulus to be shown.
         
         duration : int (ms)
-                 The time for which we will simulate the stimulus
+            The time for which we will simulate the stimulus
         
         offset : int(ms)
-               The time (in absolute time of the whole simulation) at which the stimulus starts.
+            The time (in absolute time of the whole simulation) at which the stimulus starts.
         
+               
         Returns
         -------
+
         retinal_input : list(ndarray)
-                      List of 2D arrays containing the frames of luminances that were presented to the retina.
+            List of 2D arrays containing the frames of luminances that were presented to the retina.
+
+                      
         """
         logger.debug("Presenting visual stimulus from visual space %s" % visual_space)
         visual_space.set_duration(duration)
@@ -644,20 +678,24 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         
         Parameters
         ----------
+
         visual_space : VisualSpace
-                     The visual space to which the blank stimulus are presented.
+            The visual space to which the blank stimulus are presented.
                      
         duration : int (ms)
-                 The time for which we will simulate the blank stimulus
+            The time for which we will simulate the blank stimulus
         
         offset : int(ms)
-               The time (in absolute time of the whole simulation) at which the stimulus starts.
+            The time (in absolute time of the whole simulation) at which the stimulus starts.
         
+               
         Returns
         -------
+        
         retinal_input : list(ndarray)
-                      List of 2D arrays containing the frames of luminances that were presented to the retina.
+            List of 2D arrays containing the frames of luminances that were presented to the retina.
 
+                      
         """
         # HAAACK!
         # Currently, we need to set the start time of stimulation to

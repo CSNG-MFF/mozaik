@@ -50,12 +50,13 @@ class PSTextureStimulus(TextureBasedVisualStimulus):
     is displayed.. 
      
     Types:
-        0 - original image
-        1 - naturalistic texture image (matched higher order statistics)
-        2 - spectrally matched noise (matched marginal statistics only). 
+    0 - original image
+    1 - naturalistic texture image (matched higher order statistics)
+    2 - spectrally matched noise (matched marginal statistics only). 
 
     Notes
     -----
+    
     frames_number - the number of frames for which each image is presented
 
     ALERT!!!

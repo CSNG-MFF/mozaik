@@ -27,6 +27,7 @@ class NeuronAnnotationsToPerNeuronValues(Analysis):
     their new annotations if required.
     It is assumed that in future the handling of parameters around Mozaik
     might be enhanced and unified further to avoid extension of this class.
+    
     """
 
 

@@ -38,8 +38,10 @@ class InputSpace(ParametrizedObject):
     ----------------
     
     update_interval : float (ms)
-                    How often does the input space update.
+        How often does the input space update.
+
     """
+
     
     required_parameters = ParameterSet({
         'update_interval': float  # [ms] how fast the input is changed
@@ -135,6 +137,7 @@ class VisualSpace(InputSpace):
     For now, we deal only with two-dimensions, i.e. everything projected onto a
     plane. We ignore distortions in going from a flat plane to the curved retina.
     Could consider using matplotlib.transforms for some of this.
+
     """
 
     version = __version__
@@ -157,17 +160,21 @@ class VisualSpace(InputSpace):
         
         Parameters
         ----------
+
         region : VisualRegion
-               Should be a VisualRegion object.
+            Should be a VisualRegion object.
+
         pixel_size : float (degrees)
-                   The size of a single pixel in degrees of visual field.
+            The size of a single pixel in degrees of visual field.
 
         Returns
         -------
-                array : nd_array 
-                       A numpy 2D array containing luminance values, corresponding to 
-                       to the visual scene in the visual region specified in `region` 
-                       downsample such that one pixel has `pixel_size` degree.
+
+        array : nd_array 
+            A numpy 2D array containing luminance values, corresponding to 
+            to the visual scene in the visual region specified in `region` 
+            downsample such that one pixel has `pixel_size` degree.
+
         """
         # Let's make it more efficient if there is only one object in the scene that is not transparrent (which is often the case):
         o = list(self.content.values())
@@ -209,17 +216,19 @@ class VisualRegion(object):
     
     Parameters
     ----------
+
     location_x : float (degrees)
-               The x coordinate of the center of the region in the visual space. 
+        The x coordinate of the center of the region in the visual space. 
             
     location_y : float (degrees)
-               The y coordinate of the center of the region in the visual space. 
+        The y coordinate of the center of the region in the visual space. 
 
     size_x : float (degrees)
-               The x size of the region in the visual space. 
+        The x size of the region in the visual space. 
 
     size_y : float (degrees)
-               The y size of the region in the visual space. 
+        The y size of the region in the visual space. 
+               
     """
 
     def __init__(self, location_x, location_y, size_x, size_y):

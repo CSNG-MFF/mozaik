@@ -33,6 +33,16 @@ class SNumber(Number):
     
     On top of the Number class it adds the ability to specify units and period in constructor.
     The units should be `quantities.units`.
+
+    Attributes
+    ----------
+
+    units : quantities.units
+        The units associated with this parameter
+
+    period : float or None
+        The period associated with this parameter (if any)
+        
     """
     __slots__ = ['units','period']
 
@@ -42,7 +52,6 @@ class SNumber(Number):
                                       instantiate=True, **params)
         self.units = units
         self.period = period
-        
 
 
 class SInteger(Integer):
@@ -51,7 +60,17 @@ class SInteger(Integer):
     parameter offers reffer to the `Integer` class in `param <http://ioam.github.io/param/>`_ package.
     
     On top of the Integer class it adds the ability to specify period in constructor. The units should be `quantities.units`.
-    """    
+
+    Attributes
+    ----------
+
+    units : None
+        Always None for integers
+
+    period : float or None
+        The period associated with this parameter (if any)
+    
+    """
     __slots__ = ['units','period']
 
     def __init__(self, period=None, **params):
@@ -64,13 +83,22 @@ class SInteger(Integer):
 
 class SString(String):
     """
-    A mozaik parameter that can hold an string. For the full range of options the 
+    A mozaik parameter that can hold a string. For the full range of options the 
     parameter offers reffer to the `Integer` class in `param <http://ioam.github.io/param/>`_ package.
     
     This class is here for consistency reasons as it defines the units and period properties, 
     just like SInteger and SNumber, but automatically sets them to None.
-    """
 
+    Attributes
+    ----------
+
+    units : None
+        Always None for strings
+
+    period : None
+        Always None for strings
+    
+    """
     __slots__ = ['units','period']    
     def __init__(self, **params):
         params.setdefault('default',None)        
@@ -78,6 +106,9 @@ class SString(String):
                                       instantiate=True, **params)
         self.units = None
         self.period = None
+
+
+
 
 class SParameterSet(ClassSelector):
     """
@@ -318,23 +349,24 @@ def filter_query(object_list, extra_data_list=None,allow_non_existent_parameters
     ----------
     
     object_list : list(MozaikParametrized)
-                The list of MozaikParametrized objects to filter.
+        The list of MozaikParametrized objects to filter.
                 
     extra_data_list : list(object)
-                    The list of values corresponding to objects in object_list. 
-                    The same subset of the vales will be returned as for the `object_list`.
+        The list of values corresponding to objects in object_list. 
+        The same subset of the vales will be returned as for the `object_list`.
                     
     allow_non_existent_parameters : bool
-                                    If True it will allow objects in object list that 
-                                    miss some of the parameters listed in kwargs, 
-                                    and include them in the results as long the remaining 
-                                    parameters match if False it will exclude them.
-                                    
+        If True it will allow objects in object list that 
+        miss some of the parameters listed in kwargs, 
+        and include them in the results as long the remaining 
+        parameters match if False it will exclude them.
+                                
     \*\*kwargs : dict
-             The parameter names and values that have to match.                                    
+        The parameter names and values that have to match.                                    
     
     Returns
     -------
+
     if data_list == None :  subset of object_list containing elements that match the kwargs parameters
     if data_list != None :  tuple (a,b) where a is a subset of object_list containing elements that match the kwargs parameters and b is the corresponding subset of data_list
                                     
@@ -407,31 +439,34 @@ def colapse(data_list, object_list, func=None, parameter_list=[],
     ----------
     
     data_list : list
-              The list of data corresponding to objects in object_list.
+        The list of data corresponding to objects in object_list.
     
     object_list : list(MozaikParametrized)
-                The list of object corresponding to data in data_list.
+        The list of object corresponding to data in data_list.
     
     parameter_list : list
-                   The list of parameter names against which to collapse the data.
+        The list of parameter names against which to collapse the data.
     
     func : func()
-         If not None, the function to be applied to the lists formed by data associated
-         with the same object parametrizations with exception of the parameters in parameter_list
+        If not None, the function to be applied to the lists formed by data associated
+        with the same object parametrizations with exception of the parameters in parameter_list
          
     allow_non_identical_objects : bool, optional
-                                unless set to True, it will
-                                not allow running this operation on
-                                StimulusDependentData that does not contain
-                                only object of the same type
+        unless set to True, it will
+        not allow running this operation on
+        StimulusDependentData that does not contain
+        only object of the same type
                                   
     Returns
     -------
+
     (v,object_id) : list,list
-                  Where object_id is the new list of objects where the objects in `parameter_list` were
-                  'collapsed out' and replaced with None. v is a list of lists. The outer list
-                  corresponds in order to the object_id list. The inner list corresponds
-                  to the list of data from data_list that mapped on the given object_id.
+        Where object_id is the new list of objects where the objects in `parameter_list` were
+        'collapsed out' and replaced with None. v is a list of lists. The outer list
+        corresponds in order to the object_id list. The inner list corresponds
+        to the list of data from data_list that mapped on the given object_id.
+
+                  
     """
     assert(len(data_list) == len(object_list))
     if (not allow_non_identical_objects and not identical_parametrized_object_params(object_list)):
@@ -463,6 +498,7 @@ def varying_parameters(parametrized_objects):
     -------
     
     List of parameters of the `MozaikParamterrized` objects in `parametrized_objects` that have at least 2 different values within the list.
+
     """
     if not identical_parametrized_object_params(parametrized_objects):
         raise ValueError("varying_parameters: accepts only MozaikParametrized lists with the same parameters")
@@ -488,16 +524,19 @@ def parameter_value_list(parametrized_objects,param):
     
     Parameters
     ----------
+
     parametrized_objects : list
-                         A list of MozaikParametrized instances.
+        A list of MozaikParametrized instances.
     
     param : str
-          Name of the parameter.
+        Name of the parameter.
     
+        
     Returns
     -------
     
     A list of different values that the parameter param has across the `MozaikParametrized` objects in `parametrized_objects` list.
+    
     """
     return set([obj.getParamValue(param) for obj in parametrized_objects])
     
@@ -510,6 +549,7 @@ def identical_parametrized_object_params(parametrized_objects):
     
     True if all instances of `MozaikParametrized` in  `parametrized_objects` have the same set of parameters (not values!).
     Otherwise returns False.
+    
     """
     for o in parametrized_objects:
         if set(o.getParams().keys()) != set(parametrized_objects[0].getParams().keys()):
@@ -525,14 +565,14 @@ def matching_parametrized_object_params(parametrized_objects,params=None,except_
     ----------
     
     parametrized_objects : list 
-                         List of `MozaikParametrized` object to test.
+        List of `MozaikParametrized` object to test.
     
     params : list,optional
-           List of parameters whose values have to match.
+        List of parameters whose values have to match.
 
     except_params : list, optional
-                  List of parameters that do not have to match.  
-                  
+        List of parameters that do not have to match.  
+                
     Returns
     -------
                   
@@ -547,6 +587,7 @@ def matching_parametrized_object_params(parametrized_objects,params=None,except_
         
     if except_params != None and except_params != None
         Throws exception
+    
     """
     
     if except_params != None and params != None:
@@ -581,13 +622,13 @@ def colapse_to_dictionary(value_list, parametrized_objects, parameter_name):
     ----------
     
     value_list : list
-               The list of values that correspond to instances of `MozaikParametrized` in `parametrized_objects`.
+        The list of values that correspond to instances of `MozaikParametrized` in `parametrized_objects`.
 
     parametrized_objects : list
-                         The list of values that correspond to instances of `MozaikParametrized`.
+        The list of values that correspond to instances of `MozaikParametrized`.
                          
     parameter_name : str
-                   The parameter  against which to colapse.
+        The parameter  against which to colapse.
                    
     Returns
     -------
@@ -598,6 +639,7 @@ def colapse_to_dictionary(value_list, parametrized_objects, parameter_name):
       The D.values() are tuple of lists (keys,values), where keys is the list of
       values that the parameter_name had in the parametrized_objects, and the values are the
       values from value_list that correspond to the keys.          
+    
     """
     assert(len(value_list) == len(parametrized_objects))
     d = collections.OrderedDict()

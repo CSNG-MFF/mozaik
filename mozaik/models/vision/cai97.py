@@ -1,7 +1,3 @@
-"""
-docstring goes here
-
-"""
 import numpy
 from numpy import exp, sqrt
 from collections import OrderedDict
@@ -41,6 +37,7 @@ def stRF_2d(x, y, t, p):
     F_2d() on 2D x and y arrays, and then multiply them, as Jens did in his
     original implementation.
     Timing gives 0.44 s for Jens' implementation, and 2.9 s for this one.
+    
     """
 
     tmc = G(t, p.K1, p.K2, p.c1, p.c2, p.t1, p.t2, p.n1, p.n2)

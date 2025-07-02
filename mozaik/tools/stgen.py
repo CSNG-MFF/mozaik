@@ -14,19 +14,30 @@ class SpikeTrain(object):
 
     Event times are given in a list (sparse representation) in milliseconds.
 
-    Inputs:
-        spike_times - a list/numpy array of spike times (in milliseconds)
-        t_start     - beginning of the SpikeTrain (if not, this is infered)
-        t_stop      - end of the SpikeTrain (if not, this is infered)
+    Parameters
+    ----------
 
-    Examples:
-        >> s1 = SpikeTrain([0.0, 0.1, 0.2, 0.5])
-        >> s1.isi()
-            array([ 0.1,  0.1,  0.3])
-        >> s1.mean_rate()
-            8.0
-        >> s1.cv_isi()
-            0.565685424949
+    spike_times : list or numpy.ndarray
+        spike times (in milliseconds)
+
+    t_start : float, optional
+        beginning of the SpikeTrain (if not, this is infered)
+
+    t_stop : float, optional 
+        end of the SpikeTrain (if not, this is infered)
+
+    Examples
+    --------
+
+    >>> s1 = SpikeTrain([0.0, 0.1, 0.2, 0.5])
+    >>> s1.isi()
+    array([ 0.1,  0.1,  0.3])
+    >>> s1.mean_rate()
+    8.0
+    >>> s1.cv_isi()
+    0.565685424949
+
+    
     """
 
     #######################################################################
@@ -38,8 +49,11 @@ class SpikeTrain(object):
         """
         Constructor of the SpikeTrain object
 
-        See also
-            SpikeTrain
+        See Also
+        --------
+
+        SpikeTrain,
+
         """
 
         self.t_start     = t_start
@@ -114,11 +128,17 @@ class SpikeTrain(object):
         Return True if the SpikeTrain object is equal to one other SpikeTrain, i.e
         if they have same time parameters and same spikes_times
 
-        Inputs:
-            spktrain - A SpikeTrain object
+        Parameters
+        ----------
 
-        See also:
-            time_parameters()
+        spktrain : SpikeTrain
+            A Spiketrain object.
+
+        See Also
+        --------
+
+        time_parameters : Method that returns time parameters
+
         """
         test = (self.time_parameters() == spktrain.time_parameters())
         return numpy.all(self.spike_times == spktrain.spike_times) and test
@@ -150,32 +170,33 @@ class StGen:
         and return them as SpikeTrain object.
       
 
-        Inputs:
-        -------
-            rng - The random number generator state object (optional). Can be None, or 
-                  a numpy.random.RandomState object, or an object with the same 
-                  interface.
+        .. rubric:: Inputs:
 
-            seed - A seed for the rng (optional).
+        - **rng** : `numpy.random.RandomState` or similar, optional
+            The random number generator state object. Can be `None`, or a custom RNG object
 
-        If rng is not None, the provided rng will be used to generate random numbers, 
-        otherwise StGen will create its own random number generator.
-        If a seed is provided, it is passed to rng.seed(seed)
+        - **seed** : int, optional
+            A seed for the rng (optional).
+
+        If `rng` is not `None`, the provided rng will be used to generate random numbers; 
+        otherwise `StGen` will create its own random number generator.
+        If a `seed` is provided, it is passed to `rng.seed(seed)`.
 
         Examples
         --------
-            >> x = StGen()
+
+        >>> x = StGen()
 
 
 
         StGen Methods:
         ==============
 
-        Spiking point processes:
-        ------------------------
+        .. rubric:: Spiking point processes:
  
-        poisson_generator - homogeneous Poisson process
-        inh_poisson_generator - inhomogeneous Poisson process (time varying rate)
+        - `poisson_generator` - homogeneous Poisson process
+        - `inh_poisson_generator` - inhomogeneous Poisson process (time-varying rate)
+
         """
 
         if rng==None:
@@ -197,25 +218,36 @@ class StGen:
         Returns a SpikeTrain whose spikes are a realization of a Poisson process
         with the given rate (Hz) and stopping time t_stop (milliseconds).
 
-        Note: t_start is always 0.0, thus all realizations are as if 
+        Notes
+        -----
+
+        t_start is always 0.0, thus all realizations are as if 
         they spiked at t=0.0, though this spike is not included in the SpikeList.
 
-        Inputs:
-        -------
-            rate    - the rate of the discharge (in Hz)
-            t_start - the beginning of the SpikeTrain (in ms)
-            t_stop  - the end of the SpikeTrain (in ms)
-            array   - if True, a numpy array of sorted spikes is returned,
-                      rather than a SpikeTrain object.
+        
+        .. rubric:: Inputs:
 
-        Examples:
-        --------
-            >> gen.poisson_generator(50, 0, 1000)
-            >> gen.poisson_generator(20, 5000, 10000, array=True)
+        rate    - the rate of the discharge (in Hz)
+        t_start - the beginning of the SpikeTrain (in ms)
+        t_stop  - the end of the SpikeTrain (in ms)
+        array   - if True, a numpy array of sorted spikes is returned, rather than a SpikeTrain object.
+        
+        
 
-        See also:
+        Examples
         --------
-            inh_poisson_generator, inh_gamma_generator, inh_adaptingmarkov_generator
+
+        >>> gen.poisson_generator(50, 0, 1000)
+        >>> gen.poisson_generator(20, 5000, 10000, array=True)
+
+
+        See Also
+        --------
+        
+        inh_poisson_generator, 
+        inh_gamma_generator, 
+        inh_adaptingmarkov_generator,
+
         """
 
         #number = int((t_stop-t_start)/1000.0*2.0*rate)
@@ -272,37 +304,52 @@ class StGen:
         poisson process (dynamic rate). The implementation uses the thinning 
         method, as presented in the references.
 
-        Inputs:
-        -------
-            rate   - an array of the rates (Hz) where rate[i] is active on interval 
-                     [t[i],t[i+1]]
-            t      - an array specifying the time bins (in milliseconds) at which to 
-                     specify the rate
-            t_stop - length of time to simulate process (in ms)
-            array  - if True, a numpy array of sorted spikes is returned,
-                     rather than a SpikeList object.
+        Parameters
+        ----------
 
-        Note:
-        -----
-            t_start=t[0]
+        rate : array 
+            an array of the rates (Hz) where rate[i] is active on interval 
+            [t[i],t[i+1]]
 
-        References:
-        -----------
+        t : array
+            an array specifying the time bins (in milliseconds) at which to 
+            specify the rate
 
-        Eilif Muller, Lars Buesing, Johannes Schemmel, and Karlheinz Meier 
-        Spike-Frequency Adapting Neural Ensembles: Beyond Mean Adaptation and Renewal Theories
+        t_stop : float
+            length of time to simulate process (in ms)
+
+        array : bool, optional 
+            if True, a numpy array of sorted spikes is returned,
+            rather than a SpikeList object.
+
+            
+        Notes
+        -----  
+        
+        t_start=t[0]
+
+
+        References
+        ----------
+
+        .. [1] Eilif Muller, Lars Buesing, Johannes Schemmel, and Karlheinz Meier, 
+        "Spike-Frequency Adapting Neural Ensembles: Beyond Mean Adaptation and Renewal Theories,"
         Neural Comput. 2007 19: 2958-3010.
 
-        Devroye, L. (1986). Non-uniform random variate generation. New York: Springer-Verlag.
+        .. [2] Devroye, L. (1986). "Non-uniform random variate generation. New York: Springer-Verlag."
+        
 
-        Examples:
+        Examples
         --------
-            >> time = arange(0,1000)
-            >> stgen.inh_poisson_generator(time,sin(time), 1000)
+        
+        >>> time = arange(0,1000)
+        >>> stgen.inh_poisson_generator(time,sin(time), 1000)
 
-        See also:
+        See Also
         --------
-            poisson_generator
+        
+        poisson_generator,
+            
         """
 
         if numpy.shape(t)!=numpy.shape(rate):

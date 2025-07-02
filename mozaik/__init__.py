@@ -12,14 +12,18 @@ This module exposes several parameters to the rest of mozaik:
 
 Parameters
 ----------
+
     rng : nest.RandomState
         The global mozaik random number generator. It is crucially any mozaik code using it has to make sure that it will ensure that the 
         random number generator will be in the same state on all processes after the codes execution.
+        
     pynn_rng : pynn.random.NumpyRNG
         The random number generator that should be passed to all pynn objects requiring rng.
     
     mpi_comm : mpi4py.Comm
-             The mpi communication object, None if MPI not available.
+        The mpi communication object, None if MPI not available.
+
+
 """
 __version__ = "0.1.0"
 import numpy.random
@@ -43,6 +47,7 @@ def setup_mpi(mozaik_seed=513,pynn_seed=1023):
     It is important to make sure that any piece of  code using this random generator draws from it 
     exactly the same number of numbers in each process, so that once the code is executed, the rng 
     is in exactly the same state in each mpi process!
+
     """
 
     global rng
@@ -69,6 +74,7 @@ def get_seeds(size=None):
     
     Returns
     -------
+
     A set of long integer as a ndarray of shape size. If size==None returns single seed. The integers have 64bit size.
     
     Notes
@@ -77,6 +83,7 @@ def get_seeds(size=None):
     We recommand users to use this method whenever seeding a new random generator. It is 
     important that the same number of seeds are requested in each MPI process to ensure 
     reproducability of simulations!
+
     """
     return rng.randint(2**32-1,size=size)
 
@@ -95,17 +102,22 @@ def load_component(path):
     
     Parameters
     ----------
-        path : str
-             The path to the module containing the component.   
+
+    path : str
+        The path to the module containing the component.   
              
     Returns
     -------
-        component : object
-                  The instance of the component class
+
+    component : object
+        The instance of the component class
     
-    Note
-    ----
+    Notes
+    -----
+    
     This function is primarily used to automatically load components based on configuration files during model construction.
+
+
     """
     logger = getMozaikLogger()
     path_parts = path.split('.')

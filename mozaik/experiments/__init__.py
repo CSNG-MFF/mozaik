@@ -30,21 +30,24 @@ class Experiment(ParametrizedObject):
     
     Parameters
     ----------
+
     model : Model
-          The model on which to execute the experiment.
+        The model on which to execute the experiment.
           
     Other parameters
     ----------------
 
     duration : float (ms)
-             The duration of single presentation of the stimulus.
+        The duration of single presentation of the stimulus.
 
 
-    NOTE
-    ----
+    NOTES
+    -----
+
     When creating a new Expriment, user inherits from the Experiment class, and in the constructor fills up the `self.stimuli` array with the list of stimuli
     that the experiment presents to the model. One can also implement the do_analysis method, which should perform the analysis that the experiments requires
     at the end. 
+
     """
     
     def __init__(self, model,parameters):
@@ -67,21 +70,24 @@ class Experiment(ParametrizedObject):
         ----------
         
         data_store : DataStore
-                   The data store into which to store the recorded data.
+            The data store into which to store the recorded data.
                    
         stimulus_indexes : list(Stimulus)
-                The indexes of stimuli to present to the model.
+            The indexes of stimuli to present to the model.
         
         Returns
         -------
+
         strsum : int (s)
-               The overal simulation time it took to execute the experiment.
+            The overal simulation time it took to execute the experiment.
                 
         Notes
         -----
+
         The reason why this function gets a list of stimulus index as input is that even though the experiment itself defines the list of stimuli
         to present to the model, some of these might have already been presented. The module `mozaik.controller` filters
         the list of stimuli which to present to prevent repetitions, and lets this function know via the stimuli argument which stimuli to actually present.
+        
         """
         srtsum = 0
         for i in stimulus_indexes:
@@ -121,26 +127,28 @@ class PoissonNetworkKick(Experiment):
     
     Parameters
     ----------
+
     model : Model
-          The model on which to execute the experiment.
+        The model on which to execute the experiment.
 
     Other parameters
     ----------------
   
     sheet_list : int
-               The list of sheets in which to do stimulation
+        The list of sheets in which to do stimulation
 
     drive_period : float (ms)
-                 The length of the constant drive, after which it will be linearly taken down to 0 at the end of the stimulation.   
+        The length of the constant drive, after which it will be linearly taken down to 0 at the end of the stimulation.   
                         
     stimulation_configuration : ParameterSet
-                              The parameter set for direct stimulation specifing neurons to which the kick will be administered.
+        The parameter set for direct stimulation specifing neurons to which the kick will be administered.
                                  
     lambda_list : list
-                List of the means of the Poisson spike train to be injected into the neurons specified in stimulation_configuration (one per each sheet).
+        List of the means of the Poisson spike train to be injected into the neurons specified in stimulation_configuration (one per each sheet).
     
     weight_list : list
-                List of spike sizes of the Poisson spike train to be injected into the neurons specified in stimulation_configuration (one per each sheet).
+        List of spike sizes of the Poisson spike train to be injected into the neurons specified in stimulation_configuration (one per each sheet).
+    
     """
     
     required_parameters = ParameterSet({
@@ -219,7 +227,9 @@ class NoStimulation(Experiment):
     
     Notes
     -----
+    
     Unlike :class:`.MeasureSpontaneousActivity` this can be used in model with no sensory input sheet.
+    
     """
     required_parameters = ParameterSet({
                                         'duration': float,

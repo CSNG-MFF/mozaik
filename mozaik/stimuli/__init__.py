@@ -1,8 +1,8 @@
 """
 This module defines the API for:
-    - implementation of stimuli as input to models (see class BaseStimulus)
-    - identification of stimulus identity 
-    - function helpers for common manipulation with collections of stimuli
+- implementation of stimuli as input to models (see class BaseStimulus)
+- identification of stimulus identity 
+- function helpers for common manipulation with collections of stimuli
 
 Each stimulus is expected to have a list of parameters which have to uniquely identify the stimulus.
 This parameterization is done via the MozaikParametrized package (see :class:`mozaik.tools.mozaik_parametrized.MozaikParametrized`)
@@ -85,7 +85,8 @@ class BaseStimulus(MozaikParametrized):
         frames.
 
         path - the directory in which the individual frames will be saved. If
-               path is None, then a temporary directory is created.
+        path is None, then a temporary directory is created.
+
         """
         raise NotImplementedError("Must be implemented by child class.")
 

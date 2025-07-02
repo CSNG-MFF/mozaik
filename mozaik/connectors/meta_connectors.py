@@ -33,37 +33,57 @@ class GaborConnector(BaseComponent):
     The individual Gabor parameters are drawn from distributions specified in
     the parameter set:
 
-    `aspect_ratio`  -  aspect ratio of the gabor
-    `size`          -  the size of the gabor  RFs in degrees of visual field
-    `orientation`   -  the orientation of the gabor RFs
-    `phase`         -  the phase of the gabor RFs
-    `frequency`     -  the frequency of the gabor in degrees of visual field
+    `aspect_ratio`         - aspect ratio of the gabor  
+    `size`                 - the size of the gabor RFs in degrees of visual field  
+    `orientation`          - the orientation of the gabor RFs  
+    `phase`                - the phase of the gabor RFs  
+    `frequency`            - the frequency of the gabor in degrees of visual field  
 
-    Other parameters:
-    
-    `topological`          -  should the receptive field centers vary with the
-                              position of the given neurons in the target sheet
-                              (note positions of neurons are always stored in
-                              visual field coordinates)
-    
-    `delay`                -  (ms) the delay on the projections
+    Other parameters
+    ----------------
 
-    `short_term_plasticity` - short term plasticity configuration (see basic connector)
-    
-    `base_weight`          - The weight of the synapses
-    `num_samples`           - The number of synapses per cortical neuron from each of the ON and OFF LGN populations (so effectively there will be 2 * num_samples LGN synapses)
+    topological : bool 
+        should the receptive field centers vary with the
+        position of the given neurons in the target sheet
+        (note positions of neurons are always stored in
+        visual field coordinates)
 
-    `or_map`             - is an orientation map supplied?
-    `or_map_location`    - if or_map is True where can one find the map. It
-                           has to be a file containing a single pickled 2d
-                           numpy array
-    `phase_map`          - is a phase map supplied?
-    `phase_map_location` - if phase_map is True where can one find the map.
-                           It has to be a file containing a single pickled 2d
-                           numpy array
-    `gauss_coefficient` : float - The coefficient of the gaussian component (if any) of the meta connector
+    delay : float
+        (ms) the delay on the projections  
 
+    short_term_plasticity : ParameterSet
+        short term plasticity configuration (see basic connector)  
+
+    base_weight : float          
+        The weight of the synapses  
+
+    num_samples : PyNNDistribution
+        The number of synapses per cortical neuron from each
+        of the ON and OFF LGN populations (so effectively
+        there will be 2 * num_samples LGN synapses)  
+
+    or_map : bool 
+        is an orientation map supplied? 
+
+    or_map_location : str      
+        if or_map is True where can one find the map. It
+        has to be a file containing a single pickled 2d
+        numpy array  
+
+    phase_map : bool
+        is a phase map supplied. 
+
+    phase_map_location: str
+        if phase_map is True where can one find the map.
+        It has to be a file containing a single pickled 2d
+        numpy array  
+
+    gauss_coefficient : float  
+        The coefficient of the gaussian component (if any)
+        of the meta connector
+                            
     """
+
 
     required_parameters = ParameterSet({
         'aspect_ratio': PyNNDistribution,  # aspect ratio of the gabor

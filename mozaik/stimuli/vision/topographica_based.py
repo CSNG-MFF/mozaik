@@ -137,7 +137,9 @@ class FullfieldDriftingSinusoidalGrating(TopographicaBasedVisualStimulus):
 
     Notes
     -----
+
     `max_luminance` is interpreted as scale and `size_x/2` as the bounding box radius.
+
     """
 
     orientation = SNumber(rad, period=pi, bounds=[0,pi], doc="Grating orientation")
@@ -457,7 +459,9 @@ class DriftingSinusoidalGratingDisk(TopographicaBasedVisualStimulus):
 
     Notes
     -----
+
     size_x/2 is interpreted as the bounding box radius.
+
     """
     contrast = SNumber(dimensionless,bounds=[0,100.0],doc="Contrast of the stimulus")
     orientation = SNumber(rad, period=pi, bounds=[0,pi], doc="Grating orientation")
@@ -506,7 +510,9 @@ class FlatDisk(TopographicaBasedVisualStimulus):
 
     Notes
     -----
+
     size_x/2 is interpreted as the bounding box.
+
     """
     contrast = SNumber(dimensionless,bounds=[0,100.0],doc="Contrast of the stimulus")
     radius = SNumber(degrees, doc="The radius of the disk - in degrees of visual field")
@@ -583,7 +589,9 @@ class DriftingSinusoidalGratingCenterSurroundStimulus(TopographicaBasedVisualSti
 
     Notes
     -----
+
     max_luminance is interpreted as scale and size_x/2 as the bounding box radius.
+
     """
     
     center_orientation = SNumber(rad, period=pi, bounds=[0,pi], doc="Center grating orientation")
@@ -642,7 +650,9 @@ class DriftingSinusoidalGratingRing(TopographicaBasedVisualStimulus):
 
     Notes
     -----
+
     max_luminance is interpreted as scale and size_x/2 as the bounding box radius.
+
     """
     
     orientation = SNumber(rad, period=pi, bounds=[0,pi], doc="Center grating orientation")
@@ -876,6 +886,8 @@ class SimpleGaborPatch(TopographicaBasedVisualStimulus):
     *x* and *y* for *flash_duration* milliseconds. For the remaining time, 
     until the *duration* of the stimulus, constant *background_luminance* 
     is displayed.
+
+
     """
 
     orientation = SNumber(rad, period=pi, bounds=[0,pi], doc="Gabor patch orientation")
@@ -937,26 +949,34 @@ class SimpleGaborPatch(TopographicaBasedVisualStimulus):
         """
         Creates an 2D array representing hexagonal grid based on given parameters
 
-        Algorithm:
-            First, it creates a tide containing two lines looking like: ___/
-                the height of the tide is size/2
-                the width of the tide is sqrt(3)/2*size
-                NOTE: one of the parameters is not an integer -> therefore rounding
-                    is present and for big grids it can be off by several pixels
-                    the oddness can be derived from the ratio of width and height
-                    the more close to sqrt(3) the better
+        **Algorithm**:
 
-            Second, it replicates the the tide to create hexagonal tiding of the 
-            following form              ___ 
-                                    ___/   \
-                                       \___/
-            Third, it replicates the hexagonal tide and rotates it
+        First, it creates a tide containing two lines looking like: ___/
+        - the height of the tide is size/2
+        - the width of the tide is sqrt(3)/2*size
+        - NOTE: one of the parameters is not an integer, therefore rounding
+          is present, and for big grids it can be off by several pixels.
+        - The oddness can be derived from the ratio of width and height.
+        - The closer to sqrt(3), the better.
 
-            Fourth, it computes shifts based on parameters size, size_x, size_y
-                    and cuts out the relevant part of the array
+        Second, it replicates the the tide to create hexagonal tiding of the 
+        following form :
+            ___ 
+        ___/   \
+           \___/
 
-        Returns:
+
+        Third, it replicates the hexagonal tide and rotates it.
+
+        Fourth, it computes shifts based on parameters size, size_x, size_y
+        and cuts out the relevant part of the array
+
+        Returns
+        -------
+
+        array
             array with values 1 or 0, 0 representing the hexagonal grid
+
         """
         # imagen is used to create the slant line /
         ln = imagen.Line(bounds = BoundingBox(radius=self.size/4.), 
@@ -1078,28 +1098,36 @@ class TwoStrokeGaborPatch(TopographicaBasedVisualStimulus):
     
     def hex_grid(self):
         """
-        Creates an 2D array representing hexagonal grid based on the parameters
+        Creates an 2D array representing hexagonal grid based on given parameters
 
-        Algorithm:
-            First, it creates a tide containing two lines looking like: ___/
-                the height of the tide is size/2
-                the width of the tide is sqrt(3)/2*size
-                NOTE: one of the parameters is not an integer -> therefore rounding
-                    is present and for big grids it can be off by several pixels
-                    the oddness can be derived from the ratio of width and height
-                    the more close to sqrt(3) the better
+        **Algorithm**:
 
-            Second, it replicates the the tide to create hexagonal tiding of the 
-            following form              ___ 
-                                    ___/   \
-                                       \___/
-            Third, it replicates the hexagonal tide and rotates it
+        First, it creates a tide containing two lines looking like: ___/
+        - the height of the tide is size/2
+        - the width of the tide is sqrt(3)/2*size
+        - NOTE: one of the parameters is not an integer, therefore rounding
+          is present, and for big grids it can be off by several pixels.
+        - The oddness can be derived from the ratio of width and height.
+        - The closer to sqrt(3), the better.
 
-            Fourth, it computes shifts based on parameters size, size_x, size_y
-                    and cuts out the relevant part of the array
+        Second, it replicates the the tide to create hexagonal tiding of the 
+        following form :
+            ___ 
+        ___/   \
+           \___/
 
-        Returns:
+
+        Third, it replicates the hexagonal tide and rotates it.
+
+        Fourth, it computes shifts based on parameters size, size_x, size_y
+        and cuts out the relevant part of the array
+
+        Returns
+        -------
+
+        array
             array with values 1 or 0, 0 representing the hexagonal grid
+        
         """
         # imagen is used to create the slant line /
         ln = imagen.Line(bounds = BoundingBox(radius=self.size/4.), 

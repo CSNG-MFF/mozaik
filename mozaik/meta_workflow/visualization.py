@@ -15,24 +15,30 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
     
     Parameters
     ----------
+
     simulation_name : str
-                    The name of the simulation.
+        The name of the simulation.
+
     master_results_dir : str
-                    The directory where the parameter search results are stored.
+        The directory where the parameter search results are stored.
+
     query : ParamFilterQuery
-          ParamFilterQuery filter query instance that will be applied to each datastore before records are retrieved.
+        ParamFilterQuery filter query instance that will be applied to each datastore before records are retrieved.
     
     value_names : list(str)
-                  List of value names to visualize.  
+        List of value names to visualize.
+
     file_name : str
-              The file name into which to save the resulting figure. If None figure is just displayed.  
+        The file name into which to save the resulting figure. If None figure is just displayed.
+
     resolution : int
-               If not None data will be plotted on a interpolated grid of size (resolution,...,resolution)
+        If not None data will be plotted on a interpolated grid of size (resolution,...,resolution)
+
     ranges : dict
-           A dictionary with value names as keys, and tuples of (min,max) ranges as values indicating what range of values should be displayed.
+        A dictionary with value names as keys, and tuples of (min,max) ranges as values indicating what range of values should be displayed.
            
     cols : int
-         The number of columns in which to show plots, default is 4.
+        The number of columns in which to show plots, default is 4.
                
     """
     (parameters,datastores,n) = load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir,filter=ParamFilterQuery(ParameterSet({'ads_unique' : False, 'rec_unique' : False, 'params' : ParameterSet({'identifier' : 'SingleValue'})})))
@@ -145,20 +151,26 @@ def fixed_point_visualization(simulation_name,rate_name,master_results_dir,query
     
     Parameters
     ----------
+
     rate_name : str
-              The parameter full name that corresponds to the input rate.  
+        The parameter full name that corresponds to the input rate.  
                 
     simulation_name : str
-                    The name of the simulation.
+        The name of the simulation.
+
     master_results_dir : str
-                    The directory where the parameter search results are stored.
+        The directory where the parameter search results are stored.
+
     query : ParamFilterQuery
-          ParamFilterQuery filter query instance that will be applied to each datastore before records are retrieved.
+        ParamFilterQuery filter query instance that will be applied to each datastore before records are retrieved.
+
     
     value_names : list(str)
-                  List of value names to visualize.  
+        List of value names to visualize.  
+
     file_name : str
-              The file name into which to save the resulting figure. If None figure is just displayed.  
+        The file name into which to save the resulting figure. If None figure is just displayed.  
+
     """
     (parameters,datastores,n) = load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir)
     
@@ -191,20 +203,22 @@ def multi_curve_visualzition(simulation_name,master_results_dir,x_axis_parameter
     ----------
     
     x_axis_parameter_name : str
-                          The parameter that will be varied along x axis.
+        The parameter that will be varied along x axis.
                           
     simulation_name : str
-                    The name of the simulation.
+        The name of the simulation.
                     
     master_results_dir : str
-                    The directory where the parameter search results are stored.
+        The directory where the parameter search results are stored.
+                    
     query : ParamFilterQuery
-          ParamFilterQuery filter query instance that will be applied to each datastore before records are retrieved.
+        ParamFilterQuery filter query instance that will be applied to each datastore before records are retrieved.
     
     value_name : list(str)
-                 The value name to visualize
+        The value name to visualize
+
     file_name : str
-              The file name into which to save the resulting figure. If None figure is just displayed.  
+        The file name into which to save the resulting figure. If None figure is just displayed.  
                
     """
     (parameters,datastores,n) = load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir)

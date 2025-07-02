@@ -155,6 +155,7 @@ class LocalModuleConnector(ModularConnector):
         lm_idx: List of ids of neurons within the local module.
         l_idx: List of ids of neurons outside the local module which might send
                local connections to the local module.
+
         """
         ModularConnector.__init__(self, network, name, source,target,parameters)
         if self.parameters.local_module:
@@ -181,6 +182,7 @@ class LocalModuleConnector(ModularConnector):
 
             weights: numpy.nd_array
                     The weights to update
+
         """
         x = self.target.pop.positions[0][idx]
         y = self.target.pop.positions[1][idx]
@@ -228,6 +230,7 @@ class VariableNumSamplesConnector(LocalModuleConnector):
         lm_idx: List of ids of neurons within the local module.
         l_idx: List of ids of neurons outside the local module which might send
                local connections to the local module.
+               
         """
         LocalModuleConnector.__init__(self, network, name, source,target,parameters)
         if self.parameters.num_samples_expression:

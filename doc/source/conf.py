@@ -31,7 +31,8 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.doctest',
     'numpydoc',
-    'sphinx.ext.napoleon'  # Added for better NumPy/SciPy docstring support
+    'sphinx.ext.napoleon',
+    'sphinx.ext.todo'  # Added for better NumPy/SciPy docstring support
 ]
 
 # Add any paths that contain templates here, relative to this directory.

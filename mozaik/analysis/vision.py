@@ -297,7 +297,9 @@ class Analog_F0andF1(Analysis):
       
       Notes
       -----
+      
       Only neurons for which the corresponding signals were measured will be included in the PerNeuronValue data structures.
+
       """
 
       def perform_analysis(self):

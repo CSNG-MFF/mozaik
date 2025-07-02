@@ -282,25 +282,31 @@ class CriticalityAnalysis(Analysis):
         """
         Parameters
         ----------
+        
         data : 1D numpy array
             Observations from the probability distribution we want to fit
+
         nrbins : int
             Number of bins in the created histogram
+
         img_title : str
             Used for debugging. Title of the powerlaw fit figure.
 
         Returns
         -------
-        amp, slope, tau, error
 
         amp : float
             Amplitude of the powerlaw distribution
+
         slope : float
             Slope of the powerlaw distribution
+
         tau : float
             tau = -slope
+
         error : float
             Mean square error of the fit
+
         """
         try:
             [amp, slope], _ = curve_fit(f=self.powerlaw, xdata=x, ydata=y, p0=[0, 0])

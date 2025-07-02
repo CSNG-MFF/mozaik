@@ -1,3 +1,5 @@
+.. _mozaik.analysis:
+
 analysis Package
 ================
 

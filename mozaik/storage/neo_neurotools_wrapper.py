@@ -82,11 +82,13 @@ class MozaikSegment(Segment):
             ----------
             
             neuron_id : int or list(int)
-                      An int or a list of ints containing the ids for which to return the spiketrains.
+                An int or a list of ints containing the ids for which to return the spiketrains.
                       
             Returns
             -------
+
             A SpikeTrain object if neuron_id is int, or list of SpikeTrain objects if neuron_id is list, the order corresponds to the order in neuron_id argument.
+            
             """
             
             ids = [s.annotations['source_id'] for s in self.spiketrains]
@@ -103,11 +105,13 @@ class MozaikSegment(Segment):
             ----------
             
             neuron_id : int or list(int)
-                      An int or a list of ints containing the ids for which to return the AnalogSignal objects.
+                An int or a list of ints containing the ids for which to return the AnalogSignal objects.
                       
             Returns
             -------
+            
             A AnalogSignal object if neuron_id is int, or list of AnalogSignal objects if neuron_id is list, the order corresponds to the order in neuron_id argument.
+            
             """
 
             if not self.full:
@@ -129,7 +133,9 @@ class MozaikSegment(Segment):
                       
             Returns
             -------
+            
             A AnalogSignal object if neuron_id is int, or list of AnalogSignal objects if neuron_id is list, the order corresponds to the order in neuron_id argument.
+            
             """
             if not self.full:
                 self.load_full()
@@ -145,11 +151,13 @@ class MozaikSegment(Segment):
             ----------
             
             neuron_id : int or list(int)
-                      An int or a list of ints containing the ids for which to return the AnalogSignal objects.
+                An int or a list of ints containing the ids for which to return the AnalogSignal objects.
                       
             Returns
             -------
+            
             A AnalogSignal object if neuron_id is int, or list of AnalogSignal objects if neuron_id is list, the order corresponds to the order in neuron_id argument.
+            
             """
 
             if not self.full:

@@ -56,8 +56,9 @@ def periodic(unit):
 
     Returns
     -------
-        (a,b): bool,double
-             Where a is True if unit is periodic, and b corresponds to the period if a is True.
+    (a,b): bool,double
+        Where a is True if unit is periodic, and b corresponds to the period if a is True.
+             
     """
     periodic = False
     period = None

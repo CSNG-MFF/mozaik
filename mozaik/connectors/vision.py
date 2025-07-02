@@ -70,6 +70,7 @@ class V1PushPullArborization(ModularConnectorFunction):
     
     Notes
     -----
+
     The `push_pull_ratio` parameter essentially adds constant to the probability distribution
     over the orientation and phase dependent connectivity probability space. The formula looks
     like this: push_pull_ratio + (1-push_pull_ratio) * push_pull_term. Where the push_pull_term
@@ -83,17 +84,20 @@ class V1PushPullArborization(ModularConnectorFunction):
     
     Other parameters
     ----------------
+
     or_sigma : float
-                  How sharply does the probability of connection fall off with orientation difference.
+        How sharply does the probability of connection fall off with orientation difference.
     
     phase_sigma : float
-                  how sharply does the probability of connection fall off with phase difference.
+        how sharply does the probability of connection fall off with phase difference.
                   
     target_synapses : str
-                    Either 'excitatory' or 'inhibitory': what type is the target excitatory/inhibitory
+        Either 'excitatory' or 'inhibitory': what type is the target excitatory/inhibitory
     
     push_pull_ratio : float
-                    The ratio of push-pull connections, the rest will be random drawn randomly.
+        The ratio of push-pull connections, the rest will be random drawn randomly.
+
+
     """
 
     required_parameters = ParameterSet({
@@ -152,11 +156,12 @@ class GaborArborization(ModularConnectorFunction):
     
     Other parameters
     ----------------
+
     ON : bool
-         Whether this is gabor on ON or OFF cells.
+        Whether this is gabor on ON or OFF cells.
 
     gauss_coefficient : float 
-         The coefficient of the gaussian component
+        The coefficient of the gaussian component
 
     """
 
@@ -211,11 +216,13 @@ class V1CorrelationBasedConnectivity(ModularConnectorFunction):
     
     Other parameters
     ----------------
+
     sigma : float
-                  How sharply does the probability of connection fall off depending on the afferent RF correlation of the two neurons.
+        How sharply does the probability of connection fall off depending on the afferent RF correlation of the two neurons.
                   
     target_synapses : str
-                    Either 'excitatory' or 'inhibitory': what type is the target excitatory/inhibitory
+        Either 'excitatory' or 'inhibitory': what type is the target excitatory/inhibitory
+                    
     """
 
     required_parameters = ParameterSet({

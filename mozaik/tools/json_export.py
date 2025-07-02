@@ -23,14 +23,19 @@ def get_params_from_docstring(cls):
     return params
 
 def parse_docstring(docstring):
-    """Parse the docstring into its components.
-    :returns: a dictionary of form
-              {
-                  "short_description": ...,
-                  "long_description": ...,
-                  "params": [{"name": ..., "doc": ...}, ...],
-                  "returns": ...
-              }
+    """
+    Parse the docstring into its components.
+
+    Returns
+    -------
+    dict
+        A dictionary of form:
+        {
+            "short_description": ...,
+            "long_description": ...,
+            "params": [{"name": ..., "doc": ...}, ...],
+            "returns": ...
+        }
     """
 
     short_description = long_description = returns = ""

@@ -177,6 +177,7 @@ class DataStoreView(ParametrizedObject):
         >>> datastore.get_analysis_result(identifier=['PerNeuronValue','SingleValue'],sheet_name=sheet,value_name='orientation preference')
         
         This command should return or ADS whose identifier is *PerNeuronValue* or *SingleValue*, and are associated with sheet named *sheet* and as their value name have 'orientation preference'
+        
         """
         return filter_query(self.analysis_results,**kwargs)
 
@@ -260,13 +261,15 @@ class DataStoreView(ParametrizedObject):
         
         Parameters
         ----------
-            full_recordings : bool (optional)
-                            If True each contained recording will be printed.
-                            Otherwise only the overview of the recordings based on stimulus type will be shown.
+
+        full_recordings : bool (optional)
+            If True each contained recording will be printed.
+            Otherwise only the overview of the recordings based on stimulus type will be shown.
                             
-            full_ADS : bool (optional)
-                     If True each contained ADS will be printed (for each this will print the set of their mozaik parameters together with their values).
-                     Otherwise only the overview of the ADSs based on their identifier will be shown.
+        full_ADS : bool (optional)
+            If True each contained ADS will be printed (for each this will print the set of their mozaik parameters together with their values).
+            Otherwise only the overview of the ADSs based on their identifier will be shown.
+
         """
         logger.info("DSV info:")
         logger.info("   Number of recordings: " + str(len(self.block.segments)))
@@ -361,12 +364,14 @@ class DataStore(DataStoreView):
     
     Parameters
     ----------
+
     load : bool
-         If False datastore will be created in the parameter.root_directory directory. 
-         If True it will be loaded from the parameter.root_directory directory. 
+        If False datastore will be created in the parameter.root_directory directory. 
+        If True it will be loaded from the parameter.root_directory directory. 
     
     parameters : ParameterSet
-               The required parameter set.
+        The required parameter set.
+               
     """
 
     required_parameters = ParameterSet({

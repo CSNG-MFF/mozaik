@@ -21,6 +21,7 @@ class SpontaneousActivityLength(Analysis):
       Also PopulationMean analysis over all the above has been ran as well.
       
       NOTE: we should probably give the PSTH bin as parameter.
+      
       """
       def perform_analysis(self):
 

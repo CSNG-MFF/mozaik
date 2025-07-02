@@ -77,7 +77,7 @@ Modules
 
 
 :mod:`debug` Module
-------------------
+-------------------
 
 .. automodule:: mozaik.tools.debug
     :members:

@@ -21,16 +21,17 @@ def plot_layer_activity(sheet, value_to_plot, cortical_coordinates=False,
     ----------
     
     sheet : :class:`mozaik.sheets.Sheet`
-          An instance of the Sheet class
+        An instance of the Sheet class
           
     value_to_plot : list
-                  An list of numbers whose length corresponds to the number of neurons in sheet
+        An list of numbers whose length corresponds to the number of neurons in sheet
                   
     cortical_coordinates : bool
-                         If true plotted in cortical coordinates, otherwise in degrees of visual field
+        If true plotted in cortical coordinates, otherwise in degrees of visual field
                          
     labels : bool
-           Whether to include labels.
+        Whether to include labels.
+           
     """
 
     if cortical_coordinates:

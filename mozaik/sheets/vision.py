@@ -21,13 +21,14 @@ class RetinalUniformSheet(Sheet):
     ----------------
     
     sx : float (degrees)
-       X size of the region.
+        X size of the region.
         
     sy : float (degrees)
-       Y size of the region.
+        Y size of the region.
 
     density : int
-            Number of neurons along both axis.
+        Number of neurons along both axis.
+
     """
     required_parameters = ParameterSet({
         'sx': float,  # degrees, x size of the region
@@ -75,14 +76,16 @@ class SheetWithMagnificationFactor(Sheet):
     
     Other parameters
     ----------------
+
     magnification_factor : float (μm/degree)
-                         The magnification factor.
+        The magnification factor.
     
     sx : float (μm)
-       X size of the region.
+        X size of the region.
         
     sy : float (μm)
-       Y size of the region.
+        Y size of the region.
+
     """
     required_parameters = ParameterSet({
         'magnification_factor': float,  # μm / degree
@@ -104,15 +107,18 @@ class SheetWithMagnificationFactor(Sheet):
         
         Parameters
         ----------
+
         degree_x : float (degrees)
-                 X coordinate of the position in degrees of visual field
+            X coordinate of the position in degrees of visual field
         degree_y : float (degrees)
-                 Y coordinate of the position in degrees of visual field
+            Y coordinate of the position in degrees of visual field
         
         Returns
         -------
+
         microm_meters_x,microm_meters_y : float,float (μm,μm)
-                                          Tuple with the coordinates in cortical space (μm)
+            Tuple with the coordinates in cortical space (μm)
+
         
         """
         return (degree_x * self.magnification_factor,
@@ -126,15 +132,18 @@ class SheetWithMagnificationFactor(Sheet):
         
         Parameters
         ----------
+
         micro_meters_x : float (μm)
-                 X coordinate of the position in μm of cortical space
+            X coordinate of the position in μm of cortical space
         micro_meters_y : float (μm)
-                 Y coordinate of the position in μm of cortical space
+            Y coordinate of the position in μm of cortical space
         
         Returns
         -------
+
         degrees_x,degrees_y : float,float (degrees,degrees)
-                                          Tuple with the coordinates in visual space (degrees)
+            Tuple with the coordinates in visual space (degrees)
+
         """
         return (micro_meters_x / self.magnification_factor,
                 micro_meters_y / self.magnification_factor)
@@ -146,13 +155,16 @@ class SheetWithMagnificationFactor(Sheet):
         
         Parameters
         ----------
+
         distance_vf : float (degrees)
-                 The distance in visual field coordinates (degrees).
+            The distance in visual field coordinates (degrees).
                  
         Returns
         -------
+
         distance_cs : float (μm)
-                    Distance in cortical space.
+            Distance in cortical space.
+
         """
         return distance_vf * self.magnification_factor
 
@@ -169,8 +181,10 @@ class VisualCorticalUniformSheet(SheetWithMagnificationFactor):
     
     Other parameters
     ----------------
+
     density : float (neurons/mm^2)
-            The density of neurons per square milimeter.
+        The density of neurons per square milimeter.
+
     """
     
     required_parameters = ParameterSet({
@@ -212,6 +226,7 @@ class VisualCorticalUniformSheet3D(VisualCorticalUniformSheet):
     
     Notes
     -----
+
     Manny existing Mozaik components that take neural position into consideration will 
     ignore this 3rd dimension. Also unlike the first to dimensions, corresponding to the axis along
     the cortical surface, the third depth dimension is in μm!
@@ -220,10 +235,12 @@ class VisualCorticalUniformSheet3D(VisualCorticalUniformSheet):
     
     Other parameters
     ----------------
+    
     min_depth : float (μm)
-            The mininmum depth of neurons.
+        The mininmum depth of neurons.
+        
     max_depth : float (μm)
-            The maxinmum depth of neurons.
+        The maxinmum depth of neurons.
 
     """
     

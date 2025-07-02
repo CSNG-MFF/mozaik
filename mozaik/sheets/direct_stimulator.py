@@ -49,11 +49,12 @@ class DirectStimulator(ParametrizedObject):
 
     Parameters
     ----------
+
     parameters : ParameterSet
-           The dictionary of required parameters.
+        The dictionary of required parameters.
 
     sheet : Sheet
-      The sheet in which to stimulate neurons.
+        The sheet in which to stimulate neurons.
 
     Notes
     -----
@@ -65,6 +66,8 @@ class DirectStimulator(ParametrizedObject):
 
     Important: the function inactivate should only temporarily inactivate the stimulator, a subsequent call to prepare_stimulation
     should activate the stimulator back!
+
+    
     """
 
     def __init__(self, sheet, parameters):
@@ -77,12 +80,14 @@ class DirectStimulator(ParametrizedObject):
 
         Parameters
         ----------
+
         duration : double (seconds)
-                 The period for which to prepare the stimulation
+            The period for which to prepare the stimulation
 
         offset : double (seconds)
-               The current simulator time.
+            The current simulator time.
 
+               
         """
         raise NotImplemented
 
@@ -92,10 +97,13 @@ class DirectStimulator(ParametrizedObject):
 
         Parameters
         ----------
+
         offset : double (seconds)
-               The current simulator time.
+            The current simulator time.
 
         Note that a subsequent call to prepare_stimulation should 'activate' the stimulator again.
+
+
         """
         raise NotImplemented
 
@@ -106,8 +114,11 @@ class DirectStimulator(ParametrizedObject):
 
         Parameters
         ----------
+
         data_store : DataStore
-                   The data store into which to store the direct stimulation data.
+            The data store into which to store the direct stimulation data.
+
+                   
         """
         pass
 
@@ -119,30 +130,35 @@ class BackgroundActivityBombardment(DirectStimulator):
     
     Parameters
     ----------
+
     parameters : ParameterSet
-               The dictionary of required parameters.
+        The dictionary of required parameters.
                 
     sheet : Sheet
-          The sheet in which to stimulate neurons.
+        The sheet in which to stimulate neurons.
     
+          
     Other parameters
     ----------------
     
     exc_firing_rate : float
-                     The firing rate of external neurons sending excitatory inputs to each neuron of this sheet.
+        The firing rate of external neurons sending excitatory inputs to each neuron of this sheet.
  
     inh_firing_rate : float
-                     The firing rate of external neurons sending inhibitory inputs to each neuron of this sheet.
+        The firing rate of external neurons sending inhibitory inputs to each neuron of this sheet.
     
     exc_weight : float
-                     The weight of the synapses for the excitatory external Poisson input.    
+        The weight of the synapses for the excitatory external Poisson input.    
 
     inh_weight : float
-                     The weight of the synapses for the inh external Poisson input.    
+        The weight of the synapses for the inh external Poisson input.    
+    
+    
     Notes
     -----
     
     Currently the mpi_safe version only works in nest!
+
     """
     
     
@@ -225,33 +241,37 @@ class Kick(DirectStimulator):
     
     Parameters
     ----------
+
     parameters : ParameterSet
-               The dictionary of required parameters.
+        The dictionary of required parameters.
                 
     sheet : Sheet
-          The sheet in which to stimulate neurons.
+        The sheet in which to stimulate neurons.
     
+          
     Other parameters
     ----------------
     
     exc_firing_rate : float
-                     The firing rate of external neurons sending excitatory inputs to each neuron of this sheet.
+        The firing rate of external neurons sending excitatory inputs to each neuron of this sheet.
  
     exc_weight : float
-                     The weight of the synapses for the excitatory external Poisson input.    
+        The weight of the synapses for the excitatory external Poisson input.    
     
     drive_period : float
-                     Period over which the Kick will deposit the full drive defined by the exc_firing_rate, after this time the 
-                     firing rates will be linearly reduced to reach zero at the end of stimulation.
+        Period over which the Kick will deposit the full drive defined by the exc_firing_rate, after this time the 
+        firing rates will be linearly reduced to reach zero at the end of stimulation.
 
     population_selector : ParemeterSet
-                        Defines the population selector and its parameters to specify to which neurons in the population the 
-                        background activity should be applied. 
-                     
+        Defines the population selector and its parameters to specify to which neurons in the population the 
+        background activity should be applied. 
+
+                                        
     Notes
     -----
     
     Currently this experiment does not work with MPI
+
     """
     
     
@@ -307,26 +327,30 @@ class Depolarization(DirectStimulator):
     
     Parameters
     ----------
+
     parameters : ParameterSet
-               The dictionary of required parameters.
+        The dictionary of required parameters.
                 
     sheet : Sheet
-          The sheet in which to stimulate neurons.
+        The sheet in which to stimulate neurons.
     
+          
     Other parameters
     ----------------
     
     current : float (mA)
-                     The current to inject into neurons.
+        The current to inject into neurons.
 
     population_selector : ParemeterSet
-                        Defines the population selector and its parameters to specify to which neurons in the population the 
-                        background activity should be applied. 
-                     
+        Defines the population selector and its parameters to specify to which neurons in the population the 
+        background activity should be applied. 
+
+                                        
     Notes
     -----
     
     Currently the mpi_safe version only works in nest!
+
     """
     
     
@@ -380,52 +404,56 @@ class OpticalStimulatorArray(DirectStimulator):
 
     Parameters
     ----------
+
     parameters : ParameterSet
-               The dictionary of required parameters.
+        The dictionary of required parameters.
                 
     sheet : Sheet
-          The sheet in which to stimulate neurons.
+        The sheet in which to stimulate neurons.
     
+          
     Other parameters
     ----------------
     
     size : float (μm) 
-                     The size of the stimulator grid
+        The size of the stimulator grid
 
     spacing : float (μm)
-                     The distance between stimulators (the number of stimulators will
-                     thus be (size/distance)^2)
+        The distance between stimulators (the number of stimulators will
+        thus be (size/distance)^2)
 
     update_interval : float (ms)
-                     The interval at which the stimulator is updated. Thus the length of
-                     the stimulation is update_interval times the number of values
-                     returned by the function specified in the `stimulating_signal`
-                     parameter.
+        The interval at which the stimulator is updated. Thus the length of
+        the stimulation is update_interval times the number of values
+        returned by the function specified in the `stimulating_signal`
+        parameter.
     
     depth_sampling_step : float (μm)
-                     For optimization reasons we will assume that neurons lie at
-                     discrete range of depth spaced at `depth_sampling_step`
+        For optimization reasons we will assume that neurons lie at
+        discrete range of depth spaced at `depth_sampling_step`
 
     light_source_light_propagation_data : str
-                     The path to the radial profile light dispersion data.
+        The path to the radial profile light dispersion data.
 
     stimulating_signal : str
-                     The python path to a function that defines the stimulation.
+        The python path to a function that defines the stimulation.
 
     stimulating_signal_parameters : ParameterSet
-                     The parameters passed to the function specified in
-                     `stimulating_signal`
+        The parameters passed to the function specified in
+        `stimulating_signal`
 
     transfection_proportion : float
-                     Set the proportion of transfected cells in each sheet in
-                     sheet_list. Must have equal length to sheet_list. The constants
-                     must be in the range (0,1) - 0 means no cells, 1 means
-                     all cells.
+        Set the proportion of transfected cells in each sheet in
+        sheet_list. Must have equal length to sheet_list. The constants
+        must be in the range (0,1) - 0 means no cells, 1 means
+        all cells.
 
+                     
     Notes
     -----
 
     For now this is not mpi optimized.
+
     """
     
     
@@ -711,30 +739,33 @@ def stimulating_pattern_flash(sheet, coor_x, coor_y, update_interval, parameters
 
     Parameters
     ----------
+
     sheet : Sheet
-                The stimulated sheet
+        The stimulated sheet
 
     coor_x : numpy array
-                X coordinates of all electrodes
+        X coordinates of all electrodes
 
     coor_y : numpy array
-                Y coordinates of all electrodes
+        Y coordinates of all electrodes
 
     update_interval : float (ms)
-                Timestep in which the stimulator updates
+        Timestep in which the stimulator updates
 
     parameters : Parameters
-                Extra parameters for the stimulator functions. They must at minimum
-                include the following parameters:
+        Extra parameters for the stimulator functions. They must at minimum
+        include the following parameters:
 
-                duration : float (ms)
-                        Overall stimulus duration
+        duration : float (ms)
+            Overall stimulus duration
 
-                onset_time : float (ms)
-                        Time point when the stimulation turns on
+        onset_time : float (ms)
+            Time point when the stimulation turns on
 
-                offset_time : float(ms)
-                        Time point when the stimulation turns off
+        offset_time : float(ms)
+            Time point when the stimulation turns off
+
+                        
     """
     signals = numpy.zeros(
         (
@@ -758,21 +789,23 @@ def generate_2d_stim(sheet, coor_x, coor_y, parameters):
 
     Parameters
     ----------
+
     sheet : Sheet
-                The stimulated sheet
+        The stimulated sheet
 
     coor_x : numpy array
-                X coordinates of all electrodes
+        X coordinates of all electrodes
 
     coor_y : numpy array
-                Y coordinates of all electrodes
+        Y coordinates of all electrodes
 
     parameters : Parameters
-                Extra parameters for the stimulator functions. They must at minimum
-                include the following parameter:
+        Extra parameters for the stimulator functions. They must at minimum
+        include the following parameter:
 
-                intensity : float
-                        Stimulation intensity, going from 0 to 1
+        intensity : float
+            Stimulation intensity, going from 0 to 1
+
 
     """
     if parameters.shape == "or_map":
@@ -798,17 +831,20 @@ def image_stim(coor_x, coor_y, parameters):
 
     Parameters
     ----------
+
     coor_x : numpy array
-                X coordinates of all electrodes
+        X coordinates of all electrodes
 
     coor_y : numpy array
-                Y coordinates of all electrodes
+        Y coordinates of all electrodes
 
     parameters : ParameterSet
         intensity : float
-                Stimulation intensity constant
+            Stimulation intensity constant
         image_path : str
-                Path to the .npy file containing the image (2D array).
+            Path to the .npy file containing the image (2D array).
+
+                
     """
     for i in range(coor_x.shape[1]):
         assert np.allclose(coor_x[:, i], coor_x[:, i]), "X coordinates must be in grid!"
@@ -837,22 +873,25 @@ def or_map_mask(sheet,coor_x,coor_y,parameters):
 
     Parameters
     ----------
+
     sheet : Sheet
-                Sheet to retrieve neuron orientations (proxy for orientation map) from
+        Sheet to retrieve neuron orientations (proxy for orientation map) from
 
     coor_x : numpy array
-                X coordinates of all electrodes
+        X coordinates of all electrodes
 
     coor_y : numpy array
-                Y coordinates of all electrodes
+        Y coordinates of all electrodes
 
     parameters : ParameterSet
-                    intensity : float
-                            Stimulation intensity constant
-                    sharpness : float
-                            Variance of the Gaussian falloff
-                    orientation : float
-                            Selected orientation to stimulate
+        intensity : float
+            Stimulation intensity constant
+        sharpness : float
+            Variance of the Gaussian falloff
+        orientation : float
+            Selected orientation to stimulate
+
+                            
     """
     z = sheet.pop.all_cells.astype(int)
     vals = numpy.array([sheet.get_neuron_annotation(i,'LGNAfferentOrientation') for i in range(0,len(z))])
@@ -873,35 +912,41 @@ def simple_shapes_binary_mask(coor_x, coor_y, shape, parameters):
     Currently three types of shapes are supported:
 
     polygon: *points* defines the coordinates of the polygon verices, compared to the
-             current coordinate in *coords*. These points can be rotated by *angle*, if
-             specified.
-    circle:  *radius* defines the radii of circles, with *coords* centers
-    hexagon: *radius* defines the radii (or edge length) of hexagons, *coords* their
-             center coordinates, and *angle* their rotation (at 0 angle they are
-             rotated such that the top and bottom edges are horizontal)
+        current coordinate in *coords*. These points can be rotated by *angle*, if
+        specified.
 
+    circle:  *radius* defines the radii of circles, with *coords* centers
+
+    hexagon: *radius* defines the radii (or edge length) of hexagons, *coords* their
+        center coordinates, and *angle* their rotation (at 0 angle they are
+        rotated such that the top and bottom edges are horizontal)
+
+             
     Parameters
     ----------
+
     coor_x : numpy array
-                X coordinates of all electrodes
+        X coordinates of all electrodes
 
     coor_y : numpy array
-                Y coordinates of all electrodes
+        Y coordinates of all electrodes
 
     shape : str
-            polygon, circle or hexagon
+        polygon, circle or hexagon
 
     parameters : ParameterSet
         coords : list((x,y))
-                Coordinates of the centers of the shapes to draw
+            Coordinates of the centers of the shapes to draw
         points : list((x,y))
-                Polygon coordinates compared to their center (coords[i])
+            Polygon coordinates compared to their center (coords[i])
         radius : float
-                Circle or hexagon radius
+            Circle or hexagon radius
         angle : float
-                Hexagon or polygon rotation
+            Hexagon or polygon rotation
         inverted : bool
-                Inverts the pattern if True. Defaults to False if not included.
+            Inverts the pattern if True. Defaults to False if not included.
+
+                
     """
     known_shapes = ["polygon","circle","hexagon"]
     assert shape in known_shapes, "Shape %s not among known shapes: %s" % (shape, known_shapes)
@@ -961,14 +1006,15 @@ def single_pixel(sheet, coor_x, coor_y, update_interval, parameters):
 
     Parameters
     ----------
+
     coor_x : numpy array
-                X coordinates of all electrodes
+        X coordinates of all electrodes
 
     coor_y : numpy array
-                Y coordinates of all electrodes
+        Y coordinates of all electrodes
 
     update_interval : float (ms)
-                Timestep in which the stimulator updates
+        Timestep in which the stimulator updates
 
     parameters : ParameterSet
         x : int
@@ -980,7 +1026,9 @@ def single_pixel(sheet, coor_x, coor_y, update_interval, parameters):
         duration : float (ms)
             Overall stimulus duration
 
+            
     Only used in a for testing.
+    
     """
     x, y = parameters["x"], parameters["y"]
     assert x in coor_x and y in coor_y
