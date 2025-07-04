@@ -18,7 +18,7 @@ logger = mozaik.getMozaikLogger()
 
 class ParametrizedObject(object):
     """
-    Base class for all Mozaik objects using the dynamic parameterization framework. See :doc:`getting_started`_ for more details.
+    Base class for all Mozaik objects using the dynamic parameterization framework. See `getting started guide <getting_started.rst>`__ for more details.
     
     Parameters
     ----------

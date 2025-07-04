@@ -308,7 +308,7 @@ class StGen:
         ----------
 
         rate : array 
-            an array of the rates (Hz) where rate[i] is active on interval 
+            an array of the rates (Hz) where rate[i] is active on interval
             [t[i],t[i+1]]
 
         t : array
@@ -332,11 +332,11 @@ class StGen:
         References
         ----------
 
-        .. [1] Eilif Muller, Lars Buesing, Johannes Schemmel, and Karlheinz Meier, 
+        [1] Eilif Muller, Lars Buesing, Johannes Schemmel, and Karlheinz Meier, 
         "Spike-Frequency Adapting Neural Ensembles: Beyond Mean Adaptation and Renewal Theories,"
         Neural Comput. 2007 19: 2958-3010.
 
-        .. [2] Devroye, L. (1986). "Non-uniform random variate generation. New York: Springer-Verlag."
+        [2] Devroye, L. (1986). "Non-uniform random variate generation. New York: Springer-Verlag."
         
 
         Examples

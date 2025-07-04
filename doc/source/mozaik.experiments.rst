@@ -4,7 +4,7 @@ This package contains module for different types of experiments mozaik supports.
 
 
 :mod:`experiments` Module
--------------------------------------------
+-------------------------
 
 .. automodule:: mozaik.experiments.__init__
     :members:
@@ -12,7 +12,7 @@ This package contains module for different types of experiments mozaik supports.
     :show-inheritance:
 
 :mod:`vision` Module
----------------------------------------
+--------------------
 
 .. automodule:: mozaik.experiments.vision
     :members:
@@ -20,7 +20,7 @@ This package contains module for different types of experiments mozaik supports.
     :show-inheritance:
 
 :mod:`apparent_motion` Module
-------------------------------------------------
+-----------------------------
 
 .. automodule:: mozaik.experiments.apparent_motion
     :members:
@@ -28,7 +28,7 @@ This package contains module for different types of experiments mozaik supports.
     :show-inheritance:
 
 :mod:`direct_stimulations_mixins` Module
------------------------------------------------------------
+----------------------------------------
 
 .. automodule:: mozaik.experiments.direct_stimulations_mixins
     :members:
@@ -36,7 +36,7 @@ This package contains module for different types of experiments mozaik supports.
     :show-inheritance:
 
 :mod:`optogenetic` Module
---------------------------------------------
+-------------------------
 
 .. automodule:: mozaik.experiments.optogenetic
     :members:

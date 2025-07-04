@@ -29,17 +29,15 @@ logger = logging.getLogger("mozaik")
 class SNumber(Number):
     """
     A mozaik parameter that can hold a number. For the full range of options the 
-    parameter offers reffer to the `Number` class in `param <http://ioam.github.io/param/>`_ package.
+    parameter offers refer to the ``Number`` class in `param package <http://ioam.github.io/param/>`__
     
     On top of the Number class it adds the ability to specify units and period in constructor.
-    The units should be `quantities.units`.
+    The units should be ``quantities.units``.
 
     Attributes
     ----------
-
     units : quantities.units
         The units associated with this parameter
-
     period : float or None
         The period associated with this parameter (if any)
         
@@ -57,16 +55,14 @@ class SNumber(Number):
 class SInteger(Integer):
     """
     A mozaik parameter that can hold an integer. For the full range of options the 
-    parameter offers reffer to the `Integer` class in `param <http://ioam.github.io/param/>`_ package.
+    parameter offers refer to the ``Integer`` class in `param package <http://ioam.github.io/param/>`__
     
-    On top of the Integer class it adds the ability to specify period in constructor. The units should be `quantities.units`.
+    On top of the Integer class it adds the ability to specify period in constructor. The units should be ``quantities.units``.
 
     Attributes
     ----------
-
     units : None
         Always None for integers
-
     period : float or None
         The period associated with this parameter (if any)
     
@@ -84,17 +80,15 @@ class SInteger(Integer):
 class SString(String):
     """
     A mozaik parameter that can hold a string. For the full range of options the 
-    parameter offers reffer to the `Integer` class in `param <http://ioam.github.io/param/>`_ package.
+    parameter offers refer to the ``Integer`` class in `param package <http://ioam.github.io/param/>`__
     
     This class is here for consistency reasons as it defines the units and period properties, 
     just like SInteger and SNumber, but automatically sets them to None.
 
     Attributes
     ----------
-
     units : None
         Always None for strings
-
     period : None
         Always None for strings
     
@@ -342,6 +336,7 @@ Helper functions that allow querying lists of MozaikParametrized objects.
 
 def filter_query(object_list, extra_data_list=None,allow_non_existent_parameters=False,**kwargs):
     """
+    
     Returns a subset of `object_list` containing MozaikParametrized instances (and associated data if data_list!=None)
     for which the parameters in kwargs match.
 
@@ -361,7 +356,7 @@ def filter_query(object_list, extra_data_list=None,allow_non_existent_parameters
         and include them in the results as long the remaining 
         parameters match if False it will exclude them.
                                 
-    \*\*kwargs : dict
+    **kwargs : dict
         The parameter names and values that have to match.                                    
     
     Returns
