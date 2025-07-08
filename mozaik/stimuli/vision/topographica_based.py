@@ -951,11 +951,11 @@ class SimpleGaborPatch(TopographicaBasedVisualStimulus):
 
         **Algorithm**:
 
-        First, it creates a tide containing two lines looking like: ___/
+        First, it creates a tide containing two lines looking like: ``___/``
+        
         - the height of the tide is size/2
         - the width of the tide is sqrt(3)/2*size
-        - NOTE: one of the parameters is not an integer, therefore rounding
-          is present, and for big grids it can be off by several pixels.
+        - **Note**: one of the parameters is not an integer, therefore rounding is present, and for big grids it can be off by several pixels.
         - The oddness can be derived from the ratio of width and height.
         - The closer to sqrt(3), the better.
 
@@ -969,7 +969,7 @@ class SimpleGaborPatch(TopographicaBasedVisualStimulus):
         Third, it replicates the hexagonal tide and rotates it.
 
         Fourth, it computes shifts based on parameters size, size_x, size_y
-        and cuts out the relevant part of the array
+        and cuts out the relevant part of the array.
 
         Returns
         -------
@@ -1102,11 +1102,11 @@ class TwoStrokeGaborPatch(TopographicaBasedVisualStimulus):
 
         **Algorithm**:
 
-        First, it creates a tide containing two lines looking like: ___/
+        First, it creates a tide containing two lines looking like: ``___/``
+
         - the height of the tide is size/2
         - the width of the tide is sqrt(3)/2*size
-        - NOTE: one of the parameters is not an integer, therefore rounding
-          is present, and for big grids it can be off by several pixels.
+        - **Note**: one of the parameters is not an integer, therefore rounding is present, and for big grids it can be off by several pixels.
         - The oddness can be derived from the ratio of width and height.
         - The closer to sqrt(3), the better.
 

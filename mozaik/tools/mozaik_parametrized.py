@@ -27,81 +27,32 @@ param.parameterized.docstring_signature=False
 logger = logging.getLogger("mozaik")
 
 class SNumber(Number):
-    """
-    A mozaik parameter that can hold a number. For the full range of options the 
-    parameter offers refer to the ``Number`` class in `param package <http://ioam.github.io/param/>`__
-    
-    On top of the Number class it adds the ability to specify units and period in constructor.
-    The units should be ``quantities.units``.
-
-    Attributes
-    ----------
-    units : quantities.units
-        The units associated with this parameter
-    period : float or None
-        The period associated with this parameter (if any)
-        
-    """
     __slots__ = ['units','period']
 
     def __init__(self, units, period=None, **params):
         params.setdefault('default',None)
-        super(SNumber, self).__init__(allow_None=True,
-                                      instantiate=True, **params)
+        super(SNumber, self).__init__(allow_None=True, instantiate=True, **params)
         self.units = units
         self.period = period
 
 
 class SInteger(Integer):
-    """
-    A mozaik parameter that can hold an integer. For the full range of options the 
-    parameter offers refer to the ``Integer`` class in `param package <http://ioam.github.io/param/>`__
-    
-    On top of the Integer class it adds the ability to specify period in constructor. The units should be ``quantities.units``.
-
-    Attributes
-    ----------
-    units : None
-        Always None for integers
-    period : float or None
-        The period associated with this parameter (if any)
-    
-    """
     __slots__ = ['units','period']
 
     def __init__(self, period=None, **params):
         params.setdefault('default',None)        
-        super(SInteger, self).__init__(allow_None=True,
-                                       instantiate=True, **params)
+        super(SInteger, self).__init__(allow_None=True, instantiate=True, **params)
         self.units = None
         self.period = period
 
 
 class SString(String):
-    """
-    A mozaik parameter that can hold a string. For the full range of options the 
-    parameter offers refer to the ``Integer`` class in `param package <http://ioam.github.io/param/>`__
-    
-    This class is here for consistency reasons as it defines the units and period properties, 
-    just like SInteger and SNumber, but automatically sets them to None.
-
-    Attributes
-    ----------
-    units : None
-        Always None for strings
-    period : None
-        Always None for strings
-    
-    """
     __slots__ = ['units','period']    
     def __init__(self, **params):
         params.setdefault('default',None)        
-        super(SString, self).__init__(allow_None=True,
-                                      instantiate=True, **params)
+        super(SString, self).__init__(allow_None=True, instantiate=True, **params)
         self.units = None
         self.period = None
-
-
 
 
 class SParameterSet(ClassSelector):
@@ -110,8 +61,7 @@ class SParameterSet(ClassSelector):
     """
     def __init__(self, **params):
         params.setdefault('default',None)
-        super(SParameterSet, self).__init__(MozaikExtendedParameterSet,allow_None=True,
-                                      instantiate=True, **params)
+        super(SParameterSet, self).__init__(MozaikExtendedParameterSet,allow_None=True, instantiate=True, **params)
 
 
 

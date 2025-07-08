@@ -132,6 +132,14 @@ class SpatioTemporalReceptiveField(object):
 
     @property
     def kernel_duration(self):
+        """
+        Returns the temporal duration of the quantized kernel.
+
+        Notes
+        -----
+
+        This relies on the kernel having been quantized. If not, accessing this will raise an error.
+        """
         return self.kernel.shape[2]
 
     

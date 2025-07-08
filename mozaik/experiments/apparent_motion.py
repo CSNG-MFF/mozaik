@@ -20,7 +20,6 @@ class MapSimpleGabor(VisualExperiment):
     model : Model
         The model on which to execute the experiment.
 
-          
     Other parameters
     ----------------
 
@@ -79,22 +78,22 @@ class MapSimpleGabor(VisualExperiment):
         If True hexagonal tiding with relative luminance 0 is drawn over the stimuli.
         Mostly for testing purposes to check the stimuli are generated correctly.
 
-
     .. rubric:: Notes on Hexagonal Tiding
 
     Generating coordinates of centers of regular (!) hexagonal tidings.
     It is done this way, because the centers of tides are not on circles (!)
-    First it generates integer indexed centers like this:
-              . . .                (-2,2) (0, 2) (2,2)
-             . . . .           (-3,1) (-1,1) (1,1) (3,1)
-            . . . . .   ==> (-4,0) (-2,0) (0,0) (2,0) (4,0)     (circles=3)
-             . . . .           (-3,-1)(-1,-1)(1,-1)(3,-1)
-              . . .                (-2,-2)(0,-2)(2,-2)
 
-    coordinates then multiplied by non-integer factor to get the right position
-    x coordinate multiplied by factor 1/2*size
+    First it generates integer indexed centers like this::
+
+        . . .                (-2,2) (0, 2) (2,2)
+       . . . .           (-3,1) (-1,1) (1,1) (3,1)
+      . . . . .   ==> (-4,0) (-2,0) (0,0) (2,0) (4,0)     (circles=3)
+       . . . .           (-3,-1)(-1,-1)(1,-1)(3,-1)
+        . . .                (-2,-2)(0,-2)(2,-2)
+        
+    Coordinates then multiplied by non-integer factor to get the right position:
+    x coordinate multiplied by factor 1/2*size  
     y coordinate multiplied by factor sqrt(3)/2*size
-
 
     .. rubric:: Notes on Central relative luminance
 
@@ -269,7 +268,8 @@ class MapTwoStrokeGabor(VisualExperiment):
 
     Generating coordinates of centers of regular (!) hexagonal tidings.  
     It is done this way, because the centers of tides are not on circles (!)  
-    First it generates integer indexed centers like this:  
+    First it generates integer indexed centers like this::
+
               . . .                (-2,2) (0, 2) (2,2)  
              . . . .           (-3,1) (-1,1) (1,1) (3,1)  
             . . . . .   ==> (-4,0) (-2,0) (0,0) (2,0) (4,0)     (circles=3)  
