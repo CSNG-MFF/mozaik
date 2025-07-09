@@ -961,9 +961,9 @@ class SimpleGaborPatch(TopographicaBasedVisualStimulus):
 
         Second, it replicates the the tide to create hexagonal tiding of the 
         following form :
-            ___ 
-        ___/   \
-           \___/
+        >>>     ___ 
+        >>> ___/   \
+        >>>    \___/
 
 
         Third, it replicates the hexagonal tide and rotates it.
@@ -1112,9 +1112,9 @@ class TwoStrokeGaborPatch(TopographicaBasedVisualStimulus):
 
         Second, it replicates the the tide to create hexagonal tiding of the 
         following form :
-            ___ 
-        ___/   \
-           \___/
+        >>>     ___ 
+        >>> ___/   \
+        >>>    \___/
 
 
         Third, it replicates the hexagonal tide and rotates it.

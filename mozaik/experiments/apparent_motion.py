@@ -83,14 +83,14 @@ class MapSimpleGabor(VisualExperiment):
     Generating coordinates of centers of regular (!) hexagonal tidings.
     It is done this way, because the centers of tides are not on circles (!)
 
-    First it generates integer indexed centers like this::
+    First it generates integer indexed centers like this
 
-        . . .                (-2,2) (0, 2) (2,2)
-       . . . .           (-3,1) (-1,1) (1,1) (3,1)
-      . . . . .   ==> (-4,0) (-2,0) (0,0) (2,0) (4,0)     (circles=3)
-       . . . .           (-3,-1)(-1,-1)(1,-1)(3,-1)
-        . . .                (-2,-2)(0,-2)(2,-2)
-        
+    >>>         . . .                (-2,2) (0, 2) (2,2)
+    >>>        . . . .           (-3,1) (-1,1) (1,1) (3,1)
+    >>>       . . . . .   ==> (-4,0) (-2,0) (0,0) (2,0) (4,0)     (circles=3)
+    >>>        . . . .           (-3,-1)(-1,-1)(1,-1)(3,-1)
+    >>>         . . .                (-2,-2)(0,-2)(2,-2)
+
     Coordinates then multiplied by non-integer factor to get the right position:
     x coordinate multiplied by factor 1/2*size  
     y coordinate multiplied by factor sqrt(3)/2*size
@@ -241,7 +241,7 @@ class MapTwoStrokeGabor(VisualExperiment):
     flash_duration : float  
         The total duration of the presentation of Gabor patches. Therefore,  
         the second stroke is presented for time equal:  
-            flash_duration - stroke_time
+        flash_duration - stroke_time
 
     duration : float  
         The duration of single presentation of the stimulus.
@@ -267,14 +267,15 @@ class MapTwoStrokeGabor(VisualExperiment):
     .. rubric:: Notes on hexagonal tiding
 
     Generating coordinates of centers of regular (!) hexagonal tidings.  
-    It is done this way, because the centers of tides are not on circles (!)  
-    First it generates integer indexed centers like this::
+    It is done this way, because the centers of tides are not on circles (!)
 
-              . . .                (-2,2) (0, 2) (2,2)  
-             . . . .           (-3,1) (-1,1) (1,1) (3,1)  
-            . . . . .   ==> (-4,0) (-2,0) (0,0) (2,0) (4,0)     (circles=3)  
-             . . . .           (-3,-1)(-1,-1)(1,-1)(3,-1)  
-              . . .                (-2,-2)(0,-2)(2,-2)
+    First it generates integer indexed centers like this:
+
+    >>>         . . .                (-2,2) (0, 2) (2,2)
+    >>>        . . . .           (-3,1) (-1,1) (1,1) (3,1)
+    >>>       . . . . .   ==> (-4,0) (-2,0) (0,0) (2,0) (4,0)     (circles=3)
+    >>>        . . . .           (-3,-1)(-1,-1)(1,-1)(3,-1)
+    >>>         . . .                (-2,-2)(0,-2)(2,-2)
 
     coordinates then multiplied by non-integer factor to get the right position  
     x coordinate multiplied by factor 1/2*size  
@@ -869,67 +870,67 @@ class RunApparentMotionConfigurations(VisualExperiment):
 
     ::
 
-        SECTOR_ISO
-
-           \ | /       .              .
-                       .     \|/      .
-                       .              .    |
-                       .     /|\      .
-           / | \       .              .
-
-        SECTOR_CROSS
-
-        /          \   .              .
-                       .    /    \    .
-       |            |  .   |      |   .    |
-                       .    \    /    .
-        \          /   .              .
-
-        SECTOR_CF
-
-                       .              .  \ | /
-                       .     \|/      .
-             |         .              .
-                       .     /|\      .
-                       .              .  / | \
-
-        SECTOR_RND
-
-          \            .      | /     .
-           \           .      |/      .
-                       .              .    |
-             |         .     / \      .
-           /   \       .      |       .
-
-        FULL_ISO
-
-           \ | /       .              .
-         \       /     .    \ | /     .
-       --         --   .   --   --    .    |
-         /       \     .    / | \     .
-           / | \       .              .
-
-        FULL_CROSS
-             __
-          /      \
-        /          \   .      __      .
-                       .    /    \    .
-       |            |  .   |      |   .    |
-                       .    \ __ /    .
-        \          /   .              .
-          \  __  /
-
-        FULL_RND
-
-             |         .     \   /    .
-         \     /       .     \ |   /  .
-       --      -- --   .    --        .    |
-         / / | \       .           \  .
-           /   \       .       |      .
-
-        CENTER_ONLY
-
-            |
+    >>> SECTOR_ISO
+    >>> 
+    >>>        \ | /       .              .
+    >>>                    .     \|/      .
+    >>>                    .              .    |
+    >>>                    .     /|\      .
+    >>>        / | \       .              .
+    >>> 
+    >>> SECTOR_CROSS
+    >>> 
+    >>>        /          \   .              .
+    >>>                    .    /    \    .
+    >>>       |            |  .   |      |   .    |
+    >>>                    .    \    /    .
+    >>>        \          /   .              .
+    >>> 
+    >>> SECTOR_CF
+    >>> 
+    >>>                    .              .  \ | /
+    >>>                    .     \|/      .
+    >>>          |         .              .
+    >>>                    .     /|\      .
+    >>>                    .              .  / | \
+    >>> 
+    >>> SECTOR_RND
+    >>> 
+    >>>          \            .      | /     .
+    >>>           \           .      |/      .
+    >>>                    .              .    |
+    >>>          |         .     / \      .
+    >>>           /   \       .      |       .
+    >>> 
+    >>> FULL_ISO
+    >>> 
+    >>>           \ | /       .              .
+    >>>         \       /     .    \ | /     .
+    >>>       --         --   .   --   --    .    |
+    >>>         /       \     .    / | \     .
+    >>>           / | \       .              .
+    >>> 
+    >>> FULL_CROSS
+    >>>              __
+    >>>           /      \
+    >>>         /          \   .      __      .
+    >>>                    .    /    \    .
+    >>>        |            |  .   |      |   .    |
+    >>>                    .    \ __ /    .
+    >>>         \          /   .              .
+    >>>           \  __  /
+    >>> 
+    >>> FULL_RND
+    >>> 
+    >>>              |         .     \   /    .
+    >>>         \     /       .     \ |   /  .
+    >>>       --      -- --   .    --        .    |
+    >>>         / / | \       .           \  .
+    >>>           /   \       .       |      .
+    >>> 
+    >>> CENTER_ONLY
+    >>> 
+    >>>            |
 
 
     """
