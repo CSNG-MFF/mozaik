@@ -17,7 +17,7 @@ logger = mozaik.getMozaikLogger()
 import pylab
 
 class MapDependentModularConnectorFunction(ModularConnectorFunction):
-    """
+    r"""
     Corresponds to: distance*linear_scaler + constant_scaler
     """
     required_parameters = ParameterSet({
@@ -60,7 +60,7 @@ class MapDependentModularConnectorFunction(ModularConnectorFunction):
     
 
 class V1PushPullArborization(ModularConnectorFunction):
-    """
+    r"""
     This connector function implements the standard V1 functionally specific
     connection rule:
 
@@ -150,7 +150,7 @@ def gauss(x1, y1, x2, y2, orientation, size,aspect_ratio):
      return numpy.exp(ker)
 
 class GaborArborization(ModularConnectorFunction):
-    """
+    r"""
     This connector function implements the standard Gabor-like afferent V1 connectivity. It takes the parameters of gabors from 
     the annotations that have to be before assigned to neurons.
     
@@ -198,7 +198,7 @@ class GaborArborization(ModularConnectorFunction):
 
 
 class V1CorrelationBasedConnectivity(ModularConnectorFunction):
-    """
+    r"""
     This connector function implements  a correlation based rules for neurons with 
     gabor like RFs, where excitatory synapses are more-likely between neurons with correlated 
     RFs while inhibitory synapses are more likely among anti-correlated synapses.
@@ -376,7 +376,7 @@ class V1CorrelationBasedConnectivity(ModularConnectorFunction):
         return corr_gauss
 
 class CoCircularModularConnectorFunction(ModularConnectorFunction):
-    """
+    r"""
     This connector function implements the situation where the probability of connection between pre-synaptic neuron preN and post synaptic neuron postN
     depends on their orientation and distance in following the co-circularity rule. The law was adopted from:
     Hunt, J. J., Bosking, W. H., & Goodhill, G. J. (2011). Statistical structure of lateral connections in the primary visual cortex. Neural Systems & Circuits, 1(1), 3. https://doi.org/10.1186/2042-1001-1-3

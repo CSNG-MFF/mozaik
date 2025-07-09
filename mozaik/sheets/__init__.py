@@ -20,7 +20,7 @@ import quantities as pq
 logger = mozaik.getMozaikLogger()
 
 class Sheet(BaseComponent):
-    """
+    r"""
     Sheet is an abstraction of a volume of neurons positioned in a physical space.
 
     It roughly corresponding to the PyNN Sheet class with the added spatial structure 
@@ -134,7 +134,7 @@ class Sheet(BaseComponent):
             self.to_record[k] = [numpy.flatnonzero(idds == idd)[0] for idd in self.to_record[k]]
             
     def size_in_degrees(self):
-        """Returns the x, y size in degrees of visual field of the given area."""
+        r"""Returns the x, y size in degrees of visual field of the given area."""
         raise NotImplementedError
         pass
 
@@ -162,7 +162,7 @@ class Sheet(BaseComponent):
     pop = property(**pop())  # this will be populated by PyNN population, in the derived classes
 
     def add_neuron_annotation(self, neuron_number, key, value, protected=True):
-        """
+        r"""
         Adds annotation to neuron at index neuron_number.
         
         Parameters
@@ -189,7 +189,7 @@ class Sheet(BaseComponent):
             self._neuron_annotations[neuron_number][key] = (protected, value)
 
     def get_neuron_annotation(self, neuron_number, key):
-        """
+        r"""
         Retrieve annotation for a given neuron.
         
         Parameters
@@ -249,7 +249,7 @@ class Sheet(BaseComponent):
                     self.pop.record(variable,sampling_interval=self.parameters.recording_interval)
 
     def get_data(self, stimulus_duration=None):
-        """
+        r"""
         Retrieve data recorded in this sheet from pyNN in response to the last presented stimulus.
         
         Parameters
@@ -334,7 +334,7 @@ class Sheet(BaseComponent):
         return self.msc
 
     def prepare_artificial_stimulation(self, duration, offset,additional_stimulators):
-        """
+        r"""
         Prepares the background noise and artificial stimulation for the population for the stimulus that is 
         about to be presented. 
         

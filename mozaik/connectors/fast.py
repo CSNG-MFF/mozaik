@@ -16,7 +16,7 @@ logger = mozaik.getMozaikLogger()
 
 
 class DistanceDependentProbabilisticArborization(Connector):
-    """
+    r"""
     A abstract connector that implements distance dependent connection.
     Each implementation just needs to implement the arborization_function and delay function.
     The distance input is in the 'native' metric of the sheets, i.e. degrees of visual field 
@@ -63,7 +63,7 @@ class DistanceDependentProbabilisticArborization(Connector):
 
 
 class ExponentialProbabilisticArborization(DistanceDependentProbabilisticArborization):
-    """
+    r"""
     Distance dependent arborization with exponential fall-off of the probability, and linear spike propagation.
     """
     required_parameters = ParameterSet({
@@ -81,7 +81,7 @@ class ExponentialProbabilisticArborization(DistanceDependentProbabilisticArboriz
         
         
 class UniformProbabilisticArborization(Connector):
-    """
+    r"""
     Connects source with target with equal probability between any two neurons.
     """
     
@@ -108,7 +108,7 @@ class UniformProbabilisticArborization(Connector):
                                     receptor_type=self.parameters.target_synapses)
 
 class FixedKConnector(Connector):
-    """
+    r"""
     Connects source with target such that each neuron will have the same number of presynaptic neurons chosen randomly.
     """
     

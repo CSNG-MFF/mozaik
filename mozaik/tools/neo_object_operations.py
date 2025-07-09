@@ -1,4 +1,4 @@
-"""
+r"""
 This file contains various operations over Neo objects. Such as sum over lists
 of Neo objects etc.
 """
@@ -7,7 +7,7 @@ from neo.core.analogsignal import AnalogSignal as NeoAnalogSignal
 import numpy
 
 def neo_sum(l):
-    """
+    r"""
     This function gets a list of Neo objects and it
     adds them up. Importantly unlike Python sum function
     it starts adding to the first element of the list no to 0.
@@ -25,7 +25,7 @@ def neo_mean(l):
     return neo_sum(l) / len(l)
 
 def down_sample_analog_signal_average_method(analog_signal,new_sampling_period):
-    """
+    r"""
     It down-samples the signal such that it will bin the time axis with bin length `new_sampling_period` and make average for each bin.
     
     Parameters
@@ -48,7 +48,7 @@ def down_sample_analog_signal_average_method(analog_signal,new_sampling_period):
                    units=analog_signal.units)
 
 def down_sample_analog_signal2(analog_signal,new_sampling_period):
-    """
+    r"""
     It down-samples the signal such that it picks each i-th element of the analog signal based on the desired new sampling period.
     
     Parameters

@@ -3,6 +3,16 @@ experiments Package
 
 This package contains module for different types of experiments mozaik supports.
 
+Modules
+^^^^^^^
+
+    * :py:mod:`mozaik.experiments.__init__` 
+    * :py:mod:`mozaik.experiments.vision` 
+    * :py:mod:`mozaik.experiments.apparent_motion` 
+    * :py:mod:`mozaik.experiments.direct_stimulations_mixins` 
+    * :py:mod:`mozaik.experiments.optogenetic`
+
+
 
 :mod:`experiments` Module
 -------------------------
@@ -39,7 +49,7 @@ This package contains module for different types of experiments mozaik supports.
     :undoc-members:
     :show-inheritance:
 
-?
+
 :mod:`optogenetic` Module
 -------------------------
 

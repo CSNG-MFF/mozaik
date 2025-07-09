@@ -8,7 +8,7 @@ import mozaik
 
 
 class MapSimpleGabor(VisualExperiment):
-    """
+    r"""
     Map RF with a Gabor patch stimuli.
 
     This experiment presents a series of flashed Gabor patches at the centers
@@ -176,7 +176,7 @@ class MapSimpleGabor(VisualExperiment):
 
 
 class MapTwoStrokeGabor(VisualExperiment):
-    """
+    r"""
     Map RF with a two stroke Gabor patch stimuli to study response on apparent
     movement. First a Gabor patch is presented for specified time after that
     another Gabor patch is presented at neighbohring tide with same orientation
@@ -463,7 +463,7 @@ class MapTwoStrokeGabor(VisualExperiment):
 
 
 class MeasureGaborFlashDuration(VisualExperiment):
-    """
+    r"""
     Experiment to measure the shortest duration of flashing a Gabor patch onto the RF of
     a neuron, which evokes a significant response. It tries flash durations in a range,
     and randomizes the order of durations.
@@ -584,7 +584,7 @@ class MeasureGaborFlashDuration(VisualExperiment):
 
 
 class CompareSlowVersusFastGaborMotion(VisualExperiment):
-    """
+    r"""
     Present Gabor stimuli moving radially inward in either continuous or apparent
     motion.
 
@@ -794,7 +794,7 @@ class CompareSlowVersusFastGaborMotion(VisualExperiment):
 
 
 class RunApparentMotionConfigurations(VisualExperiment):
-    """
+    r"""
     Apparent motion stimulus configurations from Benoit Le Bec, 2018.
 
     Benoit Le Bec, Lateral connectivity: propagation of network belief and

@@ -1,4 +1,4 @@
-"""
+r"""
 This module contains classes that assist with construction of complicated arrangements of plots.
 A typical example is a class that helps with creating a line of plots with a common y axis.
 """
@@ -19,7 +19,7 @@ logger = mozaik.getMozaikLogger()
 
 
 class LinePlot(Parameterized):
-        """
+        r"""
         Plot multiple plots with common x or y axis in a row or column. The user has to specify 
         the function. This one has to return a list of tuples, each containing:
         
@@ -58,7 +58,7 @@ class LinePlot(Parameterized):
                                          doc="Space to be reserved on the right side of the subplot, defined as fraction of the subplot.")
 
         def make_line_plot(self, subplotspec):
-            """
+            r"""
             Call to execute the line plot.
 
             Parameters
@@ -113,7 +113,7 @@ class LinePlot(Parameterized):
 
 
 class PerDSVPlot(LinePlot):
-    """
+    r"""
     This is a LinePlot that automatically partitions the datastore view based
     on some rules, and than executes the individual plots on the line over
     the individual DSVs.
@@ -142,7 +142,7 @@ class PerDSVPlot(LinePlot):
 
 
 class PerStimulusPlot(PerDSVPlot):
-    """
+    r"""
     Line plot where each plot corresponds to stimulus with the same parameter
     except trials.
 
@@ -238,7 +238,7 @@ class PerStimulusPlot(PerDSVPlot):
 
 
 class PerStimulusADSPlot(PerStimulusPlot):
-      """
+      r"""
       As PerStimulusPlot, but partitions the ADS not recordings. 
       """
       def _get_stimulus_ids(self):
@@ -253,7 +253,7 @@ class PerStimulusADSPlot(PerStimulusPlot):
 
 
 class ADSGridPlot(Parameterized):
-    """
+    r"""
     Set of plots that are placed on a grid, that vary in two parameters and can have shared x or y axis (only at the level of labels for now).
     
 
@@ -310,7 +310,7 @@ class ADSGridPlot(Parameterized):
         
     
     def make_grid_plot(self, subplotspec):
-        """
+        r"""
         Call to execute the grid plot.
 
         Parameters
@@ -355,7 +355,7 @@ class ADSGridPlot(Parameterized):
         return self.function(dsv,gs)
 
 class MultipleFilesPlot(Parameterized):
-        """
+        r"""
         Plot multiple plots that will be saved in different files. The user has to specify 
         the function. This one has to return a list of tuples, each containing:
         

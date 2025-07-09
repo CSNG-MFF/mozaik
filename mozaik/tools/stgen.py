@@ -8,7 +8,7 @@ import mozaik
 logger = mozaik.getMozaikLogger()
 
 class SpikeTrain(object):
-    """
+    r"""
     SpikeTrain(spikes_times, t_start=None, t_stop=None)
     This class defines a spike train as a list of times events.
 
@@ -46,7 +46,7 @@ class SpikeTrain(object):
     def __init__(self, spike_times, t_start=None, t_stop=None):
         #TODO: add information about sampling rate at time of creation
 
-        """
+        r"""
         Constructor of the SpikeTrain object
 
         See Also
@@ -124,7 +124,7 @@ class SpikeTrain(object):
         return self.spike_times[i:j]
 
     def is_equal(self, spktrain):
-        """
+        r"""
         Return True if the SpikeTrain object is equal to one other SpikeTrain, i.e
         if they have same time parameters and same spikes_times
 
@@ -144,7 +144,7 @@ class SpikeTrain(object):
         return numpy.all(self.spike_times == spktrain.spike_times) and test
 
     def copy(self):
-        """
+        r"""
         Return a copy of the SpikeTrain object
         """
         return SpikeTrain(self.spike_times, self.t_start, self.t_stop)
@@ -162,7 +162,7 @@ class SpikeTrain(object):
 class StGen:
 
     def __init__(self, rng=None, seed=None):
-        """ 
+        r""" 
         Stochastic Process Generator
         ============================
 
@@ -214,7 +214,7 @@ class StGen:
 
 
     def poisson_generator(self, rate, t_start=0.0, t_stop=1000.0, array=False,debug=False):
-        """
+        r"""
         Returns a SpikeTrain whose spikes are a realization of a Poisson process
         with the given rate (Hz) and stopping time t_stop (milliseconds).
 
@@ -299,7 +299,7 @@ class StGen:
 
             
     def inh_poisson_generator(self, rate, t, t_stop, array=False):
-        """
+        r"""
         Returns a SpikeTrain whose spikes are a realization of an inhomogeneous 
         poisson process (dynamic rate). The implementation uses the thinning 
         method, as presented in the references.

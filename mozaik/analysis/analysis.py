@@ -37,7 +37,7 @@ from builtins import zip
 logger = mozaik.getMozaikLogger()
 
 class Analysis(ParametrizedObject):
-    """
+    r"""
     The analysis interface.
 
     Each mozaik analysis is a subclass of this class and is required to implement
@@ -50,7 +50,7 @@ class Analysis(ParametrizedObject):
     Parameters
     ----------
 
-    
+
     datastore : DataStoreView
         The datastore from which to pull data.
 
@@ -72,7 +72,7 @@ class Analysis(ParametrizedObject):
             self.tags = tags
 
     def analyse(self):
-        """
+        r"""
         This is the function calls to perform the analysis.
         """
         t1 = time.time()
@@ -83,7 +83,7 @@ class Analysis(ParametrizedObject):
                        + str(t2-t1) + 'seconds')
 
     def perform_analysis(self):
-        """
+        r"""
         This is an abstract function that each analysis class has to implement. It
         contains the code performing the analysis.
         """
@@ -94,7 +94,7 @@ class Analysis(ParametrizedObject):
 
 
 class TrialAveragedFiringRate(Analysis):
-    """
+    r"""
     This analysis takes each recording in DSV that has been done in response to stimulus type 'stimulus_type' 
     and calculates the average (over trials) number of spikes. For each set of equal recordings (except trial) it creates one PerNeuronValue 
     `AnalysisDataStructure` instance containing the trial averaged firing rate per each recorded 
@@ -139,7 +139,7 @@ class TrialAveragedFiringRate(Analysis):
                                    period=None))
 
 class ParameterAveragedFiringRate(Analysis):
-    """
+    r"""
     This analysis takes each recording in DSV that has been done in response to stimulus type 'stimulus_type' 
     and calculates the average (over the set of parameters specified) number of spikes. For each set of equal recordings (except the specified parameters) it creates one PerNeuronValue 
     `AnalysisDataStructure` instance containing the trial averaged firing rate per each recorded 
@@ -187,7 +187,7 @@ class ParameterAveragedFiringRate(Analysis):
                                    period=None))
 
 class FiringRate(Analysis):
-    """
+    r"""
     This analysis takes each recording in DSV that has been done in response to stimulus type 'stimulus_type' 
     and calculates the average number of spikes. For each set of equal recordings it creates one PerNeuronValue 
     `AnalysisDataStructure` instance containing the firing rate per each recorded 
@@ -216,7 +216,7 @@ class FiringRate(Analysis):
 
 
 class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
-    """
+    r"""
     Calculates a preference and selectvitiy tuning of a periodic variable via vector average method.
     
     This analysis takes from the DSV all `PerNeuronValues`.
@@ -301,7 +301,7 @@ class PeriodicTuningCurvePreferenceAndSelectivity_VectorAverage(Analysis):
 
 
 class GSTA(Analysis):
-    """
+    r"""
     Computes conductance spike triggered average, it uses all recordings present in the DSV for the given neruon.
     
     Other parameters
@@ -388,7 +388,7 @@ class GSTA(Analysis):
 
 
 class TrialToTrialCrossCorrelationOfAnalogSignalList(Analysis):
-    """
+    r"""
     Computes the cross-correlation between identical AnalogSignalList ADSs associated with different trials.
 
     Takes all the responses in the datastore, and for each group of AnalogSignalList ADSs that is identical except the 
@@ -467,7 +467,7 @@ class TrialToTrialCrossCorrelationOfAnalogSignalList(Analysis):
         return cc
 
 class TrialAveragedCorrectedCrossCorrelation(Analysis):
-      """
+      r"""
       It computes the cross-correlation between different AnalogSignalList but shifted across trials, 
       in order to avoid covariations introduced by simultaneous stimulation.
 
@@ -604,7 +604,7 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
               )
                 
       def cross_correlation( self, reference, target, bins, bin_length ):
-          """
+          r"""
           The function returns the cross-correlation of the spiketrains with bin length bin_length.
           
           Parameters
@@ -643,7 +643,7 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
 
 
 class TrialVariability(Analysis):
-      """
+      r"""
       For each neuron it calculates the trial-to-trial variability of Vm or conductance (depending on parameters) for all recording in the datastore, 
       and for all AnalogSignalList ADS in the datastore.
       
@@ -726,7 +726,7 @@ class TrialVariability(Analysis):
 
 
 class TrialMean(Analysis):
-      """
+      r"""
       For each neuron it calculates the mean over trials of Vm or conductance (depending on parameters) for all recording in the datastore.
       In addition it calculated the trial average for the follwoing analysis data_structures: AnalogSignalList, PerNeuronValue, PerNeuronPairValue
 
@@ -825,7 +825,7 @@ class TrialMean(Analysis):
 
 
 class GaussianTuningCurveFit(Analysis):
-      """
+      r"""
       Fits each tuning curve with a gaussian.
       
       It takes a dsv containing some PerNeuronValues.
@@ -946,7 +946,7 @@ class GaussianTuningCurveFit(Analysis):
 
 
 class PSTH(Analysis):
-      """
+      r"""
       For each recording in the datastore view it creates an AnalogSignalList containing the PSTH of the neuron
       using the bin length `required_parameters.bin_length`.
       
@@ -978,7 +978,7 @@ class PSTH(Analysis):
                                          stimulus_id=str(st)))
 
 class PSTHLowRAM(Analysis):
-      """
+      r"""
       For each recording in the datastore view it creates an AnalogSignalList containing the PSTH of the neuron
       using the bin length `required_parameters.bin_length`.
       Release the mozaik segments once the PSTH are computed to spare some RAM
@@ -1014,7 +1014,7 @@ class PSTHLowRAM(Analysis):
 
 
 class SpikeCount(Analysis):
-      """
+      r"""
       For each recording in the datastore view it creates an AnalogSignalList containing the spike count per bin of the neuron
       using the bin length `required_parameters.bin_length`. This is the same as PSTH, except in PSTH the spike counts are re-normalized
       to form instantaneous firing rate.
@@ -1050,7 +1050,7 @@ class SpikeCount(Analysis):
 
 
 class TemporalBinAverage(Analysis):
-      """
+      r"""
       For each recording or AnalogSingalList ADS `with x_axis_name`='time' in the datastore `TemporalBinAverage` creates a new
       AnalogSingalList, containing a down-sampled version of the signal (vm, conductances or the AnalogSingalList), such that it will
       bin the time axis with bin length `required_parameters.bin_length` and make average for each bin.
@@ -1102,7 +1102,7 @@ class TemporalBinAverage(Analysis):
 
 
 class ActionPotentialRemoval(Analysis):
-      """
+      r"""
       For each recording in the datastore view it creates an AnalogSignalList containing the VMs with 
       the spikes removed and sends it to the datastore. 
       
@@ -1163,7 +1163,7 @@ class ActionPotentialRemoval(Analysis):
       
                 
 class Irregularity(Analysis):
-      """
+      r"""
       Irregularity as defined in:
       Kumar, A., Schrader, S., Aertsen, A., & Rotter, S. (2008). The high-conductance state of cortical networks. Neural computation, 20(1), 1-43. 
       It is the square of inter spike interval coefficient of variation.
@@ -1196,7 +1196,7 @@ class Irregularity(Analysis):
 
 
 class NeuronToNeuronAnalogSignalCorrelations(Analysis):
-      """
+      r"""
       Calculates the pairwise correlation of AnalogSignal object for each pair of neurons.
       It creates one PerNeuronPairValue for each AnalogSignalList ADS present in the DSV.
       
@@ -1226,7 +1226,7 @@ class NeuronToNeuronAnalogSignalCorrelations(Analysis):
 
 
 class PopulationMeanAndVar(Analysis):
-      """
+      r"""
       Calculates the mean value accross population of a quantity. Currently it can process PerNeuronValues , PerNeuronPairValue, and AnalogSignalList ADS.
       
       For periodic variables, the mean is correctly handled, but variance is not computed.
@@ -1291,7 +1291,7 @@ class PopulationMeanAndVar(Analysis):
                                                                 stimulus_id=ads.stimulus_id))
 
 class PopulationMedian(Analysis):
-      """
+      r"""
       Calculates the meddian value accross population of a quantity. Currently it can process PerNeuronValues , PerNeuronPairValue.
 
       Periodic variables are not supported.
@@ -1307,7 +1307,7 @@ class PopulationMedian(Analysis):
 
 
 class TemporalSTD(Analysis):
-      """
+      r"""
       Calculates the standard deviation  of vm and conductances over time windows for each neuron, and averages them for the time course of the whole stimulus.
       Then compute the mean and the standard deviation for each neurons over trials
       It stores them in PerNeuronValue datastructures (one for exc. one for inh. conductances and one for vm).
@@ -1380,7 +1380,7 @@ class TemporalSTD(Analysis):
 
 
 class Analog_MeanSTDAndFanoFactor(Analysis):
-      """
+      r"""
       Calculates the mean, standard deviation and fano-factor of vm and conductances for each neuron, and averages them over trials. 
       It stores them in PerNeuronValue datastructures (one for exc. one for inh. conductances and one for vm).
       
@@ -1444,7 +1444,7 @@ class Analog_MeanSTDAndFanoFactor(Analysis):
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(signals_fano_factor,asl.ids,asl.y_axis_units,value_name = 'FanoFactor of '+ asl.y_axis_name,sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=asl.stimulus_id))
 
 class Analog_TrialToTrialSTD(Analysis):
-      """
+      r"""
       Calculates the trial-to-trial standard deviation of vm and conductances for each neuron for each time point and average it over the whole duration of the stimulus.
       It stores them in PerNeuronValue datastructures (one for exc. one for inh. conductances and one for vm).
 
@@ -1485,7 +1485,7 @@ class Analog_TrialToTrialSTD(Analysis):
 
 
 class AnalogSignal_PerNeuronMeanVar(Analysis):
-      """
+      r"""
       Calculates the mean, and variance of AnalogSignal for each neuron. 
       It stores them in PerNeuronValue datastructures, one for mean one for variance.
       
@@ -1510,7 +1510,7 @@ class AnalogSignal_PerNeuronMeanVar(Analysis):
 
 
 class TrialAveragedVarianceAndVarianceRatioOfConductances(Analysis):
-      """
+      r"""
       Calculates the variance of the excitatory and inhibitory conductances and their ratios, and averages across trials, for all neurons and for all recordings in the datastore.
       Also the ratio of the means is calculated.
       
@@ -1546,7 +1546,7 @@ class TrialAveragedVarianceAndVarianceRatioOfConductances(Analysis):
                     
 
 class CrossCorrelationOfExcitatoryAndInhibitoryConductances(Analysis):
-      """
+      r"""
       Calculates the cross-correlation between excitatory and inhibitory conductance of each neuron, averaged over the trials of the stimulus.
       
       Notes
@@ -1595,7 +1595,7 @@ class CrossCorrelationOfExcitatoryAndInhibitoryConductances(Analysis):
                                          stimulus_id=str(st)))
 
 class AnalogSignal_PerNeuronBetweenSignalCorrelation(Analysis):
-      """
+      r"""
       Calculates the correlation between two signals (defined by the names of the two values) for each two AnalogSignalList
       that contain those value names, and otherwise match in parameters.
       """
@@ -1638,7 +1638,7 @@ class AnalogSignal_PerNeuronBetweenSignalCorrelation(Analysis):
 
 
 class TrialAveragedSparseness(Analysis):
-    """
+    r"""
     Sparseness measure for one-sided distributions
     
     Activity ratio is computed, it has a maximum value of 1.0 when each stimulus or frame receives equal numbers of spikes, 
@@ -1685,7 +1685,7 @@ class TrialAveragedSparseness(Analysis):
 
 
 class SubtractPNVfromPNVS(Analysis):
-      """
+      r"""
       Takes datastore, and from each PerNeuronValue it subtracts the PerNeuronValue supplied in parameters, and saves the new PNVs into the datastore.
       """
 
@@ -1702,7 +1702,7 @@ class SubtractPNVfromPNVS(Analysis):
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(sub,p.ids,p.value_units,value_name = p.value_name + '-' + self.pnv.value_name,sheet_name=sheet,tags=self.tags+p.tags,period=p.period,analysis_algorithm=self.__class__.__name__,stimulus_id=p.stimulus_id))        
 
 class AddPNVfromPNVS(Analysis):
-      """
+      r"""
       Takes datastore, and it adds to each PerNeuronValue in it a PerNeuronValue supplied in parameters, and saves the new PNVs into the datastore.
       """
 
@@ -1720,7 +1720,7 @@ class AddPNVfromPNVS(Analysis):
 
 
 class OperationPNVfromPNVS(Analysis):
-      """
+      r"""
       Takes datastore, and for each PerNeuronValue A in it it peformes an operation with first argument A and second the PerNeuronValue supplied in parameters.
       It saves the newly created PNVs into the datastore.
       """
@@ -1743,7 +1743,7 @@ class OperationPNVfromPNVS(Analysis):
 
 
 class TrialToTrialFanoFactorOfAnalogSignal(Analysis):
-      """
+      r"""
       This is a generalization of the trial-to-trial factor analysis done in 
       Baudot, P., Levy, M., Marre, O., Monier, C., Pananceau, M., & FrÃ©gnac, Y. (2013). Animation of natural scene by virtual eye-movements evokes high precision and low noise in V1 neurons. Frontiers in neural circuits, 7(December), 206. doi:10.3389/fncir.2013.00206
       
@@ -1794,7 +1794,7 @@ class TrialToTrialFanoFactorOfAnalogSignal(Analysis):
 
 
 class CircularVarianceOfTuningCurve(Analysis):
-      """
+      r"""
       Calculates circular variance (see for example [1] for defintion) of each tuning curve present in DSV. 
       
       It takes a dsv containing some PerNeuronValues.
@@ -1860,7 +1860,7 @@ class CircularVarianceOfTuningCurve(Analysis):
                         
 
 class NakaRushtonTuningCurveFit(Analysis):
-      """
+      r"""
       Fits each tuning curve with a gaussian.
       
       It takes a dsv containing some PerNeuronValues.

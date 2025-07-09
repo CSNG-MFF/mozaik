@@ -23,7 +23,7 @@ logger = mozaik.getMozaikLogger()
 
 
 def meshgrid3D(x, y, z):
-    """A slimmed-down version of http://www.scipy.org/scipy/numpy/attachment/ticket/966/meshgrid.py"""
+    r"""A slimmed-down version of http://www.scipy.org/scipy/numpy/attachment/ticket/966/meshgrid.py"""
     x = numpy.asarray(x)
     y = numpy.asarray(y)
     z = numpy.asarray(z)
@@ -35,7 +35,7 @@ def meshgrid3D(x, y, z):
 
 
 class SpatioTemporalReceptiveField(object):
-    """
+    r"""
     Implements spatio-temporal receptive field.
 
     Parameters
@@ -75,7 +75,7 @@ class SpatioTemporalReceptiveField(object):
         self.temporal_resolution = numpy.inf
 
     def quantize(self, dx, dy, dt):
-        """
+        r"""
         Quantizes the the receptive field. 
         
         Parameters
@@ -132,7 +132,7 @@ class SpatioTemporalReceptiveField(object):
 
     @property
     def kernel_duration(self):
-        """
+        r"""
         Returns the temporal duration of the quantized kernel.
 
         Notes
@@ -156,7 +156,7 @@ class SpatioTemporalReceptiveField(object):
 
 
 class CellWithReceptiveField(object):
-    """
+    r"""
     A model of the input current to an LGN relay cell, that multiplies, in space
     and time, the luminance values impinging on its receptive field by a
     spatiotemporal kernel. Spatial summation over the result of this
@@ -217,7 +217,7 @@ class CellWithReceptiveField(object):
         #logger.debug("  " + str(receptive_field))
 
     def initialize(self, background_luminance, stimulus_duration):
-        """
+        r"""
         Create the array that will contain the current response, and set the
         initial values on the assumption that the system was looking at a blank
         screen of constant luminance prior to stimulus onset.
@@ -262,7 +262,7 @@ class CellWithReceptiveField(object):
     
 
     def view(self):
-        """
+        r"""
         Look at the visual space and update t
         Where the kernel temporal resolution is the same as the frame duration
         (visual space update interval):
@@ -300,14 +300,14 @@ class CellWithReceptiveField(object):
         self.i += self.update_factor  # we assume there is only ever 1 visual space used between initializations
 
     def gain_function(self, response, gain, scaler):
-        """
+        r"""
         Scale the response by a symmetric Naka-Rushton function to
         achieve the variable luminance/contrast gain observed in the retina.
         """
         return gain * response / (numpy.abs(response) + scaler)
 
     def response_current(self):
-        """
+        r"""
         Multiply the response (units of luminance (cd/m²) if we assume the
         kernel values are dimensionless) by the 'gain', to produce a current in
         nA. Returns a dictionary containing 'times' and 'amplitudes'.
@@ -332,7 +332,7 @@ class CellWithReceptiveField(object):
 
 
 class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
-    """
+    r"""
     Retina/LGN model with spatiotemporal receptive field.
     
     Parameters
@@ -502,7 +502,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         self.rf = {'X_ON': rf_ON, 'X_OFF': rf_OFF}                
 
     def get_cache(self, stimulus_id):
-        """
+        r"""
         Returns the cached calculated responses due to stimulus corresponding to `stimulus_id`.
         
         Parameters
@@ -541,7 +541,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
                 return None
 
     def write_cache(self, stimulus_id, input_currents, retinal_input):
-        """
+        r"""
         Stores input currents and the retinal input corresponding to a given stimulus.
         
         Parameters
@@ -576,7 +576,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
             f1.close()
 
     def process_input(self, visual_space, stimulus, duration=None, offset=0):
-        """
+        r"""
         Present a visual stimulus to the model, and create the LGN output
         (relay) neurons.
         
@@ -679,7 +679,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
         return retinal_input
 
     def provide_null_input(self, visual_space, duration=None, offset=0):
-        """
+        r"""
         This function exists for optimization purposes. It is the analog to 
         :func:.`mozaik.retinal.SpatioTemporalFilterRetinaLGN.process_input` for the 
         special case when blank stimulus is shown.
@@ -752,7 +752,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
 
     
     def _calculate_input_currents(self, visual_space, duration):
-        """
+        r"""
         Calculate the input currents for all cells.
         """
         assert isinstance(visual_space, VisualSpace)

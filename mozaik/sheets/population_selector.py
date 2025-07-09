@@ -1,4 +1,4 @@
-"""
+r"""
 This module contains definition of the PopulationSelector API.
 It is used as mechanism for selecting subpopulations of neurons within
 Sheets. The most typical use is for selecting neurons for recordings, where 
@@ -16,7 +16,7 @@ import mozaik
 logger = mozaik.getMozaikLogger()
 
 class PopulationSelector(ParametrizedObject):
-    """
+    r"""
     The PopulationSelector specifies which cells should be selected from population. 
     
     It defines only one function: generate_idd_list_of_neurons that should 
@@ -59,7 +59,7 @@ class RCAll(PopulationSelector):
           return self.sheet.pop.all_cells.astype(int)
 
 class RCRandomN(PopulationSelector):
-      """
+      r"""
       Select random neurons.  
 
       This PopulationSelector selects *num_of_cells* random neurons from the given population.
@@ -82,7 +82,7 @@ class RCRandomN(PopulationSelector):
           return z[:self.parameters.num_of_cells]
 
 class RCRandomPercentage(PopulationSelector):
-      """
+      r"""
       Select random neurons.
 
       This PopulationSelector selects *percentage* of randomly chosen neurons from the given population.
@@ -107,7 +107,7 @@ class RCRandomPercentage(PopulationSelector):
 
           
 class RCGrid(PopulationSelector):
-      """
+      r"""
       Select neurons on a grid.
 
       This PopulationSelector assumes a grid of points ('electrodes') with a 
@@ -153,7 +153,7 @@ class RCGrid(PopulationSelector):
           return list(set(picked))
 
 class RCGridDegree(PopulationSelector):
-      """
+      r"""
       Select neurons on a grid which coordinates are in degree of visual space.
 
       This PopulationSelector assumes a grid of points ('electrodes') with a
@@ -198,7 +198,7 @@ class RCGridDegree(PopulationSelector):
           return list(set(picked))
 
 class SimilarAnnotationSelector(PopulationSelector):
-      """
+      r"""
       Choose neurons based on annotations info.
 
       This PopulationSelector picks random *num_of_cells* neurons whose 
@@ -251,7 +251,7 @@ class SimilarAnnotationSelector(PopulationSelector):
           
           
 class SimilarAnnotationSelectorRegion(SimilarAnnotationSelector):
-      """
+      r"""
       Choose neurons based on annotations info.
 
       This PopulationSelector picks random *num_of_cells* neurons whose 

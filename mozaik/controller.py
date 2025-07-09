@@ -20,11 +20,11 @@ from parameters import ParameterSet
 logger = mozaik.getMozaikLogger()
 
 class Global:
-    """global variable container currently only containing the root_directory variable that points to the root directory of the model specification"""
+    r"""global variable container currently only containing the root_directory variable that points to the root directory of the model specification"""
     root_directory = './'
 
 class FancyFormatter(logging.Formatter):
-    """
+    r"""
     A log formatter that colours and indents the log message depending on the level.
     """
     
@@ -70,7 +70,7 @@ def init_logging(filename, file_level=logging.INFO, console_level=logging.WARNIN
 
 
 def setup_logging():
-    """
+    r"""
     This functions sets up logging.
     """
     if mozaik.mpi_comm:
@@ -82,8 +82,7 @@ def setup_logging():
 
 
 def prepare_workflow(simulation_name, model_class):
-    """
-    
+    r"""
     Executes the following preparatory steps for simulation workflow:
 
     - Load simulation parameters
@@ -96,7 +95,6 @@ def prepare_workflow(simulation_name, model_class):
     Returns
     -------
 
-    
     sim : module
         NEST module, to use for simulation
 
@@ -176,7 +174,7 @@ def prepare_workflow(simulation_name, model_class):
     return sim, num_threads, parameters
 
 def run_workflow(simulation_name, model_class, create_experiments):
-    """
+    r"""
     This is the main function that executes a workflow.
     It expects it gets the simulation, class of the model, and a function that will create_experiments.
     The create experiments function get a instance of a model as the only parameter and it is expected to return
@@ -218,7 +216,7 @@ def run_workflow(simulation_name, model_class, create_experiments):
     return (data_store, model)
 
 def run_experiments(model,experiment_list,parameters,load_from=None):
-    """
+    r"""
     This is function called by :func:.run_workflow that executes the experiments in the `experiment_list` over the model. 
     Alternatively, if load_from is specified it will load an existing simulation from the path specified in load_from.
     

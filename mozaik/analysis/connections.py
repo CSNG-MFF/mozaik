@@ -12,7 +12,7 @@ from builtins import zip
 logger = mozaik.getMozaikLogger()
 
 class InputAnalysis(Analysis):
-    """
+    r"""
     Calculate the input received by each neuron included in the analysis from each connection type projection to these neurons 
     The input is here calculated as the sum of the product of the firing rate of the pre-synaptic neurons with the weight of the connections
     This analysis takes into account that there could be several connections of the same type (for example several input connections), but separate

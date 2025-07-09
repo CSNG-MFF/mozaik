@@ -14,7 +14,7 @@ logger = mozaik.getMozaikLogger()
 
 
 class Experiment(ParametrizedObject):
-    """
+    r"""
     The abastract class for an experiment. 
     
     The experiment defines the list of stimuli that it needs to present to the brain.These stimuli presentations have to be independent - e.g. should not
@@ -116,7 +116,7 @@ class Experiment(ParametrizedObject):
         pass
 
 class PoissonNetworkKick(Experiment):
-    """
+    r"""
     This experiment injects Poisson spike trains into the target popullation.
     
     This experiment does not show any stimulus.
@@ -219,7 +219,7 @@ class InjTest(Experiment):
 
         
 class NoStimulation(Experiment):
-    """ 
+    r""" 
     This is a special experiment that does not show any stimulus for the duration of the experiment. 
 
     This experiment is universal, in that it is not dependent on what sensory modality/model is used in the

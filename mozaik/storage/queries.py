@@ -1,4 +1,4 @@
-"""
+r"""
 This module contain query manipulation system that is used to filter information stored in data store (:class:`.DataStore`).
 
 The basic principle is that each query takes a existing :class:`.DataSore` (or :class:`.DataStoreView`) as an input and 
@@ -14,7 +14,7 @@ import mozaik
 logger = mozaik.getMozaikLogger()
 
 class Query(ParametrizedObject):
-    """
+    r"""
     Query accepts a :class:`.DataStoreView` and returns a :class:`.DataStoreView` (or set of DSVs) with potentially
     reduced set of recorded data or analysis results
 
@@ -41,7 +41,7 @@ class Query(ParametrizedObject):
 
 ########################################################################
 def param_filter_query(dsv,ads_unique=False,rec_unique=False,negative=False,**kwargs):
-    """
+    r"""
     It will return DSV with only recordings and ADSs with mozaik parameters 
     whose values match the parameter values combinations provided in `kwargs`. 
     
@@ -139,7 +139,7 @@ def param_filter_query(dsv,ads_unique=False,rec_unique=False,negative=False,**kw
     return new_dsv
 
 class ParamFilterQuery(Query):
-    """
+    r"""
     See :func:`.param_filter_query` for description.
     
     Other parameters
@@ -170,7 +170,7 @@ class ParamFilterQuery(Query):
 
 ########################################################################
 def tag_based_query(dsv, tags):
-        """
+        r"""
         This query filters out all AnalysisDataStructure's corresponding to the given tags.
         
         Parameters
@@ -200,7 +200,7 @@ def _tag_based_query(d, tags):
     return nd
 
 class TagBasedQuery(Query):
-    """
+    r"""
     See  :func:`.tag_based_query`.
     
     Parameters
@@ -221,7 +221,7 @@ class TagBasedQuery(Query):
 
 ########################################################################
 def partition_by_stimulus_paramter_query(dsv, parameter_list):
-    """
+    r"""
     This query will take all recordings and return list of DataStoreViews
     each holding recordings measured to the same stimulus with exception of
     the parameters reference by parameter_list.
@@ -256,7 +256,7 @@ def partition_by_stimulus_paramter_query(dsv, parameter_list):
 
 
 class PartitionByStimulusParamterQuery(Query):
-    """
+    r"""
     See  :func:`.partition_by_stimulus_paramter_query`.
     
     Other parameters
@@ -279,7 +279,7 @@ class PartitionByStimulusParamterQuery(Query):
 
 ######################################################################################################################################
 def partition_analysis_results_by_parameters_query(dsv,parameter_list=None,excpt=False):
-        """
+        r"""
         This query will take all analysis results and return list of DataStoreViews
         each holding analysis results that have the same values of the parameters 
         except those in in parameter_list.
@@ -321,7 +321,7 @@ def partition_analysis_results_by_parameters_query(dsv,parameter_list=None,excpt
         return dsvs
 
 class PartitionAnalysisResultsByParameterNameQuery(Query):
-    """
+    r"""
     See  :func:`.partition_analysis_results_by_parameters_query`.
     
     Other parameters
@@ -348,7 +348,7 @@ class PartitionAnalysisResultsByParameterNameQuery(Query):
 
 ######################################################################################################################################
 def partition_analysis_results_by_stimulus_parameters_query(dsv,parameter_list=None,excpt=False):
-        """
+        r"""
         This query will take all analysis results and return list of DataStoreViews
         each holding analysis results that have the same values of
         of stimulus parameters in parameter_list.
@@ -399,7 +399,7 @@ def partition_analysis_results_by_stimulus_parameters_query(dsv,parameter_list=N
         return dsvs
 
 class PartitionAnalysisResultsByStimulusParameterQuery(Query):
-    """
+    r"""
     See  :func:`.partition_analysis_results_by_stimulus_parameters_query`.
     
     Other parameters
@@ -434,7 +434,7 @@ class PartitionAnalysisResultsByStimulusParameterQuery(Query):
 
 ########################################################################
 def equal_stimulus_type(dsv):
-    """
+    r"""
     This functions returns True if DSV contains only recordings associated
     with the same stimulus type. Otherwise False.
     
@@ -444,7 +444,7 @@ def equal_stimulus_type(dsv):
 
 ########################################################################
 def equal_stimulus(dsv,except_params):
-    """
+    r"""
     This functions returns True if DSV contains only recordings associated
     with stimuli of identical parameter values, with the exception of parameters in *except_params*
     
@@ -455,7 +455,7 @@ def equal_stimulus(dsv,except_params):
 
 ########################################################################
 def equal_ads(dsv,params=None,except_params=None):
-    """
+    r"""
     This functions returns true if DSV contains only ADS of the same kind
     and with the same values for parameters supplied in *params* or 
     with the exception of parameters listed in *except_params*. 
@@ -467,7 +467,7 @@ def equal_ads(dsv,params=None,except_params=None):
 
 ########################################################################
 def ads_with_equal_stimuli(dsv,params=None,except_params=None):
-    """
+    r"""
     This functions returns true if DSV contains only ADS associated with stimuli 
     of the same kind and with the same values for parameters supplied in *params* or 
     with the exception of parameters listed in *except_params*. 
@@ -479,7 +479,7 @@ def ads_with_equal_stimuli(dsv,params=None,except_params=None):
 
 ########################################################################
 def equal_ads_type(dsv):
-    """
+    r"""
     Returns True if the dsv contains ADS of the same type. Otherwise False.
     """
     return matching_parametrized_object_params(dsv.analysis_results,params=['name'])
@@ -487,7 +487,7 @@ def equal_ads_type(dsv):
 
 ########################################################################
 def ads_with_equal_stimulus_type(dsv, allow_None=False):
-    """
+    r"""
     This functions tests whether DSV contains only ADS associated
     with the same stimulus type.
     

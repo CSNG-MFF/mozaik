@@ -23,7 +23,7 @@ def xy2ij(coordinates):
 
 
 class InputSpace(ParametrizedObject):
-    """
+    r"""
     A class to structure and unify operations taking place in the respective sensory space, such as stimulus presentation.
     
     The basic idea of the InputSpace API is following:
@@ -116,7 +116,7 @@ class InputSpace(ParametrizedObject):
 
 
 class VisualSpace(InputSpace):
-    """
+    r"""
     A class to structure and simplify operations taking place in visual
     space, such as stimulus presentation.
     
@@ -155,7 +155,7 @@ class VisualSpace(InputSpace):
         self.input = None
 
     def view(self, region, pixel_size):
-        """
+        r"""
         Show the scene within a specific region.
         
         Parameters
@@ -211,7 +211,7 @@ class VisualSpace(InputSpace):
 
 
 class VisualRegion(object):
-    """
+    r"""
     A rectangular region of visual space.
     
     Parameters

@@ -1,5 +1,5 @@
 # encoding: utf-8
-"""
+r"""
 This module contains visualization code not conforming the Plotting framework
 defined in the mozaik.visualization.plotting module.
 
@@ -12,7 +12,7 @@ import pylab
 
 def plot_layer_activity(sheet, value_to_plot, cortical_coordinates=False,
                         labels=True):
-    """
+    r"""
     This function creates a scatter plot, where each point corresponds to a
     neuron (in cortical or visual space coordinates) and color of each point
     corresponds to the values_to_plot.

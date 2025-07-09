@@ -17,7 +17,7 @@ logger = mozaik.getMozaikLogger()
 
 
 def psth(spike_list, bin_length,normalize=True):
-    """
+    r"""
     The function returns the psth of the spiketrains with bin length bin_length.
     
     Parameters
@@ -61,7 +61,7 @@ def psth(spike_list, bin_length,normalize=True):
 
 
 def psth_across_trials(spike_trials, bin_length):
-    """
+    r"""
     It returns PSTH averaged across the spiketrains
     
     
@@ -89,7 +89,7 @@ def psth_across_trials(spike_trials, bin_length):
     return sum([psth(st, bin_length) for st in spike_trials])/len(spike_trials)
 
 def pnv_datastore_view_to_tensor(pnv_view):
-    """
+    r"""
     Assuming:
     * the pnv_view contains a set of identical pnvs to identical stimuli with the exception of variation of some stimulus parameters
     * all values of the varied parameters lay on a n-dimensional grid where n is the number of parameters
@@ -135,7 +135,7 @@ def pnv_datastore_view_to_tensor(pnv_view):
     return (tensor,params)
 
 def pnv_datastore_view_to_tensor(pnv_view,allow_missing=False,pickle_file=None):
-    """
+    r"""
     Assuming:
     
     * the pnv_view contains a set of identical pnvs to identical stimuli with the exception of variation of some stimulus parameters

@@ -13,7 +13,7 @@ from mozaik.sheets import Sheet
 logger = mozaik.getMozaikLogger()
 
 class RetinalUniformSheet(Sheet):
-    """
+    r"""
     Retinal sheet corresponds to a sheet of retinal cells (retinal ganglion cells or photoreceptors). 
     It implicitly assumes the coordinate systems is in degress in visual field.
     
@@ -67,7 +67,7 @@ class RetinalUniformSheet(Sheet):
 
 
 class SheetWithMagnificationFactor(Sheet):
-    """
+    r"""
     A Sheet that has a magnification factor corresponding to cortical visual area.
     It interprets the coordinates system to be in degrees of visual field, but it allows
     for definition of the layer using parameters in cortical space. It offers 
@@ -101,7 +101,7 @@ class SheetWithMagnificationFactor(Sheet):
         self.magnification_factor = parameters.magnification_factor
 
     def vf_2_cs(self, degree_x, degree_y):
-        """
+        r"""
         vf_2_cs converts the position (degree_x, degree_y) in visual field to
         position in cortical space (in μm) given the magnification_factor.
         
@@ -125,7 +125,7 @@ class SheetWithMagnificationFactor(Sheet):
                 degree_y * self.magnification_factor)
 
     def cs_2_vf(self, micro_meters_x, micro_meters_y):
-        """
+        r"""
         cs_2_vf converts the position (micro_meters_x, micro_meters_y) in
         cortical space to the position in the visual field (in degrees) given
         the magnification_factor
@@ -149,7 +149,7 @@ class SheetWithMagnificationFactor(Sheet):
                 micro_meters_y / self.magnification_factor)
 
     def dvf_2_dcs(self, distance_vf):
-        """
+        r"""
         dvf_2_dcs converts the distance in visual space to the distance in
         cortical space given the magnification_factor
         
@@ -169,14 +169,14 @@ class SheetWithMagnificationFactor(Sheet):
         return distance_vf * self.magnification_factor
 
     def size_in_degrees(self):
-        """
+        r"""
         Returns the size of the sheet in cortical space (μm).
         """
         return self.cs_2_vf(self.parameters.sx, self.parameters.sy)
 
 
 class VisualCorticalUniformSheet(SheetWithMagnificationFactor):
-    """
+    r"""
     Represents a visual cortical sheet of neurons, randomly uniformly distributed in cortical space.
     
     Other parameters
@@ -218,7 +218,7 @@ class VisualCorticalUniformSheet(SheetWithMagnificationFactor):
 
 
 class VisualCorticalUniformSheet3D(VisualCorticalUniformSheet):
-    """
+    r"""
     Represents a visual cortical sheet of neurons, randomly uniformly distributed in cortical space.
     In addition to the VisualCorticalUniformSheet it adds 3rd dimension to the neurons that corresponds their depth 
     within cortical sheet (prepandicular to the cortical surface). 

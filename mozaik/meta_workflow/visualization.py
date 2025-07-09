@@ -9,7 +9,7 @@ import pickle
 from builtins import zip
         
 def single_value_visualization(simulation_name,master_results_dir,query,value_names=None,filename=None,resolution=None,treat_nan_as_zero=False,ranges={},cols=4):
-    """
+    r"""
     Visualizes all single values (or those whose names match ones in `value_names` argument)
     present in the datastores of parameter search over a fixed set of parameters. 
     
@@ -145,7 +145,7 @@ def single_value_visualization(simulation_name,master_results_dir,query,value_na
     
 
 def fixed_point_visualization(simulation_name,rate_name,master_results_dir,query,filename=None):
-    """
+    r"""
     Visualizes all single values (or those whose names match ones in `value_names` argument)
     present in the datastores of parameter search over a fixed set of parameters. 
     
@@ -198,7 +198,7 @@ def fixed_point_visualization(simulation_name,rate_name,master_results_dir,query
     
     
 def multi_curve_visualzition(simulation_name,master_results_dir,x_axis_parameter_name,query,filename=None,value_name=None,treat_nan_as_zero=False):
-    """
+    r"""
     Parameters
     ----------
     

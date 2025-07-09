@@ -12,7 +12,7 @@ import random
 
 
 class CorticalStimulationWithOptogeneticArray(Experiment):
-    """
+    r"""
     Parent class for optogenetic stimulation of cortical sheets with an array
     of light sources.
 
@@ -154,7 +154,7 @@ class CorticalStimulationWithOptogeneticArray(Experiment):
 
 
 class SingleOptogeneticArrayStimulus(CorticalStimulationWithOptogeneticArray):
-    """
+    r"""
     Optogenetic stimulation of cortical sheets with an array of light sources.
 
     Creates a array of optical stimulators covering an area of cortex, and then
@@ -257,7 +257,7 @@ class SingleOptogeneticArrayStimulus(CorticalStimulationWithOptogeneticArray):
 
 
 class OptogeneticArrayStimulusCircles(CorticalStimulationWithOptogeneticArray):
-    """
+    r"""
     Optogenetic stimulation of cortical sheets with an array of light sources,
     in the pattern of filled circles.
 
@@ -387,7 +387,7 @@ class OptogeneticArrayStimulusCircles(CorticalStimulationWithOptogeneticArray):
 
 
 class OptogeneticArrayStimulusHexagonalTiling(CorticalStimulationWithOptogeneticArray):
-    """
+    r"""
     Optogenetic stimulation of cortical sheets with an array of light sources,
     in the pattern of filled hexagons. These hexagons tile the entire span of
     the stimulation array, such that no hexagon has any parts outside of the
@@ -450,7 +450,7 @@ class OptogeneticArrayStimulusHexagonalTiling(CorticalStimulationWithOptogenetic
         are oriented such that two sides are parallel to the horizontal axis:
 
         >>>  __
-        >>> /  `\`
+        >>> /  \
         >>> \__/
 
     shuffle: bool
@@ -566,7 +566,7 @@ class OptogeneticArrayStimulusHexagonalTiling(CorticalStimulationWithOptogenetic
 
 
 class OptogeneticArrayImageStimulus(CorticalStimulationWithOptogeneticArray):
-    """
+    r"""
     Optogenetic stimulation of cortical sheets with an array of light sources,
     in the pattern of a grayscale image, stored as a .npy file containing a 2D
     numpy array, with values between 0 (black) and 1 (white). If the image has a
@@ -705,7 +705,7 @@ class OptogeneticArrayImageStimulus(CorticalStimulationWithOptogeneticArray):
 class OptogeneticArrayStimulusOrientationTuningProtocol(
     CorticalStimulationWithOptogeneticArray
 ):
-    """
+    r"""
     Optogenetic stimulation of cortical sheets with an array of light sources, with a
     pattern based on the cortical orientation map, simulating homogeneously oriented
     visual stimuli.
@@ -827,7 +827,7 @@ class OptogeneticArrayStimulusOrientationTuningProtocol(
 class OptogeneticArrayStimulusContrastBasedOrientationTuningProtocol(
     CorticalStimulationWithOptogeneticArray
 ):
-    """
+    r"""
     Optogenetic stimulation of cortical sheets with an array of light sources, with a
     pattern based on the cortical orientation map, simulating homogeneously oriented
     visual stimuli of some specific contrast.

@@ -16,7 +16,7 @@ import numpy
 logger = mozaik.getMozaikLogger()
 
 class Model(BaseComponent):
-    """
+    r"""
     Model encapsulates a mozaik model.
     
     Each mozaik model has to derive from this class,
@@ -111,7 +111,7 @@ class Model(BaseComponent):
         self.simulator_time = 0
 
     def present_stimulus_and_record(self, stimulus,artificial_stimulators):
-        """
+        r"""
         This method is the core of the model execution control. It ensures that a `stimulus` is presented
         to the model, the simulation is ran for the duration of the stimulus, and all the data recorded during 
         this period are retieved from the simulator. It also makes sure a blank stimulus preceds each stimulus presntation.
@@ -196,7 +196,7 @@ class Model(BaseComponent):
         return (segments, null_segments,sensory_input,sim_run_time,exploded)
         
     def run(self, tstop):
-        """
+        r"""
         Run's the simulation for tstop time.
         
         Parameters
@@ -221,7 +221,7 @@ class Model(BaseComponent):
         return time.time()-t0
 
     def reset(self):
-        """
+        r"""
         Rests the network. Depending on the self.parameters.reset this is done either 
         by using the pyNN `reset` function or by presenting a blank stimulus for self.parameters.null_stimulus_period
         seconds.
@@ -256,7 +256,7 @@ class Model(BaseComponent):
     
 
     def register_sheet(self, sheet):
-        """
+        r"""
         This functions has to called to add a new sheet is added to the model.
         """
         if sheet.name in self.sheets:
@@ -264,7 +264,7 @@ class Model(BaseComponent):
         self.sheets[sheet.name] = sheet
 
     def register_connector(self, connector):
-        """
+        r"""
         This functions has to called to add a new connector to the model.
         """
         
@@ -273,7 +273,7 @@ class Model(BaseComponent):
         self.connectors[connector.name] = connector
 
     def neuron_ids(self):
-        """
+        r"""
         Returns the list of ids of neurons in the model.
         """
         ids = OrderedDict()
@@ -282,7 +282,7 @@ class Model(BaseComponent):
         return ids
 
     def sheet_parameters(self):
-        """
+        r"""
         Returns the list of ids of neurons in the model.
         """
         p = OrderedDict()
@@ -292,7 +292,7 @@ class Model(BaseComponent):
 
         
     def neuron_positions(self):
-        """
+        r"""
         Returns the positions of neurons in the model. 
         The positions are return as a dictionary where each key
         corresponds to a sheet name, and the value contains a 2D array of size (2,number_of_neurons)
@@ -304,7 +304,7 @@ class Model(BaseComponent):
         return pos
 
     def neuron_annotations(self):
-        """
+        r"""
         Returns the neuron annotations, as a dictionary with sheet names as keys, and corresponding annotation
         dictionaries as values.
         """

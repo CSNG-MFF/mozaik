@@ -11,7 +11,7 @@ logger = mozaik.getMozaikLogger()
 
 
 class ModularConnectorFunction(ParametrizedObject):
-    """
+    r"""
     Abstract class defining the interface of modular connector functions.
     
     Each instance has to implement the evaluate(u) function that returns the pre-synaptic weights
@@ -27,14 +27,14 @@ class ModularConnectorFunction(ParametrizedObject):
         raise NotImplemented
 
 class ConstantModularConnectorFunction(ModularConnectorFunction):
-      """
+      r"""
       Triavial modular connection function assigning each connections the same weight
       """
       def evaluate(self,index,**params):
           return numpy.zeros(len(self.source.pop)) + 1
 
 class PyNNDistributionConnectorFunction(ModularConnectorFunction):
-      """
+      r"""
       ConnectorFunction which draws the values from the PyNNDistribution
       
       """
@@ -50,7 +50,7 @@ class PyNNDistributionConnectorFunction(ModularConnectorFunction):
 
           
 class DistanceDependentModularConnectorFunction(ModularConnectorFunction):
-    """
+    r"""
     Helper abstract class to ease the definitions of purely distance dependent connector functions.
     
     The distance is defined as the *horizontal* distance between the retinotopical positions of the neurons (one in source and one in destination sheet). 
@@ -59,7 +59,7 @@ class DistanceDependentModularConnectorFunction(ModularConnectorFunction):
     For the special case where source = target, this coresponds to the intuitive lateral distance of the neurons.
     """
     def distance_dependent_function(self,distance):
-        """
+        r"""
         The is the function, dependent only on distance that each DistanceDependentModularConnectorFunction has to implement.
         The distance can be matrix.
         """
@@ -73,7 +73,7 @@ class DistanceDependentModularConnectorFunction(ModularConnectorFunction):
         
 
 class GaussianDecayModularConnectorFunction(DistanceDependentModularConnectorFunction):
-    """
+    r"""
     Distance dependent arborization with gaussian fall-off of the connections: k * exp(-0.5*(distance/a)*2) / (a*sqrt(2*pi))
     where a = arborization_constant, k = arborization_scaler
     """
@@ -89,7 +89,7 @@ class GaussianDecayModularConnectorFunction(DistanceDependentModularConnectorFun
 
 
 class ExponentialDecayModularConnectorFunction(DistanceDependentModularConnectorFunction):
-    """
+    r"""
     Distance dependent arborization with exponential fall-off of the connections: k * exp(-distance/a)
     """
     required_parameters = ParameterSet({
@@ -104,7 +104,7 @@ class ExponentialDecayModularConnectorFunction(DistanceDependentModularConnector
 
 
 class LinearModularConnectorFunction(DistanceDependentModularConnectorFunction):
-    """
+    r"""
     Corresponds to: distance*linear_scaler + constant_scaler, where distance is in micrometers
     """
     required_parameters = ParameterSet({
@@ -117,7 +117,7 @@ class LinearModularConnectorFunction(DistanceDependentModularConnectorFunction):
 
 
 class LinearModularConnectorFunction1(DistanceDependentModularConnectorFunction):
-    """
+    r"""
     Corresponds to: distance*linear_scaler + constant_scaler, where distance is in micrometers
     """
     required_parameters = ParameterSet({
@@ -130,7 +130,7 @@ class LinearModularConnectorFunction1(DistanceDependentModularConnectorFunction)
 
 
 class HyperbolicModularConnectorFunction(DistanceDependentModularConnectorFunction):
-    """
+    r"""
     Corresponds to: exp(-alpha*sqrt(\theta^2 + distance^2)) , where distance is in micrometers
     And is the best fit I could so far find to the data from: 
     Stepanyants, A., Hirsch, J. a, Martinez, L. M., Kisvárday, Z. F., Ferecskó, A. S., & Chklovskii, D. B. (2008). 
@@ -145,7 +145,7 @@ class HyperbolicModularConnectorFunction(DistanceDependentModularConnectorFuncti
         return numpy.exp(-numpy.multiply(self.parameters.alpha,numpy.sqrt(numpy.power(self.parameters.theta,2) + numpy.power(distance,2))))
 
 class ModularNumSamplesConnectorFunction(ParametrizedObject):
-    """
+    r"""
     Abstract class defining the interface of modular connector functions for the
     number incoming connections.
     
@@ -161,7 +161,7 @@ class ModularNumSamplesConnectorFunction(ParametrizedObject):
         raise NotImplemented
 
 class ThresholdLinearModularNumSamplesConnectorFunction(ModularNumSamplesConnectorFunction):
-    """
+    r"""
     Number of incoming connection decreases quadratically when neurons are
     sufficiently close to the border (distance less than threshold).
     """
@@ -191,7 +191,7 @@ class ThresholdLinearModularNumSamplesConnectorFunction(ModularNumSamplesConnect
 
 
 class ThresholdQuadraticModularNumSamplesConnectorFunction(ModularNumSamplesConnectorFunction):
-    """
+    r"""
     Number of incoming connection decreases quadratically when neurons are
     sufficiently close to the border (distance less than threshold).
     """
@@ -220,7 +220,7 @@ class ThresholdQuadraticModularNumSamplesConnectorFunction(ModularNumSamplesConn
         return coef
 
 class ThresholdExponentialModularNumSamplesConnectorFunction(ModularNumSamplesConnectorFunction):
-    """
+    r"""
     Number of incoming connection decreases quadratically when neurons are
     sufficiently close to the border (distance less than threshold).
     """

@@ -18,7 +18,7 @@ logger = mozaik.getMozaikLogger()
 
 
 class VisualStimulus(BaseStimulus):
-    """
+    r"""
     Abstract base class for visual stimuli.
     
     This class defines all parameters common to all visual stimuli.

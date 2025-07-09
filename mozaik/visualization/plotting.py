@@ -75,7 +75,7 @@ import json
 from mozaik.tools.json_export import save_json
 
 class Plotting(ParametrizedObject):
-    """
+    r"""
     The high level Plotting API. See the module information on more detailed description.
 
     Parameters
@@ -149,7 +149,7 @@ class Plotting(ParametrizedObject):
                raise TypeError("The subplot object is not of type Plotting or SimplePlot") 
     
     def plot(self, params=None):
-        """
+        r"""
         The top level plot function. It is this function that the user will call on the plot instance to 
         execute the plotting.
         
@@ -232,7 +232,7 @@ class Plotting(ParametrizedObject):
 
 
 class PlotTuningCurve(Plotting):
-    """
+    r"""
     Plots tuning curves, one plot in line per each neuron. This plotting function assumes a set of PerNeuronValue 
     ADSs in the datastore associated with certain stimulus type. It will plot
     the values stored in these  PerNeuronValue instances (corresponding to neurons in `neurons`) across the 
@@ -575,7 +575,7 @@ class PlotTuningCurve(Plotting):
 
     
 class RasterPlot(Plotting):
-    """ 
+    r""" 
     It plots raster plots of spikes stored in the recordings.
     It assumes a datastore with a set of recordings. It will plot a line of raster 
     plots, one per each recording, showing the raster plot corresponding to the given 
@@ -646,7 +646,7 @@ class RasterPlot(Plotting):
         return l
         
 class VmPlot(Plotting):
-    """
+    r"""
     It plots the membrane potentials stored in the recordings.
     It assumes a datastore with a set of recordings. It will plot a line of vm
     plots, one per each recording, showing the vm corresponding to the given 
@@ -718,7 +718,7 @@ class VmPlot(Plotting):
 
 
 class GSynPlot(Plotting):
-    """
+    r"""
     It plots the conductances stored in the recordings.
     It assumes a datastore with a set of recordings. It will plot a line of conductance 
     plots, one per each recording, showing the excitatory and inhibitory conductances corresponding to the given 
@@ -796,8 +796,7 @@ class GSynPlot(Plotting):
 
 
 class OverviewPlot(Plotting):
-    
-    """
+    r"""
     It defines 4 (or 3 depending on the sheet_activity option) plots named: 'Activity_plot', 'Spike_plot', 'Vm_plot', 'Conductance_plot'
     corresponding to the ActivityMovie RasterPlot, VmPlot, GSynPlot plots respectively. And than a line of the with the extensions .Plot1 ... .PlotN 
     
@@ -869,7 +868,7 @@ class OverviewPlot(Plotting):
 
 
 class AnalogSignalListPlot(Plotting):
-    """
+    r"""
     This plot shows a line of plots each showing analog signals for different neurons (in the same plot), one plot per each AnalogSignalList instance
     present in the datastore.
     
@@ -927,7 +926,7 @@ class AnalogSignalListPlot(Plotting):
 
 
 class AnalogSignalPlot(Plotting):
-    """
+    r"""
     This plot shows a line of plots each showing the given AnalogSignal, one plot per each AnalogSignal instance present in the datastore.
     
     It defines line of plots named: 'AnalogSignalPlot.Plot0' ... 'AnalogSignalPlot.PlotN'.
@@ -967,7 +966,7 @@ class AnalogSignalPlot(Plotting):
 
 
 class ConductanceSignalListPlot(Plotting):
-    """
+    r"""
     This plot shows a line of plots each showing excitatory and inhibitory conductances, one plot per each ConductanceSignalList instance 
     present in the datastore.
     
@@ -1015,7 +1014,7 @@ class ConductanceSignalListPlot(Plotting):
 
 
 class PerNeuronPairAnalogSignalListPlot(Plotting):
-    """
+    r"""
     This plot shows a line of plots each showing analog signals for pairs of neurons (in the same plot), one plot per each AnalogSignalList instance
     present in the datastore.
     
@@ -1056,7 +1055,7 @@ class PerNeuronPairAnalogSignalListPlot(Plotting):
 
 
 class RetinalInputMovie(Plotting):
-    """
+    r"""
     This plots one plot showing the retinal input per each recording in the datastore. 
     
     It defines line of plots named: 'PixelMovie.Plot0' ... 'PixelMovie.PlotN'.
@@ -1088,7 +1087,7 @@ class RetinalInputMovie(Plotting):
 
 
 class ActivityMovie(Plotting):
-    """
+    r"""
     This plots one plot per each recording, each showing the activity during that recording 
     based on the spikes stored in the recording. The activity is showed localized in the sheet cooridantes.
     
@@ -1202,7 +1201,7 @@ class ActivityMovie(Plotting):
             return [("ScatterPlot",ScatterPlotMovie(posx, posy, h.T),gs,{'x_axis':False, 'y_axis':False,'dot_size':40})]
 
 class PerAreaASLMovie(Plotting):
-    """
+    r"""
     This plots one plot per each recording, each a unique PerAreaAnalogSignalList during that recording 
     based on the corresponding ADS in the datastore
 
@@ -1254,7 +1253,7 @@ class PerAreaASLMovie(Plotting):
 
 
 class PerNeuronValuePlot(Plotting):
-    """
+    r"""
     Plots the values for all PerNeuronValue ADSs in the datastore, one for each sheet.
     
     If the paramter cortical_view is true it will plot the given PerNeuronValue data
@@ -1341,7 +1340,7 @@ class PerNeuronValuePlot(Plotting):
 
 
 class PerNeuronValueScatterPlot(Plotting):
-    """
+    r"""
     Takes each pair of PerNeuronValue ADSs in the datastore and plots a scatter plot of each such pair.
     It defines line of plots named: 'ScatterPlot.Plot0' ... 'ScatterPlot.PlotN
     """
@@ -1422,7 +1421,7 @@ class PerNeuronValueScatterPlot(Plotting):
         return [("ScatterPlot",ScatterPlot(x,y),gs,params)]
 
 class ConnectivityPlot(Plotting):
-    """
+    r"""
     Plots Connectivity, one for each projection originating or targeting
     (depending on parameter reversed) sheet `sheet_name` for a single neuron in the
     sheet.
@@ -1613,7 +1612,7 @@ class ConnectivityPlot(Plotting):
 
 
 class PerNeuronAnalogSignalScatterPlot(Plotting):
-    """
+    r"""
     This plot expects exactly two AnalogSignalList ADS in the datastore. It then for each neuron
     specified in the parameters creates a scatter plot of the values occuring at the same time in the two
     AnalogSignalList ADSs.
@@ -1654,7 +1653,7 @@ class PerNeuronAnalogSignalScatterPlot(Plotting):
 
 
 class CorticalColumnRasterPlot(Plotting):
-    """ 
+    r""" 
     It plots raster plots of spikes stored in the recordings.
     It assumes a datastore with recordings to a set of stimuli in different sheets. 
     It will plot a line of raster plots, one per each stimulus, showing a 'cortical column view' of the spike rasters across all sheets present in the data_store.
@@ -1737,7 +1736,7 @@ class CorticalColumnRasterPlot(Plotting):
 
 
 class PlotTemporalTuningCurve(Plotting):
-    """
+    r"""
     Plots tuning curves, one plot in line per each neuron. This plotting function assumes a set of AnalogSignalList 
     ADSs in the datastore associated with certain stimulus type. It will plot
     the values stored in these  AnalogSignalList instances (corresponding to neurons in `neurons`) across the 
@@ -1955,7 +1954,7 @@ class PlotTemporalTuningCurve(Plotting):
            return val,par 
 
 class RasterPlotsStimuliOrder(Plotting):
-    """
+    r"""
     Plot raster plots for every population of neurons included in `neurons_dict`, in a chronological order, and split accross different files.
     The number of segments per file is equal to the maximum number of different values accross parameter values of the stimuli.
 

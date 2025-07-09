@@ -1,4 +1,4 @@
-"""
+r"""
 This module contains several helper functions for working with periodic variables.
 """
 import logging
@@ -8,14 +8,14 @@ logger = logging.getLogger("mozaik")
 
 
 def circular_dist(a, b, period):
-    """
+    r"""
     Returns the distance between a and b (scalars) in a domain with `period` period.
     """
     r = numpy.abs(numpy.mod(a,period) - numpy.mod(b,period))
     return  numpy.minimum(r, period - r)
 
 def rad_to_complex(vector):
-    """
+    r"""
     Converts a vector/matrix of angles (0, 2*pi) to vector/matrix of complex
     numbers (that will lie on the unit circle) and correspond to the given angle.
     """
@@ -23,14 +23,14 @@ def rad_to_complex(vector):
 
 
 def angle_to_pi(array):
-    """
+    r"""
     Returns angles of complex numbers in array but in (0, 2*pi) interval unlike
     numpy.angle the returns it in (-pi, pi).
     """
     return (numpy.angle(array) + 4*pi) % (pi*2)
 
 def circ_len(matrix, weights=None, low=0, high=pi*2):
-    """
+    r"""
     Circular length of matrix. Weighted if weights are not none.
     
     Parameters
@@ -68,7 +68,7 @@ def circ_len(matrix, weights=None, low=0, high=pi*2):
 
 def circ_mean(matrix, weights=None, axis=None, low=0, high=pi*2,
               normalize=False):
-    """
+    r"""
     Circular mean of matrix. Weighted if weights are not none.
     Mean will be computed along axis axis.
     
@@ -132,7 +132,7 @@ def circ_mean(matrix, weights=None, axis=None, low=0, high=pi*2,
     return a,b
     
 def circ_std(matrix, weights=None, low=0, high=pi*2):
-    """
+    r"""
     Circular std of matrix. Weighted if weights are not none.
     Parameters
     ----------

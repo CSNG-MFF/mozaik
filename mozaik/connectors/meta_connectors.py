@@ -10,7 +10,7 @@ from mozaik.tools.distribution_parametrization import PyNNDistribution
 
 from builtins import zip
 
-"""
+r"""
 This file contains meta-connectors. These are classes that represent some higher-level 
 algorithms for connecting neurons in mozaik.
 
@@ -27,7 +27,7 @@ a given neuron has to be used when calclulating both the ON and OFF connections 
 
 
 class GaborConnector(BaseComponent):
-    """
+    r"""
     Connector that creates Gabor projections.
 
     The individual Gabor parameters are drawn from distributions specified in

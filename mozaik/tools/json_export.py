@@ -23,7 +23,7 @@ def get_params_from_docstring(cls):
     return params
 
 def parse_docstring(docstring):
-    """
+    r"""
     Parse the docstring into its components.
 
     Returns

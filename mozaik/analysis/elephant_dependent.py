@@ -11,7 +11,7 @@ from mozaik.tools.distribution_parametrization import load_parameters
 
 
 class CriticalityAnalysis(Analysis):
-    """
+    r"""
     Compute distance to criticality as defined in:
     Ma Z., Turrigiano G.G., Wessel R., Hengen K.B. (2019). Cortical Circuit
     Dynamics Are Homeostatically Tuned to Criticality In Vivo, Neuron
@@ -279,7 +279,7 @@ class CriticalityAnalysis(Analysis):
         return distr, bins
 
     def fit_powerlaw_distribution(self, x, y, img_title=None):
-        """
+        r"""
         Parameters
         ----------
         

@@ -29,7 +29,7 @@ import pickle
 logger = mozaik.getMozaikLogger()
 
 class GeneralizedPhase(Analysis):
-    """
+    r"""
     Apply the generalized phased analysis on all the PerAreaAnalogSignalList of the dsv
     Compute the instantaneous frequencies, phase gradient properties, wavelengths and wavespeeds
 
@@ -331,7 +331,7 @@ class GeneralizedPhase(Analysis):
  
 
 class ButterworthFiltering(Analysis):
-    """
+    r"""
     This analysis apply a butterworth filter on all the analog signals contained in all the
     AnalogSignalList, PerNeuronPairAnalogSignalList and PerAreaAnalogSignalList of the dsv
 
@@ -497,7 +497,7 @@ class ButterworthFiltering(Analysis):
 
 
 class LFPFromPSTH(Analysis):
-    """
+    r"""
     This analysis takes each recording in DSV that has been done in response to stimulus type 'stimulus_type'
     and calculates the LFP signal using a linear combination of excitatory and inhibitory synaptic currents as a proxy.
     For each set of equal recordings (except trial) it creates one PerAreaAnalogSignalList
@@ -653,7 +653,7 @@ class LFPFromPSTH(Analysis):
 
 
 class LFPFromSynapticCurrents(Analysis):
-    """
+    r"""
     This analysis takes each recording in DSV that has been done in response to stimulus type 'stimulus_type'
     and calculates the LFP signal using a linear combination of excitatory and inhibitory synaptic currents as a proxy.
     For each set of equal recordings (except trial) it creates one PerAreaAnalogSignalList

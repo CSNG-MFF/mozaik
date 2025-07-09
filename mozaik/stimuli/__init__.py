@@ -1,4 +1,4 @@
-"""
+r"""
 This module defines the API for:
 - implementation of stimuli as input to models (see class BaseStimulus)
 - identification of stimulus identity 

@@ -16,7 +16,7 @@ logger = mozaik.getMozaikLogger()
 from mozaik.controller import Global
 
 class NeuronAnnotationsToPerNeuronValues(Analysis):
-    """
+    r"""
     Creates a PerNeuronValues analysis data structure per each neuron
     annotation that is defined for all neurons in a given sheet.
 
@@ -92,7 +92,7 @@ class SummarizeSingleValues(Analysis):
         f.close()
 
 class ExportRawSpikeData(Analysis):
-    """
+    r"""
     Exports raw data from the simulation in a simple numpy readable format.
     It will export responses to all stimuli, and for each stimulus the measurments 
     specified in the `variables_to_export` will be saved.

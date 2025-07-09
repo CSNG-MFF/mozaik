@@ -43,7 +43,7 @@ mpi_comm = MPI.COMM_WORLD
 logger = mozaik.getMozaikLogger()
 
 class DirectStimulator(ParametrizedObject):
-    """
+    r"""
     The API for direct stimulation.
     The DirectStimulator specifies how are cells in the assigned population directly stimulated.
 
@@ -75,7 +75,7 @@ class DirectStimulator(ParametrizedObject):
         self.sheet = sheet
 
     def prepare_stimulation(self,duration,offset):
-        """
+        r"""
         Prepares the stimulation during the next period of model simulation lasting `duration` seconds.
 
         Parameters
@@ -92,7 +92,7 @@ class DirectStimulator(ParametrizedObject):
         raise NotImplemented
 
     def inactivate(self,offset):
-        """
+        r"""
         Ensures any influences of the stimulation are inactivated for subsequent simulation of the model.
 
         Parameters
@@ -108,7 +108,7 @@ class DirectStimulator(ParametrizedObject):
         raise NotImplemented
 
     def save_to_datastore(self,data_store,stimulus):
-        """
+        r"""
         Save direct stimulation data to the datastore, to be used for analysis and
         visualization.
 
@@ -124,7 +124,7 @@ class DirectStimulator(ParametrizedObject):
 
 
 class BackgroundActivityBombardment(DirectStimulator):
-    """
+    r"""
     The BackgroundActivityBombardment simulates the poisson distrubated background bombardment of spikes onto a 
     neuron due to the other 'unsimulated' neurons in its pre-synaptic population.
     
@@ -236,7 +236,7 @@ class BackgroundActivityBombardment(DirectStimulator):
             
 
 class Kick(DirectStimulator):
-    """
+    r"""
     This stimulator sends a kick of excitatory spikes into a specified subpopulation of neurons.
     
     Parameters
@@ -322,7 +322,7 @@ class Kick(DirectStimulator):
 
 
 class Depolarization(DirectStimulator):
-    """
+    r"""
     This stimulator injects a constant current into neurons in the population.
     
     Parameters
@@ -385,7 +385,7 @@ class Depolarization(DirectStimulator):
 
 
 class OpticalStimulatorArray(DirectStimulator):
-    """
+    r"""
     This class assumes there is a regular grid of stimulators (parameters `size` and
     `spacing` control the geometry of the grid), with each stimulator stimulating
     indiscriminately the local population of neurons in the given sheet. The
@@ -682,7 +682,7 @@ def ChRsystem(y,time,X,sampling_period):
 
 
 class OpticalStimulatorArrayChR(OpticalStimulatorArray):
-    """
+    r"""
     Like *OpticalStimulatorArray*, but the light (photons/s/cm^2) impinging on the
     neuron is transformed via a model of Channelrhodopsin (courtesy of Quentin Sabatier)
     to give the final injected current.
@@ -732,7 +732,7 @@ class OpticalStimulatorArrayChR(OpticalStimulatorArray):
 
 
 def stimulating_pattern_flash(sheet, coor_x, coor_y, update_interval, parameters):
-    """
+    r"""
     Stimulation with a static stimulation pattern, its exact form is determined
     by the supplied extra parameters. The stimulus turns on at *onset_time*, turns off
     at *offset_time*. The overall duration of the stimulus is *duration* ms.
@@ -784,7 +784,7 @@ def stimulating_pattern_flash(sheet, coor_x, coor_y, update_interval, parameters
     return signals
 
 def generate_2d_stim(sheet, coor_x, coor_y, parameters):
-    """
+    r"""
     Generates a 2d pattern for cortical stimulation.
 
     Parameters
@@ -819,7 +819,7 @@ def generate_2d_stim(sheet, coor_x, coor_y, parameters):
 
 
 def image_stim(coor_x, coor_y, parameters):
-    """
+    r"""
     Generate stimulation in the pattern of a grayscale image, loaded from a .npy
     file containing a 2D numpy array, with values between 0 (black) and 1 (white).
 
@@ -862,7 +862,7 @@ def image_stim(coor_x, coor_y, parameters):
 
 
 def or_map_mask(sheet,coor_x,coor_y,parameters):
-    """
+    r"""
     Stimulating pattern based on the cortical orientation map, where one orientation
     is selected as the primary orientation to maximally stimulate (with *intensity*
     intensity), and the stimulation intensity for the other orientations falls off as a
@@ -902,7 +902,7 @@ def or_map_mask(sheet,coor_x,coor_y,parameters):
 
 
 def simple_shapes_binary_mask(coor_x, coor_y, shape, parameters):
-    """
+    r"""
     Generate a stimulation pattern of one or more simple shapes of the same type, in the
     form of a binary mask. The list of coordinates, *coords* defines the number and
     centers of these shapes.
@@ -1000,7 +1000,7 @@ def simple_shapes_binary_mask(coor_x, coor_y, shape, parameters):
     return mask
 
 def single_pixel(sheet, coor_x, coor_y, update_interval, parameters):
-    """
+    r"""
     A simple stimulation pattern where for the entire duration a single stimulator
     pixel is active (with an intensity of 1), all others have a value of 0.
 

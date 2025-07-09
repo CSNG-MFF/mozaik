@@ -20,7 +20,7 @@ from mozaik.tools.distribution_parametrization import PyNNDistribution
 logger = mozaik.getMozaikLogger()
 
 class DataStoreView(ParametrizedObject):
-    """
+    r"""
     This class represents a subset of a DataStore and defines the query
     interface and the structure in which the data are stored in the memory of
     any datastore. Main role of this class is to allow for creating subsets of
@@ -216,8 +216,7 @@ class DataStoreView(ParametrizedObject):
             return [self.sensory_stimulus[s] for s in stimuli if s in self.sensory_stimulus]
 
     def get_experiment_parametrization_list(self):
-        
-        """
+        r"""
         Return the list of parameters of all experiments performed (in the order they were performed).
         
         The returned data are in the following format:  a list of tuples (experimenta_class,parameter_set) where
@@ -254,7 +253,7 @@ class DataStoreView(ParametrizedObject):
         return DataStoreView(ParameterSet({}), self.full_datastore)
 
     def print_content(self, full_recordings=False, full_ADS=False):
-        """
+        r"""
         Prints the content of the data store (specifically the list of recordings and ADSs in the DSV).
         
         If the 
@@ -314,7 +313,7 @@ class DataStoreView(ParametrizedObject):
         return new_dsv
     
     def remove_ads_from_datastore(self):
-        """
+        r"""
         This operation removes all ADS that are present in this DataStoreView from the master DataStore.
         """
         if self.full_datastore == self:
@@ -330,7 +329,7 @@ class DataStoreView(ParametrizedObject):
                 self.full_datastore.analysis_results.remove(ads)
         
     def remove_seg_from_datastore(self):
-        """
+        r"""
         This operation removes all segments that are present in this DataStoreView from the master DataStore.
         ATTENTION: It also removes the pickle files associated to the segments
         """
@@ -350,7 +349,7 @@ class DataStoreView(ParametrizedObject):
         
     
 class DataStore(DataStoreView):
-    """
+    r"""
     Abstract DataStore class that declares the *mozaik* data store interface.
     
     The role of mozaik data store is to store the recordings from simulation 
@@ -409,7 +408,7 @@ class DataStore(DataStoreView):
         self.block.annotations['sheet_parameters'] = parameters
         
     def set_experiment_parametrization_list(self,experiment_parameter_list):
-        """
+        r"""
         The experiment_parameter_list is epected to be a list of tuples (experimenta_class,parameter_set) where
         *experiment_class* is the class of the experiment, and parameter_set is a ParameterSet instance converted to string 
         that corresponds to the parameters of the given experiment.

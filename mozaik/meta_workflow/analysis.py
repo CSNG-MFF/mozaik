@@ -8,7 +8,7 @@ import os
 import time
 
 def load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir,filter=None):
-    """
+    r"""
     Loads all datastores of parameter search over a fixed set of parameters. 
     
     Parameters
@@ -62,7 +62,7 @@ def load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir
     return (parameters,datastore,number_of_unloadable_datastores)
 
 def run_analysis_on_parameter_search(simulation_name,master_results_dir,analysis_function):
-    """
+    r"""
     Runs the *analysis_function* on each of the simualtions that have been executed as a part of the parameter search.
     Results are stored in the corresponding simulation's datastore. The analysis is executed sequentially over results
     of each parameter combination simulation.
@@ -87,7 +87,7 @@ def run_analysis_on_parameter_search(simulation_name,master_results_dir,analysis
         d.save()
       
 def collect_results_from_parameter_search(simulation_name,master_results_dir,processing_function,file_name):
-    """
+    r"""
     This function loads datastore associated with each parameter combination in the parameter search,
     passes it to the *processing_function* function and then adds the result this function returns to a list. 
     It then creates a tuple, with first element the list of parameter names in the same order as they appear in the parameter combinations,
@@ -124,7 +124,7 @@ def collect_results_from_parameter_search(simulation_name,master_results_dir,pro
     
         
 def export_SingleValues_as_matricies(simulation_name,master_results_dir,query):
-    """
+    r"""
     It assumes that there was a grid parameter search. Providing this it reformats the SingleValues into matricies
     (one per each value_name parameter encountered) and exports them as pickled numpy ndarrays.
     

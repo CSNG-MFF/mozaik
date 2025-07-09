@@ -20,7 +20,7 @@ logger = mozaik.getMozaikLogger()
 
 
 class SimplePlot(object):
-    """
+    r"""
     The low level plotting API based around matplotlib.
 
     Each simple plot is assumed to create a single axis - this happens in this class.
@@ -140,7 +140,7 @@ class SimplePlot(object):
 class StandardStyle(SimplePlot):
 
     def __init__(self,**param):
-        """
+        r"""
         This is the standard SimplePlot used in this package. In most cases we recomand users to derive
         all their plots from this class. In case users want to define their own plot styling they will
         want to create an analogous class as this one and then derive all their plots from it.
@@ -445,7 +445,7 @@ class StandardStyle(SimplePlot):
 
 
 class SpikeRasterPlot(StandardStyle):
-    """
+    r"""
     This function plots the raster plot of spikes in the `spike_lists` argument.
 
     Parameters
@@ -532,7 +532,7 @@ class SpikeRasterPlot(StandardStyle):
 
 
 class SpikeHistogramPlot(SpikeRasterPlot):
-    """
+    r"""
     This function plots the raster plot of spikes in the spike_list argument.
 
     Parameters
@@ -611,7 +611,7 @@ class SpikeHistogramPlot(SpikeRasterPlot):
 
 
 class StandardStyleAnimatedPlot(StandardStyle):
-    """
+    r"""
     This is an abstract class helping construction of animated graphs.
 
     Each class subclassing from this class should implement the `SimplePlot`
@@ -658,7 +658,7 @@ class StandardStyleAnimatedPlot(StandardStyle):
         self.plotting_parent.register_animation_update_function(StandardStyleAnimatedPlot._plot_next_frame,self)
 
 class PixelMovie(StandardStyleAnimatedPlot):
-    """
+    r"""
     An instatiation of StandardStyleAnimatedPlot that works with regularly sampled data - i.e. 3D matricies
     where axis are interpreted as x,y,t.
 
@@ -687,7 +687,7 @@ class PixelMovie(StandardStyleAnimatedPlot):
         self.im = self.axis.imshow(self.movie[0],interpolation='nearest',vmin=0,vmax=self.background_luminance*2,cmap='gray')
 
 class ScatterPlotMovie(StandardStyleAnimatedPlot):
-    """
+    r"""
     An instatiation of StandardStyleAnimatedPlot that works with irregularly sampled data. That data
     are assumed to have constant positions throught the time.
 
@@ -753,7 +753,7 @@ class ScatterPlotMovie(StandardStyleAnimatedPlot):
         pylab.gca().set_facecolor('black')
 
 class ScatterPlot(StandardStyle):
-    """
+    r"""
     Simple scatter plot
 
     Parameters
@@ -860,7 +860,7 @@ class ScatterPlot(StandardStyle):
 
 
 class StandardStyleLinePlot(StandardStyle):
-    """
+    r"""
     This function plots vector data in simple line plots.
 
     Parameters
@@ -1034,7 +1034,7 @@ class StandardStyleLinePlot(StandardStyle):
 
 
 class ConductancePlot(StandardStyle):
-    """
+    r"""
     Plots conductances of one type (either excitatory or inhibitory).
 
     Parameters
@@ -1101,7 +1101,7 @@ class ConductancePlot(StandardStyle):
 
 
 class ConductancesPlot(StandardStyle):
-    """
+    r"""
     Plots conductances.
 
     Parameters
@@ -1167,7 +1167,7 @@ class ConductancesPlot(StandardStyle):
 
 
 class ConnectionPlot(StandardStyle):
-    """
+    r"""
     A plot that will display connections.
 
     Parameters
@@ -1284,7 +1284,7 @@ class ConnectionPlot(StandardStyle):
 
 
 class HistogramPlot(StandardStyle):
-    """
+    r"""
     This function plots the histogram of list of value lists, coloring each independently.
 
     Parameters
@@ -1387,7 +1387,7 @@ class HistogramPlot(StandardStyle):
         self.y_label = '#'
 
 class CorticalColumnSpikeRasterPlot(StandardStyle):
-    """
+    r"""
     This function plots the raster plot of spikes in the `spike_lists` argument. It assumes
     each entry in the `spike_lists` corresponds to different cortical layer (or neural type within a layer)
     and will plot them in that order in the typical 'spikes across layer' raster plot.
@@ -1462,7 +1462,7 @@ class CorticalColumnSpikeRasterPlot(StandardStyle):
         self.y_tick_labels = self.labels
 
 class OrderedAnalogSignalListPlot(StandardStyle):
-    """
+    r"""
     This plots a set of signals, each associated with a value that can be ordered.
 
     Parameters

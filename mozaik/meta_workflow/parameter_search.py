@@ -11,7 +11,7 @@ import json
 from mozaik.tools.json_export import save_json
 
 class ParameterSearchBackend(object):
-    """
+    r"""
     This is the parameter search backend interface. The :func:.`execute_job`
     implements the execution of the job, using the information given to the 
     constructor, and the dictionary of modified parameters given in its arguments.
@@ -33,7 +33,7 @@ class ParameterSearchBackend(object):
 
 
 class LocalSequentialBackend(object):
-    """
+    r"""
     This is the simplest backend that simply executes the simulation on the present 
     machine sequentially (i.e. it waits for the simulation to end before starting new one).
     """
@@ -60,7 +60,7 @@ class LocalSequentialBackend(object):
 
 
 class SlurmSequentialBackend(object):
-    """
+    r"""
     This is a back end that runs each simulation run as a slurm job. 
     
     Parameters
@@ -96,7 +96,7 @@ class SlurmSequentialBackend(object):
         
         
     def execute_job(self,run_script,simulator_name,parameters_url,parameters,simulation_run_name):
-         """
+         r"""
          This function recevies the list of parameters to modify and their values, and has to 
          execute the corresponding mozaik simulation.
          
@@ -132,7 +132,7 @@ class SlurmSequentialBackend(object):
 
 
 class ParameterSearch(object):
-    """
+    r"""
     This class defines the interface of parameter search.
     Each ParameterSearch has to implement the function `generate_parameter_combinations`
     and `master_directory_name`.
@@ -164,19 +164,19 @@ class ParameterSearch(object):
         self.backend = backend
     
     def generate_parameter_combinations(self):
-        """
+        r"""
         Returns a list of dictionaries, each holding the modified parameters as keys, and a combination of their values as the values.
         """
         raise NotImplemented
     
     def master_directory_name(self):
-        """
+        r"""
         Returns the name of the master directory which will contain results from the invididual simulation runs.
         """
         raise NotImplemented
         
     def run_parameter_search(self):
-        """
+        r"""
         This method will run the parameter search replacing each combination of values defined by dictionary params
         in the default parametrization and runing the simulation with each such modified parameters,
         storing the results of each simulation run in a subdirectory named based on the given modified parameter names and their
@@ -208,7 +208,7 @@ class ParameterSearch(object):
 
 
 class CombinationParameterSearch(ParameterSearch):
-    """
+    r"""
     A ParameterSearch that recevies a list of parameters and list of values for each parameter to test.
     It will then test each of the combination of values.
     
@@ -247,7 +247,7 @@ def _parameter_combinations_rec(combination,arrays):
     
 
 def parameter_search_run_script_distributed_slurm(simulation_name,master_results_dir,run_script,core_number):
-    """
+    r"""
     Scheadules the execution of *run_script*, one per each parameter combination of an existing parameter search run.
     Each execution receives as the first commandline argument the directory in which the results for the given
     parameter combination were stored.
@@ -296,7 +296,7 @@ def parameter_search_run_script_distributed_slurm(simulation_name,master_results
 
 
 def parameter_search_run_script_distributed_slurm_IoV(simulation_name,master_results_dir,run_script,core_number):
-    """
+    r"""
     Scheadules the execution of *run_script*, one per each parameter combination of an existing parameter search run.
     Each execution receives as the first commandline argument the directory in which the results for the given
     parameter combination were stored.
@@ -343,7 +343,7 @@ def parameter_search_run_script_distributed_slurm_IoV(simulation_name,master_res
         p.stdin.close()
 
 def parameter_search_run_script_distributed_slurm_UK(simulation_name,master_results_dir,run_script,core_number):
-    """
+    r"""
     Scheadules the execution of *run_script*, one per each parameter combination of an existing parameter search run.
     Each execution receives as the first commandline argument the directory in which the results for the given
     parameter combination were stored.

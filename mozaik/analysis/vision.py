@@ -21,7 +21,7 @@ import pandas
 logger = mozaik.getMozaikLogger()
 
 class ModulationRatio(Analysis):
-    """
+    r"""
     This analysis calculates the modulation ration (as the F1/F0) for all
     neurons in the data using all available responses recorded to the
     FullfieldDriftingSinusoidalGrating stimuli. This method also requires
@@ -152,7 +152,7 @@ class ModulationRatio(Analysis):
                 #pylab.hist(modulation_ratio)
 
     def _calculate_MR(self,signal, frequency):
-        """
+        r"""
         Calculates MR at frequency 1/period for each of the signals in the signal_list
 
         Returns an array of MRs on per each signal in signal_list
@@ -172,7 +172,7 @@ class ModulationRatio(Analysis):
             return 10,abs(fft[0])/len(signal),2*abs(fft[first_har])/len(signal),numpy.angle(fft[first_har])
 
 class ModulationRatioSpecificOrientation(Analysis):
-    """
+    r"""
     This analysis is similar to the ModulationRatio analysis, but instead
     of retrieving the measured orientation preference of the neurons, it
     assumes all neurons have an orientation selectivity similar to the
@@ -265,7 +265,7 @@ class ModulationRatioSpecificOrientation(Analysis):
 
 
     def _calculate_MR(self,signal, frequency):
-        """
+        r"""
         Calculates MR at frequency 1/period for each of the signals in the signal_list
 
         Returns an array of MRs on per each signal in signal_list
@@ -285,7 +285,7 @@ class ModulationRatioSpecificOrientation(Analysis):
             return 10,abs(fft[0])/len(signal),2*abs(fft[first_har])/len(signal),numpy.angle(fft[first_har])
 
 class Analog_F0andF1(Analysis):
-      """
+      r"""
       Calculates the DC and first harmonic of trial averaged vm and conductancesfor each neuron.
 
       It also calculates the DC and F1 to any AnalogSignalList present in the datastore (not trial averaged this time).
@@ -361,7 +361,7 @@ class Analog_F0andF1(Analysis):
                     self.datastore.full_datastore.add_analysis_result(PerNeuronValue(f1_phase,asl.ids,asl.y_axis_units,value_name = 'F1 phase('+ asl.y_axis_name + ')',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=asl.stimulus_id))
 
 class LocalHomogeneityIndex(Analysis):      
-    """
+    r"""
     Calculates Local Homogeneity Index (LHI) for each neuron, of each PerNeuronValue that is present in the datastore, according to:
     Nauhaus, I., Benucci, A., Carandini, M., & Ringach, D. (2008). Neuronal selectivity and local map structure in visual cortex. Neuron, 57(5), 673–679. 
     """
@@ -398,7 +398,7 @@ class LocalHomogeneityIndex(Analysis):
                                    analysis_algorithm=self.__class__.__name__))
 
 class SizeTuningAnalysis(Analysis):
-      """
+      r"""
       Calculates the size tuning properties   
       """   
         
@@ -481,7 +481,7 @@ class SizeTuningAnalysis(Analysis):
                         self.datastore.full_datastore.add_analysis_result(PerNeuronValue(csis,self.parameters.neurons,None,value_name = 'Counter-suppression index of ' + self.pnvs[0].value_name ,sheet_name=self.parameters.sheet_name,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
                         
 class SizeTuningAnalysisFit(Analysis):
-      """
+      r"""
       Calculates the size tuning properties   
       """
 
@@ -619,7 +619,7 @@ class SizeTuningAnalysisFit(Analysis):
                         self.datastore.full_datastore.add_analysis_result(PerNeuronValue(errs,self.parameters.neurons,None,value_name = 'Size tuning error of fitting of ' + self.pnvs[0].value_name ,sheet_name=self.parameters.sheet_name,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
 
 class SizeTuningRingAnalysisFit(Analysis):
-      """
+      r"""
       Calculates the size tuning properties
       """
 
@@ -717,7 +717,7 @@ class SizeTuningRingAnalysisFit(Analysis):
               self.datastore.full_datastore.add_analysis_result(PerNeuronValue(errs,self.parameters.neurons,None,value_name = 'Size tuning error of fitting of ' + self.pnvs[0].value_name ,sheet_name=self.parameters.sheet_name,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
 
 class OCTCTuningAnalysis(Analysis):
-      """
+      r"""
       Calculates the Orientation Contrast tuning properties.
       """   
         
@@ -761,7 +761,7 @@ class OCTCTuningAnalysis(Analysis):
                         self.datastore.full_datastore.add_analysis_result(PerNeuronValue(sis,self.parameters.neurons,None,value_name = 'Suppression index of ' + self.pnvs[0].value_name ,sheet_name=self.parameters.sheet_name,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(k)))
 
 class F1CorrectedStandardDeviation(Analysis):
-      """
+      r"""
       Calculates the standard deviation of an AnalogSignalList after removing its F1 component.
       The F1 component had to be previous calculated with the Analog_F0andF1 analysis
       The standard deviation is computed as the average of the standard deviation of every instance
@@ -831,7 +831,7 @@ class F1CorrectedStandardDeviation(Analysis):
                   self.datastore.full_datastore.add_analysis_result(PerNeuronValue(stds,signal.ids,signal.y_axis_units,value_name = 'F1 corrected STD ('+ signal.y_axis_name + ')',sheet_name=sheet,tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=signal.stimulus_id))
 
 class LinearityIndices(Analysis):
-      """
+      r"""
       Calculates the Non-linearity index and Linearity index as in Cagnol et al. 2025
       in respect to a PerNeuronValue with name corresponding to the `value_name` argument
       """

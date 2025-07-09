@@ -12,7 +12,7 @@ logger = mozaik.getMozaikLogger()
 
 
 class AnalysisDataStructure(MozaikParametrized):
-    """
+    r"""
     Encapsulates data that a certain Analysis class generates.
 
     The four parameters that are common to all :class:`AnalysisDataStructure` classes are:
@@ -42,7 +42,7 @@ class AnalysisDataStructure(MozaikParametrized):
 
 
 class SingleValue(AnalysisDataStructure):
-    """
+    r"""
     Data structure holding single value. This can be per model, if sheet parameter is None,
     or per sheet if sheet is specified. In principle it can also be per neuron if the neuron
     parameter is specified, but in most cases you probably want to use :class:`.PerNeuronValue`
@@ -65,7 +65,7 @@ class SingleValue(AnalysisDataStructure):
         self.value_units = value_units
 
 class SingleObject(AnalysisDataStructure):
-    """
+    r"""
     Data structure holding a single object, that is not handled in any specific way by the analysis or the vizualisation code
 
     Parameters
@@ -87,7 +87,7 @@ class SingleObject(AnalysisDataStructure):
 
 
 class SingleValueList(AnalysisDataStructure):
-    """
+    r"""
     Data structure holding a list of single values. This can be per model, if sheet parameter
     is None, or per sheet if sheet is specified.
 
@@ -111,7 +111,7 @@ class SingleValueList(AnalysisDataStructure):
 
 
 class PerNeuronValue(AnalysisDataStructure):
-    """
+    r"""
     Data structure holding single value per neuron.
     
     Parameters
@@ -162,7 +162,7 @@ class PerNeuronValue(AnalysisDataStructure):
 
 
 class PerNeuronPairValue(AnalysisDataStructure):
-    """
+    r"""
     Data structure holding values for each pair of neurons.
     
     Parameters
@@ -190,7 +190,7 @@ class PerNeuronPairValue(AnalysisDataStructure):
         assert values.shape == (len(idds),len(idds))
     
     def get_value_by_ids(self,idds1,idds2):
-        """
+        r"""
         Parameters
         ---------- 
 
@@ -214,7 +214,7 @@ class PerNeuronPairValue(AnalysisDataStructure):
 
 
 class PerAreaValue(AnalysisDataStructure):
-    """
+    r"""
     Data structure holding value for each sub-area in the cortical plane
 
     values : numpy.nd_array
@@ -246,7 +246,7 @@ class PerAreaValue(AnalysisDataStructure):
 
 
 class AnalysisDataStructure1D(AnalysisDataStructure):
-    """
+    r"""
     Data structure representing 1D data.
     All data corresponds to the same axis name and units.
     Explicitly specifies the axis - their name and units.
@@ -278,7 +278,7 @@ class AnalysisDataStructure1D(AnalysisDataStructure):
 
 
 class AnalogSignal(AnalysisDataStructure1D):
-    """
+    r"""
     A single analog signal. This is effectively a wrapper around a single Neo AnalogSignal object.
 
     Parameters
@@ -304,7 +304,7 @@ class AnalogSignal(AnalysisDataStructure1D):
 
 
 class AnalogSignalList(AnalysisDataStructure1D):
-    """
+    r"""
     This is a simple list of Neo AnalogSignal objects.
 
     Parameters
@@ -378,7 +378,7 @@ class AnalogSignalList(AnalysisDataStructure1D):
         return AnalogSignalList(new_asl,self.ids,y_axis_units = self.y_axis_units,x_axis_name = self.x_axis_name,y_axis_name = self.y_axis_name, sheet_name = self.sheet_name)
 
     def mean(self, ignore_invalid = False):
-        """
+        r"""
         Calculates the mean analog signal from the ones in the list.
 
         Parameters
@@ -401,7 +401,7 @@ class AnalogSignalList(AnalysisDataStructure1D):
             return numpy.mean(self.asl,axis=0)
 
     def var(self, ignore_invalid = False):
-        """
+        r"""
         Calculates the mean analog signal from the ones in the list.
 
         Parameters
@@ -427,7 +427,7 @@ class AnalogSignalList(AnalysisDataStructure1D):
 
 
 class PerNeuronPairAnalogSignalList(AnalysisDataStructure1D):
-    """
+    r"""
     This is a list of Neo AnalogSignal objects associated with pairs of neurons.
 
     Parameters
@@ -455,7 +455,7 @@ class PerNeuronPairAnalogSignalList(AnalysisDataStructure1D):
         assert len(asl) == len(ids)
     
     def get_asl_by_id_pair(self,idd_pair):
-        """
+        r"""
         Parameters
         ---------- 
         
@@ -495,7 +495,7 @@ class PerNeuronPairAnalogSignalList(AnalysisDataStructure1D):
         return PerNeuronPairAnalogSignalList( new_asl, self.ids, analysis_algorithm=self.analysis_algorithm, y_axis_units=self.y_axis_units, x_axis_name=self.x_axis_name, y_axis_name=self.y_axis_name, sheet_name=self.sheet_name, stimulus_id=self.stimulus_id )
 
     def division_by_num(self, num):
-        """
+        r"""
         Divides all asl by the supplied number.
         """
         for asl in self.asl:
@@ -512,7 +512,7 @@ class PerNeuronPairAnalogSignalList(AnalysisDataStructure1D):
         return PerNeuronPairAnalogSignalList( new_asl, self.ids, analysis_algorithm=self.analysis_algorithm, y_axis_units=self.y_axis_units, x_axis_name=self.x_axis_name, y_axis_name=self.y_axis_name, sheet_name=self.sheet_name, stimulus_id=self.stimulus_id )
 
     def mean(self):
-        """
+        r"""
         Calculates the mean analog signal from the ones in the list.
         """
         for asl in self.asl:
@@ -524,7 +524,7 @@ class PerNeuronPairAnalogSignalList(AnalysisDataStructure1D):
 
 
 class PerAreaAnalogSignalList(AnalysisDataStructure1D):
-    """
+    r"""
     This is a list of Neo AnalogSignal objects associated with areas in the cortical space.
 
     Parameters
@@ -613,7 +613,7 @@ class PerAreaAnalogSignalList(AnalysisDataStructure1D):
         
         
 class ConductanceSignalList(AnalysisDataStructure1D):
-    """
+    r"""
     This is a simple list of Neurotools AnalogSignal objects representing the
     conductances.
 

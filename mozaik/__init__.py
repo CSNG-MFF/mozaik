@@ -1,4 +1,4 @@
-"""
+r"""
 The role of mozaik is to coordinate the workings of number of tools to provide a 
 consistent workflow experience for the user. Consequently the root mozaik package is very light,
 and majority of functionality is in the number of subpackages each addressing different parts of the workflow. 
@@ -33,7 +33,7 @@ mpi_comm = None
 MPI_ROOT = 0
 
 def setup_mpi(mozaik_seed=513,pynn_seed=1023):
-    """
+    r"""
     Tests the presence of MPI and sets up mozaik wide random number generator.
     
     Notes
@@ -67,7 +67,7 @@ def setup_mpi(mozaik_seed=513,pynn_seed=1023):
 
 
 def get_seeds(size=None):
-    """
+    r"""
     This methods returns a set of inetegers that can be used as random seeds for RNGs. The main purpose
     is that these numbers are large and random, with extremely low probability that two of the same numbers
     are returned in a single simulation run.
@@ -88,7 +88,7 @@ def get_seeds(size=None):
     return rng.randint(2**32-1,size=size)
 
 def getMozaikLogger():
-    """
+    r"""
     To maintain consistent logging settings around mozaik use this method to obtain the logger isntance.
     """
     import logging
@@ -97,7 +97,7 @@ def getMozaikLogger():
     return logger
 
 def load_component(path):
-    """
+    r"""
     This function loads a model component (represented by a class instance) located with the path varialble.
     
     Parameters
