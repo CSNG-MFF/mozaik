@@ -170,7 +170,7 @@ class StGen:
         and return them as SpikeTrain object.
       
 
-        .. rubric:: Inputs:
+        **Inputs:**
 
         - **rng** : `numpy.random.RandomState` or similar, optional
             The random number generator state object. Can be `None`, or a custom RNG object
@@ -192,7 +192,7 @@ class StGen:
         StGen Methods:
         ==============
 
-        .. rubric:: Spiking point processes:
+        **Spiking point processes:**
  
         - `poisson_generator` - homogeneous Poisson process
         - `inh_poisson_generator` - inhomogeneous Poisson process (time-varying rate)
@@ -225,7 +225,7 @@ class StGen:
         they spiked at t=0.0, though this spike is not included in the SpikeList.
 
         
-        .. rubric:: Inputs:
+        **Inputs:**
 
         rate    - the rate of the discharge (in Hz)
         t_start - the beginning of the SpikeTrain (in ms)

@@ -29,25 +29,25 @@ logger = logging.getLogger("mozaik")
 class SNumber(Number):
     """
     A mozaik parameter that can hold a number. For the full range of options the 
-    parameter offers refer to the ``Number`` class in `param package <http://ioam.github.io/param/>`__
+    parameter offers reffer to the `Number` class in `param <http://ioam.github.io/param/>`_ package.
     
-    On top of the Number class it adds the ability to specify units and period in constructor
-    The units should be ``quantities.units``.
+    On top of the Number class it adds the ability to specify units and period in constructor.
+    The units should be `quantities.units`.
 
     Attributes
     ----------
-
-    units : ``quantities.units``
+    
+    units : quantities.unit
         The units associated with this parameter
-        
-    period : ``float`` or ``None``
-        The period associated with this parameter (if any)
+
+    period : float or none
+        The period associated with this parameter(if any) 
 
     """
-    __slots__ = ['units','period']
+    __slots__ = ['units', 'period']
 
     def __init__(self, units, period=None, **params):
-        params.setdefault('default',None)
+        params.setdefault('default', None)
         super(SNumber, self).__init__(allow_None=True, instantiate=True, **params)
         self.units = units
         self.period = period
@@ -56,23 +56,24 @@ class SNumber(Number):
 class SInteger(Integer):
     """
     A mozaik parameter that can hold an integer. For the full range of options the 
-    parameter offers refer to the ``Integer`` class in `param package <http://ioam.github.io/param/>`__
+    parameter offers reffer to the `Integer` class in `param <http://ioam.github.io/param/>`_ package.
     
-    On top of the Integer class it adds the ability to specify period in constructor. The units should be ``quantities.units``.
+    On top of the Integer class it adds the ability to specify period in constructor. The units should be `quantities.units`.
 
     Attributes
     ----------
-    units : ``None``
+
+    units : None
         Always None for integers
-        
-    period : ``float/None``
+
+    period : float or None
         The period associated with this parameter (if any)
 
     """
-    __slots__ = ['units','period']
+    __slots__ = ['units', 'period']
 
     def __init__(self, period=None, **params):
-        params.setdefault('default',None)        
+        params.setdefault('default', None)        
         super(SInteger, self).__init__(allow_None=True, instantiate=True, **params)
         self.units = None
         self.period = period
@@ -80,8 +81,8 @@ class SInteger(Integer):
 
 class SString(String):
     """
-    A mozaik parameter that can hold a string. For the full range of options the 
-    parameter offers refer to the ``Integer`` class in `param package <http://ioam.github.io/param/>`__
+    A mozaik parameter that can hold an string. For the full range of options the 
+    parameter offers reffer to the `Integer` class in `param <http://ioam.github.io/param/>`_ package.
     
     This class is here for consistency reasons as it defines the units and period properties, 
     just like SInteger and SNumber, but automatically sets them to None.
@@ -89,16 +90,16 @@ class SString(String):
     Attributes
     ----------
 
-    units : ``None``
-        Always None for strings
-        
-    period : ``None``
-        Always None for strings
+    units : None
+        Always None for Strings
+
+    period : None
+        Always None for Strings
 
     """
-    __slots__ = ['units','period']    
+    __slots__ = ['units', 'period']    
     def __init__(self, **params):
-        params.setdefault('default',None)        
+        params.setdefault('default', None)        
         super(SString, self).__init__(allow_None=True, instantiate=True, **params)
         self.units = None
         self.period = None

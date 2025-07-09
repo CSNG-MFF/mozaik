@@ -448,9 +448,9 @@ class OptogeneticArrayStimulusHexagonalTiling(CorticalStimulationWithOptogenetic
     angle : float (rad)
         Clockwise rotation angle of the hexagons. At angle 0, the hexagons
         are oriented such that two sides are parallel to the horizontal axis:
-        
+
         >>>  __
-        >>> /  \
+        >>> /  `\`
         >>> \__/
 
     shuffle: bool

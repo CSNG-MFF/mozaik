@@ -49,6 +49,7 @@ class Analysis(ParametrizedObject):
 
     Parameters
     ----------
+
     
     datastore : DataStoreView
         The datastore from which to pull data.

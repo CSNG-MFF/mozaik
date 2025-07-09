@@ -1,5 +1,6 @@
 experiments Package
 ===================
+
 This package contains module for different types of experiments mozaik supports.
 
 
@@ -11,6 +12,7 @@ This package contains module for different types of experiments mozaik supports.
     :undoc-members:
     :show-inheritance:
 
+
 :mod:`vision` Module
 --------------------
 
@@ -18,6 +20,7 @@ This package contains module for different types of experiments mozaik supports.
     :members:
     :undoc-members:
     :show-inheritance:
+
 
 :mod:`apparent_motion` Module
 -----------------------------
@@ -27,6 +30,7 @@ This package contains module for different types of experiments mozaik supports.
     :undoc-members:
     :show-inheritance:
 
+
 :mod:`direct_stimulations_mixins` Module
 ----------------------------------------
 
@@ -35,6 +39,7 @@ This package contains module for different types of experiments mozaik supports.
     :undoc-members:
     :show-inheritance:
 
+?
 :mod:`optogenetic` Module
 -------------------------
 

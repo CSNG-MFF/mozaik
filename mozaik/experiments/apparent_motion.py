@@ -78,8 +78,10 @@ class MapSimpleGabor(VisualExperiment):
         If True hexagonal tiding with relative luminance 0 is drawn over the stimuli.
         Mostly for testing purposes to check the stimuli are generated correctly.
 
-    .. rubric:: Notes on Hexagonal Tiding
-
+    Notes
+    -----
+    
+    **Notes on Hexagonal Tiding:-**
     Generating coordinates of centers of regular (!) hexagonal tidings.
     It is done this way, because the centers of tides are not on circles (!)
 
@@ -95,8 +97,7 @@ class MapSimpleGabor(VisualExperiment):
     x coordinate multiplied by factor 1/2*size  
     y coordinate multiplied by factor sqrt(3)/2*size
 
-    .. rubric:: Notes on Central relative luminance
-
+    **Notes on Central relative luminance:-**
     In the experiment they had lower luminance for Gabor patches presented at the central tide.
 
     """
@@ -264,8 +265,10 @@ class MapTwoStrokeGabor(VisualExperiment):
         correctly.
 
 
-    .. rubric:: Notes on hexagonal tiding
+    Notes
+    -----
 
+    **Notes on hexagonal tiding:-**
     Generating coordinates of centers of regular (!) hexagonal tidings.  
     It is done this way, because the centers of tides are not on circles (!)
 
@@ -282,14 +285,12 @@ class MapTwoStrokeGabor(VisualExperiment):
     y coordinate multiplied by factor sqrt(3)/2*size
 
 
-    .. rubric:: Notes on central relative lumninance
-
+    **Notes on central relative lumninance:-**
     In the experiment they had lower luminance for Gabor patches presented  
     at the central tide
 
 
-    .. rubric:: Notes on number of circles
-
+    **Notes on number of circles:-**
     For 2 stroke the experiment includes also the trajectories that  
     start inside the defined number of circles but get out as well as  
     trajectories starting in the outside layer of tides comming inside.
@@ -309,8 +310,7 @@ class MapTwoStrokeGabor(VisualExperiment):
     which is for given purposes satisfied, but should be mentioned.
 
 
-    .. rubric:: Notes on rotation
-
+    **Notes on rotation:-**
     This number is taken as a free parameter, but to replicate hexagonal  
     tiding this number has to be 6 or 1 or 2. The code exploits symmetry and  
     properties of the hexagonal tiding rather a lot!  
@@ -864,7 +864,10 @@ class RunApparentMotionConfigurations(VisualExperiment):
         Number of trials of showing the stimuli.
 
 
-    .. rubric:: Notes on Possible Configurations
+    Notes
+    -----
+
+    **Notes on Possible Configurations**
 
     Possible Configurations:
 
