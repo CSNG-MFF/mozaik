@@ -23,14 +23,21 @@ def get_params_from_docstring(cls):
     return params
 
 def parse_docstring(docstring):
-    """Parse the docstring into its components.
-    :returns: a dictionary of form
-              {
-                  "short_description": ...,
-                  "long_description": ...,
-                  "params": [{"name": ..., "doc": ...}, ...],
-                  "returns": ...
-              }
+    r"""
+    Parse the docstring into its components.
+
+    Returns
+    -------
+    
+    Returns a dictionary containing the parsed docstring components with these keys:
+        - 'short_description': The first line of the docstring (str)
+        - 'long_description': The remaining description text (str)
+        - 'params': A list of parameter dictionaries, each containing:
+            * 'name': The parameter name (str)
+            * 'doc': The parameter description (str)
+        - 'returns': Description of the return value (str)
+
+
     """
 
     short_description = long_description = returns = ""

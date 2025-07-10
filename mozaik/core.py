@@ -1,5 +1,5 @@
 # coding: utf-8
-"""
+r"""
 Definition of the component interfaces. These interfaces are not currently directly checked or enforced.
 """
 
@@ -17,26 +17,30 @@ logger = mozaik.getMozaikLogger()
 
 
 class ParametrizedObject(object):
-    """
-    Base class for for all Mozaik objects using the dynamic parameterization framework. See `getting_started`_ for more details.
+    r"""
+    Base class for all Mozaik objects using the dynamic parameterization framework. See `getting started guide <getting_started.rst>`__ for more details.
     
     Parameters
     ----------
+
     parameters : dict
-               Dictionary of the parameter names and their values that has to match the required_parameters variable. 
+        Dictionary of the parameter names and their values that has to match the required_parameters variable. 
+    
     """
     required_parameters = ParameterSet({})
     version = __version__
 
     def check_parameters(self, parameters):
-        """
+        r"""
         This is a function that checks whether all required (and no other) parameters have been specified and all their values have matching types.
-        This function gets automatically executed during initialization of each :class:.ParametrizedObject object. 
+        This function gets automatically executed during initialization of each :class:`~mozaik.core.ParametrizedObject` object. 
 
         Parameters
         ----------
+
         parameters : dict
-                   Dictionary of the parameter names and their values that has to match the required_parameters variable. 
+            Dictionary of the parameter names and their values that has to match the required_parameters variable. 
+        
         """
         
         def walk(tP, P, section=None):
@@ -75,13 +79,15 @@ class ParametrizedObject(object):
 
 
 class BaseComponent(ParametrizedObject):
-    """
+    r"""
     Base class for mozaik model components.
     
     Parameters
     ----------
+
     model : Model
-          Reference to the model to which the component will belong.
+        Reference to the model to which the component will belong.
+
     """
 
     def __init__(self, model, parameters):
@@ -90,18 +96,20 @@ class BaseComponent(ParametrizedObject):
 
 
 class SensoryInputComponent(BaseComponent):
-    """
+    r"""
     Abstract API of sensory input component. Each mozaik sensory input component should 
     inherit from this class and implement its two abstrac methods.
     
     See Also
     --------
+
     mozaik.models.vision : the implementation of retinal input 
+    
     """
 
     def process_input(self, input_space, stimulus_id, duration=None,
                              offset=0):
-        """
+        r"""
         This method is responsible for presenting the content of input_space
         to the sensory input component, and all the mechanisms that are responsible to
         passing the output of the retina (in whatever form desired) to the Sheet
@@ -114,7 +122,7 @@ class SensoryInputComponent(BaseComponent):
         raise NotImplementedError
 
     def provide_null_input(self, input_space, duration=None, offset=0):
-        """
+        r"""
         This method is responsible generating sensory input in the case of no
         stimulus. This method should correspond to the special case of
         process_input method where the input_space contains 'zero'

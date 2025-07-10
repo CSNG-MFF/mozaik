@@ -1,4 +1,4 @@
-"""
+r"""
 This modules implements the API for input space.
 """
 
@@ -23,7 +23,7 @@ def xy2ij(coordinates):
 
 
 class InputSpace(ParametrizedObject):
-    """
+    r"""
     A class to structure and unify operations taking place in the respective sensory space, such as stimulus presentation.
     
     The basic idea of the InputSpace API is following:
@@ -38,8 +38,10 @@ class InputSpace(ParametrizedObject):
     ----------------
     
     update_interval : float (ms)
-                    How often does the input space update.
+        How often does the input space update.
+
     """
+
     
     required_parameters = ParameterSet({
         'update_interval': float  # [ms] how fast the input is changed
@@ -51,7 +53,7 @@ class InputSpace(ParametrizedObject):
         self.input = None
 
     def add_object(self, name, input_object):  
-        """Add an inputObject to the input scene."""
+        r"""Add an inputObject to the input scene."""
         logger.debug("Adding %s with name '%s' to the input scene." % (input_object, name))
         self.content[name] = input_object
         self.input = input_object  # really self.input should be a list, and we should append to it
@@ -84,7 +86,7 @@ class InputSpace(ParametrizedObject):
         return self.frame_number * self.parameters.update_interval
 
     def get_maximum_duration(self):
-        """
+        r"""
         The maximum duration of any of the stimuli in the inpust space.
         """
         duration = 0
@@ -93,20 +95,20 @@ class InputSpace(ParametrizedObject):
         return duration
 
     def get_duration(self):
-        """
+        r"""
         Get the duration of the stimulation in the input space.
         """
         return self.parameters['duration']
 
     def set_duration(self, duration):
-        """
+        r"""
         Set the duration of the stimulation in the input space.
         """
         assert duration <= self.get_maximum_duration()
         self.parameters['duration'] = duration
 
     def time_points(self, duration=None):
-        """
+        r"""
         Returns the time points of updates in the period 0,duration.
         """
         duration = duration or self.get_maximum_duration()
@@ -114,7 +116,7 @@ class InputSpace(ParametrizedObject):
 
 
 class VisualSpace(InputSpace):
-    """
+    r"""
     A class to structure and simplify operations taking place in visual
     space, such as stimulus presentation.
     
@@ -135,6 +137,7 @@ class VisualSpace(InputSpace):
     For now, we deal only with two-dimensions, i.e. everything projected onto a
     plane. We ignore distortions in going from a flat plane to the curved retina.
     Could consider using matplotlib.transforms for some of this.
+
     """
 
     version = __version__
@@ -152,22 +155,26 @@ class VisualSpace(InputSpace):
         self.input = None
 
     def view(self, region, pixel_size):
-        """
+        r"""
         Show the scene within a specific region.
         
         Parameters
         ----------
+
         region : VisualRegion
-               Should be a VisualRegion object.
+            Should be a VisualRegion object.
+
         pixel_size : float (degrees)
-                   The size of a single pixel in degrees of visual field.
+            The size of a single pixel in degrees of visual field.
 
         Returns
         -------
-                array : nd_array 
-                       A numpy 2D array containing luminance values, corresponding to 
-                       to the visual scene in the visual region specified in `region` 
-                       downsample such that one pixel has `pixel_size` degree.
+
+        array : nd_array 
+            A numpy 2D array containing luminance values, corresponding to 
+            to the visual scene in the visual region specified in `region` 
+            downsample such that one pixel has `pixel_size` degree.
+
         """
         # Let's make it more efficient if there is only one object in the scene that is not transparrent (which is often the case):
         o = list(self.content.values())
@@ -204,22 +211,24 @@ class VisualSpace(InputSpace):
 
 
 class VisualRegion(object):
-    """
+    r"""
     A rectangular region of visual space.
     
     Parameters
     ----------
+
     location_x : float (degrees)
-               The x coordinate of the center of the region in the visual space. 
+        The x coordinate of the center of the region in the visual space. 
             
     location_y : float (degrees)
-               The y coordinate of the center of the region in the visual space. 
+        The y coordinate of the center of the region in the visual space. 
 
     size_x : float (degrees)
-               The x size of the region in the visual space. 
+        The x size of the region in the visual space. 
 
     size_y : float (degrees)
-               The y size of the region in the visual space. 
+        The y size of the region in the visual space. 
+               
     """
 
     def __init__(self, location_x, location_y, size_x, size_y):
@@ -253,7 +262,7 @@ class VisualRegion(object):
         return hash((self.location_x,self.location_y,self.size_x,self.size_y))
 
     def overlaps(self, another_region):
-        """
+        r"""
         Returns whether this region overlaps with the one in the `another_region` argument.
         """
 
@@ -262,7 +271,7 @@ class VisualRegion(object):
         return not(lr or tb)
 
     def intersection(self, another_region):
-        """
+        r"""
         Returns VisualRegion corresponding to the intersection of this VisualRegion and the one in the `another_region` argument.
         """
         if not self.overlaps(another_region):

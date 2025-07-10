@@ -21,7 +21,7 @@ from neo.core.analogsignal import AnalogSignal as NeoAnalogSignal
 
 
 class TextureModulation(Analysis):
-    """
+    r"""
     Calculates the modulation of the response to texture stimuli compared to the response to spectrally-matched noise
     """
     required_parameters = ParameterSet({
@@ -80,7 +80,7 @@ class TextureModulation(Analysis):
 
 
 class TextureVarianceRatio(Analysis):
-    """
+    r"""
     Calculates the ratio of the variance inter-texture families on the variance intra-texture families of the response to texture stimuli compared to the response to spectrally-matched noise.
     This is similar as calculating the F statistic for a nested Anova
     This analysis also store the R-squared (the percentage of variation) for each factor and the residuals
@@ -147,7 +147,7 @@ class TextureVarianceRatio(Analysis):
 
 
 class PercentageNeuronsModulated(Analysis):
-    """
+    r"""
     Calculates the percentage of neurons positively modulated, negatively modulated, and not modulated by synthetic texture stimuli in comparison to spectrally-matched noise
     """
     required_parameters = ParameterSet({
@@ -212,7 +212,7 @@ class PercentageNeuronsModulated(Analysis):
             self.datastore.full_datastore.add_analysis_result(SingleValue(float(firing_rates_noise.shape[1] - count_positively_modulated - count_negatively_modulated)/firing_rates_noise.shape[1] * 100,qt.percent, value_name = "Percentage of neurons not significantly modulated", sheet_name=sheet, tags=self.tags,period=None,analysis_algorithm=self.__class__.__name__,stimulus_id=str(st)))
 
 class TextureModulationFromPSTH(Analysis):
-    """
+    r"""
     Calculate the time-course of the modulation of the neurons using the PSTH of the synthetic texture stimuli and of the spectrally-matched noise stimuli 
     """
     required_parameters = ParameterSet({

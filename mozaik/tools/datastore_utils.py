@@ -15,7 +15,7 @@ logger = mozaik.getMozaikLogger()
 
 
 def compare_sheets_datastores(datastores):
-    """
+    r"""
     Returns True if all datastores contain sheets with similar names
     """
     sheets = datastores[0].block.annotations["neuron_ids"].keys()
@@ -28,7 +28,7 @@ def compare_sheets_datastores(datastores):
 
 
 def compare_neurons_ids_datastores(datastores):
-    """
+    r"""
     Returns True if all datastores contain neurons with similar ids
     """
     sheets = datastores[0].block.annotations["neuron_ids"].keys()
@@ -43,7 +43,7 @@ def compare_neurons_ids_datastores(datastores):
 
 
 def compare_neurons_position_datastores(datastores):
-    """
+    r"""
     Returns True if all datastores contain neurons with similar positions
     """
     sheets = datastores[0].block.annotations["neuron_positions"].keys()
@@ -58,7 +58,7 @@ def compare_neurons_position_datastores(datastores):
 
 
 def compare_neurons_annotations_datastores(datastores):
-    """
+    r"""
     Returns True if all datastores contain neurons with similar annotations
     """
     sheets = datastores[0].block.annotations["neuron_annotations"].keys()
@@ -74,7 +74,7 @@ def compare_neurons_annotations_datastores(datastores):
 
 
 def merge_experiment_parameters_datastores(datastores):
-    """
+    r"""
     Merge the experiment parameters of the datastores
     """
     experiment_parameters = []
@@ -92,7 +92,7 @@ def merge_datastores(
     merge_stimuli=True,
     replace=False,
 ):
-    """
+    r"""
     This function takes a tuple of datastore in input and merge them into one single datastore which will be saved in root_directory.
     The type of data that should be merged can be controlled through the merge_recordings, merge_analysis and merge_stimuli booleans
     It returns this datastore as a Datastore object.

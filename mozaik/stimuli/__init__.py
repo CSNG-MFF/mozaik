@@ -1,8 +1,8 @@
-"""
+r"""
 This module defines the API for:
-    - implementation of stimuli as input to models (see class BaseStimulus)
-    - identification of stimulus identity 
-    - function helpers for common manipulation with collections of stimuli
+- implementation of stimuli as input to models (see class BaseStimulus)
+- identification of stimulus identity 
+- function helpers for common manipulation with collections of stimuli
 
 Each stimulus is expected to have a list of parameters which have to uniquely identify the stimulus.
 This parameterization is done via the MozaikParametrized package (see :class:`mozaik.tools.mozaik_parametrized.MozaikParametrized`)
@@ -27,7 +27,7 @@ import collections
 logger = mozaik.getMozaikLogger()
 
 class BaseStimulus(MozaikParametrized):
-    """
+    r"""
     The abstract stimulus class. It defines the parameters common to all stimuli and
     the list of function each stimulus has to provide.
     """
@@ -44,19 +44,19 @@ class BaseStimulus(MozaikParametrized):
         self.n_frames = numpy.inf  # possibly very dangerous. Don't do 'for i in range(stim.n_frames)'!
         
     def __eq__(self, other):
-        """
+        r"""
         Are the name and all parameters of two stimuli are equivallent?
         """
         return self.equalParams(other) and (self.__class__ == other.__class__)
 
     def number_of_parameters(self):
-        """
+        r"""
         Returns number of parameters of the stimulus.
         """
         return len(self.getParams().keys())
 
     def frames(self):
-        """
+        r"""
         Return a generator which yields the frames of the stimulus in sequence.
         Each frame is returned as a tuple `(frame, variables)` where
         `frame` is a numpy array containing the stimulus at the given time and
@@ -68,30 +68,31 @@ class BaseStimulus(MozaikParametrized):
         raise NotImplementedError("Must be implemented by child class.")
 
     def update(self):
-        """
+        r"""
         Sets the current frame to the next frame in the sequence.
         """
         raise NotImplementedError("Must be implemented by child class.")
 
     def reset(self):
-        """
+        r"""
         Reset to the first frame in the sequence.
         """
         raise NotImplementedError("Must be implemented by child class.")
 
     def export(self, path=None):
-        """
+        r"""
         Save the frames to disk. Returns a list of paths to the individual
         frames.
 
         path - the directory in which the individual frames will be saved. If
-               path is None, then a temporary directory is created.
+        path is None, then a temporary directory is created.
+
         """
         raise NotImplementedError("Must be implemented by child class.")
 
 
 class InternalStimulus(BaseStimulus):
-    """
+    r"""
     Technical stimulus corresponding to no sensory stimulation.
 
     It is used exclusively in the case when the model receives no sensory stimulus. 
@@ -110,7 +111,7 @@ class InternalStimulus(BaseStimulus):
         return None
 
 class EndOfSimulationBlank(InternalStimulus):
-    """
+    r"""
     A special case stimulus. 
     
     Before each stimulus S in simulations we show blank stimulus (or reset the network).

@@ -9,8 +9,7 @@ It is built on top of the following tools:
 
     * `PyNN <http://neuralensemble.org/PyNN/>`_ (for simulator independent neural network model definition)
     * `neo  <http://pythonhosted.org/neo/Neo>`_  (for exchange and internal representation of data)
-    * `matplotib <http://matplotlib.org/>`_ (for plotting)
-
+    * `matplotlib <http://matplotlib.org/>`_ (for plotting)
 
 *Mozaik* currently covers the following main areas of the neural simulation workflow:
     
@@ -31,9 +30,10 @@ Tasks that we would like to cover in *mozaik* in future are:
 *mozaik* is currently subdivided into the core package and 10 subpackages:
     
     * :doc:`mozaik` - contains the core of the *mozaik*:
-	  * core - The core API objects
-      * controller - the control center of *mozaik* workflows
-      * space - the input space handling
+    
+        * core - The core API objects
+        * controller - the control center of *mozaik* workflows
+        * space - the input space handling
       
     * :doc:`mozaik.sheets` - Code defining 2D sheets of neurons, one of the basic building blocks of *mozaik* networks
     * :doc:`mozaik.connectors` - Defines various connections between sheets
@@ -46,8 +46,6 @@ Tasks that we would like to cover in *mozaik* in future are:
     * :doc:`mozaik.visualization` - plotting code
     * :doc:`mozaik.meta_workflow` - code supporting meta-workflows, such as parameter searches
     * :doc:`mozaik.tools` - utility code
-    
-    
 
 This might change as *mozaik* grows, and code in the framework 
 is likely to get separated into new sub-packages as it matures.
@@ -56,5 +54,3 @@ Scetch of how the control flows between the *mozaik* elements:
 
 .. image:: mozaik_control_flow.png
    :width: 800px
-
-

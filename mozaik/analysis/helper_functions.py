@@ -1,4 +1,4 @@
-"""
+r"""
 This module contains various utility functions often useb by analysis code.
 """
 
@@ -17,28 +17,32 @@ logger = mozaik.getMozaikLogger()
 
 
 def psth(spike_list, bin_length,normalize=True):
-    """
+    r"""
     The function returns the psth of the spiketrains with bin length bin_length.
     
     Parameters
     ----------
+
     spike_list : list(SpikeTrain )
-               The list of spike trains. They are assumed to start and end at the same time.
+        The list of spike trains. They are assumed to start and end at the same time.
 
     bin_length : float (ms) 
-               Bin length.
+        Bin length.
                
     normalized : bool
-               If true the psth will return the instantenous firing rate, if False it will return spike count per bin. 
+        If true the psth will return the instantenous firing rate, if False it will return spike count per bin. 
 
     Returns
     -------
+
     psth : AnalogSignal
-           The PSTH of the spiketrain. 
+        The PSTH of the spiketrain. 
     
-    Note
-    ----
+    Notes
+    -----
+
     The spiketrains are assumed to start and stop at the same time!
+
     """
     t_start = round(spike_list[0].t_start.rescale(qt.ms),5)
     t_stop = round(spike_list[0].t_stop.rescale(qt.ms),5)
@@ -57,36 +61,42 @@ def psth(spike_list, bin_length,normalize=True):
 
 
 def psth_across_trials(spike_trials, bin_length):
-    """
+    r"""
     It returns PSTH averaged across the spiketrains
     
     
     Parameters
     ----------
+
     spike_trials : list(list(SpikeTrain)) 
-                 should contain a list of lists of neo spiketrains objects,
-                 first coresponding to different trials and second to different neurons.
-                 The function returns the histogram of spikes across trials with bin length
-                 bin_length.
+        should contain a list of lists of neo spiketrains objects,
+        first coresponding to different trials and second to different neurons.
+        The function returns the histogram of spikes across trials with bin length
+        bin_length.
    
     Returns
     -------
+
     psth : AnalogSignal
-         The PSTH averages over the spiketrains in spike_trials.
+        The PSTH averages over the spiketrains in spike_trials.
                  
-    Note
-    ----
+    Notes
+    -----
+
     The spiketrains are assumed to start and stop at the same time.
+
     """
     return sum([psth(st, bin_length) for st in spike_trials])/len(spike_trials)
 
 def pnv_datastore_view_to_tensor(pnv_view):
-    """
+    r"""
     Assuming:
-        * the pnv_view contains a set of identical pnvs to identical stimuli with the exception of variation of some stimulus parameters
-        * all values of the varied parameters lay on a n-dimensional grid where n is the number of parameters
+    * the pnv_view contains a set of identical pnvs to identical stimuli with the exception of variation of some stimulus parameters
+    * all values of the varied parameters lay on a n-dimensional grid where n is the number of parameters
+
     This function turns the pnv_view set into a n+1 dimensional tensor of values, where the first n dimensions correspond to the stimulus 
-    parameters varied, and nth+1 dimension correspond to the number of neurons recorded in the pnvs in the pnv_view.    
+    parameters varied, and nth+1 dimension correspond to the number of neurons recorded in the pnvs in the pnv_view. 
+       
     """
     assert queries.equal_ads(pnv_view,except_params=['stimulus_id']), "All ADS in the view have to be same with the exception of stimulus"
     pnvs = dsv.get_analysis_result()
@@ -125,12 +135,16 @@ def pnv_datastore_view_to_tensor(pnv_view):
     return (tensor,params)
 
 def pnv_datastore_view_to_tensor(pnv_view,allow_missing=False,pickle_file=None):
-    """
+    r"""
     Assuming:
-        * the pnv_view contains a set of identical pnvs to identical stimuli with the exception of variation of some stimulus parameters
-        * all values of the varied parameters lay on a n-dimensional (irregularly spaced) grid where n is the number of parameters
+    
+    * the pnv_view contains a set of identical pnvs to identical stimuli with the exception of variation of some stimulus parameters
+    * all values of the varied parameters lay on a n-dimensional (irregularly spaced) grid where n is the number of parameters
+
+
     This function turns the pnv_view set into a n+1 dimensional tensor of values, where the first n dimensions correspond to the stimulus 
-    parameters varied, and nth+1 dimension correspond to the number of neurons recorded in the pnvs in the pnv_view.    
+    parameters varied, and nth+1 dimension correspond to the number of neurons recorded in the pnvs in the pnv_view.   
+     
     """
     assert equal_ads(pnv_view,except_params=['stimulus_id']), "All ADS in the view have to be same with the exception of stimulus"
     pnvs = pnv_view.get_analysis_result()

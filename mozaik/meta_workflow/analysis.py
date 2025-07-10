@@ -8,21 +8,25 @@ import os
 import time
 
 def load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir,filter=None):
-    """
+    r"""
     Loads all datastores of parameter search over a fixed set of parameters. 
     
     Parameters
     ----------
+
     simulation_name : str
-                    The name of the simulation.
+        The name of the simulation.
+
     master_results_dir : str
-                       The directory where the parameter search results are stored.
+        The directory where the parameter search results are stored.
     
     Returns
     -------
+
     A tuple (parameters,datastores), where `parameters` is a list of parameters over which the parameter search was performed.
     The dsvs is a list of tuples (values,datastore) where `values` is a list of values (in the order as im `parameters`) of the
     parameters, and dsv is a DataStore with results recorded to the combination of parameter values.
+
     """
     f = open(master_results_dir+'/parameter_combinations','rb')
     combinations = pickle.load(f)
@@ -58,19 +62,24 @@ def load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir
     return (parameters,datastore,number_of_unloadable_datastores)
 
 def run_analysis_on_parameter_search(simulation_name,master_results_dir,analysis_function):
-    """
+    r"""
     Runs the *analysis_function* on each of the simualtions that have been executed as a part of the parameter search.
     Results are stored in the corresponding simulation's datastore. The analysis is executed sequentially over results
     of each parameter combination simulation.
     
     Parameters
     ----------
+
     simulation_name : str
-                    The name of the simulation.
+        The name of the simulation.
+
     master_results_dir : str
-                    The directory where the parameter search results are stored.
+        The directory where the parameter search results are stored.
+
     analysis_function : func(datastore)
-                    The analysis function to be run. The datastore will be passed as it's sole parameter.
+        The analysis function to be run. The datastore will be passed as it's sole parameter.
+
+
     """
     (a,datastores,n) = load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir)
     for d in datastores:
@@ -78,7 +87,7 @@ def run_analysis_on_parameter_search(simulation_name,master_results_dir,analysis
         d.save()
       
 def collect_results_from_parameter_search(simulation_name,master_results_dir,processing_function,file_name):
-    """
+    r"""
     This function loads datastore associated with each parameter combination in the parameter search,
     passes it to the *processing_function* function and then adds the result this function returns to a list. 
     It then creates a tuple, with first element the list of parameter names in the same order as they appear in the parameter combinations,
@@ -88,16 +97,21 @@ def collect_results_from_parameter_search(simulation_name,master_results_dir,pro
     
     Parameters
     ----------
+
     simulation_name : str
-                    The name of the simulation.
+        The name of the simulation.
+
     master_results_dir : str
-                    The directory where the parameter search results are stored.
+        The directory where the parameter search results are stored.
     
     processing_function : func(ds)
-                    A function accepting one parameter which will be the given datastore, and returning a pickable python structure to be associated with the parameter combination of the simulation run that produced the given datastore.
+        A function accepting one parameter which will be the given datastore, 
+        and returning a pickable python structure to be associated with the parameter 
+        combination of the simulation run that produced the given datastore.
     
     filename : str
-             The name of file into which to pickle the resutls.   
+        The name of file into which to pickle the results.   
+
     """
     (parameters,datastores,n) = load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir)
     results = [processing_function(d) for p,d in datastores]
@@ -110,18 +124,22 @@ def collect_results_from_parameter_search(simulation_name,master_results_dir,pro
     
         
 def export_SingleValues_as_matricies(simulation_name,master_results_dir,query):
-    """
+    r"""
     It assumes that there was a grid parameter search. Providing this it reformats the SingleValues into matricies
     (one per each value_name parameter encountered) and exports them as pickled numpy ndarrays.
     
     Parameters
     ----------
+
     simulation_name : str
-                    The name of the simulation.
+        The name of the simulation.
+
     master_results_dir : str
-                    The directory where the parameter search results are stored.
+        The directory where the parameter search results are stored.
+
     query : Query
-          The query applied to each datastore before the SingleValue ADSs to be saved are retrieved.
+        The query applied to each datastore before the SingleValue ADSs to be saved are retrieved.
+          
     """
     (parameters,datastores,n) = load_fixed_parameter_set_parameter_search(simulation_name,master_results_dir)
     

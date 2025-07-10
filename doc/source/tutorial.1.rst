@@ -9,6 +9,7 @@ that should be able to self-sustain its actvity with no external stimulus.
 
 Project folder organization
 ---------------------------
+
 There would be no need to have the code for our project in separate files but it is a good practice for larger projects. Let's go through each file of the VogelsAbbott project, each dealing with a part of the workflow:
 
 * **model.py** contains the high level specification of the network (sheet creation, reference to parameters, connection schema, ...).
@@ -24,11 +25,13 @@ There would be no need to have the code for our project in separate files but it
 
 File Content
 ------------
+
 Now let's take a look at the content of the files. For simplicity, to force ourselves in looking more at the actual files and to keep focused on what we need to look at in them, only the relevant lines will be shown here. In any case the number of lines is very little compared to what we can accomplish with them.
 
 
 model.py
 ~~~~~~~~
+
 There are two main components of mozaik: **sheets** and **connectors**. These are the ones we are going to set in this file. 
 Mozaik comes with a whole set of sheets and connectors, we can specify their properties by assigning their parameteters. In addition, we can define our own sheets and connectors, and we will do this in the advanced tutorial. Each model should be derived from the mozaik base class Model::
 
@@ -79,6 +82,7 @@ Then we will use the sheet instances to specify how to connect each sheet in its
 
 param folder
 ~~~~~~~~~~~~
+
 Another important component of mozaik is the management of parameters. All parameters are loaded by mozaik automatically from the root parameter file that is given to it on command line (see below), and recursively any other paramter files that are referenced from it (or from the other parameter files being loaded). In our case the root parameter file is called *default*. The root parameter file contains a dictionary of basic parameters used by mozaik to setup
 your project as well as references to other parameter files that will be included and expanded.
 
@@ -151,6 +155,7 @@ based on the recorded data...
 
 experiment.py
 ~~~~~~~~~~~~~
+
 How to run the experiment is something unrelated to model creation. This is why we specify our experimental protocol in a separate file 
 (then to reuse the same network with a different protocol we just need to use another experiment file).
 
@@ -182,6 +187,7 @@ The component parameter defines the population selector class and the param para
 
 run.py
 ~~~~~~
+
 The run.py is our top level execution file.
 
 We start our simulation with one line. We chose to put it in a separate file thus we can add other running-related operations, like logging and plotting.
@@ -201,6 +207,7 @@ relevant meta-data), which we can then use for analysis and visualization, see l
 
 analysis_and_visualization.py
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Last but not least, we can have a file to write our own analysis and plotting procedure. Mozaik comes with a set of analysis tools that we can further expand (which we will show how in later tutorials). In this example we will use just a couple of them in order to familirize with the process.
 
 The method that gets called in the previous run.py file receives the simulation output *datastore*::
@@ -271,6 +278,7 @@ We simply take our data_store view from a query and pass it to the plot creator,
 
 Results
 ~~~~~~~
+
 Running this project is as easy as enter this command line in the mozaik/contrib directory::
 
   $ mpirun -np 4 python run.py nest 1 param/defaults 'test'

@@ -1,4 +1,4 @@
-"""
+r"""
 This module defines units used in mozaik project and not specified in the quantities package.
 """
 import quantities as qt
@@ -51,13 +51,14 @@ uS = microsiemens = UnitQuantity(
 
 
 def periodic(unit):
-    """
+    r"""
     Checks whether a units is periodic
 
     Returns
     -------
-        (a,b): bool,double
-             Where a is True if unit is periodic, and b corresponds to the period if a is True.
+    (a,b): bool,double
+        Where a is True if unit is periodic, and b corresponds to the period if a is True.
+             
     """
     periodic = False
     period = None

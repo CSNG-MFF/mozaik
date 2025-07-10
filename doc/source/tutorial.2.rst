@@ -6,6 +6,7 @@ In this tutorial we will design a new experiment, creating a new stimulus based 
 
 Existing experiments
 --------------------
+
 In the first tutorial we briefly looked at the content of the file `experiment.py` from the VoglesAbbott2005 example project, where we specify experimental protocol.
 
 In short an experiment consists of:
@@ -23,11 +24,15 @@ common to all visual experiments - density and background_luminance - to match v
 
 The  classe below derived from VisualExperiment will guide us in understanding how a protocol is shaped. Each one has a meaningful name. Here we picked  `MeasureOrientationTuningFullfield` (see the mozaik/experiments/visio.py for the full class) that will assess the responses of our model to stimuli differing by their orientation and can also vary the contrast at which this is done.
 
-The structure of the init function tells us the way a protocol works:
+The structure of the ``__init__`` function demonstrates the protocol workflow:
+
+.. code-block:: python
+    :linenos:
+    :emphasize-lines: 3,8
 
     def __init__(self, model, num_orientations, spatial_frequency,
                  temporal_frequency, grating_duration, contrasts, num_trials):
-        VisualExperiment.__init__(self, model)
+        VisualExperiment.__init__(self, model) 
         for c in contrasts:
             for i in xrange(0, num_orientations):
                 for k in xrange(0, num_trials):
@@ -38,13 +43,15 @@ The structure of the init function tells us the way a protocol works:
                         location_x=0.0,
                         location_y=0.0,
                         background_luminance=self.background_luminance,
-                        contrast = c,
+                        contrast=c,
                         duration=grating_duration,
                         density=self.density,
                         trial=k,
                         orientation=numpy.pi/num_orientations*i,
                         spatial_frequency=spatial_frequency,
                         temporal_frequency=temporal_frequency))
+
+
 
 Above we see::
 
@@ -95,10 +102,12 @@ Let us now create our own new experiment...
 
 Writing a new experiment
 ------------------------
+
 We will now define a new type of stimulus and an experimental protocl that uses it. The experiment we want to design will test the responses of our model to full-field luminance step increments.
 
 Stimulus
 ~~~~~~~~
+
 First of all, we need a stimulus generator. There is already one that fits our purpose in the imagen library, and in turn in the topographica_based ones::
 
     class Null(TopographicaBasedVisualStimulus):
@@ -118,6 +127,7 @@ This generator produces frames with a constant luminance (the scale parameter) v
 
 Protocol
 ~~~~~~~~
+
 Then we need to define the protocol that will use this stimulus. We want to be able to specify a certain number of luminance steps, the duration of presentation and the number of trials. We create a new class, derived from VisualExperiment, into `mozaik/experiments/vision.py`.
 
 Our parameters are::
@@ -157,6 +167,7 @@ We didn't change much compared to other protocols, this will be often the case.
 
 Experiment
 ~~~~~~~~~~
+
 In the `experiments.py` file of our model we now can use the new protocol for an experiment. As expected we pass our model, a list of luminances, the duration of each step (as a multiple of the base frame duration) and the number of trials::
 
     MeasureLuminanceSensitivity(
@@ -171,6 +182,7 @@ And that's it. Of course there can be more complex stimuli (see for example `Dri
 
 Analysis and Visualization
 --------------------------
+
 Once we will have our experiment done, we will need to analyse the results that came out of the experiment. 
 Let's have a brief look at an example of such analysis. As shown in tutorial 1, we will first get the ids of the units we recorded from::
 

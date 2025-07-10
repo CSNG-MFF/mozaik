@@ -1,4 +1,4 @@
-"""
+r"""
 This module contains API of visual stimuli.
 """
 import numpy
@@ -18,7 +18,7 @@ logger = mozaik.getMozaikLogger()
 
 
 class VisualStimulus(BaseStimulus):
-    """
+    r"""
     Abstract base class for visual stimuli.
     
     This class defines all parameters common to all visual stimuli.
@@ -50,7 +50,7 @@ class VisualStimulus(BaseStimulus):
         
 
     def _calculate_zoom(self, actual_pixel_size, desired_pixel_size):
-        """
+        r"""
         Sometimes the interpolation procedure returns a new array that is too
         small due to rounding error. This is a crude attempt to work around that.
         """
@@ -163,7 +163,7 @@ class VisualStimulus(BaseStimulus):
         return view
 
     def update(self):
-        """
+        r"""
         Sets the current frame to the next frame in the sequence.
         """
         try:
@@ -176,7 +176,7 @@ class VisualStimulus(BaseStimulus):
         self._zoom_cache = OrderedDict()
 
     def reset(self):
-        """
+        r"""
         Reset to the first frame in the sequence.
         """
         self.visible = True
@@ -184,6 +184,6 @@ class VisualStimulus(BaseStimulus):
         self.update()
 
     def next_frame(self):
-        """For creating movies"""
+        r"""For creating movies"""
         self.update()
         return [self.img]

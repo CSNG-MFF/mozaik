@@ -18,7 +18,7 @@ from builtins import zip
 logger = mozaik.getMozaikLogger()
 
 class Connector(BaseComponent):
-    """
+    r"""
     An abstract interface class for Connectors in mozaik. Each mozaik connector should derive from this class and implement 
     the _connect function. The usage is: create the instance of MozaikConnector and call connect() to realize the connections.
     """
@@ -105,7 +105,7 @@ class Connector(BaseComponent):
 
 
 class SpecificArborization(Connector):
-    """
+    r"""
     Generic connector which gets directly list of connections as the list of
     quadruplets as accepted by the pyNN FromListConnector.
 
@@ -156,7 +156,7 @@ class SpecificArborization(Connector):
 
 
 class SpecificProbabilisticArborization(Connector):
-    """
+    r"""
     Generic connector which gets directly list of connections as the list
     of quadruplets as accepted by the pyNN FromListConnector.
 

@@ -3,7 +3,7 @@
 .. image:: mozaik_logo.svg
 ..    :width: 1200 px
 
-This is the first release of the *mozaik* package.
+This is the v0.4.0 of the *mozaik* package.
 *mozaik* is an integrated workflow framework for large scale neural simulations.
 Note that currently it is under intense development, and API breaking changes will be introduced
 in the next few releases before the API stabilizies.

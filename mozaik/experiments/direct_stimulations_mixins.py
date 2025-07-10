@@ -5,7 +5,7 @@ from collections import OrderedDict
 
 
 def add_per_stimulus_current_injection(exp,stimulation_configuration,stimulation_sheet,stimulation_current):
-    """
+    r"""
     To experiment *exp*, add an injection of current of magnitude *stimulation_current* to neurons from sheet *stimulation_sheet*
     selected based on population selector *stimulation_configuration*.
     """
