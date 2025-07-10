@@ -315,7 +315,7 @@ class MozaikParametrized(Parameterized):
 
     @classmethod
     def idd_to_instance(cls,obj):
-        """
+        r"""
         
         """
         if isinstance(obj,MozaikParametrized):
@@ -336,7 +336,7 @@ Helper functions that allow querying lists of MozaikParametrized objects.
 
 def filter_query(object_list, extra_data_list=None,allow_non_existent_parameters=False,**kwargs):
     r"""
-    
+
     Returns a subset of `object_list` containing MozaikParametrized instances (and associated data if data_list!=None)
     for which the parameters in kwargs match.
 

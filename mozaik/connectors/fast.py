@@ -1,5 +1,5 @@
 # encoding: utf-8
-"""
+r"""
 This file contains connectors that were written for speed - as a general rule 
 they tend to use the more native pyNN or even backend specific pyNN methods.
 

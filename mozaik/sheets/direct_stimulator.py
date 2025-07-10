@@ -1,5 +1,5 @@
 # encoding: utf-8
-"""
+r"""
 This file contains the API for direct stimulation of neurons. 
 By direct stimulation here we mean a artificial stimulation that 
 would happen during electrophisiological experiment - such a injection

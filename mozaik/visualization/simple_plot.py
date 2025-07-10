@@ -1,4 +1,4 @@
-"""
+r"""
 See :mod:`mozaik.visualization` for more general documentation.
 """
 import mozaik.visualization.helper_functions as phf
@@ -636,7 +636,7 @@ class StandardStyleAnimatedPlot(StandardStyle):
     """
 
     def plot_next_frame(self,frame):
-        """
+        r"""
         The function that each instance of `StandardStyleAnimatedPlot` has to implement, in which it updated
         the data in the plot to the next frame.
         """

@@ -117,7 +117,6 @@ important API classes: :class:`mozaik.analysis.data_structures.AnalysisDataStruc
 
 .. automodule:: mozaik.analysis.data_structures
     :members:
-    :undoc-members:
     :show-inheritance:
     
     

@@ -1,4 +1,4 @@
-"""
+r"""
 This module contains special analysis functions that relate to some tehnical mozaik architecture aspects and thus 
 do not represent a standard analysis
 """

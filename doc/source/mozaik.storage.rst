@@ -1,6 +1,8 @@
 storage Package
 ===============
 
+This sub-package contains modules that are related to storage.
+
 Modules
 ^^^^^^^    
     * :py:mod:`mozaik.storage.datastore` - This module provides interfaces and backends for managing, querying, and storing simulation and analysis data.

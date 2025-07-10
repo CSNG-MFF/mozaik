@@ -1,4 +1,4 @@
-"""
+r"""
 This is the nexus of workflow execution controll of *mozaik*.
 """
 from mozaik.cli import parse_workflow_args

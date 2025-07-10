@@ -63,7 +63,7 @@ def param_filter_query(dsv,ads_unique=False,rec_unique=False,negative=False,**kw
     rec_unique : bool, optional
         If True the query will raise an exception if the query does not identify a unique recording.
     
-    \*\*kwargs : dict
+    **kwargs : dict
         Remaining keyword arguments will be interepreted as the mozaik parameter names and their associated values that all ASDs
         or recordings have to match. The values of the parameters should be either directly the values to match or list of values in which
         case this list is interpreted as *one of* of the values that each returned recording or ASD has to match (thus effectively there

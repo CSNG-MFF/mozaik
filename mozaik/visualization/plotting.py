@@ -1,4 +1,4 @@
-"""
+r"""
 This module defines the :class:`mozaik.visualization.plotting.Plotting` API and offers
 a library of plotting commands derived from it. 
 
@@ -109,7 +109,7 @@ class Plotting(ParametrizedObject):
         self.caption = "Caption not specified."
 
     def subplot(self, subplotspec):
-        """
+        r"""
         This is the function that each Plotting instance has to implement.
         See the module documentation for more details.
         """

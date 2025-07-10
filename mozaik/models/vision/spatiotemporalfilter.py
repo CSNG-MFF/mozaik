@@ -1,5 +1,5 @@
 # encoding: utf-8
-"""
+r"""
 Retina/LGN model based on that developed by Jens Kremkow (CNRS-INCM/ALUF)
 """
 import pylab

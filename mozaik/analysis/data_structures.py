@@ -1,4 +1,4 @@
-"""
+r"""
 This module contains the definition of the AnalysisDataStructure API and implementation of some basic analysis data structures.
 
 For more documentation refer to :doc:`mozaik.analysis`
@@ -139,7 +139,7 @@ class PerNeuronValue(AnalysisDataStructure):
         assert len(values) == len(idds), '%s %s' % (str(values),str(idds))
     
     def get_value_by_id(self,idds):
-        """
+        r"""
         Parameters
         ---------- 
 
@@ -329,7 +329,7 @@ class AnalogSignalList(AnalysisDataStructure1D):
         assert len(asl) == len(ids)
     
     def get_asl_by_id(self,idds):
-        """
+        r"""
         Parameters
         ---------- 
 
@@ -655,7 +655,7 @@ class ConductanceSignalList(AnalysisDataStructure1D):
         assert len(i_con) == len(ids)
         
     def get_econ_by_id(self,idd):
-        """
+        r"""
         Parameters
         ---------- 
 
@@ -671,7 +671,7 @@ class ConductanceSignalList(AnalysisDataStructure1D):
         return self.e_con[self.ids.index(idd)]
 
     def get_icon_by_id(self,idd):
-        """
+        r"""
         Parameters
         ---------- 
 
@@ -687,7 +687,7 @@ class ConductanceSignalList(AnalysisDataStructure1D):
         return self.i_con[self.ids.index(idd)]
 
     def mean(self):
-        """
+        r"""
         Calculates the mean conductance from the ones in the list.
         """
         for asl in self.e_con:
@@ -704,7 +704,7 @@ class ConductanceSignalList(AnalysisDataStructure1D):
 
 
 class Connections(AnalysisDataStructure):
-    """
+    r"""
     Data structure holding connections.
 
     Parameters

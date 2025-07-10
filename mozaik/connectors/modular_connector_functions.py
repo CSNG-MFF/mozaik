@@ -60,7 +60,7 @@ class DistanceDependentModularConnectorFunction(ModularConnectorFunction):
     """
     def distance_dependent_function(self,distance):
         r"""
-        The is the function, dependent only on distance that each DistanceDependentModularConnectorFunction has to implement.
+        This is the function, dependent only on distance that each DistanceDependentModularConnectorFunction has to implement.
         The distance can be matrix.
         """
         raise NotImplemented

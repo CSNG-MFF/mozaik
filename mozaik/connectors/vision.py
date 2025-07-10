@@ -1,4 +1,4 @@
-"""
+r"""
 Vision specific connectors.
 """
 import numpy

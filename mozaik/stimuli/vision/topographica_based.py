@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # TODO: Remove this once we switch to Python 3
-"""
+r"""
 The file contains stimuli that use topographica to generate the stimulus
 
 """
@@ -311,7 +311,7 @@ class FlashingSquares(TopographicaBasedVisualStimulus):
 
 
 class Null(TopographicaBasedVisualStimulus):
-    """
+    r"""
     Blank stimulus.
 
     All pixels of the visual field are set to background luminance.
@@ -350,7 +350,7 @@ class PixelImpulse(TopographicaBasedVisualStimulus):
             yield (impulse, [self.frame_duration])
 
 class MaximumDynamicRange(TransferFn):
-    """
+    r"""
     It linearly maps 0 to the minimum of the image and 1.0 to the maximum in the image.
     """
     norm_value = param.Number(default=1.0)
@@ -1325,7 +1325,7 @@ class RadialGaborApparentMotion(GaborStimulus):
         return (x0-x1)**2 + (y0-y1)**2 < diameter**2
 
     def set_overlap_to_nan(self, x_pos, y_pos, angles, gabor_diameter, allowed_orientation_axes):
-        """
+        r"""
         Sets positions of overlapping Gabors to NaN, except ones
         """
         # If start_angle == end_angle, it will overlap, but we don't want to delete it

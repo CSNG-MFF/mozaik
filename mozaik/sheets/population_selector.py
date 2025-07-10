@@ -38,7 +38,7 @@ class PopulationSelector(ParametrizedObject):
         self.sheet = sheet  
 
     def generate_idd_list_of_neurons(self):
-        """
+        r"""
         The abastract function that has to be implemented by each `.PopulationSelector` 
         and has to return the list of selected neurons.
         
@@ -52,7 +52,7 @@ class PopulationSelector(ParametrizedObject):
         raise NotImplemented 
 
 class RCAll(PopulationSelector):
-      """
+      r"""
       This PopulationSelector selects all neurons in the sheet.
       """
       def generate_idd_list_of_neurons(self):

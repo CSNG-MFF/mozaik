@@ -1,4 +1,4 @@
-"""
+r"""
 The file contains stimuli generated based on a texture image
 
 """

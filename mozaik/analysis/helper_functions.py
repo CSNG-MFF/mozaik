@@ -1,4 +1,4 @@
-"""
+r"""
 This module contains various utility functions often useb by analysis code.
 """
 

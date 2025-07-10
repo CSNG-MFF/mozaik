@@ -1,5 +1,5 @@
 # encoding: utf-8
-"""
+r"""
 This module contains implementation of vision related sheets.
 """
 
@@ -94,7 +94,7 @@ class SheetWithMagnificationFactor(Sheet):
     })
 
     def __init__(self, model, parameters):
-        """
+        r"""
         """
         logger.info("Creating %s with %d neurons." % (self.__class__.__name__, int(parameters.sx*parameters.sy/1000000*parameters.density)))
         Sheet.__init__(self, model, parameters.sx/ parameters.magnification_factor,parameters.sy/parameters.magnification_factor,parameters)

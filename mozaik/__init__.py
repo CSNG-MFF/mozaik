@@ -117,7 +117,6 @@ def load_component(path):
     
     This function is primarily used to automatically load components based on configuration files during model construction.
 
-
     """
     logger = getMozaikLogger()
     path_parts = path.split('.')

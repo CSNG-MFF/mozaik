@@ -1,4 +1,4 @@
-"""
+r"""
 This module implements the data storage functionality.
 """
 
@@ -80,7 +80,7 @@ class DataStoreView(ParametrizedObject):
         self.full_datastore = full_datastore  # should be self if actually the instance is actually DataStore
 
     def get_segments(self,null=False):
-        """
+        r"""
         Returns list of all recordings (as neo segments) stored in the datastore.
         If *null* is true then the segments correspond to the blank period before every stimulus.
         If *ordered* is true then the stimuli are sorted chronologically
@@ -105,7 +105,7 @@ class DataStoreView(ParametrizedObject):
         return list(sheets.keys())
 
     def get_neuron_positions(self):
-        """
+        r"""
         Returns the positions for all neurons in the model within their respective sheets.
         A dictionary is returned with keys names of sheets and values a 2d ndarray of size (2,number of neurons)
         holding the x and y positions of all neurons in the rows.
@@ -115,7 +115,7 @@ class DataStoreView(ParametrizedObject):
         return self.full_datastore.block.annotations['neuron_positions']
 
     def get_sheet_indexes(self, sheet_name,neuron_ids):
-        """
+        r"""
         Returns the indexes of neurons in the sheet given the idds (this should be primarily used with annotations data such as positions etc.)
         """
         ids = self.full_datastore.block.annotations['neuron_ids'][sheet_name]
@@ -125,7 +125,7 @@ class DataStoreView(ParametrizedObject):
           return numpy.where(ids == neuron_ids)[0][0]
 
     def get_sheet_ids(self, sheet_name,indexes=None):
-        """
+        r"""
         Returns the idds of neurons in the sheet given the indexes (this should be primarily used with annotations data such as positions etc.)
         """
         # find first segment from sheet sheet_name
@@ -136,27 +136,27 @@ class DataStoreView(ParametrizedObject):
         else:
             raise ValueError("indexes can be aither None or list or ndarray, %s was supplied instead" % (str(type(indexes))))
     def get_sheet_parameters(self,sheet_name):
-        """
+        r"""
         Returns the *ParemterSet* instance corresponding to the given sheet.
         """
         return eval(self.full_datastore.block.annotations['sheet_parameters'])[sheet_name]
 
 
     def get_model_parameters(self):
-        """
+        r"""
         Returns the *ParemterSet* instance corresponding to the whole model.
         """
         return self.full_datastore.block.annotations['model_parameters']
 
 
     def get_neuron_annotations(self):
-        """
+        r"""
         Returns neuron annotations.
         """
         return self.full_datastore.block.annotations['neuron_annotations']
 
     def get_stimuli(self,null=False):
-        """
+        r"""
         Returns a list of stimuli (as strings). The order of the stimuli
         corresponds to the order of segments returned by the get_segments()
         call.
@@ -169,7 +169,7 @@ class DataStoreView(ParametrizedObject):
         return [s.annotations['stimulus'] for s in self.get_segments(null)]
 
     def get_analysis_result(self, **kwargs):
-        """
+        r"""
         Return a list of ADSs, that match the parameter values specified in kwargs.
         
         Examples
@@ -206,7 +206,7 @@ class DataStoreView(ParametrizedObject):
             self.analysis_results = ads_nkey + sorted(ads_key, key= lambda x:getattr(x,key),reverse=reverse)
 
     def get_sensory_stimulus(self, stimuli=None):
-        """
+        r"""
         Return the raw sensory stimulus that has been presented to the model due to stimuli specified by the stimuli argument.
         If stimuli==None returns all sensory stimuli.
         """
@@ -247,7 +247,7 @@ class DataStoreView(ParametrizedObject):
         return self.block.segments[:]
 
     def fromDataStoreView(self):
-        """
+        r"""
         Returns a empty DSV that is linked to the same `.DataStore` as this DSV.
         """
         return DataStoreView(ParameterSet({}), self.full_datastore)
@@ -416,7 +416,7 @@ class DataStore(DataStoreView):
         self.block.annotations['experiment_parameters'] = experiment_parameter_list
         
     def set_simulation_log(self,log):
-        """
+        r"""
         The simulation log is expected to be a dictionary where every pair of key/values correspond to one part
         of the log
         """
@@ -462,7 +462,7 @@ class DataStore(DataStoreView):
         self.stimulus_dict[str(stimulus)] = True
 
     def add_null_recording(self, segments,stimulus):
-        """
+        r"""
         Add recordings due to the null stimuli presented between the standard stimuli.
         """
         # we get recordings as seg
@@ -473,21 +473,21 @@ class DataStore(DataStoreView):
             self.block.segments = sorted(self.block.segments, key=lambda x:x.rec_datetime)
 
     def add_stimulus(self, data, stimulus):
-        """
+        r"""
         The DataStore interface function that adds a stimulus into the datastore.
         """
         if self.parameters.store_stimuli and not self.stimulus_presented(stimulus):
            self._add_stimulus(data, stimulus)
 
     def _add_stimulus(self, data, stimulus):
-        """
+        r"""
         This function adds raw sensory stimulus data that have been presented to the model into datastore. 
         """
         self.sensory_stimulus[str(stimulus)] = data
 
 
     def add_direct_stimulation(self, direct_stimulators, stimulus):
-        """
+        r"""
         The DataStore interface function that adds direct stimulation stimuli into
         the datastore.
         """
@@ -513,7 +513,7 @@ class DataStore(DataStoreView):
         return False
 
     def add_analysis_result(self, result):
-        """
+        r"""
         Add analysis results to data store. If there already exists ADS in the data store with the same parametrization this operation will fail.
         """
         flag = True
@@ -534,7 +534,7 @@ class DataStore(DataStoreView):
             raise ValueError("Analysis Data Structure with the same parametrization already added in the datastore. Currently uniqueness is required. The ADS was not added. User should modify analysis specification to avoid this!: %s \n %s" % (str(result),str(ads)))
 
 class Hdf5DataStore(DataStore):
-    """
+    r"""
     An DataStore that saves all it's data in a hdf5 file and an associated
     analysis results file, which just becomes the pickled self.analysis_results
     dictionary.
@@ -597,7 +597,7 @@ class Hdf5DataStore(DataStore):
 
 
 class PickledDataStore(Hdf5DataStore):
-    """
+    r"""
     An DataStore that saves all it's data as a simple pickled files
     """
 
@@ -650,7 +650,7 @@ class PickledDataStore(Hdf5DataStore):
 
 
     def add_null_recording(self, segments,stimulus):
-        """
+        r"""
         Add recordings due to the null stimuli presented between the standard stimuli.
         """
         # we get recordings as seg
@@ -666,7 +666,7 @@ class PickledDataStore(Hdf5DataStore):
         self.block.segments = sorted(self.block.segments, key=lambda x:x.rec_datetime)
 
     def purge_segments(self):
-        """Purge spiketrains and analogsignals of all sgements from memory (lazy loading mechanisms will ensure their reload if accessed again)."""
+        r"""Purge spiketrains and analogsignals of all sgements from memory (lazy loading mechanisms will ensure their reload if accessed again)."""
         for s in self.block.segments:
             if s.full:
                 s.release()

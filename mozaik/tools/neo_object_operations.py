@@ -18,7 +18,7 @@ def neo_sum(l):
     return a
 
 def neo_mean(l):
-    """
+    r"""
     Calculates the mean over list of Neo objects.
     See neo_sum for more details.
     """

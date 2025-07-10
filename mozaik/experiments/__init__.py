@@ -1,4 +1,4 @@
-"""
+r"""
 Module containing the experiment API.
 """
 import numpy
@@ -63,7 +63,7 @@ class Experiment(ParametrizedObject):
         return self.stimuli
         
     def run(self,data_store,stimulus_indexes):
-        """
+        r"""
         This function is called to execute the experiment.
         
         Parameters

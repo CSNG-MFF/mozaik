@@ -39,7 +39,7 @@ class LocalSequentialBackend(object):
     """
      
     def execute_job(self,run_script,simulator_name,parameters_url,parameters,simulation_run_name):
-         """
+         r"""
          This function recevies the list of parameters to modify and their values, and has to 
          execute the corresponding mozaik simulation.
          

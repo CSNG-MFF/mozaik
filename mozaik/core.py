@@ -1,5 +1,5 @@
 # coding: utf-8
-"""
+r"""
 Definition of the component interfaces. These interfaces are not currently directly checked or enforced.
 """
 

@@ -1,4 +1,4 @@
-"""
+r"""
 This modules implements the API for input space.
 """
 
@@ -53,7 +53,7 @@ class InputSpace(ParametrizedObject):
         self.input = None
 
     def add_object(self, name, input_object):  
-        """Add an inputObject to the input scene."""
+        r"""Add an inputObject to the input scene."""
         logger.debug("Adding %s with name '%s' to the input scene." % (input_object, name))
         self.content[name] = input_object
         self.input = input_object  # really self.input should be a list, and we should append to it
@@ -86,7 +86,7 @@ class InputSpace(ParametrizedObject):
         return self.frame_number * self.parameters.update_interval
 
     def get_maximum_duration(self):
-        """
+        r"""
         The maximum duration of any of the stimuli in the inpust space.
         """
         duration = 0
@@ -95,20 +95,20 @@ class InputSpace(ParametrizedObject):
         return duration
 
     def get_duration(self):
-        """
+        r"""
         Get the duration of the stimulation in the input space.
         """
         return self.parameters['duration']
 
     def set_duration(self, duration):
-        """
+        r"""
         Set the duration of the stimulation in the input space.
         """
         assert duration <= self.get_maximum_duration()
         self.parameters['duration'] = duration
 
     def time_points(self, duration=None):
-        """
+        r"""
         Returns the time points of updates in the period 0,duration.
         """
         duration = duration or self.get_maximum_duration()
@@ -262,7 +262,7 @@ class VisualRegion(object):
         return hash((self.location_x,self.location_y,self.size_x,self.size_y))
 
     def overlaps(self, another_region):
-        """
+        r"""
         Returns whether this region overlaps with the one in the `another_region` argument.
         """
 
@@ -271,7 +271,7 @@ class VisualRegion(object):
         return not(lr or tb)
 
     def intersection(self, another_region):
-        """
+        r"""
         Returns VisualRegion corresponding to the intersection of this VisualRegion and the one in the `another_region` argument.
         """
         if not self.overlaps(another_region):

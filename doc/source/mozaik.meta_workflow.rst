@@ -1,7 +1,7 @@
 meta-workflow Package
 =====================
 
-This peckage contains implementation of meta workflows - i.e. workflows
+This package contains implementation of meta workflows - i.e. workflows
 involving executation of multiple simulations runs. Previously only
 parameter search was implemented. Now it has visualization and analysis too. 
 

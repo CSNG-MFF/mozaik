@@ -1,4 +1,4 @@
-"""
+r"""
 This file contains code extracted from the NeuroTools package (http://neuralensemble.org/NeuroTools).
 """
 from numpy import array, log
@@ -118,7 +118,7 @@ class SpikeTrain(object):
         return len(self.spike_times)
 
     def __getslice__(self, i, j):
-        """
+        r"""
         Return a sublist of the spike_times vector of the SpikeTrain
         """
         return self.spike_times[i:j]
@@ -151,7 +151,7 @@ class SpikeTrain(object):
 
 
     def duration(self):
-        """
+        r"""
         Return the duration of the SpikeTrain
         """
         return self.t_stop - self.t_start
@@ -347,7 +347,7 @@ class StGen:
 
         See Also
         --------
-        
+
         poisson_generator,
             
         """

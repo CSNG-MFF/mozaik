@@ -1,5 +1,5 @@
 # encoding: utf-8
-"""
+r"""
 Module containing the implementation of sheets - one of the basic building blocks of *mozaik* models.
 """
 
@@ -115,7 +115,7 @@ class Sheet(BaseComponent):
         
 
     def setup_to_record_list(self):
-        """
+        r"""
         Set up the recording configuration.
         """
         self.to_record = OrderedDict()
@@ -356,7 +356,7 @@ class Sheet(BaseComponent):
         
 
     def setup_artificial_stimulation(self):
-        """
+        r"""
         Called once population is created. Sets up the background noise.
         """
         self.artificial_stimulators = []
@@ -366,7 +366,7 @@ class Sheet(BaseComponent):
 
         
     def setup_initial_values(self):
-        """
+        r"""
         Called once population is set. Set's up the initial values of the neural model variables.
         """
         # Initial state variables

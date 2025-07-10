@@ -1,6 +1,8 @@
 tools Package
 =============
 
+This sub-package contains modules that are related to various tools under the roof of mozaik.
+
 Modules
 ^^^^^^^    
     * :py:mod:`mozaik.tools.misc` - This module provides utility functions for sampling, statistical calculations, neuron localization, and result directory naming within Mozaik.
