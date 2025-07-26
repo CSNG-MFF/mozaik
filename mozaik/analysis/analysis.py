@@ -1958,9 +1958,9 @@ class ExcitatoryConductanceGenerator(Analysis):
                               exc_cond = exc_cond + seg.get_syn(idd,receptor).magnitude
                       exc_conds.append(exc_cond)
 
-                  # Create analog signals from list of conductances. Each element of the list corresponds to an id
-                  seg.analogsignals.append(NeoAnalogSignal(exc_conds, t_start= first_cond.t_start, sampling_period= first_cond.sampling_period, units= first_cond.units, name= 'gsyn_exc', source_population= sheet, source_ids = all_ids))
+                  seg.analogsignals.append(NeoAnalogSignal(numpy.squeeze(numpy.array(exc_conds)).T, t_start= first_cond.t_start, sampling_period= first_cond.sampling_period, units= first_cond.units, name= 'gsyn_exc', source_population= sheet, source_ids = all_ids))
                   self.datastore.full_datastore.update_segment(seg)
+
 
 class InhibitoryConductanceGenerator(Analysis):
       """
@@ -2027,6 +2027,5 @@ class InhibitoryConductanceGenerator(Analysis):
                               inh_cond = inh_cond + seg.get_syn(idd,receptor).magnitude
                       inh_conds.append(inh_cond)
   
-                  # Create analog signals from list of conductances. Each element of the list corresponds to an id
-                  seg.analogsignals.append(NeoAnalogSignal(inh_conds, t_start= first_cond.t_start, sampling_period= first_cond.sampling_period, units= first_cond.units, name= 'gsyn_inh', source_population= sheet, source_ids = all_ids))
+                  seg.analogsignals.append(NeoAnalogSignal(numpy.squeeze(numpy.array(inh_conds)).T, t_start= first_cond.t_start, sampling_period= first_cond.sampling_period, units= first_cond.units, name= 'gsyn_inh', source_population= sheet, source_ids = all_ids))
                   self.datastore.full_datastore.update_segment(seg)

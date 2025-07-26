@@ -343,8 +343,6 @@ class Analog_F0andF1(Analysis):
 
                     signals = asl.asl
                     first_analog_signal = signals[0]
-                    logger.info(str(first_analog_signal.t_start))
-                    logger.info(str(first_analog_signal.t_stop))
                     duration = first_analog_signal.t_stop - first_analog_signal.t_start
                     frequency = MozaikParametrized.idd(asl.stimulus_id).temporal_frequency * MozaikParametrized.idd(asl.stimulus_id).getParams()['temporal_frequency'].units
                     period = 1/frequency
