@@ -1,13 +1,11 @@
 import pickle
 import pytest
 import numpy as np
-from pyNN import nest
 import quantities as qt
 from copy import deepcopy
 from mozaik.models import Model
 from parameters import ParameterSet
 from mozaik.sheets.vision import VisualCorticalUniformSheet3D
-from mozaik.experiments.optogenetic import *
 from mozaik.tools.distribution_parametrization import (
     load_parameters,
     PyNNDistribution,
@@ -27,7 +25,17 @@ class TestCorticalStimulationWithOptogeneticArray:
 
     @classmethod
     def setup_class(cls):
-        global test_dir
+        from pyNN import nest
+        from mozaik.experiments.optogenetic import (
+            CorticalStimulationWithOptogeneticArray,
+            SingleOptogeneticArrayStimulus,
+            OptogeneticArrayStimulusCircles,
+            OptogeneticArrayStimulusHexagonalTiling,
+            OptogeneticArrayImageStimulus,
+            OptogeneticArrayStimulusOrientationTuningProtocol,
+        )
+
+        global test_dir, CorticalStimulationWithOptogeneticArray, SingleOptogeneticArrayStimulus, OptogeneticArrayStimulusCircles, OptogeneticArrayStimulusHexagonalTiling, OptogeneticArrayImageStimulus, OptogeneticArrayStimulusOrientationTuningProtocol
         test_dir = str(pathlib.Path(__file__).parent.parent)
         model_params = load_parameters(test_dir + "/sheets/model_params")
         cls.sheet_params = load_parameters(test_dir + "/sheets/exc_sheet_params")

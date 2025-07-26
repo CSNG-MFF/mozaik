@@ -5,6 +5,7 @@ from mozaik.cli import parse_workflow_args
 from mozaik.storage.datastore import Hdf5DataStore, PickledDataStore
 from mozaik.tools.distribution_parametrization import MozaikExtendedParameterSet, load_parameters
 from mozaik.tools.misc import result_directory_name
+from mozaik.stimuli import EndOfSimulationBlank
 from collections import OrderedDict
 import sys
 import os
@@ -13,6 +14,8 @@ import time
 from datetime import datetime
 import logging
 from mozaik.tools.json_export import save_json, get_experimental_protocols, get_recorders, get_stimuli
+from parameters import ParameterSet
+
 
 logger = mozaik.getMozaikLogger()
 
@@ -254,11 +257,27 @@ def run_experiments(model,experiment_list,parameters,load_from=None):
         experiment_run_time, model_exploded = experiment.run(data_store,unpresented_stimuli_indexes)
         simulation_run_time += experiment_run_time
         if model_exploded:
+            logger.info('ERROR: Model exploded, stopping simulation!')
             break
         logger.info('Experiment %d/%d finished' % (i+1,len(experiment_list)))
-    
+
+    last_blank_run_time = 0
+    # Do a reset after the last stimulus. If reset is done as blank stimulus, this makes sure we have some blank recorded also after last stimulus.
+    ds =  OrderedDict()
+
+    if parameters.null_stimulus_period != 0:
+        s = EndOfSimulationBlank(trial=0,duration=parameters.null_stimulus_period,frame_duration=parameters.null_stimulus_period)
+        (segments,null_segments,input_stimulus,last_blank_run_time,_) = model.present_stimulus_and_record(s,ds)
+        data_store.add_recording(segments,s)
+        data_store.add_stimulus(input_stimulus,s)
+        data_store.add_direct_stimulation(ds,s)
+        if null_segments != []:
+                data_store.add_null_recording(null_segments,s) 
+    else:
+        last_blank_run_time = 0
+        
     total_run_time = time.time() - t0
-    mozaik_run_time = total_run_time - simulation_run_time
+    mozaik_run_time = total_run_time - simulation_run_time - last_blank_run_time
 
     # Adding the state (represented by a randomly generated number) of the rng of every MPI process to the datastore
     if mozaik.mpi_comm:

@@ -817,12 +817,11 @@ def image_stim(coor_x, coor_y, parameters):
     A = np.load(parameters.image_path)
     assert len(A.shape) == 2, "The image must be 2D! Instead, the image shape is: " % A.shape
     assert np.all(A >= 0) and np.all(A <= 1), "All values in the image must be in the range of (0,1)!"
-    A_interp = scipy.interpolate.interp2d(
-        np.linspace(coor_x[:, 0].min(), coor_x[:, 0].max(), A.shape[0]),
-        np.linspace(coor_y[0, :].min(), coor_y[0, :].max(), A.shape[1]),
-        A,
-        fill_value=0,
-    )(coor_x[:, 0], coor_y[0, :])
+    A_interp = scipy.interpolate.RegularGridInterpolator(
+        (np.linspace(np.min(coor_x), np.max(coor_x), A.shape[0]),
+         np.linspace(np.min(coor_y), np.max(coor_y), A.shape[1])),
+        A, bounds_error=False, fill_value=np.nan)(np.vstack([coor_x.ravel(), coor_y.ravel()]).T)
+    A_interp = A_interp.reshape(coor_x.shape)
     return A_interp * parameters.intensity
 
 

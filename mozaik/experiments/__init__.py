@@ -69,8 +69,8 @@ class Experiment(ParametrizedObject):
         data_store : DataStore
                    The data store into which to store the recorded data.
                    
-        stimuli : list(Stimulus)
-                The list of stimuli to present to the model.
+        stimulus_indexes : list(Stimulus)
+                The indexes of stimuli to present to the model.
         
         Returns
         -------
@@ -79,7 +79,7 @@ class Experiment(ParametrizedObject):
                 
         Notes
         -----
-        The reason why this function gets a list of stimuli as input is that even though the experiment itself defines the list of stimuli
+        The reason why this function gets a list of stimulus index as input is that even though the experiment itself defines the list of stimuli
         to present to the model, some of these might have already been presented. The module `mozaik.controller` filters
         the list of stimuli which to present to prevent repetitions, and lets this function know via the stimuli argument which stimuli to actually present.
         """

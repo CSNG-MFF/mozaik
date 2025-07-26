@@ -212,7 +212,7 @@ class PerAreaValue(AnalysisDataStructure):
         self.values = numpy.array(values)
         self.x_coords = numpy.array(x_coords)
         self.y_coords = numpy.array(y_coords)
-        assert values.shape == (len(y_coords), len(x_coords)), 'The values matrix dimensionis doesn\'t correspond to the dimensions of the coords matrix' 
+        assert self.values.shape == (self.y_coords.shape[0], self.x_coords.shape[0]), 'The values matrix dimensionis doesn\'t correspond to the dimensions of the coords matrix' 
 
     def get_space(self):
         return numpy.meshgrid(self.x_coords, self.y_coords)
@@ -321,7 +321,25 @@ class AnalogSignalList(AnalysisDataStructure1D):
             new_asl.append(self.get_asl_by_id(idd) + other.get_asl_by_id(idd))
             
         return AnalogSignalList(new_asl,self.ids,y_axis_units = self.y_axis_units,x_axis_name = self.x_axis_name,y_axis_name = self.y_axis_name, sheet_name = self.sheet_name)
+
+    def __mul__(self, scalar):
+        assert isinstance(scalar, int) or isinstance(scalar, float)
+
+        new_asl = []
+        for idd in self.ids:
+            new_asl.append(self.get_asl_by_id(idd) * scalar)
+
+        return AnalogSignalList(new_asl,self.ids,y_axis_units = self.y_axis_units,x_axis_name = self.x_axis_name,y_axis_name = self.y_axis_name, sheet_name = self.sheet_name)
     
+    def __truediv__(self, scalar):
+        assert isinstance(scalar, int) or isinstance(scalar, float)
+
+        new_asl = []
+        for idd in self.ids:
+            new_asl.append(self.get_asl_by_id(idd) / scalar)
+
+        return AnalogSignalList(new_asl,self.ids,y_axis_units = self.y_axis_units,x_axis_name = self.x_axis_name,y_axis_name = self.y_axis_name, sheet_name = self.sheet_name)
+
     def mean(self, ignore_invalid = False):
         """
         Calculates the mean analog signal from the ones in the list.

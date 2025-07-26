@@ -174,10 +174,7 @@ class MozaikParametrized(Parameterized):
                del self.expanded_paramset_params_dict[key]
         
         self.expanded_paramset_params_dict.update(dict(self.expanded_paramset_params))
-
-
-    
-
+        
     def __setattr__(self,attribute_name,value):
         """
         We need to override the Parametrized __setattr__ to handle setting of SParameterSet parameters.

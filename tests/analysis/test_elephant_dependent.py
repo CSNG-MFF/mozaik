@@ -1,4 +1,3 @@
-from mozaik.analysis.elephant_dependent import *
 import numpy as np
 import pytest
 from scipy import stats
@@ -6,6 +5,13 @@ import pylab
 
 
 class TestCriticalityAnalysis:
+
+    @classmethod
+    def setup_class(cls):
+        from mozaik.analysis.elephant_dependent import CriticalityAnalysis
+
+        global CriticalityAnalysis
+
     def gen_powerlaw_distr(self, ca, a, b):
         x = np.linspace(1, 1000, 1000)
         f = ca.powerlaw(x, a, b)

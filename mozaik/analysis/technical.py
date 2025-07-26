@@ -6,9 +6,11 @@ from mozaik.analysis.data_structures import PerNeuronValue
 from mozaik.analysis.analysis import Analysis
 from mozaik.storage import queries
 from parameters import ParameterSet
+from mozaik.tools.mozaik_parametrized import MozaikParametrized
 import quantities as qt
 import numpy
 import mozaik
+import pickle
 
 logger = mozaik.getMozaikLogger()
 from mozaik.controller import Global
@@ -87,3 +89,57 @@ class SummarizeSingleValues(Analysis):
         for a in dsv.get_analysis_result():
             f.write("%s %s %s %s %s\n" % (a.sheet_name, a.value_name, str(a.value), a.analysis_algorithm, a.stimulus_id))
         f.close()
+
+class ExportRawSpikeData(Analysis):
+    """
+    Exports raw data from the simulation in a simple numpy readable format.
+    It will export responses to all stimuli, and for each stimulus the measurments 
+    specified in the `variables_to_export` will be saved.
+
+    The export format is as follows:
+
+    At the top level there is a dictionary with each key corresponding to one of the stimuli in the datastore that was exported.
+    The stringified `MozaikParamerised.idd` of the stimulus is used as the key.
+
+    Each entry in the dictionary is a dictionary with keys corresponding to the names of populations in the model.
+
+    Each entry in this dictionary then contains 3D ndarray. The first dimension corresponds to neurons in the given 
+    sheet, the second dimension to repeated trials of the stimulus presentation, the third dimension has variable 
+    length and contains the spike times emitted by the given neuron on the given trial.
+
+    This structure will be saved in a .npy format in file named `file_name`.
+    """
+
+    required_parameters = ParameterSet({
+        'file_name' : str
+    })
+
+    def perform_analysis(self):
+        res = {}
+
+        dsvs = queries.partition_by_stimulus_paramter_query(self.datastore,["trial"])
+
+        for dsv in dsvs:
+                # lets get rid of trial from the stimulus ID to use for the new ADS
+                stim = dsv.get_stimuli()[0]
+                stim = MozaikParametrized.idd(stim)
+                stim.trial = None
+                stim = str(stim)
+
+                if not stim in res.keys():
+                       res[stim]={}
+
+                for seg in self.datastore.get_segments():
+                    sheet_name = seg.annotations['sheet_name']
+
+                    if sheet_name not in res[stim].keys():
+                       res[stim][sheet_name]=[] 
+
+                    res[stim][sheet_name].append([s.magnitude for s in seg.spiketrains]) 
+
+        for k in res.keys():
+            for kk in res[k].keys():
+                res[k][kk] = numpy.array(res[k][kk])
+
+        f = open(Global.root_directory+self.parameters.file_name,'wb')
+        pickle.dump(res,f)

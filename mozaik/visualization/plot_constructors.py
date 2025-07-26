@@ -155,7 +155,7 @@ class PerStimulusPlot(PerDSVPlot):
                If the style is set to Clever but the conditions doesn't hold it
                falls back to Standard and emits a warning.
                In this case the name of the stimulus and all parameters which
-               are the same for all stimuli in DSV are not displayed. The
+               are the same for all stimuli in DSV are not displayed. Theblock.segments
                remaining parameters are shown line after line in the format
                'stimulus: value'.
                Of course trial parameter is ignored.
@@ -197,7 +197,7 @@ class PerStimulusPlot(PerDSVPlot):
         if not self.single_trial:
            return partition_by_stimulus_paramter_query(self.datastore,['trial'])
         else:
-           return partition_by_stimulus_paramter_query(self.datastore,[]) 
+           return partition_by_stimulus_paramter_query(self.datastore,[])
 
     def _single_plot(self, idx,gs):
         title = self.title(idx)

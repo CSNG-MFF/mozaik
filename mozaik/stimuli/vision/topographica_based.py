@@ -6,11 +6,12 @@ The file contains stimuli that use topographica to generate the stimulus
 """
 
 from mozaik.stimuli.vision.visual_stimulus import VisualStimulus
+import math
 import imagen
 import imagen.random
 from imagen.transferfn import TransferFn
 import param
-from imagen.image import BoundingBox
+from imagen.image import BoundingBox, GenericImage
 import pickle
 import numpy
 import numpy as np
@@ -19,6 +20,10 @@ from mozaik.tools.distribution_parametrization import MozaikExtendedParameterSet
 from mozaik.tools.units import cpd
 from numpy import pi
 from quantities import Hz, rad, degrees, ms, dimensionless
+import mozaik
+
+logger = mozaik.getMozaikLogger()
+
 
 
 class TopographicaBasedVisualStimulus(VisualStimulus):
@@ -28,7 +33,7 @@ class TopographicaBasedVisualStimulus(VisualStimulus):
     """
     def __init__(self,**params):
         VisualStimulus.__init__(self,**params)
-        self.transparent = False # We will not handle transparency anywhere here for now so let's make it fast
+        self.transparent = False # We will not handle transparency anywhere here for now so let's make it False by default
 
 class SparseNoise(TopographicaBasedVisualStimulus):
     """
@@ -1472,3 +1477,76 @@ class NaturalImage(TopographicaBasedVisualStimulus):
             int((self.duration - self.image_duration) / self.frame_duration)
         ):
             yield (blank, [i])
+
+class NDArrayImage(GenericImage):
+    """
+    2D Image generator that reads the image from a 2D ndarray. It assummes a single channel (grayscale).
+    """
+    def __init__(self,image, **params):
+        """
+        Create the last_filename attribute, used to hold the last
+        filename. This allows reloading an existing image to be
+        avoided.
+        """
+        super(NDArrayImage,self).__init__(**params)
+        self._image = image
+
+    def _get_image(self,p):
+        return self._image
+
+
+
+class PixelMovieFromFile(TopographicaBasedVisualStimulus):
+    """
+    A visual stimulus that consists of a movie that is loaded from a file, where it is stored as a 3D numpy matrix (npy), 
+    with the first axis the time, and 2nd and 3rd axis the visual field. The individual frames are presented one by one 
+    for the self.frame_duration. The stimulus is assumed to have pixel values in the interval [0,1].
+
+    For now we only support suqare stimuli.
+    """
+    size = SNumber(degrees, doc="The length of the longer axis of the image in visual degrees")
+    movie_path = SString(doc="Path to the image file.")
+    movie_name = SString(doc="Name of the image file.")
+    movie_frame_duration = SNumber(ms, doc="Image + blank screen display duration.")
+    frame_offset = SNumber(ms, doc="The offset at which to start presenting frames.")
+
+    # we will chaceh the loaded files in case many stimuli access frames from the same file
+    cache = {}
+
+    def __init__(self, **params):
+        TopographicaBasedVisualStimulus.__init__(self, **params)
+
+        import os
+        # Check if file was already loaded earlier as in the cache. If yes use it. If not load it and insert it in the cache.
+        p = os.path.join(self.movie_path,self.movie_name)
+        if p in PixelMovieFromFile.cache.keys():
+            self.mc = PixelMovieFromFile.cache[p]
+        else:
+            with open(p, 'rb') as f:
+                self.mc = numpy.load(f)
+                PixelMovieFromFile.cache[p] = self.mc
+
+        assert self.mc.shape[1] == self.mc.shape[2], "The spatial shape of the pixel movie has to be square"
+        assert ( self.duration <= self.movie_frame_duration * (len(self.mc)-self.frame_offset)), "The duration of the total stimulus has to be less than number of frames in the movie remaining after the offset times the movie frame duration."
+        assert ( self.movie_frame_duration % self.frame_duration == 0), "The duration of single movie frame has to be multiple of the frame duration of the input space."
+
+    def frames(self):
+        self.time = 0
+
+        while True:
+            frame = int(math.floor(self.time/self.movie_frame_duration) + self.frame_offset)
+            image = NDArrayImage(         
+                                self.mc[frame],
+                                x=0,
+                                y=0,
+                                orientation=0,
+                                xdensity=self.density,
+                                ydensity=self.density,
+                                size=self.size,
+                                bounds=BoundingBox(points=((-self.size_x/2, -self.size_y/2),
+                                                            (self.size_x/2, self.size_y/2))),
+                                scale=2*self.background_luminance,
+                                pattern_sampler= imagen.image.PatternSampler(size_normalization="fit_longest",whole_pattern_output_fns=[MaximumDynamicRange()]))
+
+            yield (image(), [frame])
+            self.time += self.frame_duration
