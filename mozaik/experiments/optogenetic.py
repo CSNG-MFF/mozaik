@@ -1065,7 +1065,7 @@ class OptogeneticArrayStimulusCircleWithFullfieldSquareGrating(VisualExperiment)
                         self.append_direct_stim(model, sap, stim_params)
 
     def generate_stimuli(self):
-        pass # We generate the stimuli later in the init function
+        pass  # We generate the stimuli later in the init function
 
     # TODO: Revise this function in CorticalStimulationWithOptogeneticArray to be more flexible
     def append_direct_stim(
