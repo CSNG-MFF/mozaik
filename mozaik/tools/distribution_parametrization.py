@@ -1,4 +1,4 @@
-"""
+r"""
 This module contains code interfacing parameters package, and pyNN distribution interface. 
 
 In future pyNN plans to make an comprehensive merge between the parameters parametrization system and pyNN,
@@ -18,7 +18,7 @@ import sys
 import json
 
 def load_parameters(parameter_url,modified_parameters=ParameterSet({})):
-    """
+    r"""
     A simple function for loading parameters that replaces the values in *modified_parameters* in the loaded parameters
     and subsequently expands references.
     """
@@ -29,7 +29,7 @@ def load_parameters(parameter_url,modified_parameters=ParameterSet({})):
     return parameters
 
 class PyNNDistribution(RandomDistribution):
-      """
+      r"""
       This will be the wraper for the PyNN RandomDistribution
       
       The first parameter is the name of the distribution (see pyNN.random.RandomDistribution)
@@ -47,7 +47,7 @@ class PyNNDistribution(RandomDistribution):
           return "PyNNDistribution(name=" + '\'' + self.name + '\',' +  ps + ')'
 
       def copy(self,seed):
-          """
+          r"""
           Returns a copy of the PyNNDistribution with the same parameters,
           but with a specified seed and in initial state.
           """
@@ -66,7 +66,7 @@ class PyNNDistribution(RandomDistribution):
 
 
 class ParameterWithUnitsAndPeriod():
-    """
+    r"""
     This is a parameter that allows us add Units and Period to a given parameter.
     """
     def __init__(self, value,units=None,period=None):
@@ -78,7 +78,7 @@ class ParameterWithUnitsAndPeriod():
         return "ParameterWithUnitsAndPeriod("+str(self.value)+",units=" + str(self.units) + ",period=" + str(self.period) + ")"
           
 class MozaikExtendedParameterSet(ParameterSet):
-    """
+    r"""
     This is an extension to `ParameterSet` class which adds the PyNNDistribution as a possible type of a parameter.
     """
 
@@ -178,7 +178,7 @@ class MozaikExtendedParameterSet(ParameterSet):
         self.parameters = self.items
 
     def tree_copy(self):
-        """Return a copy of the `MozaikExtendedParameterSet` tree structure.
+        r"""Return a copy of the `MozaikExtendedParameterSet` tree structure.
         Nodes are not copied, but re-referenced."""
 
         tmp = MozaikExtendedParameterSet({})
@@ -203,7 +203,7 @@ class MozaikExtendedParameterSet(ParameterSet):
                     v.instanciate_objects(classes = classes)
 
     def to_dict(self):
-        """
+        r"""
         Cast to json serializable dictionary while dealing with PyNNDistributions
         and MozaikExtendedParameterSets. Use a stack to avoid explicit recursion.
         """

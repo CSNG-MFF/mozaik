@@ -1,4 +1,4 @@
-"""
+r"""
 The file contains stimuli generated based on a texture image
 
 """
@@ -23,7 +23,7 @@ from PIL import Image #for testing
 import os
 
 class TextureBasedVisualStimulus(VisualStimulus):
-    """
+    r"""
     As we do not handle transparency in texture stimuli (i.e. all pixels of all stimuli difned here will have 0% transparancy)
     in this abstract class we disable the transparent flag defined by the :class:`mozaik.stimuli.visual_stimulus.VisualStimulus`, to improve efficiency.
 
@@ -42,7 +42,7 @@ class TextureBasedVisualStimulus(VisualStimulus):
 
                     
 class PSTextureStimulus(TextureBasedVisualStimulus):
-    """
+    r"""
     A stimulus generated using the Portilla-Simoncelli algorithm (see textureLib/textureBasedStimulus.m)
     with statistics matched to the original image according to the Type.
     It is presented for *stimulus_duration* milliseconds. For the remaining time, 
@@ -50,12 +50,13 @@ class PSTextureStimulus(TextureBasedVisualStimulus):
     is displayed.. 
      
     Types:
-        0 - original image
-        1 - naturalistic texture image (matched higher order statistics)
-        2 - spectrally matched noise (matched marginal statistics only). 
+    0 - original image
+    1 - naturalistic texture image (matched higher order statistics)
+    2 - spectrally matched noise (matched marginal statistics only). 
 
     Notes
     -----
+    
     frames_number - the number of frames for which each image is presented
 
     ALERT!!!
@@ -100,7 +101,7 @@ class PSTextureStimulus(TextureBasedVisualStimulus):
             yield (im, [0])
 
 class PSTextureStimulusDisk(TextureBasedVisualStimulus):
-    """
+    r"""
     A stimulus generated using the Portilla-Simoncelli algorithm (see textureLib/textureBasedStimulus.m)
     with statistics matched to the original image according to the Type.
     It is confined to an aperture of specific radius
@@ -159,7 +160,7 @@ class PSTextureStimulusDisk(TextureBasedVisualStimulus):
             
 
 class VictorUninformativeSyntheticStimulus(VisualStimulus):
-    """
+    r"""
     A stimulus generated using Jonathan Victor's maximum entropy algorithm: Victor, J. D., & Conte, M. M. (2012). Local image statistics: maximum-entropy constructions and perceptual salience. JOSA A, 29(7), 1313-1345.
     Constrain some uniformative 4 pixels correlation statistics as indicated in the pixel statistics list, and generate the rest of the statistics by maximizing the entropy of the image distribution
     """
@@ -212,7 +213,7 @@ class VictorUninformativeSyntheticStimulus(VisualStimulus):
 
 
 class VictorInformativeSyntheticStimulus(VisualStimulus):
-    """
+    r"""
     A stimulus generated using Jonathan Victor's maximum entropy algorithm
     Some statistics of each 2*2 regions of the image are constrained as indicated in the pixel statistics list, and the rest of the statistics are computed in order to maximize the entropy of the image distribution
     """

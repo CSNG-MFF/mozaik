@@ -1,4 +1,4 @@
-"""
+r"""
 This module contains definition of the PopulationSelector API.
 It is used as mechanism for selecting subpopulations of neurons within
 Sheets. The most typical use is for selecting neurons for recordings, where 
@@ -16,7 +16,7 @@ import mozaik
 logger = mozaik.getMozaikLogger()
 
 class PopulationSelector(ParametrizedObject):
-    """
+    r"""
     The PopulationSelector specifies which cells should be selected from population. 
     
     It defines only one function: generate_idd_list_of_neurons that should 
@@ -24,11 +24,13 @@ class PopulationSelector(ParametrizedObject):
     
     Parameters
     ----------
+
     parameters : ParameterSet
-               The dictionary of required parameters.
+        The dictionary of required parameters.
                 
     sheet : Sheet
-          The sheet from which to pick the neurons
+        The sheet from which to pick the neurons
+
     """
           
     def __init__(self, sheet, parameters):
@@ -36,34 +38,38 @@ class PopulationSelector(ParametrizedObject):
         self.sheet = sheet  
 
     def generate_idd_list_of_neurons(self):
-        """
+        r"""
         The abastract function that has to be implemented by each `.PopulationSelector` 
         and has to return the list of selected neurons.
         
         Returns
         -------
+
         ids : list
             List of selected ids.
+
         """
         raise NotImplemented 
 
 class RCAll(PopulationSelector):
-      """
+      r"""
       This PopulationSelector selects all neurons in the sheet.
       """
       def generate_idd_list_of_neurons(self):
           return self.sheet.pop.all_cells.astype(int)
 
 class RCRandomN(PopulationSelector):
-      """
+      r"""
       Select random neurons.  
 
       This PopulationSelector selects *num_of_cells* random neurons from the given population.
 
       Other parameters
       ----------------
+
       num_of_cells : int
-                   The number of cells to be selected.
+          The number of cells to be selected.
+
       """
       
       required_parameters = ParameterSet({
@@ -76,7 +82,7 @@ class RCRandomN(PopulationSelector):
           return z[:self.parameters.num_of_cells]
 
 class RCRandomPercentage(PopulationSelector):
-      """
+      r"""
       Select random neurons.
 
       This PopulationSelector selects *percentage* of randomly chosen neurons from the given population.
@@ -84,8 +90,10 @@ class RCRandomPercentage(PopulationSelector):
 
       Other parameters
       ----------------
+
       percentage : float
-                   The percentage of neurons to select.
+          The percentage of neurons to select.
+
 
       """
       required_parameters = ParameterSet({
@@ -99,7 +107,7 @@ class RCRandomPercentage(PopulationSelector):
 
           
 class RCGrid(PopulationSelector):
-      """
+      r"""
       Select neurons on a grid.
 
       This PopulationSelector assumes a grid of points ('electrodes') with a 
@@ -111,16 +119,17 @@ class RCGrid(PopulationSelector):
       ----------------
 
       size : float (micro meters of cortical space)
-           The size of the grid (it is assumed to be square) - it has to be multiple of spacing 
+          The size of the grid (it is assumed to be square) - it has to be multiple of spacing 
       
       spacing : float (micro meters of cortical space)
-           The space between two neighboring electrodes.
+          The space between two neighboring electrodes.
 
       offset_x : float (micro meters of cortical space)
-           The x axis offset from the center of the sheet.
+          The x axis offset from the center of the sheet.
 
       offset_y : float (micro meters of cortical space)
-           The y axis offset from the center of the sheet.
+          The y axis offset from the center of the sheet.
+
       """
       
       required_parameters = ParameterSet({
@@ -144,7 +153,7 @@ class RCGrid(PopulationSelector):
           return list(set(picked))
 
 class RCGridDegree(PopulationSelector):
-      """
+      r"""
       Select neurons on a grid which coordinates are in degree of visual space.
 
       This PopulationSelector assumes a grid of points ('electrodes') with a
@@ -156,16 +165,17 @@ class RCGridDegree(PopulationSelector):
       ----------------
 
       size : float (degrees of visual space)
-           The size of the grid (it is assumed to be square) - it has to be multiple of spacing
+          The size of the grid (it is assumed to be square) - it has to be multiple of spacing
 
       spacing : float (degrees of visual space)
-           The space between two neighboring electrodes.
+          The space between two neighboring electrodes.
 
       offset_x : float (degrees of visual space)
-           The x axis offset from the center of the sheet.
+          The x axis offset from the center of the sheet.
 
       offset_y : float (degrees of visual space)
-           The y axis offset from the center of the sheet.
+          The y axis offset from the center of the sheet.
+
       """
 
       required_parameters = ParameterSet({
@@ -188,7 +198,7 @@ class RCGridDegree(PopulationSelector):
           return list(set(picked))
 
 class SimilarAnnotationSelector(PopulationSelector):
-      """
+      r"""
       Choose neurons based on annotations info.
 
       This PopulationSelector picks random *num_of_cells* neurons whose 
@@ -197,20 +207,22 @@ class SimilarAnnotationSelector(PopulationSelector):
       
       Other parameters
       ----------------
+
       annotation : str
-                 The name of the annotation value. It has to be defined in the given population for all neurons.
+          The name of the annotation value. It has to be defined in the given population for all neurons.
       
       distance : float 
-		 The the upper limit on distance between the given neurons annotation value and the specified value that permits inclusion.
+		The the upper limit on distance between the given neurons annotation value and the specified value that permits inclusion.
       
       value : float
-	    The value from which to calculate distance.
+          The value from which to calculate distance.
       
       num_of_cells : int
-                   The number of cells to be selected.
+          The number of cells to be selected.
 
       period : float
 		The period of the annotation value (0 if none)
+        
       """
       
       required_parameters = ParameterSet({
@@ -239,7 +251,7 @@ class SimilarAnnotationSelector(PopulationSelector):
           
           
 class SimilarAnnotationSelectorRegion(SimilarAnnotationSelector):
-      """
+      r"""
       Choose neurons based on annotations info.
 
       This PopulationSelector picks random *num_of_cells* neurons whose 
@@ -250,24 +262,26 @@ class SimilarAnnotationSelectorRegion(SimilarAnnotationSelector):
 
       Other parameters
       ----------------
+
       annotation : str
-                 The name of the annotation value. It has to be defined in the given population for all neurons.
+          The name of the annotation value. It has to be defined in the given population for all neurons.
       
       distance : The the upper limit on distance between the given neurons annotation value and the specified value that permits inclusion.
       
       value : The value from which to calculate distance.
       
       num_of_cells : int
-                   The number of cells to be selected.
+          The number of cells to be selected.
 
       size : float (micro meters of cortical space)
-           The size of the grid (it is assumed to be square) - it has to be multiple of spacing 
+          The size of the grid (it is assumed to be square) - it has to be multiple of spacing 
       
       offset_x : float (micro meters of cortical space)
-           The x axis offset from the center of the sheet.
+          The x axis offset from the center of the sheet.
 
       offset_y : float (micro meters of cortical space)
-           The y axis offset from the center of the sheet.
+          The y axis offset from the center of the sheet.
+           
       """
       
       required_parameters = ParameterSet({

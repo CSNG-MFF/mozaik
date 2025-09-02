@@ -1,4 +1,4 @@
-"""
+r"""
 Various helper functions.
 """
 
@@ -7,7 +7,7 @@ import numpy.random
 from numpy import pi, sqrt, exp, power
 
 def sample_from_bin_distribution(bins, number_of_samples, seed):
-    """
+    r"""
     Samples from a distribution defined by a vector the sum in. The vector doesn't have to add up to one
     it will be automatically normalized. 
     
@@ -16,13 +16,14 @@ def sample_from_bin_distribution(bins, number_of_samples, seed):
     ----------
     
     bins : ndarray
-         The returned samples correspond to the bins in `bins` - the numpy array defining the bin distribution
+        The returned samples correspond to the bins in `bins` - the numpy array defining the bin distribution
       
     number_of_samples : int
-                      Number of samples to generate.
+        Number of samples to generate.
 
     seed : int
-         The seed to use to generate the RandomState
+        The seed to use to generate the RandomState
+
     """
     if len(bins) == 0:
         return []
@@ -35,19 +36,20 @@ def sample_from_bin_distribution(bins, number_of_samples, seed):
 
 _normal_function_sqertofpi = sqrt(2*pi)
 def normal_function(x, mean=0, sigma=1.0):
-    """
+    r"""
     Returns the value of probability density of normal distribution N(mean,sigma) at point `x`.
     """
     return numpy.exp(-numpy.power((x - mean)/sigma, 2)/2) / (sigma * _normal_function_sqertofpi)
 
 def find_neuron(which,positions):
-    """
+    r"""
     Finds a neuron depending on which:
-        'center' - the most central neuron in the sheet 
-        'top_right' - the top_right neuron in the sheet
-        'top_left' - the top_left neuron in the sheet
-        'bottom_left' - the bottom_left neuron in the sheet
-        'bottom_right' - the bottom_right neuron in the sheet
+    'center' - the most central neuron in the sheet 
+    'top_right' - the top_right neuron in the sheet
+    'top_left' - the top_left neuron in the sheet
+    'bottom_left' - the bottom_left neuron in the sheet
+    'bottom_right' - the bottom_right neuron in the sheet
+        
     """
     minx = numpy.min(positions[0,:])
     maxx = numpy.max(positions[0,:])
