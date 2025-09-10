@@ -30,7 +30,7 @@ class CorticalStimulationWithOptogeneticArray(Experiment):
     model : Model
         The model on which to execute the experiment.
 
-          
+
     Other parameters
     ----------------
 
@@ -63,7 +63,7 @@ class CorticalStimulationWithOptogeneticArray(Experiment):
         *stimulating_signal* and *stimulating_signal_parameters* - those
         must be set by the specific experiments.
 
-                            
+
     """
 
     required_parameters = ParameterSet(
@@ -171,30 +171,30 @@ class SingleOptogeneticArrayStimulus(CorticalStimulationWithOptogeneticArray):
     model : Model
         The model on which to execute the experiment.
 
-          
+
     Other parameters
     ----------------
 
     sheet_list : int
         The list of sheets in which to do stimulation.
 
-                
+
     sheet_intensity_scaler : list(float)
         Scale the stimulation intensity of each sheet in sheet_list by the
         constants in this list. Must have equal length to sheet_list.
         The constants must be in the range (0,infinity)
 
-                
+
     sheet_transfection_proportion : list(float)
         Set the proportion of transfected cells in each sheet in sheet_list.
         Must have equal length to sheet_list. The constants must be in the
         range (0,1) - 0 means no cells, 1 means all cells.
 
-                
+
     num_trials : int
         Number of trials each stimulus is shown.
 
-                
+
     stimulator_array_parameters : ParameterSet
         Parameters for the optical stimulator array:
         size : float (μm)
@@ -208,7 +208,7 @@ class SingleOptogeneticArrayStimulus(CorticalStimulationWithOptogeneticArray):
         *stimulating_signal* and *stimulating_signal_parameters* - those
         are to be entered separately in this experiment.
 
-                
+
     stimulating_signal : str
         Described in more detail in
         mozaik.sheets.direct_stimulator.OpticalStimulatorArrayChR.
@@ -226,12 +226,12 @@ class SingleOptogeneticArrayStimulus(CorticalStimulationWithOptogeneticArray):
         It should return a 3D numpy array of size:
         coor_x.shape[0] x coor_x.shape[1] x (stimulation_duration/update_interval)
 
-                
+
     stimulating_signal_parameters : ParameterSet
         Extra user parameters for the `stimulating_signal` function,
         described above.
 
-                
+
     """
 
     required_parameters = ParameterSet(
@@ -271,30 +271,30 @@ class OptogeneticArrayStimulusCircles(CorticalStimulationWithOptogeneticArray):
     model : Model
         The model on which to execute the experiment.
 
-          
+
     Other parameters
     ----------------
 
     sheet_list : int
         The list of sheets in which to do stimulation.
 
-                
+
     sheet_intensity_scaler : list(float)
         Scale the stimulation intensity of each sheet in sheet_list by the
         constants in this list. Must have equal length to sheet_list.
         The constants must be in the range (0,infinity)
 
-                
+
     sheet_transfection_proportion : list(float)
         Set the proportion of transfected cells in each sheet in sheet_list.
         Must have equal length to sheet_list. The constants must be in the
         range (0,1) - 0 means no cells, 1 means all cells.
 
-                
+
     num_trials : int
         Number of trials each stimulus is shown.
 
-                
+
     stimulator_array_parameters : ParameterSet
         Parameters for the optical stimulator array:
         size : float (μm)
@@ -308,36 +308,36 @@ class OptogeneticArrayStimulusCircles(CorticalStimulationWithOptogeneticArray):
         *stimulating_signal* and *stimulating_signal_parameters* - those
         are set by this experiment.
 
-                
+
     intensities : list(float)
         Intensities of the stimulation. Uniform across the circle.
 
-                
+
     radii : list(float (μm))
         List of circle radii (μm) to present
 
-                
+
     x_center : float (μm)
         Circle center x coordinate.
 
-                
+
     y_center : float (μm)
         Circle center y coordinate.
 
-                
+
     inverted: bool
         If true, everything in the circle has value 0, everything outside has
         the value *intensity*
 
-                
+
     duration : float (ms)
         Overall stimulus duration
 
-            
+
     onset_time : float (ms)
         Time point when the stimulation turns on
 
-            
+
     offset_time : float(ms)
         Time point when the stimulation turns off
 
@@ -590,30 +590,30 @@ class OptogeneticArrayImageStimulus(CorticalStimulationWithOptogeneticArray):
     model : Model
         The model on which to execute the experiment.
 
-          
+
     Other parameters
     ----------------
 
     sheet_list : int
         The list of sheets in which to do stimulation.
 
-                
+
     sheet_intensity_scaler : list(float)
         Scale the stimulation intensity of each sheet in sheet_list by the
         constants in this list. Must have equal length to sheet_list.
         The constants must be in the range (0,infinity)
 
-                
+
     sheet_transfection_proportion : list(float)
         Set the proportion of transfected cells in each sheet in sheet_list.
         Must have equal length to sheet_list. The constants must be in the
         range (0,1) - 0 means no cells, 1 means all cells.
 
-                
+
     num_trials : int
         Number of trials each stimulus is shown.
 
-                
+
     stimulator_array_parameters : ParameterSet
         Parameters for the optical stimulator array:
         size : float (μm)
@@ -627,28 +627,28 @@ class OptogeneticArrayImageStimulus(CorticalStimulationWithOptogeneticArray):
         *stimulating_signal* and *stimulating_signal_parameters* - those
         are set by this experiment.
 
-                
+
     intensities : list(float)
         Intensities of the stimulation. Uniform across the circle.
 
-                
+
     images_path : str
         Path to either the .npy image array to read for stimulation, or the
         directory containing the .npy image arrays to read for stimulation.
 
-                
+
     duration : float (ms)
         Overall stimulus duration
 
-            
+
     onset_time : float (ms)
         Time point when the stimulation turns on
 
-            
+
     offset_time : float(ms)
         Time point when the stimulation turns off
 
-            
+
     """
 
     required_parameters = ParameterSet(
@@ -729,18 +729,18 @@ class OptogeneticArrayStimulusOrientationTuningProtocol(
     model : Model
         The model on which to execute the experiment.
 
-          
+
     Other parameters
     ----------------
 
     sheet_list : int
         The list of sheets in which to do stimulation.
 
-               
+
     num_trials : int
         Number of trials each stimulus is shown.
 
-                
+
     stimulator_array_parameters : ParameterSet
         Parameters for the optical stimulator array:
         size : float (μm)
@@ -754,31 +754,31 @@ class OptogeneticArrayStimulusOrientationTuningProtocol(
         *stimulating_signal* and *stimulating_signal_parameters* - those
         are set by this experiment.
 
-                
+
     num_orientations : int
         Number of orientations to present
 
-                
+
     intensities : list(float)
         Intensities at which to present the stimulation
 
-                
+
     sharpness : float
         Variance of the Gaussian falloff
 
-            
+
     duration : float (ms)
         Overall stimulus duration
 
-            
+
     onset_time : float (ms)
         Time point when the stimulation turns on
 
-            
+
     offset_time : float(ms)
         Time point when the stimulation turns off
 
-            
+
     """
 
     required_parameters = ParameterSet(
@@ -867,22 +867,22 @@ class OptogeneticArrayStimulusContrastBasedOrientationTuningProtocol(
 
     Parameters
     ----------
-    
+
     model : Model
         The model on which to execute the experiment.
 
-          
+
     Other parameters
     ----------------
 
     sheet_list : int
         The list of sheets in which to do stimulation.
 
-               
+
     num_trials : int
         Number of trials each stimulus is shown.
 
-                
+
     stimulator_array_parameters : ParameterSet
         Parameters for the optical stimulator array:
         size : float (μm)
@@ -896,46 +896,46 @@ class OptogeneticArrayStimulusContrastBasedOrientationTuningProtocol(
         *stimulating_signal* and *stimulating_signal_parameters* - those
         are set by this experiment.
 
-                
+
     num_orientations : int
         Number of orientations to present
 
-                
+
     contrasts : list(float)
         List of contrasts, for which we simulate the visual activity by
         optogenetic stimulation.
 
-                
+
     contrast_response_params: ParameterSet
         Parameters of the Naka-Rushton function of the contrast-response
         curve for visual stimulus: CR(c) = r_max * c^n / (c^n + c_50)
 
         Fitting these parameters is not part of this experiment.
 
-                
+
     intensity_response_params: ParameterSet
         Parameters of the Naka-Rushton function of the intensity-response
         curve for optogenetic stimulation: IR(i) = r_max * i^n / (i^n + c_50)
 
         Fitting these parameters is not part of this experiment.
 
-                
+
     sharpness : float
         Variance of the Gaussian falloff
 
-            
+
     duration : float (ms)
         Overall stimulus duration
 
-            
+
     onset_time : float (ms)
         Time point when the stimulation turns on
 
-            
+
     offset_time : float(ms)
         Time point when the stimulation turns off
 
-                 
+
     """
 
     required_parameters = ParameterSet(
