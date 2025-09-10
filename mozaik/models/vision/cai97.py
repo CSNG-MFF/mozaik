@@ -1,14 +1,10 @@
-"""
-docstring goes here
-
-"""
 import numpy
 from numpy import exp, sqrt
 from collections import OrderedDict
 
 
 def meshgrid3D(x, y, z):
-    """A slimmed-down version of http://www.scipy.org/scipy/numpy/attachment/ticket/966/meshgrid.py"""
+    r"""A slimmed-down version of http://www.scipy.org/scipy/numpy/attachment/ticket/966/meshgrid.py"""
     x = numpy.asarray(x)
     y = numpy.asarray(y)
     z = numpy.asarray(z)
@@ -20,7 +16,7 @@ def meshgrid3D(x, y, z):
 
 def stRF_kernel_2d(duration=200.0, dt=1000.0/120.0, size=10.0,
                    scale_factor=10.0, p=OrderedDict()):
-    """
+    r"""
     scale_factor = pixel/degree
     """
     degree_per_pixel = 1/float(scale_factor)
@@ -35,12 +31,13 @@ def stRF_kernel_2d(duration=200.0, dt=1000.0/120.0, size=10.0,
 
 
 def stRF_2d(x, y, t, p):
-    """
+    r"""
     x, y, and t should all be 3D arrays, produced by meshgrid3D.
     If we need to optimize, it would be quicker to do G() on a 1D t array and
     F_2d() on 2D x and y arrays, and then multiply them, as Jens did in his
     original implementation.
     Timing gives 0.44 s for Jens' implementation, and 2.9 s for this one.
+    
     """
 
     tmc = G(t, p.K1, p.K2, p.c1, p.c2, p.t1, p.t2, p.n1, p.n2)

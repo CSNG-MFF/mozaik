@@ -1,4 +1,4 @@
-"""
+r"""
 Module containing the experiment API.
 """
 import numpy
@@ -14,7 +14,7 @@ logger = mozaik.getMozaikLogger()
 
 
 class Experiment(ParametrizedObject):
-    """
+    r"""
     The abastract class for an experiment. 
     
     The experiment defines the list of stimuli that it needs to present to the brain.These stimuli presentations have to be independent - e.g. should not
@@ -30,21 +30,24 @@ class Experiment(ParametrizedObject):
     
     Parameters
     ----------
+
     model : Model
-          The model on which to execute the experiment.
+        The model on which to execute the experiment.
           
     Other parameters
     ----------------
 
     duration : float (ms)
-             The duration of single presentation of the stimulus.
+        The duration of single presentation of the stimulus.
 
 
-    NOTE
-    ----
+    NOTES
+    -----
+
     When creating a new Expriment, user inherits from the Experiment class, and in the constructor fills up the `self.stimuli` array with the list of stimuli
     that the experiment presents to the model. One can also implement the do_analysis method, which should perform the analysis that the experiments requires
     at the end. 
+
     """
     
     def __init__(self, model,parameters):
@@ -60,28 +63,31 @@ class Experiment(ParametrizedObject):
         return self.stimuli
         
     def run(self,data_store,stimulus_indexes):
-        """
+        r"""
         This function is called to execute the experiment.
         
         Parameters
         ----------
         
         data_store : DataStore
-                   The data store into which to store the recorded data.
+            The data store into which to store the recorded data.
                    
-        stimuli : list(Stimulus)
-                The list of stimuli to present to the model.
+        stimulus_indexes : list(Stimulus)
+            The indexes of stimuli to present to the model.
         
         Returns
         -------
+
         strsum : int (s)
-               The overal simulation time it took to execute the experiment.
+            The overal simulation time it took to execute the experiment.
                 
         Notes
         -----
-        The reason why this function gets a list of stimuli as input is that even though the experiment itself defines the list of stimuli
+
+        The reason why this function gets a list of stimulus index as input is that even though the experiment itself defines the list of stimuli
         to present to the model, some of these might have already been presented. The module `mozaik.controller` filters
         the list of stimuli which to present to prevent repetitions, and lets this function know via the stimuli argument which stimuli to actually present.
+        
         """
         srtsum = 0
         for i in stimulus_indexes:
@@ -110,7 +116,7 @@ class Experiment(ParametrizedObject):
         pass
 
 class PoissonNetworkKick(Experiment):
-    """
+    r"""
     This experiment injects Poisson spike trains into the target popullation.
     
     This experiment does not show any stimulus.
@@ -121,26 +127,28 @@ class PoissonNetworkKick(Experiment):
     
     Parameters
     ----------
+
     model : Model
-          The model on which to execute the experiment.
+        The model on which to execute the experiment.
 
     Other parameters
     ----------------
   
     sheet_list : int
-               The list of sheets in which to do stimulation
+        The list of sheets in which to do stimulation
 
     drive_period : float (ms)
-                 The length of the constant drive, after which it will be linearly taken down to 0 at the end of the stimulation.   
+        The length of the constant drive, after which it will be linearly taken down to 0 at the end of the stimulation.   
                         
     stimulation_configuration : ParameterSet
-                              The parameter set for direct stimulation specifing neurons to which the kick will be administered.
+        The parameter set for direct stimulation specifing neurons to which the kick will be administered.
                                  
     lambda_list : list
-                List of the means of the Poisson spike train to be injected into the neurons specified in stimulation_configuration (one per each sheet).
+        List of the means of the Poisson spike train to be injected into the neurons specified in stimulation_configuration (one per each sheet).
     
     weight_list : list
-                List of spike sizes of the Poisson spike train to be injected into the neurons specified in stimulation_configuration (one per each sheet).
+        List of spike sizes of the Poisson spike train to be injected into the neurons specified in stimulation_configuration (one per each sheet).
+    
     """
     
     required_parameters = ParameterSet({
@@ -211,7 +219,7 @@ class InjTest(Experiment):
 
         
 class NoStimulation(Experiment):
-    """ 
+    r""" 
     This is a special experiment that does not show any stimulus for the duration of the experiment. 
 
     This experiment is universal, in that it is not dependent on what sensory modality/model is used in the
@@ -219,7 +227,9 @@ class NoStimulation(Experiment):
     
     Notes
     -----
+    
     Unlike :class:`.MeasureSpontaneousActivity` this can be used in model with no sensory input sheet.
+    
     """
     required_parameters = ParameterSet({
                                         'duration': float,

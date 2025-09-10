@@ -1,4 +1,4 @@
-"""
+r"""
 This module contains extension of the `param <http://ioam.github.io/param/>`_ package,
 and a collection of functions that allow for powerfull filtering of sets
 of :class:`.MozaikParametrized` instances based on the values of their parameters.
@@ -27,71 +27,96 @@ param.parameterized.docstring_signature=False
 logger = logging.getLogger("mozaik")
 
 class SNumber(Number):
-    """
+    r"""
     A mozaik parameter that can hold a number. For the full range of options the 
     parameter offers reffer to the `Number` class in `param <http://ioam.github.io/param/>`_ package.
     
     On top of the Number class it adds the ability to specify units and period in constructor.
     The units should be `quantities.units`.
+
+    Attributes
+    ----------
+
+    units : quantities.unit
+        The units associated with this parameter
+
+    period : float or none
+        The period associated with this parameter(if any) 
+
     """
-    __slots__ = ['units','period']
+    __slots__ = ['units', 'period']
 
     def __init__(self, units, period=None, **params):
-        params.setdefault('default',None)
-        super(SNumber, self).__init__(allow_None=True,
-                                      instantiate=True, **params)
+        params.setdefault('default', None)
+        super(SNumber, self).__init__(allow_None=True, instantiate=True, **params)
         self.units = units
         self.period = period
-        
 
 
 class SInteger(Integer):
-    """
+    r"""
     A mozaik parameter that can hold an integer. For the full range of options the 
     parameter offers reffer to the `Integer` class in `param <http://ioam.github.io/param/>`_ package.
     
     On top of the Integer class it adds the ability to specify period in constructor. The units should be `quantities.units`.
-    """    
-    __slots__ = ['units','period']
+
+    Attributes
+    ----------
+
+    units : None
+        Always None for integers
+
+    period : float or None
+        The period associated with this parameter (if any)
+
+    """
+    __slots__ = ['units', 'period']
 
     def __init__(self, period=None, **params):
-        params.setdefault('default',None)        
-        super(SInteger, self).__init__(allow_None=True,
-                                       instantiate=True, **params)
+        params.setdefault('default', None)        
+        super(SInteger, self).__init__(allow_None=True, instantiate=True, **params)
         self.units = None
         self.period = period
 
 
 class SString(String):
-    """
+    r"""
     A mozaik parameter that can hold an string. For the full range of options the 
     parameter offers reffer to the `Integer` class in `param <http://ioam.github.io/param/>`_ package.
     
     This class is here for consistency reasons as it defines the units and period properties, 
     just like SInteger and SNumber, but automatically sets them to None.
-    """
 
-    __slots__ = ['units','period']    
+    Attributes
+    ----------
+
+    units : None
+        Always None for Strings
+
+    period : None
+        Always None for Strings
+
+    """
+    __slots__ = ['units', 'period']    
     def __init__(self, **params):
-        params.setdefault('default',None)        
-        super(SString, self).__init__(allow_None=True,
-                                      instantiate=True, **params)
+        params.setdefault('default', None)        
+        super(SString, self).__init__(allow_None=True, instantiate=True, **params)
         self.units = None
         self.period = None
 
+
 class SParameterSet(ClassSelector):
-    """
+    r"""
     A mozaik parameter that can hold a ParameterSet. Such parameter is treated in a special way: see MozaikParametrized for more details.
     """
     def __init__(self, **params):
         params.setdefault('default',None)
-        super(SParameterSet, self).__init__(MozaikExtendedParameterSet,allow_None=True,
-                                      instantiate=True, **params)
+        super(SParameterSet, self).__init__(MozaikExtendedParameterSet,allow_None=True, instantiate=True, **params)
 
 
 
 class MozaikParametrized(Parameterized):
-    """
+    r"""
     We extend the topographica Parametrized package to constrain the parametrization.
     We allow only four parameter types (SNumber or SInteger or SString or SParameterSet) that we have 
     extended with further information. 
@@ -174,12 +199,9 @@ class MozaikParametrized(Parameterized):
                del self.expanded_paramset_params_dict[key]
         
         self.expanded_paramset_params_dict.update(dict(self.expanded_paramset_params))
-
-
-    
-
+        
     def __setattr__(self,attribute_name,value):
-        """
+        r"""
         We need to override the Parametrized __setattr__ to handle setting of SParameterSet parameters.
         """
         def set_in_dict(path, dt,value):
@@ -211,7 +233,7 @@ class MozaikParametrized(Parameterized):
         return self.cached_get_param_values
         
     def equalParams(self, other):
-        """
+        r"""
         Returns True if self and other have the same parameters and all their
         values match. False otherwise.
 
@@ -221,14 +243,14 @@ class MozaikParametrized(Parameterized):
         return (self.get_param_values() == other.get_param_values()) and (self.expanded_paramset_params == other.expanded_paramset_params)
 
     def getParams(self):
-        """
+        r"""
         This is the function that MozaikParametrized objects should use. It returns all the MozaikParametrized, + the expanded parameters from SParameterSet parameters, - the SParameterSet.
         In Mozaik all comparison and filtering operations should always be done based on this.
         """
         return self.expanded_paramset_params_dict
 
     def getParamValue(self,name):
-        """
+        r"""
         This is the function that MozaikParametrized objects should use to retrieve a value of a parameter.
         """
         if name in self.expanded_params_names:
@@ -240,7 +262,7 @@ class MozaikParametrized(Parameterized):
             return getattr(self,name)
 
     def __str__(self):
-        """
+        r"""
         Turn the MozaikParametrized instance into string - this stores ONLY the names and values of each parameter and the module path from which this instance class came from.
         """
         settings =[]
@@ -255,7 +277,7 @@ class MozaikParametrized(Parameterized):
         return r
 
     def __repr__(self):
-        """
+        r"""
         Returns the description of the MozaikParametrized instance - its class name and the list of its parameters and their values.
         """
         param_str = "\n".join(['   \"%s\":%s' % (name, repr(val))
@@ -264,7 +286,7 @@ class MozaikParametrized(Parameterized):
 
     @classmethod
     def idd(cls,obj):
-        """
+        r"""
         This class method is used in concjuction with the MozaikParametrized.__str__ function that stores all the parameters and the class and module of an object.
         This method restores a 'Shell' object out of this str. The returned object will be of the same type as the original object and will contain all its original parameters
         and their values, BUT WILL NOT BE INITIALIZED and so should not be used for anything else other than examining it's parameters!!!!
@@ -293,7 +315,7 @@ class MozaikParametrized(Parameterized):
 
     @classmethod
     def idd_to_instance(cls,obj):
-        """
+        r"""
         
         """
         if isinstance(obj,MozaikParametrized):
@@ -308,12 +330,13 @@ class MozaikParametrized(Parameterized):
         cls = getattr(z,name)
         return cls(**params)        
     
-"""
+r"""
 Helper functions that allow querying lists of MozaikParametrized objects.
 """
 
 def filter_query(object_list, extra_data_list=None,allow_non_existent_parameters=False,**kwargs):
-    """
+    r"""
+
     Returns a subset of `object_list` containing MozaikParametrized instances (and associated data if data_list!=None)
     for which the parameters in kwargs match.
 
@@ -321,23 +344,24 @@ def filter_query(object_list, extra_data_list=None,allow_non_existent_parameters
     ----------
     
     object_list : list(MozaikParametrized)
-                The list of MozaikParametrized objects to filter.
+        The list of MozaikParametrized objects to filter.
                 
     extra_data_list : list(object)
-                    The list of values corresponding to objects in object_list. 
-                    The same subset of the vales will be returned as for the `object_list`.
+        The list of values corresponding to objects in object_list. 
+        The same subset of the vales will be returned as for the `object_list`.
                     
     allow_non_existent_parameters : bool
-                                    If True it will allow objects in object list that 
-                                    miss some of the parameters listed in kwargs, 
-                                    and include them in the results as long the remaining 
-                                    parameters match if False it will exclude them.
-                                    
-    \*\*kwargs : dict
-             The parameter names and values that have to match.                                    
+        If True it will allow objects in object list that 
+        miss some of the parameters listed in kwargs, 
+        and include them in the results as long the remaining 
+        parameters match if False it will exclude them.
+                                
+    **kwargs : dict
+        The parameter names and values that have to match.                                    
     
     Returns
     -------
+
     if data_list == None :  subset of object_list containing elements that match the kwargs parameters
     if data_list != None :  tuple (a,b) where a is a subset of object_list containing elements that match the kwargs parameters and b is the corresponding subset of data_list
                                     
@@ -395,7 +419,7 @@ def _colapse(dd, param):
 
 def colapse(data_list, object_list, func=None, parameter_list=[],
             allow_non_identical_objects=False):
-    """
+    r"""
     It collapses the data_list against parameters of objects in object_list that are in parameter_list. 
     This means that the new list of parameters (and associated datalist) will contain one object for each
     combination of parameter values not among the paramters against which to
@@ -410,31 +434,34 @@ def colapse(data_list, object_list, func=None, parameter_list=[],
     ----------
     
     data_list : list
-              The list of data corresponding to objects in object_list.
+        The list of data corresponding to objects in object_list.
     
     object_list : list(MozaikParametrized)
-                The list of object corresponding to data in data_list.
+        The list of object corresponding to data in data_list.
     
     parameter_list : list
-                   The list of parameter names against which to collapse the data.
+        The list of parameter names against which to collapse the data.
     
     func : func()
-         If not None, the function to be applied to the lists formed by data associated
-         with the same object parametrizations with exception of the parameters in parameter_list
+        If not None, the function to be applied to the lists formed by data associated
+        with the same object parametrizations with exception of the parameters in parameter_list
          
     allow_non_identical_objects : bool, optional
-                                unless set to True, it will
-                                not allow running this operation on
-                                StimulusDependentData that does not contain
-                                only object of the same type
+        unless set to True, it will
+        not allow running this operation on
+        StimulusDependentData that does not contain
+        only object of the same type
                                   
     Returns
     -------
+
     (v,object_id) : list,list
-                  Where object_id is the new list of objects where the objects in `parameter_list` were
-                  'collapsed out' and replaced with None. v is a list of lists. The outer list
-                  corresponds in order to the object_id list. The inner list corresponds
-                  to the list of data from data_list that mapped on the given object_id.
+        Where object_id is the new list of objects where the objects in `parameter_list` were
+        'collapsed out' and replaced with None. v is a list of lists. The outer list
+        corresponds in order to the object_id list. The inner list corresponds
+        to the list of data from data_list that mapped on the given object_id.
+
+                  
     """
     assert(len(data_list) == len(object_list))
     if (not allow_non_identical_objects and not identical_parametrized_object_params(object_list)):
@@ -458,7 +485,7 @@ def colapse(data_list, object_list, func=None, parameter_list=[],
         return (values, st)
 
 def varying_parameters(parametrized_objects):
-    """
+    r"""
     Find the varying list of params. Can be only applied
     on list of MozaikParametrized that have the same parameter set.
     
@@ -466,6 +493,7 @@ def varying_parameters(parametrized_objects):
     -------
     
     List of parameters of the `MozaikParamterrized` objects in `parametrized_objects` that have at least 2 different values within the list.
+
     """
     if not identical_parametrized_object_params(parametrized_objects):
         raise ValueError("varying_parameters: accepts only MozaikParametrized lists with the same parameters")
@@ -486,26 +514,29 @@ def varying_parameters(parametrized_objects):
 
 
 def parameter_value_list(parametrized_objects,param):
-    """
+    r"""
     Returns the list of values the given parameter has in the list of MozaikParametrized instances.
     
     Parameters
     ----------
+
     parametrized_objects : list
-                         A list of MozaikParametrized instances.
+        A list of MozaikParametrized instances.
     
     param : str
-          Name of the parameter.
+        Name of the parameter.
     
+        
     Returns
     -------
     
     A list of different values that the parameter param has across the `MozaikParametrized` objects in `parametrized_objects` list.
+    
     """
     return set([obj.getParamValue(param) for obj in parametrized_objects])
     
 def identical_parametrized_object_params(parametrized_objects):
-    """
+    r"""
     Check whether the objects have the same parameters.
     
     Returns
@@ -513,6 +544,7 @@ def identical_parametrized_object_params(parametrized_objects):
     
     True if all instances of `MozaikParametrized` in  `parametrized_objects` have the same set of parameters (not values!).
     Otherwise returns False.
+    
     """
     for o in parametrized_objects:
         if set(o.getParams().keys()) != set(parametrized_objects[0].getParams().keys()):
@@ -520,7 +552,7 @@ def identical_parametrized_object_params(parametrized_objects):
     return True
                 
 def matching_parametrized_object_params(parametrized_objects,params=None,except_params=None):
-    """
+    r"""
     Checks whether `parametrized_objects` have the same parameter values for parameters in `params` or not in `except_params`.
     It is assumed all the parameterized_objects have the same parameters.
     
@@ -528,14 +560,14 @@ def matching_parametrized_object_params(parametrized_objects,params=None,except_
     ----------
     
     parametrized_objects : list 
-                         List of `MozaikParametrized` object to test.
+        List of `MozaikParametrized` object to test.
     
     params : list,optional
-           List of parameters whose values have to match.
+        List of parameters whose values have to match.
 
     except_params : list, optional
-                  List of parameters that do not have to match.  
-                  
+        List of parameters that do not have to match.  
+                
     Returns
     -------
                   
@@ -550,6 +582,7 @@ def matching_parametrized_object_params(parametrized_objects,params=None,except_
         
     if except_params != None and except_params != None
         Throws exception
+    
     """
     
     if except_params != None and params != None:
@@ -577,20 +610,20 @@ def matching_parametrized_object_params(parametrized_objects,params=None,except_
     
     
 def colapse_to_dictionary(value_list, parametrized_objects, parameter_name):
-    """
+    r"""
     Colapse out a parameter `parameter_name` of a list of  `MozaikParametrized` instances.
     
     Parameters
     ----------
     
     value_list : list
-               The list of values that correspond to instances of `MozaikParametrized` in `parametrized_objects`.
+        The list of values that correspond to instances of `MozaikParametrized` in `parametrized_objects`.
 
     parametrized_objects : list
-                         The list of values that correspond to instances of `MozaikParametrized`.
+        The list of values that correspond to instances of `MozaikParametrized`.
                          
     parameter_name : str
-                   The parameter  against which to colapse.
+        The parameter  against which to colapse.
                    
     Returns
     -------
@@ -601,6 +634,7 @@ def colapse_to_dictionary(value_list, parametrized_objects, parameter_name):
       The D.values() are tuple of lists (keys,values), where keys is the list of
       values that the parameter_name had in the parametrized_objects, and the values are the
       values from value_list that correspond to the keys.          
+    
     """
     assert(len(value_list) == len(parametrized_objects))
     d = collections.OrderedDict()

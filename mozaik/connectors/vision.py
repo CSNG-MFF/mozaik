@@ -1,4 +1,4 @@
-"""
+r"""
 Vision specific connectors.
 """
 import numpy
@@ -17,7 +17,7 @@ logger = mozaik.getMozaikLogger()
 import pylab
 
 class MapDependentModularConnectorFunction(ModularConnectorFunction):
-    """
+    r"""
     Corresponds to: distance*linear_scaler + constant_scaler
     """
     required_parameters = ParameterSet({
@@ -60,7 +60,7 @@ class MapDependentModularConnectorFunction(ModularConnectorFunction):
     
 
 class V1PushPullArborization(ModularConnectorFunction):
-    """
+    r"""
     This connector function implements the standard V1 functionally specific
     connection rule:
 
@@ -70,6 +70,7 @@ class V1PushPullArborization(ModularConnectorFunction):
     
     Notes
     -----
+
     The `push_pull_ratio` parameter essentially adds constant to the probability distribution
     over the orientation and phase dependent connectivity probability space. The formula looks
     like this: push_pull_ratio + (1-push_pull_ratio) * push_pull_term. Where the push_pull_term
@@ -83,17 +84,20 @@ class V1PushPullArborization(ModularConnectorFunction):
     
     Other parameters
     ----------------
+
     or_sigma : float
-                  How sharply does the probability of connection fall off with orientation difference.
+        How sharply does the probability of connection fall off with orientation difference.
     
     phase_sigma : float
-                  how sharply does the probability of connection fall off with phase difference.
+        how sharply does the probability of connection fall off with phase difference.
                   
     target_synapses : str
-                    Either 'excitatory' or 'inhibitory': what type is the target excitatory/inhibitory
+        Either 'excitatory' or 'inhibitory': what type is the target excitatory/inhibitory
     
     push_pull_ratio : float
-                    The ratio of push-pull connections, the rest will be random drawn randomly.
+        The ratio of push-pull connections, the rest will be random drawn randomly.
+
+
     """
 
     required_parameters = ParameterSet({
@@ -146,17 +150,18 @@ def gauss(x1, y1, x2, y2, orientation, size,aspect_ratio):
      return numpy.exp(ker)
 
 class GaborArborization(ModularConnectorFunction):
-    """
+    r"""
     This connector function implements the standard Gabor-like afferent V1 connectivity. It takes the parameters of gabors from 
     the annotations that have to be before assigned to neurons.
     
     Other parameters
     ----------------
+
     ON : bool
-         Whether this is gabor on ON or OFF cells.
+        Whether this is gabor on ON or OFF cells.
 
     gauss_coefficient : float 
-         The coefficient of the gaussian component
+        The coefficient of the gaussian component
 
     """
 
@@ -192,7 +197,7 @@ class GaborArborization(ModularConnectorFunction):
 
 
 class V1CorrelationBasedConnectivity(ModularConnectorFunction):
-    """
+    r"""
     This connector function implements  a correlation based rules for neurons with 
     gabor like RFs, where excitatory synapses are more-likely between neurons with correlated 
     RFs while inhibitory synapses are more likely among anti-correlated synapses.
@@ -210,11 +215,13 @@ class V1CorrelationBasedConnectivity(ModularConnectorFunction):
     
     Other parameters
     ----------------
+
     sigma : float
-                  How sharply does the probability of connection fall off depending on the afferent RF correlation of the two neurons.
+        How sharply does the probability of connection fall off depending on the afferent RF correlation of the two neurons.
                   
     target_synapses : str
-                    Either 'excitatory' or 'inhibitory': what type is the target excitatory/inhibitory
+        Either 'excitatory' or 'inhibitory': what type is the target excitatory/inhibitory
+                    
     """
 
     required_parameters = ParameterSet({
@@ -368,7 +375,7 @@ class V1CorrelationBasedConnectivity(ModularConnectorFunction):
         return corr_gauss
 
 class CoCircularModularConnectorFunction(ModularConnectorFunction):
-    """
+    r"""
     This connector function implements the situation where the probability of connection between pre-synaptic neuron preN and post synaptic neuron postN
     depends on their orientation and distance in following the co-circularity rule. The law was adopted from:
     Hunt, J. J., Bosking, W. H., & Goodhill, G. J. (2011). Statistical structure of lateral connections in the primary visual cortex. Neural Systems & Circuits, 1(1), 3. https://doi.org/10.1186/2042-1001-1-3

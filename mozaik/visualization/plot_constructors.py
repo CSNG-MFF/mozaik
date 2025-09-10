@@ -1,4 +1,4 @@
-"""
+r"""
 This module contains classes that assist with construction of complicated arrangements of plots.
 A typical example is a class that helps with creating a line of plots with a common y axis.
 """
@@ -19,19 +19,24 @@ logger = mozaik.getMozaikLogger()
 
 
 class LinePlot(Parameterized):
-        """
+        r"""
         Plot multiple plots with common x or y axis in a row or column. The user has to specify 
         the function. This one has to return a list of tuples, each containing:
-            * a name of a plot
-            * a Plotting or SimplePlot instance
-            * the simple_plot parameters that should be passed on
+        
+        * a name of a plot
+        * a Plotting or SimplePlot instance
+        * the simple_plot parameters that should be passed on
         
         Assuming each *function* returns a list of plots with names PlotA,...PlotX
         The LinePlot will create a list of plots named:
-                    PlotA.plot0 ... PlotA.plotN
-                    PlotX.plot0 ... PlotX.plotN
-        where N is defined by the length parameter.
+
+        PlotA.plot0 ... PlotA.plotN
+        PlotX.plot0 ... PlotX.plotN
+
+        where 'N' is defined by the length parameter.
+
         User can this way target the plots with parameters as desribed in the Plotting class.
+
         """
         horizontal = param.Boolean(default=True, instantiate=True,
                                    doc="Should the line of plots be horizontal or vertical")
@@ -53,13 +58,15 @@ class LinePlot(Parameterized):
                                          doc="Space to be reserved on the right side of the subplot, defined as fraction of the subplot.")
 
         def make_line_plot(self, subplotspec):
-            """
+            r"""
             Call to execute the line plot.
 
             Parameters
             ----------
+
             subplotspec : subplotspec
-                        Is the subplotspec into which the whole lineplot is to be plotted.
+                Is the subplotspec into which the whole lineplot is to be plotted.
+
             """
             if not self.length:
                 raise ValueError('Length not specified')
@@ -106,7 +113,7 @@ class LinePlot(Parameterized):
 
 
 class PerDSVPlot(LinePlot):
-    """
+    r"""
     This is a LinePlot that automatically partitions the datastore view based
     on some rules, and than executes the individual plots on the line over
     the individual DSVs.
@@ -115,6 +122,7 @@ class PerDSVPlot(LinePlot):
     DSV not the index of the plot on the line.
 
     The partition dsvs function should perform the partitioning.
+
     """
 
     function = param.Callable(instantiate=True,
@@ -134,7 +142,7 @@ class PerDSVPlot(LinePlot):
 
 
 class PerStimulusPlot(PerDSVPlot):
-    """
+    r"""
     Line plot where each plot corresponds to stimulus with the same parameter
     except trials.
 
@@ -148,17 +156,18 @@ class PerStimulusPlot(PerDSVPlot):
     "None" - No title
 
     "Standard" - Simple style where the Stimulus name is plotted on one line
-                 and the parameter values on the second line
+    and the parameter values on the second line
 
     "Clever" - This style is valid only for cases where only stimuli of the
-               same type are present in the supplied DSV.
-               If the style is set to Clever but the conditions doesn't hold it
-               falls back to Standard and emits a warning.
-               In this case the name of the stimulus and all parameters which
-               are the same for all stimuli in DSV are not displayed. The
-               remaining parameters are shown line after line in the format
-               'stimulus: value'.
-               Of course trial parameter is ignored.
+    same type are present in the supplied DSV.
+    If the style is set to Clever but the conditions doesn't hold it
+    falls back to Standard and emits a warning.
+    In this case the name of the stimulus and all parameters which
+    are the same for all stimuli in DSV are not displayed. Theblock.segments
+    remaining parameters are shown line after line in the format
+    'stimulus: value'.
+    Of course trial parameter is ignored.
+
     """
     title_style = param.String(default="Clever", instantiate=True,
                                doc="The style of the title")
@@ -197,7 +206,7 @@ class PerStimulusPlot(PerDSVPlot):
         if not self.single_trial:
            return partition_by_stimulus_paramter_query(self.datastore,['trial'])
         else:
-           return partition_by_stimulus_paramter_query(self.datastore,[]) 
+           return partition_by_stimulus_paramter_query(self.datastore,[])
 
     def _single_plot(self, idx,gs):
         title = self.title(idx)
@@ -229,7 +238,7 @@ class PerStimulusPlot(PerDSVPlot):
 
 
 class PerStimulusADSPlot(PerStimulusPlot):
-      """
+      r"""
       As PerStimulusPlot, but partitions the ADS not recordings. 
       """
       def _get_stimulus_ids(self):
@@ -244,25 +253,29 @@ class PerStimulusADSPlot(PerStimulusPlot):
 
 
 class ADSGridPlot(Parameterized):
-    """
+    r"""
     Set of plots that are placed on a grid, that vary in two parameters and can have shared x or y axis (only at the level of labels for now).
     
 
     Plot multiple plots with common x and y axis in a grid. 
     
     The user has to specify a plotting function (the function parameter) which has to return a list of tuples, each containing:
-        * a name of a plot
-        * a Plotting or SimplePlot instance
-        * the simple_plot parameters that should be passed on
+
+    * a name of a plot
+    * a Plotting or SimplePlot instance
+    * the simple_plot parameters that should be passed on
+
     
     The ADSGridPlot, automaticall filters the datastore such that the function always receives a DSV where the two parameters are already fixed to the right values.
     
     Assuming each *function* returns a list of plots with names PlotA,...PlotX
     The LinePlot will create a list of plots named:
-                PlotA.plot[0,0] ... PlotA.plot[n,m]
-                PlotX.plot[0,0] ... PlotX.plot[n,m]
+    PlotA.plot[0,0] ... PlotA.plot[n,m]
+    PlotX.plot[0,0] ... PlotX.plot[n,m]
     where n,m is defined by the number of values the x and y _xis_parameter has in the datastore.
     User can this way target the plots with parameters as desribed in the Plotting class.
+
+
     """
     
 
@@ -297,13 +310,15 @@ class ADSGridPlot(Parameterized):
         
     
     def make_grid_plot(self, subplotspec):
-        """
+        r"""
         Call to execute the grid plot.
 
         Parameters
         ----------
+
         subplotspec : subplotspec
-                    Is the subplotspec into which the whole lineplot is to be plotted.
+            Is the subplotspec into which the whole lineplot is to be plotted.
+
         """
         subplotspec = gridspec.GridSpecFromSubplotSpec(
                                 100, 100, subplot_spec=subplotspec
@@ -340,17 +355,19 @@ class ADSGridPlot(Parameterized):
         return self.function(dsv,gs)
 
 class MultipleFilesPlot(Parameterized):
-        """
+        r"""
         Plot multiple plots that will be saved in different files. The user has to specify 
         the function. This one has to return a list of tuples, each containing:
-            * a name of a plot
-            * a Plotting or SimplePlot instance
-            * the simple_plot parameters that should be passed on
+        
+        * a name of a plot
+        * a Plotting or SimplePlot instance
+        * the simple_plot parameters that should be passed on
         
         Assuming each *function* returns a plots with names Plot
-        This class wil produce files with names:
-                    Plot.plot0 ... Plot.plotN
+        This class will produce files with names:
+        Plot.plot0 ... Plot.plotN
         where N is defined by the length parameter.
+
         """
         length = param.Integer(default=0, instantiate=True,
                                doc="how many plots will there be")
@@ -362,8 +379,10 @@ class MultipleFilesPlot(Parameterized):
 
             Parameters
             ----------
+
             subplotspec : subplotspec
-                        Is the subplotspec into which the whole lineplot is to be plotted.
+                Is the subplotspec into which the whole lineplot is to be plotted.
+
             """
             if not self.length:
                 raise ValueError('Length not specified')

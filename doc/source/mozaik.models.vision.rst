@@ -1,6 +1,8 @@
 vision Package
 ===============
 
+This sub-package contains modules that are related to vision sub-package of models.
+
 :mod:`cai97` Module
 -------------------
 

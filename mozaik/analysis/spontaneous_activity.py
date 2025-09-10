@@ -11,7 +11,7 @@ import logging
 logger = logging.getLogger("mozaik")
 
 class SpontaneousActivityLength(Analysis):
-      """
+      r"""
       This anlysis detrmines how long does spontaneous activity stays stable. 
       
       It does so by calculating the lenght of period over which the population activity stays non zero, and excluding the points for which either population mean of neuron-to-neuron correlations or mean
@@ -21,6 +21,7 @@ class SpontaneousActivityLength(Analysis):
       Also PopulationMean analysis over all the above has been ran as well.
       
       NOTE: we should probably give the PSTH bin as parameter.
+      
       """
       def perform_analysis(self):
 

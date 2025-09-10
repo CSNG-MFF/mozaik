@@ -16,7 +16,7 @@ logger = mozaik.getMozaikLogger()
 
 
 class VisualExperiment(Experiment):
-    """
+    r"""
     Visual experiment. On top of Experiment class it defines a new variable background_luminance, 
     that it sets to be the background luminance of the model's input space, and new variable density
     which is set to over the spatial_resolution of the input layer's receptive field spatial resolution.
@@ -24,14 +24,15 @@ class VisualExperiment(Experiment):
     
     Parameters
     ----------
+
     model : Model
-          The model on which to execute the experiment.
+        The model on which to execute the experiment.
 
     Other parameters
     ----------------
 
     shuffle_stimuli: bool
-                     If True, stumuli are shuffled randomly
+        If True, stumuli are shuffled randomly
 
 
     """
@@ -61,7 +62,7 @@ class VisualExperiment(Experiment):
         raise NotImplementedError()
 
 class MeasureFlatLuminanceSensitivity(VisualExperiment):
-    """
+    r"""
     Measure luminance sensitivity using flat luminance screen.
 
     This experiment will measure luminance sensitivity by presenting a series of full-field 
@@ -72,20 +73,22 @@ class MeasureFlatLuminanceSensitivity(VisualExperiment):
     
     Parameters
     ----------
+
     model : Model
-          The model on which to execute the experiment.
+        The model on which to execute the experiment.
 
     Other parameters
     ----------------
         
     luminances : list(float) 
-              List of luminance (expressed as cd/m^2) at which to measure the response.
+        List of luminance (expressed as cd/m^2) at which to measure the response.
     
     step_duration : float
-                      The duration in miliseconds of single presentation of a luminance step.
+        The duration in miliseconds of single presentation of a luminance step.
     
     num_trials : int
-               Number of trials each stimulus is shown.
+        Number of trials each stimulus is shown.
+
     """
     
     required_parameters = ParameterSet({
@@ -114,14 +117,15 @@ class MeasureFlatLuminanceSensitivity(VisualExperiment):
         pass
     
 class MeasureSparse(VisualExperiment):
-    """
+    r"""
     Sparse noise stimulation experiments.
 
     This experiment will show a series of images formed by a single 
     circle (dot) which will be presented in a random position in each trial.
     
-    Parameter
+    Parameters
     ----------
+
     model : Model
         The model on which to execute the experiment.
 
@@ -140,17 +144,18 @@ class MeasureSparse(VisualExperiment):
         The total number of images that will be presented
     
     num_trials : int
-           Number of trials each each stimulus is shown.
+        Number of trials each each stimulus is shown.
            
     grid_size: int
-           the grid will have grid_size x grid_size spots
+        the grid will have grid_size x grid_size spots
            
     experiment_seed : int
-     sets a particular seed at the beginning of each experiment
+        sets a particular seed at the beginning of each experiment
      
-    grid: bool
-     If true makes the patterns stick to a grid, otherwise the 
-     center of the pattern is distribuited randomly
+    grid : bool
+        If true makes the patterns stick to a grid, otherwise the 
+        center of the pattern is distribuited randomly
+
     """
     
     required_parameters = ParameterSet({
@@ -188,14 +193,15 @@ class MeasureSparse(VisualExperiment):
         pass
 
 class MeasureSparseWithCurrentInjection(VisualExperiment):
-    """
+    r"""
     Sparse noise stimulation experiments (identical to MeasureSparse) with concomitant current injection.
 
     This experiment will show a series of images formed by a single 
     circle (dot) which will be presented in a random position in each trial.
     
-    Parameter
+    Parameters
     ----------
+
     model : Model
         The model on which to execute the experiment.
 
@@ -214,26 +220,26 @@ class MeasureSparseWithCurrentInjection(VisualExperiment):
         The total number of images that will be presented
     
     num_trials : int
-           Number of trials each each stimulus is shown.
+        Number of trials each each stimulus is shown.
            
     grid_size: int
-           the grid will have grid_size x grid_size spots
+        the grid will have grid_size x grid_size spots
            
     experiment_seed : int
-     sets a particular seed at the beginning of each experiment
+        sets a particular seed at the beginning of each experiment
      
-    grid: bool
-     If true makes the patterns stick to a grid, otherwise the 
-     center of the pattern is distribuited randomly
+    grid : bool
+        If true makes the patterns stick to a grid, otherwise the 
+        center of the pattern is distribuited randomly
 
     stimulation_configuration : ParameterSet
-                              The parameter set for direct stimulation specifying neurons to which the kick will be administered.
+        The parameter set for direct stimulation specifying neurons to which the kick will be administered.
 
     stimulation_sheet : sheet
-               The sheet in which to do stimulation
+        The sheet in which to do stimulation
 
     stimulation_current : float (mA)
-                     The current to inject into selected neurons.
+        The current to inject into selected neurons.
 
     """
     
@@ -297,7 +303,7 @@ class MeasureSparseWithCurrentInjection(VisualExperiment):
 
 
 class MeasureSparseBar(VisualExperiment):
-    """
+    r"""
     Sparse noise stimulation experiments with bars instead of pixels.
 
     This experiment will show a series of images formed by a single bar
@@ -309,8 +315,9 @@ class MeasureSparseBar(VisualExperiment):
     of images is not divisible by 2*number_of_positions, the presentations may have
     a slight left and black bias.
 
-    Parameter
+    Parameters
     ----------
+
     model : Model
         The model on which to execute the experiment.
 
@@ -408,7 +415,7 @@ class MeasureSparseBar(VisualExperiment):
         pass
 
 class MeasureDense(VisualExperiment):
-    """
+    r"""
     Dense noise stimulation experiments.
     
     This experiment will show a series of images formed by a grid
@@ -417,8 +424,9 @@ class MeasureDense(VisualExperiment):
 
     Parameters
     ----------
+
     model : Model
-          The model on which to execute the experiment.
+        The model on which to execute the experiment.
 
     Other parameters
     ----------------
@@ -432,13 +440,14 @@ class MeasureDense(VisualExperiment):
         The total number of images that will be presented
     
     num_trials : int
-           Number of trials each each stimulus is shown.
+        Number of trials each each stimulus is shown.
            
     grid_size: int
-           the grid will have grid_size x grid_size spots
+        the grid will have grid_size x grid_size spots
            
     experiment_seed : int
-     sets a particular seed at the beginning of each experiment
+        sets a particular seed at the beginning of each experiment
+
     """
 
     required_parameters = ParameterSet({
@@ -472,7 +481,7 @@ class MeasureDense(VisualExperiment):
 
 
 class MeasureOrientationTuningFullfield(VisualExperiment):
-    """
+    r"""
     Measure orientation tuning using a fullfiled sinusoidal grating.
 
     This experiment will show a series of full-field sinusoidal gratings 
@@ -480,29 +489,31 @@ class MeasureOrientationTuningFullfield(VisualExperiment):
     
     Parameters
     ----------
+
     model : Model
-          The model on which to execute the experiment.
+        The model on which to execute the experiment.
 
     Other parameters
     ----------------
 
     num_orientations : int
-          Number of orientation to present.
+        Number of orientation to present.
     
     spatial_frequency : float
-                      Spatial frequency of the grating.
+        Spatial frequency of the grating.
                       
     temporal_frequency : float
-                      Temporal frequency of the grating.
+        Temporal frequency of the grating.
 
     grating_duration : float
-                      The duration of single presentation of a grating.
+        The duration of single presentation of a grating.
     
     contrasts : list(float) 
-              List of contrasts (expressed as % : 0-100%) at which to measure the orientation tuning.
+        List of contrasts (expressed as % : 0-100%) at which to measure the orientation tuning.
     
     num_trials : int
-               Number of trials each each stimulus is shown.
+        Number of trials each each stimulus is shown.
+
     """
     
     required_parameters = ParameterSet({
@@ -540,7 +551,7 @@ class MeasureOrientationTuningFullfield(VisualExperiment):
         pass
 
 class MeasureOrientationTuningFullfieldA(VisualExperiment):
-    """
+    r"""
     Measure orientation tuning using a fullfiled sinusoidal grating.
 
     This experiment will show a series of full-field sinusoidal gratings
@@ -549,28 +560,29 @@ class MeasureOrientationTuningFullfieldA(VisualExperiment):
     Parameters
     ----------
     model : Model
-          The model on which to execute the experiment.
+        The model on which to execute the experiment.
 
     Other parameters
     ----------------
 
     num_orientations : int
-          Number of orientation to present.
+        Number of orientation to present.
     
     spatial_frequency : float
-                      Spatial frequency of the grating.
+        Spatial frequency of the grating.
                       
     temporal_frequency : float
                       Temporal frequency of the grating.
 
     grating_duration : float
-                      The duration of single presentation of a grating.
+        The duration of single presentation of a grating.
     
     contrasts : list(float) 
-              List of contrasts (expressed as % : 0-100%) at which to measure the orientation tuning.
+        List of contrasts (expressed as % : 0-100%) at which to measure the orientation tuning.
     
     num_trials : int
-               Number of trials each each stimulus is shown.
+        Number of trials each each stimulus is shown.
+
     """
     
     required_parameters = ParameterSet({
@@ -609,7 +621,7 @@ class MeasureOrientationTuningFullfieldA(VisualExperiment):
         pass
 
 class MeasureSizeTuning(VisualExperiment):
-    """
+    r"""
     Size tuning experiment.
 
     This experiment will show a series of sinusoidal gratings or constant flat stimuli 
@@ -619,43 +631,45 @@ class MeasureSizeTuning(VisualExperiment):
     Parameters
     ----------
     model : Model
-          The model on which to execute the experiment.
+        The model on which to execute the experiment.
 
     Other parameters
     ----------------
 
     num_sizes : int
-              Number of sizes to present.
+        Number of sizes to present.
     
     max_size : float (degrees of visual field)
-             Maximum size to present.
+        Maximum size to present.
     
     orientations : list(float)
-                The orientations (in radians) at which to measure the size tuning. (in future this will become automated)
+        The orientations (in radians) at which to measure the size tuning. (in future this will become automated)
 
     positions : list(tuple(float,float)) 
-              List of coordinates of each of the positions where the stimulus should be shown
+        List of coordinates of each of the positions where the stimulus should be shown
 
     spatial_frequency : float
-                      Spatial frequency of the grating.
+        Spatial frequency of the grating.
                       
     temporal_frequency : float
-                      Temporal frequency of the grating.
+        Temporal frequency of the grating.
 
     grating_duration : float
-                      The duration of single presentation of a grating.
+        The duration of single presentation of a grating.
     
     contrasts : list(float) 
-              List of contrasts (expressed as % : 0-100%) at which to measure the orientation tuning.
+        List of contrasts (expressed as % : 0-100%) at which to measure the orientation tuning.
     
     num_trials : int
-               Number of trials each each stimulus is shown.
+        Number of trials each each stimulus is shown.
     
     log_spacing : bool
-               Whether use logarithmic spaced sizes. By default False, meaning linear spacing 
+        Whether use logarithmic spaced sizes. By default False, meaning linear spacing 
     
     with_flat : bool
-               Whether use flat luminance disks as stimuli. If not it is the standard grating stimulus.
+        Whether use flat luminance disks as stimuli. If not it is the standard grating stimulus.
+
+
     """
 
     required_parameters = ParameterSet({
@@ -708,7 +722,7 @@ class MeasureSizeTuning(VisualExperiment):
 
 
 class MeasureSizeTuningRing(VisualExperiment):
-    """
+    r"""
     Size tuning experiment.
 
     This experiment will show a series of sinusoidal gratings confined to a ring which outer
@@ -718,37 +732,37 @@ class MeasureSizeTuningRing(VisualExperiment):
     Parameters
     ----------
     model : Model
-          The model on which to execute the experiment.
+        The model on which to execute the experiment.
 
     Other parameters
     ----------------
 
     num_inner_radius : int
-              Number of different inner radius to present.
+        Number of different inner radius to present.
     
     outer_radius : float (degrees of visual field)
-             The outside radius of the grating ring - in degrees of visual field.
+        The outside radius of the grating ring - in degrees of visual field.
     
     orientation : float
-                The orientation (in radians) at which to measure the size tuning. (in future this will become automated)
+        The orientation (in radians) at which to measure the size tuning. (in future this will become automated)
                 
     spatial_frequency : float
-                      Spatial frequency of the grating.
+        Spatial frequency of the grating.
                       
     temporal_frequency : float
-                      Temporal frequency of the grating.
+        Temporal frequency of the grating.
 
     grating_duration : float
-                      The duration of single presentation of a grating.
+        The duration of single presentation of a grating.
     
     contrasts : list(float) 
-              List of contrasts (expressed as % : 0-100%) at which to measure the orientation tuning.
+        List of contrasts (expressed as % : 0-100%) at which to measure the orientation tuning.
     
     num_trials : int
-               Number of trials each each stimulus is shown.
+        Number of trials each each stimulus is shown.
     
     log_spacing : bool
-               Whether use logarithmic spaced sizes. By default False, meaning linear spacing 
+        Whether use logarithmic spaced sizes. By default False, meaning linear spacing 
     
     """
     required_parameters = ParameterSet({
@@ -799,7 +813,7 @@ class MeasureSizeTuningRing(VisualExperiment):
         pass
 
 class MeasureContrastSensitivity(VisualExperiment):
-    """
+    r"""
     Measure contrast sensitivity using sinusoidal gratings.
 
     This experiment shows a series of full-field sinusoidal gratings of varying 
@@ -809,28 +823,30 @@ class MeasureContrastSensitivity(VisualExperiment):
     Parameters
     ----------
     model : Model
-          The model on which to execute the experiment.
+        The model on which to execute the experiment.
 
     Other parameters
     ----------------
         
     orientation : float
-                The orientation (in radians) at which to measure the contrast. (in future this will become automated)
+        The orientation (in radians) at which to measure the contrast. (in future this will become automated)
                 
     spatial_frequency : float
-                      Spatial frequency of the grating.
+        Spatial frequency of the grating.
                       
     temporal_frequency : float
-                      Temporal frequency of the grating.
+        Temporal frequency of the grating.
 
     grating_duration : float
-                      The duration of single presentation of a grating.
+        The duration of single presentation of a grating.
     
     contrasts : list(float) 
-              List of contrasts (expressed as % : 0-100%) at which to measure the orientation tuning.
+        List of contrasts (expressed as % : 0-100%) at which to measure the orientation tuning.
     
     num_trials : int
-               Number of trials each each stimulus is shown.
+        Number of trials each each stimulus is shown.
+
+
     """
 
     required_parameters = ParameterSet({
@@ -867,7 +883,7 @@ class MeasureContrastSensitivity(VisualExperiment):
 
 
 class MeasureContrastSensitivityA(VisualExperiment):
-    """
+    r"""
     Measure contrast sensitivity using sinusoidal gratings.
 
     This experiment shows a series of full-field sinusoidal gratings of varying 
@@ -877,28 +893,30 @@ class MeasureContrastSensitivityA(VisualExperiment):
     Parameters
     ----------
     model : Model
-          The model on which to execute the experiment.
+        The model on which to execute the experiment.
 
     Other parameters
     ----------------
         
     orientation : float
-                The orientation (in radians) at which to measure the contrast. (in future this will become automated)
+        The orientation (in radians) at which to measure the contrast. (in future this will become automated)
                 
     spatial_frequency : float
-                      Spatial frequency of the grating.
+        Spatial frequency of the grating.
                       
     temporal_frequency : float
-                      Temporal frequency of the grating.
+        Temporal frequency of the grating.
 
     grating_duration : float
-                      The duration of single presentation of a grating.
+        The duration of single presentation of a grating.
     
     contrasts : list(float) 
-              List of contrasts (expressed as % : 0-100%) at which to measure the orientation tuning.
+        List of contrasts (expressed as % : 0-100%) at which to measure the orientation tuning.
     
     num_trials : int
-               Number of trials each each stimulus is shown.
+        Number of trials each each stimulus is shown.
+
+
     """
 
     required_parameters = ParameterSet({
@@ -940,7 +958,7 @@ class MeasureContrastSensitivityA(VisualExperiment):
 
 
 class MeasureFrequencySensitivity(VisualExperiment):
-    """
+    r"""
     Measure frequency sensitivity using sinusoidal grating disk.
     
     This experiment shows a series of full-field drifting sinusoidal gratings 
@@ -953,31 +971,33 @@ class MeasureFrequencySensitivity(VisualExperiment):
     Parameters
     ----------
     model : Model
-          The model on which to execute the experiment.
+        The model on which to execute the experiment.
 
     Other parameters
     ----------------
         
     orientation : float
-                The orientation (in radians) at which to measure the size tuning. (in future this will become automated)
+        The orientation (in radians) at which to measure the size tuning. (in future this will become automated)
                 
     temporal_frequencies : list(float)
-                      Temporal frequency of the gratings.
+        Temporal frequency of the gratings.
                       
     contrasts : list(float)
-            List of contrasts (expressed as % : 0-100%) at which measure the tuning.
+        List of contrasts (expressed as % : 0-100%) at which measure the tuning.
 
     grating_duration : float
-                      The duration of single presentation of a grating.
+        The duration of single presentation of a grating.
     
     spatial_frequencies : list(float) 
-              List of spatial frequencies of the gratings.
+        List of spatial frequencies of the gratings.
     
     num_trials : int
-               Number of trials each each stimulus is shown.
+        Number of trials each each stimulus is shown.
 
     square : bool
-                Whether the stimulus shoul be sinusoidal or square grating
+        Whether the stimulus shoul be sinusoidal or square grating
+
+
     """
 
     required_parameters = ParameterSet({
@@ -1034,7 +1054,7 @@ class MeasureFrequencySensitivity(VisualExperiment):
 
 
 class MeasureOrientationContrastTuning(VisualExperiment):
-    """
+    r"""
     Measure orientation contrast tuning using. 
 
     This measures the orientation dependence of the RF surround 
@@ -1046,38 +1066,40 @@ class MeasureOrientationContrastTuning(VisualExperiment):
     Parameters
     ----------
     model : Model
-          The model on which to execute the experiment.
+        The model on which to execute the experiment.
 
     Other parameters
     ----------------
 
     num_orientations : int
-          Number of orientation of the surround to present.
+        Number of orientation of the surround to present.
     
     orientation : float 
-                The orientation (in radians) at which to present the center stimulus. (in future this will become automated)
+        The orientation (in radians) at which to present the center stimulus. (in future this will become automated)
     
     center_radius : float 
-                  The radius of the center grating disk.
+        The radius of the center grating disk.
     
     surround_radius : float 
-                  The outer radius of the surround grating ring.
+        The outer radius of the surround grating ring.
                   
         
     spatial_frequency : float
-                      Spatial frequency of the center and surround grating.
+        Spatial frequency of the center and surround grating.
                       
     temporal_frequency : float
-                      Temporal frequency of the center and surround the grating.
+        Temporal frequency of the center and surround the grating.
 
     grating_duration : float
-                      The duration of single presentation of the stimulus.
+        The duration of single presentation of the stimulus.
     
     contrasts : list(float) 
-              List of contrasts (expressed as % : 0-100%) of the center and surround grating.
+        List of contrasts (expressed as % : 0-100%) of the center and surround grating.
     
     num_trials : int
-               Number of trials each each stimulus is shown.
+        Number of trials each each stimulus is shown.
+
+
     """
 
     required_parameters = ParameterSet({
@@ -1122,67 +1144,69 @@ class MeasureOrientationContrastTuning(VisualExperiment):
 
 
 class MeasureFeatureInducedCorrelation(VisualExperiment):
-    """
+    r"""
     Feature-induced inter-neurons correlations.
 
     This experiment shows a sequence of two square grating disks followed by 
-    a sequence of flashing squares (see parameter **) that are separated in 
+    a sequence of flashing squares (**see parameter**) that are separated in 
     visual space by a constant distance. The spatial and temporal frequency 
     will be varied.
 
-    
     Parameters
     ----------
-    model : Model
-            The model on which to execute the experiment.
+
+    model : Model  
+        The model on which to execute the experiment.
 
     Other parameters
     ----------------
-                
-    temporal_frequencies : list(float)
-            Temporal frequency of the gratings.
-                      
-    contrast : float
-            Contrast (expressed as % : 0-100%) at which to performe measurument.
 
-    grating_duration : float
-            The duration of single presentation of a grating.
-    
-    spatial_frequencies : list(float) 
-            List of spatial frequencies of the gratings.
+    temporal_frequencies : list(float)  
+        Temporal frequency of the gratings.  
 
-    separation : float
-            The separation between the two neurons in degrees of visual space.
-    
-    num_trials : int
-            Number of trials each each stimulus is shown.
+    contrast : float  
+        Contrast (expressed as % : 0-100%) at which to perform measurement.  
+
+    grating_duration : float  
+        The duration of single presentation of a grating.  
+
+    spatial_frequencies : list(float)  
+        List of spatial frequencies of the gratings.  
+
+    separation : float  
+        The separation between the two neurons in degrees of visual space.  
+
+    num_trials : int  
+        Number of trials each stimulus is shown.  
+
+        
     """
+   
 
     required_parameters = ParameterSet({
-            'spatial_frequencies' : list, 
-            'temporal_frequencies' : list,
-            'grating_duration' : float,
-            'contrasts' : list,
-            'separation' : float,
-            'num_trials' : int,
+        'spatial_frequencies': list, 
+        'temporal_frequencies': list,
+        'grating_duration': float,
+        'contrasts': list,
+        'separation': float,
+        'num_trials': int,
     })  
 
     def generate_stimuli(self):
-        
-         # the orientation is fixed to horizontal
-        orientation = 0 #numpy.pi/2
+        # the orientation is fixed to horizontal
+        orientation = 0  # numpy.pi/2
         # SQUARED GRATINGS       
         for sf in self.parameters.spatial_frequencies:
             for k in range(0, self.parameters.num_trials):
                 self.stimuli.append(
                     topo.FullfieldDriftingSquareGrating(
-                        frame_duration = self.frame_duration,
+                        frame_duration=self.frame_duration,
                         size_x=self.model.visual_field.size_x,
                         size_y=self.model.visual_field.size_y,
                         location_x=0.0,
                         location_y=0.0,
                         background_luminance=self.background_luminance,
-                        contrast = self.parameters.contrast,
+                        contrast=self.parameters.contrast,
                         duration=self.parameters.grating_duration,
                         density=self.density,
                         trial=k,
@@ -1197,21 +1221,21 @@ class MeasureFeatureInducedCorrelation(VisualExperiment):
             for k in range(0, self.parameters.num_trials):
                 self.stimuli.append(
                     topo.FlashingSquares(
-                        frame_duration = self.frame_duration,
+                        frame_duration=self.frame_duration,
                         size_x=self.model.visual_field.size_x,
                         size_y=self.model.visual_field.size_y,
                         location_x=0.0,
                         location_y=0.0,
                         background_luminance=self.background_luminance,
-                        contrast = self.parameters.contrast,
-                        separation = self.parameters.separation,
-                        separated = True,
-                        density = self.density,
-                        trial = k,
+                        contrast=self.parameters.contrast,
+                        separation=self.parameters.separation,
+                        separated=True,
+                        density=self.density,
+                        trial=k,
                         duration=self.parameters.grating_duration,
-                        orientation = orientation*2,
-                        spatial_frequency = sf,
-                        temporal_frequency = self.parameters.temporal_frequency
+                        orientation=orientation*2,
+                        spatial_frequency=sf,
+                        temporal_frequency=self.parameters.temporal_frequency
                     )
                 )
 
@@ -1220,7 +1244,7 @@ class MeasureFeatureInducedCorrelation(VisualExperiment):
 
 
 class MeasureNaturalImagesWithEyeMovement(VisualExperiment):
-    """
+    r"""
     Stimulate the model with a natural image with simulated eye movement.
 
     This experiment presents a movie that is generated by translating a 
@@ -1229,26 +1253,30 @@ class MeasureNaturalImagesWithEyeMovement(VisualExperiment):
         
     Parameters
     ----------
+
     model : Model
-          The model on which to execute the experiment.
+        The model on which to execute the experiment.
 
 
     Other parameters
     ----------------
     
     stimulus_duration : float
-               The duration of single presentation of the stimulus.
+        The duration of single presentation of the stimulus.
     
     num_trials : int
-               Number of trials each each stimulus is shown.
+        Number of trials each each stimulus is shown.
                
     size : float
-               The size of the image in degrees of visual field
+        The size of the image in degrees of visual field
 
     Notes
     -----
+
     Currently this implementation bound to have the image and the eye path saved in in files *./image_naturelle_HIGH.bmp* and *./eye_path.pickle*.
     In future we need to make this more general.
+
+
     """
     
     required_parameters = ParameterSet({
@@ -1282,7 +1310,7 @@ class MeasureNaturalImagesWithEyeMovement(VisualExperiment):
 
 
 class MeasureDriftingSineGratingWithEyeMovement(VisualExperiment):
-    """
+    r"""
     Present drifting sine grating with simulated eye movement.
 
     This experiment presents a movie that is generated by translating a 
@@ -1292,26 +1320,29 @@ class MeasureDriftingSineGratingWithEyeMovement(VisualExperiment):
     
     Parameters
     ----------
+
     model : Model
-          The model on which to execute the experiment.
+        The model on which to execute the experiment.
 
     Other parameters
     ----------------
 
     spatial_frequency : float
-                      Spatial frequency of the center and surround grating.
+        Spatial frequency of the center and surround grating.
                       
     temporal_frequency : float
-                      Temporal frequency of the center and surround the grating.
+        Temporal frequency of the center and surround the grating.
 
     grating_duration : float
-             The duration of single presentation of the stimulus.
+        The duration of single presentation of the stimulus.
     
     contrast : float 
-              Contrast (expressed as % : 0-100%) of the grating.
+        Contrast (expressed as % : 0-100%) of the grating.
     
     num_trials : int
-               Number of trials each each stimulus is shown.
+        Number of trials each each stimulus is shown.
+
+
     """
     
     required_parameters = ParameterSet({
@@ -1347,24 +1378,27 @@ class MeasureDriftingSineGratingWithEyeMovement(VisualExperiment):
         pass
 
 class MeasureSpontaneousActivity(VisualExperiment):
-    """
+    r"""
     Measure spontaneous activity.
 
     This experiment presents a blank stimulus (all pixels set to background luminance).
         
     Parameters
     ----------
+
     model : Model
-          The model on which to execute the experiment.
+        The model on which to execute the experiment.
 
     Other parameters
     ----------------
 
     duration : str
-             The duration of single presentation of the stimulus.
+        The duration of single presentation of the stimulus.
     
     num_trials : int
-               Number of trials each each stimulus is shown.
+        Number of trials each each stimulus is shown.
+
+        
     """
 
     required_parameters = ParameterSet({
@@ -1391,7 +1425,7 @@ class MeasureSpontaneousActivity(VisualExperiment):
 
 
 class MapPhaseResponseWithBarStimulus(VisualExperiment):
-    """
+    r"""
     Map RF with a bar stimuli.
 
     This experiment presents a series of flashed bars at pre-specified range of 
@@ -1402,46 +1436,50 @@ class MapPhaseResponseWithBarStimulus(VisualExperiment):
     
     Parameters
     ----------
+
     model : Model
-          The model on which to execute the experiment.
+        The model on which to execute the experiment.
 
     Other parameters
     ----------------
+
     model : Model
-          The model on which to execute the experiment.
+        The model on which to execute the experiment.
     
     x : float
-      The x corrdinates (of center) of the area in which the mapping will be done.
+        The x corrdinates (of center) of the area in which the mapping will be done.
 
     y : float
-      The y corrdinates (of center) of the area in which the mapping will be done.
+        The y corrdinates (of center) of the area in which the mapping will be done.
         
     length : float
-          The length of the bar.
+        The length of the bar.
     
     width : float
-          The width of the bar.
+        The width of the bar.
              
     orientation : float
-                The orientation of the bar.
+        The orientation of the bar.
 
     max_offset : float
-               The maximum offset from the central position (defined by x and y) prependicular to the length of the bar at which the bars will be flashed.
+        The maximum offset from the central position (defined by x and y) prependicular to the length of the bar at which the bars will be flashed.
 
     steps : int
-         The number of steps in which the bars will be flashed between the two extreme positions defined by the max_offset parameter, along the axis prependicular to the length of the bar.
+        The number of steps in which the bars will be flashed between the two extreme positions defined by the max_offset parameter, along the axis prependicular to the length of the bar.
     
     duration : float
-             The duration of single presentation of the stimulus.
+        The duration of single presentation of the stimulus.
     
     flash_duration : float
-             The duration of the presence of the bar.
+        The duration of the presence of the bar.
     
     relative_luminance : float 
-              Luminance of the bar relative to background luminance. 0 is dark, 1.0 is double the background luminance.
+        Luminance of the bar relative to background luminance. 0 is dark, 1.0 is double the background luminance.
     
     num_trials : int
-               Number of trials each each stimulus is shown.
+        Number of trials each each stimulus is shown.
+
+
     """
     
     required_parameters = ParameterSet({
@@ -1485,49 +1523,54 @@ class MapPhaseResponseWithBarStimulus(VisualExperiment):
 
 
 class VonDerHeydtIllusoryBarProtocol(VisualExperiment):
-    """
+    r"""
     An illusory bar from Von Der Heydt et al. 1989.
 
     Von Der Heydt, R., & Peterhans, E. (1989). Mechanisms of contour perception in monkey visual cortex. I. Lines of pattern discontinuity. Journal of Neuroscience, 9(5), 1731-1748. Retrieved from https://www.jneurosci.org/content/jneuro/9/5/1731.full.pdf
     
     Parameters
     ----------
+
     model : Model
-          The model on which to execute the experiment.
+        The model on which to execute the experiment.
 
     Other parameters
     ----------------
+
     model : Model
-          The model on which to execute the experiment.
+        The model on which to execute the experiment.
     
     x : float
-      The x corrdinates (of center) of the area in which the mapping will be done.
+        The x corrdinates (of center) of the area in which the mapping will be done.
 
     y : float
-      The y corrdinates (of center) of the area in which the mapping will be done.
+        The y corrdinates (of center) of the area in which the mapping will be done.
         
     length : float
-          The length of the bar.
+        The length of the bar.
     
     background_bar_width : float
-                         Width of the background bar
+        Width of the background bar
 
     occlusion_bar_width : float
-                         Width of the occlusion bar
+        Width of the occlusion bar
+
     bar_width : float
-              Width of the bar
+        Width of the bar
              
     orientation : float
-                The orientation of the bar.
+        The orientation of the bar.
 
     duration : float
-             The duration of single presentation of the stimulus.
+        The duration of single presentation of the stimulus.
     
     flash_duration : float
-             The duration of the presence of the bar.
+        The duration of the presence of the bar.
      
     num_trials : int
-               Number of trials each each stimulus is shown.
+        Number of trials each each stimulus is shown.
+
+
     """
     
     required_parameters = ParameterSet({
@@ -1570,7 +1613,7 @@ class VonDerHeydtIllusoryBarProtocol(VisualExperiment):
 
 
 class MeasureTextureSensitivityFullfield(VisualExperiment):
-    """
+    r"""
     Measure sensitivity to second order image correlations using stimuli
     based on a texture image.
     This experiment will show a series of texture based images
@@ -1578,36 +1621,42 @@ class MeasureTextureSensitivityFullfield(VisualExperiment):
     
     Parameters
     ----------
+
     model : Model
-          The model on which to execute the experiment.
+        The model on which to execute the experiment.
+
+
     Other parameters
     ----------------
+
     num_images: int
-               The number of samples generated for each texture family
+        The number of samples generated for each texture family
 
     folder_path: str
-               The path of of the folder containing the original naturalistic images
+        The path of of the folder containing the original naturalistic images
 
     images: list
-               The names of the pgm files containing the original naturalistic images
+        The names of the pgm files containing the original naturalistic images
 
     duration : float
-               The duration of the presentation of a single image
+        The duration of the presentation of a single image
     
     types : list(int) 
-              List of types indicating which statistics to match:
-                0 - original image
-                1 - naturalistic texture image (matched higher order statistics)
-                2 - spectrally matched noise (matched marginal statistics only).
+        List of types indicating which statistics to match:
+        0 - original image
+        1 - naturalistic texture image (matched higher order statistics)
+        2 - spectrally matched noise (matched marginal statistics only).
     
     num_trials : int
-               Number of trials each each stimulus is shown.
+        Number of trials each each stimulus is shown.
 
     size_x : float
-              The size of the stimulus on the x-axis
+        The size of the stimulus on the x-axis
 
     size_y : float
-              The size of the stimulus on the y-axis
+        The size of the stimulus on the y-axis
+
+
     """
 
     required_parameters = ParameterSet({
@@ -1652,7 +1701,7 @@ class MeasureTextureSensitivityFullfield(VisualExperiment):
 
 
 class MeasureTextureSizeTuning(VisualExperiment):
-    """
+    r"""
     Size tuning experiment.
 
     This experiment will show a series of synthetic texture spectrally-matched noise stimuli
@@ -1661,41 +1710,42 @@ class MeasureTextureSizeTuning(VisualExperiment):
     
     Parameters
     ----------
+
     model : Model
-          The model on which to execute the experiment.
+        The model on which to execute the experiment.
 
     Other parameters
     ----------------
 
     num_sizes : int
-              Number of sizes to present.
+        Number of sizes to present.
     
     max_size : float (degrees of visual field)
-             Maximum size to present.
+        Maximum size to present.
     
     duration : float
-                      The duration of single presentation of a grating.
+        The duration of single presentation of a grating.
     
     num_trials : int
-               Number of trials each each stimulus is shown.
+        Number of trials each each stimulus is shown.
     
     log_spacing : bool
-               Whether use logarithmic spaced sizes. By default False, meaning linear spacing 
+        Whether use logarithmic spaced sizes. By default False, meaning linear spacing 
 
     num_images: int
-               The number of samples generated for each texture family
+        The number of samples generated for each texture family
 
     folder_path: str
-               The path of of the folder containing the original naturalistic images
+        The path of of the folder containing the original naturalistic images
     
     images: list
-               The names of the pgm files containing the original naturalistic images
+        The names of the pgm files containing the original naturalistic images
                
     types : list(int)
-          List of types indicating which statistics to match:
-            0 - original image
-            1 - naturalistic texture image (matched higher order statistics)
-            2 - spectrally matched noise (matched marginal statistics only).
+        List of types indicating which statistics to match:
+        0 - original image
+        1 - naturalistic texture image (matched higher order statistics)
+        2 - spectrally matched noise (matched marginal statistics only).
 
     """
 
@@ -1752,27 +1802,32 @@ class MeasureTextureSizeTuning(VisualExperiment):
         pass
 
 class MeasureInformativePixelCorrelationStatisticsResponse(VisualExperiment):
-    """
+    r"""
     Measure sensitivity to informative pixel correlations base on synthetic stimuli 
     This experiment will show a series of synthetic stimuli  
     that vary in pixel correlations statistics.
     
     Parameters
     ----------
+
     model : Model
-          The model on which to execute the experiment.
+        The model on which to execute the experiment.
+
+
     Other parameters
     ----------------
 
     duration : float
-               The duration of the presentation of a single image
+        The duration of the presentation of a single image
     
     correlation_values: list(float) 
-               List of values of the pixel correlation statistics
-               that will be used to generate the stimuli
+        List of values of the pixel correlation statistics
+        that will be used to generate the stimuli
 
     num_trials : int
-               Number of trials each each stimulus is shown.
+        Number of trials each each stimulus is shown.
+
+
     """
 
     required_parameters = ParameterSet({
@@ -1810,27 +1865,32 @@ class MeasureInformativePixelCorrelationStatisticsResponse(VisualExperiment):
         pass
 
 class MeasureUninformativePixelCorrelationStatisticsResponse(VisualExperiment):
-    """
+    r"""
     Measure sensitivity to uninformative pixel correlations base on synthetic stimuli 
     This experiment will show a series of synthetic stimuli  
     that vary in pixel correlations statistics.
     
     Parameters
     ----------
+    
     model : Model
-          The model on which to execute the experiment.
+        The model on which to execute the experiment.
+
+
     Other parameters
     ----------------
 
     duration : float
-               The duration of the presentation of a single image
+        The duration of the presentation of a single image
     
     correlation_values: list(float) 
-               List of values of the pixel correlation statistics
-               that will be used to generate the stimuli
+        List of values of the pixel correlation statistics
+        that will be used to generate the stimuli
 
     num_trials : int
-               Number of trials each each stimulus is shown.
+        Number of trials each each stimulus is shown.
+
+
     """
 
     required_parameters = ParameterSet({
@@ -1867,7 +1927,7 @@ class MeasureUninformativePixelCorrelationStatisticsResponse(VisualExperiment):
         pass
 
 class MapResponseToInterruptedBarStimulus(VisualExperiment):
-    """
+    r"""
     Map response to interrupted bar stimuli. 
 
     The experiments is intended as the simplest test for line-completion.
@@ -1878,50 +1938,54 @@ class MapResponseToInterruptedBarStimulus(VisualExperiment):
     
     Parameters
     ----------
+
     model : Model
-          The model on which to execute the experiment.
+        The model on which to execute the experiment.
 
     Other parameters
     ----------------
+
     model : Model
-          The model on which to execute the experiment.
+        The model on which to execute the experiment.
     
     x : float
-      The x corrdinates (of center) of the area in which the mapping will be done.
+        The x corrdinates (of center) of the area in which the mapping will be done.
 
     y : float
-      The y corrdinates (of center) of the area in which the mapping will be done.
+        The y corrdinates (of center) of the area in which the mapping will be done.
         
     length : float
-          The length of the bar.
+        The length of the bar.
     
     width : float
-          The width of the bar.
+        The width of the bar.
              
     orientation : float
-                The orientation of the bar.
+        The orientation of the bar.
 
     max_offset : float
-               The maximum offset from the central position (defined by x and y) prependicular to the length of the bar at which the bars will be flashed.
+        The maximum offset from the central position (defined by x and y) prependicular to the length of the bar at which the bars will be flashed.
 
     steps : int
-         The number of steps in which the bars will be flashed between the two extreme positions defined by the max_offset parameter, along the axis prependicular to the length of the bar.
+        The number of steps in which the bars will be flashed between the two extreme positions defined by the max_offset parameter, along the axis prependicular to the length of the bar.
     
     duration : float
-             The duration of single presentation of the stimulus.
+        The duration of single presentation of the stimulus.
     
     flash_duration : float
-             The duration of the presence of the bar.
+        The duration of the presence of the bar.
     
     relative_luminances : list(float) 
-              List of luminance of the bar relative to background luminance at which the bar's will be presented. 0 is dark, 1.0 is double the background luminance.
+        List of luminance of the bar relative to background luminance at which the bar's will be presented. 0 is dark, 1.0 is double the background luminance.
 
     gap_lengths : list(float)
-                List of length of the gap that the bar will have in the middle.
+        List of length of the gap that the bar will have in the middle.
 
     
     num_trials : int
-               Number of trials each each stimulus is shown.
+        Number of trials each each stimulus is shown.
+
+
     """
     
     required_parameters = ParameterSet({
@@ -1973,57 +2037,61 @@ class MapResponseToInterruptedBarStimulus(VisualExperiment):
 
 
 class MapResponseToInterruptedCornerStimulus(VisualExperiment):
-    """
+    r"""
     Map response with interrupted corner stimuli. 
 
     Parameters
     ----------
+
     model : Model
-          The model on which to execute the experiment.
+        The model on which to execute the experiment.
 
     Other parameters
     ----------------
+
     model : Model
-          The model on which to execute the experiment.
+        The model on which to execute the experiment.
     
     x : float
-      The x corrdinates (of center) of the area in which the mapping will be done.
+        The x corrdinates (of center) of the area in which the mapping will be done.
 
     y : float
-      The y corrdinates (of center) of the area in which the mapping will be done.
+        The y corrdinates (of center) of the area in which the mapping will be done.
         
     length : float
-          The length of the corner stimulus if unfolded ().
+        The length of the corner stimulus if unfolded ().
     
     width : float
-          The width of the bar.
+        The width of the bar.
              
     orientation : float
-                The orientation of the bar.
+        The orientation of the bar.
 
     max_offset : float
-               The maximum offset from the central position (defined by x and y) prependicular to the length of the bar at which the bars will be flashed.
+        The maximum offset from the central position (defined by x and y) prependicular to the length of the bar at which the bars will be flashed.
 
     steps : int
-         The number of steps in which the bars will be flashed between the two extreme positions defined by the max_offset parameter, along the axis prependicular to the length of the bar.
+        The number of steps in which the bars will be flashed between the two extreme positions defined by the max_offset parameter, along the axis prependicular to the length of the bar.
     
     duration : float
-             The duration of single presentation of the stimulus.
+        The duration of single presentation of the stimulus.
     
     flash_duration : float
-             The duration of the presence of the bar.
+        The duration of the presence of the bar.
     
     relative_luminances : list(float) 
-              List of luminance of the bar relative to background luminance at which the bar's will be presented. 0 is dark, 1.0 is double the background luminance.
+        List of luminance of the bar relative to background luminance at which the bar's will be presented. 0 is dark, 1.0 is double the background luminance.
 
     gap_length : float
-                List of length of the gap that the bar will have in the middle.
+        List of length of the gap that the bar will have in the middle.
     
     angels    : list(float)
-                List of angles (rad) in which both left and right (first left then right) will be angled at.
+        List of angles (rad) in which both left and right (first left then right) will be angled at.
     
     num_trials : int
-               Number of trials each each stimulus is shown.
+        Number of trials each each stimulus is shown.
+
+
     """
     
     required_parameters = ParameterSet({
@@ -2100,37 +2168,40 @@ class MapResponseToInterruptedCornerStimulus(VisualExperiment):
 
 
 class MeasureNaturalImages(VisualExperiment):
-    """
+    r"""
     Present a sequence of images loaded from a directory, in alphabetical order of
     image filenames, interleaved by blank stimulation.
 
     Parameters
     ----------
+
     model : Model
-            The model on which to execute the experiment.
+        The model on which to execute the experiment.
 
     Other parameters
     ----------------
+
     duration : float
-            The duration of single presentation of the stimulus.
+        The duration of single presentation of the stimulus.
 
     images_dir : str
-            Path to the directory containing the images.
+        Path to the directory containing the images.
 
     num_images : int
-            Number of images to present.
+        Number of images to present.
 
     image_display_duration : float
-            The duration for which each image is displayed.
+        The duration for which each image is displayed.
 
     num_skipped_images : int
-            Skip the first num_skipped_images in the alphabetical order of filenames.
+        Skip the first num_skipped_images in the alphabetical order of filenames.
 
     num_trials : int
-            Number of trials each each stimulus is shown.
+        Number of trials each each stimulus is shown.
 
     size : float
-            The length of the longer axis of the image in visual degrees
+        The length of the longer axis of the image in visual degrees
+
     """
 
     required_parameters = ParameterSet(
@@ -2179,55 +2250,78 @@ class MeasureNaturalImages(VisualExperiment):
     def do_analysis(self, data_store):
         pass
 
-
 class MeasurePixelMovieFromFile(VisualExperiment):
-    """
-    Present a sequence of images loaded from a directory, in alphabetical order of
-    image filenames, interleaved by blank stimulation.
+    r"""
+    Present a sequence of images loaded from numpy 3D array stored in npy file.
+
+    The image is assumed to be square.
 
     Parameters
     ----------
+
     model : Model
-            The model on which to execute the experiment.
+        The model on which to execute the experiment.
 
     Other parameters
     ----------------
-    duration : float
-            The duration of single presentation of the stimulus.
+
+    movie_frame_duration : float
+        The duration of single presentation of the movie frame.
 
     movie_path : str
-            Path to the directory containing the images.
+        Path to the directory containing the images.
 
     movie_name : str
-            Name of the directory containing the images.
+        Name of the directory containing the images.
 
     num_trials : int
-            Number of trials each each stimulus is shown.
+        Number of trials each each stimulus is shown.
+
+    width : float
+        The width of the image in degrees of visual field.
+
+    global_frame_offset : int
+        The movie frame index from which to start the experiment (0 means start from beginning of the movie) 
+
+    images_per_trial : int
+        How many movie frames to show per trial
+
+    num_presentation_trials : int
+        How many trials of movie frame presentations (with images_per_trial of movie frames presented) to present. Note that each trails will have blank in between them.
+    
     """
 
     required_parameters = ParameterSet(
         {
-            "duration": float,
             "movie_path": str,
             "movie_name": str,
             "num_trials": int,
+            "width" : float,
+            "movie_frame_duration" : int,
+            "global_frame_offset" : int,
+            "images_per_trial" : int,
+            "num_presentation_trials" : int,
         }
     )
     def generate_stimuli(self):
         for k in range(0, self.parameters.num_trials):
+            for l in range(0, self.parameters.num_presentation_trials):
                 self.stimuli.append(
-                    vs.PixelMovieFromFile(
+                    topo.PixelMovieFromFile(
                         frame_duration=self.frame_duration,
                         movie_path=self.parameters.movie_path,
                         movie_name=self.parameters.movie_name,
-                        duration=self.parameters.duration,
+                        duration=self.parameters.images_per_trial * self.parameters.movie_frame_duration,
                         size_x=self.model.visual_field.size_x,
                         size_y=self.model.visual_field.size_y,
+                        density=self.density,
                         location_x=0.0,
                         location_y=0.0,
                         background_luminance=self.background_luminance,
-                        density=self.density,
-                        trial=k
+                        trial=k,
+                        size=self.parameters.width,
+                        movie_frame_duration=self.parameters.movie_frame_duration,
+                        frame_offset=self.parameters.global_frame_offset+l*self.parameters.images_per_trial,
                     )
                 )
 

@@ -18,7 +18,7 @@ logger = mozaik.getMozaikLogger()
 
 
 class ExpVisitor(ast.NodeVisitor):
-    """
+    r"""
     AST tree visitor used for determining list of variables in the delay or weight expresions
     """
     
@@ -32,7 +32,7 @@ class ExpVisitor(ast.NodeVisitor):
            self.names.append(node.id) 
 
 class ModularConnector(Connector):
-    """
+    r"""
     An abstract connector than allows for mixing of various factors that can affect the connectivity.
     
     The connector sepparates the implementation of delays from the implementation of weights.
@@ -87,7 +87,7 @@ class ModularConnector(Connector):
           self.delay_functions[k] = load_component(self.parameters.delay_functions[k].component)(self.source,self.target,self.parameters.delay_functions[k].params)
 
     def _obtain_weights(self,i,seed=None):
-        """
+        r"""
         This function calculates the combined weights from the ModularConnectorFunction in weight_functions
         """
         evaled = OrderedDict()
@@ -100,7 +100,7 @@ class ModularConnector(Connector):
         return weights
         
     def _obtain_delays(self,i,seed=None):
-        """
+        r"""
         This function calculates the combined weights from the ModularConnectorFunction in weight_functions
         """
         evaled = OrderedDict()
@@ -127,7 +127,7 @@ class ModularConnector(Connector):
                                 receptor_type=self.parameters.target_synapses)
 
 class LocalModuleConnector(ModularConnector):
-    """
+    r"""
     ModularConnector which includes the possibility to define a local module.
     Local connections projecting from neurons outside the module to neurons inside
     the module are to be deleted and replaced by connections coming from inside the 
@@ -150,11 +150,12 @@ class LocalModuleConnector(ModularConnector):
     })
 
     def __init__(self, network, name,source, target, parameters):
-        """
+        r"""
         Set two numpy arrays:
         lm_idx: List of ids of neurons within the local module.
         l_idx: List of ids of neurons outside the local module which might send
                local connections to the local module.
+
         """
         ModularConnector.__init__(self, network, name, source,target,parameters)
         if self.parameters.local_module:
@@ -171,7 +172,7 @@ class LocalModuleConnector(ModularConnector):
             self.l_idx = None
 
     def local_module_weight_updates(self, idx, weights):
-        """ 
+        r""" 
         For each neuron, if it lies within the local module, delete all local 
         connections coming from outside the local module and update its weights. 
 
@@ -181,6 +182,7 @@ class LocalModuleConnector(ModularConnector):
 
             weights: numpy.nd_array
                     The weights to update
+
         """
         x = self.target.pop.positions[0][idx]
         y = self.target.pop.positions[1][idx]
@@ -202,7 +204,7 @@ class LocalModuleConnector(ModularConnector):
         return weights
 
 class VariableNumSamplesConnector(LocalModuleConnector):
-    """
+    r"""
     Modular connector for which the number of sample connections varies
     accross neurons according to the num_samples_functions and 
     num_samples_expression provided.
@@ -223,11 +225,12 @@ class VariableNumSamplesConnector(LocalModuleConnector):
         })
 
     def __init__(self, network, name,source, target, parameters):
-        """
+        r"""
         Set two numpy arrays:
         lm_idx: List of ids of neurons within the local module.
         l_idx: List of ids of neurons outside the local module which might send
                local connections to the local module.
+               
         """
         LocalModuleConnector.__init__(self, network, name, source,target,parameters)
         if self.parameters.num_samples_expression:
@@ -244,7 +247,7 @@ class VariableNumSamplesConnector(LocalModuleConnector):
             self.num_samples_functions = None
 
     def _obtain_num_samples(self,i,samples):
-        """
+        r"""
         This function calculates the combined weights from the ModularConnectorFunction in weight_functions
         """
         evaled = OrderedDict()
@@ -257,7 +260,7 @@ class VariableNumSamplesConnector(LocalModuleConnector):
             return samples
 
 class ModularSamplingProbabilisticConnector(VariableNumSamplesConnector):
-    """
+    r"""
     VariableNumSampleConnector that interprets the weights as proportional probabilities of connectivity
     and for each neuron in connections it samples num_samples 
     (modulated for each neuron according to num_samples_functions)
@@ -374,7 +377,7 @@ class ModularSamplingProbabilisticConnector(VariableNumSamplesConnector):
 
 
 class ModularSingleWeightProbabilisticConnector(ModularConnector):
-    """
+    r"""
     ModularConnector that interprets the weights as proportional probabilities of connectivity.
     The parameter connection_probability is interepreted as the average probability that two neurons will be connected in this 
     projection. For each pair this connecter will make one random choice of connecting them (where the probability of this choice
@@ -416,7 +419,7 @@ class ModularSingleWeightProbabilisticConnector(ModularConnector):
 
 
 class ModularSamplingProbabilisticConnectorAnnotationSamplesCount(VariableNumSamplesConnector):
-    """
+    r"""
     ModularConnector that interprets the weights as proportional probabilities of connectivity
     and for each neuron in connections it samples num_samples of
     connections that actually get realized according to these weights.

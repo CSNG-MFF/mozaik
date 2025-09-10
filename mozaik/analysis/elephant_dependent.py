@@ -11,7 +11,7 @@ from mozaik.tools.distribution_parametrization import load_parameters
 
 
 class CriticalityAnalysis(Analysis):
-    """
+    r"""
     Compute distance to criticality as defined in:
     Ma Z., Turrigiano G.G., Wessel R., Hengen K.B. (2019). Cortical Circuit
     Dynamics Are Homeostatically Tuned to Criticality In Vivo, Neuron
@@ -279,28 +279,34 @@ class CriticalityAnalysis(Analysis):
         return distr, bins
 
     def fit_powerlaw_distribution(self, x, y, img_title=None):
-        """
+        r"""
         Parameters
         ----------
+        
         data : 1D numpy array
             Observations from the probability distribution we want to fit
+
         nrbins : int
             Number of bins in the created histogram
+
         img_title : str
             Used for debugging. Title of the powerlaw fit figure.
 
         Returns
         -------
-        amp, slope, tau, error
 
         amp : float
             Amplitude of the powerlaw distribution
+
         slope : float
             Slope of the powerlaw distribution
+
         tau : float
             tau = -slope
+
         error : float
             Mean square error of the fit
+
         """
         try:
             [amp, slope], _ = curve_fit(f=self.powerlaw, xdata=x, ydata=y, p0=[0, 0])

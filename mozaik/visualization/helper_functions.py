@@ -1,4 +1,4 @@
-"""
+r"""
 This module contains several low level plotting function used mainly in simple_plot module.
 """
 import pylab
