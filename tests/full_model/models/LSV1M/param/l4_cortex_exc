@@ -29,8 +29,8 @@
                             'tau_w' : 1.0,
                             'v_thresh' : -56.0                            
                         },
-
-                       'initial_values': {
+                        'receptors':None,
+                        'initial_values': {
                                     'v': PyNNDistribution(name='uniform',low=-70,high=-51),
                                 },
 
@@ -88,6 +88,7 @@
 
         'base_weight': 0.00016,
 	'annotation_reference_name' : 'aff_samples',
+        'samples_coeff': 1,
         'num_samples' : ref('sheets.l4_cortex_exc.K')*4.0/5.0*(1-ref('sheets.l4_cortex_exc.feedback_conn_ratio')),
         'self_connections': True,
         'local_module': None,
@@ -133,6 +134,7 @@
 
         'base_weight': 0.00022,
 	'annotation_reference_name' : 'aff_samples',
+        'samples_coeff': 1,
         'num_samples' : ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.num_samples') * ref('sheets.l4_cortex_exc.inhibitory_connection_ratio'),
         'self_connections': ref('sheets.l4_cortex_exc.L4ExcL4ExcConnection.self_connections'),
         'local_module': None,
@@ -142,6 +144,7 @@
     'AfferentVar' : 25,
 
     'AfferentConnection': {
+        'target_synapses': 'excitatory',
         'aspect_ratio':            0.4,
         'size':                    0.17,
         'orientation_preference':  PyNNDistribution(name='uniform',low=0,high=3.141592653589793),
@@ -188,5 +191,4 @@
 
         'local_module': None,
     }        
-        
 }

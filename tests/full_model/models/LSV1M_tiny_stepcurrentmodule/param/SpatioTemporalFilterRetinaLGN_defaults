@@ -58,6 +58,7 @@
                 'tau_syn_ex': 1.5,
                 'tau_syn_in': 10.0,
             },
+            'receptors': None,
             'initial_values': {
                 'V_m': -70.0,
             },

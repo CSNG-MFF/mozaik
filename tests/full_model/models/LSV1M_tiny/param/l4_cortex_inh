@@ -28,6 +28,7 @@
                             'delta_T' : ref('sheets.l4_cortex_exc.params.cell.params.delta_T'),
                             'tau_w' : ref('sheets.l4_cortex_exc.params.cell.params.tau_w'),
                         }, 
+                        'receptors':None,
                         'initial_values': {
                                     'v': PyNNDistribution(name='uniform',low=-70,high=-51),
                                 },
@@ -131,6 +132,7 @@
     'AfferentVar' : 14, 
     
     'AfferentConnection': {
+        'target_synapses': 'excitatory',
         'aspect_ratio':            ref('sheets.l4_cortex_exc.AfferentConnection.aspect_ratio'),
         'size':                    ref('sheets.l4_cortex_exc.AfferentConnection.size'),
         'orientation_preference':  PyNNDistribution(name='uniform',low=0,high=3.141592653589793),
