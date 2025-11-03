@@ -15,6 +15,8 @@ and may not be the current affiliation of a contributor.
 * Remy Cagnol [3]
 * Tibor Rozsa [3]
 * Tanguy Damart [3]
+* Luca Baroni [3] 
+* Pavel Haman [3]
 
 
 1. Unité de Neuroscience, Information et Complexité, CNRS UPR 3293, Gif-sur-Yvette, France 
