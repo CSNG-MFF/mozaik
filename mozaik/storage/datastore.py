@@ -5,6 +5,7 @@ This module implements the data storage functionality.
 import numpy
 from parameters import ParameterSet
 from neo.core.block import Block
+from neo.core import Segment
 #from neo.io.hdf5io import NeoHdf5IO
 import mozaik
 from mozaik.core import ParametrizedObject
@@ -670,3 +671,29 @@ class PickledDataStore(Hdf5DataStore):
         for s in self.block.segments:
             if s.full:
                 s.release()
+
+    def update_segment(self, segment):
+        """Update the pickle file corresponding to a given segment given in input
+
+        Parameters
+        ----------
+            segment : MozaikSegment
+                     The segment to update
+        """
+
+
+        if not isinstance(segment, MozaikSegment):
+            raise TypeError("`segment` must be an instance of MozaikSegment")
+
+        new_seg = Segment(name=segment.name,
+                             description=segment.description,
+                             file_origin=segment.file_origin,
+                             file_datetime=segment.file_datetime,
+                             rec_datetime=segment.rec_datetime,
+                             index=segment.index)
+        new_seg.analogsignals = segment.analogsignals
+        new_seg.spiketrains = segment.spiketrains
+        new_seg.annotations = segment.annotations
+        f = open(self.parameters.root_directory + '/' + segment.identifier + ".pickle", 'wb')
+        pickle.dump(new_seg, f)
+        f.close()

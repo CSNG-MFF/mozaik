@@ -83,6 +83,7 @@ class Sheet(BaseComponent):
             'model': str,  # the cell type of the sheet
             'native_nest': bool,
             'params': ParameterSet,
+            'receptors': ParameterSet,
             'initial_values': ParameterSet,
         }),
 
@@ -103,6 +104,8 @@ class Sheet(BaseComponent):
         self.size_x = size_x
         self.size_y = size_y
         self.msc=0
+        # By default we assume that the population corresponds to a non multisynapse model
+        self.multisynapse = False
         # We want to be able to define in cell.params the cell parameters as also PyNNDistributions so we can get variably parametrized populations
         # The problem is that the pyNN.Population can accept only scalar parameters. There fore we will remove from cell.params all parameters
         # that are PyNNDistributions, and will initialize them later just after the population is initialized (in property pop())
@@ -188,6 +191,31 @@ class Sheet(BaseComponent):
         else:
             self._neuron_annotations[neuron_number][key] = (protected, value)
 
+    def has_neuron_annotation(self, neuron_number, key):
+        """
+        Check if an annotation exists for a given neuron.
+
+        Parameters
+        ----------
+        neuron_number : int
+                      The index of the neuron in the population for which the annotation will be checked.
+
+        key : str
+            The name of the annotation
+
+        Returns
+        -------
+            value : Boolean
+                   True if the neurons has such annotation, False otherwise
+        """
+
+        if not self._pop:
+            logger.error('Population has not been yet set in sheet: ' + self.name + '!')
+        if key not in self._neuron_annotations[neuron_number]:
+            return False
+        else:
+            return True
+
     def get_neuron_annotation(self, neuron_number, key):
         r"""
         Retrieve annotation for a given neuron.
@@ -265,22 +293,30 @@ class Sheet(BaseComponent):
             The segment holding all the recorded data. See NEO documentation for detail on the format.
 
         """
-        
+
+        if self.parameters.cell.native_nest:
+            vm_name = ['V_m']
+        else:
+            vm_name = ['v']
+
+        if self.multisynapse:
+            gsyn_names = []
+            for k in self.parameters.cell.receptors.keys():
+                gsyn_names.append(k+ '.gsyn') 
+        elif self.parameters.cell.native_nest:
+            gsyn_names = ['g_ex', 'g_in']
+        else: 
+            gsyn_names = ['gsyn_exc', 'gsyn_inh']
+            
         block = None
         steps = self.model.parameters.steps_get_data 
         if steps:
             for i in range(0,len(self.pop),steps):
                 try:
-                    if self.parameters.cell.native_nest:
-                        if i + steps < len(self.pop):
-                            b = self.pop[i:i+steps].get_data(['spikes', 'V_m', 'g_ex', 'g_in'],clear=False)
-                        else:
-                            b = self.pop[i:i+steps].get_data(['spikes', 'V_m', 'g_ex', 'g_in'],clear=True)
+                    if i + steps < len(self.pop):
+                        b = self.pop[i:i+steps].get_data(['spikes'] + vm_name + gsyn_names,clear=False)
                     else:
-                        if i + steps < len(self.pop):
-                            b = self.pop[i:i+steps].get_data(['spikes', 'v', 'gsyn_exc', 'gsyn_inh'],clear=False)
-                        else:
-                            b = self.pop[i:i+steps].get_data(['spikes', 'v', 'gsyn_exc', 'gsyn_inh'],clear=True)
+                        b = self.pop[i:i+steps].get_data(['spikes'] + vm_name + gsyn_names,clear=True)
                 except (NothingToWriteError, errmsg):
                     logger.debug(errmsg)
                 if (mozaik.mpi_comm) and (mozaik.mpi_comm.rank == mozaik.MPI_ROOT):
@@ -299,10 +335,7 @@ class Sheet(BaseComponent):
                 mozaik.mpi_comm.barrier()
         else:
             try:
-                if self.parameters.cell.native_nest:
-                    block = self.pop.get_data(['spikes', 'V_m', 'g_ex', 'g_in'],clear=True)
-                else:
-                    block = self.pop.get_data(['spikes', 'v', 'gsyn_exc', 'gsyn_inh'],clear=True)
+                block = self.pop.get_data(['spikes'] + vm_name + gsyn_names,clear=True)
             except (NothingToWriteError, errmsg):
                 logger.debug(errmsg)
 
