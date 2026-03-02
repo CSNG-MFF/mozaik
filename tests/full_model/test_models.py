@@ -30,6 +30,7 @@ if repo_present:
 else:
     MODEL_DIRS = ["__missing_repo__"]
 
+
 class TestMozaikModelsSmoke:
     """
     Smoke test for models in the CSNG_MFF/mozaik-models repository.
@@ -60,8 +61,7 @@ class TestMozaikModelsSmoke:
         )
 
         # Python code that will run in a fresh interpreter
-        runner_code = textwrap.dedent(
-            f"""
+        runner_code = textwrap.dedent(f"""
             import os
             import sys
             import runpy
@@ -105,8 +105,7 @@ class TestMozaikModelsSmoke:
             except SystemExit as e:
                 code = e.code if isinstance(e.code, int) else 0
                 sys.exit(code)
-            """
-        )
+            """)
 
         result = subprocess.run(
             [sys.executable, "-c", runner_code],
@@ -120,7 +119,6 @@ class TestMozaikModelsSmoke:
             print(result.stderr)
 
         assert result.returncode == 0
-
 
 
 class TestModel(object):

@@ -38,6 +38,7 @@ exclude = '''
  | mozaik/stimuli
  | examples/VogelsAbbott2005
  | examples/TextureModel
+ | tests/full_model/models/mozaik-models
 | build
 | doc
 | imagen
