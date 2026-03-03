@@ -22,7 +22,6 @@ from mozaik.tools.mozaik_parametrized import SNumber
 from quantities import dimensionless
 from parameters import ParameterSet
 
-
 params = {
     "input_space_type": "mozaik.space.VisualSpace",
     "input_space": {"update_interval": 7.0, "background_luminance": 45.0},

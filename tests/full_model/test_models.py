@@ -5,12 +5,120 @@ saved reference.
 
 import numpy as np
 import os
+import sys
+import subprocess
+import textwrap
+import shutil
 from mozaik.storage.queries import *
 from mozaik.storage.datastore import PickledDataStore
 from mozaik.tools.distribution_parametrization import PyNNDistribution
 from parameters import ParameterSet
 
 import pytest
+
+REPO_DIR = "tests/full_model/models/mozaik-models"
+
+repo_present = os.path.isdir(os.path.join(REPO_DIR, ".git"))
+
+if repo_present:
+    MODEL_DIRS = sorted(
+        os.path.join(REPO_DIR, d)
+        for d in os.listdir(REPO_DIR)
+        if os.path.isdir(os.path.join(REPO_DIR, d))
+        and os.path.exists(os.path.join(REPO_DIR, d, "run.py"))
+    )
+else:
+    MODEL_DIRS = ["__missing_repo__"]
+
+
+class TestMozaikModelsSmoke:
+    """
+    Smoke test for models in the CSNG_MFF/mozaik-models repository.
+
+    Runs each model's run.py with a reduced cortical and LGN density and exits after
+    the simulation. Checks only that execution finishes without errors.
+    """
+
+    @pytest.mark.model
+    @pytest.mark.mozaik_models
+    @pytest.mark.parametrize("repo_dir", MODEL_DIRS)
+    def test_run_successful(self, repo_dir):
+        if repo_dir == "__missing_repo__":
+            pytest.fail(
+                "mozaik-models repository not found.\n"
+                "Clone it to run these tests:\n"
+                "git clone https://github.com/CSNG-MFF/mozaik-models.git "
+                "tests/full_model/models/mozaik-models"
+            )
+
+        # Remove previous simulations
+        shutil.rmtree(
+            os.path.join(
+                repo_dir,
+                "SelfSustainedPushPull_smoketest_____sheets.l4_cortex_exc.params.density:150_sheets.retina_lgn.params.density:20",
+            ),
+            ignore_errors=True,
+        )
+
+        # Python code that will run in a fresh interpreter
+        runner_code = textwrap.dedent(f"""
+            import os
+            import sys
+            import runpy
+            import mozaik.controller
+            from parameters import ParameterSet
+            from mozaik.experiments import NoStimulation
+
+            repo_dir = r"{repo_dir}"
+            os.chdir(repo_dir)
+
+            # simulate CLI
+            sys.argv = [
+                "run.py",
+                "nest",
+                "4",
+                "param/defaults",
+                "sheets.l4_cortex_exc.params.density",
+                "150",
+                "sheets.retina_lgn.params.density",
+                "20",
+                "smoketest",
+            ]
+
+            # edit run_workflow
+            original = mozaik.controller.run_workflow
+
+            def fast_run_workflow(simulation_name, model_class, create_experiments):
+                def fast_experiments(model):
+                    return [NoStimulation(model, ParameterSet({{"duration": 30 * 7}}))]
+
+                original(simulation_name, model_class, fast_experiments)
+                raise SystemExit(0)
+
+            mozaik.controller.run_workflow = fast_run_workflow
+
+            # emulate 'python run.py'
+            sys.path = [""] + sys.path
+
+            try:
+                runpy.run_path("run.py", run_name="__main__")
+            except SystemExit as e:
+                code = e.code if isinstance(e.code, int) else 0
+                sys.exit(code)
+            """)
+
+        result = subprocess.run(
+            [sys.executable, "-c", runner_code],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+
+        if result.returncode != 0:
+            print(result.stdout)
+            print(result.stderr)
+
+        assert result.returncode == 0
 
 
 class TestModel(object):

@@ -1,0 +1,8 @@
+name: mozaik-models tests
+on: [push, pull_request]
+jobs:
+  models-tests:
+    uses: ./.github/workflows/mozaik-setup.yml
+    with:
+      pytest-args: '-m "mozaik_models"'
+      clone_mozaik_models: true
