@@ -1,4 +1,4 @@
-name: Mozaik-models tests
+name: mozaik-models tests
 on: [push, pull_request]
 jobs:
   models-tests:
