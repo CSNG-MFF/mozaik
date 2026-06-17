@@ -1,4 +1,5 @@
 attrs==21.4.0
+bimvee==2.0.0
 certifi==2021.10.8
 charset-normalizer==2.0.12
 ConnPlotter==0.7a0

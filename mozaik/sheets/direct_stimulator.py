@@ -221,8 +221,15 @@ class SpikeSourceArrayStimulator(DirectStimulator):
                 raise ValueError("Spike times must be within the stimulation duration")
 
             # PyNN/NEST expects absolute simulator times, while experiment files
-            # normally describe times relative to the current presentation.
-            self._set_cell_spike_times(index, times + offset)
+            # normally describe times relative to the current presentation. A
+            # spike scheduled exactly at the current simulator time is not
+            # emitted, so events in the first simulator bin are placed at the
+            # first representable simulation step.
+            absolute_times = times + offset
+            first_step = self._first_simulation_step(offset)
+            if len(absolute_times) and first_step > offset:
+                absolute_times = numpy.maximum(absolute_times, first_step)
+            self._set_cell_spike_times(index, absolute_times)
 
     def inactivate(self, offset):
         r"""
@@ -235,6 +242,30 @@ class SpikeSourceArrayStimulator(DirectStimulator):
         # spike times without carrying over stale input.
         for index in range(len(self.sheet.pop)):
             self._set_cell_spike_times(index, [])
+
+    def _first_simulation_step(self, offset):
+        r"""
+        Return the first legal spike time after the current simulator time.
+        """
+        timestep_candidates = [getattr(self.sheet, "dt", 0.0)]
+        if hasattr(self.sheet, "model"):
+            timestep_candidates.extend(
+                [
+                    getattr(self.sheet.model.parameters, "time_step", 0.0),
+                    getattr(self.sheet.model.parameters, "min_delay", 0.0),
+                ]
+            )
+        timesteps = []
+        for timestep in timestep_candidates:
+            try:
+                timestep = float(timestep)
+            except (TypeError, ValueError):
+                continue
+            if timestep > 0.0:
+                timesteps.append(timestep)
+        if timesteps:
+            return offset + 2.001 * max(timesteps)
+        return offset
 
     def save_to_datastore(self, data_store, stimulus):
         r"""

@@ -4,6 +4,7 @@ Experiments and helpers for presenting DVS event streams to spike-source sheets.
 """
 
 from collections import OrderedDict
+import os
 
 import numpy
 from parameters import ParameterSet
@@ -16,16 +17,86 @@ from mozaik.tools.distribution_parametrization import MozaikExtendedParameterSet
 
 def load_dvs_events(event_file):
     r"""
-    Load DVS events from an ``.npy`` file.
+    Load DVS events from an IIT/YARP event-camera export through ``bimvee``.
 
-    The expected format is a numeric array with columns
-    ``time_ms, x, y, polarity``.
+    ``event_file`` should point to the exported dataset directory containing
+    ``data.log`` and ``info.log``. A direct path to one of the files in that
+    directory is also accepted for convenience.
+
+    The returned array is Mozaik's internal DVS representation with columns
+    ``time_ms, x, y, polarity``. ``bimvee`` timestamps are in seconds and are
+    converted here to milliseconds relative to the first imported event.
+    ``bimvee`` polarity uses ``True`` for ON/brighter events and ``False`` for
+    OFF/darker events.
     """
-    events = numpy.load(event_file)
+    imported_data = _import_iit_yarp_events(event_file)
+    dvs_events = _extract_single_dvs_stream(imported_data)
+    return _bimvee_dvs_events_to_array(dvs_events)
+
+
+def _import_iit_yarp_events(event_file):
     try:
-        events = numpy.asarray(events, dtype=float)
+        from bimvee.importIitYarp import importIitYarp
+    except ImportError as exc:
+        raise ImportError(
+            "Loading IIT/YARP DVS exports requires the bimvee package"
+        ) from exc
+
+    event_path = event_file
+    if os.path.isfile(event_path):
+        event_path = os.path.dirname(event_path)
+    return importIitYarp(filePathOrName=event_path, importType="iityarp")
+
+
+def _extract_single_dvs_stream(imported_data):
+    streams = list(_iter_dvs_streams(imported_data))
+    if not streams:
+        raise ValueError("DVS event export does not contain a DVS stream")
+    if len(streams) > 1:
+        raise ValueError(
+            "DVS event export contains multiple DVS streams; provide a single stream"
+        )
+    return streams[0][1]
+
+
+def _iter_dvs_streams(imported_data):
+    if isinstance(imported_data, list):
+        for item in imported_data:
+            for stream in _iter_dvs_streams(item):
+                yield stream
+        return
+
+    data = imported_data.get("data", {})
+    for channel_name, channel_data in data.items():
+        if isinstance(channel_data, dict) and channel_data.get("dvs") is not None:
+            yield channel_name, channel_data["dvs"]
+
+
+def _bimvee_dvs_events_to_array(dvs_events):
+    missing_fields = [field for field in ["ts", "x", "y", "pol"] if field not in dvs_events]
+    if missing_fields:
+        raise ValueError(
+            "DVS event stream is missing fields: %s" % ", ".join(missing_fields)
+        )
+
+    try:
+        timestamps = numpy.asarray(dvs_events["ts"], dtype=float)
+        x = numpy.asarray(dvs_events["x"], dtype=float)
+        y = numpy.asarray(dvs_events["y"], dtype=float)
+        polarity = numpy.asarray(dvs_events["pol"], dtype=bool)
     except (TypeError, ValueError):
-        raise ValueError("DVS event file must contain a numeric array")
+        raise ValueError("DVS event stream must contain numeric arrays")
+
+    lengths = {len(timestamps), len(x), len(y), len(polarity)}
+    if len(lengths) != 1:
+        raise ValueError("DVS event stream fields must have matching lengths")
+
+    if len(timestamps) == 0:
+        return numpy.zeros((0, 4), dtype=float)
+
+    time_ms = (timestamps - timestamps.min()) * 1000.0
+    polarity = numpy.where(polarity, 1.0, -1.0)
+    events = numpy.column_stack((time_ms, x, y, polarity))
     _validate_event_shape(events)
     if not numpy.all(numpy.isfinite(events)):
         raise ValueError("DVS event array must contain only finite values")
@@ -113,7 +184,7 @@ def infer_sheet_grid_shape(sheet):
 
 class DVSRecordedInput(Experiment):
     r"""
-    Present DVS events from a NumPy file through ON and OFF spike-source sheets.
+    Present DVS events from an IIT/YARP export through ON and OFF spike-source sheets.
     """
 
     required_parameters = ParameterSet({

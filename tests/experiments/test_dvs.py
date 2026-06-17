@@ -43,6 +43,7 @@ class FakePopulation:
 class FakeSheet:
     def __init__(self, name, width=2, height=2):
         self.name = name
+        self.dt = 0.1
         self.parameters = ParameterSet(
             {
                 "cell": {
@@ -74,20 +75,37 @@ def sequence_values(sequence):
     return list(np.array(sequence.value, dtype=float))
 
 
-def write_events(tmp_path, events, name="events.npy"):
-    event_file = tmp_path / name
-    np.save(str(event_file), np.asarray(events, dtype=float))
-    return str(event_file)
+def encode_iit_yarp_dvs_address(x, y, polarity, channel=1):
+    raw_polarity = 0 if polarity > 0 else 1
+    return (((channel << 10 | y) << 11 | x) << 1) | raw_polarity
 
 
-def test_load_dvs_events_accepts_numeric_n_by_four_npy(tmp_path):
+def write_events(tmp_path, events, name="dvs_dataset"):
+    event_dir = tmp_path / name
+    event_dir.mkdir()
+    (event_dir / "info.log").write_text(
+        "Type: Bottle;\n"
+        "Stamp: rx;\n"
+        "[0.000000] /vPreProcess/right:o [connected]\n"
+    )
+    encoded_events = []
+    for time_ms, x, y, polarity in sorted(events, key=lambda event: event[0]):
+        encoded_events.append(str(int(round(time_ms * 1000.0))))
+        encoded_events.append(str(encode_iit_yarp_dvs_address(int(x), int(y), polarity)))
+    (event_dir / "data.log").write_text(
+        "1 0.000000 AE (%s)\n" % " ".join(encoded_events)
+    )
+    return str(event_dir)
+
+
+def test_load_dvs_events_accepts_iit_yarp_export(tmp_path):
     event_file = write_events(
         tmp_path,
         [
-            [1.0, 0, 1, 1],
-            [3.0, 0, 1, 1],
-            [2.0, 1, 0, -1],
-            [4.0, 1, 0, -1],
+            [0.0, 0, 1, 1],
+            [2.0, 0, 1, 1],
+            [1.0, 1, 0, -1],
+            [3.0, 1, 0, -1],
         ],
     )
 
@@ -97,10 +115,10 @@ def test_load_dvs_events_accepts_numeric_n_by_four_npy(tmp_path):
         events,
         np.array(
             [
-                [1.0, 0, 1, 1],
-                [3.0, 0, 1, 1],
-                [2.0, 1, 0, -1],
-                [4.0, 1, 0, -1],
+                [0.0, 0, 1, 1],
+                [1.0, 1, 0, -1],
+                [2.0, 0, 1, 1],
+                [3.0, 1, 0, -1],
             ],
             dtype=float,
         ),
@@ -161,13 +179,13 @@ def test_dvs_spike_source_stimulator_offsets_and_clears_spike_times():
     stimulator = SpikeSourceArrayStimulator(
         sheet,
         ParameterSet(
-            {"spike_times": [[1.0, 3.0], [], [2.0, 4.0], [0.5, 4.5]]}
+            {"spike_times": [[0.0, 3.0], [], [2.0, 4.0], [0.5, 4.5]]}
         ),
     )
 
     stimulator.prepare_stimulation(duration=5.0, offset=10.0)
 
-    assert sequence_values(sheet.pop[0].spike_times) == [11.0, 13.0]
+    np.testing.assert_allclose(sequence_values(sheet.pop[0].spike_times), [10.2001, 13.0])
     assert sequence_values(sheet.pop[1].spike_times) == []
     assert sequence_values(sheet.pop[2].spike_times) == [12.0, 14.0]
     assert sequence_values(sheet.pop[3].spike_times) == [10.5, 14.5]
@@ -182,10 +200,10 @@ def test_dvs_recorded_input_uses_named_on_off_sheets(tmp_path):
     event_file = write_events(
         tmp_path,
         [
-            [1.0, 0, 0, 1],
-            [3.0, 0, 0, 1],
-            [2.0, 1, 1, -1],
-            [4.0, 1, 1, -1],
+            [0.0, 0, 0, 1],
+            [2.0, 0, 0, 1],
+            [1.0, 1, 1, -1],
+            [3.0, 1, 1, -1],
         ],
     )
 
@@ -206,7 +224,7 @@ def test_dvs_recorded_input_uses_named_on_off_sheets(tmp_path):
     stimulation = experiment.direct_stimulation[0]
     assert list(stimulation.keys()) == ["ON", "OFF"]
     assert [list(s) for s in stimulation["ON"][0].parameters.spike_times] == [
-        [1.0, 3.0],
+        [0.0, 2.0],
         [],
         [],
         [],
@@ -215,12 +233,12 @@ def test_dvs_recorded_input_uses_named_on_off_sheets(tmp_path):
         [],
         [],
         [],
-        [2.0, 4.0],
+        [1.0, 3.0],
     ]
 
 
 def test_dvs_recorded_input_rejects_sheet_grid_mismatch(tmp_path):
-    event_file = write_events(tmp_path, [[1.0, 0, 0, 1]])
+    event_file = write_events(tmp_path, [[0.0, 0, 0, 1]])
 
     with pytest.raises(ValueError, match="DVS grid"):
         DVSRecordedInput(
@@ -392,6 +410,11 @@ def test_dvs_recorded_input_records_spikes_from_two_consecutive_nest_experiments
             spikes[index] = [float(t) for t in train]
         return spikes
 
+    def assert_spikes_by_index(actual, expected):
+        assert actual.keys() == expected.keys()
+        for index, expected_times in expected.items():
+            np.testing.assert_allclose(actual[index], expected_times)
+
     def cortex_voltage_delta(segment):
         signal = np.asarray(segment.analogsignals[0])
         return float(signal.max() - signal.min())
@@ -412,24 +435,24 @@ def test_dvs_recorded_input_records_spikes_from_two_consecutive_nest_experiments
         event_file_1 = write_events(
             tmp_path,
             [
-                [1.0, 0, 0, 1],
-                [3.0, 0, 0, 1],
+                [0.0, 0, 0, 1],
+                [2.0, 0, 0, 1],
                 [4.0, 1, 0, -1],
                 [6.0, 1, 0, -1],
                 [5.0, 1, 1, 1],
                 [8.0, 1, 1, 1],
             ],
-            "events_1.npy",
+            "events_1",
         )
         event_file_2 = write_events(
             tmp_path,
             [
-                [2.0, 0, 1, -1],
-                [5.0, 0, 1, -1],
+                [0.0, 0, 1, -1],
+                [3.0, 0, 1, -1],
                 [4.0, 1, 1, 1],
                 [7.0, 1, 1, 1],
             ],
-            "events_2.npy",
+            "events_2",
         )
 
         experiment_1 = dvs_experiment(model, event_file_1)
@@ -454,34 +477,46 @@ def test_dvs_recorded_input_records_spikes_from_two_consecutive_nest_experiments
     finally:
         nest.end()
 
-    assert first_on_spikes == {
-        0: [1.0, 3.0],
-        1: [],
-        2: [],
-        3: [5.0, 8.0],
-    }
-    assert first_off_spikes == {
-        0: [],
-        1: [],
-        2: [4.0, 6.0],
-        3: [],
-    }
-    assert second_on_spikes == {
-        0: [],
-        1: [],
-        2: [],
-        3: [4.0, 7.0],
-    }
-    assert second_off_spikes == {
-        0: [],
-        1: [2.0, 5.0],
-        2: [],
-        3: [],
-    }
-    assert_postsynaptic_spikes_after_inputs(first_cortex_spikes[0], [1.0, 3.0])
+    assert_spikes_by_index(
+        first_on_spikes,
+        {
+            0: [0.2001, 2.0],
+            1: [],
+            2: [],
+            3: [5.0, 8.0],
+        },
+    )
+    assert_spikes_by_index(
+        first_off_spikes,
+        {
+            0: [],
+            1: [],
+            2: [4.0, 6.0],
+            3: [],
+        },
+    )
+    assert_spikes_by_index(
+        second_on_spikes,
+        {
+            0: [],
+            1: [],
+            2: [],
+            3: [4.0, 7.0],
+        },
+    )
+    assert_spikes_by_index(
+        second_off_spikes,
+        {
+            0: [],
+            1: [0.2001, 3.0],
+            2: [],
+            3: [],
+        },
+    )
+    assert_postsynaptic_spikes_after_inputs(first_cortex_spikes[0], [0.2001, 2.0])
     assert_postsynaptic_spikes_after_inputs(first_cortex_spikes[2], [4.0, 6.0])
     assert_postsynaptic_spikes_after_inputs(first_cortex_spikes[3], [5.0, 8.0])
-    assert_postsynaptic_spikes_after_inputs(second_cortex_spikes[1], [2.0, 5.0])
+    assert_postsynaptic_spikes_after_inputs(second_cortex_spikes[1], [0.2001, 3.0])
     assert_postsynaptic_spikes_after_inputs(second_cortex_spikes[3], [4.0, 7.0])
     assert first_cortex_voltage_delta > 0.0
     assert second_cortex_voltage_delta > 0.0
