@@ -123,6 +123,144 @@ class DirectStimulator(ParametrizedObject):
         pass
 
 
+class SpikeSourceArrayStimulator(DirectStimulator):
+    r"""
+    Sets spike times directly on a sheet whose cells are SpikeSourceArray cells.
+
+    This stimulator is intended for input sheets that are themselves the
+    source of spikes. Unlike :class:`Kick` or
+    :class:`BackgroundActivityBombardment`, it does not create an auxiliary
+    spike-source population and does not connect that population to the target
+    sheet. Instead, it updates the target sheet cells' ``spike_times``
+    parameter directly.
+
+    The sheet must therefore be backed by a PyNN ``SpikeSourceArray`` cell
+    model. This is useful for sensory-input sheets where the desired model
+    behavior is for the sheet neurons to emit externally supplied spikes, not
+    to receive current or synaptic input from another population.
+
+    Parameters
+    ----------
+
+    sheet : Sheet
+        The sheet whose population should emit the supplied spikes.
+
+    parameters : ParameterSet
+        The dictionary of required parameters.
+
+    Other parameters
+    ----------------
+
+    spike_times : list(list(float))
+        One list of spike times per neuron in ``sheet.pop``. Times are in ms
+        relative to the beginning of the current stimulation presentation and
+        are converted to absolute simulator time in
+        :meth:`prepare_stimulation`.
+
+    Notes
+    -----
+
+    The length of ``spike_times`` must match ``len(sheet.pop)``. Each per-cell
+    spike-time list must already be sorted in non-decreasing order, matching
+    the requirement imposed by PyNN/NEST ``SpikeSourceArray``.
+    """
+
+    required_parameters = ParameterSet({
+        "spike_times": list,
+    })
+
+    def __init__(self, sheet, parameters):
+        r"""
+        Create a direct stimulator for a SpikeSourceArray sheet.
+
+        The constructor validates that the target sheet can accept
+        ``spike_times`` directly and stores the provided spike times as
+        presentation-relative values. Absolute simulator offsets are applied
+        later in :meth:`prepare_stimulation`, because the same stimulator API
+        is used regardless of when the presentation occurs in the simulation.
+        """
+        DirectStimulator.__init__(self, sheet, parameters)
+        self._validate_sheet()
+        if len(self.parameters.spike_times) != len(self.sheet.pop):
+            raise ValueError("Spike-time list length must match sheet population size")
+
+        self._relative_spike_times = [
+            numpy.asarray(times, dtype=float) for times in self.parameters.spike_times
+        ]
+        for times in self._relative_spike_times:
+            if len(times) > 1 and numpy.any(numpy.diff(times) < 0):
+                raise ValueError("Spike times must be sorted for each neuron")
+
+    def _validate_sheet(self):
+        r"""
+        Ensure the target sheet is a SpikeSourceArray population.
+        """
+        model_name = self.sheet.parameters.cell.model
+        celltype = getattr(self.sheet.pop, "celltype", None)
+        celltype_name = getattr(celltype, "__name__", celltype.__class__.__name__)
+        if model_name != "SpikeSourceArray" and celltype_name != "SpikeSourceArray":
+            raise ValueError("Target sheet must use SpikeSourceArray cells")
+
+    def prepare_stimulation(self, duration, offset):
+        r"""
+        Install spike times for the next simulation interval.
+
+        Parameters
+        ----------
+
+        duration : float (ms)
+            Duration of the upcoming stimulation presentation.
+
+        offset : float (ms)
+            Current simulator time. The stored per-cell spike times are
+            relative to presentation onset; this method adds ``offset`` before
+            passing them to PyNN.
+        """
+        for index, times in enumerate(self._relative_spike_times):
+            if len(times) and (numpy.any(times < 0.0) or numpy.any(times >= duration)):
+                raise ValueError("Spike times must be within the stimulation duration")
+
+            # PyNN/NEST expects absolute simulator times, while experiment files
+            # normally describe times relative to the current presentation.
+            self._set_cell_spike_times(index, times + offset)
+
+    def inactivate(self, offset):
+        r"""
+        Clear all spike times after a presentation has finished.
+
+        This prevents a later presentation from reusing stale spike times when
+        the same sheet is stimulated again.
+        """
+        # Clear all scheduled spikes so a later presentation can install its own
+        # spike times without carrying over stale input.
+        for index in range(len(self.sheet.pop)):
+            self._set_cell_spike_times(index, [])
+
+    def save_to_datastore(self, data_store, stimulus):
+        r"""
+        No-op datastore hook.
+
+        The emitted spikes are already captured through normal sheet spike
+        recording, so this stimulator does not store an additional analysis
+        object.
+        """
+        pass
+
+    def _set_cell_spike_times(self, index, times):
+        r"""
+        Set spike times on one local cell.
+
+        In MPI simulations, only local cells can be modified on a given rank,
+        so non-local indexes are skipped when the PyNN population exposes a
+        ``_mask_local`` mask.
+        """
+        if hasattr(self.sheet.pop, "_mask_local") and not self.sheet.pop._mask_local[index]:
+            return
+        self.sheet.pop[index].set_parameters(
+            spike_times=Sequence(numpy.asarray(times, dtype=float))
+        )
+
+
 class BackgroundActivityBombardment(DirectStimulator):
     r"""
     The BackgroundActivityBombardment simulates the poisson distrubated background bombardment of spikes onto a 
