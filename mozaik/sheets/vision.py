@@ -195,7 +195,12 @@ class VisualCorticalUniformSheet(SheetWithMagnificationFactor):
         rs = space.RandomStructure(boundary=space.Cuboid(dx, dy, 0),
                                    origin=(0.0, 0.0, 0.0),
                                    rng=mozaik.pynn_rng)
+        self._create_population(int(parameters.sx * parameters.sy/1000000 * parameters.density), rs)
 
+        # Forces PyNN to generate the positions to ensure the reproducibility with multiprocessing
+        self.pop.positions
+
+    def _create_population(self, population_size, structure):
         # Include nestml multisynapse neuron model name here
         if self.parameters.cell.model in set(["aeif_cond_alpha_multisynapse","aeif_cond_beta_multisynapse"]):
             self.multisynapse = True
@@ -213,28 +218,66 @@ class VisualCorticalUniformSheet(SheetWithMagnificationFactor):
                                     **receptors)
                     
                     
-                self.pop = self.sim.Population(int(parameters.sx * parameters.sy/1000000 * parameters.density), 
-                                                celltype,structure=rs, initial_values=self.parameters.cell.initial_values,
+                self.pop = self.sim.Population(population_size,
+                                                celltype,structure=structure, initial_values=self.parameters.cell.initial_values,
                                                 label= self.name)    
         
         else:
             if self.parameters.cell.native_nest:
-                self.pop = self.sim.Population(int(parameters.sx * parameters.sy/1000000 * parameters.density),
+                self.pop = self.sim.Population(population_size,
                                                    self.sim.native_cell_type(self.parameters.cell.model),
                                                    self.parameters.cell.params,
-                                                   structure=rs,
+                                                   structure=structure,
                                                    initial_values=self.parameters.cell.initial_values,
                                                    label=self.name)
             else:
-                self.pop = self.sim.Population(int(parameters.sx * parameters.sy/1000000 * parameters.density),
+                self.pop = self.sim.Population(population_size,
                                                    getattr(self.model.sim, self.parameters.cell.model),
                                                    self.parameters.cell.params,
-                                                   structure=rs,
+                                                   structure=structure,
                                                    initial_values=self.parameters.cell.initial_values,
                                                    label=self.name)
 
+
+class VisualCorticalGridSheet(VisualCorticalUniformSheet):
+    r"""
+    Represents a visual cortical sheet of neurons distributed on a regular
+    grid in cortical space.
+
+    Other parameters
+    ----------------
+
+    density : float (neurons/mm^2)
+        The density of neurons per square milimeter. The corresponding linear
+        density is used equally along the x and y axes.
+
+    """
+
+    required_parameters = ParameterSet({})
+
+    def __init__(self, model, parameters):
+        SheetWithMagnificationFactor.__init__(self, model, parameters)
+        num_x, num_y, spacing = self._grid_parameters(parameters)
+        spacing_x, spacing_y = self.cs_2_vf(spacing, spacing)
+
+        rs = space.Grid2D(aspect_ratio=float(num_x) / num_y,
+                          dx=spacing_x,
+                          dy=spacing_y,
+                          x0=-(num_x - 1) * spacing_x / 2.0,
+                          y0=-(num_y - 1) * spacing_y / 2.0,
+                          fill_order='sequential')
+        self._create_population(num_x * num_y, rs)
+
         # Forces PyNN to generate the positions to ensure the reproducibility with multiprocessing
         self.pop.positions
+
+    def _grid_parameters(self, parameters):
+        if parameters.density <= 0:
+            raise ValueError("VisualCorticalGridSheet density must be positive")
+        spacing = 1000.0 / numpy.sqrt(parameters.density)
+        num_x = max(1, int(round(parameters.sx / spacing)))
+        num_y = max(1, int(round(parameters.sy / spacing)))
+        return num_x, num_y, spacing
 
 
 class VisualCorticalUniformSheet3D(VisualCorticalUniformSheet):
