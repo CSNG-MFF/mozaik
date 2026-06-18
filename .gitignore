@@ -6,4 +6,3 @@ build
 *.komodoproject
 cover
 .coverage
-AGENTS.md
