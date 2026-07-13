@@ -161,16 +161,17 @@ class Model(BaseComponent):
         sim_run_time += self.run(stimulus.duration)
         segments = []
         
-        for sheet in self.sheets.values():    
-            if sheet.to_record != None:
-                if self.parameters.reset:
-                    s = sheet.get_data()
-                    if (not mozaik.mpi_comm) or (mozaik.mpi_comm.rank == mozaik.MPI_ROOT):
-                        segments.append(s)
-                else:
-                    s = sheet.get_data(stimulus.duration)
-                    if (not mozaik.mpi_comm) or (mozaik.mpi_comm.rank == mozaik.MPI_ROOT):
-                        segments.append(s)
+        with self.sim.state.freeze_time():
+            for sheet in self.sheets.values():
+                if sheet.to_record != None:
+                    if self.parameters.reset:
+                        s = sheet.get_data()
+                        if (not mozaik.mpi_comm) or (mozaik.mpi_comm.rank == mozaik.MPI_ROOT):
+                            segments.append(s)
+                    else:
+                        s = sheet.get_data(stimulus.duration)
+                        if (not mozaik.mpi_comm) or (mozaik.mpi_comm.rank == mozaik.MPI_ROOT):
+                            segments.append(s)
 
         self.first_time = False
 
@@ -246,11 +247,12 @@ class Model(BaseComponent):
         
                 self.sim.run(self.parameters.null_stimulus_period)
                 self.simulator_time+=self.parameters.null_stimulus_period
-                for sheet in self.sheets.values():    
-                    if sheet.to_record != None:
-                       s = sheet.get_data(self.parameters.null_stimulus_period)
-                       if (not mozaik.mpi_comm) or (mozaik.mpi_comm.rank == mozaik.MPI_ROOT):
-                           segments.append(s)
+                with self.sim.state.freeze_time():
+                    for sheet in self.sheets.values():
+                        if sheet.to_record != None:
+                           s = sheet.get_data(self.parameters.null_stimulus_period)
+                           if (not mozaik.mpi_comm) or (mozaik.mpi_comm.rank == mozaik.MPI_ROOT):
+                               segments.append(s)
 
         return segments,time.time()-t0    
     
