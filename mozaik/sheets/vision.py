@@ -303,8 +303,34 @@ class VisualCorticalUniformSheet3D(VisualCorticalUniformSheet):
 
         else:
             if self.parameters.cell.native_nest:
+
+                # Hack to get the NESTML model to work:
+                from pyNN.standardmodels.base import build_translations
+                celltype = self.sim.native_cell_type(self.parameters.cell.model)
+                celltype.translations = build_translations(
+                    ('tau_syn_E',  'tau_syn_exc'),
+                    ('tau_syn_I',  'tau_syn_inh_a'),
+                )
+                celltype.units['w'] = "pA"
+                celltype.units['v'] = "mV"
+                celltype.units['k_trace'] = "mM"
+                celltype.units['gsyn_exc'] = "nS"
+                celltype.units['gsyn_inh'] = "nS"
+                celltype.units['gsyn_inh_a'] = "nS"
+                celltype.units['gsyn_inh_b'] = "nS"
+
+                # Ideally, it should go something like:
+                #from pyNN.standardmodels.base import build_translations
+                #celltype = self.sim.native_cell_type(self.parameters.cell.model)
+
+                #if len(self.parameters.cell.nestml_translation):
+                #    celltype.translations = build_translations(*list(self.parameters.cell.nestml_translation.items()))
+                #if len(self.parameters.cell.nestml_units):
+                #    for k, v in parameters.nestml_units:
+                #        celltype.units[k] = v
+
                 self.pop = self.sim.Population(int(parameters.sx * parameters.sy/1000000 * parameters.density),
-                                                   self.sim.native_cell_type(self.parameters.cell.model),
+                                                   celltype,
                                                    self.parameters.cell.params,
                                                    structure=rs,
                                                    initial_values=self.parameters.cell.initial_values,
