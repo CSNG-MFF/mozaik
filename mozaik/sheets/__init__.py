@@ -294,6 +294,11 @@ class Sheet(BaseComponent):
 
         """
 
+        # I am not sure I understand the implication of the new version of the present function
+        # For the ICMS paper I need a to record arbitrary signals. For example, here is what I usually record:
+        # block = self.pop.get_data(['spikes', 'v', 'g_exc', 'g_inh', 'gsyn_inh_a', 'gsyn_inh_b', 'gsyn_exc', 'gsyn_inh', 'k_trace', 'w'], clear=True)
+        # How should I modify the following code to achieve that ?
+
         if self.parameters.cell.native_nest:
             vm_name = ['V_m']
         else:
@@ -307,7 +312,7 @@ class Sheet(BaseComponent):
             gsyn_names = ['g_ex', 'g_in']
         else: 
             gsyn_names = ['gsyn_exc', 'gsyn_inh']
-            
+
         block = None
         steps = self.model.parameters.steps_get_data 
         if steps:

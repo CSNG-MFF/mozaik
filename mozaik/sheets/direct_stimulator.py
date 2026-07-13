@@ -7,35 +7,39 @@ of spikes/currents etc into cells. In mozaik this happens at population level - 
 each direct stimulator specifies how the given population is stimulated. In general each population can have several
 stimultors.
 """
-from mozaik.core import ParametrizedObject
-from parameters import ParameterSet
+from builtins import zip
+import io
+import math
+import matplotlib
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+from numba import jit
 import numpy
 import numpy as np
 import numpy.random
+from neo.core.analogsignal import AnalogSignal as NeoAnalogSignal
+import pylab
+from parameters import ParameterSet
+import pickle
+from probeinterface import read_prb
+from pyNN.parameters import Sequence
+from pyNN.connectors import FromListConnector
+import quantities as qt
+import scipy.interpolate
+from scipy.integrate import odeint
+from scipy.spatial.distance import cdist
+from scipy import signal
+from mpi4py import MPI
+
 import mozaik
 from mozaik.tools.stgen import StGen
+from mozaik.core import ParametrizedObject
 from mozaik import load_component
-from pyNN.parameters import Sequence
-from mozaik import load_component
-import math
-from mozaik.tools.circ_stat import circular_dist ,circ_mean
-import pylab
-from scipy.integrate import odeint
-import pickle
-import scipy.interpolate
-from mpl_toolkits.mplot3d import Axes3D
+from mozaik.tools.circ_stat import circular_dist
 from mozaik.controller import Global
-import matplotlib
-from mozaik.analysis.analysis import SingleValue, AnalogSignalList
-from neo.core.analogsignal import AnalogSignal as NeoAnalogSignal
-import quantities as qt
 from mozaik.tools.units import *
-import io
-from numba import jit
-
-from builtins import zip
-
-from mpi4py import MPI
+from mozaik.analysis.analysis import SingleValue, AnalogSignalList, PerNeuronValue
+from mozaik.analysis.data_structures import SingleValueList
 
 mpi_comm = MPI.COMM_WORLD
 
@@ -1041,3 +1045,284 @@ def single_pixel(sheet, coor_x, coor_y, update_interval, parameters):
     )
     signals[np.where(x == coor_x)[0][0], np.where(y == coor_y)[1][0], :] = 1
     return signals
+
+class IntraCorticalMicroStimulation(DirectStimulator):
+    """ This class instantiates a multi-electrode array using the
+    probeinterface library. For each electrode, a subset of neurons is
+    selected at random using a distance dependent distribution centered on
+    the electrode.
+    Note that a neuron can be part of the selected population of multiple electrodes.
+
+    For now this is not mpi optimize NOR TO BE USED WITH MPI.
+    """
+
+    required_parameters = ParameterSet({
+        "current_amplitude": float,       # uA
+        "pulse_per_train": int,
+        "intertrain_interval": float,     # ms
+        "pulse_frequency": float,         # Hz
+        "k_increment_ICMS_factor": float,
+        "connectivity_profiles_path": str,
+        "probe_path": str,
+        "probe_position_offset": list,
+        "probe_rotation_angle": float,
+        "probe_rotation_axis": list,
+        "probe_2d_planes": str,
+        "probe_active_electrodes": list,
+        "recruitment_offset": float,
+        "recruitment_gain_exc": float,
+        "recruitment_gain_inh": float,
+        "stimulator_seed": int
+    })
+
+    def __init__(self, sheet, parameters):
+        """Init"""
+        DirectStimulator.__init__(self, sheet, parameters)
+
+        # ICMS specific random generator. This is used to make sure that the same cells
+        # are selected to be stimulated between runs that use the same electrode(s) and amplitude.
+        self.rng = numpy.random.default_rng(self.parameters.stimulator_seed)
+
+        self.probe = None
+        self.stimulated_cells = {}
+        self.random_propensities = None
+
+        self.instantiate_probe()
+        self.select_stimulated_cells()
+
+    def instantiate_probe(self):
+        """Instantiate a probe based on its description. Please refer to
+        https://probeinterface.readthedocs.io/en/main/format_spec.html for the
+        description file format."""
+
+        self.probe = read_prb(self.parameters.probe_path).probes[0]
+        self.probe = self.probe.to_3d(axes=self.parameters.probe_2d_planes)
+
+        if self.parameters.probe_rotation_angle:
+            self.probe.rotate(
+                theta=self.parameters.probe_rotation_angle,
+                center=None,
+                axis=self.parameters.probe_rotation_axis
+            )
+
+        if any(self.parameters.probe_position_offset):
+            self.probe.move(translation_vector=self.parameters.probe_position_offset)
+
+    def generate_activation_profile(self):
+        """Generate an activation connection profile, that is, a probability for a cell to be
+        activited as a function of distance. It is computed as the convolution of an axonal activation
+        profile (the probability that an axon gets activated at a given distance from the electrode) and 
+        a pre-computed connectivity profile (the probability that this axon is connected to a cell at a
+        given distance from the electrode).
+
+        Note that this profile is independent of the current amplitude."""
+
+        # Get the pre-computer connectivity profile
+        with open(self.parameters.connectivity_profiles_path, "rb") as fp:
+            connectivity_profile = numpy.array(pickle.load(fp)[self.sheet.name])
+
+        def axonal_activation_profile(distance, a=2.67135221, b=2.17589264, c=0.01009279):
+            """This function gives the density of activated axon as a function of the distance
+            to the stimulated electrode. The parameter a, b and c have been fitted on
+            Kumaravelu et al. (2022) Fig5D"""
+            return a / (np.abs(distance)**b + c)
+
+        # Define the unified grid we will work on
+        max_dist = 4.0 # in mm
+        num_points = 4001
+        distance_axis = np.linspace(-max_dist, max_dist, num_points)
+
+        # Create a symmetric version of the experimental data
+        connect_distances = np.array(connectivity_profile[0]) / 1000. # From mm to um
+        connect_probabilities = np.array(connectivity_profile[2]) #[2]
+        sym_connect_distances = np.concatenate([-connect_distances[:0:-1], connect_distances])
+        sym_connect_probabilities = np.concatenate([connect_probabilities[:0:-1], connect_probabilities])
+
+        # Sort the data for np.interp
+        sort_indices = np.argsort(sym_connect_distances)
+        sorted_distances = sym_connect_distances[sort_indices]
+        sorted_probabilities = sym_connect_probabilities[sort_indices]
+
+        # Interpolate the connection profile onto our uniform grid
+        connection_profile_interpolated = np.interp(
+            distance_axis,
+            sorted_distances,
+            sorted_probabilities
+        )
+
+        # Generate the axonal activation profile for the same grid
+        activation_profile = axonal_activation_profile(distance_axis)
+    
+        # Normalize the kernel such as to redistribute the probabilities without
+        # changing the overall sum of probabilites
+        activation_profile = activation_profile / np.sum(activation_profile)
+
+        # Perform the convolution and normalize it to one
+        convolved_result = signal.convolve(
+            activation_profile,
+            connection_profile_interpolated,
+            mode='same'
+        )
+
+        return [distance_axis[2000:] * 1000.0, convolved_result[2000:]] # Back to um
+        # This is to check the result without the convolution:
+        #return [distance_axis[2000:] * 1000.0, connection_profile_interpolated[2000:] / np.max(connection_profile_interpolated)]
+
+    def select_stimulated_cells(self):
+        """For each electrode of the multi-electrode array, select a subset of neurons
+        that get activate by the electrode. The selection is based on the distance
+        between the electrode and the neurons.
+
+        The selection process also ensures that for a given seed, the set of cells
+        activated at a higher amplitude is a superset of the cells activated at lower
+        amplitudes.
+        """
+
+        # Generate the activation profile
+        activation_profile = self.generate_activation_profile()
+
+        # Get the positions of the neurons
+        cells_positions = self.sheet.pop.positions.T
+        cells_positions = [list(self.sheet.vf_2_cs(cp[0], cp[1])) + [cp[2]] for cp in cells_positions]
+        n_cells = len(cells_positions)
+
+        # Get the positions of the electrodes
+        electrodes_positions = self.probe.contact_positions
+        n_electrodes = len(electrodes_positions)
+
+        # Compute the distance between each neuron and each electrode
+        cells_contact_distances = cdist(numpy.array(cells_positions), numpy.array(electrodes_positions))
+
+        # Assign a fixed random activation propensity score to each cell-electrode pair
+        # This propensity is a phenomenological representation of how close the 
+        # axon of a neuron passes by each electrode.
+        self.random_propensities = self.rng.random(size=(n_cells, n_electrodes))
+
+        # Calculate distance-dependent activation probabilities
+        _idx_distribution = numpy.digitize(cells_contact_distances, activation_profile[0]) - 1
+        _idx_distribution = numpy.clip(_idx_distribution, 0, len(activation_profile[1]) - 1)
+
+        # Calculate the amplitude-specific scaling factor, which increases as sqrt(current_amplitude)
+        if "Inh" in self.sheet.name:
+            recruitment_gain = self.parameters.recruitment_gain_inh
+        else:
+            recruitment_gain = self.parameters.recruitment_gain_exc
+        recruitment_rescale = numpy.sqrt(numpy.clip(
+            recruitment_gain * (self.parameters.current_amplitude - self.parameters.recruitment_offset),
+            0,
+            numpy.inf
+        ))
+
+        # This calculates the probability P(activate | distance, current_amplitude)
+        scaled_probabilities = activation_profile[1][_idx_distribution] * recruitment_rescale
+
+        # Compare the fixed random score with the amplitude-dependent probability
+        # Activate if random_propensity < P(activate | distance, current_amplitude)
+        _mask = self.random_propensities < scaled_probabilities
+
+        # Only keep the active electrodes
+        for j in range(n_electrodes):
+            if j not in self.parameters.probe_active_electrodes:
+                _mask[:, j] = False
+
+        # Build the dictionary of stimulated cells
+        self.stimulated_cells = {}
+        for i, cell_id in enumerate(self.sheet.pop.all_cells):
+            # If any *active* electrode activates a cell, add it to the list
+            _idx_electrodes = numpy.nonzero(_mask[i, :])[0]
+            if len(_idx_electrodes):
+                self.stimulated_cells[cell_id] = _idx_electrodes
+
+        logger.info(
+             f"ICMS: in population {self.sheet.name}, activating {len(self.stimulated_cells)} cells " +
+             f"({100 * len(self.stimulated_cells) / n_cells:.2f}% of the population) " +
+             f"at amplitude {self.parameters.current_amplitude}."
+        )
+
+    def prepare_stimulation(self, duration, offset):
+        """
+        Prepares the stimulation for the next period of model simulation lasting `duration` seconds.
+
+        Parameters
+        ----------
+        duration : double (seconds)
+                 The period for which to prepare the stimulation
+
+        offset : double (seconds)
+               The current simulator time.
+        """
+
+        k_increment = self.parameters.k_increment_ICMS_factor * self.parameters.current_amplitude
+        if "Exc" in self.sheet.name:
+            k_increment = 0
+
+        ICMS_ISI = 1000. / self.parameters.pulse_frequency
+        ISIs = []
+        propensities = []
+        for i, cell_id in enumerate(self.sheet.pop.all_cells):
+            if cell_id in self.stimulated_cells:
+                ISIs.append(ICMS_ISI)
+                activating_electrodes = self.stimulated_cells[cell_id]
+                min_random_draw = np.min(self.random_propensities[i, activating_electrodes])
+                # Cells that have lower propensities are more sensitive to K accumulation
+                propensities.append(1.0 - min_random_draw)
+            else:
+                # A stimulation ISI of 0 means no ICMS-induced spikes
+                ISIs.append(0)
+                propensities.append(0)
+
+        self.sheet.pop.set(propensity_ICMS=propensities)
+        self.sheet.pop.set(pulse_ISI_ICMS=ISIs)
+        self.sheet.pop.set(intertrain_interval_ICMS=self.parameters.intertrain_interval)
+        self.sheet.pop.set(pulse_per_train_ICMS=self.parameters.pulse_per_train)
+        self.sheet.pop.set(k_increment_ICMS=k_increment)
+
+        logger.info(
+            f"ICMS: starting stimulation at frequency {self.parameters.pulse_frequency}Hz, with an inter-train interval of {self.parameters.intertrain_interval} and {self.parameters.pulse_per_train} pulses per train."
+        )
+
+    def inactivate(self, offset):
+        """
+        Ensures any influences of the stimulation are inactivated for subsequent simulation of the model.
+
+        Parameters
+        ----------
+        offset : double (seconds)
+               The current simulator time.
+
+        Note that a subsequent call to prepare_stimulation should 'activate' the stimulator again.
+        """
+        self.sheet.pop.set(pulse_ISI_ICMS=0)
+        self.sheet.pop.set(intertrain_interval_ICMS=0)
+        self.sheet.pop.set(pulse_per_train_ICMS=0)
+        self.sheet.pop.set(k_increment_ICMS=0)
+        logger.info(f"ICMS: ending stimulation.")
+
+    def save_to_datastore(self, data_store, stimulus):
+        """Stores the electrode positions and the list of cells activated by each electrode"""
+        
+        active_electrode = '_'.join(str(e) for e in self.parameters.probe_active_electrodes)
+
+        # This "metadata" is a trick used in case there are multiple ICMS experiments in the same run.
+        # It does not work if there are several experiments with the exact same parameters.
+        metadata = f"__{self.parameters.current_amplitude}__{self.parameters.pulse_frequency}__{active_electrode}"
+
+        electrode_per_cell = [list(el)[0] for el in self.stimulated_cells.values()]
+        data_store.full_datastore.add_analysis_result(
+            PerNeuronValue(
+                values=electrode_per_cell,
+                idds=[int(idd) for idd in self.stimulated_cells.keys()],
+                value_name='electrode_active_per_cell' + metadata,
+                sheet_name=self.sheet.name,
+                value_units="None"
+            )
+        )
+
+        data_store.full_datastore.add_analysis_result(
+            SingleValueList(
+                values=self.probe.contact_positions,
+                values_unit='um',
+                value_name='probe_electrode_positions' + metadata,
+                sheet_name=self.sheet.name
+            )
+        )
