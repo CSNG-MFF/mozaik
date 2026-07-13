@@ -7,3 +7,4 @@ build
 cover
 .coverage
 AGENTS.md
+.DS_Store
