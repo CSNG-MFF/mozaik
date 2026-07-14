@@ -14,9 +14,11 @@ from scipy.stats import pearsonr
 import logging
 import itertools
 import os
+import pickle
 from collections import OrderedDict
 
 import pytest
+from parameters import ParameterSet
 
 np.random.seed(1024)  # Make random tests deterministic
 
@@ -119,6 +121,98 @@ class TestMapDependentModularConnectorFunction:
         assert corr.statistic > 0.99 and corr.pvalue < 0.001
 
     pass
+
+
+def test_map_dependent_function_accepts_matching_annotations(tmp_path):
+    map_path = tmp_path / "orientation_map"
+    with map_path.open("wb") as stream:
+        pickle.dump(np.array([[0.0, 0.25], [0.5, 0.75]]), stream)
+
+    class Population:
+        positions = np.array([[-0.75, 0.75, -0.75], [-0.75, -0.75, 0.75]])
+
+        def all(self):
+            return range(self.positions.shape[1])
+
+    class AnnotationSheet:
+        pop = Population()
+
+        def __init__(self):
+            self.annotations = [
+                {"LGNAfferentOrientation": (True, 0.0)},
+                {"LGNAfferentOrientation": (False, 0.5 * np.pi)},
+                {},
+            ]
+            self.updated = []
+
+        def size_in_degrees(self):
+            return (2.0, 2.0)
+
+        def has_neuron_annotation(self, index, key):
+            return key in self.annotations[index]
+
+        def add_neuron_annotation(self, index, key, value, protected=True):
+            assert not self.has_neuron_annotation(index, key)
+            self.annotations[index][key] = (protected, value)
+            self.updated.append(index)
+
+        def get_neuron_annotation(self, index, key):
+            return self.annotations[index][key][1]
+
+    sheet = AnnotationSheet()
+    vision.MapDependentModularConnectorFunction(
+        sheet,
+        sheet,
+        ParameterSet(
+            {
+                "map_location": str(map_path),
+                "map_stretch": 1.0,
+                "sigma": 1.0,
+                "periodic": True,
+            }
+        ),
+    )
+
+    assert sheet.updated == [2]
+    assert sheet.get_neuron_annotation(2, "LGNAfferentOrientation") == 0.25 * np.pi
+
+
+def test_map_dependent_function_rejects_conflicting_annotation(tmp_path):
+    map_path = tmp_path / "orientation_map"
+    with map_path.open("wb") as stream:
+        pickle.dump(np.array([[0.0]]), stream)
+
+    class Population:
+        positions = np.array([[0.0], [0.0]])
+
+        def all(self):
+            return range(1)
+
+    class AnnotationSheet:
+        pop = Population()
+
+        def size_in_degrees(self):
+            return (2.0, 2.0)
+
+        def has_neuron_annotation(self, index, key):
+            return True
+
+        def get_neuron_annotation(self, index, key):
+            return 0.1
+
+    with pytest.raises(ValueError, match="conflicts with the orientation map"):
+        vision.MapDependentModularConnectorFunction(
+            AnnotationSheet(),
+            AnnotationSheet(),
+            ParameterSet(
+                {
+                    "map_location": str(map_path),
+                    "map_stretch": 1.0,
+                    "sigma": 1.0,
+                    "periodic": True,
+                }
+            ),
+        )
 
 
 class TestV1PushPullArborization:

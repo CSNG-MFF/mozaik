@@ -47,8 +47,20 @@ class MapDependentModularConnectorFunction(ModularConnectorFunction):
         self.val_source=self.mmap(numpy.transpose(numpy.array([self.source.pop.positions[0],self.source.pop.positions[1]]))) * numpy.pi
         
         for (index, neuron2) in enumerate(target.pop.all()):
-            val_target=self.mmap(self.target.pop.positions[0][index],self.target.pop.positions[1][index])
-            self.target.add_neuron_annotation(index,'LGNAfferentOrientation', val_target*numpy.pi, protected=False) 
+            val_target=self.mmap(self.target.pop.positions[0][index],self.target.pop.positions[1][index]) * numpy.pi
+            if self.target.has_neuron_annotation(index, 'LGNAfferentOrientation'):
+                annotation = self.target.get_neuron_annotation(index, 'LGNAfferentOrientation')
+                if not numpy.array_equal(annotation, val_target):
+                    raise ValueError(
+                        'LGNAfferentOrientation annotation for neuron '
+                        + str(index)
+                        + ' conflicts with the orientation map: '
+                        + repr(annotation)
+                        + ' != '
+                        + repr(val_target)
+                    )
+            else:
+                self.target.add_neuron_annotation(index,'LGNAfferentOrientation', val_target, protected=False)
             
     def evaluate(self,index,**params):
             val_target = self.target.get_neuron_annotation(index,'LGNAfferentOrientation')
@@ -457,5 +469,3 @@ class CoCircularModularConnectorFunction(ModularConnectorFunction):
                 pylab.savefig(Global.root_directory+'aaa'+str(index)+'.png')
 
             return prob
-
-
