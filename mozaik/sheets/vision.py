@@ -45,15 +45,13 @@ class RetinalUniformSheet(Sheet):
         
         if self.parameters.cell.native_nest:
             self.pop = self.sim.Population(int(parameters.sx * parameters.sy * parameters.density),
-                                               self.sim.native_cell_type(self.parameters.cell.model),
-                                               self.parameters.cell.params,
+                                               self.sim.native_cell_type(self.parameters.cell.model)(**self.parameters.cell.params),
                                                structure=rs,
                                                initial_values=self.parameters.cell.initial_values,
                                                label=self.name)
         else:
             self.pop = self.sim.Population(int(parameters.sx * parameters.sy * parameters.density),
-                                               getattr(self.model.sim, self.parameters.cell.model),
-                                               self.parameters.cell.params,
+                                               getattr(self.model.sim, self.parameters.cell.model)(**self.parameters.cell.params),
                                                structure=rs,
                                                initial_values=self.parameters.cell.initial_values,
                                                label=self.name)
@@ -220,15 +218,13 @@ class VisualCorticalUniformSheet(SheetWithMagnificationFactor):
         else:
             if self.parameters.cell.native_nest:
                 self.pop = self.sim.Population(int(parameters.sx * parameters.sy/1000000 * parameters.density),
-                                                   self.sim.native_cell_type(self.parameters.cell.model),
-                                                   self.parameters.cell.params,
+                                                   self.sim.native_cell_type(self.parameters.cell.model)(**self.parameters.cell.params),
                                                    structure=rs,
                                                    initial_values=self.parameters.cell.initial_values,
                                                    label=self.name)
             else:
                 self.pop = self.sim.Population(int(parameters.sx * parameters.sy/1000000 * parameters.density),
-                                                   getattr(self.model.sim, self.parameters.cell.model),
-                                                   self.parameters.cell.params,
+                                                   getattr(self.model.sim, self.parameters.cell.model)(**self.parameters.cell.params),
                                                    structure=rs,
                                                    initial_values=self.parameters.cell.initial_values,
                                                    label=self.name)
@@ -304,15 +300,13 @@ class VisualCorticalUniformSheet3D(VisualCorticalUniformSheet):
         else:
             if self.parameters.cell.native_nest:
                 self.pop = self.sim.Population(int(parameters.sx * parameters.sy/1000000 * parameters.density),
-                                                   self.sim.native_cell_type(self.parameters.cell.model),
-                                                   self.parameters.cell.params,
+                                                   self.sim.native_cell_type(self.parameters.cell.model)(**self.parameters.cell.params),
                                                    structure=rs,
                                                    initial_values=self.parameters.cell.initial_values,
                                                    label=self.name)
             else:
                 self.pop = self.sim.Population(int(parameters.sx * parameters.sy/1000000 * parameters.density),
-                                                   getattr(self.model.sim, self.parameters.cell.model),
-                                                   self.parameters.cell.params,
+                                                   getattr(self.model.sim, self.parameters.cell.model)(**self.parameters.cell.params),
                                                    structure=rs,
                                                    initial_values=self.parameters.cell.initial_values,
                                                    label=self.name)

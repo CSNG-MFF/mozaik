@@ -180,15 +180,19 @@ class BackgroundActivityBombardment(DirectStimulator):
         if not self.sheet.parameters.mpi_safe:
             from pyNN.nest import native_cell_type        
             if (self.parameters.exc_firing_rate != 0 or self.parameters.exc_weight != 0):
-                self.np_exc = self.sheet.sim.Population(len(self.sheet.pop), native_cell_type("poisson_generator"),{'rate': 0})
+                self.np_exc = self.sheet.sim.Population(
+                    len(self.sheet.pop), native_cell_type("poisson_generator")(rate=0)
+                )
                 self.sheet.sim.Projection(self.np_exc, self.sheet.pop,self.sheet.sim.OneToOneConnector(),synapse_type=exc_syn,receptor_type='excitatory')
-                #self.np_exc = self.sheet.sim.Population(1, native_cell_type("poisson_generator"),{'rate': 0})
+                #self.np_exc = self.sheet.sim.Population(1, native_cell_type("poisson_generator")(rate=0))
                 #self.sheet.sim.Projection(self.np_exc, self.sheet.pop,self.sheet.sim.AllToAllConnector(),synapse_type=exc_syn,receptor_type='excitatory')
 
             if (self.parameters.inh_firing_rate != 0 or self.parameters.inh_weight != 0):
-                self.np_inh = self.sheet.sim.Population(len(self.sheet.pop), native_cell_type("poisson_generator"),{'rate': 0})
+                self.np_inh = self.sheet.sim.Population(
+                    len(self.sheet.pop), native_cell_type("poisson_generator")(rate=0)
+                )
                 self.sheet.sim.Projection(self.np_exc, self.sheet.pop,self.sheet.sim.OneToOneConnector(),synapse_type=exc_syn,receptor_type='excitatory')
-                #self.np_inh = self.sheet.sim.Population(1, native_cell_type("poisson_generator"),{'rate': 0})
+                #self.np_inh = self.sheet.sim.Population(1, native_cell_type("poisson_generator")(rate=0))
                 #self.sheet.sim.Projection(self.np_inh, self.sheet.pop,self.sheet.sim.AllToAllConnector(),synapse_type=inh_syn,receptor_type='inhibitory')
         
         else:

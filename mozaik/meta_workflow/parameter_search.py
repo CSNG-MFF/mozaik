@@ -377,8 +377,7 @@ def parameter_search_run_script_distributed_slurm(
     path_to_mozaik_env = os.path.expanduser(os.path.expandvars(path_to_mozaik_env))
     if not os.path.isfile(path_to_mozaik_env):
         raise FileNotFoundError(
-            "path_to_mozaik_env does not exist or is not a file: "
-            + path_to_mozaik_env
+            "path_to_mozaik_env does not exist or is not a file: " + path_to_mozaik_env
         )
 
     with open(

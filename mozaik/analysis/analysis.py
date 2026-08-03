@@ -544,7 +544,7 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
               # get spiketrains by trial
               dsvs_spiketrains = OrderedDict()
               #neurons_ids = []
-              # dsvs_spiketrains will have keys labeled after trial number, containing each the spiketrains from each recorded neuron (source_id)
+              # dsvs_spiketrains will have keys labeled after trial number, containing each the spiketrains from each recorded neuron (channel_id)
               for dsv in dsvs :
                   # get stimulus id name to label segments corresponding to a trial
                   for stimid, seg in zip( [MozaikParametrized.idd(s) for s in dsv.get_stimuli()], dsv.get_segments() ) :
@@ -558,12 +558,12 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
                   for ref in dsvs_spiketrains[trial] :
                       for trg in dsvs_spiketrains[trial] :
                           # optimization: cross-correlation is symmetric thus we consider only forward spiketrains
-                          if trg.annotations['source_id']<=ref.annotations['source_id'] :
+                          if trg.annotations['channel_id']<=ref.annotations['channel_id'] :
                               continue 
                           xcorr.append(
                               PerNeuronPairAnalogSignalList(
                                   [self.cross_correlation( ref, trg, self.parameters.bins, self.parameters.bin_length )],
-                                  [ (ref.annotations['source_id'],trg.annotations['source_id']) ],
+                                  [ (ref.annotations['channel_id'],trg.annotations['channel_id']) ],
                                   qt.dimensionless,
                                   sheet_name = sheet,
                                   tags = self.tags,
@@ -573,19 +573,19 @@ class TrialAveragedCorrectedCrossCorrelation(Analysis):
                           )
                   raw_xcorr[trial] = xcorr
               # SHIFT PREDICTOR CROSS-CORRELATION
-              # for each raw_xcorr analogsignal take the reference and change the target to the same source_id but different trial
+              # for each raw_xcorr analogsignal take the reference and change the target to the same channel_id but different trial
               shift_xcorr = OrderedDict()
               # the two dictionaries in the end must be identical by indexes in order to do a one-by-one subtraction
               for trial in raw_xcorr.keys() :
                   xcorr = [] # local storage
-                  # loop over raw_xcorr[trial] source_ids and anothertrial same source_ids
+                  # loop over raw_xcorr[trial] channel_ids and anothertrial same channel_ids
                   anothertrial = (trial+1)%len(list(raw_xcorr.keys()))
 
                   for rcorr in raw_xcorr[trial] :
                       # compute the xcorr if the references and targets of spiketrains of different trials corresponds to those of the raw_xcorr 
                       for ref in dsvs_spiketrains[trial] :
                           for trg in dsvs_spiketrains[anothertrial] :
-                              if ref.annotations['source_id']==rcorr.ids[0][0] and trg.annotations['source_id']==rcorr.ids[0][1] :
+                              if ref.annotations['channel_id']==rcorr.ids[0][0] and trg.annotations['channel_id']==rcorr.ids[0][1] :
                                   xcorr.append( 
                                       PerNeuronPairAnalogSignalList(
                                           [ rcorr.get_asl_by_id_pair(rcorr.ids[0]) - self.cross_correlation( ref, trg, self.parameters.bins, self.parameters.bin_length ) ],
@@ -1346,12 +1346,12 @@ class TemporalSTD(Analysis):
                       for a in seg.analogsignals:
                           index_window = int(a.sampling_rate * self.parameters.time_window)
                           if (a.name =='v' or a.name == 'V_m') and self.parameters.vm:
-                              vm_std.append([numpy.mean(pandas.Series(a[:,a.annotations['source_ids'].tolist().index(nid)].reshape(-1).magnitude).rolling(index_window).std(ddof=0)) for nid in vm_ids])
+                              vm_std.append([numpy.mean(pandas.Series(a[:,a.annotations['channel_ids'].tolist().index(nid)].reshape(-1).magnitude).rolling(index_window).std(ddof=0)) for nid in vm_ids])
 
                           if (a.name =='gsyn_exc'  or a.name == 'g_ex') and self.parameters.cond_exc:
-                              esyn_std.append([numpy.mean(pandas.Series(a[:,a.annotations['source_ids'].tolist().index(nid)].reshape(-1).magnitude).rolling(index_window).std(ddof=0)) for nid in esyn_ids])
+                              esyn_std.append([numpy.mean(pandas.Series(a[:,a.annotations['channel_ids'].tolist().index(nid)].reshape(-1).magnitude).rolling(index_window).std(ddof=0)) for nid in esyn_ids])
                           if (a.name =='gsyn_inh'  or a.name == 'g_in') and self.parameters.cond_inh:
-                              isyn_std.append([numpy.mean(pandas.Series(a[:,a.annotations['source_ids'].tolist().index(nid)].reshape(-1).magnitude).rolling(index_window).std(ddof=0)) for nid in isyn_ids])
+                              isyn_std.append([numpy.mean(pandas.Series(a[:,a.annotations['channel_ids'].tolist().index(nid)].reshape(-1).magnitude).rolling(index_window).std(ddof=0)) for nid in isyn_ids])
 
                   if self.parameters.vm:
                       vm_std_mean = numpy.mean(vm_std, axis = 0)
@@ -2029,7 +2029,7 @@ class ExcitatoryConductanceGenerator(Analysis):
                       exc_conds.append(exc_cond)
 
                   # Create analog signals from list of conductances. Each element of the list corresponds to an id
-                  seg.analogsignals.append(NeoAnalogSignal(exc_conds, t_start= first_cond.t_start, sampling_period= first_cond.sampling_period, units= first_cond.units, name= 'gsyn_exc', source_population= sheet, source_ids = all_ids))
+                  seg.analogsignals.append(NeoAnalogSignal(exc_conds, t_start= first_cond.t_start, sampling_period= first_cond.sampling_period, units= first_cond.units, name= 'gsyn_exc', source_population= sheet, channel_ids = all_ids))
                   self.datastore.full_datastore.update_segment(seg)
 
 class InhibitoryConductanceGenerator(Analysis):
@@ -2098,5 +2098,5 @@ class InhibitoryConductanceGenerator(Analysis):
                       inh_conds.append(inh_cond)
   
                   # Create analog signals from list of conductances. Each element of the list corresponds to an id
-                  seg.analogsignals.append(NeoAnalogSignal(inh_conds, t_start= first_cond.t_start, sampling_period= first_cond.sampling_period, units= first_cond.units, name= 'gsyn_inh', source_population= sheet, source_ids = all_ids))
+                  seg.analogsignals.append(NeoAnalogSignal(inh_conds, t_start= first_cond.t_start, sampling_period= first_cond.sampling_period, units= first_cond.units, name= 'gsyn_inh', source_population= sheet, channel_ids = all_ids))
                   self.datastore.full_datastore.update_segment(seg)
