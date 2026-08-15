@@ -43,18 +43,11 @@ class RetinalUniformSheet(Sheet):
                                    origin=(0.0, 0.0, 0.0),
                                    rng=mozaik.model_pynn_rng)
         
-        if self.parameters.cell.native_nest:
-            self.pop = self.sim.Population(int(parameters.sx * parameters.sy * parameters.density),
-                                               self.sim.native_cell_type(self.parameters.cell.model)(**self.parameters.cell.params),
-                                               structure=rs,
-                                               initial_values=self.parameters.cell.initial_values,
-                                               label=self.name)
-        else:
-            self.pop = self.sim.Population(int(parameters.sx * parameters.sy * parameters.density),
-                                               getattr(self.model.sim, self.parameters.cell.model)(**self.parameters.cell.params),
-                                               structure=rs,
-                                               initial_values=self.parameters.cell.initial_values,
-                                               label=self.name)
+        self.pop = self.sim.Population(int(parameters.sx * parameters.sy * parameters.density),
+                                           self._create_cell_type(),
+                                           structure=rs,
+                                           initial_values=self.parameters.cell.initial_values,
+                                           label=self.name)
         # Forces PyNN to generate the positions to ensure the reproducibility with multiprocessing
         self.pop.positions
 
@@ -216,18 +209,11 @@ class VisualCorticalUniformSheet(SheetWithMagnificationFactor):
                                                 label= self.name)    
         
         else:
-            if self.parameters.cell.native_nest:
-                self.pop = self.sim.Population(int(parameters.sx * parameters.sy/1000000 * parameters.density),
-                                                   self.sim.native_cell_type(self.parameters.cell.model)(**self.parameters.cell.params),
-                                                   structure=rs,
-                                                   initial_values=self.parameters.cell.initial_values,
-                                                   label=self.name)
-            else:
-                self.pop = self.sim.Population(int(parameters.sx * parameters.sy/1000000 * parameters.density),
-                                                   getattr(self.model.sim, self.parameters.cell.model)(**self.parameters.cell.params),
-                                                   structure=rs,
-                                                   initial_values=self.parameters.cell.initial_values,
-                                                   label=self.name)
+            self.pop = self.sim.Population(int(parameters.sx * parameters.sy/1000000 * parameters.density),
+                                               self._create_cell_type(),
+                                               structure=rs,
+                                               initial_values=self.parameters.cell.initial_values,
+                                               label=self.name)
 
         # Forces PyNN to generate the positions to ensure the reproducibility with multiprocessing
         self.pop.positions
@@ -298,44 +284,10 @@ class VisualCorticalUniformSheet3D(VisualCorticalUniformSheet):
                                                 label= self.name)
 
         else:
-            if self.parameters.cell.native_nest:
-
-                # Hack to get the NESTML model to work:
-                from pyNN.standardmodels.base import build_translations
-                celltype = self.sim.native_cell_type(self.parameters.cell.model)
-                celltype.translations = build_translations(
-                    ('tau_syn_E',  'tau_syn_exc'),
-                    ('tau_syn_I',  'tau_syn_inh_a'),
-                )
-                celltype.units['w'] = "pA"
-                celltype.units['v'] = "mV"
-                celltype.units['k_trace'] = "mM"
-                celltype.units['gsyn_exc'] = "nS"
-                celltype.units['gsyn_inh'] = "nS"
-                celltype.units['gsyn_inh_a'] = "nS"
-                celltype.units['gsyn_inh_b'] = "nS"
-
-                # Ideally, it should go something like:
-                #from pyNN.standardmodels.base import build_translations
-                #celltype = self.sim.native_cell_type(self.parameters.cell.model)
-
-                #if len(self.parameters.cell.nestml_translation):
-                #    celltype.translations = build_translations(*list(self.parameters.cell.nestml_translation.items()))
-                #if len(self.parameters.cell.nestml_units):
-                #    for k, v in parameters.nestml_units:
-                #        celltype.units[k] = v
-
-                self.pop = self.sim.Population(int(parameters.sx * parameters.sy/1000000 * parameters.density),
-                                                   celltype,
-                                                   self.parameters.cell.params,
-                                                   structure=rs,
-                                                   initial_values=self.parameters.cell.initial_values,
-                                                   label=self.name)
-            else:
-                self.pop = self.sim.Population(int(parameters.sx * parameters.sy/1000000 * parameters.density),
-                                                   getattr(self.model.sim, self.parameters.cell.model)(**self.parameters.cell.params),
-                                                   structure=rs,
-                                                   initial_values=self.parameters.cell.initial_values,
-                                                   label=self.name)
+            self.pop = self.sim.Population(int(parameters.sx * parameters.sy/1000000 * parameters.density),
+                                               self._create_cell_type(),
+                                               structure=rs,
+                                               initial_values=self.parameters.cell.initial_values,
+                                               label=self.name)
         # Forces PyNN to generate the positions to ensure the reproducibility with multiprocessing
         self.pop.positions
