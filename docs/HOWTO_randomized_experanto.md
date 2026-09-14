@@ -1,14 +1,35 @@
 # HOWTO — run the **Randomized Experanto** experiment: simulation → Experanto export
 
-`RandomizedExperanto` is the **production** stimulus-presentation protocol for the neural-foundation-model
-data pipeline. It drives the MOZAIK V1 model (`SelfSustainedPushPull`) over an explicit, pre-computed list
-of images and videos — a *chunk* — so a large stimulus set can be split into walltime-balanced chunks,
-simulated independently, and then exported to Experanto format.
+This document is for a **Mozaik user** who wants to run a visual experiment and export the result in
+**Experanto** format. It covers **what you need to prepare and why**, then **how to run it**. For a tiny,
+copy-paste smoke run, see `HOWTO_test3_sim_then_export.md`.
 
-The stimulus/timing logic lives in this repo (`mozaik/mozaik/experiments/vision.py`); the driver, chunk
-generation, and export live in the sibling **`mozaik-models/experanto/`** project. This HOWTO is the
-general (any-dataset, any-chunk-count) runbook. For the tiny 3-trial smoke case with copy-paste commands
-see the workspace-level `HOWTO_test3_sim_then_export.md`.
+`RandomizedExperanto` is a Mozaik visual-experiment protocol that drives a model over an explicit,
+pre-computed list of images and videos — a **chunk** — so a large stimulus set can be split into
+walltime-balanced pieces, simulated independently, and then exported. The protocol is part of Mozaik
+(`mozaik/experiments/vision.py`); the chunk-list builder and the exporter currently live in the companion
+**`mozaik-models/experanto/`** project (`generate_chunks.py`, `run.py`, `export.py`) and may move into
+Mozaik after merge.
+
+**Terms used here.** A **chunk** is one JSON list of stimuli (a slice of the full set) that a single run
+simulates. A **shard** is one exported Experanto directory for a trial: `responses/` (the spike responses)
+plus `screen/` (the stimulus frames and their metadata) — the on-disk unit the Experanto library reads. A
+**trial** is a repeat of the whole stimulus set (same network, different background noise).
+
+## What you need, and why
+
+- **A working Mozaik installation** — the model runs on PyNN/NEST exactly as described in the Mozaik
+  `README.rst`: Mozaik + the PyNNStepCurrentModule build of PyNN + NEST + the `stepcurrentmodule` NEST
+  module, in a virtualenv. Nothing here changes that install. *(On our cluster we instead run this stack
+  inside an Apptainer image — see "Running on a cluster with Apptainer"; that image is environment-specific,
+  not part of Mozaik.)*
+- **The `experanto` library importable** — the export writes through the Experanto data-format package
+  ([experanto](https://github.com/goirik-chakrabarty/experanto)).
+- **An input stimulus dataset in Experanto *screen* form** — a directory with `screen/meta/*.yml` and
+  `screen/data/*.npy` (one metadata file + one pixel array per image/video). This is *what the model sees*;
+  you point `BASE_PATH` at it.
+- **Chunk lists** — generated once from that dataset (Step 0). *Why:* to split a large stimulus set into
+  independently-simulable, walltime-balanced pieces you can run in parallel.
 
 ### The Experanto experiment family
 
@@ -18,13 +39,18 @@ differ only in **how they enumerate the stimuli** to present:
 
 | Class | Enumerates stimuli by | Status |
 |---|---|---|
-| **`RandomizedExperanto`** | an explicit, pre-computed **chunk JSON** (`chunk_dict_path`) | **production** — this HOWTO |
-| `MeasurePixelMovieExperanto` | scanning a whole Experanto **screen directory** (optionally windowed) | ad-hoc measurement |
+| **`RandomizedExperanto`** | an explicit, pre-computed **chunk JSON** (`chunk_dict_path`) — you control the grouping into trials/chunks | this HOWTO |
+| `MeasurePixelMovieExperanto` | scanning a whole Experanto **screen directory** — the directory contents/order define the grouping | same output |
 | `SingleMoviePixelMovieExperanto` | a single **movie file** presented as frame chunks | legacy, no live caller |
 
-Only `RandomizedExperanto` is documented here. Sibling protocols elsewhere in `vision.py`
-(`MeasureNaturalImages`, `MeasurePixelMovieFromFile`, …) are **not** part of the Experanto export pipeline
-and are out of scope.
+All three call the **same** per-stimulus construction (`_append_meta_stimulus`) and record the **same** data
+with the **same** metadata — so `MeasurePixelMovieExperanto` is **not** more limited than `RandomizedExperanto`.
+The only difference is how the stimuli are enumerated and grouped: `RandomizedExperanto` takes an explicit,
+pre-balanced chunk list (you decide the trial/chunk grouping, and can split it across parallel jobs), whereas
+`MeasurePixelMovieExperanto` presents everything in a screen directory (listing order, optional window). This
+HOWTO uses `RandomizedExperanto` because that chunk list is what the parallel-friendly export consumes. Other
+`vision.py` protocols (`MeasureNaturalImages`, `MeasurePixelMovieFromFile`, …) are unrelated to the Experanto
+export and out of scope.
 
 There are **two** ways to produce shards:
 
@@ -35,10 +61,8 @@ There are **two** ways to produce shards:
 | Entry | `export.py` driver (walks chunks) | `run.py --export` (exports the one chunk it simulated) |
 | Output | shards under `OUTPUT_PREFIX{trial}/` | shard **next to the datastore** (`<datastore>/experanto/`) |
 
-> **This cluster only:** a config-driven `cluster/submit.sh <conf>` wrapper exists **on disk** for
-> convenience, but it is **cluster-specific and not tracked/pushed** (see the closing note). Everything
-> below is the portable, in-tree path — a direct `run.py` / `export.py` invocation inside the container —
-> which is what this branch (`csng-mozaik-update`) ships.
+> Launch is a plain `run.py` / `export.py` invocation (below). Wrapping it in a scheduler (a SLURM array,
+> etc.) is up to you and your site; any site-specific launcher is out of scope for this manual.
 
 ---
 
@@ -59,20 +83,32 @@ python -u export.py <trial> --n-chunks 12          # CHUNK_DIR / OUTPUT_PREFIX /
 
 ---
 
-## Prerequisites
+## Running on a cluster with Apptainer (our environment)
 
-- **Repos / checkouts** (bound into the container by the invocation below, `$PWD`-relative):
-  - `mozaik/` (this repo, on `csng-mozaik-update`, → `/mozaik`) — the experiment class + exporter library.
-  - `mozaik-models/experanto/` (→ `/project`) — holds `run.py`, `export.py`, `generate_chunks.py`, `param/`.
-  - `experanto/` sibling at `../../experanto` (→ `/experanto`).
-  - `/mnt/vast-react/projects/neural_foundation_model` (→ `/data`) — dataset, chunks, and output.
-- **SIF:** a `freeze_time`-capable image (pyNN 0.13.0). At time of writing that is
-  `mozaik-sif/mozaik-opt-qpatch_2026-08-20.sif` — confirm the blessed image in
-  `mozaik-models/experanto/experiments/LOG.md`. (Earlier `qpatch_2026-07-14` SIFs predate `freeze_time`
-  and will fail on this branch.)
-- **Input dataset:** an Experanto **screen** dataset (`screen/meta/*.yml` + `screen/data/*.npy`) — the
-  stimuli the experiment reads. Selected by `BASE_PATH`.
-- **Chunk files:** `{CHUNK_DIR}/{trial}_{chunk}.json` — built in Step 0.
+The commands below run inside an **Apptainer container** — the way *we* package the Mozaik/NEST stack on our
+cluster. This is **not** required by Mozaik: a standard `README.rst` install runs the exact same
+`python run.py …` / `python export.py …` command directly. If you have that install, ignore the
+`apptainer exec …` / `--bind` wrapper and run the `python -u …` line on its own.
+
+In our container the paths map as follows (all bind mounts; `$PWD` is the **Mozaik repo root**):
+
+| Host | In container | What it is |
+|---|---|---|
+| `$PWD` (Mozaik repo root) | `/mozaik` | Mozaik itself — the experiment protocol + exporter library. |
+| `mozaik-models/experanto/` | `/project` | The companion project: `run.py`, `export.py`, `generate_chunks.py`, `param/`. |
+| a clone of the **experanto** library ([repo](https://github.com/goirik-chakrabarty/experanto)) | `/experanto` | The Experanto data-format package the export writes through. |
+| your **working directory** | `/data` | Holds the input dataset, the chunk lists, **and the output shards**. |
+
+- **The image (`.sif`)** is an Apptainer/Singularity image bundling Mozaik + NEST. It is **specific to a
+  site and is not part of the Mozaik repo** — build or obtain one whose PyNN is the PyNNStepCurrentModule
+  build (0.13.0, which provides `freeze_time`). We record the current image in
+  `mozaik-models/experanto/experiments/LOG.md`.
+
+Regardless of environment you still need:
+
+- **An input dataset in Experanto *screen* form** (`screen/meta/*.yml` + `screen/data/*.npy`), pointed to by
+  `BASE_PATH`.
+- **Chunk lists** `{CHUNK_DIR}/{trial}_{chunk}.json` — built in Step 0.
 
 ---
 
@@ -111,9 +147,11 @@ trial for independent noise. Direct in-container invocation (portable; adapt the
 scheduler):
 
 ```bash
-cd /mnt/vast-nhr/projects/nix00014/goirik/MOZAIK-new/mozaik
-module load apptainer
-SIF=$PWD/../mozaik-sif/mozaik-opt-qpatch_2026-08-20.sif   # a freeze_time (pyNN 0.13.0) image; confirm in the LOG
+cd "$MOZAIK_ROOT"                                 # your Mozaik repo root ($PWD, below, must be this dir)
+module load apptainer                             # cluster-specific; skip on a standard README.rst install
+SIF=$PWD/../mozaik-sif/<mozaik-nest-image>.sif    # the site Apptainer image (see "Running on a cluster …")
+EXPERANTO=/path/to/experanto                      # your clone of the experanto library
+WORKDIR=/path/to/workdir                          # holds the input dataset, chunk lists, and output shards
 
 TRIAL=0 CHUNK=0                                   # ← the chunk to simulate
 NRANKS=12                                         # MPI ranks — set to the physical cores you allocated (see note)
@@ -123,8 +161,8 @@ apptainer exec --cleanenv \
   --env BASE_PATH=/data/<input-screen-dataset> --env NRANKS=$NRANKS \
   --env OMP_NUM_THREADS=1 --env MKL_NUM_THREADS=1 --env OPENBLAS_NUM_THREADS=1 \
   --bind "$PWD:/mozaik" --bind "$PWD/../mozaik-models/experanto:/project" \
-  --bind "$PWD/../../experanto:/experanto" \
-  --bind /mnt/vast-react/projects/neural_foundation_model:/data \
+  --bind "$EXPERANTO:/experanto" \                 # your experanto library clone
+  --bind "$WORKDIR:/data" \                        # your working dir: dataset + chunk lists + output shards
   "$SIF" bash -lc '
     unset HTTP_PROXY HTTPS_PROXY FTP_PROXY http_proxy https_proxy ftp_proxy
     cd /project
@@ -272,9 +310,7 @@ clock, so keep the two equal (`responses/meta.yml:end_time == screen/timestamps.
 > Treat that as the pipeline's fourth, build-time seed.
 
 Per-trial noise is set on the `run.py` CLI (`simulation_seed <n>`), **not** in the chunk JSON. The sim is
-bit-reproducible under fixed seeds. The seed refactor changed noise bit-for-bit vs the old
-`lgn_stepcurrentsource_noise_seed` scheme, so current runs will **not** byte-reproduce pre-refactor
-datastores — expected, not a regression.
+bit-reproducible under fixed seeds (same three seeds → identical spikes).
 
 ---
 
@@ -283,18 +319,10 @@ datastores — expected, not a regression.
 - **PSTH notebook:** `mozaik-models/experanto/notebooks/verify_psth_export.ipynb` — point its config cell at
   a shard dir and Run All: stimulus-locking (§1–6) and export-vs-datastore PSTH parity (§7, build
   `datastore_psths.npz` first via `analysis/compute_psth_datastore.py`).
-- **Structural / invariant checks:** compare `responses/spikes.npy`, `responses/meta.yml` CSR
-  `spike_indices` (N+1), `screen/timestamps.npy`, `screen/combined_meta.json`, `screen/data/*.npy` against a
-  reference; assert `responses/meta.yml:end_time == screen/timestamps.npy[-1]`.
-- **Golden gate:** sanity-gate against `docs/plan/audit/golden/P1.json` before/after any sim/export change.
-
----
-
-## Note — the `cluster/` wrapper is local-only
-
-A `cluster/submit.sh <conf>` config-driven launcher (one `.conf` per experiment: `sim-{test3,prod}`,
-`export-{test3,prod}`) exists **on disk** in this working copy and wraps exactly the invocations above
-(`ARRAY` index → `TRIAL = idx / N_CHUNKS`, `CHUNK = idx % N_CHUNKS`). It is **specific to this cluster and
-deliberately not tracked/pushed** (kept out via the repo's local `info/exclude`; the cluster runner code was
-removed from the tree in `52b6a8e`). Treat it as a local convenience — the portable, reproducible launch
-path is the direct `run.py` / `export.py` invocation documented here.
+- **Sanity checks on the shard** (load the files with numpy + PyYAML — e.g. inside the container, since the
+  bare host python may lack them):
+  - **timelines agree:** `responses/meta.yml`'s `end_time` equals the last value of `screen/timestamps.npy`;
+  - **spike index is well-formed:** `responses/meta.yml`'s `spike_indices` (the CSR offsets into
+    `responses/spikes.npy`) has length `n_signals + 1`;
+  - **counts are as expected:** the number of signals (neurons) and its per-sheet breakdown (`sheets`,
+    `n_signals_layerwise`), and the number of `screen/data/*.npy` files match the stimuli you presented.

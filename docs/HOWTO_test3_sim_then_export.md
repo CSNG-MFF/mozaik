@@ -75,7 +75,7 @@ runs without hunting for paths.
 ## TL;DR
 
 ```bash
-cd /mnt/vast-nhr/projects/nix00014/goirik/MOZAIK-new/mozaik
+cd "$MOZAIK_ROOT"          # your Mozaik repo root
 
 # ── Step 0: generate the chunk lists from the bundled fixture (once) ──
 python ../mozaik-models/experanto/generate_chunks.py \
@@ -155,7 +155,7 @@ separate export job, no `cluster/` tooling — this is the portable path.
 Invocation (e.g. on a compute node), using the bundled fixture:
 
 ```bash
-cd /mnt/vast-nhr/projects/nix00014/goirik/MOZAIK-new/mozaik   # $PWD = mozaik repo ROOT
+cd "$MOZAIK_ROOT"   # your Mozaik repo root ($PWD, below, must be this dir)
 module load apptainer
 SIF=$PWD/../mozaik-sif/mozaik-opt-qpatch_2026-08-20.sif   # freeze_time (pyNN 0.13.0) image; confirm in the LOG
 FIX=$PWD/docs/test3_fixture
@@ -318,20 +318,18 @@ just wrote.)
 
 ---
 
-## Seed scheme (three-stream, on csng)
+## Seed scheme (three-stream)
 
-`param/defaults` is on the three-seed schema (`controller.py` requires all three):
-- `model_seed=1023` (was `mozaik_seed`+`pynn_seed`) — **network identity** (connectivity, positions, weights, sampling).
-- `simulation_seed=1` (was `lgn_stepcurrentsource_noise_seed`; **nonzero** — NEST rejects `rng_seed=0`) — **per-trial noise**; vary this per trial.
-- `experiment_seed=0` — **experiment-level RNG** (stimulus shuffling / random draws in shuffling experiments). `RandomizedExperanto` (this pipeline) presents the chunk in fixed order, so it has **no effect** on order here — the stimulus order is set offline by `generate_chunks.py --seed`.
+`param/defaults` uses three seeds (`controller.py` requires all three):
+- `model_seed=1023` — **network identity** (connectivity, positions, weights, sampling); fixed across trials.
+- `simulation_seed=1` — **per-trial noise** (NEST kernel); **must be nonzero** (NEST rejects `rng_seed=0`);
+  override it per trial for independent background noise on the same network.
+- `experiment_seed=0` — experiment-level RNG (stimulus shuffling in shuffling experiments). `RandomizedExperanto`
+  presents the chunk in fixed order, so it has **no effect** on order here — the order is set offline by
+  `generate_chunks.py --seed`.
 
-- **Direct `run.py … simulation_seed <n>`** (Workflow 2 above): ✅ works.
-- **The local cluster sim runner** still passes `lgn_stepcurrentsource_noise_seed`, which this branch
-  ignores → `simulation_seed` stays at its default for every trial (**no per-trial noise variation**). Fix:
-  pass **`simulation_seed`** with a nonzero per-(trial,chunk) base, e.g. `$(( TRIAL*1000 + CHUNK + 1 ))`.
-- **Export** is seed-scheme agnostic (glob lookup) — works either way.
-- Reproducibility: `seed_refactor` changes noise **bit-for-bit** vs the old scheme, so a csng sim will
-  **not** reproduce the old `noise_seed` datastores byte-for-byte — expected, not a regression.
+Set the per-trial noise directly on the `run.py` CLI (`simulation_seed <n>`, e.g. `$(( TRIAL*1000 + CHUNK + 1 ))`).
+The export resolves datastores by glob and is seed-scheme agnostic. Runs are bit-reproducible under fixed seeds.
 
 ---
 
