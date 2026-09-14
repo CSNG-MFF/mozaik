@@ -20,8 +20,8 @@ plus `screen/` (the stimulus frames and their metadata) — the on-disk unit the
 
 - **A working Mozaik installation** — the model runs on PyNN/NEST exactly as described in the Mozaik
   `README.rst`: Mozaik + the PyNNStepCurrentModule build of PyNN + NEST + the `stepcurrentmodule` NEST
-  module, in a virtualenv. Nothing here changes that install. *(On our cluster we instead run this stack
-  inside an Apptainer image — see "Running on a cluster with Apptainer"; that image is environment-specific,
+  module, in a virtualenv. Nothing here changes that install. *(This stack can also run inside a Docker or
+  an Apptainer image — see "Running on a cluster with Apptainer"; that image is environment-specific,
   not part of Mozaik.)*
 - **The `experanto` library importable** — the export writes through the Experanto data-format package
   ([experanto](https://github.com/goirik-chakrabarty/experanto)).
@@ -83,14 +83,14 @@ python -u export.py <trial> --n-chunks 12          # CHUNK_DIR / OUTPUT_PREFIX /
 
 ---
 
-## Running on a cluster with Apptainer (our environment)
+## Running on a cluster with Apptainer
 
-The commands below run inside an **Apptainer container** — the way *we* package the Mozaik/NEST stack on our
-cluster. This is **not** required by Mozaik: a standard `README.rst` install runs the exact same
+The commands below run inside an **Apptainer container**. This is **not** required by Mozaik: 
+a standard `README.rst` install runs the exact same
 `python run.py …` / `python export.py …` command directly. If you have that install, ignore the
 `apptainer exec …` / `--bind` wrapper and run the `python -u …` line on its own.
 
-In our container the paths map as follows (all bind mounts; `$PWD` is the **Mozaik repo root**):
+In a container the paths map as follows (all bind mounts; `$PWD` is the **Mozaik repo root**):
 
 | Host | In container | What it is |
 |---|---|---|
