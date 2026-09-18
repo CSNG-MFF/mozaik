@@ -296,7 +296,7 @@ Workflow 2's `run.py` imports the **same library** directly — one export code 
 **Runtime env knobs** (set in the conf; both compose scripts pass them through as `--env`):
 `SIF_IMAGE`, `PARAM_FILE` (default `param/defaults`), `CHUNK_DIR`, `BASE_PATH` (sim input screen dataset),
 `RESULTS_DIR`/`WORKSPACE` (sim: redirect datastore to a bound `/ws`), `N_CHUNKS`, `CHUNK_START`/`CHUNK_END`,
-`BATCH_SIZE`, `EXPORT_MODE` (`--screen-only`/`--spikes-only`), `MODALITY_FILTER`, `OUTPUT_PREFIX`,
+`BATCH_SIZE`, `EXPORT_MODE` (`--screen-only`/`--spikes-only`), `OUTPUT_PREFIX`,
 `DATASTORE_PREFIX`.
 
 ---

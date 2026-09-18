@@ -207,7 +207,7 @@ OUTPUT_PREFIX=/data/mozaik_data/trial \
 DATASTORE_PREFIX=/data/<the results_dir the sim wrote to> \
   python -u export.py 0 --n-chunks 12                 # export trial 0
 #   split a long export across jobs:  --chunk-start 0 --chunk-end 6   then   --chunk-start 6 --chunk-end 12
-#   screen only:  --screen-only        spikes only:  --spikes-only     images only:  --modality-filter image
+#   screen only:  --screen-only        spikes only:  --spikes-only
 ```
 
 | Env / flag | Role |

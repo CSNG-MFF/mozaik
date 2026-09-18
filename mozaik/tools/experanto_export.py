@@ -529,10 +529,6 @@ class MozaikScreenExporter:
         Simulation frame duration in ms (default 7.0).
     movie_frame_duration_ms : float
         Duration of a single video frame in ms (default 35.0).
-    modality_filter : list of str or None
-        If set, only export stimuli whose modality is in this list
-        (e.g. ``["image"]``). Timestamps still advance for filtered-out
-        stimuli to keep spike alignment.
     """
 
     def __init__(
@@ -541,14 +537,12 @@ class MozaikScreenExporter:
         chunk_paths,
         frame_duration_ms=7.0,
         movie_frame_duration_ms=35.0,
-        modality_filter=None,
         tier_reference=None,
     ):
         self.screen_dir = os.path.join(output_dir, "screen")
         self.chunk_paths = chunk_paths
         self.frame_duration_ms = frame_duration_ms
         self.movie_frame_duration_ms = movie_frame_duration_ms
-        self.modality_filter = modality_filter
         self._source_data_dir = None  # derived from DSV annotations
         self._source_meta_dir = None
         self._tier_reference = tier_reference  # condition_hash -> tier

@@ -85,7 +85,6 @@ def _make_screen_exporter(
     chunk_paths,
     frame_duration_ms,
     movie_frame_duration_ms,
-    modality_filter,
     tier_reference,
 ):
     return MozaikScreenExporter(
@@ -93,7 +92,6 @@ def _make_screen_exporter(
         chunk_paths=chunk_paths,
         frame_duration_ms=frame_duration_ms,
         movie_frame_duration_ms=movie_frame_duration_ms,
-        modality_filter=modality_filter,
         tier_reference=tier_reference,
     )
 
@@ -109,7 +107,6 @@ def export_dsvs_to_experanto(
     export_spikes=True,
     export_screen=True,
     append_mode=False,
-    modality_filter=None,
     tier_reference=None,
     frame_duration_ms=7.0,
     movie_frame_duration_ms=35.0,
@@ -134,7 +131,6 @@ def export_dsvs_to_experanto(
             chunk_paths,
             frame_duration_ms,
             movie_frame_duration_ms,
-            modality_filter,
             tier_reference,
         )
         screen.process_batch(dsvs)
@@ -156,7 +152,6 @@ def run_experanto_export(
     sampling_rate=1000.0,
     export_spikes=True,
     export_screen=True,
-    modality_filter=None,
     tier_reference=None,
     frame_duration_ms=7.0,
     movie_frame_duration_ms=35.0,
@@ -193,7 +188,6 @@ def run_experanto_export(
                 chunk_paths_for_trial(trial),
                 frame_duration_ms,
                 movie_frame_duration_ms,
-                modality_filter,
                 tier_reference,
             )
             if export_screen
