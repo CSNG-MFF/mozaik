@@ -177,7 +177,7 @@ def run_experanto_export(
     # Screen-only: only one chunk needs loading (just to resolve the source movie_path).
     screen_only = not export_spikes
 
-    for trial in tqdm(trials):
+    for trial in tqdm(trials, disable=None):
         experiment_dir = output_dir_for_trial(trial)
 
         spike_exporter = (
@@ -205,7 +205,7 @@ def run_experanto_export(
             chunks_to_load = range(chunk_start, chunk_end)
 
         dsv_list = []
-        for i, chunk in enumerate(tqdm(chunks_to_load)):
+        for i, chunk in enumerate(tqdm(chunks_to_load, disable=None)):
             path = resolve_datastore(datastore_prefix, trial, chunk, model_name)
             data_store, dsv = open_datastore_dsv(path)
             dsv_list.append(dsv)
