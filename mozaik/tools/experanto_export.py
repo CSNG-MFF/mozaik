@@ -602,6 +602,12 @@ class MozaikScreenExporter:
             with open(chunk_path, "r") as f:
                 all_stimuli.extend(json.load(f))
 
+        if not all_stimuli:
+            # Nothing was presented, so there is no timeline to describe. Writing the trailing
+            # blank alone would produce a shard claiming a one-frame experiment that never ran.
+            print("WARNING: No stimuli in this trial's chunks. Skipping screen export.")
+            return
+
         timestamps_ms = []
         combined_meta = {}
         output_idx = 0
