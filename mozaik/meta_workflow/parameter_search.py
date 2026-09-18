@@ -74,7 +74,7 @@ class LocalSequentialBackend(object):
         command = (
             ["python", run_script, simulator_name, "1", parameters_url]
             + modified_parameters
-            + ["ParameterSearch"]
+            + [simulation_run_name]
         )
         subprocess.call(
             " ".join(shlex.quote(str(token)) for token in command), shell=True
