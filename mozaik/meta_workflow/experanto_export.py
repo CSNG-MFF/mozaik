@@ -42,9 +42,14 @@ def resolve_datastore(datastore_prefix, trial, chunk, model_name=DEFAULT_MODEL_N
     Globs the stable prefix ``<model_name>_trial{t}_chunk{c}_____*``.
     Exactly one match returns that directory; multiple matches raise
     ``RuntimeError``; no matches raise ``FileNotFoundError``.
+
+    ``datastore_prefix`` is a literal directory name, so it is escaped before globbing:
+    any ``*``, ``?`` or ``[...]`` in it would otherwise be read as pattern syntax.
     """
     run_prefix = f"{model_name}_trial{trial}_chunk{chunk}_____"
-    matches = sorted(glob.glob(os.path.join(datastore_prefix, run_prefix + "*")))
+    matches = sorted(
+        glob.glob(os.path.join(glob.escape(datastore_prefix), run_prefix + "*"))
+    )
     if len(matches) == 1:
         return matches[0]
     if len(matches) > 1:
