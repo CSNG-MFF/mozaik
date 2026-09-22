@@ -27,13 +27,12 @@ class TestModularConnector:
     def setup_class(cls):
         os.chdir("tests/connectors/ModularConnectorFunctionTest/")
         parameters = MozaikExtendedParameterSet("param/defaults")
-        p = OrderedDict()
-        if "mozaik_seed" in parameters:
-            p["mozaik_seed"] = parameters["mozaik_seed"]
-        if "pynn_seed" in parameters:
-            p["pynn_seed"] = parameters["pynn_seed"]
-
-        mozaik.setup_mpi(**p)
+        mozaik.setup_seeds(
+            model_seed=parameters["model_seed"],
+            simulation_seed=parameters["simulation_seed"],
+            experiment_seed=parameters["experiment_seed"],
+        )
+        mozaik.setup_mpi()
         parameters = MozaikExtendedParameterSet("param/defaults")
         parameters_selfconnections = MozaikExtendedParameterSet(
             "param_selfconnections/defaults"
@@ -80,13 +79,12 @@ class TestMapDependentModularConnectorFunction:
     def setup_class(cls):
         os.chdir("tests/connectors/MapDependentModularConnectorFunctionTest/")
         parameters = MozaikExtendedParameterSet("param/defaults")
-        p = OrderedDict()
-        if "mozaik_seed" in parameters:
-            p["mozaik_seed"] = parameters["mozaik_seed"]
-        if "pynn_seed" in parameters:
-            p["pynn_seed"] = parameters["pynn_seed"]
-
-        mozaik.setup_mpi(**p)
+        mozaik.setup_seeds(
+            model_seed=parameters["model_seed"],
+            simulation_seed=parameters["simulation_seed"],
+            experiment_seed=parameters["experiment_seed"],
+        )
+        mozaik.setup_mpi()
         parameters = MozaikExtendedParameterSet("param/defaults")
         parameters_stretch = MozaikExtendedParameterSet("param_stretch/defaults")
 
@@ -223,13 +221,12 @@ class TestGaborConnector:
     def setup_class(cls):
         os.chdir("tests/connectors/GaborConnectorTest/")
         parameters = MozaikExtendedParameterSet("param/defaults")
-        p = OrderedDict()
-        if "mozaik_seed" in parameters:
-            p["mozaik_seed"] = parameters["mozaik_seed"]
-        if "pynn_seed" in parameters:
-            p["pynn_seed"] = parameters["pynn_seed"]
-
-        mozaik.setup_mpi(**p)
+        mozaik.setup_seeds(
+            model_seed=parameters["model_seed"],
+            simulation_seed=parameters["simulation_seed"],
+            experiment_seed=parameters["experiment_seed"],
+        )
+        mozaik.setup_mpi()
         parameters = MozaikExtendedParameterSet("param/defaults")
         parameters_stretch = MozaikExtendedParameterSet("param_stretch/defaults")
 
@@ -472,13 +469,12 @@ class TestLocalModule:
     def setup_class(cls):
         os.chdir("tests/connectors/LocalModuleTest/")
         parameters = MozaikExtendedParameterSet("param/defaults")
-        p = OrderedDict()
-        if "mozaik_seed" in parameters:
-            p["mozaik_seed"] = parameters["mozaik_seed"]
-        if "pynn_seed" in parameters:
-            p["pynn_seed"] = parameters["pynn_seed"]
-
-        mozaik.setup_mpi(**p)
+        mozaik.setup_seeds(
+            model_seed=parameters["model_seed"],
+            simulation_seed=parameters["simulation_seed"],
+            experiment_seed=parameters["experiment_seed"],
+        )
+        mozaik.setup_mpi()
         parameters = MozaikExtendedParameterSet("param/defaults")
         import pyNN.nest as sim
         from tests.connectors.LocalModuleTest.model import ModelLocalModule
@@ -524,13 +520,12 @@ class TestModularNumSamples:
     def setup_class(cls):
         os.chdir("tests/connectors/ModularNumSamplesTest/")
         parameters = MozaikExtendedParameterSet("param/defaults")
-        p = OrderedDict()
-        if "mozaik_seed" in parameters:
-            p["mozaik_seed"] = parameters["mozaik_seed"]
-        if "pynn_seed" in parameters:
-            p["pynn_seed"] = parameters["pynn_seed"]
-
-        mozaik.setup_mpi(**p)
+        mozaik.setup_seeds(
+            model_seed=parameters["model_seed"],
+            simulation_seed=parameters["simulation_seed"],
+            experiment_seed=parameters["experiment_seed"],
+        )
+        mozaik.setup_mpi()
         parameters = MozaikExtendedParameterSet("param/defaults")
         import pyNN.nest as sim
         from tests.connectors.ModularNumSamplesTest.model import ModelModularNumSamples

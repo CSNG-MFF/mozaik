@@ -39,7 +39,7 @@ class PyNNDistribution(RandomDistribution):
       def __init__(self,name,rng=None,**params):
           self._first = True
           if rng == None:
-              rng = mozaik.pynn_rng
+              rng = mozaik.model_pynn_rng
           RandomDistribution.__init__(self,name,rng=rng,**params)
 
       def __str__(self):

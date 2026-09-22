@@ -65,7 +65,9 @@ def test_gather_regular_recording(monkeypatch):
 
     segment = merged.segments[0]
     assert [train.annotations["channel_id"] for train in segment.spiketrains] == [1, 2]
-    numpy.testing.assert_array_equal(segment.analogsignals[0].magnitude, [[2, 1], [2, 1]])
+    numpy.testing.assert_array_equal(
+        segment.analogsignals[0].magnitude, [[2, 1], [2, 1]]
+    )
     numpy.testing.assert_array_equal(
         segment.analogsignals[0].array_annotations["channel_index"], [2, 1]
     )

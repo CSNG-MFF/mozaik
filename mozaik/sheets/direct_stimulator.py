@@ -198,14 +198,14 @@ class BackgroundActivityBombardment(DirectStimulator):
         else:
             if (self.parameters.exc_firing_rate != 0 or self.parameters.exc_weight != 0):
                         self.ssae = self.sheet.sim.Population(self.sheet.pop.size,self.sheet.sim.SpikeSourceArray())
-                        seeds=mozaik.get_seeds((self.sheet.pop.size,))
-                        self.stgene = [StGen(rng=numpy.random.RandomState(seed=seeds[i])) for i in numpy.nonzero(self.sheet.pop._mask_local)[0]]
+                        seeds=mozaik.get_simulation_seeds((self.sheet.pop.size,))
+                        self.stgene = [StGen(seed=seeds[i]) for i in numpy.nonzero(self.sheet.pop._mask_local)[0]]
                         self.sheet.sim.Projection(self.ssae, self.sheet.pop,self.sheet.sim.OneToOneConnector(),synapse_type=exc_syn,receptor_type='excitatory')
 
             if (self.parameters.inh_firing_rate != 0 or self.parameters.inh_weight != 0):
                         self.ssai = self.sheet.sim.Population(self.sheet.pop.size,self.sheet.sim.SpikeSourceArray())
-                        seeds=mozaik.get_seeds((self.sheet.pop.size,))
-                        self.stgeni = [StGen(rng=numpy.random.RandomState(seed=seeds[i])) for i in numpy.nonzero(self.sheet.pop._mask_local)[0]]
+                        seeds=mozaik.get_simulation_seeds((self.sheet.pop.size,))
+                        self.stgeni = [StGen(seed=seeds[i]) for i in numpy.nonzero(self.sheet.pop._mask_local)[0]]
                         self.sheet.sim.Projection(self.ssai, self.sheet.pop,self.sheet.sim.OneToOneConnector(),synapse_type=inh_syn,receptor_type='inhibitory')
 
     def prepare_stimulation(self,duration,offset):
@@ -301,8 +301,8 @@ class Kick(DirectStimulator):
         exc_syn = self.sheet.sim.StaticSynapse(weight=self.parameters.exc_weight,delay=2*self.sheet.model.parameters.min_delay)
         if (self.parameters.exc_firing_rate != 0 or self.parameters.exc_weight != 0):
             self.ssae = self.sheet.sim.Population(self.sheet.pop.size,self.sheet.sim.SpikeSourceArray())
-            seeds=mozaik.get_seeds((self.sheet.pop.size,))
-            self.stgene = [StGen(rng=numpy.random.RandomState(seed=seeds[i])) for i in self.to_stimulate_indexes]
+            seeds=mozaik.get_simulation_seeds((self.sheet.pop.size,))
+            self.stgene = [StGen(seed=seeds[i]) for i in self.to_stimulate_indexes]
             self.sheet.sim.Projection(self.ssae, self.sheet.pop,self.sheet.sim.OneToOneConnector(),synapse_type=exc_syn,receptor_type='excitatory') 
 
     def prepare_stimulation(self,duration,offset):
@@ -562,7 +562,14 @@ class OpticalStimulatorArray(DirectStimulator):
         self.mixed_signals_photo = self.mixed_signals_photo[stimulated_cell_indices]
 
         if self.parameters.transfection_proportion != 1:
-            sel_idx = np.random.choice(range(len(self.stimulated_cells)),size=int(self.parameters.transfection_proportion*len(self.stimulated_cells)))
+            sel_idx = mozaik.model_rng.choice(
+                range(len(self.stimulated_cells)),
+                size=int(
+                    self.parameters.transfection_proportion
+                    * len(self.stimulated_cells)
+                ),
+                replace=False,
+            )
             self.stimulated_cells = self.stimulated_cells[sel_idx]
             self.mixed_signals_photo = self.mixed_signals_photo[sel_idx]
 

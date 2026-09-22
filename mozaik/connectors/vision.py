@@ -469,3 +469,5 @@ class CoCircularModularConnectorFunction(ModularConnectorFunction):
                 pylab.savefig(Global.root_directory+'aaa'+str(index)+'.png')
 
             return prob
+
+

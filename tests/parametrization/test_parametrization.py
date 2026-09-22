@@ -17,14 +17,17 @@ class TestParametrization:
         os.chdir("tests/parametrization/")
 
         p = OrderedDict()
-        p["mozaik_seed"] = 1023
-        p["pynn_seed"] = 936395
-        mozaik.setup_mpi(**p)
+        p["model_seed"] = 936395
+        p["simulation_seed"] = 1023
+        p["experiment_seed"] = 0
+        mozaik.setup_seeds(**p)
+        mozaik.setup_mpi()
         cls.param_original_PyNNDistribution = load_parameters(
             "param_original_PyNNDistribution/defaults"
         )
 
-        mozaik.setup_mpi(**p)
+        mozaik.setup_seeds(**p)
+        mozaik.setup_mpi()
         cls.param_parametrized_PyNNDistribution = load_parameters(
             "param_parametrized_PyNNDistribution/defaults"
         )

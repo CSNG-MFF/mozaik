@@ -1,0 +1,14 @@
+condition_hash: 6cdWv32GiPHCdqzV4z54
+first_frame_idx: 20323
+image_class: imagenet
+image_id: 4923.0
+image_size:
+- 36
+- 64
+modality: image
+num_frames: 1
+pre_blank_period: 0.478579
+presentation_time: 0.5
+stim_type: stimulus.Frame
+tier: test
+trial_idx: 3804

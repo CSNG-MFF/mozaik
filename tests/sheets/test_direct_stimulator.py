@@ -12,8 +12,10 @@ from mozaik.tools.distribution_parametrization import (
     MozaikExtendedParameterSet,
 )
 import pathlib
+import mozaik
 
 test_dir = None
+PARAM_RNG = np.random.RandomState(1729)
 
 
 class TestDirectStimulator:
@@ -55,6 +57,12 @@ class TestOpticalStimulatorArrayChR:
         global test_dir, OpticalStimulatorArrayChR
         test_dir = str(pathlib.Path(__file__).parent.parent)
         model_params = load_parameters(test_dir + "/sheets/model_params")
+        mozaik.setup_seeds(
+            model_seed=model_params["model_seed"],
+            simulation_seed=model_params["simulation_seed"],
+            experiment_seed=model_params["experiment_seed"],
+        )
+        mozaik.setup_mpi()
         model_params.null_stimulus_period = 200
         cls.sheet_params = load_parameters(test_dir + "/sheets/exc_sheet_params")
         cls.sheet_params.min_depth = 100
@@ -108,7 +116,7 @@ class TestOpticalStimulatorArrayChR:
             - self.sheet_params["cell"]["params"]["v_rest"] * qt.mV
         )
 
-    @pytest.mark.parametrize("A", [np.random.rand(50, 50, 10) for i in range(5)])
+    @pytest.mark.parametrize("A", [PARAM_RNG.rand(50, 50, 10) for i in range(5)])
     def test_compress_decompress(self, A):
         A_compressed = OpticalStimulatorArrayChR.compress_array(A)
         A_decompressed = OpticalStimulatorArrayChR.decompress_array(A_compressed)
@@ -124,6 +132,7 @@ class TestOpticalStimulatorArrayChR:
         ds = OpticalStimulatorArrayChR(self.sheet, sap)
         stim_p = ds.stimulated_cells
         assert set(stim_p).issubset(set(stim_1))
+        assert len(stim_p) == len(set(stim_p))
         assert np.isclose(len(stim_p) / len(stim_1), proportion, atol=0.02)
 
     def test_stimulated_cells(self):
@@ -139,9 +148,9 @@ class TestOpticalStimulatorArrayChR:
             else:
                 assert d[i] < 1e-11, "Nonzero input to neuron not in stimulated_cells!"
 
-    @pytest.mark.parametrize("onset_time", np.random.randint(0, 250, 4))
-    @pytest.mark.parametrize("stim_duration", np.random.randint(0, 50, 4))
-    @pytest.mark.parametrize("time_after_offset", np.random.randint(0, 250, 4))
+    @pytest.mark.parametrize("onset_time", PARAM_RNG.randint(0, 250, 4))
+    @pytest.mark.parametrize("stim_duration", PARAM_RNG.randint(0, 50, 4))
+    @pytest.mark.parametrize("time_after_offset", PARAM_RNG.randint(0, 250, 4))
     def test_duration_independence(self, onset_time, stim_duration, time_after_offset):
         # Ensure that the odeint solver works irrespective of stimulation duration
         sap = MozaikExtendedParameterSet(deepcopy(self.opt_array_params))

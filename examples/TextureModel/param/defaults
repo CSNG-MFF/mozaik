@@ -21,6 +21,7 @@
     'min_delay' : 0.1,
     'max_delay' : 100,
     'time_step' : 0.1,
-    'pynn_seed' : 513,
-    'mpi_seed' : 1023,
+    'model_seed' : 995,
+    'simulation_seed' : 513,
+    'experiment_seed' : 0,
 }

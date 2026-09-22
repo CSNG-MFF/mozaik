@@ -41,7 +41,7 @@ class RetinalUniformSheet(Sheet):
         logger.info("Creating %s with %d neurons." % (self.__class__.__name__, int(parameters.sx * parameters.sy * parameters.density)))
         rs = space.RandomStructure(boundary=space.Cuboid(self.size_x,self.size_y, 0),
                                    origin=(0.0, 0.0, 0.0),
-                                   rng=mozaik.pynn_rng)
+                                   rng=mozaik.model_pynn_rng)
         
         if self.parameters.cell.native_nest:
             self.pop = self.sim.Population(int(parameters.sx * parameters.sy * parameters.density),
@@ -192,7 +192,7 @@ class VisualCorticalUniformSheet(SheetWithMagnificationFactor):
         dx, dy = self.cs_2_vf(parameters.sx, parameters.sy)
         rs = space.RandomStructure(boundary=space.Cuboid(dx, dy, 0),
                                    origin=(0.0, 0.0, 0.0),
-                                   rng=mozaik.pynn_rng)
+                                   rng=mozaik.model_pynn_rng)
 
         # Include nestml multisynapse neuron model name here
         if self.parameters.cell.model in set(["aeif_cond_alpha_multisynapse","aeif_cond_beta_multisynapse"]):
@@ -274,7 +274,7 @@ class VisualCorticalUniformSheet3D(VisualCorticalUniformSheet):
 
         rs = space.RandomStructure(boundary=space.Cuboid(dx, dy, width_z),
                                    origin=(0.0, 0.0, origin_z),
-                                   rng=mozaik.pynn_rng)
+                                   rng=mozaik.model_pynn_rng)
 
         # Include nestml multisynapse neuron model name here
         if self.parameters.cell.model in set(["aeif_cond_alpha_multisynapse","aeif_cond_beta_multisynapse"]):

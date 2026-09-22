@@ -5,7 +5,6 @@ import pylab
 
 
 class TestCriticalityAnalysis:
-
     @classmethod
     def setup_class(cls):
         from mozaik.analysis.elephant_dependent import CriticalityAnalysis

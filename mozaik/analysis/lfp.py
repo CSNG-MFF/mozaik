@@ -108,7 +108,9 @@ class GeneralizedPhase(Analysis):
                positive = 0
                negative = 0
 
-               shuffledSig = numpy.random.permutation(asl_arr.reshape(nx*ny,dur)).reshape(ny, nx, dur)
+               shuffledSig = mozaik.simulation_rng.permutation(
+                   asl_arr.reshape(nx*ny,dur)
+               ).reshape(ny, nx, dur)
 
                # Compute the analytic signal using Hilbert transform
                analyticSig = hilbert(asl_arr)
@@ -896,7 +898,11 @@ class NauhausAnalysis(Analysis):
             p1 = [numpy.nan,numpy.nan,numpy.nan]
 
             for _ in range(n_attempts):
-                p0 = [numpy.max(amplitude),(numpy.random.rand()-0.5)*20,(numpy.random.rand()-1)*10]
+                p0 = [
+                    numpy.max(amplitude),
+                    (mozaik.simulation_rng.rand() - 0.5) * 20,
+                    (mozaik.simulation_rng.rand() - 1) * 10,
+                ]
 
                 try:
                     try:
@@ -951,8 +957,11 @@ class NauhausAnalysis(Analysis):
             mid_amps = []
             ortho_amps = []
 
-            numpy.random.seed(1001)
-            idx_chosen = numpy.random.choice(numpy.arange(len(spikes)),self.parameters.n_neurons,replace=False)
+            idx_chosen = mozaik.simulation_rng.choice(
+                numpy.arange(len(spikes)),
+                self.parameters.n_neurons,
+                replace=False,
+            )
             ids_output = []
             ids_speeds = []
 
@@ -1050,5 +1059,4 @@ class NauhausAnalysis(Analysis):
                                tags=self.tags,
                                analysis_algorithm=self.__class__.__name__,
                                period=None))
-
 

@@ -51,7 +51,7 @@ class DistanceDependentProbabilisticArborization(Connector):
                                                                 space=space.Space(axes='xy'), 
                                                                 safe=True, 
                                                                 verbose=False, 
-                                                                n_connections=None,rng=mozaik.pynn_rng)
+                                                                n_connections=None,rng=mozaik.model_pynn_rng)
                                                                 
         self.proj = self.sim.Projection(self.source.pop, 
                                         self.target.pop, 
@@ -95,7 +95,7 @@ class UniformProbabilisticArborization(Connector):
         method = self.sim.FixedProbabilityConnector(
                                     self.parameters.connection_probability,
                                     allow_self_connections=False,
-                                    safe=True,rng=mozaik.pynn_rng)
+                                    safe=True,rng=mozaik.model_pynn_rng)
 
                                     
         self.proj = self.sim.Projection(
@@ -122,7 +122,7 @@ class FixedKConnector(Connector):
         method = self.sim.FixedNumberPreConnector(
                                     self.parameters.k,
                                     allow_self_connections=False,
-                                    safe=True,rng=mozaik.pynn_rng)
+                                    safe=True,rng=mozaik.model_pynn_rng)
                                     
         self.proj = self.sim.Projection(
                                     self.source.pop,
@@ -132,7 +132,6 @@ class FixedKConnector(Connector):
                                     label=self.name,
                                     space=space.Space(axes='xy'),
                                     receptor_type=self.parameters.target_synapses)
-
 
 
 

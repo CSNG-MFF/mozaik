@@ -22,12 +22,12 @@ The top-level ``mozaik`` package is intentionally minimal. Most functionality is
 
 The root ``mozaik`` package provides essential infrastructure:
 
-- Global random number generators (`rng`, `pynn_rng`)
+- Global model random number generators (`model_rng`, `model_pynn_rng`)
 - MPI communication object (`mpi_comm`)
 - Workflow utilities for setting up and running simulations
 - Component loading and logging
 
-It also includes the `setup_mpi`, `get_seeds`, `getMozaikLogger`, and `load_component` functions that help manage reproducibility and inter-process coordination.
+It also includes the `setup_mpi`, `get_model_seeds`, `getMozaikLogger`, and `load_component` functions that help manage reproducibility and inter-process coordination.
 
 As Mozaik evolves, subpackages may be added or deprecated as coordination with external tools improves.
 

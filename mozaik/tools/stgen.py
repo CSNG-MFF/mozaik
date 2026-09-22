@@ -176,16 +176,16 @@ class StGen:
             The random number generator state object. Can be `None`, or a custom RNG object
 
         - **seed** : int, optional
-            A seed for the rng (optional).
+            A seed for the rng. Required when `rng` is `None`.
 
         If `rng` is not `None`, the provided rng will be used to generate random numbers; 
         otherwise `StGen` will create its own random number generator.
-        If a `seed` is provided, it is passed to `rng.seed(seed)`.
+        Providing both `rng` and `seed`, or neither one, raises `ValueError`.
 
         Examples
         --------
 
-        >>> x = StGen()
+        >>> x = StGen(seed=0)
 
 
 
@@ -199,13 +199,12 @@ class StGen:
 
         """
 
-        if rng==None:
-            self.rng = numpy.random.RandomState()
+        if (rng is None) == (seed is None):
+            raise ValueError("StGen requires exactly one of rng or seed")
+        if rng is None:
+            self.rng = numpy.random.RandomState(seed)
         else:
             self.rng = rng
-
-        if seed != None:
-            self.rng.seed(seed)
         self.dep_checked = False
 
     def seed(self,seed):
@@ -381,6 +380,4 @@ class StGen:
             return spike_train
 
         return SpikeTrain(spike_train, t_start=t[0],t_stop=t_stop)
-
-
 

@@ -43,7 +43,7 @@ class PyNNDistributionConnectorFunction(ModularConnectorFunction):
       })
 
       def evaluate(self,index,seed=None):
-          if seed:
+          if seed is not None:
               return self.parameters.pynn_distribution.copy(seed).next(len(self.source.pop))
           else:
               return self.parameters.pynn_distribution.next(len(self.source.pop))
@@ -248,4 +248,3 @@ class ThresholdExponentialModularNumSamplesConnectorFunction(ModularNumSamplesCo
             coef *=  1/self.parameters.max_decrease + (1 - 1/self.parameters.max_decrease) *  (-numpy.exp(-self.parameters.exponent_factor * (self.target.size_y - posy)/self.parameters.threshold)+1)/(-numpy.exp(-self.parameters.exponent_factor)+1)
 
         return coef
-

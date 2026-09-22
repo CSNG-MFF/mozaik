@@ -177,7 +177,7 @@ class VictorUninformativeSyntheticStimulus(VisualStimulus):
         fieldsize_x = self.size_x * self.density
         fieldsize_y = self.size_y * self.density
         pixel_spatial_frequency = int(self.spatial_frequency * self.density)
-        numpy.random.seed(self.seed)
+        rng = numpy.random.RandomState(int(self.seed))
         im = numpy.zeros((int(fieldsize_x), int(fieldsize_y)))
 
         for y in range(0,int(fieldsize_y),pixel_spatial_frequency):
@@ -193,19 +193,19 @@ class VictorUninformativeSyntheticStimulus(VisualStimulus):
                     xlim = im.shape[0]
 
                 if self.correlation_type == 1 and x > pixel_spatial_frequency*2 and y > pixel_spatial_frequency*2:
-                    if numpy.random.rand() < (1 + self.pixel_statistics[0])/2:
+                    if rng.rand() < (1 + self.pixel_statistics[0])/2:
                         im[y:ylim,x:xlim] = (im[y-pixel_spatial_frequency, x-pixel_spatial_frequency] + im[y-pixel_spatial_frequency, x-2*pixel_spatial_frequency] + im[y-2*pixel_spatial_frequency, x-pixel_spatial_frequency]) % 510
                     else:
                         im[y:ylim,x:xlim] = -1 * ((im[y-pixel_spatial_frequency, x-pixel_spatial_frequency] + im[y-pixel_spatial_frequency, x-2*pixel_spatial_frequency] + im[y-2*pixel_spatial_frequency, x-pixel_spatial_frequency]) % 510 - 255)
 
                 elif self.correlation_type == 2 and y > pixel_spatial_frequency and x > 2*pixel_spatial_frequency:
-                    if numpy.random.rand() < (1 + self.pixel_statistics[1])/2:
+                    if rng.rand() < (1 + self.pixel_statistics[1])/2:
                         im[y:ylim,x:xlim] = (im[y-pixel_spatial_frequency, x-pixel_spatial_frequency] + im[y, x-2*pixel_spatial_frequency] + im[y-pixel_spatial_frequency, x]) % 510
                     else:
                         im[y:ylim,x:xlim] = -1 * ((im[y-pixel_spatial_frequency, x-pixel_spatial_frequency] + im[y, x-2*pixel_spatial_frequency] + im[y-pixel_spatial_frequency, x]) % 510 - 255)
 
                 else:
-                    if numpy.random.rand() < 0.5:
+                    if rng.rand() < 0.5:
                         im[y:ylim,x:xlim] = 255
 
         while True:
@@ -231,7 +231,7 @@ class VictorInformativeSyntheticStimulus(VisualStimulus):
         fieldsize_x = self.size_x * self.density
         fieldsize_y = self.size_y * self.density
         pixel_spatial_frequency = int(self.spatial_frequency * self.density)
-        numpy.random.seed(self.seed)
+        rng = numpy.random.RandomState(int(self.seed))
         im = numpy.zeros((int(fieldsize_x), int(fieldsize_y)))
 
         for y in range(0,int(fieldsize_y),pixel_spatial_frequency):
@@ -247,68 +247,67 @@ class VictorInformativeSyntheticStimulus(VisualStimulus):
                     xlim = im.shape[0]
 
                 if self.correlation_type == 1:
-                    if numpy.random.rand() < (1 + self.pixel_statistics[0])/2:
+                    if rng.rand() < (1 + self.pixel_statistics[0])/2:
                         im[y:ylim,x:xlim] = 255
 
                 elif self.correlation_type == 2 and y > 0:
-                    if numpy.random.rand() < (1 + self.pixel_statistics[1])/2:
+                    if rng.rand() < (1 + self.pixel_statistics[1])/2:
                         im[y:ylim,x:xlim] = im[y-1, x]
                     else:
                         im[y:ylim,x:xlim] = -1 * (im[y-1, x] - 255)
 
                 elif self.correlation_type == 3 and x > 0:
-                    if numpy.random.rand() < (1 + self.pixel_statistics[2])/2:
+                    if rng.rand() < (1 + self.pixel_statistics[2])/2:
                         im[y:ylim,x:xlim] = im[y, x-1]
                     else:
                         im[y:ylim,x:xlim] = -1 * (im[y, x-1] - 255)
 
                 elif self.correlation_type == 4 and y > 0 and x < fieldsize_x - pixel_spatial_frequency:
-                    if numpy.random.rand() < (1 + self.pixel_statistics[3])/2:
+                    if rng.rand() < (1 + self.pixel_statistics[3])/2:
                         im[y:ylim,x:xlim] = im[y-1, x+pixel_spatial_frequency]
                     else:
                         im[y:ylim,x:xlim] = -1 * (im[y-1, x+pixel_spatial_frequency] - 255)
 
 
                 elif self.correlation_type == 5 and y > 0 and x > 0:
-                    if numpy.random.rand() < (1 + self.pixel_statistics[4])/2:
+                    if rng.rand() < (1 + self.pixel_statistics[4])/2:
                         im[y:ylim,x:xlim] = im[y-1, x-1]
                     else:
                         im[y:ylim,x:xlim] = -1 * (im[y-1, x-1] - 255)
 
                 elif self.correlation_type == 6 and y > 0 and x > 0:
-                    if numpy.random.rand() < (1 + self.pixel_statistics[5])/2:
+                    if rng.rand() < (1 + self.pixel_statistics[5])/2:
                         im[y:ylim,x:xlim] = -1 * ((im[y-1, x-1] + im[y, x-1]) % 510 - 255)
                     else:
                         im[y:ylim,x:xlim] = (im[y-1, x-1] + im[y, x-1]) % 510
 
                 elif self.correlation_type == 7 and y > 0 and x < fieldsize_x - pixel_spatial_frequency:
-                    if numpy.random.rand() < (1 + self.pixel_statistics[6])/2:
+                    if rng.rand() < (1 + self.pixel_statistics[6])/2:
                         im[y:ylim,x:xlim] = -1 * ((im[y-1, x+pixel_spatial_frequency] + im[y-1, x]) % 510 - 255)
                     else:
                         im[y:ylim,x:xlim] = (im[y-1, x+pixel_spatial_frequency] + im[y-1, x]) % 510
 
                 elif self.correlation_type == 8 and y > 0 and x > 0:
-                    if numpy.random.rand() < (1 + self.pixel_statistics[7])/2:
+                    if rng.rand() < (1 + self.pixel_statistics[7])/2:
                         im[y:ylim,x:xlim] = -1 * ((im[y-1, x] + im[y-1, x-1])% 510 - 255)
                     else:
                         im[y:ylim,x:xlim] = (im[y-1, x] + im[y-1, x-1]) % 510
 
                 elif self.correlation_type == 9 and y > 0 and x > 0:
-                    if numpy.random.rand() < (1 + self.pixel_statistics[8])/2:
+                    if rng.rand() < (1 + self.pixel_statistics[8])/2:
                         im[y:ylim,x:xlim] = -1 * ((im[y-1, x] + im[y, x-1])% 510 - 255)
                     else:
                         im[y:ylim,x:xlim] = (im[y-1, x] + im[y, x-1]) % 510
 
                 elif self.correlation_type == 10 and y > 0 and x > 0:
-                    if numpy.random.rand() < (1 + self.pixel_statistics[9])/2:
+                    if rng.rand() < (1 + self.pixel_statistics[9])/2:
                         im[y:ylim,x:xlim] = (im[y-1, x-1] + im[y, x-1] + im[y-1, x]) % 510
                     else:
                         im[y:ylim,x:xlim] = -1 * ((im[y-1, x-1] + im[y, x-1] + im[y-1, x]) % 510 - 255)
 
                 else:
-                    if numpy.random.rand() < 0.5:
+                    if rng.rand() < 0.5:
                         im[y:ylim,x:xlim] = 255
 
         while True:
             yield (im, [0])
-

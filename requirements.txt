@@ -30,6 +30,7 @@ pluggy==1.0.0
 psutil==5.9.0
 py==1.11.0
 PyNN==0.10.0
+PyYAML
 pyparsing==3.0.8
 pytest==7.1.1
 pytest-forked==1.4.0

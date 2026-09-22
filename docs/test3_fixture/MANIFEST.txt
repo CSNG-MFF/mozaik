@@ -1,0 +1,25 @@
+# test3 fixture — minimal RAW stimuli for HOWTO_test3_sim_then_export.md
+#
+# The Randomized Experanto test3 case (3 trials x 1 chunk) references only 3 stimuli
+# (video 01911, images 09943/11353). This is the complete 3-stimulus slice of the
+# production dataset — enough to run sim + inline export offline without the full 6.8 GB.
+#
+# Chunk JSONs are NOT bundled: they are a DERIVED artifact, generated on first run by
+#   generate_chunks.py --data-root docs/test3_fixture --output-dir docs/test3_fixture/mozaik_chunk_test3 --n-trials 3 --n-chunks 1
+# (freshly generated chunk ORDER differs from the historical golden — a different shuffle —
+#  which is fine for a smoke run but not for byte-reproducing the P1 golden export).
+# combined_meta.json is NOT needed (the exporter builds it from these per-stimulus YMLs).
+#
+# Source dataset : /mnt/vast-react/projects/neural_foundation_model/test_upsampling_without_hamming_30.0Hz/dynamic26872-17-20-Video-021a75e56847d574b9acbcc06c675055_30hz
+# Assembled      : 2026-09-10
+#
+# Use (see HOWTO): bind docs/test3_fixture -> /fixture ;  BASE_PATH=/fixture ;  CHUNK_DIR=/fixture/mozaik_chunk_test3
+#
+# sha256 (relative to docs/test3_fixture/):
+0fa3f16f40d9d3813dc24295fa89206296f3f612d9ec3689b84948d30f3b9f2c  screen/data/01911.npy
+12e258bd79d71078ad89f1fbf8d9cef2ad3980943281c0d82ebf5a141ab20c95  screen/data/09943.npy
+18981c610f4b247134ccbfc434bd2a3248e994631ca1db70640b8e792a4a0418  screen/data/11353.npy
+6f29fa1a3271b53507b73afd695fced913a7a8cba00d13731f57f20c86470dd5  screen/meta.yml
+880f66ee0973ffef53d5ea26c30be143951ff1a415c1b7d1dbe49cdee6ef079a  screen/meta/01911.yml
+08b06f7e7b0fb7a2731ab0f52d22c26e297e666abb88b1e195514f3fc4adda22  screen/meta/09943.yml
+eab3968abdd2ac625bff20bad15a423833049a456ee9a9ddf1c3e245a9e4c7dd  screen/meta/11353.yml

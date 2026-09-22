@@ -12,6 +12,14 @@ from mpi4py import MPI
 import nest
 
 nest.Install("stepcurrentmodule")
+from pyNN.nest.cells import UNITS_MAP
+
+UNITS_MAP.update(
+    {
+        "g_ex": "nS",
+        "g_in": "nS",
+    }
+)
 
 mpi_comm = MPI.COMM_WORLD
 

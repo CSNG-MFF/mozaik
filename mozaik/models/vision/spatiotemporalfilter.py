@@ -641,7 +641,7 @@ class SpatioTemporalFilterRetinaLGN(SensoryInputComponent):
 
         for rf_type in self.rf_types:
             self.ncs_rng[rf_type] = []
-            seeds = mozaik.get_seeds((self.sheets[rf_type].pop.size,))
+            seeds = mozaik.get_simulation_seeds((self.sheets[rf_type].pop.size,))
 
             if self.integrated_cs:
                 for i, lgn_cell in enumerate(self.sheets[rf_type].pop.all_cells):

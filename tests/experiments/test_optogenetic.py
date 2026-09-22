@@ -15,8 +15,10 @@ from mozaik.connectors.vision import MapDependentModularConnectorFunction
 from mozaik.tools.circ_stat import circular_dist
 import scipy.stats
 import pathlib
+import mozaik
 
 test_dir = None
+PARAM_RNG = np.random.RandomState(1729)
 
 
 class TestCorticalStimulationWithOptogeneticArray:
@@ -38,6 +40,12 @@ class TestCorticalStimulationWithOptogeneticArray:
         global test_dir, CorticalStimulationWithOptogeneticArray, SingleOptogeneticArrayStimulus, OptogeneticArrayStimulusCircles, OptogeneticArrayStimulusHexagonalTiling, OptogeneticArrayImageStimulus, OptogeneticArrayStimulusOrientationTuningProtocol
         test_dir = str(pathlib.Path(__file__).parent.parent)
         model_params = load_parameters(test_dir + "/sheets/model_params")
+        mozaik.setup_seeds(
+            model_seed=model_params["model_seed"],
+            simulation_seed=model_params["simulation_seed"],
+            experiment_seed=model_params["experiment_seed"],
+        )
+        mozaik.setup_mpi()
         cls.sheet_params = load_parameters(test_dir + "/sheets/exc_sheet_params")
         cls.sheet_params.min_depth = 100
         cls.sheet_params.max_depth = 400
@@ -133,8 +141,8 @@ class TestSingleOptogeneticArrayStimulus(TestCorticalStimulationWithOptogeneticA
     def c2a(self, c):
         return int((c + self.opt_array_params.size / 2) / self.opt_array_params.spacing)
 
-    @pytest.mark.parametrize("x", np.random.randint(-20, 20, 7) * 10)
-    @pytest.mark.parametrize("y", np.random.randint(-20, 20, 7) * 10)
+    @pytest.mark.parametrize("x", PARAM_RNG.randint(-20, 20, 7) * 10)
+    @pytest.mark.parametrize("y", PARAM_RNG.randint(-20, 20, 7) * 10)
     def test_random_pixels(self, x, y):
         size, spacing = self.opt_array_params.size, self.opt_array_params.spacing
         assert size == 400 and spacing == 10

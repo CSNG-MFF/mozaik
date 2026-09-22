@@ -20,6 +20,7 @@ from numpy import pi
 from parameters import ParameterSet
 from quantities import Hz, rad, degrees, ms, dimensionless
 import mozaik.stimuli.vision.topographica_based as topo
+import mozaik
 from collections import namedtuple
 import pytest
 
@@ -712,6 +713,7 @@ default_apparent_motion = {
     "surround_gabor_orientation_radial": True,
     "flash_center": True,
     "random": False,
+    "random_seed": 0,
     "symmetric": False,
     "centrifugal": False,
 }
@@ -768,6 +770,71 @@ class TestRadialGaborApparentMotion(TestGabor):
         params.update(kwargs)
         stim = topo.RadialGaborApparentMotion(**params)
         return stim
+
+    def test_randomized_frames_repeat_after_reset(self):
+        stimulus = self.get_stimulus(
+            random=True,
+            random_seed=17,
+            flash_duration=1,
+            n_gabors=3,
+            n_circles=3,
+        )
+
+        first_render = self.pop_frames(stimulus, 3)
+        stimulus.reset()
+        second_render = [stimulus.img.copy()] + self.pop_frames(stimulus, 2)
+
+        for first_frame, second_frame in zip(first_render, second_render):
+            np.testing.assert_array_equal(first_frame, second_frame)
+
+    def test_randomized_frames_require_a_seed(self):
+        stimulus = self.get_stimulus(
+            random=True,
+            random_seed=None,
+        )
+
+        with pytest.raises(ValueError, match="random_seed is required"):
+            next(stimulus._frames)
+
+    def test_randomized_frames_do_not_depend_on_rendering_order(self):
+        stimulus_a = self.get_stimulus(
+            random=True,
+            random_seed=17,
+            flash_duration=1,
+            n_gabors=3,
+            n_circles=3,
+        )
+        stimulus_b = self.get_stimulus(
+            random=True,
+            random_seed=23,
+            flash_duration=1,
+            n_gabors=3,
+            n_circles=3,
+        )
+        render_a_first = self.pop_frames(stimulus_a, 3)
+        render_b_second = self.pop_frames(stimulus_b, 3)
+
+        stimulus_a = self.get_stimulus(
+            random=True,
+            random_seed=17,
+            flash_duration=1,
+            n_gabors=3,
+            n_circles=3,
+        )
+        stimulus_b = self.get_stimulus(
+            random=True,
+            random_seed=23,
+            flash_duration=1,
+            n_gabors=3,
+            n_circles=3,
+        )
+        render_b_first = self.pop_frames(stimulus_b, 3)
+        render_a_second = self.pop_frames(stimulus_a, 3)
+
+        for expected, actual in zip(render_a_first, render_a_second):
+            np.testing.assert_array_equal(expected, actual)
+        for expected, actual in zip(render_b_second, render_b_first):
+            np.testing.assert_array_equal(expected, actual)
 
     @pytest.mark.parametrize(
         "x, y, sigma, orientation, flash_duration, start_angle, end_angle, n_gabors, n_circles, symmetric, random, flash_center, centrifugal",

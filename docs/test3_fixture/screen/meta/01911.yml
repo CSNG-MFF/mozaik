@@ -1,0 +1,10 @@
+condition_hash: ecUQJtcERZJGdqza1k7h
+first_frame_idx: 2808
+image_size:
+- 36
+- 64
+modality: video
+num_frames: 300
+stim_type: stimulus.Clip
+tier: train
+trial_idx: 639

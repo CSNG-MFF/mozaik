@@ -78,7 +78,7 @@ class RCRandomN(PopulationSelector):
         
       def generate_idd_list_of_neurons(self):
           z = self.sheet.pop.all_cells.astype(int)
-          mozaik.rng.shuffle(z)
+          mozaik.model_rng.shuffle(z)
           return z[:self.parameters.num_of_cells]
 
 class RCRandomPercentage(PopulationSelector):
@@ -102,7 +102,7 @@ class RCRandomPercentage(PopulationSelector):
         
       def generate_idd_list_of_neurons(self):
           z = self.sheet.pop.all_cells.astype(int)
-          mozaik.rng.shuffle(z)
+          mozaik.model_rng.shuffle(z)
           return z[:int(len(z)*self.parameters.percentage/100)]
 
           
@@ -245,7 +245,7 @@ class SimilarAnnotationSelector(PopulationSelector):
       
       def generate_idd_list_of_neurons(self):
           picked = sorted(self.pick_close_to_annotation())
-          mozaik.rng.shuffle(picked)
+          mozaik.model_rng.shuffle(picked)
           return z[picked[:self.parameters.num_of_cells]]
           
           
@@ -300,7 +300,7 @@ class SimilarAnnotationSelectorRegion(SimilarAnnotationSelector):
                                                                          abs(numpy.array(yy - self.parameters.offset_y)) < self.parameters.size/2.0
                                                       )])
           picked = sorted(list(picked_or & picked_region))
-          mozaik.rng.shuffle(picked)
+          mozaik.model_rng.shuffle(picked)
           z = self.sheet.pop.all_cells.astype(int)
           return z[picked[:self.parameters.num_of_cells]]
            

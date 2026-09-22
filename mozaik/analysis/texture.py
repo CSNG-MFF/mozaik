@@ -162,7 +162,7 @@ class PercentageNeuronsModulated(Analysis):
             #Concatenate the mean responses for every samples of the synthetic texture stimuli and the spectrally-matched noise stimuli
             _tmp = numpy.concatenate((response_noise,  response_texture))
             #Shuffle the list and split it in 2
-            numpy.random.shuffle(_tmp)
+            mozaik.simulation_rng.shuffle(_tmp)
             tmp = numpy.split(_tmp,2)
             mean1 = numpy.mean(tmp[1])
             mean0 = numpy.mean(tmp[0])
@@ -373,4 +373,3 @@ class TextureModulationFromPSTH(Analysis):
                                          tags=self.tags,
                                          analysis_algorithm=self.__class__.__name__,
                                          stimulus_id=str(st_modulation)))
-

@@ -187,7 +187,7 @@ class SpecificProbabilisticArborization(Connector):
         # This is due to native synapses models (which we currently use as the short term synaptic plasticity model) 
         # do not apply the 1000 factor scaler as the pyNN synaptic models
         wf = self.parameters.weight_factor * self.weight_scaler
-        seeds = mozaik.get_seeds(self.target.pop.size)
+        seeds = mozaik.get_model_seeds(self.target.pop.size)
         weights = self.connection_matrix
         delays = self.delay_matrix
         cl = []
@@ -209,5 +209,4 @@ class SpecificProbabilisticArborization(Connector):
                                 label=self.name,
                                 receptor_type=self.parameters.target_synapses)
                   
-
 

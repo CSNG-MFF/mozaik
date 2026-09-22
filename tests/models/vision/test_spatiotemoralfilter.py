@@ -18,107 +18,12 @@ from parameters import ParameterSet
 import copy
 from mozaik.models.vision.spatiotemporalfilter import KernelResponse
 import itertools
-import matplotlib.pyplot as plt
+from tests.models.vision.spatiotemporalfilter_test_support import (
+    BASE_STIM_PARAMS as base_stim_params,
+    PARAMS as params,
+)
 
-params = {
-    "input_space_type": "mozaik.space.VisualSpace",
-    "input_space": {"update_interval": 7.0, "background_luminance": 45.0},
-    "visual_field": {
-        "centre": (0.0, 0.0),
-        "size": (7.0, 7.0),
-    },
-    "sheets": {
-        "retina_lgn": {
-            "component": "mozaik.models.vision.spatiotemporalfilter.SpatioTemporalFilterRetinaLGN",
-            "params": {
-                "density": 10,
-                "size": (0.5, 0.5),
-                "linear_scaler": 6.0,
-                "mpi_reproducible_noise": False,
-                "recorders": {},
-                "recording_interval": 1.0,
-                "receptive_field": {
-                    "func": "cai97.stRF_2d",
-                    "func_params": {
-                        "Ac": 1.0,
-                        "As": 0.3,
-                        "K1": 1.05,
-                        "K2": 0.7,
-                        "c1": 0.14,
-                        "c2": 0.12,
-                        "n1": 7.0,
-                        "n2": 8.0,
-                        "t1": -6.0,
-                        "t2": -6.0,
-                        "td": 6.0,
-                        "sigma_c": 0.4,
-                        "sigma_s": 1.0,
-                        "subtract_mean": False,
-                    },
-                    "width": 6.0,
-                    "height": 6.0,
-                    "spatial_resolution": 0.1,
-                    "temporal_resolution": 7.0,
-                    "duration": 200.0,
-                },
-                "original_2024_lgn_mode": False,
-                "gain_control": {
-                    "gain": 1,
-                    "non_linear_gain": {
-                        "contrast_gain": 0.11,
-                        "contrast_scaler": 0.00013,
-                        "luminance_gain": 0.009,
-                        "luminance_scaler": 0.4,
-                    },
-                },
-                "cell": {
-                    "model": "IF_cond_exp",
-                    "native_nest": False,
-                    "params": {
-                        "v_thresh": -57.0,
-                        "v_rest": -70.0,
-                        "v_reset": -70.0,
-                        "tau_refrac": 2.0,
-                        "tau_m": 10.0,
-                        "cm": 0.29,
-                        "e_rev_E": 0.0,
-                        "e_rev_I": -75.0,
-                        "tau_syn_E": 1.5,
-                        "tau_syn_I": 10.0,
-                    },
-                    "receptors": None,
-                    "initial_values": {"v": -70.0},
-                },
-                "noise": {"mean": 0.0, "stdev": 0.0},
-            },
-        }
-    },
-    "results_dir": "",
-    "name": "SelfSustainedPushPullV1",
-    "reset": False,
-    "null_stimulus_period": 150.0,
-    "store_stimuli": False,
-    "min_delay": 0.1,
-    "max_delay": 100,
-    "time_step": 0.1,
-    "pynn_seed": 936395,
-    "mpi_seed": 1023,
-    "explosion_monitoring": None,
-    "steps_get_data": 0,
-}
-
-base_stim_params = {
-    "frame_duration": params["input_space"]["update_interval"],
-    "duration": 1,
-    "trial": 1,
-    "background_luminance": params["input_space"]["background_luminance"],
-    "density": 1
-    / params["sheets"]["retina_lgn"]["params"]["receptive_field"]["spatial_resolution"],
-    "location_x": 0.0,
-    "location_y": 0.0,
-    "size_x": params["visual_field"]["size"][0],
-    "size_y": params["visual_field"]["size"][1],
-}
+PARAM_RNG = np.random.RandomState(1729)
 
 
 class TestCellWithReceptiveField:
@@ -184,8 +89,8 @@ class TestCellWithReceptiveField:
             original_2024_lgn_mode,
         )
 
-    @pytest.mark.parametrize("x", np.random.randint(0, 30, size=5))
-    @pytest.mark.parametrize("y", np.random.randint(0, 30, size=5))
+    @pytest.mark.parametrize("x", PARAM_RNG.randint(0, 30, size=5))
+    @pytest.mark.parametrize("y", PARAM_RNG.randint(0, 30, size=5))
     @pytest.mark.parametrize("on", [True, False])
     def test_impulse_response(self, x, y, on):
         """
@@ -361,7 +266,6 @@ class TestCellWithReceptiveField:
 
 
 class TestSpatioTemporalFilterRetinaLGN:
-
     @classmethod
     def setup_class(cls):
         from pyNN import nest
@@ -374,10 +278,12 @@ class TestSpatioTemporalFilterRetinaLGN:
         visual_field_size=(7.0, 7.0),
         visual_field_center=(0.0, 0.0),
     ):
-        mozaik.setup_mpi(
-            parameters["mpi_seed"],
-            parameters["pynn_seed"],
+        mozaik.setup_seeds(
+            model_seed=parameters["model_seed"],
+            simulation_seed=parameters["simulation_seed"],
+            experiment_seed=parameters["experiment_seed"],
         )
+        mozaik.setup_mpi()
 
         model = Model(nest, 2, parameters)
 

@@ -82,8 +82,9 @@ class Model(BaseComponent):
         'max_delay' : float,
         'time_step' : float,
         'sheets' : ParameterSet, # can be none - in which case input_space_type is ignored
-        'mpi_seed' : int,
-        'pynn_seed' : int,
+        'model_seed' : int,
+        'simulation_seed' : int,
+        'experiment_seed' : int,
         'explosion_monitoring': ParameterSet, # Can be None. Strucutured as follows:
                                               #            {
                                               #                 sheet_name : str,
@@ -96,7 +97,13 @@ class Model(BaseComponent):
         BaseComponent.__init__(self, self, parameters)
         self.first_time = True
         self.sim = sim
-        self.node = sim.setup(timestep=self.parameters.time_step, min_delay=self.parameters.min_delay, max_delay=self.parameters.max_delay, threads=num_threads)  # should have some parameters here
+        self.node = sim.setup(
+            timestep=self.parameters.time_step,
+            min_delay=self.parameters.min_delay,
+            max_delay=self.parameters.max_delay,
+            threads=num_threads,
+            rng_seed=self.parameters.simulation_seed,
+        )
         self.sheets = OrderedDict()
         self.connectors = OrderedDict()
         self.num_threads = num_threads

@@ -10,9 +10,12 @@ from mozaik.tools.distribution_parametrization import ParameterWithUnitsAndPerio
 from mozaik.sheets.direct_stimulator import Depolarization
 from collections import OrderedDict
 import os
+import json
+import yaml
 
 
 logger = mozaik.getMozaikLogger()
+
 
 
 class VisualExperiment(Experiment):
@@ -53,7 +56,7 @@ class VisualExperiment(Experiment):
         self.generate_stimuli()
 
         if self.parameters.shuffle_stimuli:
-            mozaik.rng.shuffle(self.stimuli)
+            mozaik.experiment_rng.shuffle(self.stimuli)
 
     def generate_stimuli(self):
         """
@@ -1859,7 +1862,9 @@ class MeasureInformativePixelCorrelationStatisticsResponse(VisualExperiment):
                             spatial_frequency=self.parameters.spatial_frequency/2,
                             pixel_statistics = value,
                             correlation_type = i,
-                            seed = 523+5113*(i+1))
+                            seed=int(
+                                mozaik.experiment_rng.randint(2**32 - 1)
+                            ))
                     self.stimuli.append(im)
 
     def do_analysis(self, data_store):
@@ -1921,7 +1926,9 @@ class MeasureUninformativePixelCorrelationStatisticsResponse(VisualExperiment):
                             spatial_frequency=self.parameters.spatial_frequency/2,
                             pixel_statistics = value,
                             correlation_type = i,
-                            seed = 523+5113*(i+1))
+                            seed=int(
+                                mozaik.experiment_rng.randint(2**32 - 1)
+                            ))
                     self.stimuli.append(im)
 
     def do_analysis(self, data_store):
@@ -2325,6 +2332,326 @@ class MeasurePixelMovieFromFile(VisualExperiment):
                         frame_offset=self.parameters.global_frame_offset+l*self.parameters.images_per_trial,
                     )
                 )
+
+    def do_analysis(self, data_store):
+        pass
+
+
+class PixelMovieExperantoBase(VisualExperiment):
+    """
+    Base class for the Experanto pixel-movie experiments.
+
+    Presents images and videos stored as numpy 3D arrays (npy) via topo.PixelMovieExperanto.
+    Each image is wrapped in a pre-blank (its pre_blank_period) and a POST_BLANK_MS post-blank;
+    videos are presented bare; blank entries carry no npy and are skipped. The subclasses differ
+    only in how they enumerate the stimuli to present: SingleMoviePixelMovieExperanto (a single
+    movie file), MeasurePixelMovieExperanto (scan a screen directory) and RandomizedExperanto (an
+    explicit chunk list, used in production).
+
+    Parameters
+    ----------
+    model : Model
+            The model on which to execute the experiment.
+
+    Other parameters
+    ----------------
+    base_path : str
+            Root of the Experanto screen dataset (containing screen/meta and screen/data).
+
+    width : float
+            The width of the stimulus in degrees of visual field.
+
+    movie_frame_duration : int
+            The per-frame duration in ms used for videos.
+
+    global_frame_offset : int
+            The movie frame index from which to start the experiment (0 means start from beginning of the movie)
+
+    images_per_trial : int
+            How many movie frames to show per trial (overwritten per stimulus from its metadata).
+
+    video_max_value : float
+            The maximum pixel value in the video files, used to normalise to [0, 1].
+    """
+
+    # Post-blank duration (ms) appended after each image. The Experanto export mirrors this
+    # exactly (mozaik2experanto.POST_BLANK_MS); keep the two in sync - the spike and screen
+    # timelines are aligned, so a drift here desyncs them. (REFACTOR-01)
+    POST_BLANK_MS = 49
+
+    required_parameters = ParameterSet(
+        {
+            "base_path": str,
+            "width": float,
+            "movie_frame_duration": int,
+            "global_frame_offset": int,
+            "images_per_trial": int,
+            "video_max_value": float,
+        }
+    )
+
+    def _make_pixel_movie(
+        self,
+        movie_path,
+        movie_name,
+        duration,
+        movie_frame_duration,
+        trial,
+        frame_offset,
+        condition_hash=None,
+    ):
+        """
+        Build a single topo.PixelMovieExperanto stimulus with the common per-experiment kwargs.
+
+        condition_hash is required by PixelMovieExperanto only on the meta-driven paths (where a
+        hash is available); the single-movie path omits it, so it is passed only when set.
+        """
+        kwargs = dict(
+            frame_duration=self.frame_duration,
+            movie_path=movie_path,
+            movie_name=movie_name,
+            duration=duration,
+            size_x=self.model.visual_field.size_x,
+            size_y=self.model.visual_field.size_y,
+            density=self.density,
+            location_x=0.0,
+            location_y=0.0,
+            background_luminance=self.background_luminance,
+            trial=trial,
+            size=self.parameters.width,
+            movie_frame_duration=movie_frame_duration,
+            frame_offset=frame_offset,
+            video_max_value=self.parameters.video_max_value,
+        )
+        if condition_hash is not None:
+            kwargs["condition_hash"] = condition_hash
+        return topo.PixelMovieExperanto(**kwargs)
+
+    def _append_meta_stimulus(self, meta_path, movie_path, meta_name, trial, presentation_trial=0):
+        """
+        Load a single stimulus's Experanto metadata and append it to self.stimuli.
+
+        Images are wrapped in a pre-blank (pre_blank_period) and a POST_BLANK_MS post-blank;
+        videos are appended bare; blank entries are skipped (they carry no npy file). Shared by
+        the meta-driven subclasses (MeasurePixelMovieExperanto and RandomizedExperanto).
+        """
+        # Loading the yaml metadata file for stimulus parameters
+        with open(os.path.join(meta_path, meta_name), "r") as f:
+            meta = yaml.safe_load(f)
+
+        # blank stimulus does not have a npy file so it is skipped
+        if meta["modality"] == "blank":
+            return
+
+        # For all modalities set the num_frames parameter
+        self.parameters.images_per_trial = meta["num_frames"]
+
+        # For images and videos the amount of time to spend on each frame is different.
+        # For images it is determined by the presentation_time parameter, for videos it is fixed
+        # by the movie_frame_duration parameter.
+        if meta["modality"] == "image":
+            movie_frame_duration = self.frame_duration * (
+                (meta["presentation_time"] * 1000) // self.frame_duration
+            )
+            blank_duration = self.frame_duration * (
+                (meta["pre_blank_period"] * 1000) // self.frame_duration
+            )
+        elif meta["modality"] == "video":
+            movie_frame_duration = self.parameters.movie_frame_duration
+
+        frame_offset = (
+            self.parameters.global_frame_offset
+            + presentation_trial * self.parameters.images_per_trial
+        )
+        duration = self.parameters.images_per_trial * movie_frame_duration
+
+        if meta["modality"] == "image":
+            self.stimuli.append(
+                InternalStimulus(
+                    frame_duration=blank_duration,
+                    duration=blank_duration,
+                    trial=trial,
+                )
+            )
+        self.stimuli.append(
+            self._make_pixel_movie(
+                movie_path,
+                meta_name.replace(".yml", ".npy"),
+                duration,
+                movie_frame_duration,
+                trial,
+                frame_offset,
+                condition_hash=meta["condition_hash"],
+            )
+        )
+        if meta["modality"] == "image":
+            self.stimuli.append(
+                InternalStimulus(
+                    frame_duration=self.POST_BLANK_MS,
+                    duration=self.POST_BLANK_MS,
+                    trial=trial,
+                )
+            )
+
+
+class SingleMoviePixelMovieExperanto(PixelMovieExperantoBase):
+    """
+    Present a single movie file as a sequence of frames.
+
+    The movie stored under base_path/movie_name is presented as num_trials x
+    num_presentation_trials chunks of images_per_trial frames each; no per-frame blanks are
+    inserted. This is a legacy path with no current caller, retained as it may be useful for
+    testing.
+
+    Parameters
+    ----------
+    model : Model
+            The model on which to execute the experiment.
+
+    Other parameters
+    ----------------
+    movie_name : str
+            Name of the movie file (relative to base_path).
+
+    num_trials : int
+            Number of trials each stimulus is shown.
+
+    num_presentation_trials : int
+            How many movie-frame presentation trials to present (with a blank in between them).
+    """
+
+    required_parameters = ParameterSet(
+        {
+            "movie_name": str,
+            "num_trials": int,
+            "num_presentation_trials": int,
+        }
+    )
+
+    def generate_stimuli(self):
+        for k in range(0, self.parameters.num_trials):
+            for l in range(0, self.parameters.num_presentation_trials):
+                self.stimuli.append(
+                    self._make_pixel_movie(
+                        movie_path=self.parameters.base_path,
+                        movie_name=self.parameters.movie_name,
+                        duration=self.parameters.images_per_trial
+                        * self.parameters.movie_frame_duration,
+                        movie_frame_duration=self.parameters.movie_frame_duration,
+                        trial=k,
+                        frame_offset=self.parameters.global_frame_offset
+                        + l * self.parameters.images_per_trial,
+                    )
+                )
+
+
+class MeasurePixelMovieExperanto(PixelMovieExperantoBase):
+    """
+    Present every image/video stimulus found in an Experanto screen directory.
+
+    All npy stimuli under base_path/screen are presented; when stimulus_window > 0 the non-blank
+    stimuli are sliced to [stimulus_offset : stimulus_offset + stimulus_window]. Each image is
+    wrapped in blanks (see the base class); videos are presented bare.
+
+    Parameters
+    ----------
+    model : Model
+            The model on which to execute the experiment.
+
+    Other parameters
+    ----------------
+    movie_name : str
+            Kept for backward compatibility; not used on this (directory-scanning) path.
+
+    num_trials : int
+            Number of trials each stimulus is shown.
+
+    num_presentation_trials : int
+            How many presentation trials to present (with a blank in between them).
+
+    stimulus_offset : int
+            Index of the first non-blank stimulus to present (used when stimulus_window > 0).
+
+    stimulus_window : int
+            Number of non-blank stimuli to present; 0 means present all of them.
+    """
+
+    required_parameters = ParameterSet(
+        {
+            "movie_name": str,
+            "num_trials": int,
+            "num_presentation_trials": int,
+            "stimulus_offset": int,
+            "stimulus_window": int,
+        }
+    )
+
+    def generate_stimuli(self):
+        movie_path = os.path.join(self.parameters.base_path, "screen", "data")
+        meta_path = os.path.join(self.parameters.base_path, "screen", "meta")
+        meta_names = [x for x in os.listdir(meta_path) if x.endswith(".yml")]
+
+        if self.parameters.stimulus_window > 0:
+            meta_names_without_blank = []
+            for meta_name in meta_names:
+                with open(os.path.join(meta_path, meta_name), "r") as f:
+                    meta = yaml.safe_load(f)
+                if meta["modality"] != "blank":
+                    meta_names_without_blank.append(meta_name)
+            meta_names = meta_names_without_blank[
+                self.parameters.stimulus_offset : self.parameters.stimulus_offset
+                + self.parameters.stimulus_window
+            ]
+
+        for k in range(0, self.parameters.num_trials):
+            for l in range(0, self.parameters.num_presentation_trials):
+                for meta_name in meta_names:
+                    self._append_meta_stimulus(
+                        meta_path, movie_path, meta_name, trial=k, presentation_trial=l
+                    )
+
+
+class RandomizedExperanto(PixelMovieExperantoBase):
+    """
+    Present an explicit, pre-computed list of stimuli read from a chunk JSON file.
+
+    The chunk file at base_path/chunk_dict_path is a list of {"file": <meta>.yml, "trial": int}
+    items presented in order. Each image is wrapped in blanks (see the base class); videos are
+    presented bare. This is the production path; the chunk list is built (balanced across chunks)
+    by generate_chunks.py.
+
+    Parameters
+    ----------
+    model : Model
+            The model on which to execute the experiment.
+
+    Other parameters
+    ----------------
+    chunk_dict_path : str
+            Path (relative to base_path) to the chunk JSON listing the stimuli for this run.
+    """
+
+    required_parameters = ParameterSet(
+        {
+            "chunk_dict_path": str,
+        }
+    )
+
+    def generate_stimuli(self):
+        # Load the chunk json which contains the list of stimuli for this trial/chunk
+        movie_path = os.path.join(self.parameters.base_path, "screen", "data")
+        meta_path = os.path.join(self.parameters.base_path, "screen", "meta")
+
+        chunk_path = os.path.join(self.parameters.base_path, self.parameters.chunk_dict_path)
+        logger.info("Loading chunk from %s", chunk_path)
+        with open(chunk_path, "r") as f:
+            chunk = json.load(f)
+        logger.info("Chunk loaded, number of stimuli in chunk: %d", len(chunk))
+
+        for item in chunk:
+            self._append_meta_stimulus(
+                meta_path, movie_path, item["file"], trial=item["trial"]
+            )
 
     def do_analysis(self, data_store):
         pass

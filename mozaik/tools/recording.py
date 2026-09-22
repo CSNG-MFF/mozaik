@@ -6,7 +6,6 @@ import quantities as pq
 
 import mozaik
 
-
 SPIKE_ANNOTATIONS = {"channel_id", "source_index", "source_population"}
 SIGNAL_ANNOTATIONS = {"channel_ids", "source_population"}
 
@@ -62,8 +61,12 @@ def _pack(block):
         spikes = {
             "times": numpy.concatenate([train.magnitude for train in trains]),
             "counts": numpy.array([train.size for train in trains]),
-            "channel_ids": numpy.array([train.annotations["channel_id"] for train in trains]),
-            "source_indices": numpy.array([train.annotations["source_index"] for train in trains]),
+            "channel_ids": numpy.array(
+                [train.annotations["channel_id"] for train in trains]
+            ),
+            "source_indices": numpy.array(
+                [train.annotations["source_index"] for train in trains]
+            ),
             "source_population": trains[0].annotations["source_population"],
             "t_start": numpy.array([train.t_start.magnitude for train in trains]),
             "t_stop": numpy.array([train.t_stop.magnitude for train in trains]),
@@ -115,13 +118,17 @@ def _merge(root_block, packets):
             train.segment = segment
             trains.append(train)
             offset += count
-    segment.spiketrains = sorted(trains, key=lambda train: train.annotations["channel_id"])
+    segment.spiketrains = sorted(
+        trains, key=lambda train: train.annotations["channel_id"]
+    )
 
     by_name = {}
     for packet in packets:
         for signal in packet["signals"]:
             by_name.setdefault(signal["name"], []).append(signal)
-    segment.analogsignals = [_merge_signal(signals, segment) for signals in by_name.values()]
+    segment.analogsignals = [
+        _merge_signal(signals, segment) for signals in by_name.values()
+    ]
     return root_block
 
 
@@ -139,7 +146,9 @@ def _merge_signal(signals, segment):
         channel_ids=numpy.concatenate([item["channel_ids"] for item in signals]),
         source_population=first["source_population"],
         array_annotations={
-            "channel_index": numpy.concatenate([item["channel_index"] for item in signals])
+            "channel_index": numpy.concatenate(
+                [item["channel_index"] for item in signals]
+            )
         },
     )
     signal.segment = segment
