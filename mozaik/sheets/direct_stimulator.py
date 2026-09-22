@@ -191,7 +191,7 @@ class BackgroundActivityBombardment(DirectStimulator):
                 self.np_inh = self.sheet.sim.Population(
                     len(self.sheet.pop), native_cell_type("poisson_generator")(rate=0)
                 )
-                self.sheet.sim.Projection(self.np_exc, self.sheet.pop,self.sheet.sim.OneToOneConnector(),synapse_type=exc_syn,receptor_type='excitatory')
+                self.sheet.sim.Projection(self.np_inh, self.sheet.pop,self.sheet.sim.OneToOneConnector(),synapse_type=inh_syn,receptor_type='inhibitory')
                 #self.np_inh = self.sheet.sim.Population(1, native_cell_type("poisson_generator")(rate=0))
                 #self.sheet.sim.Projection(self.np_inh, self.sheet.pop,self.sheet.sim.AllToAllConnector(),synapse_type=inh_syn,receptor_type='inhibitory')
         
@@ -224,7 +224,7 @@ class BackgroundActivityBombardment(DirectStimulator):
                
            if (self.parameters.inh_firing_rate != 0 or self.parameters.inh_weight != 0):
                 for j,i in enumerate(numpy.nonzero(self.sheet.pop._mask_local)[0]):
-                    pp = self.stgene[j].poisson_generator(rate=self.parameters.inh_firing_rate,t_start=0,t_stop=duration).spike_times
+                    pp = self.stgeni[j].poisson_generator(rate=self.parameters.inh_firing_rate,t_start=0,t_stop=duration).spike_times
                     a = offset + numpy.array(pp)
                     self.ssai[i].set_parameters(spike_times=Sequence(a.astype(float)))
         
