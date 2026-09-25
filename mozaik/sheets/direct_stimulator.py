@@ -184,17 +184,11 @@ class BackgroundActivityBombardment(DirectStimulator):
                     len(self.sheet.pop), native_cell_type("poisson_generator")(rate=0)
                 )
                 self.sheet.sim.Projection(self.np_exc, self.sheet.pop,self.sheet.sim.OneToOneConnector(),synapse_type=exc_syn,receptor_type='excitatory')
-                #self.np_exc = self.sheet.sim.Population(1, native_cell_type("poisson_generator")(rate=0))
-                #self.sheet.sim.Projection(self.np_exc, self.sheet.pop,self.sheet.sim.AllToAllConnector(),synapse_type=exc_syn,receptor_type='excitatory')
-
             if (self.parameters.inh_firing_rate != 0 or self.parameters.inh_weight != 0):
                 self.np_inh = self.sheet.sim.Population(
                     len(self.sheet.pop), native_cell_type("poisson_generator")(rate=0)
                 )
-                self.sheet.sim.Projection(self.np_exc, self.sheet.pop,self.sheet.sim.OneToOneConnector(),synapse_type=exc_syn,receptor_type='excitatory')
-                #self.np_inh = self.sheet.sim.Population(1, native_cell_type("poisson_generator")(rate=0))
-                #self.sheet.sim.Projection(self.np_inh, self.sheet.pop,self.sheet.sim.AllToAllConnector(),synapse_type=inh_syn,receptor_type='inhibitory')
-        
+                self.sheet.sim.Projection(self.np_inh, self.sheet.pop,self.sheet.sim.OneToOneConnector(),synapse_type=inh_syn,receptor_type='inhibitory')
         else:
             if (self.parameters.exc_firing_rate != 0 or self.parameters.exc_weight != 0):
                         self.ssae = self.sheet.sim.Population(self.sheet.pop.size,self.sheet.sim.SpikeSourceArray())
@@ -213,6 +207,8 @@ class BackgroundActivityBombardment(DirectStimulator):
             for i in range(len(self.np_exc)):
                 if self.np_exc._mask_local[i]:
                     self.np_exc[i].set_parameters(rate=self.parameters.exc_firing_rate)
+
+            for i in range(len(self.np_inh)):
                 if self.np_inh._mask_local[i]:
                     self.np_inh[i].set_parameters(rate=self.parameters.inh_firing_rate)
         else:
@@ -235,6 +231,8 @@ class BackgroundActivityBombardment(DirectStimulator):
             for i in range(len(self.np_exc)):
                 if self.np_exc[i]._mask_local:
                     self.np_exc[i].set_parameters(rate=0)
+            
+            for i in range(len(self.np_inh)):                    
                 if self.np_inh[i]._mask_local:
                     self.np_inh[i].set_parameters(rate=0)
             
