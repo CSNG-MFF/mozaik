@@ -11,11 +11,12 @@ from mozaik.sheets.direct_stimulator import Depolarization
 from collections import OrderedDict
 import os
 import json
+import math
+import numbers
 import yaml
 
 
 logger = mozaik.getMozaikLogger()
-
 
 
 class VisualExperiment(Experiment):
@@ -2342,11 +2343,12 @@ class PixelMovieExperantoBase(VisualExperiment):
     Base class for the Experanto pixel-movie experiments.
 
     Presents images and videos stored as numpy 3D arrays (npy) via topo.PixelMovieExperanto.
-    Each image is wrapped in a pre-blank (its pre_blank_period) and a POST_BLANK_MS post-blank;
-    videos are presented bare; blank entries carry no npy and are skipped. The subclasses differ
-    only in how they enumerate the stimuli to present: SingleMoviePixelMovieExperanto (a single
-    movie file), MeasurePixelMovieExperanto (scan a screen directory) and RandomizedExperanto (an
-    explicit chunk list, used in production).
+    Each image is wrapped in the positive-duration pre- and post-blanks specified by its metadata.
+    Historical metadata without post_blank_period defaults to 49 ms; videos are presented bare and
+    blank entries carry no npy and are skipped. The subclasses differ only in how they enumerate the
+    stimuli to present: SingleMoviePixelMovieExperanto (a single movie file),
+    MeasurePixelMovieExperanto (scan a screen directory) and RandomizedExperanto (an explicit chunk
+    list, used in production).
 
     Parameters
     ----------
@@ -2374,11 +2376,6 @@ class PixelMovieExperantoBase(VisualExperiment):
             The maximum pixel value in the video files, used to normalise to [0, 1].
     """
 
-    # Post-blank duration (ms) appended after each image. The Experanto export mirrors this
-    # exactly (mozaik2experanto.POST_BLANK_MS); keep the two in sync - the spike and screen
-    # timelines are aligned, so a drift here desyncs them. (REFACTOR-01)
-    POST_BLANK_MS = 49
-
     required_parameters = ParameterSet(
         {
             "base_path": str,
@@ -2389,6 +2386,46 @@ class PixelMovieExperantoBase(VisualExperiment):
             "video_max_value": float,
         }
     )
+
+    DEFAULT_POST_BLANK_PERIOD_S = 0.049
+
+    @staticmethod
+    def resolve_experanto_image_timing(meta, frame_duration_ms, source_name=None):
+        """Resolve and quantize the timing fields of an Experanto image.
+
+        Metadata is in seconds; returned durations are milliseconds rounded down to
+        complete input-space frames. A missing post-blank defaults to 49 ms.
+        """
+        default_post_blank = PixelMovieExperantoBase.DEFAULT_POST_BLANK_PERIOD_S
+        post_blank_period = meta.get("post_blank_period", default_post_blank)
+        if "post_blank_period" not in meta:
+            logger.warning(
+                "Experanto image metadata%s has no post_blank_period; defaulting to %.0f ms",
+                " %r" % source_name if source_name is not None else "",
+                default_post_blank * 1000,
+            )
+
+        periods = (
+            ("pre_blank_period", meta["pre_blank_period"]),
+            ("presentation_time", meta["presentation_time"]),
+            ("post_blank_period", post_blank_period),
+        )
+        for field, value in periods:
+            if (
+                isinstance(value, bool)
+                or not isinstance(value, numbers.Real)
+                or not math.isfinite(value)
+                or value < 0
+            ):
+                raise ValueError(
+                    "Experanto %s must be a non-negative finite number of seconds, got %r"
+                    % (field, value)
+                )
+
+        return tuple(
+            frame_duration_ms * ((value * 1000) // frame_duration_ms)
+            for _, value in periods
+        )
 
     def _make_pixel_movie(
         self,
@@ -2431,9 +2468,9 @@ class PixelMovieExperantoBase(VisualExperiment):
         """
         Load a single stimulus's Experanto metadata and append it to self.stimuli.
 
-        Images are wrapped in a pre-blank (pre_blank_period) and a POST_BLANK_MS post-blank;
-        videos are appended bare; blank entries are skipped (they carry no npy file). Shared by
-        the meta-driven subclasses (MeasurePixelMovieExperanto and RandomizedExperanto).
+        Images are wrapped in their positive-duration pre- and post-blanks; videos are appended
+        bare and blank entries are skipped (they carry no npy file). Shared by the meta-driven
+        subclasses (MeasurePixelMovieExperanto and RandomizedExperanto).
         """
         # Loading the yaml metadata file for stimulus parameters
         with open(os.path.join(meta_path, meta_name), "r") as f:
@@ -2450,11 +2487,14 @@ class PixelMovieExperantoBase(VisualExperiment):
         # For images it is determined by the presentation_time parameter, for videos it is fixed
         # by the movie_frame_duration parameter.
         if meta["modality"] == "image":
-            movie_frame_duration = self.frame_duration * (
-                (meta["presentation_time"] * 1000) // self.frame_duration
-            )
-            blank_duration = self.frame_duration * (
-                (meta["pre_blank_period"] * 1000) // self.frame_duration
+            (
+                pre_blank_duration,
+                movie_frame_duration,
+                post_blank_duration,
+            ) = PixelMovieExperantoBase.resolve_experanto_image_timing(
+                meta,
+                self.frame_duration,
+                source_name=os.path.join(meta_path, meta_name),
             )
         elif meta["modality"] == "video":
             movie_frame_duration = self.parameters.movie_frame_duration
@@ -2465,11 +2505,11 @@ class PixelMovieExperantoBase(VisualExperiment):
         )
         duration = self.parameters.images_per_trial * movie_frame_duration
 
-        if meta["modality"] == "image":
+        if meta["modality"] == "image" and pre_blank_duration > 0:
             self.stimuli.append(
                 InternalStimulus(
-                    frame_duration=blank_duration,
-                    duration=blank_duration,
+                    frame_duration=pre_blank_duration,
+                    duration=pre_blank_duration,
                     trial=trial,
                 )
             )
@@ -2484,11 +2524,11 @@ class PixelMovieExperantoBase(VisualExperiment):
                 condition_hash=meta["condition_hash"],
             )
         )
-        if meta["modality"] == "image":
+        if meta["modality"] == "image" and post_blank_duration > 0:
             self.stimuli.append(
                 InternalStimulus(
-                    frame_duration=self.POST_BLANK_MS,
-                    duration=self.POST_BLANK_MS,
+                    frame_duration=post_blank_duration,
+                    duration=post_blank_duration,
                     trial=trial,
                 )
             )

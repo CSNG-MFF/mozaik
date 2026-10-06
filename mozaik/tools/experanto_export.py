@@ -9,11 +9,6 @@ import psutil
 import yaml
 from scipy.ndimage import gaussian_filter1d
 
-# Post-blank duration (ms) appended after each image, mirroring the simulation's RandomizedExperanto
-# experiment. MUST equal the post-blank in mozaik/experiments/vision.py (InternalStimulus); the spike
-# and screen timelines are aligned exactly, so a drift here desyncs them. Single source on this side.
-POST_BLANK_MS = 49.0
-
 # Canonical export order for sheets when multiple are exported into one spikes.npy. Sheets not listed
 # here are appended in sorted-name order, so unit indexing stays deterministic across trials/runs while
 # still handling models that add new sheets. See docs/plan/updating-mozaik/2026-08-13_multi-sheet-export.md.
@@ -587,9 +582,8 @@ class MozaikScreenExporter:
         For each stimulus in the chunk JSONs, the output matches the ground-truth
         Experanto format:
         - **Video**: one entry with ``num_frames`` timestamps (one per frame).
-        - **Image**: three separate entries — pre-blank (1 frame), image (1 frame),
-          post-blank (1 frame) — mirroring the ``InternalStimulus`` /
-          ``PixelMovieExperanto`` / ``InternalStimulus`` sequence in the simulation.
+        - **Image**: an image entry plus its positive-duration pre- and post-blank entries,
+          mirroring the simulation's ``InternalStimulus`` / ``PixelMovieExperanto`` sequence.
         - **Blank** (from chunk JSON): skipped (the simulation also skips these).
         """
         if self._source_data_dir is None:
@@ -613,6 +607,9 @@ class MozaikScreenExporter:
         output_idx = 0
         fd = self.frame_duration_ms
         last_ts = 0.0  # running clock — tracks end of previous segment
+
+        # Lazy to keep spike-only export from loading the visual experiment stack.
+        from mozaik.experiments.vision import PixelMovieExperantoBase
 
         for item in all_stimuli:
             meta_file = item["file"]
@@ -656,29 +653,32 @@ class MozaikScreenExporter:
                 output_idx += 1
 
             elif modality == "image":
-                pre_blank_ms = fd * ((src_meta["pre_blank_period"] * 1000) // fd)
-                presentation_ms = fd * ((src_meta["presentation_time"] * 1000) // fd)
-                post_blank_ms = (
-                    POST_BLANK_MS  # mirrors RandomizedExperanto (see constant at top)
+                pre_blank_ms, presentation_ms, post_blank_ms = (
+                    PixelMovieExperantoBase.resolve_experanto_image_timing(
+                        src_meta,
+                        fd,
+                        source_name=os.path.join(self._source_meta_dir, meta_file),
+                    )
                 )
 
                 # --- Pre-blank entry ---
-                out_key = f"{output_idx:05d}"
-                pre_meta = {
-                    "modality": "blank",
-                    "first_frame_idx": len(timestamps_ms),
-                    "num_frames": 1,
-                    "image_size": image_size,
-                    "interleave_value": 128.0,
-                }
-                timestamps_ms.append(last_ts)
-                last_ts += pre_blank_ms
-                combined_meta[out_key] = pre_meta
-                with open(
-                    os.path.join(self.screen_dir, "meta", f"{out_key}.yml"), "w"
-                ) as f:
-                    yaml.dump(pre_meta, f)
-                output_idx += 1
+                if pre_blank_ms > 0:
+                    out_key = f"{output_idx:05d}"
+                    pre_meta = {
+                        "modality": "blank",
+                        "first_frame_idx": len(timestamps_ms),
+                        "num_frames": 1,
+                        "image_size": image_size,
+                        "interleave_value": 128.0,
+                    }
+                    timestamps_ms.append(last_ts)
+                    last_ts += pre_blank_ms
+                    combined_meta[out_key] = pre_meta
+                    with open(
+                        os.path.join(self.screen_dir, "meta", f"{out_key}.yml"), "w"
+                    ) as f:
+                        yaml.dump(pre_meta, f)
+                    output_idx += 1
 
                 # --- Image entry ---
                 out_key = f"{output_idx:05d}"
@@ -704,22 +704,23 @@ class MozaikScreenExporter:
                 output_idx += 1
 
                 # --- Post-blank entry ---
-                out_key = f"{output_idx:05d}"
-                post_meta = {
-                    "modality": "blank",
-                    "first_frame_idx": len(timestamps_ms),
-                    "num_frames": 1,
-                    "image_size": image_size,
-                    "interleave_value": 128.0,
-                }
-                timestamps_ms.append(last_ts)
-                last_ts += post_blank_ms
-                combined_meta[out_key] = post_meta
-                with open(
-                    os.path.join(self.screen_dir, "meta", f"{out_key}.yml"), "w"
-                ) as f:
-                    yaml.dump(post_meta, f)
-                output_idx += 1
+                if post_blank_ms > 0:
+                    out_key = f"{output_idx:05d}"
+                    post_meta = {
+                        "modality": "blank",
+                        "first_frame_idx": len(timestamps_ms),
+                        "num_frames": 1,
+                        "image_size": image_size,
+                        "interleave_value": 128.0,
+                    }
+                    timestamps_ms.append(last_ts)
+                    last_ts += post_blank_ms
+                    combined_meta[out_key] = post_meta
+                    with open(
+                        os.path.join(self.screen_dir, "meta", f"{out_key}.yml"), "w"
+                    ) as f:
+                        yaml.dump(post_meta, f)
+                    output_idx += 1
 
         # Trailing blank entry (matches ground-truth format)
         out_key = f"{output_idx:05d}"
@@ -771,10 +772,10 @@ class MozaikScreenExporter:
         if modality == "video":
             return src_meta["num_frames"] * self.movie_frame_duration_ms
         elif modality == "image":
-            pre_blank_ms = fd * ((src_meta["pre_blank_period"] * 1000) // fd)
-            presentation_ms = fd * ((src_meta["presentation_time"] * 1000) // fd)
-            post_blank_ms = (
-                POST_BLANK_MS  # mirrors RandomizedExperanto (see constant at top)
+            from mozaik.experiments.vision import PixelMovieExperantoBase
+
+            pre_blank_ms, presentation_ms, post_blank_ms = (
+                PixelMovieExperantoBase.resolve_experanto_image_timing(src_meta, fd)
             )
             return pre_blank_ms + presentation_ms + post_blank_ms
         else:  # blank
@@ -786,7 +787,7 @@ class MozaikScreenExporter:
         added. Mirrors the simulation's RandomizedExperanto timing logic.
 
         For videos: one timestamp per frame, spaced by movie_frame_duration_ms.
-        For images: pre_blank frame + image frame + post_blank frame, with
+        For images: the image frame plus positive-duration pre- and post-blank frames, with
             durations discretised to multiples of frame_duration.
         For blanks: one frame with minimal duration.
 
@@ -811,24 +812,28 @@ class MozaikScreenExporter:
                 frames_added += 1
 
         elif modality == "image":
-            # Discretise to simulation frame duration
-            pre_blank_ms = fd * ((src_meta["pre_blank_period"] * 1000) // fd)
-            presentation_ms = fd * ((src_meta["presentation_time"] * 1000) // fd)
+            from mozaik.experiments.vision import PixelMovieExperantoBase
+
+            pre_blank_ms, presentation_ms, post_blank_ms = (
+                PixelMovieExperantoBase.resolve_experanto_image_timing(src_meta, fd)
+            )
 
             # Pre-blank frame
-            timestamps_ms.append(last_ts)
-            last_ts += pre_blank_ms
-            frames_added += 1
+            if pre_blank_ms > 0:
+                timestamps_ms.append(last_ts)
+                last_ts += pre_blank_ms
+                frames_added += 1
 
             # Image frame
             timestamps_ms.append(last_ts)
             last_ts += presentation_ms
             frames_added += 1
 
-            # Post-blank frame (mirrors RandomizedExperanto; see POST_BLANK_MS at top)
-            timestamps_ms.append(last_ts)
-            last_ts += POST_BLANK_MS
-            frames_added += 1
+            # Post-blank frame
+            if post_blank_ms > 0:
+                timestamps_ms.append(last_ts)
+                last_ts += post_blank_ms
+                frames_added += 1
 
         elif modality == "blank":
             timestamps_ms.append(last_ts)
