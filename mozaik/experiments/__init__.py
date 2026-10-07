@@ -229,20 +229,23 @@ class NoStimulation(Experiment):
     -----
     
     Unlike :class:`.MeasureSpontaneousActivity` this can be used in model with no sensory input sheet.
+
+    The ``stimulus_trial`` constructor argument defaults to 0. Setting it to
+    ``None`` leaves the generated
+    :class:`~mozaik.stimuli.InternalStimulus` unassigned to a trial, allowing
+    trial-based exporters to omit it.
     
     """
     required_parameters = ParameterSet({
                                         'duration': float,
                                        })
 
-    def __init__(self,model,parameters):
+    def __init__(self,model,parameters,stimulus_trial=0):
         Experiment.__init__(self, model,parameters)
         self.stimuli.append(
                         InternalStimulus(   
                                             frame_duration=self.parameters.duration, 
                                             duration=self.parameters.duration,
-                                            trial=0,
+                                            trial=stimulus_trial,
                                          )
                                 )
-
-
