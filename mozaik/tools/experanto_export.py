@@ -601,11 +601,7 @@ class MozaikScreenExporter:
         Only the first segment with a valid ``movie_path`` is needed — all
         stimuli in a trial share the same source directory.
         """
-        dsvs = (
-            dsv_or_list
-            if isinstance(dsv_or_list, (list, tuple))
-            else [dsv_or_list]
-        )
+        dsvs = dsv_or_list if isinstance(dsv_or_list, (list, tuple)) else [dsv_or_list]
         for dsv in dsvs:
             _validate_experanto_model_timing(dsv)
         if self._source_data_dir is not None:

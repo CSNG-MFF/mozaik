@@ -232,9 +232,7 @@ def test_multi_sheet_stacks_units_and_records_boundaries(tmp_path):
     np.testing.assert_allclose(
         units[0], np.array([10.0, 50.0, 110.0, 155.0, 229.0]) / 1000.0
     )
-    np.testing.assert_allclose(
-        units[1], np.array([20.0, 149.0]) / 1000.0
-    )  # L4 unit1
+    np.testing.assert_allclose(units[1], np.array([20.0, 149.0]) / 1000.0)  # L4 unit1
     # V1_Exc_L2/3 (global units 2..4)
     np.testing.assert_allclose(
         units[2], np.array([5.0, 101.0, 151.0]) / 1000.0

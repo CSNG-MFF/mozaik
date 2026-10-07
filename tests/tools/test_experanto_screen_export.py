@@ -121,7 +121,9 @@ def _read(screen_dir):
     return combined, timestamps
 
 
-def test_timeline_matches_the_sequence_the_simulation_presents(tmp_path, source, caplog):
+def test_timeline_matches_the_sequence_the_simulation_presents(
+    tmp_path, source, caplog
+):
     """
     The whole timing contract in one place: an image becomes pre-blank / image / post-blank
     with durations quantised down to whole input frames, a video becomes one timestamp per
