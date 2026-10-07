@@ -2345,8 +2345,9 @@ class PixelMovieExperantoBase(VisualExperiment):
     Presents images and videos stored as numpy 3D arrays (npy) via topo.PixelMovieExperanto.
     Each image is wrapped in the positive-duration pre- and post-blanks specified by its metadata.
     Historical metadata without post_blank_period defaults to 49 ms; videos are presented bare and
-    blank entries carry no npy and are skipped. The subclasses differ only in how they enumerate the
-    stimuli to present: SingleMoviePixelMovieExperanto (a single movie file),
+    blank entries carry no npy and are skipped. Mozaik's automatic null-stimulus periods are not
+    supported; ``model.parameters.null_stimulus_period`` must be zero. The subclasses differ only in
+    how they enumerate the stimuli to present: SingleMoviePixelMovieExperanto (a single movie file),
     MeasurePixelMovieExperanto (scan a screen directory) and RandomizedExperanto (an explicit chunk
     list, used in production).
 
@@ -2388,6 +2389,14 @@ class PixelMovieExperantoBase(VisualExperiment):
     )
 
     DEFAULT_POST_BLANK_PERIOD_S = 0.049
+
+    def __init__(self, model, parameters):
+        if model.parameters.null_stimulus_period != 0:
+            raise ValueError(
+                "Experanto experiments require model.parameters.null_stimulus_period == 0 "
+                "because Mozaik null-stimulus periods are not exported"
+            )
+        super().__init__(model, parameters)
 
     @staticmethod
     def resolve_experanto_image_timing(meta, frame_duration_ms, source_name=None):

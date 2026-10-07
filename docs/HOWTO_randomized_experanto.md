@@ -294,6 +294,12 @@ zero-duration blanks are omitted. The simulation and screen exporter use the sam
 `mozaik/experiments/vision.py`, keeping their clocks equal
 (`responses/meta.yml:end_time == screen/timestamps.npy[-1]`).
 
+Spikes recorded during those explicit pre- and post-blanks are included in `responses/spikes.npy`.
+Mozaik-models callers can pass `export_blank_spikes=False` to `export_dsvs_to_experanto()` or
+`run_experanto_export()` to omit those spikes while retaining blank timing and metadata.
+Mozaik's separate automatic null-stimulus periods are not exported, so Experanto experiments and
+exports require `model.parameters.null_stimulus_period == 0`.
+
 ---
 
 ## Seeds (three-stream)

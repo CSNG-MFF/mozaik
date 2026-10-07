@@ -63,9 +63,10 @@ def resolve_datastore(datastore_prefix, trial, chunk, model_name=DEFAULT_MODEL_N
 def open_datastore_dsv(path):
     """Load a ``PickledDataStore`` and return ``(data_store, dsv)``.
 
-    The DSV has **no** stimulus-name filter (blanks/``InternalStimulus`` retained so the spike
-    timeline stays aligned with the screen timeline) and **no** sheet filter (every recorded sheet is
-    available; the spike exporter selects/folds sheets per ``sheet_names``).
+    The DSV has **no** stimulus-name filter (explicit Experanto ``InternalStimulus`` blanks are
+    retained) and **no** sheet filter. Mozaik's automatic null-stimulus recordings are excluded by
+    ``get_segments()`` and unsupported by the exporter; Experanto experiments require
+    ``null_stimulus_period == 0``.
     """
     data_store = PickledDataStore(
         load=True,
@@ -75,13 +76,21 @@ def open_datastore_dsv(path):
     return data_store, param_filter_query(data_store)
 
 
-def _make_spike_exporter(output_dir, trial_id, sampling_rate, append_mode, sheet_names):
+def _make_spike_exporter(
+    output_dir,
+    trial_id,
+    sampling_rate,
+    append_mode,
+    sheet_names,
+    export_blank_spikes,
+):
     return MozaikTrialExporter(
         os.path.join(output_dir, "responses") + "/",
         trial_id=trial_id,
         sampling_rate=sampling_rate,
         append_mode=append_mode,
         sheet_names=sheet_names,
+        export_blank_spikes=export_blank_spikes,
     )
 
 
@@ -115,18 +124,25 @@ def export_dsvs_to_experanto(
     tier_reference=None,
     frame_duration_ms=7.0,
     movie_frame_duration_ms=35.0,
+    export_blank_spikes=True,
 ):
     """Drive the exporter classes over already-built DSV(s) for a single trial, in one shot.
 
     Writes ``<output_dir>/responses/`` (spikes, folding every requested sheet) and
     ``<output_dir>/screen/``. This is the shared core used by the inline single-chunk path
     (``run.py --export``, one in-memory DSV); the multi-chunk driver builds the stateful exporters
-    itself so it can stream many batches before finalizing.
+    itself so it can stream many batches before finalizing. Set ``export_blank_spikes=False`` to
+    retain explicit blank timing while omitting spikes recorded during those blanks.
     """
     dsvs = dsv_list if isinstance(dsv_list, (list, tuple)) else [dsv_list]
     if export_spikes:
         spikes = _make_spike_exporter(
-            output_dir, trial_id, sampling_rate, append_mode, sheet_names
+            output_dir,
+            trial_id,
+            sampling_rate,
+            append_mode,
+            sheet_names,
+            export_blank_spikes,
         )
         spikes.process_batch(dsvs)
         spikes.finalize()
@@ -160,6 +176,7 @@ def run_experanto_export(
     tier_reference=None,
     frame_duration_ms=7.0,
     movie_frame_duration_ms=35.0,
+    export_blank_spikes=True,
 ):
     """Multi-chunk trial-loop driver (the loop lifted from ``export.py``).
 
@@ -171,6 +188,7 @@ def run_experanto_export(
     ``output_dir_for_trial(trial)`` -> the trial's experiment dir; ``chunk_paths_for_trial(trial)`` ->
     the ordered list of **all** chunk JSON paths (screen timestamps need every chunk even when only a
     subset is processed for spikes). These closures keep project path patterns out of the package.
+    ``export_blank_spikes`` is forwarded to each trial's spike exporter.
     """
     chunk_end = n_chunks if chunk_end is None else chunk_end
     is_resume = chunk_start > 0
@@ -182,7 +200,12 @@ def run_experanto_export(
 
         spike_exporter = (
             _make_spike_exporter(
-                experiment_dir, trial, sampling_rate, is_resume, sheet_names
+                experiment_dir,
+                trial,
+                sampling_rate,
+                is_resume,
+                sheet_names,
+                export_blank_spikes,
             )
             if export_spikes
             else None

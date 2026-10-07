@@ -62,6 +62,9 @@ class _DSV:
     def get_segments(self):
         return self._segments
 
+    def get_model_parameters(self):
+        return {"null_stimulus_period": 0.0}
+
 
 @pytest.fixture
 def source(tmp_path):

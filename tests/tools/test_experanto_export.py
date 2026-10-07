@@ -14,20 +14,24 @@ behaviour.
 """
 
 import os
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
 import yaml
 
+from mozaik.experiments.vision import PixelMovieExperantoBase
+from mozaik.meta_workflow.experanto_export import export_dsvs_to_experanto
 from mozaik.tools.experanto_export import MozaikTrialExporter
 
 
 class _Seg:
     """Minimal stand-in for a Mozaik/neo segment as the exporter consumes it."""
 
-    def __init__(self, stim, trains=None, sheet_name=None):
+    def __init__(self, stim, trains=None, sheet_name=None, null=False):
         self.annotations = {"stimulus": stim, "sheet_name": sheet_name}
         self._trains = trains or []
+        self.null = null
 
     def get_spiketrains(self):
         return self._trains
@@ -37,11 +41,20 @@ class _Seg:
 
 
 class _DSV:
-    def __init__(self, segments):
+    def __init__(self, segments, null_stimulus_period=0.0):
         self._segments = segments
+        self._model_parameters = repr(
+            {
+                "null_stimulus_period": null_stimulus_period,
+                "unrelated_parameter": {"value": 1},
+            }
+        )
 
-    def get_segments(self):
-        return self._segments
+    def get_segments(self, null=False):
+        return [segment for segment in self._segments if segment.null == null]
+
+    def get_model_parameters(self):
+        return self._model_parameters
 
 
 def _reconstruct(spikes, spike_indices):
@@ -66,7 +79,10 @@ def test_trial_export_format_and_spikes_identical(tmp_path):
             {"trial": 0, "movie_name": "imgA", "duration": 100},
             [np.array([10.0, 50.0, 150.0]), np.array([20.0])],  # 150 >= dur -> dropped
         ),
-        _Seg({"trial": 0, "duration": 50}),  # blank (no movie_name)
+        _Seg(
+            {"name": "InternalStimulus", "trial": 0, "duration": 50},
+            [np.array([0.0, 25.0, 50.0]), np.array([10.0])],
+        ),  # 50 >= duration -> dropped
         _Seg(
             {"trial": 0, "movie_name": "imgC", "duration": 80},
             [np.array([5.0, 79.0]), np.array([])],
@@ -98,11 +114,13 @@ def test_trial_export_format_and_spikes_identical(tmp_path):
     assert meta["end_time"] == 0.230
 
     # --- spikes identical to the datastore trains (offset per segment, windowed to < duration) ---
-    # unit0: imgA [10,50] @off 0 ; imgC [5,79] @off 150  -> [10,50,155,229] ms
-    # unit1: imgA [20] @off 0                             -> [20] ms
+    # unit0: imgA [10,50] @0 ; blank [0,25] @100 ; imgC [5,79] @150
+    # unit1: imgA [20] @0 ; blank [10] @100
     u0, u1 = _reconstruct(spikes, idx)
-    np.testing.assert_allclose(u0, np.array([10.0, 50.0, 155.0, 229.0]) / 1000.0)
-    np.testing.assert_allclose(u1, np.array([20.0]) / 1000.0)
+    np.testing.assert_allclose(
+        u0, np.array([10.0, 50.0, 100.0, 125.0, 155.0, 229.0]) / 1000.0
+    )
+    np.testing.assert_allclose(u1, np.array([20.0, 110.0]) / 1000.0)
 
 
 def test_custom_group_and_name_keys(tmp_path):
@@ -160,9 +178,17 @@ def _sheet_segs():
             [np.array([5.0]), np.array([]), np.array([7.0])],
             sheet_name=L23,
         ),
-        # presentation 1: blank (dur 50) — per-sheet, no movie_name, no trains
-        _Seg({"trial": 0, "duration": 50}, sheet_name=L4),
-        _Seg({"trial": 0, "duration": 50}, sheet_name=L23),
+        # presentation 1: explicit Experanto blank (dur 50)
+        _Seg(
+            {"name": "InternalStimulus", "trial": 0, "duration": 50},
+            [np.array([10.0]), np.array([49.0])],
+            sheet_name=L4,
+        ),
+        _Seg(
+            {"name": "InternalStimulus", "trial": 0, "duration": 50},
+            [np.array([1.0]), np.array([]), np.array([50.0])],
+            sheet_name=L23,
+        ),  # 50 >= duration dropped
         # presentation 2: imgC (dur 80)
         _Seg(
             {"trial": 0, "movie_name": "imgC", "duration": 80},
@@ -202,17 +228,83 @@ def test_multi_sheet_stacks_units_and_records_boundaries(tmp_path):
 
     # --- each sheet's slice matches its own trains, offset per presentation ---
     units = _reconstruct(spikes, meta["spike_indices"])
-    # V1_Exc_L4 unit0: imgA[10,50]@0 + imgC[5,79]@150 -> [10,50,155,229]
-    np.testing.assert_allclose(units[0], np.array([10.0, 50.0, 155.0, 229.0]) / 1000.0)
-    np.testing.assert_allclose(units[1], np.array([20.0]) / 1000.0)  # L4 unit1
+    # V1_Exc_L4 unit0: imgA[10,50]@0 + blank[10]@100 + imgC[5,79]@150
+    np.testing.assert_allclose(
+        units[0], np.array([10.0, 50.0, 110.0, 155.0, 229.0]) / 1000.0
+    )
+    np.testing.assert_allclose(
+        units[1], np.array([20.0, 149.0]) / 1000.0
+    )  # L4 unit1
     # V1_Exc_L2/3 (global units 2..4)
     np.testing.assert_allclose(
-        units[2], np.array([5.0, 151.0]) / 1000.0
-    )  # imgA[5]@0 + imgC[1]@150
+        units[2], np.array([5.0, 101.0, 151.0]) / 1000.0
+    )  # imgA[5]@0 + blank[1]@100 + imgC[1]@150
     np.testing.assert_allclose(units[3], np.array([152.0]) / 1000.0)  # imgC[2]@150
     np.testing.assert_allclose(
         units[4], np.array([7.0]) / 1000.0
-    )  # imgA[7]@0 (imgC[80] dropped)
+    )  # imgA[7]@0 (blank[50] and imgC[80] dropped)
+
+
+def test_pre_and_post_blank_spikes_are_exported(tmp_path):
+    segs = [
+        _Seg(
+            {"name": "InternalStimulus", "trial": 0, "duration": 50},
+            [np.array([5.0]), np.array([])],
+        ),
+        _Seg(
+            {"trial": 0, "movie_name": "imgA", "duration": 100},
+            [np.array([10.0]), np.array([20.0])],
+        ),
+        _Seg(
+            {"name": "InternalStimulus", "trial": 0, "duration": 20},
+            [np.array([3.0]), np.array([4.0, 20.0])],
+        ),
+    ]
+
+    out = str(tmp_path / "responses")
+    exp = MozaikTrialExporter(out, trial_id=0)
+    exp.process_batch([_DSV(segs)])
+    exp.finalize()
+    spikes, meta = _load(out)
+
+    assert meta["stimuli_order"] == ["blank", "imgA", "blank"]
+    assert meta["end_time"] == 0.170
+    u0, u1 = _reconstruct(spikes, meta["spike_indices"])
+    np.testing.assert_allclose(u0, np.array([5.0, 60.0, 153.0]) / 1000.0)
+    np.testing.assert_allclose(u1, np.array([70.0, 154.0]) / 1000.0)
+
+
+def test_blank_spikes_can_be_disabled_from_workflow(tmp_path):
+    segs = [
+        _Seg(
+            {"name": "InternalStimulus", "trial": 0, "duration": 50},
+            [np.array([5.0]), np.array([6.0])],
+        ),
+        _Seg(
+            {"trial": 0, "movie_name": "imgA", "duration": 100},
+            [np.array([10.0]), np.array([20.0])],
+        ),
+        _Seg(
+            {"name": "InternalStimulus", "trial": 0, "duration": 20},
+            [np.array([3.0]), np.array([4.0])],
+        ),
+    ]
+
+    export_dsvs_to_experanto(
+        [_DSV(segs)],
+        str(tmp_path),
+        trial_id=0,
+        chunk_paths=[],
+        export_screen=False,
+        export_blank_spikes=False,
+    )
+    spikes, meta = _load(str(tmp_path / "responses"))
+
+    assert meta["stimuli_order"] == ["blank", "imgA", "blank"]
+    assert meta["end_time"] == 0.170
+    u0, u1 = _reconstruct(spikes, meta["spike_indices"])
+    np.testing.assert_allclose(u0, np.array([60.0]) / 1000.0)
+    np.testing.assert_allclose(u1, np.array([70.0]) / 1000.0)
 
 
 def test_multi_sheet_subset_selection(tmp_path):
