@@ -9,11 +9,6 @@ import psutil
 import yaml
 from scipy.ndimage import gaussian_filter1d
 
-# Post-blank duration (ms) appended after each image, mirroring the simulation's RandomizedExperanto
-# experiment. MUST equal the post-blank in mozaik/experiments/vision.py (InternalStimulus); the spike
-# and screen timelines are aligned exactly, so a drift here desyncs them. Single source on this side.
-POST_BLANK_MS = 49.0
-
 # Canonical export order for sheets when multiple are exported into one spikes.npy. Sheets not listed
 # here are appended in sorted-name order, so unit indexing stays deterministic across trials/runs while
 # still handling models that add new sheets. See docs/plan/updating-mozaik/2026-08-13_multi-sheet-export.md.
@@ -70,6 +65,26 @@ def get_process_memory():
     return process.memory_info().rss / 1024 / 1024
 
 
+def _validate_experanto_model_timing(dsv):
+    """Reject Mozaik's unsupported automatic null-stimulus periods."""
+    parameters = dsv.get_model_parameters()
+    if isinstance(parameters, str):
+        parameters = ast.parse(parameters, mode="eval").body
+        null_stimulus_period = next(
+            ast.literal_eval(value)
+            for key, value in zip(parameters.keys, parameters.values)
+            if key.value == "null_stimulus_period"
+        )
+    else:
+        null_stimulus_period = parameters["null_stimulus_period"]
+
+    if null_stimulus_period:
+        raise ValueError(
+            "Experanto export requires model.parameters.null_stimulus_period == 0 "
+            "because Mozaik null-stimulus periods are not exported"
+        )
+
+
 class MozaikTrialExporter:
     """
     Stateful exporter to handle batch processing of Mozaik DataStoreViews
@@ -79,9 +94,9 @@ class MozaikTrialExporter:
     Parameters
     ----------
     stim_name_key : str
-        Stimulus parameter that names each stimulus (used for ``stimuli_order`` and to detect
-        blanks: a segment is treated as blank when this parameter is absent). Default
-        ``"movie_name"`` reproduces the historical behaviour.
+        Stimulus parameter that names each non-blank stimulus in ``stimuli_order``. Explicit
+        Experanto blanks are identified by the ``InternalStimulus`` class name. Default
+        ``"movie_name"`` names ``PixelMovieExperanto`` stimuli.
     group_by_key : str
         Stimulus parameter used to select which segments are exported together. Default
         ``"trial"`` reproduces the historical behaviour; e.g. a long movie presented in chunks
@@ -90,6 +105,9 @@ class MozaikTrialExporter:
         Value of ``group_by_key`` selecting this export; defaults to ``trial_id`` so the default
         keys/values (and the written ``meta.yml``) are byte-identical to the previous
         trial-based export.
+    export_blank_spikes : bool
+        Include spikes recorded during explicit Experanto ``InternalStimulus`` blanks. Disabling
+        this leaves blank timing and metadata intact while omitting their spikes. Default ``True``.
     """
 
     def __init__(
@@ -103,6 +121,7 @@ class MozaikTrialExporter:
         group_by_key="trial",
         group_value=None,
         sheet_names=None,
+        export_blank_spikes=True,
     ):
         self.output_dir = output_dir
         self.trial_id = trial_id
@@ -114,6 +133,7 @@ class MozaikTrialExporter:
         self.stim_name_key = stim_name_key
         self.group_by_key = group_by_key
         self.group_value = trial_id if group_value is None else group_value
+        self.export_blank_spikes = export_blank_spikes
 
         # Multi-sheet export: which sheets to fold into the single spikes.npy. None = every sheet with
         # recorded spiketrains in the DSV (discovered on the first batch). A list restricts to a subset.
@@ -224,6 +244,19 @@ class MozaikTrialExporter:
             print(f"Warning: Parse error for segment {seg}. Skipping.", flush=True)
             return None
 
+    def _presentation_label(self, stim_params):
+        """Return ``(label, is_blank)`` for an Experanto presentation."""
+        if stim_params.get("name") == "InternalStimulus":
+            return "blank", True
+
+        label = stim_params.get(self.stim_name_key)
+        if label is None:
+            raise ValueError(
+                "Non-blank stimulus %r has no %r parameter"
+                % (stim_params.get("name"), self.stim_name_key)
+            )
+        return label, False
+
     def _bucket_by_sheet(self, dsvs):
         """Group this batch's (trial-matched) segments by sheet, preserving block/temporal order.
 
@@ -235,6 +268,9 @@ class MozaikTrialExporter:
 
         segs_by_sheet = OrderedDict()
         for dsv in dsvs:
+            _validate_experanto_model_timing(dsv)
+            # get_segments() intentionally uses null=False: Mozaik's automatic null-stimulus
+            # periods (Model.parameters.null_stimulus_period) are not supported by this exporter.
             for seg in dsv.get_segments():
                 stim_params = self._parse_stimulus(seg)
                 if stim_params is None:
@@ -270,8 +306,8 @@ class MozaikTrialExporter:
     def _init_layout(self, segs_by_sheet, i):
         """Allocate the global per-unit spike lists using each sheet's unit count at presentation ``i``.
 
-        A presentation is blank or non-blank for all sheets simultaneously (same stimulus), so at the
-        first non-blank presentation every sheet has spiketrains to size from.
+        Every explicitly presented stimulus, including an Experanto ``InternalStimulus`` blank,
+        has one spike train per recorded unit and can therefore establish the layout.
         """
         counts = [
             len(segs_by_sheet[sn][i][0].get_spiketrains()) for sn in self.sheet_names
@@ -330,7 +366,7 @@ class MozaikTrialExporter:
         n_blanks = sum(
             1
             for j in range(n_pres)
-            if segs_by_sheet[ref][j][1].get(self.stim_name_key) is None
+            if self._presentation_label(segs_by_sheet[ref][j][1])[1]
         )
         n_stim = n_pres - n_blanks
         print(
@@ -347,21 +383,20 @@ class MozaikTrialExporter:
 
         # 3. Process presentation by presentation, stacking sheets on the unit axis.
         for i in range(n_pres):
-            ref_seg, ref_stim = segs_by_sheet[ref][i]
-            stim_name = ref_stim.get(self.stim_name_key)
+            _, ref_stim = segs_by_sheet[ref][i]
+            stim_label, is_blank = self._presentation_label(ref_stim)
             seg_duration = ref_stim["duration"]
             num_seg_bins = int(np.ceil(seg_duration / bin_size_ms))
-            is_blank = stim_name is None
 
-            self.meta_segments.append(stim_name if stim_name else "blank")
+            self.meta_segments.append(stim_label)
 
-            if is_blank:
-                # Blank presentation: advance the timeline for every sheet at once, skip extraction.
+            if is_blank and not self.export_blank_spikes:
                 self.current_time_offset += seg_duration
                 self.total_bins_accumulated += num_seg_bins
+                n_processed += 1
                 continue
 
-            # Allocate the global layout from all sheets' unit counts at the first non-blank presentation.
+            # Allocate the global layout from the first presentation, which may be a pre-blank.
             if self.all_unit_spike_lists is None:
                 self._init_layout(segs_by_sheet, i)
 
@@ -400,9 +435,9 @@ class MozaikTrialExporter:
 
             if n_processed % 50 == 0:
                 elapsed = time.time() - seg_t0
-                eta = (n_stim - n_processed) * (elapsed / n_processed)
+                eta = (n_pres - n_processed) * (elapsed / n_processed)
                 print(
-                    f"  [{n_processed}/{n_stim}] {elapsed:.0f}s elapsed, ETA {eta:.0f}s — "
+                    f"  [{n_processed}/{n_pres}] {elapsed:.0f}s elapsed, ETA {eta:.0f}s — "
                     f"load: {t_load:.1f}s, loop: {t_loop:.1f}s, "
                     f"offset: {self.current_time_offset/1000:.1f}s, "
                     f"mem: {get_process_memory():.0f} MB",
@@ -495,13 +530,19 @@ def export_mozaik_trial_streamed(
     sampling_rate=1000.0,
     smooth_param=None,
     append_mode=False,
+    export_blank_spikes=True,
 ):
     """
     Wrapper function for backward compatibility.
     Processes the given DSV(s) in one go using the Exporter class.
     """
     exporter = MozaikTrialExporter(
-        output_dir, trial_id, sampling_rate, smooth_param, append_mode
+        output_dir,
+        trial_id,
+        sampling_rate,
+        smooth_param,
+        append_mode,
+        export_blank_spikes=export_blank_spikes,
     )
     exporter.process_batch(dsv_or_list)
     exporter.finalize()
@@ -560,10 +601,12 @@ class MozaikScreenExporter:
         Only the first segment with a valid ``movie_path`` is needed — all
         stimuli in a trial share the same source directory.
         """
+        dsvs = dsv_or_list if isinstance(dsv_or_list, (list, tuple)) else [dsv_or_list]
+        for dsv in dsvs:
+            _validate_experanto_model_timing(dsv)
         if self._source_data_dir is not None:
             return  # already resolved
 
-        dsvs = dsv_or_list if isinstance(dsv_or_list, (list, tuple)) else [dsv_or_list]
         for dsv in dsvs:
             for seg in dsv.get_segments():
                 if "stimulus" not in seg.annotations:
@@ -587,9 +630,8 @@ class MozaikScreenExporter:
         For each stimulus in the chunk JSONs, the output matches the ground-truth
         Experanto format:
         - **Video**: one entry with ``num_frames`` timestamps (one per frame).
-        - **Image**: three separate entries — pre-blank (1 frame), image (1 frame),
-          post-blank (1 frame) — mirroring the ``InternalStimulus`` /
-          ``PixelMovieExperanto`` / ``InternalStimulus`` sequence in the simulation.
+        - **Image**: an image entry plus its positive-duration pre- and post-blank entries,
+          mirroring the simulation's ``InternalStimulus`` / ``PixelMovieExperanto`` sequence.
         - **Blank** (from chunk JSON): skipped (the simulation also skips these).
         """
         if self._source_data_dir is None:
@@ -613,6 +655,9 @@ class MozaikScreenExporter:
         output_idx = 0
         fd = self.frame_duration_ms
         last_ts = 0.0  # running clock — tracks end of previous segment
+
+        # Lazy to keep spike-only export from loading the visual experiment stack.
+        from mozaik.experiments.vision import PixelMovieExperantoBase
 
         for item in all_stimuli:
             meta_file = item["file"]
@@ -656,29 +701,32 @@ class MozaikScreenExporter:
                 output_idx += 1
 
             elif modality == "image":
-                pre_blank_ms = fd * ((src_meta["pre_blank_period"] * 1000) // fd)
-                presentation_ms = fd * ((src_meta["presentation_time"] * 1000) // fd)
-                post_blank_ms = (
-                    POST_BLANK_MS  # mirrors RandomizedExperanto (see constant at top)
+                pre_blank_ms, presentation_ms, post_blank_ms = (
+                    PixelMovieExperantoBase.resolve_experanto_image_timing(
+                        src_meta,
+                        fd,
+                        source_name=os.path.join(self._source_meta_dir, meta_file),
+                    )
                 )
 
                 # --- Pre-blank entry ---
-                out_key = f"{output_idx:05d}"
-                pre_meta = {
-                    "modality": "blank",
-                    "first_frame_idx": len(timestamps_ms),
-                    "num_frames": 1,
-                    "image_size": image_size,
-                    "interleave_value": 128.0,
-                }
-                timestamps_ms.append(last_ts)
-                last_ts += pre_blank_ms
-                combined_meta[out_key] = pre_meta
-                with open(
-                    os.path.join(self.screen_dir, "meta", f"{out_key}.yml"), "w"
-                ) as f:
-                    yaml.dump(pre_meta, f)
-                output_idx += 1
+                if pre_blank_ms > 0:
+                    out_key = f"{output_idx:05d}"
+                    pre_meta = {
+                        "modality": "blank",
+                        "first_frame_idx": len(timestamps_ms),
+                        "num_frames": 1,
+                        "image_size": image_size,
+                        "interleave_value": 128.0,
+                    }
+                    timestamps_ms.append(last_ts)
+                    last_ts += pre_blank_ms
+                    combined_meta[out_key] = pre_meta
+                    with open(
+                        os.path.join(self.screen_dir, "meta", f"{out_key}.yml"), "w"
+                    ) as f:
+                        yaml.dump(pre_meta, f)
+                    output_idx += 1
 
                 # --- Image entry ---
                 out_key = f"{output_idx:05d}"
@@ -704,22 +752,23 @@ class MozaikScreenExporter:
                 output_idx += 1
 
                 # --- Post-blank entry ---
-                out_key = f"{output_idx:05d}"
-                post_meta = {
-                    "modality": "blank",
-                    "first_frame_idx": len(timestamps_ms),
-                    "num_frames": 1,
-                    "image_size": image_size,
-                    "interleave_value": 128.0,
-                }
-                timestamps_ms.append(last_ts)
-                last_ts += post_blank_ms
-                combined_meta[out_key] = post_meta
-                with open(
-                    os.path.join(self.screen_dir, "meta", f"{out_key}.yml"), "w"
-                ) as f:
-                    yaml.dump(post_meta, f)
-                output_idx += 1
+                if post_blank_ms > 0:
+                    out_key = f"{output_idx:05d}"
+                    post_meta = {
+                        "modality": "blank",
+                        "first_frame_idx": len(timestamps_ms),
+                        "num_frames": 1,
+                        "image_size": image_size,
+                        "interleave_value": 128.0,
+                    }
+                    timestamps_ms.append(last_ts)
+                    last_ts += post_blank_ms
+                    combined_meta[out_key] = post_meta
+                    with open(
+                        os.path.join(self.screen_dir, "meta", f"{out_key}.yml"), "w"
+                    ) as f:
+                        yaml.dump(post_meta, f)
+                    output_idx += 1
 
         # Trailing blank entry (matches ground-truth format)
         out_key = f"{output_idx:05d}"
@@ -771,10 +820,10 @@ class MozaikScreenExporter:
         if modality == "video":
             return src_meta["num_frames"] * self.movie_frame_duration_ms
         elif modality == "image":
-            pre_blank_ms = fd * ((src_meta["pre_blank_period"] * 1000) // fd)
-            presentation_ms = fd * ((src_meta["presentation_time"] * 1000) // fd)
-            post_blank_ms = (
-                POST_BLANK_MS  # mirrors RandomizedExperanto (see constant at top)
+            from mozaik.experiments.vision import PixelMovieExperantoBase
+
+            pre_blank_ms, presentation_ms, post_blank_ms = (
+                PixelMovieExperantoBase.resolve_experanto_image_timing(src_meta, fd)
             )
             return pre_blank_ms + presentation_ms + post_blank_ms
         else:  # blank
@@ -786,7 +835,7 @@ class MozaikScreenExporter:
         added. Mirrors the simulation's RandomizedExperanto timing logic.
 
         For videos: one timestamp per frame, spaced by movie_frame_duration_ms.
-        For images: pre_blank frame + image frame + post_blank frame, with
+        For images: the image frame plus positive-duration pre- and post-blank frames, with
             durations discretised to multiples of frame_duration.
         For blanks: one frame with minimal duration.
 
@@ -811,24 +860,28 @@ class MozaikScreenExporter:
                 frames_added += 1
 
         elif modality == "image":
-            # Discretise to simulation frame duration
-            pre_blank_ms = fd * ((src_meta["pre_blank_period"] * 1000) // fd)
-            presentation_ms = fd * ((src_meta["presentation_time"] * 1000) // fd)
+            from mozaik.experiments.vision import PixelMovieExperantoBase
+
+            pre_blank_ms, presentation_ms, post_blank_ms = (
+                PixelMovieExperantoBase.resolve_experanto_image_timing(src_meta, fd)
+            )
 
             # Pre-blank frame
-            timestamps_ms.append(last_ts)
-            last_ts += pre_blank_ms
-            frames_added += 1
+            if pre_blank_ms > 0:
+                timestamps_ms.append(last_ts)
+                last_ts += pre_blank_ms
+                frames_added += 1
 
             # Image frame
             timestamps_ms.append(last_ts)
             last_ts += presentation_ms
             frames_added += 1
 
-            # Post-blank frame (mirrors RandomizedExperanto; see POST_BLANK_MS at top)
-            timestamps_ms.append(last_ts)
-            last_ts += POST_BLANK_MS
-            frames_added += 1
+            # Post-blank frame
+            if post_blank_ms > 0:
+                timestamps_ms.append(last_ts)
+                last_ts += post_blank_ms
+                frames_added += 1
 
         elif modality == "blank":
             timestamps_ms.append(last_ts)

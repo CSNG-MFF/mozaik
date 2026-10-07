@@ -34,7 +34,8 @@ plus `screen/` (the stimulus frames and their metadata) — the on-disk unit the
 ### The Experanto experiment family
 
 `RandomizedExperanto` is one of three subclasses of **`PixelMovieExperantoBase`** (`vision.py`), which owns
-the shared stimulus construction and timing (pre-blank → image → 49 ms post-blank; videos bare). The three
+the shared stimulus construction, timing resolver, and default timing (pre-blank → image → post-blank; videos bare). Blank periods
+come from image metadata, with a backward-compatible 49 ms post-blank when `post_blank_period` is absent. The three
 differ only in **how they enumerate the stimuli** to present:
 
 | Class | Enumerates stimuli by | Status |
@@ -273,7 +274,7 @@ run.py                                   (mozaik-models/experanto — entry poin
       → create_randomized_experanto: reads TRIAL/CHUNK/CHUNK_DIR/BASE_PATH/STIM_WIDTH
             → RandomizedExperanto(chunk_dict_path = {CHUNK_DIR}/{TRIAL}_{CHUNK}.json)   ← mozaik/experiments/vision.py
                   → generate_stimuli(): for each {file, trial} in the chunk,
-                        _append_meta_stimulus(): image → pre-blank + image + 49 ms post-blank;  video → bare
+                        _append_meta_stimulus(): image → pre-blank + image + post-blank;  video → bare
       → present stimuli, record spikes → data_store.save()  (rank 0)
       → (if --export and rank 0) export_datastore_inline(...)                            ← Workflow 2 hook
 
@@ -286,10 +287,18 @@ export.py <trials> --n-chunks N          (mozaik-models/experanto — Workflow 1
 
 Both entry points call the **same** exporter library in the `mozaik` package — one export code path.
 
-**Timing / sync invariant:** each image is `pre-blank → image (~497 ms) → 49 ms post-blank`; videos are
-`num_frames × 35 ms`, bare. `POST_BLANK_MS = 49` is defined in `PixelMovieExperantoBase`
-(`mozaik/experiments/vision.py`) and **mirrored** in the exporter — the spike and screen timelines share one
-clock, so keep the two equal (`responses/meta.yml:end_time == screen/timestamps.npy[-1]`).
+**Timing / sync invariant:** each image is `pre-blank → image (~497 ms) → post-blank`; videos are
+`num_frames × 35 ms`, bare. `pre_blank_period` and `post_blank_period` are metadata values in seconds and
+are rounded down to complete input frames. Missing `post_blank_period` warns and defaults to 49 ms; effective
+zero-duration blanks are omitted. The simulation and screen exporter use the same resolver in
+`mozaik/experiments/vision.py`, keeping their clocks equal
+(`responses/meta.yml:end_time == screen/timestamps.npy[-1]`).
+
+Spikes recorded during those explicit pre- and post-blanks are included in `responses/spikes.npy`.
+Mozaik-models callers can pass `export_blank_spikes=False` to `export_dsvs_to_experanto()` or
+`run_experanto_export()` to omit those spikes while retaining blank timing and metadata.
+Mozaik's separate automatic null-stimulus periods are not exported, so Experanto experiments and
+exports require `model.parameters.null_stimulus_period == 0`.
 
 ---
 

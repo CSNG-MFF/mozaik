@@ -16,7 +16,8 @@ import numpy as np
 import pytest
 import yaml
 
-from mozaik.tools.experanto_export import POST_BLANK_MS, MozaikScreenExporter
+from mozaik.experiments.vision import PixelMovieExperantoBase
+from mozaik.tools.experanto_export import MozaikScreenExporter
 
 FRAME_DURATION_MS = 7.0
 MOVIE_FRAME_DURATION_MS = 35.0
@@ -42,6 +43,7 @@ VIDEO_META = {
 # simply 381.2 and 500: 7*(381.2//7) = 378 and 7*(500//7) = 497.
 PRE_BLANK_MS = 378.0
 PRESENTATION_MS = 497.0
+POST_BLANK_MS = PixelMovieExperantoBase.DEFAULT_POST_BLANK_PERIOD_S * 1000
 IMAGE_TOTAL_MS = PRE_BLANK_MS + PRESENTATION_MS + POST_BLANK_MS  # 924.0
 VIDEO_TOTAL_MS = VIDEO_META["num_frames"] * MOVIE_FRAME_DURATION_MS  # 105.0
 
@@ -59,6 +61,9 @@ class _DSV:
 
     def get_segments(self):
         return self._segments
+
+    def get_model_parameters(self):
+        return {"null_stimulus_period": 0.0}
 
 
 @pytest.fixture
@@ -116,7 +121,9 @@ def _read(screen_dir):
     return combined, timestamps
 
 
-def test_timeline_matches_the_sequence_the_simulation_presents(tmp_path, source):
+def test_timeline_matches_the_sequence_the_simulation_presents(
+    tmp_path, source, caplog
+):
     """
     The whole timing contract in one place: an image becomes pre-blank / image / post-blank
     with durations quantised down to whole input frames, a video becomes one timestamp per
@@ -156,6 +163,7 @@ def test_timeline_matches_the_sequence_the_simulation_presents(tmp_path, source)
     np.testing.assert_allclose(timestamps, np.array(expected_ms) / 1000.0)
 
     assert timestamps[-1] == pytest.approx((IMAGE_TOTAL_MS + VIDEO_TOTAL_MS) / 1000.0)
+    assert "has no post_blank_period; defaulting to 49 ms" in caplog.text
     assert np.all(np.diff(timestamps) > 0)
     # first_frame_idx must index the timestamp array contiguously, entry by entry
     assert [combined[k]["first_frame_idx"] for k in keys] == [0, 1, 2, 3, 6]
