@@ -16,8 +16,12 @@ import yaml
 
 from mozaik.tools.experanto_chunks import (
     CHUNK_RECORD_FIELDS,
+    CHUNK_SETTINGS_FILE,
+    chunk_list_names,
     generate_chunks,
+    read_chunk_settings,
     scan_screen_metadata,
+    verify_chunk_lists,
 )
 
 
@@ -102,3 +106,67 @@ def test_the_seed_reproducibly_determines_which_chunk_a_stimulus_lands_in(
     assert _load(os.path.join(first, "0_0.json")) != _load(
         os.path.join(other, "0_0.json")
     )
+
+
+def test_generating_records_the_settings_beside_the_lists(
+    dataset, tmp_path, monkeypatch
+):
+    """
+    The settings a chunk set was generated from cannot be read back out of the lists, so they
+    are recorded beside them -- with the dataset as an absolute path, so that the record still
+    names it when read from another directory.
+    """
+    monkeypatch.chdir(os.path.dirname(dataset))
+    out = str(tmp_path / "chunks")
+    generate_chunks(os.path.basename(dataset), out, n_trials=2, n_chunks=3, seed=5)
+
+    assert read_chunk_settings(out) == {
+        "data_root": dataset,
+        "n_trials": 2,
+        "n_chunks": 3,
+        "chunk_seed": 5,
+    }
+    assert read_chunk_settings(str(tmp_path)) is None
+
+
+def test_the_settings_record_is_not_taken_for_a_chunk_list(dataset, tmp_path):
+    out = str(tmp_path / "chunks")
+    generate_chunks(dataset, out, n_trials=1, n_chunks=2)
+
+    assert CHUNK_SETTINGS_FILE in os.listdir(out)
+    assert chunk_list_names(out) == ["0_0.json", "0_1.json"]
+    assert chunk_list_names(str(tmp_path / "absent")) == []
+
+
+def test_verifying_accepts_the_lists_of_the_same_settings(dataset, tmp_path):
+    out = str(tmp_path / "chunks")
+    generate_chunks(dataset, out, n_trials=2, n_chunks=2, seed=7)
+    os.remove(os.path.join(out, CHUNK_SETTINGS_FILE))
+
+    verify_chunk_lists(out, dataset, n_trials=2, n_chunks=2, seed=7)
+
+
+def test_verifying_rejects_lists_of_another_seed(dataset, tmp_path):
+    """
+    The point of verifying is that a wrong seed can never end up recorded, so lists generated
+    at a different seed have to fail, naming the list that gives it away.
+    """
+    out = str(tmp_path / "chunks")
+    generate_chunks(dataset, out, n_trials=2, n_chunks=2, seed=7)
+
+    with pytest.raises(ValueError, match="0_0.json differs"):
+        verify_chunk_lists(out, dataset, n_trials=2, n_chunks=2, seed=8)
+
+
+@pytest.mark.parametrize(
+    "n_trials, n_chunks, problem",
+    [(3, 2, "missing 2_0.json, 2_1.json"), (1, 2, "unexpected 1_0.json, 1_1.json")],
+)
+def test_verifying_rejects_a_different_set_of_lists(
+    dataset, tmp_path, n_trials, n_chunks, problem
+):
+    out = str(tmp_path / "chunks")
+    generate_chunks(dataset, out, n_trials=2, n_chunks=2, seed=7)
+
+    with pytest.raises(ValueError, match=problem):
+        verify_chunk_lists(out, dataset, n_trials=n_trials, n_chunks=n_chunks, seed=7)
