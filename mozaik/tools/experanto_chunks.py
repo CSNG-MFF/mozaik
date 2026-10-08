@@ -23,12 +23,19 @@ The shuffle (``random.Random(seed + trial)``) and the greedy assignment order in
 therefore which stimuli end up in which datastore. Changing either silently invalidates
 comparisons against chunk sets generated earlier, so they must be kept as they are unless a
 regeneration of existing datasets is intended.
+
+The settings a chunk set was generated from cannot be read back out of the lists, so
+:func:`generate_chunks` writes them beside the lists, in :data:`CHUNK_SETTINGS_FILE`. A run
+that reuses the lists checks its own settings against that file instead of taking them on
+trust; :func:`verify_chunk_lists` establishes it for lists that were written without one.
 """
 
 import heapq
 import json
 import os
 import random
+import re
+import tempfile
 
 import yaml
 
@@ -49,6 +56,55 @@ DEFAULT_TIME_COSTS = {
 # The fields written to a chunk record, in this order. ``num_frames`` is carried internally
 # for cost estimation but deliberately not written: it is not part of the contract above.
 CHUNK_RECORD_FIELDS = ("modality", "file", "trial")
+
+# Written beside the chunk lists: the settings they were generated from.
+CHUNK_SETTINGS_FILE = "chunk_settings.json"
+
+# A chunk list's file name; anything else in a chunk directory is not a chunk list.
+_CHUNK_LIST_NAME = re.compile(r"^\d+_\d+\.json$")
+
+
+def chunk_list_names(chunk_dir):
+    """
+    Return the sorted names of the chunk lists (``{trial}_{chunk}.json``) in *chunk_dir*.
+
+    Other files -- :data:`CHUNK_SETTINGS_FILE` among them -- are ignored, and a directory
+    that does not exist holds no chunk lists.
+    """
+    if not os.path.isdir(chunk_dir):
+        return []
+    return sorted(n for n in os.listdir(chunk_dir) if _CHUNK_LIST_NAME.match(n))
+
+
+def chunk_settings(data_root, n_trials, n_chunks, seed):
+    """
+    Return the settings a chunk set is generated from, as recorded in
+    :data:`CHUNK_SETTINGS_FILE`.
+
+    ``data_root`` is made absolute, so that the record names the same dataset whatever
+    directory it is later read from.
+    """
+    return {
+        "data_root": os.path.abspath(data_root),
+        "n_trials": n_trials,
+        "n_chunks": n_chunks,
+        "chunk_seed": seed,
+    }
+
+
+def read_chunk_settings(chunk_dir):
+    """Return the recorded settings of the chunk set in *chunk_dir*, or None if unrecorded."""
+    path = os.path.join(chunk_dir, CHUNK_SETTINGS_FILE)
+    if not os.path.isfile(path):
+        return None
+    with open(path, "r") as f:
+        return json.load(f)
+
+
+def write_chunk_settings(chunk_dir, settings):
+    """Record *settings* (see :func:`chunk_settings`) as those of the chunk set in *chunk_dir*."""
+    with open(os.path.join(chunk_dir, CHUNK_SETTINGS_FILE), "w") as f:
+        json.dump(settings, f, indent=4)
 
 
 def scan_screen_metadata(data_root):
@@ -208,7 +264,9 @@ def generate_chunks(
 
     For each trial the full stimulus set is shuffled with ``random.Random(seed + trial)`` --
     every trial sees the same stimuli in a different but reproducible order -- and split into
-    ``n_chunks`` time-balanced chunks, written as ``output_dir/{trial}_{chunk}.json``.
+    ``n_chunks`` time-balanced chunks, written as ``output_dir/{trial}_{chunk}.json``. The
+    settings they were generated from are recorded beside them, in
+    :data:`CHUNK_SETTINGS_FILE`.
 
     Parameters
     ----------
@@ -258,4 +316,61 @@ def generate_chunks(
                 }
             )
 
+    write_chunk_settings(
+        output_dir, chunk_settings(data_root, n_trials, n_chunks, seed)
+    )
     return summary
+
+
+def verify_chunk_lists(
+    chunk_dir, data_root, n_trials, n_chunks, seed=42, time_costs=None
+):
+    """
+    Check that *chunk_dir* holds exactly the chunk lists :func:`generate_chunks` writes for
+    these settings: the same set of lists, each with the same content.
+
+    This is how the settings of a chunk set written without :data:`CHUNK_SETTINGS_FILE` are
+    established -- by regenerating it, rather than by taking them on trust. Note that the
+    split also depends on *time_costs*, so lists generated under a different cost table fail
+    the check even at the right seed.
+
+    Raises
+    ------
+    ValueError
+        Naming the first difference found.
+    """
+    with tempfile.TemporaryDirectory() as expected_dir:
+        generate_chunks(data_root, expected_dir, n_trials, n_chunks, seed, time_costs)
+        expected = chunk_list_names(expected_dir)
+        present = chunk_list_names(chunk_dir)
+
+        if present != expected:
+            problems = []
+            missing = sorted(set(expected) - set(present))
+            if missing:
+                problems.append("missing " + ", ".join(missing))
+            extra = sorted(set(present) - set(expected))
+            if extra:
+                problems.append("unexpected " + ", ".join(extra))
+            raise ValueError(
+                "%s does not hold the chunk lists of data_root=%s, n_trials=%d, "
+                "n_chunks=%d, chunk_seed=%d: %s"
+                % (chunk_dir, data_root, n_trials, n_chunks, seed, "; ".join(problems))
+            )
+
+        for name in expected:
+            with open(os.path.join(expected_dir, name), "r") as f:
+                regenerated = json.load(f)
+            with open(os.path.join(chunk_dir, name), "r") as f:
+                if json.load(f) != regenerated:
+                    raise ValueError(
+                        "%s differs from what data_root=%s, n_trials=%d, n_chunks=%d, "
+                        "chunk_seed=%d generate"
+                        % (
+                            os.path.join(chunk_dir, name),
+                            data_root,
+                            n_trials,
+                            n_chunks,
+                            seed,
+                        )
+                    )

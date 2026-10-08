@@ -18,6 +18,7 @@ Two levels:
 
 import gc
 import glob
+import json
 import os
 
 from mozaik.storage.datastore import PickledDataStore
@@ -34,6 +35,12 @@ except ImportError:  # pragma: no cover
 
 
 DEFAULT_MODEL_NAME = "SelfSustainedPushPull"
+
+# Experiment-level metadata at the root of a shard. Experanto reads its "data_key" to name the
+# session (falling back to the shard's directory name without it); the "mozaik_run" record
+# beside it is ignored by Experanto, and holds the settings the shard was simulated with, so
+# that they outlive the datastores.
+SHARD_META_FILE = "meta.json"
 
 
 def resolve_datastore(datastore_prefix, trial, chunk, model_name=DEFAULT_MODEL_NAME):
@@ -74,6 +81,100 @@ def open_datastore_dsv(path):
         replace=False,
     )
     return data_store, param_filter_query(data_store)
+
+
+def _read_shard_meta(experiment_dir):
+    path = os.path.join(experiment_dir, SHARD_META_FILE)
+    if not os.path.isfile(path):
+        return None
+    with open(path, "r") as f:
+        return json.load(f)
+
+
+def _shard_meta(experiment_dir, trial, provenance, chunk_start, chunk_end):
+    """
+    Return the ``meta.json`` a shard should have once chunks ``[chunk_start, chunk_end)`` of
+    *trial* have been exported into it, or None if it should be left alone.
+
+    Called before any spike is exported, so that a failed check leaves the shard as it was.
+
+    *provenance* is the run record the launcher wrote (``settings``, ``environment_variables``
+    and every trial's per-chunk ``simulation_seeds``). The shard's record holds the same
+    settings with ``chunks`` set to the chunks the shard actually contains, and the seeds of
+    just those chunks. A run's settings cannot change between its rounds, so a resumed export
+    only extends ``chunks`` and the seeds -- after checking that it continues exactly where the
+    shard ends, which also catches a round exported out of order or twice.
+
+    An export without *provenance* (one run by hand) leaves ``meta.json`` alone, unless the
+    shard has a record: the record would then misstate what the shard holds, so that raises.
+    """
+    existing = _read_shard_meta(experiment_dir) or {}
+    recorded = existing.get("mozaik_run")
+    if provenance is None:
+        if recorded is not None:
+            raise ValueError(
+                "%s records the run it was exported from, so exporting into it without that "
+                "run's provenance would leave the record wrong; pass the provenance"
+                % experiment_dir
+            )
+        return None
+
+    all_seeds = provenance["simulation_seeds"].get(str(trial))
+    if all_seeds is None or len(all_seeds) < chunk_end:
+        raise ValueError(
+            "the provenance has no simulation seeds for trial %d chunks %d-%d"
+            % (trial, chunk_start, chunk_end - 1)
+        )
+
+    if chunk_start == 0:
+        first, seeds = 0, []
+    else:
+        if recorded is None:
+            raise ValueError(
+                "%s has no run record to extend: chunks %d-%d can only be appended to a "
+                "shard whose earlier chunks were exported with their provenance"
+                % (experiment_dir, chunk_start, chunk_end - 1)
+            )
+        first, last = (int(c) for c in recorded["settings"]["chunks"].split("-"))
+        if last != chunk_start - 1:
+            raise ValueError(
+                "%s holds chunks %s, so chunks %d-%d do not continue it"
+                % (
+                    experiment_dir,
+                    recorded["settings"]["chunks"],
+                    chunk_start,
+                    chunk_end - 1,
+                )
+            )
+        recorded_settings = dict(recorded["settings"])
+        del recorded_settings["chunks"]
+        if (
+            recorded["trial"] != trial
+            or recorded_settings != provenance["settings"]
+            or recorded["environment_variables"] != provenance["environment_variables"]
+        ):
+            raise ValueError(
+                "%s was exported from a run with different settings than the provenance "
+                "given now" % experiment_dir
+            )
+        seeds = recorded["simulation_seeds"]
+
+    meta = dict(existing)
+    meta.setdefault("data_key", os.path.basename(os.path.normpath(experiment_dir)))
+    meta["mozaik_run"] = {
+        "trial": trial,
+        "settings": dict(
+            provenance["settings"], chunks="%d-%d" % (first, chunk_end - 1)
+        ),
+        "environment_variables": provenance["environment_variables"],
+        "simulation_seeds": seeds + list(all_seeds[chunk_start:chunk_end]),
+    }
+    return meta
+
+
+def _write_shard_meta(experiment_dir, meta):
+    with open(os.path.join(experiment_dir, SHARD_META_FILE), "w") as f:
+        json.dump(meta, f, indent=4)
 
 
 def _make_spike_exporter(
@@ -177,6 +278,7 @@ def run_experanto_export(
     frame_duration_ms=7.0,
     movie_frame_duration_ms=35.0,
     export_blank_spikes=True,
+    provenance=None,
 ):
     """Multi-chunk trial-loop driver (the loop lifted from ``export.py``).
 
@@ -189,11 +291,28 @@ def run_experanto_export(
     the ordered list of **all** chunk JSON paths (screen timestamps need every chunk even when only a
     subset is processed for spikes). These closures keep project path patterns out of the package.
     ``export_blank_spikes`` is forwarded to each trial's spike exporter.
+
+    ``provenance`` is the run record written by the launcher that simulated the chunks; with
+    spikes exported, each shard's ``meta.json`` records it (see :func:`_shard_meta`). Every
+    trial's shard is checked against it before any trial is exported, so a mismatch exports
+    nothing. Without it, ``meta.json`` is not written, as before.
     """
     chunk_end = n_chunks if chunk_end is None else chunk_end
     is_resume = chunk_start > 0
     # Screen-only: only one chunk needs loading (just to resolve the source movie_path).
     screen_only = not export_spikes
+
+    # The spikes are what a shard's run record describes, so a screen-only export leaves it be.
+    shard_metas = {
+        trial: (
+            _shard_meta(
+                output_dir_for_trial(trial), trial, provenance, chunk_start, chunk_end
+            )
+            if export_spikes
+            else None
+        )
+        for trial in trials
+    }
 
     for trial in tqdm(trials, disable=None):
         experiment_dir = output_dir_for_trial(trial)
@@ -252,5 +371,7 @@ def run_experanto_export(
 
         if spike_exporter is not None:
             spike_exporter.finalize()
+            if shard_metas[trial] is not None:
+                _write_shard_meta(experiment_dir, shard_metas[trial])
         if screen_exporter is not None:
             screen_exporter.finalize()

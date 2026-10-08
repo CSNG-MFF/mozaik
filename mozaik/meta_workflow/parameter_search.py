@@ -575,7 +575,8 @@ class ParameterSearch(object):
         save_json(combinations, mdn + "/parameter_combinations.json")
 
         for combination in combinations:
-            combination["results_dir"] = os.getcwd() + "/" + mdn + "/"
+            # join, so that a master_directory() returning an absolute path is kept as it is
+            combination["results_dir"] = os.path.join(os.getcwd(), mdn) + "/"
             job_ids.append(
                 self.backend.execute_job(
                     run_script,
