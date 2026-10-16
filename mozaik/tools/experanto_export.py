@@ -468,9 +468,11 @@ class MozaikScreenExporter:
         metadata = (
             [None]
             + [
-                None
-                if stimulus.get("name") == "InternalStimulus"
-                else self._load_source_meta(stimulus)
+                (
+                    None
+                    if stimulus.get("name") == "InternalStimulus"
+                    else self._load_source_meta(stimulus)
+                )
                 for stimulus in presentations
             ]
             + [None]

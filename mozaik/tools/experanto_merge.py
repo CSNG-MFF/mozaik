@@ -10,7 +10,6 @@ import tempfile
 import numpy as np
 import yaml
 
-
 CHUNK_EXPORT_META = "chunk_export.json"
 
 
