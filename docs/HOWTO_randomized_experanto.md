@@ -131,7 +131,7 @@ The chunk carries **no seed** — per-trial noise is set at launch (see "Seeds")
 
 ### Step 1 — Simulation (one job per `(trial, chunk)`)
 
-Each job simulates one chunk. Select it with `TRIAL` / `CHUNK` / `CHUNK_DIR`; vary `simulation_seed` per
+Each job simulates one chunk. Select it with the model `trial` parameter and `CHUNK` / `CHUNK_DIR`; vary `simulation_seed` per
 trial for independent noise. Direct in-container invocation (portable; adapt the outer loop / array to your
 scheduler):
 
@@ -146,10 +146,10 @@ TRIAL=0 CHUNK=0                                   # ← the chunk to simulate
 NRANKS=12                                         # MPI ranks — set to the physical cores you allocated (see note)
 apptainer exec --cleanenv \
   --env PYTHONPATH=/mozaik --env OMPI_MCA_orte_tmpdir_base=/tmp \
-  --env TRIAL=$TRIAL --env CHUNK=$CHUNK --env CHUNK_DIR=/data/mozaik_chunk \
+  --env CHUNK=$CHUNK --env CHUNK_DIR=/data/mozaik_chunk \
   --env BASE_PATH=/data/<input-screen-dataset> --env NRANKS=$NRANKS \
   --env OMP_NUM_THREADS=1 --env MKL_NUM_THREADS=1 --env OPENBLAS_NUM_THREADS=1 \
-  --bind "$PWD:/mozaik" --bind "$PWD/../mozaik-models/experanto:/project" \
+  --bind "$PWD:/mozaik" --bind "$PWD/../mozaik-models/LSV1M:/project" \
   --bind "$EXPERANTO:/experanto" \                 # your experanto library clone
   --bind "$WORKDIR:/data" \                        # your working dir: dataset + chunk lists + output shards
   "$SIF" bash -lc '
@@ -157,10 +157,10 @@ apptainer exec --cleanenv \
     cd /project
     mpirun -n "$NRANKS" \
       -x OMP_NUM_THREADS -x MKL_NUM_THREADS -x OPENBLAS_NUM_THREADS -x PYTHONPATH \
-      -x TRIAL -x CHUNK -x CHUNK_DIR -x BASE_PATH -x NRANKS \
+      -x CHUNK -x CHUNK_DIR -x BASE_PATH -x NRANKS \
       python -u run_experanto.py nest "$NRANKS" param_experanto/defaults \
         results_dir "'"'"'/data/<fresh-out-dir>/'"'"'" \
-        simulation_seed '"$(( TRIAL*1000 + CHUNK + 1 ))"' \
+        trial '"$TRIAL"' simulation_seed '"$(( TRIAL*1000 + CHUNK + 1 ))"' \
         trial'"$TRIAL"'_chunk'"$CHUNK"'
   '
 ```
@@ -195,9 +195,11 @@ from mozaik.meta_workflow.experanto_export import (
     ExperantoExportSettings, export_experanto_chunk,
 )
 
-settings = ExperantoExportSettings(export_blank_spikes=True)
 data_store, model = run_workflow(model_name, Model, create_experiments)
 if mozaik.mpi_comm is None or mozaik.mpi_comm.rank == mozaik.MPI_ROOT:
+    settings = ExperantoExportSettings(
+        export_blank_spikes=True,
+    )
     export_experanto_chunk(
         data_store, trial_id=trial, chunk_id=chunk,
         chunk_path=f"chunks/{trial}_{chunk}.json",
@@ -206,9 +208,11 @@ if mozaik.mpi_comm is None or mozaik.mpi_comm.rank == mozaik.MPI_ROOT:
 ```
 
 The model entry point supplies the model, experiment factory and selected
-trial/chunk. Export settings include sheet selection, blank spikes, sampling
-rate, frame timings and an optional `tier_reference_path`. Frame timings must
-match the experiment's timings.
+trial/chunk. The LSV1M launcher configures sheet selection, blank spikes,
+sampling rate and an optional `tier_reference_path`. The exporter reads the complete presentation sequence, including explicit blanks,
+from recorded annotations and checks agreement across sheets. Recorded durations
+and video frame periods determine the screen timeline. Source metadata supplies
+pixel attributes, dataset splits and the image sizes associated with blanks.
 
 Output defaults to `<datastore>/experanto`; `output_dir` selects a separate
 writable directory. Each completed export contains `responses/`, `screen/`,
@@ -220,9 +224,10 @@ the trial, chunk, input-list digest, export settings and optional run provenance
 ## Backend integration
 
 The mozaik-models LSV1M launcher submits one simulation/export job per chunk and
-one dependent merge per trial. It passes `TRIAL`, `CHUNK`, `CHUNK_DIR`,
-`BASE_PATH` and `RUN_CONFIG` through the job environment. `run_experanto.py`
-reads settings and provenance from that run record and calls the exporter
+one dependent merge per trial. It passes `CHUNK` and `RUN_CONFIG` through the
+job environment. The model's `trial` parameter selects the trial; the run record
+supplies dataset paths, chunk-directory paths, export settings and provenance.
+`run_experanto.py` calls the exporter
 directly. Allocate simulation memory and wall time for the export phase.
 
 The launcher submits its `experanto_merge.py` through the backend's generic
@@ -239,9 +244,10 @@ The final merge requires all chunks of the trial, and leaves their exports intac
 To merge completed exports manually, run from the mozaik-models LSV1M directory:
 
 ```bash
-python experanto_merge.py 0 --results-dir runs/experiment --n-chunks 20
+python experanto_merge.py 0 --results-dir runs/experiment
 ```
 
+The planned chunk count comes from `runs/experiment/run_config.json`.
 The output defaults to `runs/experiment/shards/trial0`. Use `--output-dir`
 for a different fresh output directory. A subset can be selected with
 `--chunk-start` (inclusive) and `--chunk-end` (exclusive).
@@ -270,15 +276,16 @@ provenance automatically. For shards without completion records, pass `provenanc
 
 ## Environment knobs (the experiment driver)
 
-`create_randomized_experanto(model)` (`mozaik-models/LSV1M/experiments.py`) reads:
+`LSV1M/run_experanto.py` selects the experiment inputs. Launcher jobs use
+`RUN_CONFIG` for run-wide settings; manual runs set the paths explicitly:
 
-| Env var | Default | Role |
+| Setting | Default | Role |
 |---|---|---|
-| `TRIAL` | `0` | Trial index; selects the chunk JSON and (at launch) the noise seed. |
-| `CHUNK` | `0` | Chunk index within the trial. Reads `{CHUNK_DIR}/{TRIAL}_{CHUNK}.json`. |
-| `CHUNK_DIR` | `/data/mozaik_chunk` | Directory of chunk JSONs. |
-| `BASE_PATH` | required by `run_experanto.py` | Input Experanto **screen** dataset the stimuli are read from (e.g. a P4 subset from `materialize_subset_screen.py`). |
-| `STIM_WIDTH` | `11` | Presented image's longest-axis extent in **degrees** (not the visual field). E2 Cadena runs use `6.7`. |
+| Model parameter `trial` | `0` | Trial index; supplied as a Mozaik CLI override. |
+| `RUN_CONFIG` | unset | Run-record path for launcher jobs. |
+| `CHUNK` | `0` | Chunk index within the trial. Reads `{CHUNK_DIR}/{trial}_{CHUNK}.json`. |
+| `CHUNK_DIR` | required for manual runs | Directory of chunk JSONs. |
+| `BASE_PATH` | required for manual runs | Input Experanto **screen** dataset the stimuli are read from (e.g. a P4 subset from `materialize_subset_screen.py`). |
 
 ---
 
@@ -292,8 +299,8 @@ merge job:  experanto_merge.py → merge_experanto_trial → merge_experanto_sha
 **Timing / sync invariant:** each image is `pre-blank → image (~497 ms) → post-blank`; videos are
 `num_frames × 35 ms`, bare. `pre_blank_period` and `post_blank_period` are metadata values in seconds and
 are rounded down to complete input frames. Missing `post_blank_period` warns and defaults to 49 ms; effective
-zero-duration blanks are omitted. The simulation and screen exporter use the same resolver in
-`mozaik/experiments/vision.py`, keeping their clocks equal
+zero-duration blanks are omitted. The screen exporter follows the recorded presentation
+sequence and durations, keeping the clocks equal
 (`responses/meta.yml:end_time == screen/timestamps.npy[-1]`).
 
 Spikes recorded during those explicit pre- and post-blanks are included in `responses/spikes.npy`.

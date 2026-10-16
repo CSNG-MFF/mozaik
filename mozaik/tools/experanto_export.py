@@ -1,12 +1,12 @@
 import ast
 import json
+import math
 import os
 import shutil
 
 import numpy as np
 import psutil
 import yaml
-from scipy.ndimage import gaussian_filter1d
 
 # Canonical export order for sheets when multiple are exported into one spikes.npy. Sheets not listed
 # here are appended in sorted-name order, so unit indexing stays deterministic across trials/runs while
@@ -129,7 +129,7 @@ class MozaikTrialExporter:
         self.export_blank_spikes = export_blank_spikes
 
         # Multi-sheet export: which sheets to fold into the single spikes.npy. None = every sheet with
-        # recorded spiketrains in the DSV (discovered on the first batch). A list restricts to a subset.
+        # recorded spiketrains in the DSV (discovered from the chunk). A list restricts to a subset.
         # Sheets are laid out contiguously in canonical_sheet_order(); the per-sheet unit boundaries are
         # recorded in meta.yml (`sheets`/`sheet_unit_indices`/`n_signals_layerwise`).
         self.sheet_names_requested = (
@@ -142,7 +142,6 @@ class MozaikTrialExporter:
         self.meta_segments = []
         self.all_unit_spike_lists = None
         self.num_units = 0
-        self.total_bins_accumulated = 0
         self.current_time_offset = 0.0
 
         os.makedirs(self.output_dir, exist_ok=True)
@@ -185,8 +184,8 @@ class MozaikTrialExporter:
             )
         return label, False
 
-    def _bucket_by_sheet(self, dsvs):
-        """Group this batch's (trial-matched) segments by sheet, preserving block/temporal order.
+    def _bucket_by_sheet(self, dsv):
+        """Group this chunk's (trial-matched) segments by sheet, preserving block/temporal order.
 
         Segments in a Mozaik datastore are stored one per (presentation, sheet); within a sheet the
         block order is the temporal presentation order. Returns an ``OrderedDict`` mapping
@@ -195,22 +194,21 @@ class MozaikTrialExporter:
         from collections import OrderedDict
 
         segs_by_sheet = OrderedDict()
-        for dsv in dsvs:
-            _validate_experanto_model_timing(dsv)
-            # get_segments() intentionally uses null=False: Mozaik's automatic null-stimulus
-            # periods (Model.parameters.null_stimulus_period) are not supported by this exporter.
-            for seg in dsv.get_segments():
-                stim_params = self._parse_stimulus(seg)
-                if stim_params is None:
-                    continue
-                if not self._in_group(stim_params.get(self.group_by_key)):
-                    continue
-                sn = seg.annotations.get("sheet_name")
-                segs_by_sheet.setdefault(sn, []).append((seg, stim_params))
+        _validate_experanto_model_timing(dsv)
+        # get_segments() intentionally uses null=False: Mozaik's automatic null-stimulus
+        # periods (Model.parameters.null_stimulus_period) are not supported by this exporter.
+        for seg in dsv.get_segments():
+            stim_params = self._parse_stimulus(seg)
+            if stim_params is None:
+                continue
+            if not self._in_group(stim_params.get(self.group_by_key)):
+                continue
+            sn = seg.annotations.get("sheet_name")
+            segs_by_sheet.setdefault(sn, []).append((seg, stim_params))
         return segs_by_sheet
 
     def _resolve_sheets(self, present):
-        """Resolve (and, on later batches, validate) the ordered list of sheets to export."""
+        """Resolve the ordered list of sheets to export."""
         if self.sheet_names_requested is not None:
             missing = [s for s in self.sheet_names_requested if s not in present]
             if missing:
@@ -222,13 +220,7 @@ class MozaikTrialExporter:
         else:
             selected = canonical_sheet_order(present)
 
-        if self.sheet_names is None:
-            self.sheet_names = selected
-        elif selected != self.sheet_names:
-            # A chunk's sheet layout must stay fixed across presentations.
-            raise ValueError(
-                f"Sheet set/order changed across batches: had {self.sheet_names}, now {selected}"
-            )
+        self.sheet_names = selected
         return self.sheet_names
 
     def _init_layout(self, segs_by_sheet, i):
@@ -253,33 +245,25 @@ class MozaikTrialExporter:
             flush=True,
         )
 
-    def process_batch(self, dsv_or_list):
+    def process(self, dsv):
         """
-        Process a batch of DSVs. Folds every requested sheet into one flat per-unit spike list,
+        Process one chunk's DSV. Folds every requested sheet into one flat per-unit spike list,
         aligning presentations by index across sheets (segments are per-(presentation, sheet)) and
         advancing the timeline once per presentation so it stays aligned with the screen timeline.
         """
         import time
 
-        if isinstance(dsv_or_list, (list, tuple)):
-            dsvs = dsv_or_list
-        else:
-            dsvs = [dsv_or_list]
-
-        if not dsvs:
-            return
-
-        batch_t0 = time.time()
+        process_t0 = time.time()
         print(
-            f"Processing batch of {len(dsvs)} DSVs... (Mem: {get_process_memory():.2f} MB)",
+            f"Processing chunk... (Mem: {get_process_memory():.2f} MB)",
             flush=True,
         )
 
         # 1. Bucket segments by sheet (trial-filtered), preserving temporal order within each sheet.
         scan_t0 = time.time()
-        segs_by_sheet = self._bucket_by_sheet(dsvs)
+        segs_by_sheet = self._bucket_by_sheet(dsv)
         if not segs_by_sheet:
-            print("No matching segments in this batch.", flush=True)
+            print("No matching segments in this chunk.", flush=True)
             return
 
         sheet_names = self._resolve_sheets(list(segs_by_sheet.keys()))
@@ -303,7 +287,6 @@ class MozaikTrialExporter:
             flush=True,
         )
 
-        bin_size_ms = 1000.0 / self.sampling_rate
         t_load = 0.0  # time in get_spiketrains()
         t_loop = 0.0  # time in per-unit spike extraction
         n_processed = 0
@@ -314,13 +297,11 @@ class MozaikTrialExporter:
             _, ref_stim = segs_by_sheet[ref][i]
             stim_label, is_blank = self._presentation_label(ref_stim)
             seg_duration = ref_stim["duration"]
-            num_seg_bins = int(np.ceil(seg_duration / bin_size_ms))
 
             self.meta_segments.append(stim_label)
 
             if is_blank and not self.export_blank_spikes:
                 self.current_time_offset += seg_duration
-                self.total_bins_accumulated += num_seg_bins
                 n_processed += 1
                 continue
 
@@ -358,7 +339,6 @@ class MozaikTrialExporter:
                     seg_k.release()
 
             self.current_time_offset += seg_duration
-            self.total_bins_accumulated += num_seg_bins
             n_processed += 1
 
             if n_processed % 50 == 0:
@@ -372,9 +352,9 @@ class MozaikTrialExporter:
                     flush=True,
                 )
 
-        total_t = time.time() - batch_t0
+        total_t = time.time() - process_t0
         print(
-            f"Batch complete in {total_t:.1f}s — "
+            f"Chunk complete in {total_t:.1f}s — "
             f"load: {t_load:.1f}s ({t_load/total_t*100:.0f}%), "
             f"loop: {t_loop:.1f}s ({t_loop/total_t*100:.0f}%), "
             f"other: {total_t - t_load - t_loop:.1f}s. "
@@ -385,7 +365,7 @@ class MozaikTrialExporter:
 
     def finalize(self):
         """
-        Writes the final spikes.npy and meta.yaml combining all batches.
+        Write the chunk's spikes.npy and meta.yml.
         """
         print("Finalizing export...")
         print(f"Memory before concat: {get_process_memory():.2f} MB")
@@ -442,349 +422,144 @@ class MozaikTrialExporter:
 
 
 class MozaikScreenExporter:
-    """
-    Exports screen data (stimuli + timestamps) for a given trial by reading
-    Mozaik DSV segment annotations (to locate source data files) and chunk
-    JSONs (to determine stimulus order and modality).
+    """Export one trial's recorded presentation sequence, including explicit blanks.
 
-    Generates a complete Experanto-compatible ``screen/`` directory with
-    ``timestamps.npy``, per-trial ``meta/*.yml``, ``data/*.npy``, and
-    ``combined_meta.json``.
-
-    Parameters
-    ----------
-    output_dir : str
-        Parent output directory (experiment root). A ``screen/`` subdirectory
-        will be created inside it.
-    chunk_paths : list of str
-        Ordered list of chunk JSON file paths for this trial. Each JSON
-        contains ``[{"modality": ..., "file": ..., "trial": ...}, ...]``.
-    frame_duration_ms : float
-        Simulation frame duration in ms (default 7.0).
-    movie_frame_duration_ms : float
-        Duration of a single video frame in ms (default 35.0).
+    Stimulus annotations supply order and timing. Source metadata supplies pixel
+    attributes and dataset splits. Each sheet must record the same sequence.
     """
 
-    def __init__(
-        self,
-        output_dir,
-        chunk_paths,
-        frame_duration_ms=7.0,
-        movie_frame_duration_ms=35.0,
-        tier_reference=None,
-    ):
+    def __init__(self, output_dir, trial_id, tier_reference=None):
         self.screen_dir = os.path.join(output_dir, "screen")
-        self.chunk_paths = chunk_paths
-        self.frame_duration_ms = frame_duration_ms
-        self.movie_frame_duration_ms = movie_frame_duration_ms
-        self._source_data_dir = None  # derived from DSV annotations
-        self._source_meta_dir = None
-        self._tier_reference = tier_reference  # condition_hash -> tier
-
+        self.trial_id = trial_id
+        self._presentations = []
+        self._tier_reference = tier_reference
         os.makedirs(os.path.join(self.screen_dir, "meta"), exist_ok=True)
         os.makedirs(os.path.join(self.screen_dir, "data"), exist_ok=True)
+        with open(os.path.join(self.screen_dir, "meta.yml"), "w") as stream:
+            yaml.safe_dump({"modality": "screen"}, stream)
 
-        # Device-level meta.yml
-        with open(os.path.join(self.screen_dir, "meta.yml"), "w") as f:
-            yaml.dump({"modality": "screen"}, f)
-
-    def process_batch(self, dsv_or_list):
-        """Extract the source data/meta directories from DSV segment annotations.
-
-        Only the first segment with a valid ``movie_path`` is needed — all
-        stimuli in a trial share the same source directory.
-        """
-        dsvs = dsv_or_list if isinstance(dsv_or_list, (list, tuple)) else [dsv_or_list]
-        for dsv in dsvs:
-            _validate_experanto_model_timing(dsv)
-        if self._source_data_dir is not None:
-            return  # already resolved
-
-        for dsv in dsvs:
-            for seg in dsv.get_segments():
-                if "stimulus" not in seg.annotations:
-                    continue
-                stim = seg.annotations["stimulus"]
-                params = ast.literal_eval(stim) if isinstance(stim, str) else stim
-                movie_path = params.get("movie_path")
-                if movie_path:
-                    self._source_data_dir = movie_path
-                    # movie_path = <base_path>/screen/data
-                    self._source_meta_dir = os.path.join(
-                        os.path.dirname(movie_path.rstrip("/")), "meta"
-                    )
-                    print(f"Screen exporter: source data dir = {self._source_data_dir}")
-                    print(f"Screen exporter: source meta dir = {self._source_meta_dir}")
-                    return
+    def process(self, dsv):
+        """Read ordered annotations without loading spike trains."""
+        _validate_experanto_model_timing(dsv)
+        by_sheet = {}
+        for segment in dsv.get_segments():
+            raw = segment.annotations["stimulus"]
+            params = ast.literal_eval(raw) if isinstance(raw, str) else raw
+            if (
+                params.get("trial") is not None
+                and int(params["trial"]) == self.trial_id
+            ):
+                by_sheet.setdefault(segment.annotations.get("sheet_name"), []).append(
+                    params
+                )
+        if by_sheet:
+            self._presentations = next(iter(by_sheet.values()))
+            if any(sequence != self._presentations for sequence in by_sheet.values()):
+                raise ValueError("Inconsistent recorded presentations across sheets")
 
     def finalize(self):
-        """Walk chunk JSONs in order, build timestamps, copy files, write metadata.
-
-        For each stimulus in the chunk JSONs, the output matches the ground-truth
-        Experanto format:
-        - **Video**: one entry with ``num_frames`` timestamps (one per frame).
-        - **Image**: an image entry plus its positive-duration pre- and post-blank entries,
-          mirroring the simulation's ``InternalStimulus`` / ``PixelMovieExperanto`` sequence.
-        - **Blank** (from chunk JSON): skipped (the simulation also skips these).
-        """
-        if self._source_data_dir is None:
-            print("WARNING: No source data directory found. Skipping screen export.")
+        """Write recorded presentations and one synthetic terminal blank."""
+        if not self._presentations:
             return
-
-        # Collect ordered stimuli from all chunks
-        all_stimuli = []
-        for chunk_path in self.chunk_paths:
-            with open(chunk_path, "r") as f:
-                all_stimuli.extend(json.load(f))
-
-        if not all_stimuli:
-            # Nothing was presented, so there is no timeline to describe. Writing the trailing
-            # blank alone would produce a shard claiming a one-frame experiment that never ran.
-            print("WARNING: No stimuli in this trial's chunks. Skipping screen export.")
-            return
-
-        timestamps_ms = []
-        combined_meta = {}
-        output_idx = 0
-        fd = self.frame_duration_ms
-        last_ts = 0.0  # running clock — tracks end of previous segment
-
-        # Lazy to keep spike-only export from loading the visual experiment stack.
-        from mozaik.experiments.vision import PixelMovieExperantoBase
-
-        for item in all_stimuli:
-            meta_file = item["file"]
-            modality = item["modality"]
-
-            # Blanks from the chunk JSON are skipped by the simulation
-            if modality == "blank":
-                continue
-
-            # Load source meta for this stimulus
-            src_meta = self._load_source_meta(meta_file)
-            image_size = src_meta.get("image_size", [144, 256])
-
-            if modality == "video":
-                num_frames = src_meta["num_frames"]
-                first_frame_idx = len(timestamps_ms)
-
-                for _ in range(num_frames):
-                    timestamps_ms.append(last_ts)
-                    last_ts += self.movie_frame_duration_ms
-
-                # Write video entry
-                out_key = f"{output_idx:05d}"
-                out_meta = dict(src_meta)
-                out_meta["first_frame_idx"] = first_frame_idx
-                out_meta["num_frames"] = num_frames
-                combined_meta[out_key] = out_meta
-
-                # Copy data file
-                src_npy = os.path.join(
-                    self._source_data_dir, meta_file.replace(".yml", ".npy")
-                )
-                dst_npy = os.path.join(self.screen_dir, "data", f"{out_key}.npy")
-                if os.path.exists(src_npy):
-                    shutil.copy2(src_npy, dst_npy)
-
-                with open(
-                    os.path.join(self.screen_dir, "meta", f"{out_key}.yml"), "w"
-                ) as f:
-                    yaml.dump(out_meta, f)
-                output_idx += 1
-
-            elif modality == "image":
-                (
-                    pre_blank_ms,
-                    presentation_ms,
-                    post_blank_ms,
-                ) = PixelMovieExperantoBase.resolve_experanto_image_timing(
-                    src_meta,
-                    fd,
-                    source_name=os.path.join(self._source_meta_dir, meta_file),
-                )
-
-                # --- Pre-blank entry ---
-                if pre_blank_ms > 0:
-                    out_key = f"{output_idx:05d}"
-                    pre_meta = {
-                        "modality": "blank",
-                        "first_frame_idx": len(timestamps_ms),
-                        "num_frames": 1,
-                        "image_size": image_size,
-                        "interleave_value": 128.0,
-                    }
-                    timestamps_ms.append(last_ts)
-                    last_ts += pre_blank_ms
-                    combined_meta[out_key] = pre_meta
-                    with open(
-                        os.path.join(self.screen_dir, "meta", f"{out_key}.yml"), "w"
-                    ) as f:
-                        yaml.dump(pre_meta, f)
-                    output_idx += 1
-
-                # --- Image entry ---
-                out_key = f"{output_idx:05d}"
-                img_meta = dict(src_meta)
-                img_meta["first_frame_idx"] = len(timestamps_ms)
-                img_meta["num_frames"] = 1
-                timestamps_ms.append(last_ts)
-                last_ts += presentation_ms
-                combined_meta[out_key] = img_meta
-
-                # Copy data file
-                src_npy = os.path.join(
-                    self._source_data_dir, meta_file.replace(".yml", ".npy")
-                )
-                dst_npy = os.path.join(self.screen_dir, "data", f"{out_key}.npy")
-                if os.path.exists(src_npy):
-                    shutil.copy2(src_npy, dst_npy)
-
-                with open(
-                    os.path.join(self.screen_dir, "meta", f"{out_key}.yml"), "w"
-                ) as f:
-                    yaml.dump(img_meta, f)
-                output_idx += 1
-
-                # --- Post-blank entry ---
-                if post_blank_ms > 0:
-                    out_key = f"{output_idx:05d}"
-                    post_meta = {
-                        "modality": "blank",
-                        "first_frame_idx": len(timestamps_ms),
-                        "num_frames": 1,
-                        "image_size": image_size,
-                        "interleave_value": 128.0,
-                    }
-                    timestamps_ms.append(last_ts)
-                    last_ts += post_blank_ms
-                    combined_meta[out_key] = post_meta
-                    with open(
-                        os.path.join(self.screen_dir, "meta", f"{out_key}.yml"), "w"
-                    ) as f:
-                        yaml.dump(post_meta, f)
-                    output_idx += 1
-
-        # Trailing blank entry (matches ground-truth format)
-        out_key = f"{output_idx:05d}"
-        trailing_meta = {
-            "modality": "blank",
-            "first_frame_idx": len(timestamps_ms),
-            "num_frames": 1,
-            "image_size": image_size,
-            "interleave_value": 128.0,
-        }
-        timestamps_ms.append(last_ts)
-        combined_meta[out_key] = trailing_meta
-        with open(os.path.join(self.screen_dir, "meta", f"{out_key}.yml"), "w") as f:
-            yaml.dump(trailing_meta, f)
-        output_idx += 1
-
-        # Save timestamps (convert ms → seconds)
-        timestamps = np.array(timestamps_ms, dtype=np.float64) / 1000.0
-        np.save(os.path.join(self.screen_dir, "timestamps.npy"), timestamps)
-
-        # Write combined_meta.json
-        with open(os.path.join(self.screen_dir, "combined_meta.json"), "w") as f:
-            json.dump(combined_meta, f)
-
-        print(
-            f"Screen export complete: {output_idx} entries, "
-            f"{len(timestamps)} timestamp frames, "
-            f"end_time={timestamps[-1]:.3f}s"
+        presentations = self._presentations + [
+            {"name": "InternalStimulus", "duration": 0}
+        ]
+        # Adjacent pixel stimuli supply image sizes for recorded pre/post blanks.
+        metadata = (
+            [None]
+            + [
+                None
+                if stimulus.get("name") == "InternalStimulus"
+                else self._load_source_meta(stimulus)
+                for stimulus in presentations
+            ]
+            + [None]
         )
+        timestamps_ms = []
+        combined = {}
+        image_size = [144, 256]
+        elapsed = 0.0
+        for index, stimulus in enumerate(presentations, 1):
+            duration = float(stimulus["duration"])
+            if not math.isfinite(duration) or duration < 0:
+                raise ValueError("Invalid recorded stimulus duration")
+            is_blank = stimulus.get("name") == "InternalStimulus"
+            source = metadata[index]
+            if is_blank:
+                previous, following = metadata[index - 1], metadata[index + 1]
+                source = previous or following
+                # A pre-blank after a video belongs to the following image. For
+                # adjacent images, source metadata identifies which one has a blank;
+                # its actual duration still comes exclusively from the recording.
+                if (
+                    following
+                    and following["modality"] == "image"
+                    and (
+                        not previous
+                        or previous["modality"] != "image"
+                        or previous.get("post_blank_period", 0.049) * 1000
+                        < presentations[index - 2]["frame_duration"]
+                    )
+                ):
+                    source = following
+            if source:
+                image_size = source.get("image_size", [144, 256])
+            entry = (
+                dict(modality="blank", image_size=image_size, interleave_value=128.0)
+                if is_blank
+                else dict(source)
+            )
+            entry["first_frame_idx"] = len(timestamps_ms)
+            entry["num_frames"] = (
+                source["num_frames"] if entry["modality"] == "video" else 1
+            )
+            if entry["modality"] == "video":
+                try:
+                    frame_time = float(stimulus["movie_frame_duration"])
+                except (KeyError, TypeError, ValueError) as error:
+                    raise ValueError(
+                        "Missing or invalid recorded video timing"
+                    ) from error
+                if (
+                    not math.isfinite(frame_time)
+                    or frame_time <= 0
+                    or not math.isclose(entry["num_frames"] * frame_time, duration)
+                ):
+                    raise ValueError("Recorded video timing disagrees with frame count")
+                timestamps_ms.extend(
+                    elapsed + frame * frame_time for frame in range(entry["num_frames"])
+                )
+            else:
+                timestamps_ms.append(elapsed)
+            elapsed += duration
+            key = f"{len(combined):05d}"
+            combined[key] = entry
+            if not is_blank:
+                shutil.copy2(
+                    os.path.join(stimulus["movie_path"], stimulus["movie_name"]),
+                    os.path.join(self.screen_dir, "data", f"{key}.npy"),
+                )
+            with open(
+                os.path.join(self.screen_dir, "meta", f"{key}.yml"), "w"
+            ) as stream:
+                yaml.safe_dump(entry, stream)
+        np.save(
+            os.path.join(self.screen_dir, "timestamps.npy"),
+            np.array(timestamps_ms) / 1000.0,
+        )
+        with open(os.path.join(self.screen_dir, "combined_meta.json"), "w") as stream:
+            json.dump(combined, stream)
 
-    def _load_source_meta(self, meta_filename):
-        """Load a per-stimulus YAML from the source screen/meta/ directory.
-
-        If a tier_reference mapping was provided, overrides the tier field
-        using the stimulus's condition_hash as the lookup key.
-        """
-        path = os.path.join(self._source_meta_dir, meta_filename)
-        with open(path, "r") as f:
-            meta = yaml.safe_load(f)
+    def _load_source_meta(self, stimulus):
+        path = os.path.join(
+            os.path.dirname(stimulus["movie_path"].rstrip("/")),
+            "meta",
+            stimulus["movie_name"].replace(".npy", ".yml"),
+        )
+        with open(path) as stream:
+            meta = yaml.safe_load(stream)
         if self._tier_reference is not None:
-            condition_hash = meta.get("condition_hash")
-            if condition_hash and condition_hash in self._tier_reference:
-                meta["tier"] = self._tier_reference[condition_hash]
+            condition = meta.get("condition_hash")
+            if condition in self._tier_reference:
+                meta["tier"] = self._tier_reference[condition]
         return meta
-
-    def _calc_stimulus_duration_ms(self, src_meta, fd):
-        """Return the total time (ms) a stimulus occupies, without modifying any state."""
-        modality = src_meta.get("modality", "blank")
-        if modality == "video":
-            return src_meta["num_frames"] * self.movie_frame_duration_ms
-        elif modality == "image":
-            from mozaik.experiments.vision import PixelMovieExperantoBase
-
-            (
-                pre_blank_ms,
-                presentation_ms,
-                post_blank_ms,
-            ) = PixelMovieExperantoBase.resolve_experanto_image_timing(src_meta, fd)
-            return pre_blank_ms + presentation_ms + post_blank_ms
-        else:  # blank
-            return fd
-
-    def _advance_timestamps(self, timestamps_ms, src_meta, fd, start_time_ms=None):
-        """
-        Append timestamps for one stimulus and return the number of frames
-        added. Mirrors the simulation's RandomizedExperanto timing logic.
-
-        For videos: one timestamp per frame, spaced by movie_frame_duration_ms.
-        For images: the image frame plus positive-duration pre- and post-blank frames, with
-            durations discretised to multiples of frame_duration.
-        For blanks: one frame with minimal duration.
-
-        Parameters
-        ----------
-        start_time_ms : float or None
-            If provided, use this as the base time instead of the last
-            timestamp in ``timestamps_ms``.
-        """
-        modality = src_meta.get("modality", "blank")
-        if start_time_ms is not None:
-            last_ts = start_time_ms
-        else:
-            last_ts = timestamps_ms[-1] if timestamps_ms else 0.0
-        frames_added = 0
-
-        if modality == "video":
-            num_frames = src_meta["num_frames"]
-            for _ in range(num_frames):
-                timestamps_ms.append(last_ts)
-                last_ts += self.movie_frame_duration_ms
-                frames_added += 1
-
-        elif modality == "image":
-            from mozaik.experiments.vision import PixelMovieExperantoBase
-
-            (
-                pre_blank_ms,
-                presentation_ms,
-                post_blank_ms,
-            ) = PixelMovieExperantoBase.resolve_experanto_image_timing(src_meta, fd)
-
-            # Pre-blank frame
-            if pre_blank_ms > 0:
-                timestamps_ms.append(last_ts)
-                last_ts += pre_blank_ms
-                frames_added += 1
-
-            # Image frame
-            timestamps_ms.append(last_ts)
-            last_ts += presentation_ms
-            frames_added += 1
-
-            # Post-blank frame
-            if post_blank_ms > 0:
-                timestamps_ms.append(last_ts)
-                last_ts += post_blank_ms
-                frames_added += 1
-
-        elif modality == "blank":
-            timestamps_ms.append(last_ts)
-            last_ts += fd
-            frames_added += 1
-
-        return frames_added

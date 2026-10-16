@@ -41,7 +41,7 @@ configuring the model's experiment driver:
 |---|---|
 | `BASE_PATH` | Path to `docs/test3_fixture` |
 | `CHUNK_DIR` | Path to `docs/test3_fixture/mozaik_chunk_test3` |
-| `TRIAL` | `0`, `1` or `2`, one simulation job each |
+| Model parameter `trial` | `0`, `1` or `2`, one simulation job each |
 | `CHUNK` | `0` |
 
 ## Simulate and export
@@ -58,12 +58,14 @@ from mozaik.meta_workflow.experanto_export import (
     ExperantoExportSettings, export_experanto_chunk,
 )
 
-trial = int(os.environ["TRIAL"])
-settings = ExperantoExportSettings(export_blank_spikes=True)
 data_store, model = run_workflow(
     "SelfSustainedPushPull", Model, create_randomized_experanto,
 )
+trial = model.parameters.trial
 if mozaik.mpi_comm is None or mozaik.mpi_comm.rank == mozaik.MPI_ROOT:
+    settings = ExperantoExportSettings(
+        export_blank_spikes=True,
+    )
     export_experanto_chunk(
         data_store, trial_id=trial, chunk_id=0,
         chunk_path=os.path.join(os.environ["CHUNK_DIR"], f"{trial}_0.json"),

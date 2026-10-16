@@ -95,19 +95,23 @@ def test_chunk_exports_and_merge_match_single_chunk(
         tier_reference_path=str(tier_reference),
     )
     stimuli = [
-        dict(name="InternalStimulus", trial=0, duration=14),
+        dict(name="InternalStimulus", trial=0, duration=10),
         dict(
             name="PixelMovieExperanto",
             trial=0,
-            duration=28,
+            duration=25,
+            frame_duration=5.0,
+            movie_frame_duration=25.0,
             movie_name="image.npy",
             movie_path=str(source / "screen/data"),
         ),
-        dict(name="InternalStimulus", trial=0, duration=7),
+        dict(name="InternalStimulus", trial=0, duration=5),
         dict(
             name="PixelMovieExperanto",
             trial=0,
-            duration=105,
+            duration=120,
+            frame_duration=5.0,
+            movie_frame_duration=40.0,
             movie_name="video.npy",
             movie_path=str(source / "screen/data"),
         ),
@@ -180,6 +184,7 @@ def test_chunk_exports_and_merge_match_single_chunk(
         merge_output / "responses/meta.yml"
     )
     assert actual == expected
+    assert actual["end_time"] == pytest.approx(0.160)
     for name in ["responses/spikes.npy", "screen/timestamps.npy"]:
         np.testing.assert_allclose(
             np.load(merge_output / name),
@@ -224,7 +229,7 @@ def test_failed_export_is_not_published(tmp_path, monkeypatch):
     def fail(*args, **kwargs):
         raise RuntimeError("export failed")
 
-    monkeypatch.setattr(workflow, "export_dsvs_to_experanto", fail)
+    monkeypatch.setattr(workflow, "export_dsv_to_experanto", fail)
     with pytest.raises(RuntimeError, match="export failed"):
         workflow.export_experanto_chunk(
             Store(tmp_path, []),
@@ -235,13 +240,6 @@ def test_failed_export_is_not_published(tmp_path, monkeypatch):
         )
     assert not output.exists()
     assert not list(tmp_path.glob(".export.export-*"))
-
-
-def test_chunk_export_requires_single_chunk(tmp_path):
-    with pytest.raises(ValueError, match="one chunk"):
-        workflow.export_dsvs_to_experanto(
-            [object(), object()], str(tmp_path), trial_id=0, chunk_paths=[]
-        )
 
 
 def test_trial_merge_requires_completed_exports(tmp_path):

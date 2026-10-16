@@ -9,8 +9,8 @@ the stimuli that one simulation job presents::
 Those three fields are the whole contract, and both of its consumers live in this package:
 :class:`mozaik.experiments.vision.RandomizedExperanto` reads ``file`` and ``trial`` to build
 the stimulus sequence, and
-:class:`mozaik.tools.experanto_export.MozaikScreenExporter` reads ``file`` and ``modality``
-to rebuild the screen timeline at export time.
+:func:`mozaik.meta_workflow.experanto_export.export_experanto_chunk` checks the
+recorded presentation sequence against it at export time.
 
 Chunks exist because one trial of a large stimulus set does not fit in a single job's wall
 time. The stimuli of a trial are shuffled and then split into ``n_chunks`` groups of roughly

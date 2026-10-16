@@ -21,14 +21,11 @@ class ExperantoExportSettings:
     sheet_names: tuple = None
     sampling_rate: float = 1000.0
     export_blank_spikes: bool = True
-    frame_duration_ms: float = 7.0
-    movie_frame_duration_ms: float = 35.0
     tier_reference_path: str = None
 
     def __post_init__(self):
-        for name in ("sampling_rate", "frame_duration_ms", "movie_frame_duration_ms"):
-            if not math.isfinite(getattr(self, name)) or getattr(self, name) <= 0:
-                raise ValueError(f"{name} must be positive and finite")
+        if not math.isfinite(self.sampling_rate) or self.sampling_rate <= 0:
+            raise ValueError("sampling_rate must be positive and finite")
         if self.sheet_names is not None:
             object.__setattr__(
                 self, "sheet_names", tuple(sorted(set(self.sheet_names)))
@@ -88,25 +85,19 @@ def open_datastore_dsv(path):
     return data_store, param_filter_query(data_store)
 
 
-def export_dsvs_to_experanto(
-    dsv_list,
+def export_dsv_to_experanto(
+    dsv,
     output_dir,
     *,
     trial_id,
-    chunk_paths,
     sheet_names=None,
     sampling_rate=1000.0,
     export_spikes=True,
     export_screen=True,
     tier_reference=None,
-    frame_duration_ms=7.0,
-    movie_frame_duration_ms=35.0,
     export_blank_spikes=True,
 ):
     """Export one chunk's already available DSV. Combine chunks through the merger."""
-    dsvs = dsv_list if isinstance(dsv_list, (list, tuple)) else [dsv_list]
-    if len(dsvs) != 1 or (export_screen and len(chunk_paths) != 1):
-        raise ValueError("Export one chunk at a time, then merge its Experanto shards")
     from mozaik.tools.experanto_export import MozaikScreenExporter, MozaikTrialExporter
 
     if export_spikes:
@@ -117,17 +108,15 @@ def export_dsvs_to_experanto(
             sheet_names=sheet_names,
             export_blank_spikes=export_blank_spikes,
         )
-        spikes.process_batch(dsvs)
+        spikes.process(dsv)
         spikes.finalize()
     if export_screen:
         screen = MozaikScreenExporter(
             output_dir=output_dir,
-            chunk_paths=chunk_paths,
-            frame_duration_ms=frame_duration_ms,
-            movie_frame_duration_ms=movie_frame_duration_ms,
+            trial_id=trial_id,
             tier_reference=tier_reference,
         )
-        screen.process_batch(dsvs)
+        screen.process(dsv)
         screen.finalize()
 
 
@@ -190,11 +179,10 @@ def export_experanto_chunk(
         prefix=f".{output.name}.export-", dir=output.parent
     ) as temporary:
         staging = Path(temporary)
-        export_dsvs_to_experanto(
-            [param_filter_query(data_store)],
+        export_dsv_to_experanto(
+            param_filter_query(data_store),
             str(staging),
             trial_id=trial_id,
-            chunk_paths=[chunk_path],
             **settings.export_kwargs(),
         )
         shard = _load_shard(staging)

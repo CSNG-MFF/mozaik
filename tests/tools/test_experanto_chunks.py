@@ -2,7 +2,7 @@
 Tests for :mod:`mozaik.tools.experanto_chunks`.
 
 The chunk JSON is a contract between two other modules -- ``RandomizedExperanto`` builds the
-stimulus sequence from it, ``MozaikScreenExporter`` rebuilds the screen timeline from it -- and
+stimulus sequence from it, and the chunk exporter checks recorded presentations against it -- and
 which stimuli land in which chunk decides what each datastore ends up holding. So what is
 pinned here is the emitted record shape, that the split is a true partition, and that a seed
 determines it reproducibly.
