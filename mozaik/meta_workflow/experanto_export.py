@@ -1,11 +1,6 @@
-"""Simulation-side chunk export and dependent Experanto merge jobs.
+"""Export available simulation chunks and merge completed Experanto shards."""
 
-Model entry points pass an ExperantoChunkExport to run_workflow, or launchers
-include its job_environment() in the simulation job's environment. Merge jobs
-read completed Experanto exports only.
-"""
-
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 import glob
 import hashlib
 import json
@@ -16,8 +11,6 @@ import tempfile
 
 from mozaik.tools.experanto_merge import CHUNK_EXPORT_META
 
-EXPORT_JOB_ENV = "MOZAIK_EXPERANTO_CHUNK_EXPORT"
-MERGE_JOB_ENV = "MOZAIK_EXPERANTO_MERGE"
 DEFAULT_MODEL_NAME = "SelfSustainedPushPull"
 
 
@@ -62,39 +55,6 @@ class ExperantoExportSettings:
 
             settings["tier_reference"] = load_tier_reference(tier_path)
         return settings
-
-
-@dataclass(frozen=True)
-class ExperantoChunkExport:
-    """One simulation job's export request, consumed by run_workflow on every rank."""
-
-    trial_id: int
-    chunk_id: int
-    chunk_path: str
-    output_dir: str = None
-    settings: ExperantoExportSettings = field(default_factory=ExperantoExportSettings)
-    provenance: dict = None
-
-    def __post_init__(self):
-        if self.trial_id < 0 or self.chunk_id < 0:
-            raise ValueError("Trial and chunk indices must be nonnegative")
-        object.__setattr__(self, "chunk_path", str(Path(self.chunk_path).resolve()))
-        if self.output_dir is not None:
-            object.__setattr__(self, "output_dir", str(Path(self.output_dir).resolve()))
-
-    def job_environment(self):
-        request = asdict(self)
-        request["settings"] = self.settings.to_dict()
-        return {EXPORT_JOB_ENV: json.dumps(request)}
-
-    @classmethod
-    def from_environment(cls):
-        value = os.environ.get(EXPORT_JOB_ENV)
-        if not value:
-            return None
-        request = json.loads(value)
-        request["settings"] = ExperantoExportSettings(**request["settings"])
-        return cls(**request)
 
 
 def resolve_datastore(datastore_prefix, trial, chunk, model_name=DEFAULT_MODEL_NAME):
@@ -171,44 +131,57 @@ def export_dsvs_to_experanto(
         screen.finalize()
 
 
-def export_experanto_chunk(data_store, request):
-    """Export the finished datastore on MPI root, publishing a completion record last.
+def export_experanto_chunk(
+    data_store,
+    *,
+    trial_id,
+    chunk_id,
+    chunk_path,
+    settings=None,
+    output_dir=None,
+    provenance=None,
+):
+    """Export one finished chunk from its available datastore; call on MPI root.
 
-    The default output is <datastore>/experanto; request.output_dir can select a
-    separate writable directory. This reuses the datastore and never reopens it.
+    The caller saves the datastore before exporting. Output defaults to
+    <datastore>/experanto. Files and a completion record are published together
+    after validation; existing output directories are refused.
     """
     from mozaik.storage.queries import param_filter_query
     from mozaik.tools.experanto_merge import _load_shard, _merged_provenance
 
+    if trial_id < 0 or chunk_id < 0:
+        raise ValueError("Trial and chunk indices must be nonnegative")
+    settings = settings if settings is not None else ExperantoExportSettings()
     if data_store.block.annotations.get("simulation_log", {}).get("explosion_detected"):
         raise ValueError("Cannot export a simulation that stopped after an explosion")
-    chunk_bytes = Path(request.chunk_path).read_bytes()
+    chunk_bytes = Path(chunk_path).read_bytes()
     items = json.loads(chunk_bytes)
-    if not items or any(item["trial"] != request.trial_id for item in items):
+    if not items or any(item["trial"] != trial_id for item in items):
         raise ValueError("Chunk list must be nonempty and match the requested trial")
     output = Path(
-        request.output_dir or Path(data_store.parameters.root_directory) / "experanto"
+        output_dir or Path(data_store.parameters.root_directory) / "experanto"
     )
     if output.exists():
         raise FileExistsError(f"Chunk export already exists: {output}")
-    settings = request.settings.to_dict()
-    tier_path = request.settings.tier_reference_path
-    settings["tier_reference_sha256"] = (
+    recorded_settings = settings.to_dict()
+    tier_path = settings.tier_reference_path
+    recorded_settings["tier_reference_sha256"] = (
         hashlib.sha256(Path(tier_path).read_bytes()).hexdigest() if tier_path else None
     )
     completion = dict(
-        trial_id=request.trial_id,
-        chunk_id=request.chunk_id,
+        trial_id=trial_id,
+        chunk_id=chunk_id,
         chunk_sha256=hashlib.sha256(chunk_bytes).hexdigest(),
-        export_settings=settings,
-        provenance=request.provenance,
+        export_settings=recorded_settings,
+        provenance=provenance,
     )
-    root_meta = {"data_key": f"trial{request.trial_id}_chunk{request.chunk_id}"}
-    if request.provenance is not None:
+    root_meta = {"data_key": f"trial{trial_id}_chunk{chunk_id}"}
+    if provenance is not None:
         root_meta = _merged_provenance(
-            request.provenance,
-            request.trial_id,
-            request.chunk_id,
+            provenance,
+            trial_id,
+            chunk_id,
             1,
             root_meta["data_key"],
         )
@@ -220,9 +193,9 @@ def export_experanto_chunk(data_store, request):
         export_dsvs_to_experanto(
             [param_filter_query(data_store)],
             str(staging),
-            trial_id=request.trial_id,
-            chunk_paths=[request.chunk_path],
-            **request.settings.export_kwargs(),
+            trial_id=trial_id,
+            chunk_paths=[chunk_path],
+            **settings.export_kwargs(),
         )
         shard = _load_shard(staging)
         expected = [
@@ -247,27 +220,6 @@ def export_experanto_chunk(data_store, request):
             raise FileExistsError(f"Chunk export already exists: {output}")
         staging.rename(output)
     return output
-
-
-def finish_experanto_workflow(data_store, request):
-    """Save and export on root; propagate an export failure to every MPI rank."""
-    import mozaik
-
-    comm = mozaik.mpi_comm
-    is_root = comm is None or comm.rank == mozaik.MPI_ROOT
-    failure = None
-    exception = None
-    if is_root:
-        try:
-            data_store.save()
-            export_experanto_chunk(data_store, request)
-        except Exception as error:
-            exception = error
-            failure = f"{type(error).__name__}: {error}"
-    if comm is not None:
-        failure = comm.bcast(failure, root=mozaik.MPI_ROOT)
-    if failure:
-        raise RuntimeError(f"Experanto chunk export failed: {failure}") from exception
 
 
 def merge_experanto_trial(
@@ -308,69 +260,3 @@ def merge_experanto_trial(
         chunk_start=chunk_start,
         provenance=provenance,
     )
-
-
-def merge_experanto_from_environment():
-    """Entry called by a submitted merge job, without a CLI in the Mozaik module."""
-    return merge_experanto_trial(**json.loads(os.environ[MERGE_JOB_ENV]))
-
-
-def submit_experanto_merge_job(
-    backend,
-    *,
-    simulation_job_ids,
-    trial_id,
-    output_dir,
-    shard_paths=None,
-    datastore_prefix=None,
-    model_name=DEFAULT_MODEL_NAME,
-    chunk_start=0,
-    chunk_end=None,
-    provenance=None,
-    env=None,
-    output=None,
-    python_executable="python",
-):
-    """Submit a merge behind all required simulation/export jobs for one trial.
-
-    Use the existing backend.execute_script interface. Missing job IDs are rejected
-    before submission, so Slurm cannot accidentally queue a dependency-free merge.
-    Paths are resolved when constructing the request; datastores, if needed for
-    locating default chunk exports, are resolved by directory name at job execution.
-    """
-    ids = list(simulation_job_ids)
-    if not ids or any(not job_id for job_id in ids):
-        raise ValueError("Every simulation/export job must have a dependency ID")
-    if (shard_paths is None) == (datastore_prefix is None):
-        raise ValueError("Provide shard_paths or datastore_prefix, exclusively")
-    if shard_paths is not None:
-        shard_paths = [str(Path(path).resolve()) for path in shard_paths]
-        if not shard_paths:
-            raise ValueError("Provide at least one chunk export")
-        if chunk_end is not None and chunk_end - chunk_start != len(shard_paths):
-            raise ValueError("Chunk range does not match the supplied shard paths")
-    elif chunk_end is None or chunk_end <= chunk_start:
-        raise ValueError("Provide a nonempty chunk range")
-    request = dict(
-        trial_id=trial_id,
-        output_dir=str(Path(output_dir).resolve()),
-        shard_paths=shard_paths,
-        datastore_prefix=str(Path(datastore_prefix).resolve())
-        if datastore_prefix is not None
-        else None,
-        model_name=model_name,
-        chunk_start=chunk_start,
-        chunk_end=chunk_end,
-        provenance=provenance,
-    )
-    job_env = dict(env or {})
-    job_env[MERGE_JOB_ENV] = json.dumps(request)
-    command = [
-        python_executable,
-        "-c",
-        "from mozaik.meta_workflow.experanto_export import merge_experanto_from_environment; merge_experanto_from_environment()",
-    ]
-    job_id = backend.execute_script(command, env=job_env, depends_on=ids, output=output)
-    if not job_id:
-        raise RuntimeError("The backend did not report a merge-job ID")
-    return job_id

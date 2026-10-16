@@ -47,33 +47,34 @@ configuring the model's experiment driver:
 ## Simulate and export
 
 The companion model entry point supplies the model and experiment factory.
-Pass a chunk export request to `run_workflow` on every MPI rank:
+Call the exporter after the saved datastore is returned, on MPI root:
 
 ```python
 import os
+import mozaik
 
 from mozaik.controller import run_workflow
 from mozaik.meta_workflow.experanto_export import (
-    ExperantoChunkExport,
-    ExperantoExportSettings,
+    ExperantoExportSettings, export_experanto_chunk,
 )
 
 trial = int(os.environ["TRIAL"])
-request = ExperantoChunkExport(
-    trial_id=trial,
-    chunk_id=0,
-    chunk_path=os.path.join(os.environ["CHUNK_DIR"], f"{trial}_0.json"),
-    settings=ExperantoExportSettings(export_blank_spikes=True),
-)
-run_workflow(
+settings = ExperantoExportSettings(export_blank_spikes=True)
+data_store, model = run_workflow(
     "SelfSustainedPushPull", Model, create_randomized_experanto,
-    experanto_export=request,
 )
+if mozaik.mpi_comm is None or mozaik.mpi_comm.rank == mozaik.MPI_ROOT:
+    export_experanto_chunk(
+        data_store, trial_id=trial, chunk_id=0,
+        chunk_path=os.path.join(os.environ["CHUNK_DIR"], f"{trial}_0.json"),
+        settings=settings,
+    )
 ```
 
 Here `Model` and `create_randomized_experanto` come from the companion model
-project. A launcher can also supply `request.job_environment()` to each job;
-`run_workflow` consumes that request automatically.
+project. Its `LSV1M/run_experanto.py` includes this export step and reads the
+shared settings and provenance from `RUN_CONFIG` when launched by
+`run_parameter_search_experanto.py`.
 
 Set a writable `results_dir` and distinct run names such as `trial0_chunk0`.
 Use the same `model_seed` across trials and a nonzero `simulation_seed` per
@@ -83,7 +84,7 @@ Set `model.parameters.null_stimulus_period == 0`. For MPI runs, match the
 
 After saving the datastore, MPI root exports into `<datastore>/experanto/`.
 Each completed chunk export contains `responses/`, `screen/`, `meta.json`
-and `chunk_export.json`. Use the request's `output_dir` to select a separate
+and `chunk_export.json`. Use the exporter's `output_dir` to select a separate
 writable directory.
 
 ## Merge each trial
@@ -104,9 +105,9 @@ for trial in range(3):
 
 Set `datastore_prefix` to the simulation's `results_dir`; it must contain one
 matching datastore per trial/chunk. Each output directory must be new.
-For Slurm, use `submit_experanto_merge_job` with the trial's simulation job
-IDs to schedule the merge with `afterok` dependencies, as shown in the
-[backend integration example](HOWTO_randomized_experanto.md#backend-integration).
+The companion launcher submits `experanto_merge.py` with `afterok` dependencies
+on the trial's simulation jobs. Use `--skip-merge` to keep individual exports
+without submitting a merge. See [backend integration](HOWTO_randomized_experanto.md#backend-integration).
 
 ## Verify the result
 
@@ -117,6 +118,3 @@ Check each `test3/shards/trial{trial}/` using NumPy, PyYAML and JSON:
   the length of `responses/spikes.npy`.
 - Sheet counts agree with the configured model, and screen entries cover the
   two images, video and explicit blanks.
-
-For stimulus-locked response checks, point the companion project's
-`notebooks/verify_psth_export.ipynb` at the final shards.

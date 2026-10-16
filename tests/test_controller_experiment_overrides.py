@@ -55,7 +55,6 @@ def _install_common_monkeypatches(monkeypatch, experiment_overrides):
         Experiment override dictionary returned by the patched
         ``prepare_workflow`` helper.
     """
-    monkeypatch.delenv("MOZAIK_EXPERANTO_CHUNK_EXPORT", raising=False)
     parameters = ParameterSet({"store_stimuli": False, "null_stimulus_period": 0})
     monkeypatch.setattr(
         mozaik.controller,
@@ -185,38 +184,6 @@ def test_run_workflow_list_rejects_experiment_overrides(monkeypatch):
 
     with pytest.raises(ValueError, match="Experiment overrides were provided"):
         mozaik.controller.run_workflow("dummy", DummyModel, create_experiments)
-
-
-@pytest.mark.parametrize("configuration", ["explicit", "environment"])
-def test_run_workflow_exports_after_save(monkeypatch, tmp_path, configuration):
-    from mozaik.meta_workflow import experanto_export as export
-
-    _install_common_monkeypatches(monkeypatch, OrderedDict())
-    store = DummyDataStore()
-    monkeypatch.setattr(
-        mozaik.controller, "run_experiments", lambda *args, **kwargs: store
-    )
-    monkeypatch.setattr(
-        mozaik.controller.mozaik,
-        "mpi_comm",
-        SimpleNamespace(rank=0, bcast=lambda value, root: value),
-    )
-    request = export.ExperantoChunkExport(0, 0, str(tmp_path / "0_0.json"))
-    captured = []
-
-    def export_chunk(data_store, received):
-        assert data_store.saved
-        captured.append(received)
-
-    monkeypatch.setattr(export, "export_experanto_chunk", export_chunk)
-    options = {"experanto_export": request}
-    if configuration == "environment":
-        monkeypatch.setenv(
-            export.EXPORT_JOB_ENV, request.job_environment()[export.EXPORT_JOB_ENV]
-        )
-        options = {}
-    mozaik.controller.run_workflow("dummy", DummyModel, lambda model: [], **options)
-    assert captured == [request]
 
 
 def test_run_workflow_ordereddict_rejects_unknown_target(monkeypatch):

@@ -59,16 +59,11 @@ Model launchers use the library hooks below; no model-specific launcher is bundl
 ## TL;DR
 
 ```bash
-# 0) Build the chunk lists once (offline, outside the container is fine — pure Python + pyyaml)
-python mozaik-models/experanto/generate_chunks.py \
-    --data-root <dataset>/screen/... --output-dir /data/mozaik_chunk \
-    --n-trials 20 --n-chunks 12
-
-# 1) SIMULATE each (trial, chunk): one run.py per chunk, TRIAL/CHUNK/CHUNK_DIR select the chunk JSON
-#    (loop the array over TRIAL*N_CHUNKS + CHUNK; see "Simulate each chunk")
-
-# 2) Each simulation exports its chunk through run_workflow (see below).
-# 3) Submit one dependent merge job per trial; it reads only the chunk exports.
+# Run from the mozaik-models LSV1M directory. The launcher builds the chunk lists.
+python run_parameter_search_experanto.py run_experanto.py nest param_experanto/defaults \
+    --data-root dataset --n-trials 20 --n-chunks 12 \
+    --mozaik-env "$VIRTUAL_ENV/bin/activate"
+# Add --skip-merge to export chunks without scheduling a final merge.
 ```
 
 ---
@@ -77,7 +72,7 @@ python mozaik-models/experanto/generate_chunks.py \
 
 The commands below run inside an **Apptainer container**. This is **not** required by Mozaik: 
 a standard `README.rst` install runs the exact same
-`python run.py …` command directly and use the library hooks below for exports. If you have that install, ignore the
+`python run_experanto.py …` command directly and use the library hooks below for exports. If you have that install, ignore the
 `apptainer exec …` / `--bind` wrapper and run the `python -u …` line on its own.
 
 In a container the paths map as follows (all bind mounts; `$PWD` is the **Mozaik repo root**):
@@ -85,14 +80,13 @@ In a container the paths map as follows (all bind mounts; `$PWD` is the **Mozaik
 | Host | In container | What it is |
 |---|---|---|
 | `$PWD` (Mozaik repo root) | `/mozaik` | Mozaik itself — the experiment protocol + exporter library. |
-| `mozaik-models/experanto/` | `/project` | The companion project: `run.py`, `generate_chunks.py`, `param/`. |
+| `mozaik-models/LSV1M/` | `/project` | The companion project: `run_experanto.py`, `run_parameter_search_experanto.py`, `param_experanto/`. |
 | a clone of the **experanto** library ([repo](https://github.com/goirik-chakrabarty/experanto)) | `/experanto` | The Experanto data-format package the export writes through. |
 | your **working directory** | `/data` | Holds the input dataset, the chunk lists, **and the output shards**. |
 
 - **The image (`.sif`)** is an Apptainer/Singularity image bundling Mozaik + NEST. It is **specific to a
   site and is not part of the Mozaik repo** — build or obtain one whose PyNN is the PyNNStepCurrentModule
-  build (0.13.0, which provides `freeze_time`). We record the current image in
-  `mozaik-models/experanto/experiments/LOG.md`.
+  build (0.13.0, which provides `freeze_time`). Select the image for your site.
 
 Regardless of environment you still need:
 
@@ -102,16 +96,18 @@ Regardless of environment you still need:
 
 ---
 
-## Step 0 — generate the chunk lists (`generate_chunks.py`)
+## Step 0 — generate the chunk lists
 
-Run once to turn a stimulus dataset into per-`(trial, chunk)` JSON lists:
+The launcher generates chunk lists automatically. To prepare them separately,
+call the library in an environment with Mozaik and PyYAML:
 
-```bash
-python mozaik-models/experanto/generate_chunks.py \
-    --data-root /data/<dataset>/screen/... \   # dir containing screen/meta/*.yml
-    --output-dir /data/mozaik_chunk \
-    --n-trials 20 --n-chunks 12 \
-    --seed 42                                   # base seed (default 42)
+```python
+from mozaik.tools.experanto_chunks import generate_chunks
+
+generate_chunks(
+    data_root="dataset", output_dir="chunks",
+    n_trials=20, n_chunks=12, seed=42,
+)
 ```
 
 - Scans `screen/meta/*.yml`, keeping `image` and `video` stimuli.
@@ -122,10 +118,10 @@ python mozaik-models/experanto/generate_chunks.py \
   (`video_base + num_frames × video_per_frame`), so one long video does not swamp a chunk.
 - Emits `{trial}_{chunk}.json`, each record exactly `{modality, file, trial}` — the only fields
   `RandomizedExperanto.generate_stimuli` reads. It prints each chunk's stimulus count and **estimated
-  walltime**; size `--n-chunks` so a chunk fits the job time limit.
+  walltime**; size `n_chunks` so a chunk fits the job time limit.
 - When generated through `mozaik.tools.experanto_chunks.generate_chunks`, the lists are accompanied by
   `chunk_settings.json` — the dataset (absolute path), trial count, chunk count and seed they were
-  generated from. Nothing in this workflow reads it; the launcher below checks reused lists against it.
+  generated from. The launcher checks reused lists against it.
 
 The chunk carries **no seed** — per-trial noise is set at launch (see "Seeds").
 
@@ -162,7 +158,7 @@ apptainer exec --cleanenv \
     mpirun -n "$NRANKS" \
       -x OMP_NUM_THREADS -x MKL_NUM_THREADS -x OPENBLAS_NUM_THREADS -x PYTHONPATH \
       -x TRIAL -x CHUNK -x CHUNK_DIR -x BASE_PATH -x NRANKS \
-      python -u run.py nest "$NRANKS" param/defaults \
+      python -u run_experanto.py nest "$NRANKS" param_experanto/defaults \
         results_dir "'"'"'/data/<fresh-out-dir>/'"'"'" \
         simulation_seed '"$(( TRIAL*1000 + CHUNK + 1 ))"' \
         trial'"$TRIAL"'_chunk'"$CHUNK"'
@@ -190,59 +186,68 @@ apptainer exec --cleanenv \
 
 ## Export after simulation
 
-Use the same settings object for every chunk. Pass the request to `run_workflow`
-on **every MPI rank**; saving and export run only on root, and failures propagate
-across ranks. These names are supplied by the model entry point:
+In the model entry point, call the exporter on MPI root after `run_workflow`
+returns its saved datastore. Use the same export settings for every chunk:
 
 ```python
+import mozaik
 from mozaik.meta_workflow.experanto_export import (
-    ExperantoChunkExport, ExperantoExportSettings,
+    ExperantoExportSettings, export_experanto_chunk,
 )
 
 settings = ExperantoExportSettings(export_blank_spikes=True)
-request = ExperantoChunkExport(
-    trial_id=trial, chunk_id=chunk, chunk_path=f"chunks/{trial}_{chunk}.json",
-    settings=settings, provenance=run_record,
-)
-run_workflow(model_name, Model, create_experiments, experanto_export=request)
+data_store, model = run_workflow(model_name, Model, create_experiments)
+if mozaik.mpi_comm is None or mozaik.mpi_comm.rank == mozaik.MPI_ROOT:
+    export_experanto_chunk(
+        data_store, trial_id=trial, chunk_id=chunk,
+        chunk_path=f"chunks/{trial}_{chunk}.json",
+        settings=settings, provenance=run_record,
+    )
 ```
+
+The model entry point supplies the model, experiment factory and selected
+trial/chunk. Export settings include sheet selection, blank spikes, sampling
+rate, frame timings and an optional `tier_reference_path`. Frame timings must
+match the experiment's timings.
 
 Output defaults to `<datastore>/experanto`; `output_dir` selects a separate
 writable directory. Each completed export contains `responses/`, `screen/`,
 `meta.json` and `chunk_export.json`. Failed exports never publish the final
 output directory. Existing outputs are refused. The completion record preserves
 the trial, chunk, input-list digest, export settings and optional run provenance.
-`provenance` is the original `run_config.json` dictionary.
+`provenance` is the full `run_config.json` dictionary, shared by all chunks.
 
 ## Backend integration
 
-A launcher can supply the request through its existing `job_environment()` hook:
-merge `request.job_environment()` into the experiment's `TRIAL`, `CHUNK`,
-`CHUNK_DIR`, etc. environment. `run_workflow` consumes it automatically and
-exports the chunk after saving the datastore.
+The mozaik-models LSV1M launcher submits one simulation/export job per chunk and
+one dependent merge per trial. It passes `TRIAL`, `CHUNK`, `CHUNK_DIR`,
+`BASE_PATH` and `RUN_CONFIG` through the job environment. `run_experanto.py`
+reads settings and provenance from that run record and calls the exporter
+directly. Allocate simulation memory and wall time for the export phase.
 
-After submitting all simulation/export jobs of one trial, schedule its merge:
+The launcher submits its `experanto_merge.py` through the backend's generic
+`execute_script` interface, with Slurm `afterok` dependencies on the trial's
+simulation jobs. It requires a complete set of job IDs. The merge runs in one
+process and reads only completed chunk exports.
 
-```python
-from mozaik.meta_workflow.experanto_export import submit_experanto_merge_job
+Use `--skip-merge` (or `skip_merge: true` in the launcher config) to leave the
+individual exports for merging later. This option does not change simulation
+or export settings. For runs submitted in rounds, finish intermediate rounds
+with merging skipped before submitting the final round with merging enabled.
+The final merge requires all chunks of the trial, and leaves their exports intact.
 
-merge_id = submit_experanto_merge_job(
-    backend, simulation_job_ids=trial_job_ids, trial_id=trial,
-    datastore_prefix=results_dir, chunk_end=n_chunks,
-    output_dir=f"shards/trial{trial}",
-)
+To merge completed exports manually, run from the mozaik-models LSV1M directory:
+
+```bash
+python experanto_merge.py 0 --results-dir runs/experiment --n-chunks 20
 ```
 
-The default directory lookup uses `SelfSustainedPushPull_trialT_chunkC_____*`;
-set `model_name` for another model, or supply ordered `shard_paths` instead of
-`datastore_prefix`. The helper uses the backend's `execute_script` with Slurm
-`afterok` dependencies and refuses missing job IDs. It runs one merge process,
-requires completed chunk exports and never loads a datastore. The shared
-settings include sheet selection, blank spikes, sampling/frame timing and an
-optional `tier_reference_path`. Allocate simulation memory and wall time for
-the additional export phase.
-
-Each merge requires a new output directory, including when rebuilding a partial run.
+The output defaults to `runs/experiment/shards/trial0`. Use `--output-dir`
+for a different fresh output directory. A subset can be selected with
+`--chunk-start` (inclusive) and `--chunk-end` (exclusive).
+The default lookup uses `SelfSustainedPushPull_trialT_chunkC_____*`.
+For other models or layouts, call `merge_experanto_trial` with `model_name`
+or ordered `shard_paths`.
 
 ## Merging individually exported shards
 
@@ -265,14 +270,14 @@ provenance automatically. For shards without completion records, pass `provenanc
 
 ## Environment knobs (the experiment driver)
 
-`create_randomized_experanto(model)` (`mozaik-models/experanto/experiments.py`) reads:
+`create_randomized_experanto(model)` (`mozaik-models/LSV1M/experiments.py`) reads:
 
 | Env var | Default | Role |
 |---|---|---|
 | `TRIAL` | `0` | Trial index; selects the chunk JSON and (at launch) the noise seed. |
 | `CHUNK` | `0` | Chunk index within the trial. Reads `{CHUNK_DIR}/{TRIAL}_{CHUNK}.json`. |
 | `CHUNK_DIR` | `/data/mozaik_chunk` | Directory of chunk JSONs. |
-| `BASE_PATH` | model-specific | Input Experanto **screen** dataset the stimuli are read from (e.g. a P4 subset from `materialize_subset_screen.py`). |
+| `BASE_PATH` | required by `run_experanto.py` | Input Experanto **screen** dataset the stimuli are read from (e.g. a P4 subset from `materialize_subset_screen.py`). |
 | `STIM_WIDTH` | `11` | Presented image's longest-axis extent in **degrees** (not the visual field). E2 Cadena runs use `6.7`. |
 
 ---
@@ -280,8 +285,8 @@ provenance automatically. For shards without completion records, pass `provenanc
 ## Execution chain
 
 ```text
-simulation: run_workflow → save datastore → export_experanto_chunk (root only)
-merge job:  merge_experanto_trial → merge_experanto_shards → final trial shard
+simulation: run_workflow → save datastore → return → export_experanto_chunk (root only)
+merge job:  experanto_merge.py → merge_experanto_trial → merge_experanto_shards
 ```
 
 **Timing / sync invariant:** each image is `pre-blank → image (~497 ms) → post-blank`; videos are
@@ -301,7 +306,7 @@ exports require `model.parameters.null_stimulus_period == 0`.
 
 ## Seeds (three-stream)
 
-`param/defaults` uses three seeds, each driving its own RNG (`controller.py` → `mozaik.setup_mozaik_seeds`):
+`param_experanto/defaults` uses three seeds, each driving its own RNG (`controller.py` → `mozaik.setup_mozaik_seeds`):
 
 | Seed | Drives (RNG) | Governs | Varies |
 |---|---|---|---|
@@ -312,19 +317,16 @@ exports require `model.parameters.null_stimulus_period == 0`.
 > **Stimulus order for this pipeline is NOT set by a runtime seed.** `RandomizedExperanto` presents the
 > chunk **in the order written in the JSON**, with no runtime shuffle — so `experiment_seed` has no effect on
 > the order here (it matters only for shuffling experiments like the tuning protocols). The order is fixed
-> **offline** by `generate_chunks.py --seed` (Step 0), which shuffles per trial with `Random(seed + trial)`.
+> **offline** by `generate_chunks(..., seed=...)` (Step 0), which shuffles per trial with `Random(seed + trial)`.
 > Treat that as the pipeline's fourth, build-time seed.
 
-Per-trial noise is set on the `run.py` CLI (`simulation_seed <n>`), **not** in the chunk JSON. The sim is
+Per-trial noise is set on the `run_experanto.py` CLI (`simulation_seed <n>`), **not** in the chunk JSON. The sim is
 bit-reproducible under fixed seeds (same three seeds → identical spikes).
 
 ---
 
 ## Verify the export
 
-- **PSTH notebook:** `mozaik-models/experanto/notebooks/verify_psth_export.ipynb` — point its config cell at
-  a shard dir and Run All: stimulus-locking (§1–6) and export-vs-datastore PSTH parity (§7, build
-  `datastore_psths.npz` first via `analysis/compute_psth_datastore.py`).
 - **Sanity checks on the shard** (load the files with numpy + PyYAML — e.g. inside the container, since the
   bare host python may lack them):
   - **timelines agree:** `responses/meta.yml`'s `end_time` equals the last value of `screen/timestamps.npy`;

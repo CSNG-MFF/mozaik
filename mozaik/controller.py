@@ -393,7 +393,7 @@ def prepare_workflow(simulation_name, model_class):
     return sim, num_threads, parameters, experiment_modified_parameters
 
 
-def run_workflow(simulation_name, model_class, create_experiments, *, experanto_export=None):
+def run_workflow(simulation_name, model_class, create_experiments):
     r"""
     This is the main function that executes a workflow.
     It expects it gets the simulation, class of the model, and a function that will create_experiments.
@@ -418,12 +418,6 @@ def run_workflow(simulation_name, model_class, create_experiments, *, experanto_
         executed on the model or an OrderedDict of named experiment
         specifications.
 
-    experanto_export : ExperantoChunkExport, optional
-        Export this chunk after saving the finished datastore. Alternatively the
-        launcher can supply the request through its job environment. Export runs
-        only on MPI root; failures propagate to all ranks, preventing dependent
-        merge jobs from starting after a failed export.
-
     Examples
     --------
 
@@ -436,14 +430,6 @@ def run_workflow(simulation_name, model_class, create_experiments, *, experanto_
     specifications.
 
     """
-
-    from mozaik.meta_workflow.experanto_export import (
-        ExperantoChunkExport,
-        finish_experanto_workflow,
-    )
-
-    if experanto_export is None:
-        experanto_export = ExperantoChunkExport.from_environment()
 
     # Prepare workflow - read parameters, setup logging, etc.
     sim, num_threads, parameters, experiment_modified_parameters = prepare_workflow(
@@ -482,9 +468,7 @@ def run_workflow(simulation_name, model_class, create_experiments, *, experanto_
         experiment_parameter_list=experiment_parameter_list,
     )
 
-    if experanto_export is not None:
-        finish_experanto_workflow(data_store, experanto_export)
-    elif mozaik.mpi_comm.rank == mozaik.MPI_ROOT:
+    if mozaik.mpi_comm.rank == mozaik.MPI_ROOT:
         data_store.save()
     import resource
 

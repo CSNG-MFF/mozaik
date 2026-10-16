@@ -1,15 +1,12 @@
-"""Chunk export, MPI completion and dependent merge-job integration."""
+"""Direct chunk export and completed-shard merge integration."""
 
 import json
-from pathlib import Path
-import sys
 from types import SimpleNamespace
 
 import numpy as np
 import pytest
 import yaml
 
-import mozaik
 from mozaik.meta_workflow import experanto_export as workflow
 from mozaik.tools.experanto_merge import merge_experanto_shards
 
@@ -53,13 +50,12 @@ class Store:
 
 
 @pytest.mark.parametrize("blank_spikes", [True, False])
-def test_simulation_exports_and_submitted_merge_match_single_chunk(
-    tmp_path, monkeypatch, capsys, blank_spikes
+def test_chunk_exports_and_merge_match_single_chunk(
+    tmp_path, monkeypatch, blank_spikes
 ):
     from mozaik.storage import queries
 
     monkeypatch.setattr(queries, "param_filter_query", lambda store: store)
-    monkeypatch.setattr(mozaik, "mpi_comm", None)
     monkeypatch.setattr(
         workflow, "open_datastore_dsv", lambda *args: pytest.fail("Datastore reload")
     )
@@ -137,75 +133,49 @@ def test_simulation_exports_and_submitted_merge_match_single_chunk(
     for chunk, presentations in enumerate([segments[:3], segments[3:]]):
         chunk_path = tmp_path / f"0_{chunk}.json"
         chunk_path.write_text(json.dumps([records[chunk]]))
-        request = workflow.ExperantoChunkExport(
-            0,
-            chunk,
-            str(chunk_path),
-            settings=settings,
-            provenance=provenance,
-        )
-        monkeypatch.setenv(
-            workflow.EXPORT_JOB_ENV, request.job_environment()[workflow.EXPORT_JOB_ENV]
-        )
-        request = workflow.ExperantoChunkExport.from_environment()
         datastore = (
             datastore_root
             / f"SelfSustainedPushPull_trial0_chunk{chunk}_____seed:{chunk + 1}"
         )
         store = Store(datastore, sum(presentations, []))
-        workflow.finish_experanto_workflow(store, request)
-        assert store.saved
-        paths.append(datastore / "experanto")
+        store.save()
+        paths.append(
+            workflow.export_experanto_chunk(
+                store,
+                trial_id=0,
+                chunk_id=chunk,
+                chunk_path=chunk_path,
+                settings=settings,
+                provenance=provenance,
+            )
+        )
         record = json.loads((paths[-1] / workflow.CHUNK_EXPORT_META).read_text())
         assert record["export_settings"]["export_blank_spikes"] is blank_spikes
         assert record["export_settings"]["tier_reference_sha256"]
         assert (paths[-1] / "meta.json").is_file()
     assert not list(datastore_root.rglob(".experanto.export-*"))
 
-    # Submit through the real Slurm backend in dry-run mode, then execute the
-    # exact worker request locally. This exercises its environment contract.
-    from mozaik.meta_workflow.parameter_search import SlurmSequentialBackend
-
-    backend = SlurmSequentialBackend(1, 4, "environment/activate", dry_run=True)
-    merge_output = tmp_path / "merged"
-    captured = {}
-    execute = backend.execute_script
-
-    def capture(command, **kwargs):
-        captured.update(command=command, **kwargs)
-        return execute(command, **kwargs)
-
-    monkeypatch.setattr(backend, "execute_script", capture)
-    job_id = workflow.submit_experanto_merge_job(
-        backend,
-        simulation_job_ids=["101", "102"],
+    merge_output = workflow.merge_experanto_trial(
         trial_id=0,
-        datastore_prefix=str(datastore_root),
+        datastore_prefix=datastore_root,
         chunk_end=2,
-        output_dir=str(merge_output),
-        python_executable=sys.executable,
+        output_dir=tmp_path / "merged",
     )
-    assert job_id.startswith("DRY") and captured["depends_on"] == ["101", "102"]
-    assert "--dependency=afterok:101:102" in capsys.readouterr().out
-    monkeypatch.setenv(workflow.MERGE_JOB_ENV, captured["env"][workflow.MERGE_JOB_ENV])
-    workflow.merge_experanto_from_environment()
 
     # Export the same presentations as one chunk and pass it through the merger.
     all_path = tmp_path / "all.json"
     all_path.write_text(json.dumps(records))
-    single_request = workflow.ExperantoChunkExport(
-        0,
-        0,
-        str(all_path),
-        output_dir=str(tmp_path / "single_export"),
+    store = Store(tmp_path / "single_datastore", sum(segments, []))
+    store.save()
+    single_export = workflow.export_experanto_chunk(
+        store,
+        trial_id=0,
+        chunk_id=0,
+        chunk_path=all_path,
         settings=settings,
+        output_dir=tmp_path / "single_export",
     )
-    workflow.finish_experanto_workflow(
-        Store(tmp_path / "single_datastore", sum(segments, [])), single_request
-    )
-    single_output = merge_experanto_shards(
-        [single_request.output_dir], tmp_path / "single_merged"
-    )
+    single_output = merge_experanto_shards([single_export], tmp_path / "single_merged")
     expected, actual = _read_yaml(single_output / "responses/meta.yml"), _read_yaml(
         merge_output / "responses/meta.yml"
     )
@@ -249,46 +219,22 @@ def test_failed_export_is_not_published(tmp_path, monkeypatch):
     chunk_path.write_text(
         json.dumps([dict(modality="image", file="image.yml", trial=0)])
     )
-    request = workflow.ExperantoChunkExport(
-        0, 0, str(chunk_path), output_dir=str(tmp_path / "export")
-    )
+    output = tmp_path / "export"
 
     def fail(*args, **kwargs):
         raise RuntimeError("export failed")
 
     monkeypatch.setattr(workflow, "export_dsvs_to_experanto", fail)
     with pytest.raises(RuntimeError, match="export failed"):
-        workflow.export_experanto_chunk(Store(tmp_path, []), request)
-    assert not Path(request.output_dir).exists()
+        workflow.export_experanto_chunk(
+            Store(tmp_path, []),
+            trial_id=0,
+            chunk_id=0,
+            chunk_path=chunk_path,
+            output_dir=output,
+        )
+    assert not output.exists()
     assert not list(tmp_path.glob(".export.export-*"))
-
-
-@pytest.mark.parametrize(
-    "rank,failure", [(0, None), (0, "disk full"), (1, "disk full")]
-)
-def test_root_only_export_and_mpi_failure_propagation(monkeypatch, rank, failure):
-    events = []
-    store = SimpleNamespace(save=lambda: events.append("saved"))
-
-    def export(*args):
-        events.append("exported")
-        if failure:
-            raise OSError(failure)
-
-    monkeypatch.setattr(workflow, "export_experanto_chunk", export)
-    monkeypatch.setattr(
-        mozaik,
-        "mpi_comm",
-        SimpleNamespace(
-            rank=rank, bcast=lambda value, root: value if rank == 0 else failure
-        ),
-    )
-    if failure:
-        with pytest.raises(RuntimeError, match=failure):
-            workflow.finish_experanto_workflow(store, object())
-    else:
-        workflow.finish_experanto_workflow(store, object())
-    assert events == (["saved", "exported"] if rank == 0 else [])
 
 
 def test_chunk_export_requires_single_chunk(tmp_path):
@@ -303,21 +249,5 @@ def test_trial_merge_requires_completed_exports(tmp_path):
         workflow.merge_experanto_trial(
             trial_id=0,
             shard_paths=[tmp_path / "unfinished"],
-            output_dir=tmp_path / "merged",
-        )
-
-
-def test_merge_submission_requires_all_simulation_job_ids(tmp_path):
-    backend = SimpleNamespace(
-        execute_script=lambda *args, **kwargs: pytest.fail(
-            "Submitted without all dependencies"
-        )
-    )
-    with pytest.raises(ValueError, match="dependency ID"):
-        workflow.submit_experanto_merge_job(
-            backend,
-            simulation_job_ids=["101", None],
-            trial_id=0,
-            shard_paths=["chunk0", "chunk1"],
             output_dir=tmp_path / "merged",
         )
