@@ -75,9 +75,9 @@ def _install_common_monkeypatches(monkeypatch, experiment_overrides):
     monkeypatch.setattr(mozaik.controller.mozaik, "MPI_ROOT", 0)
 
 
-def test_run_workflow_list_legacy_path(monkeypatch):
+def test_run_workflow_accepts_instantiated_experiment_list(monkeypatch):
     """
-    Verify that the legacy list-based experiment workflow remains unchanged.
+    Verify that the controller accepts an instantiated experiment list.
 
     When no experiment overrides are present and ``create_experiments`` returns
     an already-instantiated list, the controller should pass that list straight
@@ -122,7 +122,7 @@ def test_run_workflow_ordereddict_applies_overrides(monkeypatch):
     experiment instantiation.
 
     The resulting instantiated experiment should contain the overridden value,
-    and the controller should store legacy experiment metadata tuples for the
+    and the controller should store experiment metadata tuples for the
     datastore.
     """
     _install_common_monkeypatches(
@@ -172,8 +172,8 @@ def test_run_workflow_ordereddict_applies_overrides(monkeypatch):
 
 def test_run_workflow_list_rejects_experiment_overrides(monkeypatch):
     """
-    Verify that new-style experiment overrides are rejected for legacy
-    list-based experiment factories.
+    Verify that experiment overrides are rejected for factories returning
+    instantiated experiment lists.
     """
     _install_common_monkeypatches(
         monkeypatch,

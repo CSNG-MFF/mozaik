@@ -8,9 +8,8 @@ export can be driven and checked end-to-end without running a model. Verifies:
   b) that the exported spikes are IDENTICAL to those "stored in the datastore" (the synthetic
      spike trains), with the documented per-segment offsetting and < duration windowing.
 
-Also checks that the new stim_name_key / group_by_key parameters let the user select and name
-stimuli by parameters other than movie_name / trial, with the defaults reproducing the old
-behaviour.
+Also checks that stim_name_key / group_by_key select and name stimuli by configurable
+parameters, defaulting to movie_name / trial.
 """
 
 import os
