@@ -8,9 +8,8 @@ export can be driven and checked end-to-end without running a model. Verifies:
   b) that the exported spikes are IDENTICAL to those "stored in the datastore" (the synthetic
      spike trains), with the documented per-segment offsetting and < duration windowing.
 
-Also checks that the new stim_name_key / group_by_key parameters let the user select and name
-stimuli by parameters other than movie_name / trial, with the defaults reproducing the old
-behaviour.
+Also checks that stim_name_key / group_by_key select and name stimuli by configurable
+parameters, defaulting to movie_name / trial.
 """
 
 import os
@@ -21,7 +20,7 @@ import pytest
 import yaml
 
 from mozaik.experiments.vision import PixelMovieExperantoBase
-from mozaik.meta_workflow.experanto_export import export_dsvs_to_experanto
+from mozaik.meta_workflow.experanto_export import export_dsv_to_experanto
 from mozaik.tools.experanto_export import MozaikTrialExporter
 
 
@@ -95,7 +94,7 @@ def test_trial_export_format_and_spikes_identical(tmp_path):
 
     out = str(tmp_path / "responses")
     exp = MozaikTrialExporter(out, trial_id=0, sampling_rate=1000.0)
-    exp.process_batch([_DSV(segs)])
+    exp.process(_DSV(segs))
     exp.finalize()
     spikes, meta = _load(out)
 
@@ -147,7 +146,7 @@ def test_custom_group_and_name_keys(tmp_path):
         group_value="A",
         stim_name_key="label",
     )
-    exp.process_batch([_DSV(segs)])
+    exp.process(_DSV(segs))
     exp.finalize()
     spikes, meta = _load(out)
 
@@ -208,7 +207,7 @@ def test_multi_sheet_stacks_units_and_records_boundaries(tmp_path):
     exp = MozaikTrialExporter(
         out, trial_id=0, sampling_rate=1000.0
     )  # sheet_names=None -> all
-    exp.process_batch([_DSV(_sheet_segs())])
+    exp.process(_DSV(_sheet_segs()))
     exp.finalize()
     spikes, meta = _load(out)
 
@@ -261,7 +260,7 @@ def test_pre_and_post_blank_spikes_are_exported(tmp_path):
 
     out = str(tmp_path / "responses")
     exp = MozaikTrialExporter(out, trial_id=0)
-    exp.process_batch([_DSV(segs)])
+    exp.process(_DSV(segs))
     exp.finalize()
     spikes, meta = _load(out)
 
@@ -288,11 +287,10 @@ def test_blank_spikes_can_be_disabled_from_workflow(tmp_path):
         ),
     ]
 
-    export_dsvs_to_experanto(
-        [_DSV(segs)],
+    export_dsv_to_experanto(
+        _DSV(segs),
         str(tmp_path),
         trial_id=0,
-        chunk_paths=[],
         export_screen=False,
         export_blank_spikes=False,
     )
@@ -310,7 +308,7 @@ def test_multi_sheet_subset_selection(tmp_path):
     exp = MozaikTrialExporter(
         out, trial_id=0, sampling_rate=1000.0, sheet_names=["V1_Exc_L2/3"]
     )
-    exp.process_batch([_DSV(_sheet_segs())])
+    exp.process(_DSV(_sheet_segs()))
     exp.finalize()
     spikes, meta = _load(out)
     assert meta["sheets"] == ["V1_Exc_L2/3"]
@@ -341,7 +339,7 @@ def test_multi_sheet_unequal_counts_raise(tmp_path):
     ]
     exp = MozaikTrialExporter(str(tmp_path / "r"), trial_id=0, sampling_rate=1000.0)
     with pytest.raises(ValueError, match="Unequal segment counts"):
-        exp.process_batch([_DSV(segs)])
+        exp.process(_DSV(segs))
 
 
 def test_multi_sheet_missing_requested_sheet_raises(tmp_path):
@@ -352,4 +350,4 @@ def test_multi_sheet_missing_requested_sheet_raises(tmp_path):
         sheet_names=["V1_Exc_L4", "NOT_A_SHEET"],
     )
     with pytest.raises(ValueError, match="not present"):
-        exp.process_batch([_DSV(_sheet_segs())])
+        exp.process(_DSV(_sheet_segs()))
