@@ -1,5 +1,4 @@
 import ast
-import gc
 import json
 import os
 import shutil
@@ -87,9 +86,7 @@ def _validate_experanto_model_timing(dsv):
 
 class MozaikTrialExporter:
     """
-    Stateful exporter to handle batch processing of Mozaik DataStoreViews
-    into a single large output file.
-    Supports appending to an existing export if append_mode=True.
+    Export one chunk's presentations into a flat spike array, grouped by unit.
 
     Parameters
     ----------
@@ -99,12 +96,10 @@ class MozaikTrialExporter:
         ``"movie_name"`` names ``PixelMovieExperanto`` stimuli.
     group_by_key : str
         Stimulus parameter used to select which segments are exported together. Default
-        ``"trial"`` reproduces the historical behaviour; e.g. a long movie presented in chunks
-        could instead be grouped by its per-chunk start time.
+        ``"trial"`` groups segments by trial; e.g. a long movie presented in chunks could
+        instead be grouped by its per-chunk start time.
     group_value : optional
-        Value of ``group_by_key`` selecting this export; defaults to ``trial_id`` so the default
-        keys/values (and the written ``meta.yml``) are byte-identical to the previous
-        trial-based export.
+        Value of ``group_by_key`` selecting this export; defaults to ``trial_id``.
     export_blank_spikes : bool
         Include spikes recorded during explicit Experanto ``InternalStimulus`` blanks. Disabling
         this leaves blank timing and metadata intact while omitting their spikes. Default ``True``.
@@ -116,7 +111,6 @@ class MozaikTrialExporter:
         trial_id,
         sampling_rate=1000.0,
         smooth_param=None,
-        append_mode=False,
         stim_name_key="movie_name",
         group_by_key="trial",
         group_value=None,
@@ -128,8 +122,7 @@ class MozaikTrialExporter:
         self.sampling_rate = sampling_rate
         self.smooth_param = smooth_param
         # Which stimulus parameter names each stimulus, and which parameter (and value) selects
-        # the segments to export together. Defaults reproduce the historical trial/movie_name
-        # behaviour exactly.
+        # the segments to export together. Defaults select by trial and name by movie_name.
         self.stim_name_key = stim_name_key
         self.group_by_key = group_by_key
         self.group_value = trial_id if group_value is None else group_value
@@ -154,78 +147,13 @@ class MozaikTrialExporter:
 
         os.makedirs(self.output_dir, exist_ok=True)
 
-        # Check for existing data if append_mode is active
-        if append_mode:
-            self._load_existing_state()
-        else:
-            print(f"Exporter initialized. Target: {self.output_dir} (New Export)")
-
-    def _load_existing_state(self):
-        """Attempts to load state from existing meta.yaml and spikes.npy."""
-        meta_path = os.path.join(self.output_dir, "meta.yml")
-        spikes_path = os.path.join(self.output_dir, "spikes.npy")
-
-        if os.path.exists(meta_path) and os.path.exists(spikes_path):
-            print(f"Loading existing data from {self.output_dir}...")
-
-            # 1. Load Metadata
-            with open(meta_path, "r") as f:
-                meta_data = yaml.safe_load(f)
-
-            # Verify compatibility
-            if meta_data.get("sampling_rate") != self.sampling_rate:
-                raise ValueError("Sampling rate mismatch with existing data.")
-            if meta_data.get("trial_id") != self.trial_id:
-                print(
-                    f"Warning: Existing data has trial_id {meta_data.get('trial_id')}, expected {self.trial_id}"
-                )
-
-            self.num_units = meta_data["n_signals"]
-            self.meta_segments = meta_data.get("stimuli_order", [])
-            spike_indices = meta_data["spike_indices"]
-
-            # Restore multi-sheet layout so appended chunks keep the same sheet ordering / boundaries.
-            # (Absent on legacy single-sheet exports — finalize() then falls back to a single block.)
-            self.sheet_names = meta_data.get("sheets")
-            self.sheet_unit_counts = meta_data.get("n_signals_layerwise")
-            self.sheet_unit_indices = meta_data.get("sheet_unit_indices")
-
-            # end_time is in seconds; convert back to ms for internal offset
-            self.current_time_offset = meta_data["end_time"] * 1000.0
-            bin_size_ms = 1000.0 / self.sampling_rate
-            self.total_bins_accumulated = int(
-                np.ceil(self.current_time_offset / bin_size_ms)
-            )
-
-            # 2. Load Spikes and Reconstruct Lists
-            # We must load the full array to append to it efficiently in memory
-            # Spikes on disk are in seconds; convert back to ms for internal accumulation
-            flat_spikes = np.load(spikes_path) * 1000.0
-
-            self.all_unit_spike_lists = []
-
-            # Reconstruct list of lists using the CSR indices
-            # spike_indices = [0, end_0, end_1, ..., end_{N-1}] (length N+1)
-            for i in range(self.num_units):
-                start = spike_indices[i]
-                end = spike_indices[i + 1]
-                # Copying to list allows appending later
-                unit_spikes = flat_spikes[start:end]
-                self.all_unit_spike_lists.append([unit_spikes])
-
-            print(
-                f"Resumed from offset: {self.current_time_offset} ms with {self.num_units} units."
-            )
-            del flat_spikes  # Free raw buffer
-            gc.collect()
-        else:
-            print("No existing data found to append. Starting fresh.")
+        print(f"Exporter initialized. Target: {self.output_dir} (New Export)")
 
     def _in_group(self, raw):
         """Whether a segment whose ``group_by_key`` value is ``raw`` belongs to this export.
 
-        Reproduces the historical integer trial comparison for the default ("trial") key and
-        falls back to a direct equality test for other (e.g. float start-time) grouping keys.
+        Compares values as integers when possible, falling back to direct equality
+        for values that cannot be converted to integers.
         A segment missing the grouping parameter (``raw is None``) is not selected.
         """
         if raw is None:
@@ -297,7 +225,7 @@ class MozaikTrialExporter:
         if self.sheet_names is None:
             self.sheet_names = selected
         elif selected != self.sheet_names:
-            # Only enforce once we already know the layout (fresh export, or a resume that restored it).
+            # A chunk's sheet layout must stay fixed across presentations.
             raise ValueError(
                 f"Sheet set/order changed across batches: had {self.sheet_names}, now {selected}"
             )
@@ -488,23 +416,13 @@ class MozaikTrialExporter:
         # Save Main Output
         np.save(os.path.join(self.output_dir, "spikes.npy"), spikes_1d)
 
-        # Sheet layout for the multi-sheet index. Fall back to a single anonymous block for a legacy
-        # resume that restored no sheet metadata (old single-sheet exports).
-        sheet_names = self.sheet_names
-        sheet_unit_counts = self.sheet_unit_counts
-        sheet_unit_indices = self.sheet_unit_indices
-        if sheet_unit_indices is None:
-            sheet_names = sheet_names if sheet_names is not None else [None]
-            sheet_unit_counts = [self.num_units]
-            sheet_unit_indices = [0, self.num_units]
-
         # Save Metadata
         meta_data = {
             "modality": "spikes",
             "n_signals": self.num_units,
-            "n_signals_layerwise": sheet_unit_counts,
-            "sheets": sheet_names,
-            "sheet_unit_indices": sheet_unit_indices,
+            "n_signals_layerwise": self.sheet_unit_counts,
+            "sheets": self.sheet_names,
+            "sheet_unit_indices": self.sheet_unit_indices,
             "start_time": 0.0,
             "end_time": self.current_time_offset / 1000.0,
             "trial_id": self.trial_id,
@@ -521,31 +439,6 @@ class MozaikTrialExporter:
             f"Export Complete. Total Units: {self.num_units}, Total Time: {self.current_time_offset}ms"
         )
         print(f"Final Memory: {get_process_memory():.2f} MB")
-
-
-def export_mozaik_trial_streamed(
-    dsv_or_list,
-    output_dir,
-    trial_id,
-    sampling_rate=1000.0,
-    smooth_param=None,
-    append_mode=False,
-    export_blank_spikes=True,
-):
-    """
-    Wrapper function for backward compatibility.
-    Processes the given DSV(s) in one go using the Exporter class.
-    """
-    exporter = MozaikTrialExporter(
-        output_dir,
-        trial_id,
-        sampling_rate,
-        smooth_param,
-        append_mode,
-        export_blank_spikes=export_blank_spikes,
-    )
-    exporter.process_batch(dsv_or_list)
-    exporter.finalize()
 
 
 class MozaikScreenExporter:
@@ -701,12 +594,14 @@ class MozaikScreenExporter:
                 output_idx += 1
 
             elif modality == "image":
-                pre_blank_ms, presentation_ms, post_blank_ms = (
-                    PixelMovieExperantoBase.resolve_experanto_image_timing(
-                        src_meta,
-                        fd,
-                        source_name=os.path.join(self._source_meta_dir, meta_file),
-                    )
+                (
+                    pre_blank_ms,
+                    presentation_ms,
+                    post_blank_ms,
+                ) = PixelMovieExperantoBase.resolve_experanto_image_timing(
+                    src_meta,
+                    fd,
+                    source_name=os.path.join(self._source_meta_dir, meta_file),
                 )
 
                 # --- Pre-blank entry ---
@@ -822,9 +717,11 @@ class MozaikScreenExporter:
         elif modality == "image":
             from mozaik.experiments.vision import PixelMovieExperantoBase
 
-            pre_blank_ms, presentation_ms, post_blank_ms = (
-                PixelMovieExperantoBase.resolve_experanto_image_timing(src_meta, fd)
-            )
+            (
+                pre_blank_ms,
+                presentation_ms,
+                post_blank_ms,
+            ) = PixelMovieExperantoBase.resolve_experanto_image_timing(src_meta, fd)
             return pre_blank_ms + presentation_ms + post_blank_ms
         else:  # blank
             return fd
@@ -862,9 +759,11 @@ class MozaikScreenExporter:
         elif modality == "image":
             from mozaik.experiments.vision import PixelMovieExperantoBase
 
-            pre_blank_ms, presentation_ms, post_blank_ms = (
-                PixelMovieExperantoBase.resolve_experanto_image_timing(src_meta, fd)
-            )
+            (
+                pre_blank_ms,
+                presentation_ms,
+                post_blank_ms,
+            ) = PixelMovieExperantoBase.resolve_experanto_image_timing(src_meta, fd)
 
             # Pre-blank frame
             if pre_blank_ms > 0:
