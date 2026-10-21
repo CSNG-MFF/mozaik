@@ -134,7 +134,28 @@ class FixedKConnector(Connector):
                                     receptor_type=self.parameters.target_synapses)
 
 
+class FixedKConnectorWithAnnotation(FixedKConnector):
+    """
+    Identical to FixedKConnector, but after connecting, it adds an annotation
+    to each target neuron with the number of connections it received (k).
 
+    This is designed to be used before a connector like MSPCASC.
+    """
+    required_parameters = ParameterSet({
+        'annotation_name': str  # The name of the annotation to create, e.g., 'num_afferent_inputs'
+    })
+
+    def _connect(self):
+        # First, run the standard connection process from the parent class
+        super()._connect()
+
+        # Now, add the annotation to every neuron in the target sheet
+        k_value = self.parameters.k
+        annotation_key = self.parameters.annotation_name
+
+        # self.target is the destination sheet
+        for neuron_index in range(len(self.target.pop)):
+            self.target.add_neuron_annotation(neuron_index, annotation_key, k_value)
 
 
 

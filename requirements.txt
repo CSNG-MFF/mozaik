@@ -27,6 +27,7 @@ param==1.5.1
 parameters==0.2.1
 Pillow==9.1.0
 pluggy==1.0.0
+probeinterface
 psutil==5.9.0
 py==1.11.0
 PyNN==0.10.0
@@ -46,3 +47,4 @@ som-pbc
 tomli==2.0.1
 tqdm==4.64.0
 urllib3==1.26.9
+probeinterface

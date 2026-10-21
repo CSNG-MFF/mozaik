@@ -39,6 +39,15 @@ class Sheet(BaseComponent):
     
     cell.params : ParameterSet
         The set of parameters that the given model requires.
+
+    cell.params.native_params : ParameterSet, optional
+        Metadata required for constructing a native NEST cell type. It contains
+        ``parameter_units`` and ``parameter_translations`` ParameterSets, and
+        may contain an ``excluded_parameters`` list. This metadata is not passed
+        to the cell-type constructor. ``parameter_units`` maps native parameter
+        or recordable names to unit strings, ``parameter_translations`` maps
+        PyNN parameter names to native names, and ``excluded_parameters`` names
+        read-only NEST defaults that PyNN must not treat as parameters.
                
     cell.initial_values : ParameterSet
         It can contain a ParameterSet containing the initial values for some of the parameters in cell.params
@@ -116,7 +125,106 @@ class Sheet(BaseComponent):
                self.dist_params[k]=self.parameters.cell.params[k]
         for dist_k in self.dist_params.keys():
             del self.parameters.cell.params[dist_k]
-        
+
+    def _create_cell_type(self):
+        r"""Create the PyNN cell-type instance configured for this sheet."""
+        cell_params = dict(self.parameters.cell.params)
+        # native_params contains Mozaik metadata, not neuron constructor arguments.
+        native_params = cell_params.pop("native_params", None)
+
+        if not self.parameters.cell.native_nest:
+            if native_params is not None:
+                raise ValueError(
+                    "cell.params.native_params can only be used with a native NEST cell type"
+                )
+            return getattr(self.sim, self.parameters.cell.model)(**cell_params)
+
+        cell_type_class = self.sim.native_cell_type(self.parameters.cell.model)
+
+        if native_params is not None:
+            if not isinstance(native_params, ParameterSet):
+                raise TypeError("cell.params.native_params must be a ParameterSet")
+
+            required_parameters = {
+                "parameter_units",
+                "parameter_translations",
+            }
+            optional_parameters = {"excluded_parameters"}
+            native_parameter_names = set(native_params.keys())
+            if (
+                not required_parameters.issubset(native_parameter_names)
+                or not native_parameter_names.issubset(
+                    required_parameters | optional_parameters
+                )
+            ):
+                raise ValueError(
+                    "cell.params.native_params must contain parameter_units and "
+                    "parameter_translations, and may contain excluded_parameters"
+                )
+
+            parameter_units = native_params.parameter_units
+            parameter_translations = native_params.parameter_translations
+            excluded_parameters = native_params.get("excluded_parameters", [])
+            if not isinstance(parameter_units, ParameterSet):
+                raise TypeError(
+                    "cell.params.native_params.parameter_units must be a ParameterSet"
+                )
+            if not isinstance(parameter_translations, ParameterSet):
+                raise TypeError(
+                    "cell.params.native_params.parameter_translations must be a ParameterSet"
+                )
+            if not isinstance(excluded_parameters, (list, tuple)):
+                raise TypeError(
+                    "cell.params.native_params.excluded_parameters must be a list or tuple"
+                )
+
+            for parameter_name in excluded_parameters:
+                if not isinstance(parameter_name, str):
+                    raise TypeError(
+                        "Excluded native parameter names must be strings"
+                    )
+
+            for parameter_name, unit in parameter_units.items():
+                if not isinstance(unit, str):
+                    raise TypeError(
+                        "Unit for native parameter %s must be a string"
+                        % parameter_name
+                    )
+                try:
+                    pq.Quantity(1, unit)
+                except (LookupError, TypeError, ValueError) as error:
+                    raise ValueError(
+                        "Invalid unit %r for native parameter %s"
+                        % (unit, parameter_name)
+                    ) from error
+
+            translation_pairs = []
+            for parameter_name, native_parameter_name in parameter_translations.items():
+                if not isinstance(native_parameter_name, str):
+                    raise TypeError(
+                        "Translation target for native parameter %s must be a string"
+                        % parameter_name
+                    )
+                translation_pairs.append((parameter_name, native_parameter_name))
+
+            if translation_pairs:
+                from pyNN.standardmodels.base import build_translations
+
+                # Translations have to be installed on the native class before it is instantiated.
+                cell_type_class.translations = build_translations(*translation_pairs)
+
+            # Keep unit overrides local to the freshly generated native cell class.
+            cell_type_class.units = cell_type_class.units.copy()
+            cell_type_class.units.update(dict(parameter_units))
+
+            # PyNN otherwise passes read-only numeric NEST defaults to nest.Create().
+            cell_type_class.default_parameters = (
+                cell_type_class.default_parameters.copy()
+            )
+            for parameter_name in excluded_parameters:
+                cell_type_class.default_parameters.pop(parameter_name, None)
+
+        return cell_type_class(**cell_params)
 
     def setup_to_record_list(self):
         r"""
@@ -295,34 +403,17 @@ class Sheet(BaseComponent):
 
         """
 
-        if self.parameters.cell.native_nest:
-            vm_name = ['V_m']
-        else:
-            vm_name = ['v']
-
-        if self.multisynapse:
-            gsyn_names = []
-            for k in self.parameters.cell.receptors.keys():
-                gsyn_names.append(k+ '.gsyn') 
-        elif self.parameters.cell.native_nest:
-            gsyn_names = ['g_ex', 'g_in']
-        else: 
-            gsyn_names = ['gsyn_exc', 'gsyn_inh']
-            
         block = None
         steps = self.model.parameters.steps_get_data 
         if steps:
             for i in range(0,len(self.pop),steps):
                 try:
                     if i + steps < len(self.pop):
-                        b = self.pop[i:i+steps].get_data(
-                            ['spikes'] + vm_name + gsyn_names, gather=False, clear=False
-                        )
+                        b = self.pop[i:i+steps].get_data('all', gather=False, clear=False)
                     else:
-                        b = self.pop[i:i+steps].get_data(
-                            ['spikes'] + vm_name + gsyn_names, gather=False, clear=True
-                        )
+                        b = self.pop[i:i+steps].get_data('all', gather=False, clear=True)
                     b = gather_recording(b)
+
                 except NothingToWriteError as errmsg:
                     logger.debug(errmsg)
                 if (mozaik.mpi_comm) and (mozaik.mpi_comm.rank == mozaik.MPI_ROOT):
@@ -341,10 +432,9 @@ class Sheet(BaseComponent):
                 mozaik.mpi_comm.barrier()
         else:
             try:
-                block = self.pop.get_data(
-                    ['spikes'] + vm_name + gsyn_names, gather=False, clear=True
-                )
+                block = self.pop.get_data('all', gather=False, clear=True)
                 block = gather_recording(block)
+
             except NothingToWriteError as errmsg:
                 logger.debug(errmsg)
 

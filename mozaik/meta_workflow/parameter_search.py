@@ -540,12 +540,16 @@ class ParameterSearch(object):
         """
         return "ParameterSearch"
 
-    def run_parameter_search(self):
+    def run_parameter_search(self, results_directory=None):
         r"""
         This method will run the parameter search replacing each combination of values defined by dictionary params
         in the default parametrization and runing the simulation with each such modified parameters,
         storing the results of each simulation run in a subdirectory named based on the given modified parameter names and their
         values.
+
+        ``results_directory`` optionally selects the parent directory for the
+        parameter-search results. By default, results are stored in the current
+        working directory as before.
 
         It will read the command line for the name of the script that runs individual simulations, the simulator name and the root parameter file path
         Command line syntax:
@@ -564,19 +568,29 @@ class ParameterSearch(object):
         run_script, simulator_name, parameters_url = parse_parameter_search_args()
 
         mdn = self.master_directory(parameters_url)
+
+        if results_directory is None:
+            master_results_directory = mdn
+        else:
+            results_directory = os.path.abspath(results_directory)
+            os.makedirs(results_directory, exist_ok=True)
+            master_results_directory = os.path.join(results_directory, mdn)
+
         # exist_ok so that a search whose master_directory() is fixed can be run more than
         # once, each invocation adding to the same directory.
-        os.makedirs(mdn, exist_ok=True)
-        self.prepare(mdn)
+        os.makedirs(master_results_directory, exist_ok=True)
+        self.prepare(master_results_directory)
 
         counter = 0
         job_ids = []
         combinations = self.generate_parameter_combinations()
-        save_json(combinations, mdn + "/parameter_combinations.json")
+        save_json(
+            combinations,
+            os.path.join(master_results_directory, "parameter_combinations.json"),
+        )
 
         for combination in combinations:
-            # join, so that a master_directory() returning an absolute path is kept as it is
-            combination["results_dir"] = os.path.join(os.getcwd(), mdn) + "/"
+            combination["results_dir"] = os.path.abspath(master_results_directory) + "/"
             job_ids.append(
                 self.backend.execute_job(
                     run_script,
