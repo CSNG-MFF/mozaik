@@ -29,11 +29,13 @@ class IntraCorticalMicroStimulationStimulus(Experiment):
                 See class IntraCorticalMicroStimulation in direct_stimulator.py
     """
 
-    required_parameters = ParameterSet({
-        'duration': float,
-        'sheet_list': list,
-        "stimulator_parameters": ParameterSet,
-    })
+    required_parameters = ParameterSet(
+        {
+            "duration": float,
+            "sheet_list": list,
+            "stimulator_parameters": ParameterSet,
+        }
+    )
 
     def __init__(self, model, parameters):
         Experiment.__init__(self, model, parameters)
@@ -42,17 +44,19 @@ class IntraCorticalMicroStimulationStimulus(Experiment):
         for sheet in parameters.sheet_list:
             _params = MozaikExtendedParameterSet(deepcopy(parameters))
             stimulators[sheet] = [
-                IntraCorticalMicroStimulation(model.sheets[sheet], _params.stimulator_parameters)
+                IntraCorticalMicroStimulation(
+                    model.sheets[sheet], _params.stimulator_parameters
+                )
             ]
         self.direct_stimulation = [stimulators]
 
         _params = MozaikExtendedParameterSet(deepcopy(parameters))
         self.stimuli.append(
             InternalStimulus(
-                frame_duration=_params.duration, 
+                frame_duration=_params.duration,
                 duration=_params.duration,
                 trial=0,
-                direct_stimulation_name='IntraCorticalMicroStimulation',
-                direct_stimulation_parameters=_params.stimulator_parameters
+                direct_stimulation_name="IntraCorticalMicroStimulation",
+                direct_stimulation_parameters=_params.stimulator_parameters,
             )
         )
