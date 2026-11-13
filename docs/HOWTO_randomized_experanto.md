@@ -274,6 +274,25 @@ chunks. Completion records, when present, check order and settings and supply
 provenance automatically. For shards without completion records, pass `provenance=run_record` explicitly;
 `chunk_start` identifies the first supplied chunk (default 0).
 
+## Choose the static-image transfer
+
+Pass `image_transfer="CenteredSymmetricContrast", image_transfer_window=0.2`
+to `RandomizedExperanto` alongside its experiment parameters. In the companion
+LSV1M launcher these are `--image-transfer CenteredSymmetricContrast
+--image-transfer-window 0.2` or the YAML keys `image_transfer` and
+`image_transfer_window`. The default transfer is `MaximumDynamicRange`.
+
+`CenteredSymmetricContrast` centers the input image at the background
+luminance B and maps its largest absolute deviation to W × B before spatial
+sampling. W is the window parameter in [0, 1] and defaults to 0.2. Constant
+images and padding take the background luminance. Video uses its existing
+sampler transfer.
+
+The resolved settings are recorded in the launcher's run record and Mozaik's
+stimulus annotations. Screen exports retain the source pixels and record the
+applied transfer in each entry's `mozaik_image_transfer` metadata. For replay,
+use the recorded settings with the same Mozaik and Imagen source versions.
+
 ## Environment knobs (the experiment driver)
 
 `LSV1M/run_experanto.py` selects the experiment inputs. Launcher jobs use

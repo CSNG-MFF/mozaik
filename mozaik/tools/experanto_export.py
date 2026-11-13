@@ -511,6 +511,11 @@ class MozaikScreenExporter:
                 if is_blank
                 else dict(source)
             )
+            if not is_blank and stimulus.get("image_transfer") is not None:
+                entry["mozaik_image_transfer"] = {
+                    "name": stimulus["image_transfer"],
+                    "window": stimulus.get("image_transfer_window"),
+                }
             entry["first_frame_idx"] = len(timestamps_ms)
             entry["num_frames"] = (
                 source["num_frames"] if entry["modality"] == "video" else 1
