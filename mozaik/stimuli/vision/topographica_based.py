@@ -1631,7 +1631,7 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
         default=DEFAULT_IMAGE_TRANSFER, doc="Registered image transfer."
     )
     image_transfer_window = SNumber(
-        dimensionless, doc="Peak deviation as a fraction of background luminance."
+        dimensionless, doc="Window for the selected image transfer (fraction of background or absolute luminance)."
     )
 
     # Cache source frames for stimuli that use the same file.
@@ -1647,9 +1647,9 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
 
         # Check if file was already loaded earlier as in the cache. If yes use it. If not load it and insert it in the cache.
         p = os.path.join(self.movie_path,self.movie_name)
-        centered = self.image_transfer_window is not None
-        # Keep the centered transfer's float64 input separate from legacy frames.
-        key = (p, "centered") if centered else p
+        uses_fixed_norm = self.image_transfer_window is not None
+        # Keep the FixedNorm transfers' float64 input separate from legacy frames.
+        key = (p, "fixed_norm") if uses_fixed_norm else p
         if key in self.cache:
             self.mc = self.cache[key]
         else:
@@ -1659,7 +1659,7 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
                     # print(">>>>>>>>>>>>>>>>>>>>>>>>>>> Got an image")
                     # if only one frame is present, we need to add a time axis
                     self.mc = self.mc[numpy.newaxis,:,:]
-                if centered:
+                if uses_fixed_norm:
                     self.mc = self.mc.astype(numpy.float64)
                     self.cache[key] = self.mc
                 else:
@@ -1673,9 +1673,9 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
         self.time = 0
 
         transfer_class = IMAGE_TRANSFERS[self.image_transfer]
-        centered = self.image_transfer_window is not None
-        if centered:
-            # Match the historical FixedNorm baseline before applying contrast.
+        uses_fixed_norm = self.image_transfer_window is not None
+        if uses_fixed_norm:
+            # Render the FixedNorm baseline before applying a luminance transfer.
             post_render = transfer_class(window=self.image_transfer_window)
             sampler_transfer = FixedNorm(norm_value=self.video_max_value)
         else:
@@ -1689,13 +1689,13 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
         while True:
             frame = int(math.floor(self.time/self.movie_frame_duration) + self.frame_offset)
             # A static image is held for multiple input-space updates.
-            if centered and frame == last_frame:
+            if uses_fixed_norm and frame == last_frame:
                 yield (rendered, [frame])
                 self.time += self.frame_duration
                 continue
 
             # FixedNorm acts in place, so give it a copy of the cached source.
-            pixels = self.mc[frame].copy() if centered else self.mc[frame]
+            pixels = self.mc[frame].copy() if uses_fixed_norm else self.mc[frame]
             image = NDArrayImage(
                                 pixels,
                                 x=self.x_location,
@@ -1710,7 +1710,7 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
                                 pattern_sampler=sampler)
             
             rendered = image()
-            if centered:
+            if uses_fixed_norm:
                 rendered = post_render(rendered, self.background_luminance)
                 last_frame = frame
             yield (rendered, [frame])

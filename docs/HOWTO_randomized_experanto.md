@@ -288,6 +288,14 @@ padding) at the background luminance B and maps its largest absolute deviation
 to W × B. W is in [0, 1] and defaults to 0.2, reproducing the operation order
 of the historical `centered_c020`. Video uses its existing sampler transfer.
 
+For a fixed linear mapping, select `--image-transfer LinearLuminanceWindow
+--image-transfer-window 10`. After the same FixedNorm rendering, the transfer
+maps `y` to `B + w * ((y - B) / B)`. The required window `w` is an absolute
+luminance half-width in `[0, B]`. For example, with B = 50 and w = 10,
+rendered luminances of 0, 50, and 100 map to 40, 50, and 60. The mapping
+uses fixed endpoints for every image, including any padding in the rendered
+frame.
+
 The resolved settings are recorded in the launcher's run record and Mozaik's
 stimulus annotations. Screen exports retain the source pixels and record the
 applied transfer in each entry's `mozaik_image_transfer` metadata. For replay,

@@ -1,5 +1,6 @@
 """Built-in image transfers for Experanto stimuli."""
 
+import math
 from numbers import Real
 
 import numpy as np
@@ -29,9 +30,27 @@ class CenteredSymmetricContrast(param.Parameterized):
         return background_luminance * (1 + self.window * z)
 
 
+class LinearLuminanceWindow(param.Parameterized):
+    """Map rendered luminance from [0, 2B] to [B - window, B + window]."""
+
+    window = param.Number(bounds=(0, None))
+
+    def __call__(self, image, background_luminance):
+        if not math.isfinite(background_luminance) or not 0 < background_luminance:
+            raise ValueError("LinearLuminanceWindow requires a positive finite background")
+        if self.window > background_luminance:
+            raise ValueError("LinearLuminanceWindow window cannot exceed background luminance")
+        if not np.isfinite(image).all() or image.min() < 0 or image.max() > 2 * background_luminance:
+            raise ValueError("LinearLuminanceWindow requires luminance in [0, 2 * background]")
+        return background_luminance + self.window * (
+            (image - background_luminance) / background_luminance
+        )
+
+
 IMAGE_TRANSFERS = {
     DEFAULT_IMAGE_TRANSFER: MaximumDynamicRange,
     "CenteredSymmetricContrast": CenteredSymmetricContrast,
+    "LinearLuminanceWindow": LinearLuminanceWindow,
 }
 
 
@@ -49,6 +68,14 @@ def resolve_image_transfer(name, window):
             or not 0 <= window <= 1
         ):
             raise ValueError("CenteredSymmetricContrast window must be finite and in [0, 1]")
+        return float(window)
+    if IMAGE_TRANSFERS[name] is LinearLuminanceWindow:
+        if (
+            isinstance(window, bool)
+            or not isinstance(window, Real)
+            or not 0 <= window < float("inf")
+        ):
+            raise ValueError("LinearLuminanceWindow requires a finite nonnegative window")
         return float(window)
     if window is not None:
         raise ValueError(f"{name} does not accept an image transfer window")

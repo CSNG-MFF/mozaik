@@ -12,14 +12,22 @@ import yaml
 from parameters import ParameterSet
 
 from mozaik.experiments.vision import RandomizedExperanto
-from mozaik.stimuli.vision.image_transfers import CenteredSymmetricContrast
+from mozaik.stimuli.vision.image_transfers import (
+    CenteredSymmetricContrast,
+    LinearLuminanceWindow,
+    resolve_image_transfer,
+)
 from mozaik.stimuli.vision.topographica_based import NaturalImage
 from mozaik.tools.experanto_export import MozaikScreenExporter
 from mozaik.tools.mozaik_parametrized import MozaikParametrized
 
 
-@pytest.mark.parametrize("window, width", [(None, 11.0), (1.0, 8.0)])
-def test_centered_image_transfer_replays_and_exports_its_settings(tmp_path, window, width):
+@pytest.mark.parametrize("transfer, window, width", [
+    ("CenteredSymmetricContrast", None, 11.0),
+    ("CenteredSymmetricContrast", 1.0, 8.0),
+    ("LinearLuminanceWindow", 10.0, 8.0),
+])
+def test_image_transfer_replays_and_exports_its_settings(tmp_path, transfer, window, width):
     effective_window = 0.2 if window is None else window
     data = tmp_path / "screen/data"
     meta = tmp_path / "screen/meta"
@@ -59,12 +67,12 @@ def test_centered_image_transfer_replays_and_exports_its_settings(tmp_path, wind
         video_max_value=255.0, shuffle_stimuli=False,
     ))
     experiment = RandomizedExperanto(
-        model, parameters, image_transfer="CenteredSymmetricContrast",
+        model, parameters, image_transfer=transfer,
         image_transfer_window=window,
     )
     image, blank, video = experiment.stimuli
     record = ast.literal_eval(str(image))
-    assert record["image_transfer"] == "CenteredSymmetricContrast"
+    assert record["image_transfer"] == transfer
     assert record["image_transfer_window"] == effective_window
     assert video.image_transfer == "MaximumDynamicRange"
     assert video.image_transfer_window is None
@@ -76,14 +84,22 @@ def test_centered_image_transfer_replays_and_exports_its_settings(tmp_path, wind
         size_x=11.0, size_y=11.0, location_x=0.0, location_y=0.0,
     )
     baseline = next(reference.frames())[0]
-    deviations = baseline - baseline.mean()
-    expected = 40.1 * (1 + effective_window * (deviations / np.max(np.abs(deviations))))
+    if transfer == "LinearLuminanceWindow":
+        expected = 40.1 - effective_window + baseline * (effective_window / 40.1)
+        np.testing.assert_allclose(expected[0, 0], 30.1)
+    else:
+        deviations = baseline - baseline.mean()
+        expected = 40.1 * (1 + effective_window * (deviations / np.max(np.abs(deviations))))
     replay = MozaikParametrized.idd_to_instance(str(image))
     for stimulus in (image, replay):
         stimulus.reset()
-        np.testing.assert_array_equal(stimulus.img, expected)
+        if transfer == "LinearLuminanceWindow":
+            np.testing.assert_allclose(stimulus.img, expected, rtol=1e-15)
+        else:
+            np.testing.assert_array_equal(stimulus.img, expected)
+        rendered = stimulus.img.copy()
         stimulus.update()
-        np.testing.assert_array_equal(stimulus.img, expected)
+        np.testing.assert_array_equal(stimulus.img, rendered)
 
     dsv = SimpleNamespace(
         get_segments=lambda: [
@@ -98,7 +114,7 @@ def test_centered_image_transfer_replays_and_exports_its_settings(tmp_path, wind
     screen = tmp_path / "export/screen"
     entries = json.loads((screen / "combined_meta.json").read_text())
     assert entries["00000"]["mozaik_image_transfer"] == {
-        "name": "CenteredSymmetricContrast", "window": effective_window,
+        "name": transfer, "window": effective_window,
     }
     np.testing.assert_array_equal(np.load(screen / "data/00000.npy"), pixels)
 
@@ -107,3 +123,19 @@ def test_centered_transfer_maps_constant_image_to_background():
     baseline = np.full((3, 5), 12.5)
     result = CenteredSymmetricContrast()(baseline, 50.0)
     np.testing.assert_array_equal(result, 50.0)
+
+
+
+def test_linear_window_uses_fixed_endpoints():
+    transfer = LinearLuminanceWindow(window=10.0)
+    np.testing.assert_array_equal(transfer(np.array([[0., 25., 50., 75., 100.]]), 50.),
+                                  [[40., 45., 50., 55., 60.]])
+    np.testing.assert_array_equal(transfer(np.array([[25., 25.]]), 50.), [[45., 45.]])
+    with pytest.raises(ValueError, match="cannot exceed"):
+        transfer(np.array([[5.]]), 5.)
+
+
+@pytest.mark.parametrize("window", [None, -1, float("nan"), float("inf"), True])
+def test_linear_window_requires_explicit_finite_nonnegative_value(window):
+    with pytest.raises(ValueError, match="finite nonnegative"):
+        resolve_image_transfer("LinearLuminanceWindow", window)

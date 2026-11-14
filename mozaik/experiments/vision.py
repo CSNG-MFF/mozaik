@@ -2686,8 +2686,9 @@ class RandomizedExperanto(PixelMovieExperantoBase):
     image_transfer : str
             Registered static-image transfer. Defaults to MaximumDynamicRange.
     image_transfer_window : float or None
-            Peak luminance deviation as a fraction of background for
-            CenteredSymmetricContrast. Defaults to 0.2 for that transfer.
+            Peak deviation as a fraction of background for CenteredSymmetricContrast
+            (default 0.2), or an absolute luminance half-width for LinearLuminanceWindow
+            (required, from zero to background luminance).
 
     Other parameters
     ----------------
