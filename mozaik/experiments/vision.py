@@ -3,10 +3,7 @@ from mozaik.controller import Global
 from mozaik.experiments import Experiment
 from parameters import ParameterSet
 import mozaik.stimuli.vision.topographica_based as topo
-from mozaik.stimuli.vision.image_transfers import (
-    DEFAULT_IMAGE_TRANSFER,
-    resolve_image_transfer,
-)
+from mozaik.stimuli.vision.image_transfers import DEFAULT_IMAGE_TRANSFER
 import mozaik.stimuli.vision.visual_stimulus as vs
 import numpy
 from mozaik.stimuli import InternalStimulus
@@ -2710,7 +2707,7 @@ class RandomizedExperanto(PixelMovieExperantoBase):
     ):
         self.image_settings = dict(
             image_transfer=image_transfer,
-            image_transfer_window=resolve_image_transfer(image_transfer, image_transfer_window),
+            image_transfer_window=image_transfer_window,
         )
         super().__init__(model, parameters)
 
