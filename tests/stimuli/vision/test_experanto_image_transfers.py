@@ -18,8 +18,8 @@ from mozaik.tools.experanto_export import MozaikScreenExporter
 from mozaik.tools.mozaik_parametrized import MozaikParametrized
 
 
-@pytest.mark.parametrize("window", [None, 1.0])
-def test_centered_image_transfer_replays_and_exports_its_settings(tmp_path, window):
+@pytest.mark.parametrize("window, width", [(None, 11.0), (1.0, 8.0)])
+def test_centered_image_transfer_replays_and_exports_its_settings(tmp_path, window, width):
     effective_window = 0.2 if window is None else window
     data = tmp_path / "screen/data"
     meta = tmp_path / "screen/meta"
@@ -54,7 +54,7 @@ def test_centered_image_transfer_replays_and_exports_its_settings(tmp_path, wind
         visual_field=SimpleNamespace(size_x=11.0, size_y=11.0),
     )
     parameters = ParameterSet(dict(
-        base_path=str(tmp_path), chunk_dict_path="chunk.json", width=11.0,
+        base_path=str(tmp_path), chunk_dict_path="chunk.json", width=width,
         movie_frame_duration=35, global_frame_offset=0, images_per_trial=1,
         video_max_value=255.0, shuffle_stimuli=False,
     ))
@@ -71,7 +71,7 @@ def test_centered_image_transfer_replays_and_exports_its_settings(tmp_path, wind
 
     reference = NaturalImage(
         image_path=str(tmp_path / "reference.png"), image_duration=280.0,
-        blank_duration=0.0, duration=280.0, frame_duration=7.0, size=11.0,
+        blank_duration=0.0, duration=280.0, frame_duration=7.0, size=width,
         density=1 / .0763889, background_luminance=40.1, trial=0,
         size_x=11.0, size_y=11.0, location_x=0.0, location_y=0.0,
     )
@@ -81,14 +81,9 @@ def test_centered_image_transfer_replays_and_exports_its_settings(tmp_path, wind
     replay = MozaikParametrized.idd_to_instance(str(image))
     for stimulus in (image, replay):
         stimulus.reset()
-        np.testing.assert_allclose(stimulus.img, expected, rtol=2e-15, atol=5e-14)
+        np.testing.assert_array_equal(stimulus.img, expected)
         stimulus.update()
-        np.testing.assert_allclose(stimulus.img, expected, rtol=2e-15, atol=5e-14)
-
-    # A smaller field of the image leaves neutral padding on the screen.
-    image.size = 8.0
-    image.reset()
-    assert image.img[0, 0] == 40.1
+        np.testing.assert_array_equal(stimulus.img, expected)
 
     dsv = SimpleNamespace(
         get_segments=lambda: [
@@ -109,6 +104,6 @@ def test_centered_image_transfer_replays_and_exports_its_settings(tmp_path, wind
 
 
 def test_centered_transfer_maps_constant_image_to_background():
-    pixels = np.full((3, 5), 0.1)
-    CenteredSymmetricContrast()(pixels)
-    np.testing.assert_array_equal(pixels, 0.5)
+    baseline = np.full((3, 5), 12.5)
+    result = CenteredSymmetricContrast()(baseline, 50.0)
+    np.testing.assert_array_equal(result, 50.0)

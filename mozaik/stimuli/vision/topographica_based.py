@@ -1628,7 +1628,7 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
     video_max_value = SNumber(dimensionless, default=1.0, doc="The maximum pixel value in the video file.")
 
     image_transfer = SString(
-        default=DEFAULT_IMAGE_TRANSFER, doc="Registered image sampler transfer."
+        default=DEFAULT_IMAGE_TRANSFER, doc="Registered image transfer."
     )
     image_transfer_window = SNumber(
         dimensionless, doc="Peak deviation as a fraction of background luminance."
@@ -1649,7 +1649,7 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
         p = os.path.join(self.movie_path,self.movie_name)
         centered = self.image_transfer_window is not None
         # Keep the centered transfer's float64 input separate from legacy frames.
-        key = (p, self.video_max_value) if centered else p
+        key = (p, "centered") if centered else p
         if key in self.cache:
             self.mc = self.cache[key]
         else:
@@ -1660,7 +1660,7 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
                     # if only one frame is present, we need to add a time axis
                     self.mc = self.mc[numpy.newaxis,:,:]
                 if centered:
-                    self.mc = self.mc.astype(numpy.float64) / self.video_max_value
+                    self.mc = self.mc.astype(numpy.float64)
                     self.cache[key] = self.mc
                 else:
                     self.cache[key] = self.mc / self.video_max_value
@@ -1674,16 +1674,27 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
 
         transfer_class = IMAGE_TRANSFERS[self.image_transfer]
         centered = self.image_transfer_window is not None
-        transfer_options = {"window": self.image_transfer_window} if centered else {}
+        if centered:
+            # Match the historical FixedNorm baseline before applying contrast.
+            post_render = transfer_class(window=self.image_transfer_window)
+            sampler_transfer = FixedNorm(norm_value=self.video_max_value)
+        else:
+            sampler_transfer = transfer_class()
         sampler = imagen.image.PatternSampler(
             size_normalization="fit_longest",
-            whole_pattern_output_fns=[transfer_class(**transfer_options)],
-            background_value_fn=(lambda pixels: 0.5) if centered else None,
+            whole_pattern_output_fns=[sampler_transfer],
         )
+        last_frame = None
 
         while True:
             frame = int(math.floor(self.time/self.movie_frame_duration) + self.frame_offset)
-            # PatternSampler applies its transfer in place. Protect cached source pixels.
+            # A static image is held for multiple input-space updates.
+            if centered and frame == last_frame:
+                yield (rendered, [frame])
+                self.time += self.frame_duration
+                continue
+
+            # FixedNorm acts in place, so give it a copy of the cached source.
             pixels = self.mc[frame].copy() if centered else self.mc[frame]
             image = NDArrayImage(
                                 pixels,
@@ -1698,6 +1709,10 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
                                 scale=2*self.background_luminance,
                                 pattern_sampler=sampler)
             
-            yield (image(), [frame])
+            rendered = image()
+            if centered:
+                rendered = post_render(rendered, self.background_luminance)
+                last_frame = frame
+            yield (rendered, [frame])
 
             self.time += self.frame_duration

@@ -1,38 +1,32 @@
-"""Built-in image transfers for the Experanto pattern sampler."""
+"""Built-in image transfers for Experanto stimuli."""
 
 from numbers import Real
 
 import numpy as np
 import param
-from imagen.transferfn import MaximumDynamicRange, TransferFn
+from imagen.transferfn import MaximumDynamicRange
 
 
 DEFAULT_IMAGE_TRANSFER = "MaximumDynamicRange"
 DEFAULT_CONTRAST_WINDOW = 0.2
 
 
-class CenteredSymmetricContrast(TransferFn):
-    """Map the image mean to 0.5 and the largest deviation to window / 2.
+class CenteredSymmetricContrast(param.Parameterized):
+    """Center a rendered luminance image at the background luminance B.
 
-    Mozaik scales the result by twice the background luminance B, giving
-    a mean of B and a maximum absolute luminance deviation of window * B.
-    A constant image maps to 0.5.
+    The largest absolute deviation is window * B. Apply this transfer after
+    spatial sampling and luminance scaling, as in the original centered_c020.
     """
 
     window = param.Number(default=DEFAULT_CONTRAST_WINDOW, bounds=(0, 1))
 
-    def __call__(self, pixels):
-        pixels -= pixels.mean()
-        amplitude = np.max(np.abs(pixels))
-        if not np.isfinite(amplitude):
-            raise ValueError("CenteredSymmetricContrast requires finite pixels")
-        if pixels.min() == pixels.max():
-            pixels.fill(0.5)
-        else:
-            pixels /= amplitude
-            pixels *= self.window
-            pixels += 1.0
-            pixels *= 0.5
+    def __call__(self, image, background_luminance):
+        if not np.isfinite(image).all():
+            raise ValueError("CenteredSymmetricContrast requires finite luminance")
+        centered = image - image.mean()
+        amplitude = np.max(np.abs(centered))
+        z = centered / amplitude if amplitude > 0 else np.zeros_like(image)
+        return background_luminance * (1 + self.window * z)
 
 
 IMAGE_TRANSFERS = {

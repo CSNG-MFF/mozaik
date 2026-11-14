@@ -282,11 +282,11 @@ LSV1M launcher these are `--image-transfer CenteredSymmetricContrast
 --image-transfer-window 0.2` or the YAML keys `image_transfer` and
 `image_transfer_window`. The default transfer is `MaximumDynamicRange`.
 
-`CenteredSymmetricContrast` centers the input image at the background
-luminance B and maps its largest absolute deviation to W × B before spatial
-sampling. W is the window parameter in [0, 1] and defaults to 0.2. Constant
-images and padding take the background luminance. Video uses its existing
-sampler transfer.
+`CenteredSymmetricContrast` first renders a luminance frame with `FixedNorm`
+and `fit_longest`. It then centers the full rendered frame (including any
+padding) at the background luminance B and maps its largest absolute deviation
+to W × B. W is in [0, 1] and defaults to 0.2, reproducing the operation order
+of the historical `centered_c020`. Video uses its existing sampler transfer.
 
 The resolved settings are recorded in the launcher's run record and Mozaik's
 stimulus annotations. Screen exports retain the source pixels and record the

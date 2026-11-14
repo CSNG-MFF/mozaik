@@ -2684,7 +2684,7 @@ class RandomizedExperanto(PixelMovieExperantoBase):
             The model on which to execute the experiment.
 
     image_transfer : str
-            Registered static-image sampler transfer. Defaults to MaximumDynamicRange.
+            Registered static-image transfer. Defaults to MaximumDynamicRange.
     image_transfer_window : float or None
             Peak luminance deviation as a fraction of background for
             CenteredSymmetricContrast. Defaults to 0.2 for that transfer.
