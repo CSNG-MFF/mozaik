@@ -1532,7 +1532,7 @@ class NaturalImage(TopographicaBasedVisualStimulus):
 ### TODO: This should go to imagen
 class NDArrayImage(GenericImage):
     r"""
-    2D Image generator that reads the image from a 2D ndarray. It assummes a single channel (grayscale).
+    2D Image generator that reads the image from a 2D ndarray. It assumes a single channel (grayscale).
     """
     def __init__(self,image, **params):
         """
@@ -1554,7 +1554,7 @@ class PixelMovieFromFile(TopographicaBasedVisualStimulus):
     with the first axis the time, and 2nd and 3rd axis the visual field. The individual frames are presented one by one 
     for the self.frame_duration. The stimulus is assumed to have pixel values in the interval [0,1].
 
-    For now we only support suqare stimuli.
+    For now we only support square stimuli.
     """
     size = SNumber(degrees, doc="The length of the longer axis of the image in visual degrees")
     movie_path = SString(doc="Path to the image file.")
@@ -1562,7 +1562,7 @@ class PixelMovieFromFile(TopographicaBasedVisualStimulus):
     movie_frame_duration = SNumber(ms, doc="Image + blank screen display duration.")
     frame_offset = SNumber(ms, doc="The offset at which to start presenting frames.")
 
-    # we will chaceh the loaded files in case many stimuli access frames from the same file
+    # we will cache the loaded files in case many stimuli access frames from the same file
     cache = {}
 
     def __init__(self, **params):
@@ -1625,7 +1625,7 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
     contrast_scaler = SNumber(dimensionless, default=1.0, bounds=(0, 1),
                               doc="Fraction of the full luminance range around the background.")
 
-    # we will chaceh the loaded files in case many stimuli access frames from the same file
+    # we will cache the loaded files in case many stimuli access frames from the same file
     cache = {}
 
     def __init__(self, **params):
