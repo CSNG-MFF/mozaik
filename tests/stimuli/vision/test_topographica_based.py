@@ -446,10 +446,14 @@ class TestNaturalImage:
 
 
 class TestPixelMovieExperanto:
+    # Render the same black, mid-gray, and white pixels as an image and a one-frame
+    # movie. Check that the default, zero, and reduced contrast give the expected
+    # luminances around the background, including when the frame is held for two
+    # updates. Replay from the recorded stimulus parameters to check that the
+    # scaler survives serialization and that reusing cached pixels gives the same output.
     @pytest.mark.parametrize("scaler", [None, 0.0, 0.2])
     @pytest.mark.parametrize("is_movie", [False, True])
     def test_contrast_scaler(self, tmp_path, scaler, is_movie):
-        # Black, mid-gray and white should map symmetrically around the background.
         pixels = np.tile(np.array([0, 127.5, 255], dtype=np.float32), (3, 1))
         np.save(tmp_path / "frames.npy", pixels[None] if is_movie else pixels)
         params = dict(default_topo, duration=2, density=1.0, size_x=3.0, size_y=3.0)
@@ -469,7 +473,6 @@ class TestPixelMovieExperanto:
         background = params["background_luminance"]
         expected = background + background * expected_scaler * (2 * pixels / 255 - 1)
 
-        # Replay from the recorded parameters also exercises the shared pixel cache.
         replay = MozaikParametrized.idd_to_instance(str(stimulus))
         assert replay.contrast_scaler == expected_scaler
         for movie in (stimulus, replay):
