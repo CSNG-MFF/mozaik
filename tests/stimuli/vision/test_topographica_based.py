@@ -13,7 +13,7 @@ import pickle
 import numpy
 import numpy as np
 from PIL import Image
-from mozaik.tools.mozaik_parametrized import SNumber, SString
+from mozaik.tools.mozaik_parametrized import MozaikParametrized, SNumber, SString
 from mozaik.tools.units import cpd
 from mozaik.space import VisualRegion, VisualSpace
 from numpy import pi
@@ -443,6 +443,42 @@ class TestNaturalImage:
 
         with pytest.raises(ValueError, match="supports only 8-bit image inputs"):
             self.visual_space_frames(stimulus, 1)
+
+
+class TestPixelMovieExperanto:
+    # Render the same black, mid-gray, and white pixels as an image and a one-frame
+    # movie. Check that the default, zero, and reduced contrast give the expected
+    # luminances around the background, including when the frame is held for two
+    # updates. Replay from the recorded stimulus parameters to check that the
+    # scaler survives serialization and that reusing cached pixels gives the same output.
+    @pytest.mark.parametrize("scaler", [None, 0.0, 0.2])
+    @pytest.mark.parametrize("is_movie", [False, True])
+    def test_contrast_scaler(self, tmp_path, scaler, is_movie):
+        pixels = np.tile(np.array([0, 127.5, 255], dtype=np.float32), (3, 1))
+        np.save(tmp_path / "frames.npy", pixels[None] if is_movie else pixels)
+        params = dict(default_topo, duration=2, density=1.0, size_x=3.0, size_y=3.0)
+        if scaler is not None:
+            params["contrast_scaler"] = scaler
+        stimulus = topo.PixelMovieExperanto(
+            movie_path=str(tmp_path),
+            movie_name="frames.npy",
+            movie_frame_duration=2,
+            frame_offset=0,
+            video_max_value=255.0,
+            size=3.0,
+            trial=0,
+            **params,
+        )
+        expected_scaler = 1.0 if scaler is None else scaler
+        background = params["background_luminance"]
+        expected = background + background * expected_scaler * (2 * pixels / 255 - 1)
+
+        replay = MozaikParametrized.idd_to_instance(str(stimulus))
+        assert replay.contrast_scaler == expected_scaler
+        for movie in (stimulus, replay):
+            frames = movie.frames()
+            np.testing.assert_allclose(next(frames)[0], expected)
+            np.testing.assert_allclose(next(frames)[0], expected)
 
 
 class TestDriftingGratingWithEyeMovement(TopographicaBasedVisualStimulusTester):

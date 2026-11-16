@@ -2374,7 +2374,11 @@ class PixelMovieExperantoBase(VisualExperiment):
             How many movie frames to show per trial (overwritten per stimulus from its metadata).
 
     video_max_value : float
-            The maximum pixel value in the video files, used to normalise to [0, 1].
+            The fixed maximum pixel value used to normalise frames to [0, 1].
+
+    contrast_scaler : float
+            Fraction of the full luminance range around the background, in [0, 1].
+            Defaults to 1.0.
     """
 
     required_parameters = ParameterSet(
@@ -2385,6 +2389,7 @@ class PixelMovieExperantoBase(VisualExperiment):
             "global_frame_offset": int,
             "images_per_trial": int,
             "video_max_value": float,
+            "contrast_scaler": float,
         }
     )
 
@@ -2396,6 +2401,8 @@ class PixelMovieExperantoBase(VisualExperiment):
                 "Experanto experiments require model.parameters.null_stimulus_period == 0 "
                 "because Mozaik null-stimulus periods are not exported"
             )
+        if "contrast_scaler" not in parameters:
+            parameters = ParameterSet(dict(parameters, contrast_scaler=1.0))
         super().__init__(model, parameters)
 
     @staticmethod
@@ -2468,6 +2475,7 @@ class PixelMovieExperantoBase(VisualExperiment):
             movie_frame_duration=movie_frame_duration,
             frame_offset=frame_offset,
             video_max_value=self.parameters.video_max_value,
+            contrast_scaler=self.parameters.contrast_scaler,
         )
         if condition_hash is not None:
             kwargs["condition_hash"] = condition_hash

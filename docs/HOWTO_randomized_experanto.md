@@ -274,6 +274,20 @@ chunks. Completion records, when present, check order and settings and supply
 provenance automatically. For shards without completion records, pass `provenance=run_record` explicitly;
 `chunk_start` identifies the first supplied chunk (default 0).
 
+## Set stimulus contrast
+
+Set `contrast_scaler` in the Mozaik experiment's `ParameterSet`. In the LSV1M
+experiment factory, pass it to `create_randomized_experanto` or edit the
+factory default in `experiments.py`.
+
+The scaler `s` is in `[0, 1]` and defaults to `1.0`. After FixedNorm and
+spatial sampling, a pixel with normalized value `p` has luminance
+`B * (1 - s) + 2 * B * s * p`, where `B` is the background luminance.
+For example, `contrast_scaler=0.2` with `B=50` gives a fixed 40–60 cd/m²
+range. A scaler of zero gives uniform background luminance throughout the
+frame. Mozaik records the parameter in `experimental_protocols.json` and
+in the `PixelMovieExperanto` stimulus parameters.
+
 ## Environment knobs (the experiment driver)
 
 `LSV1M/run_experanto.py` selects the experiment inputs. Launcher jobs use

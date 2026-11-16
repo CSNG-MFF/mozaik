@@ -1532,7 +1532,7 @@ class NaturalImage(TopographicaBasedVisualStimulus):
 ### TODO: This should go to imagen
 class NDArrayImage(GenericImage):
     r"""
-    2D Image generator that reads the image from a 2D ndarray. It assummes a single channel (grayscale).
+    2D Image generator that reads the image from a 2D ndarray. It assumes a single channel (grayscale).
     """
     def __init__(self,image, **params):
         """
@@ -1554,7 +1554,7 @@ class PixelMovieFromFile(TopographicaBasedVisualStimulus):
     with the first axis the time, and 2nd and 3rd axis the visual field. The individual frames are presented one by one 
     for the self.frame_duration. The stimulus is assumed to have pixel values in the interval [0,1].
 
-    For now we only support suqare stimuli.
+    For now we only support square stimuli.
     """
     size = SNumber(degrees, doc="The length of the longer axis of the image in visual degrees")
     movie_path = SString(doc="Path to the image file.")
@@ -1562,7 +1562,7 @@ class PixelMovieFromFile(TopographicaBasedVisualStimulus):
     movie_frame_duration = SNumber(ms, doc="Image + blank screen display duration.")
     frame_offset = SNumber(ms, doc="The offset at which to start presenting frames.")
 
-    # we will chaceh the loaded files in case many stimuli access frames from the same file
+    # we will cache the loaded files in case many stimuli access frames from the same file
     cache = {}
 
     def __init__(self, **params):
@@ -1610,7 +1610,7 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
     with the first axis the time, and 2nd and 3rd axis the visual field. The individual frames are presented one by one 
     for the self.frame_duration. The stimulus is assumed to have pixel values in the interval [0,1].
 
-    For now we only support suqare stimuli.
+    For now we only support square stimuli.
     """
     size = SNumber(degrees, doc="The length of the longer axis of the image in visual degrees")
     movie_path = SString(doc="Path to the image file.")
@@ -1622,11 +1622,18 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
     y_location = SNumber(degrees, default=0., doc="The y location of the center of the movie stimulus.")
     video_max_value = SNumber(dimensionless, default=1.0, doc="The maximum pixel value in the video file.")
 
-    # we will chaceh the loaded files in case many stimuli access frames from the same file
+    contrast_scaler = SNumber(dimensionless, default=1.0, bounds=(0, 1),
+                              doc="Fraction of the full luminance range around the background.")
+
+    # we will cache the loaded files in case many stimuli access frames from the same file
     cache = {}
 
     def __init__(self, **params):
         TopographicaBasedVisualStimulus.__init__(self, **params)
+        if self.contrast_scaler is None or isinstance(self.contrast_scaler, bool) or not math.isfinite(self.contrast_scaler):
+            raise ValueError("contrast_scaler must be a number in [0, 1]")
+        if not math.isfinite(self.video_max_value) or self.video_max_value <= 0:
+            raise ValueError("video_max_value must be positive and finite")
 
         import os
 
@@ -1641,7 +1648,7 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
                     # print(">>>>>>>>>>>>>>>>>>>>>>>>>>> Got an image")
                     # if only one frame is present, we need to add a time axis
                     self.mc = self.mc[numpy.newaxis,:,:]
-                PixelMovieExperanto.cache[p] = self.mc/self.video_max_value  # normalizing the pixel values to [0,1]
+                PixelMovieExperanto.cache[p] = self.mc
 
         # assert self.mc.shape[1] == self.mc.shape[2], "The spatial shape of the pixel movie has to be square"
         assert ( self.duration <= self.movie_frame_duration * (len(self.mc)-self.frame_offset)), "The duration of the total stimulus has to be less than number of frames in the movie remaining after the offset times the movie frame duration."
@@ -1649,22 +1656,36 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
 
     def frames(self):
         self.time = 0
+        # FixedNorm converts pixels to [0, 1] in place, so render from a copy.
+        sampler = imagen.image.PatternSampler(size_normalization="fit_longest",
+                                              whole_pattern_output_fns=[FixedNorm(norm_value=self.video_max_value)])
+        background = self.background_luminance
+        last_frame = None
 
         while True:
             frame = int(math.floor(self.time/self.movie_frame_duration) + self.frame_offset)
-            image = NDArrayImage(         
-                                self.mc[frame],
-                                x=self.x_location,
-                                y=self.y_location,
-                                orientation=0,
-                                xdensity=self.density,
-                                ydensity=self.density,
-                                size=self.size,
-                                bounds=BoundingBox(points=((-self.size_x/2, -self.size_y/2),
-                                                            (self.size_x/2, self.size_y/2))),
-                                scale=2*self.background_luminance,
-                                pattern_sampler= imagen.image.PatternSampler(size_normalization="fit_longest",whole_pattern_output_fns=[MaximumDynamicRange()]))
-            
-            yield (image(), [frame])
+            if frame != last_frame:
+                pixels = self.mc[frame].astype(numpy.float64)
+                if not numpy.isfinite(pixels).all() or pixels.min() < 0 or pixels.max() > self.video_max_value:
+                    raise ValueError("Expected finite pixels in [0, video_max_value]")
+                image = NDArrayImage(
+                                    pixels,
+                                    x=self.x_location,
+                                    y=self.y_location,
+                                    orientation=0,
+                                    xdensity=self.density,
+                                    ydensity=self.density,
+                                    size=self.size,
+                                    bounds=BoundingBox(points=((-self.size_x/2, -self.size_y/2),
+                                                                (self.size_x/2, self.size_y/2))),
+                                    # Output brightness = scale * normalized pixel value + offset.
+                                    # Offset keeps middle gray as bright as the background.
+                                    scale=2*background*self.contrast_scaler,
+                                    offset=background*(1-self.contrast_scaler),
+                                    pattern_sampler=sampler)
+                rendered = image()
+                last_frame = frame
+
+            yield (rendered, [frame])
 
             self.time += self.frame_duration
