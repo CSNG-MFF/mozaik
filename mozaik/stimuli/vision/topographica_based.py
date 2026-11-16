@@ -1657,7 +1657,6 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
     def frames(self):
         self.time = 0
         # FixedNorm converts pixels to [0, 1] in place, so render from a copy.
-        # Scale and offset keep mid-gray at the background luminance.
         sampler = imagen.image.PatternSampler(size_normalization="fit_longest",
                                               whole_pattern_output_fns=[FixedNorm(norm_value=self.video_max_value)])
         background = self.background_luminance
@@ -1679,6 +1678,7 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
                                     size=self.size,
                                     bounds=BoundingBox(points=((-self.size_x/2, -self.size_y/2),
                                                                 (self.size_x/2, self.size_y/2))),
+                                    # Scale sets the luminance span, and offset keeps mid-gray (0.5) at background.
                                     scale=2*background*self.contrast_scaler,
                                     offset=background*(1-self.contrast_scaler),
                                     pattern_sampler=sampler)
