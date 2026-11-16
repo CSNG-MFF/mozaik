@@ -274,32 +274,19 @@ chunks. Completion records, when present, check order and settings and supply
 provenance automatically. For shards without completion records, pass `provenance=run_record` explicitly;
 `chunk_start` identifies the first supplied chunk (default 0).
 
-## Choose the static-image luminance map
+## Set stimulus contrast
 
-Pass `luminance_map="CenteredSymmetricContrast", luminance_map_window=0.2`
-to `RandomizedExperanto` alongside its experiment parameters. In the companion
-LSV1M launcher these are `--luminance-map CenteredSymmetricContrast
---luminance-map-window 0.2` or the YAML keys `luminance_map` and
-`luminance_map_window`. The default luminance map is `MaximumDynamicRange`.
+Set `contrast_scaler` in the Mozaik experiment's `ParameterSet`. In the LSV1M
+experiment factory, pass it to `create_randomized_experanto` or edit the
+factory default in `experiments.py`.
 
-`CenteredSymmetricContrast` first renders a luminance frame with `FixedNorm`
-and `fit_longest`. It then centers the full rendered frame (including any
-padding) at the background luminance B and maps its largest absolute deviation
-to W × B. W is in [0, 1] and defaults to 0.2, reproducing the operation order
-of the historical `centered_c020`. Video uses its existing sampler transfer.
-
-For a fixed linear mapping, select `--luminance-map LinearLuminanceWindow
---luminance-map-window 10`. After the same FixedNorm rendering, the transfer
-maps `y` to `B + w * ((y - B) / B)`. The required window `w` is an absolute
-luminance half-width in `[0, B]`. For example, with B = 50 and w = 10,
-rendered luminances of 0, 50, and 100 map to 40, 50, and 60. The mapping
-uses fixed endpoints for every image, including any padding in the rendered
-frame.
-
-The resolved settings are recorded in the launcher's run record and Mozaik's
-stimulus annotations. Screen exports retain the source pixels and record the
-applied map in each entry's `mozaik_luminance_map` metadata. For replay,
-use the recorded settings with the same Mozaik and Imagen source versions.
+The scaler `s` is in `[0, 1]` and defaults to `1.0`. After FixedNorm and
+spatial sampling, a pixel with normalized value `p` has luminance
+`B * (1 - s) + 2 * B * s * p`, where `B` is the background luminance.
+For example, `contrast_scaler=0.2` with `B=50` gives a fixed 40–60 cd/m²
+range. A scaler of zero gives uniform background luminance throughout the
+frame. Mozaik records the parameter in `experimental_protocols.json` and
+in the `PixelMovieExperanto` stimulus parameters.
 
 ## Environment knobs (the experiment driver)
 

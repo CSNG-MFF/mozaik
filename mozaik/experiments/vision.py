@@ -3,7 +3,6 @@ from mozaik.controller import Global
 from mozaik.experiments import Experiment
 from parameters import ParameterSet
 import mozaik.stimuli.vision.topographica_based as topo
-from mozaik.stimuli.vision.luminance_maps import DEFAULT_LUMINANCE_MAP
 import mozaik.stimuli.vision.visual_stimulus as vs
 import numpy
 from mozaik.stimuli import InternalStimulus
@@ -2375,7 +2374,11 @@ class PixelMovieExperantoBase(VisualExperiment):
             How many movie frames to show per trial (overwritten per stimulus from its metadata).
 
     video_max_value : float
-            The maximum pixel value in the video files, used to normalise to [0, 1].
+            The fixed maximum pixel value used to normalise frames to [0, 1].
+
+    contrast_scaler : float
+            Fraction of the full luminance range around the background, in [0, 1].
+            Defaults to 1.0.
     """
 
     required_parameters = ParameterSet(
@@ -2386,6 +2389,7 @@ class PixelMovieExperantoBase(VisualExperiment):
             "global_frame_offset": int,
             "images_per_trial": int,
             "video_max_value": float,
+            "contrast_scaler": float,
         }
     )
 
@@ -2397,6 +2401,8 @@ class PixelMovieExperantoBase(VisualExperiment):
                 "Experanto experiments require model.parameters.null_stimulus_period == 0 "
                 "because Mozaik null-stimulus periods are not exported"
             )
+        if "contrast_scaler" not in parameters:
+            parameters = ParameterSet(dict(parameters, contrast_scaler=1.0))
         super().__init__(model, parameters)
 
     @staticmethod
@@ -2446,9 +2452,6 @@ class PixelMovieExperantoBase(VisualExperiment):
         trial,
         frame_offset,
         condition_hash=None,
-        *,
-        luminance_map=DEFAULT_LUMINANCE_MAP,
-        luminance_map_window=None,
     ):
         """
         Build a single topo.PixelMovieExperanto stimulus with the common per-experiment kwargs.
@@ -2472,16 +2475,13 @@ class PixelMovieExperantoBase(VisualExperiment):
             movie_frame_duration=movie_frame_duration,
             frame_offset=frame_offset,
             video_max_value=self.parameters.video_max_value,
-            luminance_map=luminance_map,
-            luminance_map_window=luminance_map_window,
+            contrast_scaler=self.parameters.contrast_scaler,
         )
         if condition_hash is not None:
             kwargs["condition_hash"] = condition_hash
         return topo.PixelMovieExperanto(**kwargs)
 
-    def _append_meta_stimulus(
-        self, meta_path, movie_path, meta_name, trial, presentation_trial=0, *, luminance_settings=None
-    ):
+    def _append_meta_stimulus(self, meta_path, movie_path, meta_name, trial, presentation_trial=0):
         """
         Load a single stimulus's Experanto metadata and append it to self.stimuli.
 
@@ -2539,7 +2539,6 @@ class PixelMovieExperantoBase(VisualExperiment):
                 trial,
                 frame_offset,
                 condition_hash=meta["condition_hash"],
-                **((luminance_settings or {}) if meta["modality"] == "image" else {}),
             )
         )
         if meta["modality"] == "image" and post_blank_duration > 0:
@@ -2683,13 +2682,6 @@ class RandomizedExperanto(PixelMovieExperantoBase):
     model : Model
             The model on which to execute the experiment.
 
-    luminance_map : str
-            Registered static-image luminance map. Defaults to MaximumDynamicRange.
-    luminance_map_window : float or None
-            Peak deviation as a fraction of background for CenteredSymmetricContrast
-            (default 0.2), or an absolute luminance half-width for LinearLuminanceWindow
-            (required, from zero to background luminance).
-
     Other parameters
     ----------------
     chunk_dict_path : str
@@ -2701,16 +2693,6 @@ class RandomizedExperanto(PixelMovieExperantoBase):
             "chunk_dict_path": str,
         }
     )
-
-    def __init__(
-        self, model, parameters, *,
-        luminance_map=DEFAULT_LUMINANCE_MAP, luminance_map_window=None,
-    ):
-        self.luminance_settings = dict(
-            luminance_map=luminance_map,
-            luminance_map_window=luminance_map_window,
-        )
-        super().__init__(model, parameters)
 
     def generate_stimuli(self):
         # Load the chunk json which contains the list of stimuli for this trial/chunk
@@ -2725,8 +2707,7 @@ class RandomizedExperanto(PixelMovieExperantoBase):
 
         for item in chunk:
             self._append_meta_stimulus(
-                meta_path, movie_path, item["file"], trial=item["trial"],
-                luminance_settings=self.luminance_settings,
+                meta_path, movie_path, item["file"], trial=item["trial"]
             )
 
     def do_analysis(self, data_store):

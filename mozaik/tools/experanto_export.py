@@ -511,11 +511,6 @@ class MozaikScreenExporter:
                 if is_blank
                 else dict(source)
             )
-            if not is_blank and stimulus.get("luminance_map") is not None:
-                entry["mozaik_luminance_map"] = {
-                    "name": stimulus["luminance_map"],
-                    "window": stimulus.get("luminance_map_window"),
-                }
             entry["first_frame_idx"] = len(timestamps_ms)
             entry["num_frames"] = (
                 source["num_frames"] if entry["modality"] == "video" else 1
