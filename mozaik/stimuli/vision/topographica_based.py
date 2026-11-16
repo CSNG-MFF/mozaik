@@ -1610,7 +1610,7 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
     with the first axis the time, and 2nd and 3rd axis the visual field. The individual frames are presented one by one 
     for the self.frame_duration. The stimulus is assumed to have pixel values in the interval [0,1].
 
-    For now we only support suqare stimuli.
+    For now we only support square stimuli.
     """
     size = SNumber(degrees, doc="The length of the longer axis of the image in visual degrees")
     movie_path = SString(doc="Path to the image file.")
