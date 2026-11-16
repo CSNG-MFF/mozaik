@@ -22,12 +22,17 @@ from mozaik.tools.experanto_export import MozaikScreenExporter
 from mozaik.tools.mozaik_parametrized import MozaikParametrized
 
 
-@pytest.mark.parametrize("transfer, window, width", [
-    ("CenteredSymmetricContrast", None, 11.0),
-    ("CenteredSymmetricContrast", 1.0, 8.0),
-    ("LinearLuminanceWindow", 10.0, 8.0),
-])
-def test_luminance_map_replays_and_exports_its_settings(tmp_path, transfer, window, width):
+@pytest.mark.parametrize(
+    "transfer, window, width",
+    [
+        ("CenteredSymmetricContrast", None, 11.0),
+        ("CenteredSymmetricContrast", 1.0, 8.0),
+        ("LinearLuminanceWindow", 10.0, 8.0),
+    ],
+)
+def test_luminance_map_replays_and_exports_its_settings(
+    tmp_path, transfer, window, width
+):
     effective_window = 0.2 if window is None else window
     data = tmp_path / "screen/data"
     meta = tmp_path / "screen/meta"
@@ -39,35 +44,64 @@ def test_luminance_map_replays_and_exports_its_settings(tmp_path, transfer, wind
     np.save(data / "image.npy", pixels.astype(np.float32))
     np.save(data / "video.npy", pixels[None].astype(np.float32))
     Image.fromarray(pixels).save(tmp_path / "reference.png")
-    (meta / "image.yml").write_text(yaml.safe_dump(dict(
-        modality="image", num_frames=1, condition_hash="image",
-        pre_blank_period=0.0, presentation_time=.28, post_blank_period=.28,
-    )))
-    (meta / "video.yml").write_text(yaml.safe_dump(dict(
-        modality="video", num_frames=1, condition_hash="video",
-    )))
-    (tmp_path / "chunk.json").write_text(json.dumps([
-        {"file": "image.yml", "trial": 0},
-        {"file": "video.yml", "trial": 0},
-    ]))
+    (meta / "image.yml").write_text(
+        yaml.safe_dump(
+            dict(
+                modality="image",
+                num_frames=1,
+                condition_hash="image",
+                pre_blank_period=0.0,
+                presentation_time=0.28,
+                post_blank_period=0.28,
+            )
+        )
+    )
+    (meta / "video.yml").write_text(
+        yaml.safe_dump(
+            dict(
+                modality="video",
+                num_frames=1,
+                condition_hash="video",
+            )
+        )
+    )
+    (tmp_path / "chunk.json").write_text(
+        json.dumps(
+            [
+                {"file": "image.yml", "trial": 0},
+                {"file": "video.yml", "trial": 0},
+            ]
+        )
+    )
     model = SimpleNamespace(
         parameters=SimpleNamespace(null_stimulus_period=0),
         input_space=SimpleNamespace(
             background_luminance=40.1,
             parameters=SimpleNamespace(update_interval=7.0),
         ),
-        input_layer=SimpleNamespace(parameters=SimpleNamespace(
-            receptive_field=SimpleNamespace(spatial_resolution=.0763889),
-        )),
+        input_layer=SimpleNamespace(
+            parameters=SimpleNamespace(
+                receptive_field=SimpleNamespace(spatial_resolution=0.0763889),
+            )
+        ),
         visual_field=SimpleNamespace(size_x=11.0, size_y=11.0),
     )
-    parameters = ParameterSet(dict(
-        base_path=str(tmp_path), chunk_dict_path="chunk.json", width=width,
-        movie_frame_duration=35, global_frame_offset=0, images_per_trial=1,
-        video_max_value=255.0, shuffle_stimuli=False,
-    ))
+    parameters = ParameterSet(
+        dict(
+            base_path=str(tmp_path),
+            chunk_dict_path="chunk.json",
+            width=width,
+            movie_frame_duration=35,
+            global_frame_offset=0,
+            images_per_trial=1,
+            video_max_value=255.0,
+            shuffle_stimuli=False,
+        )
+    )
     experiment = RandomizedExperanto(
-        model, parameters, luminance_map=transfer,
+        model,
+        parameters,
+        luminance_map=transfer,
         luminance_map_window=window,
     )
     image, blank, video = experiment.stimuli
@@ -78,10 +112,19 @@ def test_luminance_map_replays_and_exports_its_settings(tmp_path, transfer, wind
     assert video.luminance_map_window is None
 
     reference = NaturalImage(
-        image_path=str(tmp_path / "reference.png"), image_duration=280.0,
-        blank_duration=0.0, duration=280.0, frame_duration=7.0, size=width,
-        density=1 / .0763889, background_luminance=40.1, trial=0,
-        size_x=11.0, size_y=11.0, location_x=0.0, location_y=0.0,
+        image_path=str(tmp_path / "reference.png"),
+        image_duration=280.0,
+        blank_duration=0.0,
+        duration=280.0,
+        frame_duration=7.0,
+        size=width,
+        density=1 / 0.0763889,
+        background_luminance=40.1,
+        trial=0,
+        size_x=11.0,
+        size_y=11.0,
+        location_x=0.0,
+        location_y=0.0,
     )
     baseline = next(reference.frames())[0]
     if transfer == "LinearLuminanceWindow":
@@ -89,7 +132,9 @@ def test_luminance_map_replays_and_exports_its_settings(tmp_path, transfer, wind
         np.testing.assert_allclose(expected[0, 0], 30.1)
     else:
         deviations = baseline - baseline.mean()
-        expected = 40.1 * (1 + effective_window * (deviations / np.max(np.abs(deviations))))
+        expected = 40.1 * (
+            1 + effective_window * (deviations / np.max(np.abs(deviations)))
+        )
     replay = MozaikParametrized.idd_to_instance(str(image))
     for stimulus in (image, replay):
         stimulus.reset()
@@ -114,7 +159,8 @@ def test_luminance_map_replays_and_exports_its_settings(tmp_path, transfer, wind
     screen = tmp_path / "export/screen"
     entries = json.loads((screen / "combined_meta.json").read_text())
     assert entries["00000"]["mozaik_luminance_map"] == {
-        "name": transfer, "window": effective_window,
+        "name": transfer,
+        "window": effective_window,
     }
     np.testing.assert_array_equal(np.load(screen / "data/00000.npy"), pixels)
 
@@ -125,14 +171,17 @@ def test_centered_transfer_maps_constant_image_to_background():
     np.testing.assert_array_equal(result, 50.0)
 
 
-
 def test_linear_window_uses_fixed_endpoints():
     transfer = LinearLuminanceWindow(window=10.0)
-    np.testing.assert_array_equal(transfer(np.array([[0., 25., 50., 75., 100.]]), 50.),
-                                  [[40., 45., 50., 55., 60.]])
-    np.testing.assert_array_equal(transfer(np.array([[25., 25.]]), 50.), [[45., 45.]])
+    np.testing.assert_array_equal(
+        transfer(np.array([[0.0, 25.0, 50.0, 75.0, 100.0]]), 50.0),
+        [[40.0, 45.0, 50.0, 55.0, 60.0]],
+    )
+    np.testing.assert_array_equal(
+        transfer(np.array([[25.0, 25.0]]), 50.0), [[45.0, 45.0]]
+    )
     with pytest.raises(ValueError, match="cannot exceed"):
-        transfer(np.array([[5.]]), 5.)
+        transfer(np.array([[5.0]]), 5.0)
 
 
 @pytest.mark.parametrize("window", [None, -1, float("nan"), float("inf"), True])
