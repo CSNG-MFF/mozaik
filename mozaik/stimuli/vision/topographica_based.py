@@ -7,7 +7,6 @@ The file contains stimuli that use topographica to generate the stimulus
 
 from mozaik.stimuli.vision.visual_stimulus import VisualStimulus
 import math
-from numbers import Real
 import imagen
 import imagen.random
 from imagen.transferfn import MaximumDynamicRange, FixedNorm
@@ -1606,100 +1605,86 @@ class PixelMovieFromFile(TopographicaBasedVisualStimulus):
 
 
 class PixelMovieExperanto(TopographicaBasedVisualStimulus):
-    """Present a NumPy image or movie using a fixed luminance range.
-
-    Frames are stored as (time, rows, columns). A 2D image is a single frame.
-    Pixels in [0, video_max_value] map to B ± contrast_scaler * B, where B
-    is the background luminance.
     """
+    A visual stimulus that consists of a movie that is loaded from a file, where it is stored as a 3D numpy matrix (npy), 
+    with the first axis the time, and 2nd and 3rd axis the visual field. The individual frames are presented one by one 
+    for the self.frame_duration. The stimulus is assumed to have pixel values in the interval [0,1].
 
-    size = SNumber(degrees, doc="Length of the longer axis in visual degrees.")
-    movie_path = SString(doc="Directory holding the NumPy file.")
-    movie_name = SString(doc="Name of the NumPy file.")
-    condition_hash = SString(doc="Condition hash of stimulus.")
-    movie_frame_duration = SNumber(ms, doc="Duration of each movie frame.")
-    frame_offset = SNumber(ms, doc="Index of the first frame to present.")
-    x_location = SNumber(degrees, default=0.0, doc="Horizontal center of the movie.")
-    y_location = SNumber(degrees, default=0.0, doc="Vertical center of the movie.")
-    video_max_value = SNumber(
-        dimensionless, default=1.0, doc="Fixed maximum pixel value."
-    )
-    contrast_scaler = SNumber(
-        dimensionless,
-        default=1.0,
-        bounds=(0, 1),
-        doc="Fraction of the full luminance range around the background.",
-    )
+    For now we only support suqare stimuli.
+    """
+    size = SNumber(degrees, doc="The length of the longer axis of the image in visual degrees")
+    movie_path = SString(doc="Path to the image file.")
+    movie_name = SString(doc="Name of the image file.")
+    condition_hash = SString(doc="Condition hash of stimulus")
+    movie_frame_duration = SNumber(ms, doc="Image + blank screen display duration.")
+    frame_offset = SNumber(ms, doc="The offset at which to start presenting frames.")
+    x_location = SNumber(degrees, default=0., doc="The x location of the center of the movie stimulus.")
+    y_location = SNumber(degrees, default=0., doc="The y location of the center of the movie stimulus.")
+    video_max_value = SNumber(dimensionless, default=1.0, doc="The maximum pixel value in the video file.")
 
+    contrast_scaler = SNumber(dimensionless, default=1.0, bounds=(0, 1),
+                              doc="Fraction of the full luminance range around the background.")
+
+    # we will chaceh the loaded files in case many stimuli access frames from the same file
     cache = {}
 
     def __init__(self, **params):
-        super().__init__(**params)
-        if (
-            isinstance(self.contrast_scaler, bool)
-            or not isinstance(self.contrast_scaler, Real)
-            or not 0 <= self.contrast_scaler <= 1
-        ):
+        TopographicaBasedVisualStimulus.__init__(self, **params)
+        if self.contrast_scaler is None or isinstance(self.contrast_scaler, bool) or not math.isfinite(self.contrast_scaler):
             raise ValueError("contrast_scaler must be a number in [0, 1]")
         if not math.isfinite(self.video_max_value) or self.video_max_value <= 0:
             raise ValueError("video_max_value must be positive and finite")
 
         import os
 
-        path = os.path.join(self.movie_path, self.movie_name)
-        if path not in self.cache:
-            pixels = numpy.load(path, allow_pickle=False)
-            self.cache[path] = (
-                pixels[numpy.newaxis, :, :] if pixels.ndim == 2 else pixels
-            )
-        self.mc = self.cache[path]
-        assert self.duration <= self.movie_frame_duration * (
-            len(self.mc) - self.frame_offset
-        ), "The stimulus duration exceeds the available movie frames."
-        assert (
-            self.movie_frame_duration % self.frame_duration == 0
-        ), "Movie frame duration must be a multiple of input frame duration."
+        # Check if file was already loaded earlier as in the cache. If yes use it. If not load it and insert it in the cache.
+        p = os.path.join(self.movie_path,self.movie_name)
+        if p in PixelMovieExperanto.cache.keys():
+            self.mc = PixelMovieExperanto.cache[p]
+        else:
+            with open(p, 'rb') as f:
+                self.mc = numpy.load(f)
+                if len(self.mc.shape) == 2:
+                    # print(">>>>>>>>>>>>>>>>>>>>>>>>>>> Got an image")
+                    # if only one frame is present, we need to add a time axis
+                    self.mc = self.mc[numpy.newaxis,:,:]
+                PixelMovieExperanto.cache[p] = self.mc
+
+        # assert self.mc.shape[1] == self.mc.shape[2], "The spatial shape of the pixel movie has to be square"
+        assert ( self.duration <= self.movie_frame_duration * (len(self.mc)-self.frame_offset)), "The duration of the total stimulus has to be less than number of frames in the movie remaining after the offset times the movie frame duration."
+        assert ( self.movie_frame_duration % self.frame_duration == 0), "The duration of single movie frame has to be multiple of the frame duration of the input space."
 
     def frames(self):
         self.time = 0
-        sampler = imagen.image.PatternSampler(
-            size_normalization="fit_longest",
-            whole_pattern_output_fns=[FixedNorm(norm_value=self.video_max_value)],
-        )
+        # FixedNorm converts pixels to [0, 1] in place, so render from a copy.
+        # Scale and offset keep mid-gray at the background luminance.
+        sampler = imagen.image.PatternSampler(size_normalization="fit_longest",
+                                              whole_pattern_output_fns=[FixedNorm(norm_value=self.video_max_value)])
         background = self.background_luminance
-        bounds = BoundingBox(
-            points=(
-                (-self.size_x / 2, -self.size_y / 2),
-                (self.size_x / 2, self.size_y / 2),
-            )
-        )
         last_frame = None
+
         while True:
-            frame = int(
-                math.floor(self.time / self.movie_frame_duration) + self.frame_offset
-            )
+            frame = int(math.floor(self.time/self.movie_frame_duration) + self.frame_offset)
             if frame != last_frame:
-                # FixedNorm divides in place. Keep the shared source array intact.
                 pixels = self.mc[frame].astype(numpy.float64)
-                if (
-                    not numpy.isfinite(pixels).all()
-                    or pixels.min() < 0
-                    or pixels.max() > self.video_max_value
-                ):
+                if not numpy.isfinite(pixels).all() or pixels.min() < 0 or pixels.max() > self.video_max_value:
                     raise ValueError("Expected finite pixels in [0, video_max_value]")
-                rendered = NDArrayImage(
-                    pixels,
-                    x=self.x_location,
-                    y=self.y_location,
-                    orientation=0,
-                    xdensity=self.density,
-                    ydensity=self.density,
-                    size=self.size,
-                    bounds=bounds,
-                    scale=2 * background * self.contrast_scaler,
-                    offset=background * (1 - self.contrast_scaler),
-                    pattern_sampler=sampler,
-                )()
+                image = NDArrayImage(
+                                    pixels,
+                                    x=self.x_location,
+                                    y=self.y_location,
+                                    orientation=0,
+                                    xdensity=self.density,
+                                    ydensity=self.density,
+                                    size=self.size,
+                                    bounds=BoundingBox(points=((-self.size_x/2, -self.size_y/2),
+                                                                (self.size_x/2, self.size_y/2))),
+                                    scale=2*background*self.contrast_scaler,
+                                    offset=background*(1-self.contrast_scaler),
+                                    pattern_sampler=sampler)
+                rendered = image()
                 last_frame = frame
+
             yield (rendered, [frame])
+
             self.time += self.frame_duration
