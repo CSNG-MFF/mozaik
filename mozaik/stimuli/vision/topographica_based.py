@@ -1678,7 +1678,7 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
                                     size=self.size,
                                     bounds=BoundingBox(points=((-self.size_x/2, -self.size_y/2),
                                                                 (self.size_x/2, self.size_y/2))),
-                                    # Scale sets the brightness difference between black and white.
+                                    # Output brightness = scale * normalized pixel value + offset.
                                     # Offset keeps middle gray as bright as the background.
                                     scale=2*background*self.contrast_scaler,
                                     offset=background*(1-self.contrast_scaler),
