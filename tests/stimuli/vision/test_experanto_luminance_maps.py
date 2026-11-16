@@ -1,4 +1,4 @@
-"""Check the registered image transfer through experiment construction and replay."""
+"""Check the registered luminance map through experiment construction and replay."""
 
 import ast
 import json
@@ -12,10 +12,10 @@ import yaml
 from parameters import ParameterSet
 
 from mozaik.experiments.vision import RandomizedExperanto
-from mozaik.stimuli.vision.image_transfers import (
+from mozaik.stimuli.vision.luminance_maps import (
     CenteredSymmetricContrast,
     LinearLuminanceWindow,
-    resolve_image_transfer,
+    resolve_luminance_map,
 )
 from mozaik.stimuli.vision.topographica_based import NaturalImage
 from mozaik.tools.experanto_export import MozaikScreenExporter
@@ -27,7 +27,7 @@ from mozaik.tools.mozaik_parametrized import MozaikParametrized
     ("CenteredSymmetricContrast", 1.0, 8.0),
     ("LinearLuminanceWindow", 10.0, 8.0),
 ])
-def test_image_transfer_replays_and_exports_its_settings(tmp_path, transfer, window, width):
+def test_luminance_map_replays_and_exports_its_settings(tmp_path, transfer, window, width):
     effective_window = 0.2 if window is None else window
     data = tmp_path / "screen/data"
     meta = tmp_path / "screen/meta"
@@ -67,15 +67,15 @@ def test_image_transfer_replays_and_exports_its_settings(tmp_path, transfer, win
         video_max_value=255.0, shuffle_stimuli=False,
     ))
     experiment = RandomizedExperanto(
-        model, parameters, image_transfer=transfer,
-        image_transfer_window=window,
+        model, parameters, luminance_map=transfer,
+        luminance_map_window=window,
     )
     image, blank, video = experiment.stimuli
     record = ast.literal_eval(str(image))
-    assert record["image_transfer"] == transfer
-    assert record["image_transfer_window"] == effective_window
-    assert video.image_transfer == "MaximumDynamicRange"
-    assert video.image_transfer_window is None
+    assert record["luminance_map"] == transfer
+    assert record["luminance_map_window"] == effective_window
+    assert video.luminance_map == "MaximumDynamicRange"
+    assert video.luminance_map_window is None
 
     reference = NaturalImage(
         image_path=str(tmp_path / "reference.png"), image_duration=280.0,
@@ -113,7 +113,7 @@ def test_image_transfer_replays_and_exports_its_settings(tmp_path, transfer, win
     exporter.finalize()
     screen = tmp_path / "export/screen"
     entries = json.loads((screen / "combined_meta.json").read_text())
-    assert entries["00000"]["mozaik_image_transfer"] == {
+    assert entries["00000"]["mozaik_luminance_map"] == {
         "name": transfer, "window": effective_window,
     }
     np.testing.assert_array_equal(np.load(screen / "data/00000.npy"), pixels)
@@ -138,4 +138,4 @@ def test_linear_window_uses_fixed_endpoints():
 @pytest.mark.parametrize("window", [None, -1, float("nan"), float("inf"), True])
 def test_linear_window_requires_explicit_finite_nonnegative_value(window):
     with pytest.raises(ValueError, match="finite nonnegative"):
-        resolve_image_transfer("LinearLuminanceWindow", window)
+        resolve_luminance_map("LinearLuminanceWindow", window)

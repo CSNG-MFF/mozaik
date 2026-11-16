@@ -274,13 +274,13 @@ chunks. Completion records, when present, check order and settings and supply
 provenance automatically. For shards without completion records, pass `provenance=run_record` explicitly;
 `chunk_start` identifies the first supplied chunk (default 0).
 
-## Choose the static-image transfer
+## Choose the static-image luminance map
 
-Pass `image_transfer="CenteredSymmetricContrast", image_transfer_window=0.2`
+Pass `luminance_map="CenteredSymmetricContrast", luminance_map_window=0.2`
 to `RandomizedExperanto` alongside its experiment parameters. In the companion
-LSV1M launcher these are `--image-transfer CenteredSymmetricContrast
---image-transfer-window 0.2` or the YAML keys `image_transfer` and
-`image_transfer_window`. The default transfer is `MaximumDynamicRange`.
+LSV1M launcher these are `--luminance-map CenteredSymmetricContrast
+--luminance-map-window 0.2` or the YAML keys `luminance_map` and
+`luminance_map_window`. The default luminance map is `MaximumDynamicRange`.
 
 `CenteredSymmetricContrast` first renders a luminance frame with `FixedNorm`
 and `fit_longest`. It then centers the full rendered frame (including any
@@ -288,8 +288,8 @@ padding) at the background luminance B and maps its largest absolute deviation
 to W × B. W is in [0, 1] and defaults to 0.2, reproducing the operation order
 of the historical `centered_c020`. Video uses its existing sampler transfer.
 
-For a fixed linear mapping, select `--image-transfer LinearLuminanceWindow
---image-transfer-window 10`. After the same FixedNorm rendering, the transfer
+For a fixed linear mapping, select `--luminance-map LinearLuminanceWindow
+--luminance-map-window 10`. After the same FixedNorm rendering, the transfer
 maps `y` to `B + w * ((y - B) / B)`. The required window `w` is an absolute
 luminance half-width in `[0, B]`. For example, with B = 50 and w = 10,
 rendered luminances of 0, 50, and 100 map to 40, 50, and 60. The mapping
@@ -298,7 +298,7 @@ frame.
 
 The resolved settings are recorded in the launcher's run record and Mozaik's
 stimulus annotations. Screen exports retain the source pixels and record the
-applied transfer in each entry's `mozaik_image_transfer` metadata. For replay,
+applied map in each entry's `mozaik_luminance_map` metadata. For replay,
 use the recorded settings with the same Mozaik and Imagen source versions.
 
 ## Environment knobs (the experiment driver)

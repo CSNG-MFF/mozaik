@@ -3,7 +3,7 @@ from mozaik.controller import Global
 from mozaik.experiments import Experiment
 from parameters import ParameterSet
 import mozaik.stimuli.vision.topographica_based as topo
-from mozaik.stimuli.vision.image_transfers import DEFAULT_IMAGE_TRANSFER
+from mozaik.stimuli.vision.luminance_maps import DEFAULT_LUMINANCE_MAP
 import mozaik.stimuli.vision.visual_stimulus as vs
 import numpy
 from mozaik.stimuli import InternalStimulus
@@ -2447,8 +2447,8 @@ class PixelMovieExperantoBase(VisualExperiment):
         frame_offset,
         condition_hash=None,
         *,
-        image_transfer=DEFAULT_IMAGE_TRANSFER,
-        image_transfer_window=None,
+        luminance_map=DEFAULT_LUMINANCE_MAP,
+        luminance_map_window=None,
     ):
         """
         Build a single topo.PixelMovieExperanto stimulus with the common per-experiment kwargs.
@@ -2472,15 +2472,15 @@ class PixelMovieExperantoBase(VisualExperiment):
             movie_frame_duration=movie_frame_duration,
             frame_offset=frame_offset,
             video_max_value=self.parameters.video_max_value,
-            image_transfer=image_transfer,
-            image_transfer_window=image_transfer_window,
+            luminance_map=luminance_map,
+            luminance_map_window=luminance_map_window,
         )
         if condition_hash is not None:
             kwargs["condition_hash"] = condition_hash
         return topo.PixelMovieExperanto(**kwargs)
 
     def _append_meta_stimulus(
-        self, meta_path, movie_path, meta_name, trial, presentation_trial=0, *, image_settings=None
+        self, meta_path, movie_path, meta_name, trial, presentation_trial=0, *, luminance_settings=None
     ):
         """
         Load a single stimulus's Experanto metadata and append it to self.stimuli.
@@ -2539,7 +2539,7 @@ class PixelMovieExperantoBase(VisualExperiment):
                 trial,
                 frame_offset,
                 condition_hash=meta["condition_hash"],
-                **((image_settings or {}) if meta["modality"] == "image" else {}),
+                **((luminance_settings or {}) if meta["modality"] == "image" else {}),
             )
         )
         if meta["modality"] == "image" and post_blank_duration > 0:
@@ -2683,9 +2683,9 @@ class RandomizedExperanto(PixelMovieExperantoBase):
     model : Model
             The model on which to execute the experiment.
 
-    image_transfer : str
-            Registered static-image transfer. Defaults to MaximumDynamicRange.
-    image_transfer_window : float or None
+    luminance_map : str
+            Registered static-image luminance map. Defaults to MaximumDynamicRange.
+    luminance_map_window : float or None
             Peak deviation as a fraction of background for CenteredSymmetricContrast
             (default 0.2), or an absolute luminance half-width for LinearLuminanceWindow
             (required, from zero to background luminance).
@@ -2704,11 +2704,11 @@ class RandomizedExperanto(PixelMovieExperantoBase):
 
     def __init__(
         self, model, parameters, *,
-        image_transfer=DEFAULT_IMAGE_TRANSFER, image_transfer_window=None,
+        luminance_map=DEFAULT_LUMINANCE_MAP, luminance_map_window=None,
     ):
-        self.image_settings = dict(
-            image_transfer=image_transfer,
-            image_transfer_window=image_transfer_window,
+        self.luminance_settings = dict(
+            luminance_map=luminance_map,
+            luminance_map_window=luminance_map_window,
         )
         super().__init__(model, parameters)
 
@@ -2726,7 +2726,7 @@ class RandomizedExperanto(PixelMovieExperantoBase):
         for item in chunk:
             self._append_meta_stimulus(
                 meta_path, movie_path, item["file"], trial=item["trial"],
-                image_settings=self.image_settings,
+                luminance_settings=self.luminance_settings,
             )
 
     def do_analysis(self, data_store):

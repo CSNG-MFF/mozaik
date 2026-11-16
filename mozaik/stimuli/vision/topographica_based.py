@@ -10,10 +10,10 @@ import math
 import imagen
 import imagen.random
 from imagen.transferfn import FixedNorm, MaximumDynamicRange
-from mozaik.stimuli.vision.image_transfers import (
-    DEFAULT_IMAGE_TRANSFER,
-    IMAGE_TRANSFERS,
-    resolve_image_transfer,
+from mozaik.stimuli.vision.luminance_maps import (
+    DEFAULT_LUMINANCE_MAP,
+    LUMINANCE_MAPS,
+    resolve_luminance_map,
 )
 import param
 from imagen.image import BoundingBox, GenericImage
@@ -1627,11 +1627,11 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
     y_location = SNumber(degrees, default=0., doc="The y location of the center of the movie stimulus.")
     video_max_value = SNumber(dimensionless, default=1.0, doc="The maximum pixel value in the video file.")
 
-    image_transfer = SString(
-        default=DEFAULT_IMAGE_TRANSFER, doc="Registered image transfer."
+    luminance_map = SString(
+        default=DEFAULT_LUMINANCE_MAP, doc="Registered luminance map."
     )
-    image_transfer_window = SNumber(
-        dimensionless, doc="Window for the selected image transfer (fraction of background or absolute luminance)."
+    luminance_map_window = SNumber(
+        dimensionless, doc="Window for the selected luminance map (fraction of background or absolute luminance)."
     )
 
     # Cache source frames for stimuli that use the same file.
@@ -1640,14 +1640,14 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
     def __init__(self, **params):
         TopographicaBasedVisualStimulus.__init__(self, **params)
 
-        self.image_transfer_window = resolve_image_transfer(
-            self.image_transfer, self.image_transfer_window
+        self.luminance_map_window = resolve_luminance_map(
+            self.luminance_map, self.luminance_map_window
         )
         import os
 
         # Check if file was already loaded earlier as in the cache. If yes use it. If not load it and insert it in the cache.
         p = os.path.join(self.movie_path,self.movie_name)
-        uses_fixed_norm = self.image_transfer_window is not None
+        uses_fixed_norm = self.luminance_map_window is not None
         # Keep the FixedNorm transfers' float64 input separate from legacy frames.
         key = (p, "fixed_norm") if uses_fixed_norm else p
         if key in self.cache:
@@ -1672,14 +1672,14 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
     def frames(self):
         self.time = 0
 
-        transfer_class = IMAGE_TRANSFERS[self.image_transfer]
-        uses_fixed_norm = self.image_transfer_window is not None
+        mapping_class = LUMINANCE_MAPS[self.luminance_map]
+        uses_fixed_norm = self.luminance_map_window is not None
         if uses_fixed_norm:
             # Render the FixedNorm baseline before applying a luminance transfer.
-            post_render = transfer_class(window=self.image_transfer_window)
+            post_render = mapping_class(window=self.luminance_map_window)
             sampler_transfer = FixedNorm(norm_value=self.video_max_value)
         else:
-            sampler_transfer = transfer_class()
+            sampler_transfer = mapping_class()
         sampler = imagen.image.PatternSampler(
             size_normalization="fit_longest",
             whole_pattern_output_fns=[sampler_transfer],

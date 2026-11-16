@@ -1,4 +1,4 @@
-"""Built-in image transfers for Experanto stimuli."""
+"""Built-in luminance maps for Experanto stimuli."""
 
 import math
 from numbers import Real
@@ -8,7 +8,7 @@ import param
 from imagen.transferfn import MaximumDynamicRange
 
 
-DEFAULT_IMAGE_TRANSFER = "MaximumDynamicRange"
+DEFAULT_LUMINANCE_MAP = "MaximumDynamicRange"
 DEFAULT_CONTRAST_WINDOW = 0.2
 
 
@@ -47,19 +47,19 @@ class LinearLuminanceWindow(param.Parameterized):
         )
 
 
-IMAGE_TRANSFERS = {
-    DEFAULT_IMAGE_TRANSFER: MaximumDynamicRange,
+LUMINANCE_MAPS = {
+    DEFAULT_LUMINANCE_MAP: MaximumDynamicRange,
     "CenteredSymmetricContrast": CenteredSymmetricContrast,
     "LinearLuminanceWindow": LinearLuminanceWindow,
 }
 
 
-def resolve_image_transfer(name, window):
+def resolve_luminance_map(name, window):
     """Validate a registered name and return its effective, serializable window."""
-    if not isinstance(name, str) or name not in IMAGE_TRANSFERS:
-        choices = ", ".join(IMAGE_TRANSFERS)
-        raise ValueError(f"Unknown image transfer {name!r}. Choose from {choices}")
-    if IMAGE_TRANSFERS[name] is CenteredSymmetricContrast:
+    if not isinstance(name, str) or name not in LUMINANCE_MAPS:
+        choices = ", ".join(LUMINANCE_MAPS)
+        raise ValueError(f"Unknown luminance map {name!r}. Choose from {choices}")
+    if LUMINANCE_MAPS[name] is CenteredSymmetricContrast:
         if window is None:
             window = DEFAULT_CONTRAST_WINDOW
         if (
@@ -69,7 +69,7 @@ def resolve_image_transfer(name, window):
         ):
             raise ValueError("CenteredSymmetricContrast window must be finite and in [0, 1]")
         return float(window)
-    if IMAGE_TRANSFERS[name] is LinearLuminanceWindow:
+    if LUMINANCE_MAPS[name] is LinearLuminanceWindow:
         if (
             isinstance(window, bool)
             or not isinstance(window, Real)
@@ -78,5 +78,5 @@ def resolve_image_transfer(name, window):
             raise ValueError("LinearLuminanceWindow requires a finite nonnegative window")
         return float(window)
     if window is not None:
-        raise ValueError(f"{name} does not accept an image transfer window")
+        raise ValueError(f"{name} does not accept an luminance map window")
     return None
