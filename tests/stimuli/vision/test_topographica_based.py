@@ -1,3 +1,5 @@
+import ast
+
 # -*- coding: utf-8 -*-
 """
 This module contains classes with tests for mozaik/stimuli/vision/topographica_based.py
@@ -479,6 +481,82 @@ class TestPixelMovieExperanto:
             frames = movie.frames()
             np.testing.assert_allclose(next(frames)[0], expected)
             np.testing.assert_allclose(next(frames)[0], expected)
+
+    @pytest.mark.parametrize("dtype", [np.uint8, np.float32])
+    @pytest.mark.parametrize("overrides", [{}, {"b": 5.0, "s": 48.0, "a": 2.0}])
+    def test_power_law(self, tmp_path, dtype, overrides):
+        pixels = np.tile(np.array([0, 128, 255], dtype=dtype), (3, 1))
+        np.save(tmp_path / "frames.npy", pixels)
+        stimulus = topo.PixelMovieExperanto(
+            movie_path=str(tmp_path),
+            movie_name="frames.npy",
+            movie_frame_duration=2,
+            frame_offset=0,
+            video_max_value=255.0,
+            size=3.0,
+            trial=0,
+            normalizer={"name": "power_law", **overrides},
+            **dict(
+                default_topo,
+                duration=2,
+                density=1.0,
+                size_x=3.0,
+                size_y=3.0,
+                background_luminance=40.1,
+            ),
+        )
+        b, s, a = (5.0, 48.0, 2.0) if overrides else (3.459, 128.492, 1.81)
+        expected = b + s * (pixels.astype(np.float64) / 255) ** a
+        replay = MozaikParametrized.idd_to_instance(str(stimulus))
+        identifier = ast.literal_eval(str(stimulus))
+        assert identifier["normalizer_name"] == "power_law"
+        assert [identifier["power_law_" + key] for key in ("b", "s", "a")] == [b, s, a]
+        for movie in (stimulus, replay):
+            movie.reset()
+            np.testing.assert_allclose(movie.img, expected)
+            movie.update()
+            np.testing.assert_allclose(movie.img, expected)
+        # The center pixel uses the curve; the surrounding canvas uses the model gray.
+        stimulus.size = 1.0
+        stimulus.reset()
+        np.testing.assert_allclose(stimulus.img[0], 40.1)
+
+    @pytest.mark.parametrize(
+        "normalizer",
+        [
+            {"name": "fixed_norm"},
+            {"name": "low_contrast", "contrast_scaler": 0.2},
+        ],
+    )
+    def test_linear_modes_match_legacy_and_keep_limit(self, tmp_path, normalizer):
+        pixels = np.tile(np.array([0, 128, 255], dtype=np.uint8), (3, 1))
+        np.save(tmp_path / "frames.npy", pixels)
+        params = dict(
+            default_topo,
+            duration=2,
+            density=1.0,
+            size_x=3.0,
+            size_y=3.0,
+            movie_path=str(tmp_path),
+            movie_name="frames.npy",
+            movie_frame_duration=2,
+            frame_offset=0,
+            video_max_value=255.0,
+            size=3.0,
+            trial=0,
+        )
+        legacy = topo.PixelMovieExperanto(
+            contrast_scaler=normalizer.get("contrast_scaler", 1.0), **params
+        )
+        stimulus = topo.PixelMovieExperanto(normalizer=normalizer, **params)
+        legacy.reset()
+        stimulus.reset()
+        np.testing.assert_array_equal(stimulus.img, legacy.img)
+        limit = 2 * stimulus.background_luminance
+        assert stimulus.maximum_luminance == limit
+        stimulus._frames = iter([(np.full((3, 3), limit + 1), [0])])
+        with pytest.raises(AssertionError, match="maximum luminance"):
+            stimulus.update()
 
 
 class TestDriftingGratingWithEyeMovement(TopographicaBasedVisualStimulusTester):

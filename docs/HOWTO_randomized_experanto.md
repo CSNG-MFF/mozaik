@@ -274,19 +274,26 @@ chunks. Completion records, when present, check order and settings and supply
 provenance automatically. For shards without completion records, pass `provenance=run_record` explicitly;
 `chunk_start` identifies the first supplied chunk (default 0).
 
-## Set stimulus contrast
+## Set the stimulus luminance map
 
-Set `contrast_scaler` in the Mozaik experiment's `ParameterSet`. In the LSV1M
-experiment factory, pass it to `create_randomized_experanto` or edit the
-factory default in `experiments.py`.
+Pass a `normalizer` ParameterSet to the Mozaik experiment or to LSV1M's
+`create_randomized_experanto` factory:
 
-The scaler `s` is in `[0, 1]` and defaults to `1.0`. After FixedNorm and
-spatial sampling, a pixel with normalized value `p` has luminance
-`B * (1 - s) + 2 * B * s * p`, where `B` is the background luminance.
-For example, `contrast_scaler=0.2` with `B=50` gives a fixed 40–60 cd/m²
-range. A scaler of zero gives uniform background luminance throughout the
-frame. Mozaik records the parameter in `experimental_protocols.json` and
-in the `PixelMovieExperanto` stimulus parameters.
+- `ParameterSet({"name": "fixed_norm"})` (default) maps the fixed code range to
+  `[0, 2*B]`, where `B` is the model background luminance.
+- `ParameterSet({"name": "low_contrast", "contrast_scaler": 0.2})` uses the range
+  `[B*(1-c), B*(1+c)]` with `c=0.2`. At `B=50` this gives 40–60 cd/m².
+  The legacy top-level `contrast_scaler` is still accepted on its own.
+- `ParameterSet({"name": "power_law"})` maps grayscale codes to
+  `L = b + s * v**a` cd/m² before spatial sampling. For ordinary Experanto
+  images `v = pixel/255`, using the existing `video_max_value=255`.
+  The defaults are `b=3.459`, `s=128.492`, and `a=1.81` from the
+  [published TVSD lab-4 curve](https://gin.g-node.org/paolo_papale/TVSD/raw/master/_code/code_utils_v2/gammacon.m).
+  Override any of these coefficients in the same ParameterSet. Image padding
+  and the existing pre- and post-blank intervals use the model background.
+
+Mozaik records the resolved settings in `experimental_protocols.json` and in
+the `PixelMovieExperanto` stimulus parameters.
 
 ## Environment knobs (the experiment driver)
 

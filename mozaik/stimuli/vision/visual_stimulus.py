@@ -30,7 +30,7 @@ class VisualStimulus(BaseStimulus):
     This class also implements functions common to all visual stimuli that are required for it to be compatible 
     with the :class:`mozaik.space.VisualSpace` and  class.
     """
-    background_luminance = SNumber(lux, doc="Background luminance. Maximum luminance of object allowed is 2*background_luminance")
+    background_luminance = SNumber(lux, doc="Background luminance. The default maximum is twice this value.")
     density = SNumber(1/(degrees), doc="The density of stimulus - units per degree")
     location_x = SNumber(degrees, doc="x location of the center of  visual region.")
     location_y = SNumber(degrees, doc="y location of the center of  visual region.")
@@ -162,6 +162,10 @@ class VisualStimulus(BaseStimulus):
                     raise
         return view
 
+    @property
+    def maximum_luminance(self):
+        return 2 * self.background_luminance
+
     def update(self):
         r"""
         Sets the current frame to the next frame in the sequence.
@@ -172,7 +176,8 @@ class VisualStimulus(BaseStimulus):
             self.visible = False
         else:
             assert self.img.min() >= 0 or self.img.min() == TRANSPARENT, "frame minimum is less than zero: %g" % self.img.min()
-            assert self.img.max() <= 2*self.background_luminance, "frame maximum (%g) is greater than the maximum luminance (%g)" % (self.img.max(), 2*self.background_luminance)
+            maximum = self.maximum_luminance
+            assert self.img.max() <= maximum, "frame maximum (%g) is greater than the maximum luminance (%g)" % (self.img.max(), maximum)
         self._zoom_cache = OrderedDict()
 
     def reset(self):

@@ -2376,9 +2376,10 @@ class PixelMovieExperantoBase(VisualExperiment):
     video_max_value : float
             The fixed maximum pixel value used to normalise frames to [0, 1].
 
-    contrast_scaler : float
-            Fraction of the full luminance range around the background, in [0, 1].
-            Defaults to 1.0.
+    normalizer : ParameterSet
+            Named luminance normalizer with its parameters. Defaults to fixed_norm.
+            Use low_contrast with contrast_scaler for a reduced range, or power_law
+            with b, s and a for display-calibrated luminance.
     """
 
     required_parameters = ParameterSet(
@@ -2389,7 +2390,7 @@ class PixelMovieExperantoBase(VisualExperiment):
             "global_frame_offset": int,
             "images_per_trial": int,
             "video_max_value": float,
-            "contrast_scaler": float,
+            "normalizer": ParameterSet,
         }
     )
 
@@ -2401,9 +2402,11 @@ class PixelMovieExperantoBase(VisualExperiment):
                 "Experanto experiments require model.parameters.null_stimulus_period == 0 "
                 "because Mozaik null-stimulus periods are not exported"
             )
-        if "contrast_scaler" not in parameters:
-            parameters = ParameterSet(dict(parameters, contrast_scaler=1.0))
-        super().__init__(model, parameters)
+        settings = dict(parameters)
+        normalizer = settings.pop("normalizer", None)
+        contrast_scaler = settings.pop("contrast_scaler", None)
+        settings["normalizer"] = topo.resolve_experanto_normalizer(normalizer, contrast_scaler)
+        super().__init__(model, ParameterSet(settings))
 
     @staticmethod
     def resolve_experanto_image_timing(meta, frame_duration_ms, source_name=None):
@@ -2475,7 +2478,7 @@ class PixelMovieExperantoBase(VisualExperiment):
             movie_frame_duration=movie_frame_duration,
             frame_offset=frame_offset,
             video_max_value=self.parameters.video_max_value,
-            contrast_scaler=self.parameters.contrast_scaler,
+            normalizer=self.parameters.normalizer,
         )
         if condition_hash is not None:
             kwargs["condition_hash"] = condition_hash
