@@ -21,7 +21,10 @@ import yaml
 
 from mozaik.experiments.vision import PixelMovieExperantoBase
 from mozaik.meta_workflow.experanto_export import export_dsv_to_experanto
-from mozaik.tools.experanto_export import MozaikTrialExporter
+from mozaik.tools.experanto_export import (
+    MozaikTrialExporter,
+    _parse_stimulus_parameters,
+)
 
 
 class _Seg:
@@ -69,6 +72,20 @@ def _load(output_dir):
     with open(os.path.join(output_dir, "meta.yml")) as f:
         meta = yaml.safe_load(f)
     return spikes, meta
+
+
+@pytest.mark.parametrize(
+    "identifier",
+    [
+        '{"normalizer": dict()}',
+        '{"normalizer": MozaikExtendedParameterSet({"normalizer_name": dict()})}',
+        '{"other": MozaikExtendedParameterSet({"normalizer_name": "low_contrast"})}',
+    ],
+)
+def test_stimulus_parser_rejects_other_calls(identifier):
+    """Only the normalizer's ParameterSet wrapper is accepted by the export parser."""
+    with pytest.raises(ValueError):
+        _parse_stimulus_parameters(identifier)
 
 
 def test_trial_export_format_and_spikes_identical(tmp_path):

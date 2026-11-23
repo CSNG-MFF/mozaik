@@ -13,6 +13,7 @@ import pickle
 import numpy
 import numpy as np
 from PIL import Image
+from mozaik.tools.experanto_export import _parse_stimulus_parameters
 from mozaik.tools.mozaik_parametrized import MozaikParametrized, SNumber, SString
 from mozaik.tools.units import cpd
 from mozaik.space import VisualRegion, VisualSpace
@@ -446,19 +447,31 @@ class TestNaturalImage:
 
 
 class TestPixelMovieExperanto:
-    # Render the same black, mid-gray, and white pixels as an image and a one-frame
-    # movie. Check that the default, zero, and reduced contrast give the expected
-    # luminances around the background, including when the frame is held for two
-    # updates. Replay from the recorded stimulus parameters to check that the
-    # scaler survives serialization and that reusing cached pixels gives the same output.
-    @pytest.mark.parametrize("scaler", [None, 0.0, 0.2])
+    """Verify the luminance produced by Experanto's grayscale rendering path.
+
+    The tests load small NumPy fixtures through PixelMovieExperanto and
+    compare the rendered pixels with the mapping equations. They also check
+    that recorded stimulus identifiers reproduce the selected normalizer and
+    that frame validation respects each mode's luminance range.
+    """
+
+    @pytest.mark.parametrize("scaler", [None, 0.0, 0.2, 1.0])
     @pytest.mark.parametrize("is_movie", [False, True])
-    def test_contrast_scaler(self, tmp_path, scaler, is_movie):
+    def test_linear_contrast(self, tmp_path, scaler, is_movie):
+        """Verify linear luminance and replay for still images and one-frame movies.
+
+        The default mode and a scaler of one both span zero to twice the
+        background. Zero contrast produces uniform background, while reduced
+        contrast narrows the range around the same midpoint. The original
+        stimulus and its replay must agree on each update of the held frame.
+        """
+        # Black, exact half-scale gray and white expose any change to the linear
+        # endpoints or midpoint. Save the same pixels as an image or a one-frame movie.
         pixels = np.tile(np.array([0, 127.5, 255], dtype=np.float32), (3, 1))
         np.save(tmp_path / "frames.npy", pixels[None] if is_movie else pixels)
         params = dict(default_topo, duration=2, density=1.0, size_x=3.0, size_y=3.0)
         if scaler is not None:
-            params["contrast_scaler"] = scaler
+            params["normalizer"] = {"name": "low_contrast", "contrast_scaler": scaler}
         stimulus = topo.PixelMovieExperanto(
             movie_path=str(tmp_path),
             movie_name="frames.npy",
@@ -474,11 +487,119 @@ class TestPixelMovieExperanto:
         expected = background + background * expected_scaler * (2 * pixels / 255 - 1)
 
         replay = MozaikParametrized.idd_to_instance(str(stimulus))
-        assert replay.contrast_scaler == expected_scaler
+        assert replay.normalizer.as_dict() == {
+            "normalizer_name": "low_contrast",
+            "contrast_scaler": expected_scaler,
+        }
+        # A source frame spans two updates. Replays also share the cached source
+        # pixels, which must survive Imagen's in-place normalization intact.
         for movie in (stimulus, replay):
             frames = movie.frames()
             np.testing.assert_allclose(next(frames)[0], expected)
             np.testing.assert_allclose(next(frames)[0], expected)
+
+    @pytest.mark.parametrize("dtype", [np.uint8, np.float32])
+    @pytest.mark.parametrize("overrides", [{}, {"b": 5.0, "s": 30.0, "a": 2.0}])
+    def test_power_law(self, tmp_path, dtype, overrides):
+        """Verify the power-law mapping across data types and calibrations.
+
+        Compare black, an intermediate code and white with the analytical
+        curve for both default and custom coefficients. Check that the saved
+        identifier survives the export parser and restores those coefficients.
+        Frame validation must accept the default white above the linear limit
+        and background padding brighter than white under the custom curve.
+        """
+        # The endpoints check the black and white luminances. An intermediate code
+        # checks the exponent in both 8-bit arrays and float32 Experanto exports.
+        pixels = np.tile(np.array([0, 128, 255], dtype=dtype), (3, 1))
+        np.save(tmp_path / "frames.npy", pixels)
+        stimulus = topo.PixelMovieExperanto(
+            movie_path=str(tmp_path),
+            movie_name="frames.npy",
+            movie_frame_duration=2,
+            frame_offset=0,
+            video_max_value=255.0,
+            size=3.0,
+            trial=0,
+            normalizer={"name": "power_law", **overrides},
+            **dict(
+                default_topo,
+                duration=2,
+                density=1.0,
+                size_x=3.0,
+                size_y=3.0,
+                background_luminance=40.1,
+            ),
+        )
+        b, s, a = (5.0, 30.0, 2.0) if overrides else (3.459, 128.492, 1.81)
+        expected = b + s * (pixels.astype(np.float64) / 255) ** a
+        replay = MozaikParametrized.idd_to_instance(str(stimulus))
+        identifier = _parse_stimulus_parameters(str(stimulus))
+        # The saved ParameterSet records the resolved coefficients for export and replay.
+        assert (
+            identifier["normalizer"]
+            == replay.normalizer.as_dict()
+            == {
+                "normalizer_name": "power_law",
+                "b": b,
+                "s": s,
+                "a": a,
+            }
+        )
+        # reset() and update() exercise the frame check. The default curve
+        # produces white above twice the background.
+        for movie in (stimulus, replay):
+            movie.reset()
+            np.testing.assert_allclose(movie.img, expected)
+            movie.update()
+            np.testing.assert_allclose(movie.img, expected)
+        # Shrink the image to expose background padding. The custom curve reaches
+        # only 35 cd/m², so the frame check must allow the brighter 40.1 cd/m² padding.
+        stimulus.size = 1.0
+        stimulus.reset()
+        np.testing.assert_allclose(stimulus.img[0], 40.1)
+        assert stimulus.maximum_luminance == max(b + s, 40.1)
+
+    @pytest.mark.parametrize(
+        "normalizer",
+        [
+            {"name": "low_contrast", "contrast_scaler": 1.0},
+            {"name": "low_contrast", "contrast_scaler": 0.2},
+        ],
+    )
+    def test_linear_modes_keep_limit(self, tmp_path, normalizer):
+        """Verify that switching normalizers preserves the linear frame ceiling.
+
+        Run this check at full and reduced contrast. After rendering once,
+        inject a frame one luminance unit above twice the background. Using
+        a synthetic frame isolates the validation in update() from the linear
+        sampler, whose output already stays within the permitted range.
+        """
+        pixels = np.tile(np.array([0, 128, 255], dtype=np.uint8), (3, 1))
+        np.save(tmp_path / "frames.npy", pixels)
+        params = dict(
+            default_topo,
+            duration=2,
+            density=1.0,
+            size_x=3.0,
+            size_y=3.0,
+            movie_path=str(tmp_path),
+            movie_name="frames.npy",
+            movie_frame_duration=2,
+            frame_offset=0,
+            video_max_value=255.0,
+            size=3.0,
+            trial=0,
+        )
+        stimulus = topo.PixelMovieExperanto(normalizer=normalizer, **params)
+        stimulus.reset()
+        limit = 2 * stimulus.background_luminance
+        assert stimulus.maximum_luminance == limit
+        # Valid linear renders stay within this bound. Inject a brighter frame
+        # to check that update() rejects it at both contrast levels.
+        stimulus._frames = iter([(np.full((3, 3), limit + 1), [0])])
+        with pytest.raises(AssertionError, match="maximum luminance"):
+            stimulus.update()
 
 
 class TestDriftingGratingWithEyeMovement(TopographicaBasedVisualStimulusTester):

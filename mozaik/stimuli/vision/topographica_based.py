@@ -7,9 +7,10 @@ The file contains stimuli that use topographica to generate the stimulus
 
 from mozaik.stimuli.vision.visual_stimulus import VisualStimulus
 import math
+from numbers import Real
 import imagen
 import imagen.random
-from imagen.transferfn import MaximumDynamicRange, FixedNorm
+from imagen.transferfn import MaximumDynamicRange, FixedNorm, TransferFn
 import param
 from imagen.image import BoundingBox, GenericImage
 from PIL import Image, ImageOps
@@ -1604,11 +1605,106 @@ class PixelMovieFromFile(TopographicaBasedVisualStimulus):
             self.time += self.frame_duration
 
 
+class _ExperantoLinearLuminance(FixedNorm):
+    """Map grayscale codes to a linear range centered on the model background.
+
+    Imagen's FixedNorm divides pixels by the configured maximum code. The
+    sampler's scale and offset then express the sample in cd/m². The default
+    scaler of one gives the full range from zero to twice the background.
+    Select ``low_contrast`` with a smaller scaler to reduce contrast about the
+    same midpoint. Zero gives uniform background.
+    """
+
+    contrast_scaler = param.Number(default=1.0, bounds=(0, 1))
+    white_level = None
+
+    def render_options(self, video_max_value, background):
+        self.norm_value = video_max_value
+        return dict(
+            pattern_sampler=imagen.image.PatternSampler(
+                size_normalization="fit_longest", whole_pattern_output_fns=[self]
+            ),
+            scale=2 * background * self.contrast_scaler,
+            offset=background * (1 - self.contrast_scaler),
+        )
+
+
+class PowerLawLuminance(TransferFn):
+    """Map grayscale codes to physical luminance using a display response curve.
+
+    Select ``power_law`` when simulating a calibrated display. After dividing
+    the code by the configured maximum, the transfer applies ``b + s * v**a``
+    before spatial sampling. Here ``b`` is black luminance, ``s`` is the
+    black-to-white luminance range, and ``a`` is the exponent. Image padding
+    takes the model background luminance.
+    """
+
+    # Papale et al. TVSD lab-4 curve (candidate for monkey N).
+    b = param.Number(default=3.459, bounds=(0, None))
+    s = param.Number(default=128.492, bounds=(0, None))
+    a = param.Number(default=1.81, bounds=(0, None), inclusive_bounds=(False, True))
+
+    @property
+    def white_level(self):
+        return self.b + self.s
+
+    def __call__(self, pixels):
+        pixels /= self.norm_value
+        numpy.power(pixels, self.a, out=pixels)
+        pixels *= self.s
+        pixels += self.b
+
+    def render_options(self, video_max_value, background):
+        self.norm_value = video_max_value
+        return dict(
+            pattern_sampler=imagen.image.PatternSampler(
+                size_normalization="fit_longest",
+                whole_pattern_output_fns=[self],
+                background_value_fn=lambda image: background,
+            ),
+            scale=1.0,
+            offset=0.0,
+        )
+
+
+def resolve_experanto_normalizer(normalizer=None):
+    """Create the selected Imagen transfer and return its resolved settings."""
+    if normalizer is None:
+        normalizer = {"name": "low_contrast"}
+
+    options = dict(normalizer)
+    # Saved settings use "normalizer_name" because Mozaik flattens
+    # ParameterSet keys and the stimulus already has a "name" parameter.
+    name_key = "name" if "name" in options else "normalizer_name"
+    name = options.pop(name_key, None)
+    transfer_type = {
+        "low_contrast": _ExperantoLinearLuminance,
+        "power_law": PowerLawLuminance,
+    }.get(name)
+    if transfer_type is None:
+        raise ValueError(f"Unknown Experanto normalizer: {name!r}")
+
+    # Use the transfer's declared parameters for defaults and bounds. Check
+    # names here because older Param versions only warn about unknown options.
+    allowed = transfer_type.params().keys() - {"name", "norm_value"}
+    if options.keys() - allowed:
+        raise ValueError(f"Unexpected parameters for {name}: {options.keys() - allowed}")
+    for key, value in options.items():
+        if isinstance(value, bool) or not isinstance(value, Real) or not math.isfinite(value):
+            raise ValueError(f"{key} must be a finite real number")
+
+    transfer = transfer_type(**options)
+    if transfer.white_level is not None and not math.isfinite(transfer.white_level):
+        raise ValueError("power_law requires a finite white level")
+    settings = {"name": name, **{key: float(getattr(transfer, key)) for key in sorted(allowed)}}
+    return transfer, settings
+
+
 class PixelMovieExperanto(TopographicaBasedVisualStimulus):
     """
     A visual stimulus that consists of a movie that is loaded from a file, where it is stored as a 3D numpy matrix (npy), 
     with the first axis the time, and 2nd and 3rd axis the visual field. The individual frames are presented one by one 
-    for the self.frame_duration. The stimulus is assumed to have pixel values in the interval [0,1].
+    for the self.frame_duration. The grayscale pixel codes must be in [0, video_max_value].
 
     For now we only support square stimuli.
     """
@@ -1622,16 +1718,16 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
     y_location = SNumber(degrees, default=0., doc="The y location of the center of the movie stimulus.")
     video_max_value = SNumber(dimensionless, default=1.0, doc="The maximum pixel value in the video file.")
 
-    contrast_scaler = SNumber(dimensionless, default=1.0, bounds=(0, 1),
-                              doc="Fraction of the full luminance range around the background.")
+    normalizer = SParameterSet(doc="Resolved luminance normalizer settings.")
 
     # we will cache the loaded files in case many stimuli access frames from the same file
     cache = {}
 
     def __init__(self, **params):
+        self._normalizer, settings = resolve_experanto_normalizer(params.get("normalizer"))
+        settings["normalizer_name"] = settings.pop("name")
+        params["normalizer"] = MozaikExtendedParameterSet(settings)
         TopographicaBasedVisualStimulus.__init__(self, **params)
-        if self.contrast_scaler is None or isinstance(self.contrast_scaler, bool) or not math.isfinite(self.contrast_scaler):
-            raise ValueError("contrast_scaler must be a number in [0, 1]")
         if not math.isfinite(self.video_max_value) or self.video_max_value <= 0:
             raise ValueError("video_max_value must be positive and finite")
 
@@ -1650,16 +1746,26 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
                     self.mc = self.mc[numpy.newaxis,:,:]
                 PixelMovieExperanto.cache[p] = self.mc
 
+        if self.mc.ndim != 3:
+            raise ValueError("Experanto expects a grayscale image or a stack of grayscale frames")
+
         # assert self.mc.shape[1] == self.mc.shape[2], "The spatial shape of the pixel movie has to be square"
         assert ( self.duration <= self.movie_frame_duration * (len(self.mc)-self.frame_offset)), "The duration of the total stimulus has to be less than number of frames in the movie remaining after the offset times the movie frame duration."
         assert ( self.movie_frame_duration % self.frame_duration == 0), "The duration of single movie frame has to be multiple of the frame duration of the input space."
 
+    @property
+    def maximum_luminance(self):
+        white_level = self._normalizer.white_level
+        if white_level is None:
+            return super().maximum_luminance
+        # Padding can be brighter than the calibrated white level.
+        return max(white_level, self.background_luminance)
+
     def frames(self):
         self.time = 0
-        # FixedNorm converts pixels to [0, 1] in place, so render from a copy.
-        sampler = imagen.image.PatternSampler(size_normalization="fit_longest",
-                                              whole_pattern_output_fns=[FixedNorm(norm_value=self.video_max_value)])
-        background = self.background_luminance
+        render_options = self._normalizer.render_options(
+            self.video_max_value, self.background_luminance
+        )
         last_frame = None
 
         while True:
@@ -1678,11 +1784,7 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
                                     size=self.size,
                                     bounds=BoundingBox(points=((-self.size_x/2, -self.size_y/2),
                                                                 (self.size_x/2, self.size_y/2))),
-                                    # Output brightness = scale * normalized pixel value + offset.
-                                    # Offset keeps middle gray as bright as the background.
-                                    scale=2*background*self.contrast_scaler,
-                                    offset=background*(1-self.contrast_scaler),
-                                    pattern_sampler=sampler)
+                                    **render_options)
                 rendered = image()
                 last_frame = frame
 
