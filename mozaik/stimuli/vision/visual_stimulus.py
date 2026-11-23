@@ -164,6 +164,8 @@ class VisualStimulus(BaseStimulus):
 
     @property
     def maximum_luminance(self):
+        # Keep the default ceiling previously enforced directly in update().
+        # Subclasses can override it when their renderer has a different range.
         return 2 * self.background_luminance
 
     def update(self):
