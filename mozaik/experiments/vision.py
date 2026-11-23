@@ -2403,9 +2403,7 @@ class PixelMovieExperantoBase(VisualExperiment):
                 "because Mozaik null-stimulus periods are not exported"
             )
         settings = dict(parameters)
-        normalizer = settings.pop("normalizer", None)
-        contrast_scaler = settings.pop("contrast_scaler", None)
-        _, settings["normalizer"] = topo.resolve_experanto_normalizer(normalizer, contrast_scaler)
+        _, settings["normalizer"] = topo.resolve_experanto_normalizer(settings.get("normalizer"))
         super().__init__(model, ParameterSet(settings))
 
     @staticmethod

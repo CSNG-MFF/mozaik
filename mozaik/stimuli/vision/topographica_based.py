@@ -1656,14 +1656,10 @@ class PowerLawLuminance(TransferFn):
         )
 
 
-def resolve_experanto_normalizer(normalizer=None, contrast_scaler=None):
+def resolve_experanto_normalizer(normalizer=None):
     """Create the selected Imagen transfer and return its resolved settings."""
     if normalizer is None:
         normalizer = {"name": "fixed_norm"}
-        if contrast_scaler is not None:
-            normalizer = {"name": "low_contrast", "contrast_scaler": contrast_scaler}
-    elif contrast_scaler is not None:
-        raise ValueError("Specify normalizer or contrast_scaler, not both")
 
     options = dict(normalizer)
     name = options.pop("name", None)
@@ -1691,26 +1687,6 @@ def resolve_experanto_normalizer(normalizer=None, contrast_scaler=None):
     return transfer, settings
 
 
-def _experanto_stimulus_normalizer(params):
-    """Resolve a new configuration or restore settings from a stimulus identifier."""
-    normalizer = params.pop("normalizer", None)
-    saved = params.pop("normalizer_config", None)
-    if saved is not None:
-        if normalizer is not None:
-            raise ValueError("Specify normalizer or normalizer_config, not both")
-        normalizer = json.loads(saved)
-
-    # Accept identifiers recorded before normalizer settings were stored together.
-    old_name = params.pop("normalizer_name", None)
-    scaler = params.pop("contrast_scaler", None)
-    old_curve = {key: params.pop(f"power_law_{key}", None) for key in ("b", "s", "a")}
-    if normalizer is None and old_name == "power_law":
-        normalizer = {"name": old_name, **old_curve}
-    elif normalizer is None and old_name == "fixed_norm":
-        scaler = None
-    return resolve_experanto_normalizer(normalizer, scaler)
-
-
 class PixelMovieExperanto(TopographicaBasedVisualStimulus):
     """
     A visual stimulus that consists of a movie that is loaded from a file, where it is stored as a 3D numpy matrix (npy), 
@@ -1731,13 +1707,18 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
 
     # A JSON string keeps the stimulus identifier readable by Experanto's literal parser.
     normalizer_config = SString(doc="Resolved luminance normalizer settings in JSON.")
-    contrast_scaler = SNumber(dimensionless, bounds=(0, 1), doc="Legacy stimulus identifier field.")
 
     # we will cache the loaded files in case many stimuli access frames from the same file
     cache = {}
 
     def __init__(self, **params):
-        self._normalizer, settings = _experanto_stimulus_normalizer(params)
+        normalizer = params.pop("normalizer", None)
+        saved = params.get("normalizer_config")
+        if saved is not None:
+            if normalizer is not None:
+                raise ValueError("Specify normalizer or normalizer_config, not both")
+            normalizer = json.loads(saved)
+        self._normalizer, settings = resolve_experanto_normalizer(normalizer)
         params["normalizer_config"] = json.dumps(settings, sort_keys=True)
         TopographicaBasedVisualStimulus.__init__(self, **params)
         if not math.isfinite(self.video_max_value) or self.video_max_value <= 0:

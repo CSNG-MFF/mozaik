@@ -453,15 +453,15 @@ class TestPixelMovieExperanto:
 
     @pytest.mark.parametrize("scaler", [None, 0.0, 0.2])
     @pytest.mark.parametrize("is_movie", [False, True])
-    def test_contrast_scaler(self, tmp_path, scaler, is_movie):
-        """Render and replay legacy grayscale inputs with default, zero and reduced contrast."""
+    def test_linear_contrast(self, tmp_path, scaler, is_movie):
+        """Render and replay grayscale inputs with default, zero and reduced contrast."""
         # Black, exact half-scale gray and white expose any change to the linear
         # endpoints or midpoint. Save the same pixels as an image or a one-frame movie.
         pixels = np.tile(np.array([0, 127.5, 255], dtype=np.float32), (3, 1))
         np.save(tmp_path / "frames.npy", pixels[None] if is_movie else pixels)
         params = dict(default_topo, duration=2, density=1.0, size_x=3.0, size_y=3.0)
         if scaler is not None:
-            params["contrast_scaler"] = scaler
+            params["normalizer"] = {"name": "low_contrast", "contrast_scaler": scaler}
         stimulus = topo.PixelMovieExperanto(
             movie_path=str(tmp_path),
             movie_name="frames.npy",
@@ -477,17 +477,15 @@ class TestPixelMovieExperanto:
         expected = background + background * expected_scaler * (2 * pixels / 255 - 1)
 
         replay = MozaikParametrized.idd_to_instance(str(stimulus))
-        identifier = ast.literal_eval(str(stimulus))
-        # Build the older identifier format to check replay of existing recordings.
-        identifier.pop("normalizer_config")
-        identifier["contrast_scaler"] = expected_scaler
-        legacy_replay = MozaikParametrized.idd_to_instance(repr(identifier))
-        assert json.loads(replay.normalizer_config).get("contrast_scaler", 1.0) == (
-            expected_scaler
+        settings = json.loads(replay.normalizer_config)
+        assert settings == (
+            {"name": "fixed_norm"}
+            if scaler is None
+            else {"name": "low_contrast", "contrast_scaler": scaler}
         )
         # A source frame spans two updates. Replays also share the cached source
         # pixels, which must survive Imagen's in-place normalization intact.
-        for movie in (stimulus, replay, legacy_replay):
+        for movie in (stimulus, replay):
             frames = movie.frames()
             np.testing.assert_allclose(next(frames)[0], expected)
             np.testing.assert_allclose(next(frames)[0], expected)
@@ -551,8 +549,8 @@ class TestPixelMovieExperanto:
             {"name": "low_contrast", "contrast_scaler": 0.2},
         ],
     )
-    def test_linear_modes_match_legacy_and_keep_limit(self, tmp_path, normalizer):
-        """Compare linear renders with legacy calls and reject frames above twice the background."""
+    def test_linear_modes_keep_limit(self, tmp_path, normalizer):
+        """Both named linear modes reject frames above twice the background."""
         pixels = np.tile(np.array([0, 128, 255], dtype=np.uint8), (3, 1))
         np.save(tmp_path / "frames.npy", pixels)
         params = dict(
@@ -569,14 +567,8 @@ class TestPixelMovieExperanto:
             size=3.0,
             trial=0,
         )
-        legacy = topo.PixelMovieExperanto(
-            contrast_scaler=normalizer.get("contrast_scaler", 1.0), **params
-        )
         stimulus = topo.PixelMovieExperanto(normalizer=normalizer, **params)
-        legacy.reset()
         stimulus.reset()
-        # The named modes should render exactly the same pixels as the legacy calls.
-        np.testing.assert_array_equal(stimulus.img, legacy.img)
         limit = 2 * stimulus.background_luminance
         assert stimulus.maximum_luminance == limit
         # Valid linear renders stay within this bound. Inject a brighter frame
