@@ -77,8 +77,8 @@ def _load(output_dir):
 @pytest.mark.parametrize(
     "identifier",
     [
-        '{"normalizer_config": dict()}',
-        '{"normalizer_config": MozaikExtendedParameterSet({"mode": dict()})}',
+        '{"normalizer": dict()}',
+        '{"normalizer": MozaikExtendedParameterSet({"mode": dict()})}',
         '{"other": MozaikExtendedParameterSet({"mode": "low_contrast"})}',
     ],
 )

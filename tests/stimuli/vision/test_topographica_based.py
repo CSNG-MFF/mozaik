@@ -487,7 +487,7 @@ class TestPixelMovieExperanto:
         expected = background + background * expected_scaler * (2 * pixels / 255 - 1)
 
         replay = MozaikParametrized.idd_to_instance(str(stimulus))
-        assert replay.normalizer_config.as_dict() == {
+        assert replay.normalizer.as_dict() == {
             "mode": "low_contrast",
             "contrast_scaler": expected_scaler,
         }
@@ -537,8 +537,8 @@ class TestPixelMovieExperanto:
         identifier = _parse_stimulus_parameters(str(stimulus))
         # The saved ParameterSet records the resolved coefficients for export and replay.
         assert (
-            identifier["normalizer_config"]
-            == replay.normalizer_config.as_dict()
+            identifier["normalizer"]
+            == replay.normalizer.as_dict()
             == {
                 "mode": "power_law",
                 "b": b,

@@ -1673,7 +1673,9 @@ def resolve_experanto_normalizer(normalizer=None):
         normalizer = {"name": "low_contrast"}
 
     options = dict(normalizer)
-    name = options.pop("name", None)
+    # Public settings use "name". Saved settings use "mode" so Mozaik's
+    # flattened ParameterSet keys do not collide with the stimulus name.
+    name = options.pop("name" if "name" in options else "mode", None)
     transfer_type = {
         "low_contrast": _ExperantoLinearLuminance,
         "power_law": PowerLawLuminance,
@@ -1715,23 +1717,15 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
     y_location = SNumber(degrees, default=0., doc="The y location of the center of the movie stimulus.")
     video_max_value = SNumber(dimensionless, default=1.0, doc="The maximum pixel value in the video file.")
 
-    normalizer_config = SParameterSet(doc="Resolved luminance normalizer settings.")
+    normalizer = SParameterSet(doc="Resolved luminance normalizer settings.")
 
     # we will cache the loaded files in case many stimuli access frames from the same file
     cache = {}
 
     def __init__(self, **params):
-        normalizer = params.pop("normalizer", None)
-        saved = params.get("normalizer_config")
-        if saved is not None:
-            if normalizer is not None:
-                raise ValueError("Specify normalizer or normalizer_config, not both")
-            normalizer = dict(saved)
-            normalizer["name"] = normalizer.pop("mode")
-        self._normalizer, settings = resolve_experanto_normalizer(normalizer)
-        # Mozaik flattens nested parameters. Reserve "name" for the stimulus class.
+        self._normalizer, settings = resolve_experanto_normalizer(params.get("normalizer"))
         settings["mode"] = settings.pop("name")
-        params["normalizer_config"] = MozaikExtendedParameterSet(settings)
+        params["normalizer"] = MozaikExtendedParameterSet(settings)
         TopographicaBasedVisualStimulus.__init__(self, **params)
         if not math.isfinite(self.video_max_value) or self.video_max_value <= 0:
             raise ValueError("video_max_value must be positive and finite")

@@ -73,7 +73,7 @@ def _parse_stimulus_parameters(raw):
         for index, (key, value) in enumerate(zip(node.keys, node.values)):
             if (
                 isinstance(key, ast.Constant)
-                and key.value == "normalizer_config"
+                and key.value == "normalizer"
                 and isinstance(value, ast.Call)
                 and isinstance(value.func, ast.Name)
                 and value.func.id == "MozaikExtendedParameterSet"
