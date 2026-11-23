@@ -449,10 +449,14 @@ class TestNaturalImage:
 
 
 class TestPixelMovieExperanto:
+    """Cover luminance mapping, stimulus replay and frame validation for Experanto."""
+
     @pytest.mark.parametrize("scaler", [None, 0.0, 0.2])
     @pytest.mark.parametrize("is_movie", [False, True])
     def test_contrast_scaler(self, tmp_path, scaler, is_movie):
         """Render and replay legacy grayscale inputs with default, zero and reduced contrast."""
+        # Black, exact half-scale gray and white expose any change to the linear
+        # endpoints or midpoint. Save the same pixels as an image or a one-frame movie.
         pixels = np.tile(np.array([0, 127.5, 255], dtype=np.float32), (3, 1))
         np.save(tmp_path / "frames.npy", pixels[None] if is_movie else pixels)
         params = dict(default_topo, duration=2, density=1.0, size_x=3.0, size_y=3.0)
@@ -474,12 +478,15 @@ class TestPixelMovieExperanto:
 
         replay = MozaikParametrized.idd_to_instance(str(stimulus))
         identifier = ast.literal_eval(str(stimulus))
+        # Build the older identifier format to check replay of existing recordings.
         identifier.pop("normalizer_config")
         identifier["contrast_scaler"] = expected_scaler
         legacy_replay = MozaikParametrized.idd_to_instance(repr(identifier))
         assert json.loads(replay.normalizer_config).get("contrast_scaler", 1.0) == (
             expected_scaler
         )
+        # A source frame spans two updates. Replays also share the cached source
+        # pixels, which must survive Imagen's in-place normalization intact.
         for movie in (stimulus, replay, legacy_replay):
             frames = movie.frames()
             np.testing.assert_allclose(next(frames)[0], expected)
@@ -489,6 +496,8 @@ class TestPixelMovieExperanto:
     @pytest.mark.parametrize("overrides", [{}, {"b": 5.0, "s": 30.0, "a": 2.0}])
     def test_power_law(self, tmp_path, dtype, overrides):
         """Check calibrated pixels, literal identifiers, replay and background padding."""
+        # The endpoints check the black and white luminances. An intermediate code
+        # checks the exponent in both 8-bit arrays and float32 Experanto exports.
         pixels = np.tile(np.array([0, 128, 255], dtype=dtype), (3, 1))
         np.save(tmp_path / "frames.npy", pixels)
         stimulus = topo.PixelMovieExperanto(
@@ -513,18 +522,23 @@ class TestPixelMovieExperanto:
         expected = b + s * (pixels.astype(np.float64) / 255) ** a
         replay = MozaikParametrized.idd_to_instance(str(stimulus))
         identifier = ast.literal_eval(str(stimulus))
+        # Experanto export parses identifiers as Python literals. The enclosed JSON
+        # records the resolved coefficients so replay uses the same curve.
         assert json.loads(identifier["normalizer_config"]) == {
             "name": "power_law",
             "b": b,
             "s": s,
             "a": a,
         }
+        # reset() and update() exercise the frame check. The default curve
+        # produces white above twice the background.
         for movie in (stimulus, replay):
             movie.reset()
             np.testing.assert_allclose(movie.img, expected)
             movie.update()
             np.testing.assert_allclose(movie.img, expected)
-        # The center pixel uses the curve; the surrounding canvas uses the model gray.
+        # Shrink the image to expose background padding. The custom curve reaches
+        # only 35 cd/m², so the frame check must allow the brighter 40.1 cd/m² padding.
         stimulus.size = 1.0
         stimulus.reset()
         np.testing.assert_allclose(stimulus.img[0], 40.1)
@@ -561,9 +575,12 @@ class TestPixelMovieExperanto:
         stimulus = topo.PixelMovieExperanto(normalizer=normalizer, **params)
         legacy.reset()
         stimulus.reset()
+        # The named modes should render exactly the same pixels as the legacy calls.
         np.testing.assert_array_equal(stimulus.img, legacy.img)
         limit = 2 * stimulus.background_luminance
         assert stimulus.maximum_luminance == limit
+        # Valid linear renders stay within this bound. Inject a brighter frame
+        # to check that update() still rejects it in both linear modes.
         stimulus._frames = iter([(np.full((3, 3), limit + 1), [0])])
         with pytest.raises(AssertionError, match="maximum luminance"):
             stimulus.update()
