@@ -2405,7 +2405,7 @@ class PixelMovieExperantoBase(VisualExperiment):
         settings = dict(parameters)
         normalizer = settings.pop("normalizer", None)
         contrast_scaler = settings.pop("contrast_scaler", None)
-        settings["normalizer"] = topo.resolve_experanto_normalizer(normalizer, contrast_scaler)
+        _, settings["normalizer"] = topo.resolve_experanto_normalizer(normalizer, contrast_scaler)
         super().__init__(model, ParameterSet(settings))
 
     @staticmethod

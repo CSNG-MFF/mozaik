@@ -7,10 +7,11 @@ The file contains stimuli that use topographica to generate the stimulus
 
 from mozaik.stimuli.vision.visual_stimulus import VisualStimulus
 import math
+import json
 from numbers import Real
 import imagen
 import imagen.random
-from imagen.transferfn import MaximumDynamicRange, FixedNorm
+from imagen.transferfn import MaximumDynamicRange, FixedNorm, TransferFn
 import param
 from imagen.image import BoundingBox, GenericImage
 from PIL import Image, ImageOps
@@ -1605,60 +1606,109 @@ class PixelMovieFromFile(TopographicaBasedVisualStimulus):
             self.time += self.frame_duration
 
 
-# Experanto experiments and stimuli share the same defaults and validation.
-# Convert the legacy contrast_scaler argument into a named mode so the
-# recorded settings can reproduce the same luminance mapping on replay.
-def resolve_experanto_normalizer(normalizer=None, contrast_scaler=None):
-    """Resolve an Experanto normalizer configuration with explicit defaults."""
-    if normalizer is not None and contrast_scaler is not None:
-        raise ValueError("Specify normalizer or contrast_scaler, not both")
-    if normalizer is None:
-        normalizer = {"name": "fixed_norm"} if contrast_scaler is None else {
-            "name": "low_contrast", "contrast_scaler": contrast_scaler
-        }
-    options = dict(normalizer)
-    name = options.pop("name", None)
-    if name == "fixed_norm":
-        defaults = {}
-    elif name == "low_contrast":
-        defaults = {"contrast_scaler": 1.0}
-    elif name == "power_law":
-        # Papale et al. TVSD lab-4 calibration (candidate for monkey N).
-        defaults = {"b": 3.459, "s": 128.492, "a": 1.81}
-    else:
-        raise ValueError(f"Unknown Experanto normalizer: {name!r}")
-    if options.keys() - defaults.keys():
-        raise ValueError(f"Unexpected parameters for {name}: {options.keys() - defaults.keys()}")
-    values = dict(defaults, **options)
-    for key, value in values.items():
-        if isinstance(value, bool) or not isinstance(value, Real) or not math.isfinite(value):
-            raise ValueError(f"{key} must be a finite real number")
-        values[key] = float(value)
-    if name == "low_contrast" and not 0 <= values["contrast_scaler"] <= 1:
-        raise ValueError("contrast_scaler must be in [0, 1]")
-    if name == "power_law" and (
-        values["b"] < 0 or values["s"] < 0 or values["a"] <= 0
-        or not math.isfinite(values["b"] + values["s"])
-    ):
-        raise ValueError("power_law requires b >= 0, s >= 0, a > 0, and a finite b + s")
-    return {"name": name, **values}
+class _ExperantoFixedNorm(FixedNorm):
+    contrast_scaler = 1.0
+    white_level = None
+
+    def render_options(self, video_max_value, background):
+        self.norm_value = video_max_value
+        return dict(
+            pattern_sampler=imagen.image.PatternSampler(
+                size_normalization="fit_longest", whole_pattern_output_fns=[self]
+            ),
+            scale=2 * background * self.contrast_scaler,
+            offset=background * (1 - self.contrast_scaler),
+        )
 
 
-class PowerLawLuminance:
-    """Map one grayscale frame to cd/m² before spatial sampling."""
+class _ExperantoLowContrast(_ExperantoFixedNorm):
+    contrast_scaler = param.Number(default=1.0, bounds=(0, 1))
 
-    def __init__(self, b, s, a, video_max_value):
-        self.b = b
-        self.s = s
-        self.a = a
-        self.video_max_value = video_max_value
+
+class PowerLawLuminance(TransferFn):
+    """Convert grayscale codes to cd/m² before spatial sampling."""
+
+    # Papale et al. TVSD lab-4 curve (candidate for monkey N).
+    b = param.Number(default=3.459, bounds=(0, None))
+    s = param.Number(default=128.492, bounds=(0, None))
+    a = param.Number(default=1.81, bounds=(0, None), inclusive_bounds=(False, True))
 
     @property
-    def maximum_luminance(self):
+    def white_level(self):
         return self.b + self.s
 
     def __call__(self, pixels):
-        return self.b + self.s * numpy.power(pixels / self.video_max_value, self.a)
+        pixels /= self.norm_value
+        numpy.power(pixels, self.a, out=pixels)
+        pixels *= self.s
+        pixels += self.b
+
+    def render_options(self, video_max_value, background):
+        self.norm_value = video_max_value
+        return dict(
+            pattern_sampler=imagen.image.PatternSampler(
+                size_normalization="fit_longest",
+                whole_pattern_output_fns=[self],
+                background_value_fn=lambda image: background,
+            ),
+            scale=1.0,
+            offset=0.0,
+        )
+
+
+def resolve_experanto_normalizer(normalizer=None, contrast_scaler=None):
+    """Create the selected Imagen transfer and return its resolved settings."""
+    if normalizer is None:
+        normalizer = {"name": "fixed_norm"}
+        if contrast_scaler is not None:
+            normalizer = {"name": "low_contrast", "contrast_scaler": contrast_scaler}
+    elif contrast_scaler is not None:
+        raise ValueError("Specify normalizer or contrast_scaler, not both")
+
+    options = dict(normalizer)
+    name = options.pop("name", None)
+    transfer_type = {
+        "fixed_norm": _ExperantoFixedNorm,
+        "low_contrast": _ExperantoLowContrast,
+        "power_law": PowerLawLuminance,
+    }.get(name)
+    if transfer_type is None:
+        raise ValueError(f"Unknown Experanto normalizer: {name!r}")
+
+    # Use the transfer's declared parameters for defaults and bounds. Check
+    # names here because older Param versions only warn about unknown options.
+    allowed = transfer_type.params().keys() - {"name", "norm_value"}
+    if options.keys() - allowed:
+        raise ValueError(f"Unexpected parameters for {name}: {options.keys() - allowed}")
+    for key, value in options.items():
+        if isinstance(value, bool) or not isinstance(value, Real) or not math.isfinite(value):
+            raise ValueError(f"{key} must be a finite real number")
+
+    transfer = transfer_type(**options)
+    if transfer.white_level is not None and not math.isfinite(transfer.white_level):
+        raise ValueError("power_law requires a finite white level")
+    settings = {"name": name, **{key: float(getattr(transfer, key)) for key in sorted(allowed)}}
+    return transfer, settings
+
+
+def _experanto_stimulus_normalizer(params):
+    """Resolve a new configuration or restore settings from a stimulus identifier."""
+    normalizer = params.pop("normalizer", None)
+    saved = params.pop("normalizer_config", None)
+    if saved is not None:
+        if normalizer is not None:
+            raise ValueError("Specify normalizer or normalizer_config, not both")
+        normalizer = json.loads(saved)
+
+    # Accept identifiers recorded before normalizer settings were stored together.
+    old_name = params.pop("normalizer_name", None)
+    scaler = params.pop("contrast_scaler", None)
+    old_curve = {key: params.pop(f"power_law_{key}", None) for key in ("b", "s", "a")}
+    if normalizer is None and old_name == "power_law":
+        normalizer = {"name": old_name, **old_curve}
+    elif normalizer is None and old_name == "fixed_norm":
+        scaler = None
+    return resolve_experanto_normalizer(normalizer, scaler)
 
 
 class PixelMovieExperanto(TopographicaBasedVisualStimulus):
@@ -1679,47 +1729,19 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
     y_location = SNumber(degrees, default=0., doc="The y location of the center of the movie stimulus.")
     video_max_value = SNumber(dimensionless, default=1.0, doc="The maximum pixel value in the video file.")
 
-    # Use scalar parameters so Experanto export can parse identifiers with literal_eval.
-    normalizer_name = SString(doc="Resolved luminance normalizer.")
-    power_law_b = SNumber(dimensionless, doc="Power-law luminance at black, in cd/m².")
-    power_law_s = SNumber(dimensionless, doc="Power-law luminance range, in cd/m².")
-    power_law_a = SNumber(dimensionless, doc="Power-law exponent.")
-    contrast_scaler = SNumber(dimensionless, bounds=(0, 1),
-                              doc="Legacy fraction of the full luminance range around the background.")
+    # A JSON string keeps the stimulus identifier readable by Experanto's literal parser.
+    normalizer_config = SString(doc="Resolved luminance normalizer settings in JSON.")
+    contrast_scaler = SNumber(dimensionless, bounds=(0, 1), doc="Legacy stimulus identifier field.")
 
     # we will cache the loaded files in case many stimuli access frames from the same file
     cache = {}
 
     def __init__(self, **params):
-        normalizer = params.pop("normalizer", None)
-        contrast_scaler = params.get("contrast_scaler")
-        saved_name = params.get("normalizer_name")
-        if saved_name == "power_law":
-            normalizer = {"name": saved_name}
-            normalizer.update({key: params["power_law_" + key] for key in ("b", "s", "a")})
-        elif saved_name == "fixed_norm":
-            normalizer = {"name": saved_name}
-            contrast_scaler = None
-        # A saved low-contrast identifier already includes the legacy scaler.
-        settings = resolve_experanto_normalizer(normalizer, contrast_scaler)
-        params["normalizer_name"] = settings["name"]
-        if settings["name"] == "power_law":
-            params.update({"power_law_" + key: settings[key] for key in ("b", "s", "a")})
-        elif settings["name"] == "low_contrast":
-            params["contrast_scaler"] = settings["contrast_scaler"]
-        elif "contrast_scaler" not in params and normalizer is None:
-            # Preserve the default property for callers using the old constructor.
-            params["contrast_scaler"] = 1.0
+        self._normalizer, settings = _experanto_stimulus_normalizer(params)
+        params["normalizer_config"] = json.dumps(settings, sort_keys=True)
         TopographicaBasedVisualStimulus.__init__(self, **params)
         if not math.isfinite(self.video_max_value) or self.video_max_value <= 0:
             raise ValueError("video_max_value must be positive and finite")
-
-        self._scaler = settings.get("contrast_scaler", 1.0)
-        self._power_law = None
-        if settings["name"] == "power_law":
-            self._power_law = PowerLawLuminance(
-                settings["b"], settings["s"], settings["a"], self.video_max_value
-            )
 
         import os
 
@@ -1736,8 +1758,8 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
                     self.mc = self.mc[numpy.newaxis,:,:]
                 PixelMovieExperanto.cache[p] = self.mc
 
-        if self._power_law is not None and self.mc.ndim != 3:
-            raise ValueError("power_law expects a grayscale image or a stack of grayscale frames")
+        if self.mc.ndim != 3:
+            raise ValueError("Experanto expects a grayscale image or a stack of grayscale frames")
 
         # assert self.mc.shape[1] == self.mc.shape[2], "The spatial shape of the pixel movie has to be square"
         assert ( self.duration <= self.movie_frame_duration * (len(self.mc)-self.frame_offset)), "The duration of the total stimulus has to be less than number of frames in the movie remaining after the offset times the movie frame duration."
@@ -1745,31 +1767,17 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
 
     @property
     def maximum_luminance(self):
-        if self._power_law is None:
+        white_level = self._normalizer.white_level
+        if white_level is None:
             return super().maximum_luminance
-        # The frame check includes padding at the background luminance, which
-        # can be brighter than the power-law curve's white level.
-        return max(self._power_law.maximum_luminance, self.background_luminance)
+        # Padding can be brighter than the calibrated white level.
+        return max(white_level, self.background_luminance)
 
     def frames(self):
         self.time = 0
-        background = self.background_luminance
-        if self._power_law is None:
-            # FixedNorm converts pixels to [0, 1] in place, so render from a copy.
-            sampler = imagen.image.PatternSampler(
-                size_normalization="fit_longest",
-                whole_pattern_output_fns=[FixedNorm(norm_value=self.video_max_value)],
-            )
-            # The offset keeps middle gray as bright as the background.
-            scale = 2 * background * self._scaler
-            offset = background * (1 - self._scaler)
-        else:
-            sampler = imagen.image.PatternSampler(
-                size_normalization="fit_longest",
-                whole_pattern_output_fns=[],
-                background_value_fn=lambda image: background,
-            )
-            scale, offset = 1.0, 0.0
+        render_options = self._normalizer.render_options(
+            self.video_max_value, self.background_luminance
+        )
         last_frame = None
 
         while True:
@@ -1778,8 +1786,6 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
                 pixels = self.mc[frame].astype(numpy.float64)
                 if not numpy.isfinite(pixels).all() or pixels.min() < 0 or pixels.max() > self.video_max_value:
                     raise ValueError("Expected finite pixels in [0, video_max_value]")
-                if self._power_law is not None:
-                    pixels = self._power_law(pixels)
                 image = NDArrayImage(
                                     pixels,
                                     x=self.x_location,
@@ -1790,9 +1796,7 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
                                     size=self.size,
                                     bounds=BoundingBox(points=((-self.size_x/2, -self.size_y/2),
                                                                 (self.size_x/2, self.size_y/2))),
-                                    scale=scale,
-                                    offset=offset,
-                                    pattern_sampler=sampler)
+                                    **render_options)
                 rendered = image()
                 last_frame = frame
 

@@ -30,7 +30,7 @@ class VisualStimulus(BaseStimulus):
     This class also implements functions common to all visual stimuli that are required for it to be compatible 
     with the :class:`mozaik.space.VisualSpace` and  class.
     """
-    background_luminance = SNumber(lux, doc="Background luminance. The default maximum is twice this value.")
+    background_luminance = SNumber(lux, doc="Background luminance.")
     density = SNumber(1/(degrees), doc="The density of stimulus - units per degree")
     location_x = SNumber(degrees, doc="x location of the center of  visual region.")
     location_y = SNumber(degrees, doc="y location of the center of  visual region.")
@@ -164,8 +164,6 @@ class VisualStimulus(BaseStimulus):
 
     @property
     def maximum_luminance(self):
-        # Keep the default ceiling previously enforced directly in update().
-        # Subclasses can override it when their renderer has a different range.
         return 2 * self.background_luminance
 
     def update(self):

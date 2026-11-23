@@ -1,9 +1,10 @@
-import ast
-
 # -*- coding: utf-8 -*-
 """
 This module contains classes with tests for mozaik/stimuli/vision/topographica_based.py
 """
+
+import ast
+import json
 
 from mozaik.stimuli.vision.visual_stimulus import VisualStimulus
 import imagen
@@ -448,14 +449,10 @@ class TestNaturalImage:
 
 
 class TestPixelMovieExperanto:
-    # Render the same black, mid-gray, and white pixels as an image and a one-frame
-    # movie. Check that the default, zero, and reduced contrast give the expected
-    # luminances around the background, including when the frame is held for two
-    # updates. Replay from the recorded stimulus parameters to check that the
-    # scaler survives serialization and that reusing cached pixels gives the same output.
     @pytest.mark.parametrize("scaler", [None, 0.0, 0.2])
     @pytest.mark.parametrize("is_movie", [False, True])
     def test_contrast_scaler(self, tmp_path, scaler, is_movie):
+        """Render and replay legacy grayscale inputs with default, zero and reduced contrast."""
         pixels = np.tile(np.array([0, 127.5, 255], dtype=np.float32), (3, 1))
         np.save(tmp_path / "frames.npy", pixels[None] if is_movie else pixels)
         params = dict(default_topo, duration=2, density=1.0, size_x=3.0, size_y=3.0)
@@ -476,15 +473,22 @@ class TestPixelMovieExperanto:
         expected = background + background * expected_scaler * (2 * pixels / 255 - 1)
 
         replay = MozaikParametrized.idd_to_instance(str(stimulus))
-        assert replay.contrast_scaler == expected_scaler
-        for movie in (stimulus, replay):
+        identifier = ast.literal_eval(str(stimulus))
+        identifier.pop("normalizer_config")
+        identifier["contrast_scaler"] = expected_scaler
+        legacy_replay = MozaikParametrized.idd_to_instance(repr(identifier))
+        assert json.loads(replay.normalizer_config).get("contrast_scaler", 1.0) == (
+            expected_scaler
+        )
+        for movie in (stimulus, replay, legacy_replay):
             frames = movie.frames()
             np.testing.assert_allclose(next(frames)[0], expected)
             np.testing.assert_allclose(next(frames)[0], expected)
 
     @pytest.mark.parametrize("dtype", [np.uint8, np.float32])
-    @pytest.mark.parametrize("overrides", [{}, {"b": 5.0, "s": 48.0, "a": 2.0}])
+    @pytest.mark.parametrize("overrides", [{}, {"b": 5.0, "s": 30.0, "a": 2.0}])
     def test_power_law(self, tmp_path, dtype, overrides):
+        """Check calibrated pixels, literal identifiers, replay and background padding."""
         pixels = np.tile(np.array([0, 128, 255], dtype=dtype), (3, 1))
         np.save(tmp_path / "frames.npy", pixels)
         stimulus = topo.PixelMovieExperanto(
@@ -505,12 +509,16 @@ class TestPixelMovieExperanto:
                 background_luminance=40.1,
             ),
         )
-        b, s, a = (5.0, 48.0, 2.0) if overrides else (3.459, 128.492, 1.81)
+        b, s, a = (5.0, 30.0, 2.0) if overrides else (3.459, 128.492, 1.81)
         expected = b + s * (pixels.astype(np.float64) / 255) ** a
         replay = MozaikParametrized.idd_to_instance(str(stimulus))
         identifier = ast.literal_eval(str(stimulus))
-        assert identifier["normalizer_name"] == "power_law"
-        assert [identifier["power_law_" + key] for key in ("b", "s", "a")] == [b, s, a]
+        assert json.loads(identifier["normalizer_config"]) == {
+            "name": "power_law",
+            "b": b,
+            "s": s,
+            "a": a,
+        }
         for movie in (stimulus, replay):
             movie.reset()
             np.testing.assert_allclose(movie.img, expected)
@@ -520,6 +528,7 @@ class TestPixelMovieExperanto:
         stimulus.size = 1.0
         stimulus.reset()
         np.testing.assert_allclose(stimulus.img[0], 40.1)
+        assert stimulus.maximum_luminance == max(b + s, 40.1)
 
     @pytest.mark.parametrize(
         "normalizer",
@@ -529,6 +538,7 @@ class TestPixelMovieExperanto:
         ],
     )
     def test_linear_modes_match_legacy_and_keep_limit(self, tmp_path, normalizer):
+        """Compare linear renders with legacy calls and reject frames above twice the background."""
         pixels = np.tile(np.array([0, 128, 255], dtype=np.uint8), (3, 1))
         np.save(tmp_path / "frames.npy", pixels)
         params = dict(

@@ -283,7 +283,6 @@ Pass a `normalizer` ParameterSet to the Mozaik experiment or to LSV1M's
   `[0, 2*B]`, where `B` is the model background luminance.
 - `ParameterSet({"name": "low_contrast", "contrast_scaler": 0.2})` uses the range
   `[B*(1-c), B*(1+c)]` with `c=0.2`. At `B=50` this gives 40–60 cd/m².
-  The legacy top-level `contrast_scaler` is still accepted on its own.
 - `ParameterSet({"name": "power_law"})` maps grayscale codes to
   `L = b + s * v**a` cd/m² before spatial sampling. For ordinary Experanto
   images `v = pixel/255`, using the existing `video_max_value=255`.
