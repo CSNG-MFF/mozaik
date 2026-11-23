@@ -1744,6 +1744,8 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
     def maximum_luminance(self):
         if self._power_law is None:
             return super().maximum_luminance
+        # The frame check includes padding at the background luminance, which
+        # can be brighter than the power-law curve's white level.
         return max(self._power_law.maximum_luminance, self.background_luminance)
 
     def frames(self):
