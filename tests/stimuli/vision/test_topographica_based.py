@@ -449,12 +449,24 @@ class TestNaturalImage:
 
 
 class TestPixelMovieExperanto:
-    """Cover luminance mapping, stimulus replay and frame validation for Experanto."""
+    """Verify the luminance produced by Experanto's grayscale rendering path.
+
+    The tests load small NumPy fixtures through PixelMovieExperanto and
+    compare the rendered pixels with the mapping equations. They also check
+    that recorded stimulus identifiers reproduce the selected normalizer and
+    that frame validation respects each mode's luminance range.
+    """
 
     @pytest.mark.parametrize("scaler", [None, 0.0, 0.2])
     @pytest.mark.parametrize("is_movie", [False, True])
     def test_linear_contrast(self, tmp_path, scaler, is_movie):
-        """Render and replay grayscale inputs with default, zero and reduced contrast."""
+        """Verify linear luminance and replay for still images and one-frame movies.
+
+        The default mode spans zero to twice the background. Zero contrast
+        produces uniform background, while reduced contrast narrows the range
+        around the same midpoint. Both the original stimulus and its replay
+        should render the expected values on each update of the held frame.
+        """
         # Black, exact half-scale gray and white expose any change to the linear
         # endpoints or midpoint. Save the same pixels as an image or a one-frame movie.
         pixels = np.tile(np.array([0, 127.5, 255], dtype=np.float32), (3, 1))
@@ -493,7 +505,14 @@ class TestPixelMovieExperanto:
     @pytest.mark.parametrize("dtype", [np.uint8, np.float32])
     @pytest.mark.parametrize("overrides", [{}, {"b": 5.0, "s": 30.0, "a": 2.0}])
     def test_power_law(self, tmp_path, dtype, overrides):
-        """Check calibrated pixels, literal identifiers, replay and background padding."""
+        """Verify the power-law mapping across data types and calibrations.
+
+        Compare black, an intermediate code and white with the analytical
+        curve for both default and custom coefficients. Check that the saved
+        identifier survives the export parser and restores those coefficients.
+        Frame validation must accept the default white above the linear limit
+        and background padding brighter than white under the custom curve.
+        """
         # The endpoints check the black and white luminances. An intermediate code
         # checks the exponent in both 8-bit arrays and float32 Experanto exports.
         pixels = np.tile(np.array([0, 128, 255], dtype=dtype), (3, 1))
@@ -550,7 +569,13 @@ class TestPixelMovieExperanto:
         ],
     )
     def test_linear_modes_keep_limit(self, tmp_path, normalizer):
-        """Both named linear modes reject frames above twice the background."""
+        """Verify that switching normalizers preserves the linear frame ceiling.
+
+        Run this check with both explicit linear modes. After rendering once,
+        inject a frame one luminance unit above twice the background. Using
+        a synthetic frame isolates the validation in update() from the linear
+        sampler, whose output already stays within the permitted range.
+        """
         pixels = np.tile(np.array([0, 128, 255], dtype=np.uint8), (3, 1))
         np.save(tmp_path / "frames.npy", pixels)
         params = dict(
