@@ -79,7 +79,7 @@ def _load(output_dir):
     [
         '{"normalizer_config": dict()}',
         '{"normalizer_config": MozaikExtendedParameterSet({"mode": dict()})}',
-        '{"other": MozaikExtendedParameterSet({"mode": "fixed_norm"})}',
+        '{"other": MozaikExtendedParameterSet({"mode": "low_contrast"})}',
     ],
 )
 def test_stimulus_parser_rejects_other_calls(identifier):

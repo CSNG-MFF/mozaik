@@ -487,11 +487,10 @@ class TestPixelMovieExperanto:
         expected = background + background * expected_scaler * (2 * pixels / 255 - 1)
 
         replay = MozaikParametrized.idd_to_instance(str(stimulus))
-        assert replay.normalizer_config.as_dict() == (
-            {"mode": "fixed_norm"}
-            if scaler is None
-            else {"mode": "low_contrast", "contrast_scaler": scaler}
-        )
+        assert replay.normalizer_config.as_dict() == {
+            "mode": "low_contrast",
+            "contrast_scaler": expected_scaler,
+        }
         # A source frame spans two updates. Replays also share the cached source
         # pixels, which must survive Imagen's in-place normalization intact.
         for movie in (stimulus, replay):
@@ -564,14 +563,14 @@ class TestPixelMovieExperanto:
     @pytest.mark.parametrize(
         "normalizer",
         [
-            {"name": "fixed_norm"},
+            {"name": "low_contrast", "contrast_scaler": 1.0},
             {"name": "low_contrast", "contrast_scaler": 0.2},
         ],
     )
     def test_linear_modes_keep_limit(self, tmp_path, normalizer):
         """Verify that switching normalizers preserves the linear frame ceiling.
 
-        Run this check with both explicit linear modes. After rendering once,
+        Run this check at full and reduced contrast. After rendering once,
         inject a frame one luminance unit above twice the background. Using
         a synthetic frame isolates the validation in update() from the linear
         sampler, whose output already stays within the permitted range.
@@ -597,7 +596,7 @@ class TestPixelMovieExperanto:
         limit = 2 * stimulus.background_luminance
         assert stimulus.maximum_luminance == limit
         # Valid linear renders stay within this bound. Inject a brighter frame
-        # to check that update() still rejects it in both linear modes.
+        # to check that update() rejects it at both contrast levels.
         stimulus._frames = iter([(np.full((3, 3), limit + 1), [0])])
         with pytest.raises(AssertionError, match="maximum luminance"):
             stimulus.update()

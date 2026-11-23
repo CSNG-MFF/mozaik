@@ -1609,11 +1609,10 @@ class _ExperantoLinearLuminance(FixedNorm):
     """Map grayscale codes to a linear range centered on the model background.
 
     Imagen's FixedNorm divides pixels by the configured maximum code. The
-    sampler's scale and offset then set the luminance range. The default
-    scaler of one gives the full range from zero to twice the background
-    and serves both the default ``fixed_norm`` mode and ``low_contrast``
-    with a scaler of one. Select ``low_contrast`` with a smaller scaler to
-    reduce contrast about the same midpoint. Zero gives uniform background.
+    sampler's scale and offset then express the sample in cd/m². The default
+    scaler of one gives the full range from zero to twice the background.
+    Select ``low_contrast`` with a smaller scaler to reduce contrast about the
+    same midpoint. Zero gives uniform background.
     """
 
     contrast_scaler = param.Number(default=1.0, bounds=(0, 1))
@@ -1671,12 +1670,11 @@ class PowerLawLuminance(TransferFn):
 def resolve_experanto_normalizer(normalizer=None):
     """Create the selected Imagen transfer and return its resolved settings."""
     if normalizer is None:
-        normalizer = {"name": "fixed_norm"}
+        normalizer = {"name": "low_contrast"}
 
     options = dict(normalizer)
     name = options.pop("name", None)
     transfer_type = {
-        "fixed_norm": _ExperantoLinearLuminance,
         "low_contrast": _ExperantoLinearLuminance,
         "power_law": PowerLawLuminance,
     }.get(name)
@@ -1686,8 +1684,6 @@ def resolve_experanto_normalizer(normalizer=None):
     # Use the transfer's declared parameters for defaults and bounds. Check
     # names here because older Param versions only warn about unknown options.
     allowed = transfer_type.params().keys() - {"name", "norm_value"}
-    if name == "fixed_norm":
-        allowed.discard("contrast_scaler")
     if options.keys() - allowed:
         raise ValueError(f"Unexpected parameters for {name}: {options.keys() - allowed}")
     for key, value in options.items():

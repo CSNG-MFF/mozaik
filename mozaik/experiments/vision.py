@@ -2377,9 +2377,9 @@ class PixelMovieExperantoBase(VisualExperiment):
             The fixed maximum pixel value used to normalise frames to [0, 1].
 
     normalizer : ParameterSet
-            Named luminance normalizer with its parameters. Defaults to fixed_norm.
-            Use low_contrast with contrast_scaler for a reduced range, or power_law
-            with b, s and a for display-calibrated luminance.
+            Named luminance normalizer with its parameters. Defaults to low_contrast
+            with contrast_scaler=1. Use a smaller scaler for a reduced range, or
+            power_law with b, s and a for display-calibrated luminance.
     """
 
     required_parameters = ParameterSet(

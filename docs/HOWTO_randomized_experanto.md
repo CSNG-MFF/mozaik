@@ -279,10 +279,11 @@ provenance automatically. For shards without completion records, pass `provenanc
 Pass a `normalizer` ParameterSet to the Mozaik experiment or to LSV1M's
 `create_randomized_experanto` factory:
 
-- `ParameterSet({"name": "fixed_norm"})` (default) maps the fixed code range to
-  `[0, 2*B]`, where `B` is the model background luminance.
-- `ParameterSet({"name": "low_contrast", "contrast_scaler": 0.2})` uses the range
-  `[B*(1-c), B*(1+c)]` with `c=0.2`. At `B=50` this gives 40–60 cd/m².
+- `ParameterSet({"name": "low_contrast"})` is the default linear map. Imagen
+  normalizes the fixed pixel-code range, then the map scales it to luminance
+  `[B*(1-c), B*(1+c)]`, where `B` is the model background and `c` is
+  `contrast_scaler`. The default `c=1` gives `[0, 2*B]`. Set
+  `contrast_scaler=0.2` in the same ParameterSet for 40–60 cd/m² at `B=50`.
 - `ParameterSet({"name": "power_law"})` maps grayscale codes to
   `L = b + s * v**a` cd/m² before spatial sampling. For ordinary Experanto
   images `v = pixel/255`, using the existing `video_max_value=255`.
