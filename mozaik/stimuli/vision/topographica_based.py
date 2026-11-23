@@ -1673,9 +1673,10 @@ def resolve_experanto_normalizer(normalizer=None):
         normalizer = {"name": "low_contrast"}
 
     options = dict(normalizer)
-    # Public settings use "name". Saved settings use "mode" so Mozaik's
-    # flattened ParameterSet keys do not collide with the stimulus name.
-    name = options.pop("name" if "name" in options else "mode", None)
+    # Saved settings use "normalizer_name" because Mozaik flattens
+    # ParameterSet keys and the stimulus already has a "name" parameter.
+    name_key = "name" if "name" in options else "normalizer_name"
+    name = options.pop(name_key, None)
     transfer_type = {
         "low_contrast": _ExperantoLinearLuminance,
         "power_law": PowerLawLuminance,
@@ -1724,7 +1725,7 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
 
     def __init__(self, **params):
         self._normalizer, settings = resolve_experanto_normalizer(params.get("normalizer"))
-        settings["mode"] = settings.pop("name")
+        settings["normalizer_name"] = settings.pop("name")
         params["normalizer"] = MozaikExtendedParameterSet(settings)
         TopographicaBasedVisualStimulus.__init__(self, **params)
         if not math.isfinite(self.video_max_value) or self.video_max_value <= 0:

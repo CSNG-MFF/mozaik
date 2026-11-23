@@ -488,7 +488,7 @@ class TestPixelMovieExperanto:
 
         replay = MozaikParametrized.idd_to_instance(str(stimulus))
         assert replay.normalizer.as_dict() == {
-            "mode": "low_contrast",
+            "normalizer_name": "low_contrast",
             "contrast_scaler": expected_scaler,
         }
         # A source frame spans two updates. Replays also share the cached source
@@ -540,7 +540,7 @@ class TestPixelMovieExperanto:
             identifier["normalizer"]
             == replay.normalizer.as_dict()
             == {
-                "mode": "power_law",
+                "normalizer_name": "power_law",
                 "b": b,
                 "s": s,
                 "a": a,
