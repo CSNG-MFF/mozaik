@@ -1607,6 +1607,14 @@ class PixelMovieFromFile(TopographicaBasedVisualStimulus):
 
 
 class _ExperantoFixedNorm(FixedNorm):
+    """Map the full grayscale code range linearly around the model background.
+
+    This is the default Experanto normalizer, named ``fixed_norm``. Imagen
+    divides by the configured maximum pixel code, then scales the sampled
+    values to the range from zero to twice the background luminance. A
+    half-scale code produces the background luminance.
+    """
+
     contrast_scaler = 1.0
     white_level = None
 
@@ -1622,11 +1630,26 @@ class _ExperantoFixedNorm(FixedNorm):
 
 
 class _ExperantoLowContrast(_ExperantoFixedNorm):
+    """Reduce the linear luminance range while retaining its midpoint.
+
+    Select ``low_contrast`` when the stimulus should use a narrower range
+    centered on the model background. The ``contrast_scaler`` sets the
+    fraction of the full range. A value of one gives the full linear range,
+    and a value of zero gives uniform background luminance.
+    """
+
     contrast_scaler = param.Number(default=1.0, bounds=(0, 1))
 
 
 class PowerLawLuminance(TransferFn):
-    """Convert grayscale codes to cd/m² before spatial sampling."""
+    """Map grayscale codes to physical luminance using a display response curve.
+
+    Select ``power_law`` when simulating a calibrated display. After dividing
+    the code by the configured maximum, the transfer applies ``b + s * v**a``
+    before spatial sampling. Here ``b`` is black luminance, ``s`` is the
+    black-to-white luminance range, and ``a`` is the exponent. Image padding
+    takes the model background luminance.
+    """
 
     # Papale et al. TVSD lab-4 curve (candidate for monkey N).
     b = param.Number(default=3.459, bounds=(0, None))
