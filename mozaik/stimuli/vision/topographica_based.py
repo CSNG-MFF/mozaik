@@ -7,7 +7,6 @@ The file contains stimuli that use topographica to generate the stimulus
 
 from mozaik.stimuli.vision.visual_stimulus import VisualStimulus
 import math
-import json
 from numbers import Real
 import imagen
 import imagen.random
@@ -1606,16 +1605,18 @@ class PixelMovieFromFile(TopographicaBasedVisualStimulus):
             self.time += self.frame_duration
 
 
-class _ExperantoFixedNorm(FixedNorm):
-    """Map the full grayscale code range linearly around the model background.
+class _ExperantoLinearLuminance(FixedNorm):
+    """Map grayscale codes to a linear range centered on the model background.
 
-    This is the default Experanto normalizer, named ``fixed_norm``. Imagen
-    divides by the configured maximum pixel code, then scales the sampled
-    values to the range from zero to twice the background luminance. A
-    half-scale code produces the background luminance.
+    Imagen's FixedNorm divides pixels by the configured maximum code. The
+    sampler's scale and offset then set the luminance range. The default
+    scaler of one gives the full range from zero to twice the background
+    and serves both the default ``fixed_norm`` mode and ``low_contrast``
+    with a scaler of one. Select ``low_contrast`` with a smaller scaler to
+    reduce contrast about the same midpoint. Zero gives uniform background.
     """
 
-    contrast_scaler = 1.0
+    contrast_scaler = param.Number(default=1.0, bounds=(0, 1))
     white_level = None
 
     def render_options(self, video_max_value, background):
@@ -1627,18 +1628,6 @@ class _ExperantoFixedNorm(FixedNorm):
             scale=2 * background * self.contrast_scaler,
             offset=background * (1 - self.contrast_scaler),
         )
-
-
-class _ExperantoLowContrast(_ExperantoFixedNorm):
-    """Reduce the linear luminance range while retaining its midpoint.
-
-    Select ``low_contrast`` when the stimulus should use a narrower range
-    centered on the model background. The ``contrast_scaler`` sets the
-    fraction of the full range. A value of one gives the full linear range,
-    and a value of zero gives uniform background luminance.
-    """
-
-    contrast_scaler = param.Number(default=1.0, bounds=(0, 1))
 
 
 class PowerLawLuminance(TransferFn):
@@ -1687,8 +1676,8 @@ def resolve_experanto_normalizer(normalizer=None):
     options = dict(normalizer)
     name = options.pop("name", None)
     transfer_type = {
-        "fixed_norm": _ExperantoFixedNorm,
-        "low_contrast": _ExperantoLowContrast,
+        "fixed_norm": _ExperantoLinearLuminance,
+        "low_contrast": _ExperantoLinearLuminance,
         "power_law": PowerLawLuminance,
     }.get(name)
     if transfer_type is None:
@@ -1697,6 +1686,8 @@ def resolve_experanto_normalizer(normalizer=None):
     # Use the transfer's declared parameters for defaults and bounds. Check
     # names here because older Param versions only warn about unknown options.
     allowed = transfer_type.params().keys() - {"name", "norm_value"}
+    if name == "fixed_norm":
+        allowed.discard("contrast_scaler")
     if options.keys() - allowed:
         raise ValueError(f"Unexpected parameters for {name}: {options.keys() - allowed}")
     for key, value in options.items():
@@ -1728,8 +1719,7 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
     y_location = SNumber(degrees, default=0., doc="The y location of the center of the movie stimulus.")
     video_max_value = SNumber(dimensionless, default=1.0, doc="The maximum pixel value in the video file.")
 
-    # A JSON string keeps the stimulus identifier readable by Experanto's literal parser.
-    normalizer_config = SString(doc="Resolved luminance normalizer settings in JSON.")
+    normalizer_config = SParameterSet(doc="Resolved luminance normalizer settings.")
 
     # we will cache the loaded files in case many stimuli access frames from the same file
     cache = {}
@@ -1740,9 +1730,12 @@ class PixelMovieExperanto(TopographicaBasedVisualStimulus):
         if saved is not None:
             if normalizer is not None:
                 raise ValueError("Specify normalizer or normalizer_config, not both")
-            normalizer = json.loads(saved)
+            normalizer = dict(saved)
+            normalizer["name"] = normalizer.pop("mode")
         self._normalizer, settings = resolve_experanto_normalizer(normalizer)
-        params["normalizer_config"] = json.dumps(settings, sort_keys=True)
+        # Mozaik flattens nested parameters. Reserve "name" for the stimulus class.
+        settings["mode"] = settings.pop("name")
+        params["normalizer_config"] = MozaikExtendedParameterSet(settings)
         TopographicaBasedVisualStimulus.__init__(self, **params)
         if not math.isfinite(self.video_max_value) or self.video_max_value <= 0:
             raise ValueError("video_max_value must be positive and finite")

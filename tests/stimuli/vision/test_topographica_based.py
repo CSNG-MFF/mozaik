@@ -3,9 +3,6 @@
 This module contains classes with tests for mozaik/stimuli/vision/topographica_based.py
 """
 
-import ast
-import json
-
 from mozaik.stimuli.vision.visual_stimulus import VisualStimulus
 import imagen
 import imagen.random
@@ -16,6 +13,7 @@ import pickle
 import numpy
 import numpy as np
 from PIL import Image
+from mozaik.tools.experanto_export import _parse_stimulus_parameters
 from mozaik.tools.mozaik_parametrized import MozaikParametrized, SNumber, SString
 from mozaik.tools.units import cpd
 from mozaik.space import VisualRegion, VisualSpace
@@ -457,15 +455,15 @@ class TestPixelMovieExperanto:
     that frame validation respects each mode's luminance range.
     """
 
-    @pytest.mark.parametrize("scaler", [None, 0.0, 0.2])
+    @pytest.mark.parametrize("scaler", [None, 0.0, 0.2, 1.0])
     @pytest.mark.parametrize("is_movie", [False, True])
     def test_linear_contrast(self, tmp_path, scaler, is_movie):
         """Verify linear luminance and replay for still images and one-frame movies.
 
-        The default mode spans zero to twice the background. Zero contrast
-        produces uniform background, while reduced contrast narrows the range
-        around the same midpoint. Both the original stimulus and its replay
-        should render the expected values on each update of the held frame.
+        The default mode and a scaler of one both span zero to twice the
+        background. Zero contrast produces uniform background, while reduced
+        contrast narrows the range around the same midpoint. The original
+        stimulus and its replay must agree on each update of the held frame.
         """
         # Black, exact half-scale gray and white expose any change to the linear
         # endpoints or midpoint. Save the same pixels as an image or a one-frame movie.
@@ -489,11 +487,10 @@ class TestPixelMovieExperanto:
         expected = background + background * expected_scaler * (2 * pixels / 255 - 1)
 
         replay = MozaikParametrized.idd_to_instance(str(stimulus))
-        settings = json.loads(replay.normalizer_config)
-        assert settings == (
-            {"name": "fixed_norm"}
+        assert replay.normalizer_config.as_dict() == (
+            {"mode": "fixed_norm"}
             if scaler is None
-            else {"name": "low_contrast", "contrast_scaler": scaler}
+            else {"mode": "low_contrast", "contrast_scaler": scaler}
         )
         # A source frame spans two updates. Replays also share the cached source
         # pixels, which must survive Imagen's in-place normalization intact.
@@ -538,15 +535,18 @@ class TestPixelMovieExperanto:
         b, s, a = (5.0, 30.0, 2.0) if overrides else (3.459, 128.492, 1.81)
         expected = b + s * (pixels.astype(np.float64) / 255) ** a
         replay = MozaikParametrized.idd_to_instance(str(stimulus))
-        identifier = ast.literal_eval(str(stimulus))
-        # Experanto export parses identifiers as Python literals. The enclosed JSON
-        # records the resolved coefficients so replay uses the same curve.
-        assert json.loads(identifier["normalizer_config"]) == {
-            "name": "power_law",
-            "b": b,
-            "s": s,
-            "a": a,
-        }
+        identifier = _parse_stimulus_parameters(str(stimulus))
+        # The saved ParameterSet records the resolved coefficients for export and replay.
+        assert (
+            identifier["normalizer_config"]
+            == replay.normalizer_config.as_dict()
+            == {
+                "mode": "power_law",
+                "b": b,
+                "s": s,
+                "a": a,
+            }
+        )
         # reset() and update() exercise the frame check. The default curve
         # produces white above twice the background.
         for movie in (stimulus, replay):

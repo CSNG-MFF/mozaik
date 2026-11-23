@@ -64,6 +64,28 @@ def get_process_memory():
     return process.memory_info().rss / 1024 / 1024
 
 
+def _parse_stimulus_parameters(raw):
+    """Read a stimulus identifier with an optional Mozaik normalizer ParameterSet."""
+    if not isinstance(raw, str):
+        return raw
+    node = ast.parse(raw, mode="eval").body
+    if isinstance(node, ast.Dict):
+        for index, (key, value) in enumerate(zip(node.keys, node.values)):
+            if (
+                isinstance(key, ast.Constant)
+                and key.value == "normalizer_config"
+                and isinstance(value, ast.Call)
+                and isinstance(value.func, ast.Name)
+                and value.func.id == "MozaikExtendedParameterSet"
+                and len(value.args) == 1
+                and isinstance(value.args[0], ast.Dict)
+                and not value.keywords
+            ):
+                # Unwrap only the serialized ParameterSet; literal_eval checks its contents.
+                node.values[index] = value.args[0]
+    return ast.literal_eval(node)
+
+
 def _validate_experanto_model_timing(dsv):
     """Reject Mozaik's unsupported automatic null-stimulus periods."""
     parameters = dsv.get_model_parameters()
@@ -166,7 +188,7 @@ class MozaikTrialExporter:
         """Return the stimulus-parameter dict for a segment, or None on a parse error."""
         try:
             raw = seg.annotations["stimulus"]
-            return ast.literal_eval(raw) if isinstance(raw, str) else raw
+            return _parse_stimulus_parameters(raw)
         except (ValueError, SyntaxError):
             print(f"Warning: Parse error for segment {seg}. Skipping.", flush=True)
             return None
@@ -444,7 +466,7 @@ class MozaikScreenExporter:
         by_sheet = {}
         for segment in dsv.get_segments():
             raw = segment.annotations["stimulus"]
-            params = ast.literal_eval(raw) if isinstance(raw, str) else raw
+            params = _parse_stimulus_parameters(raw)
             if (
                 params.get("trial") is not None
                 and int(params["trial"]) == self.trial_id
