@@ -1605,6 +1605,9 @@ class PixelMovieFromFile(TopographicaBasedVisualStimulus):
             self.time += self.frame_duration
 
 
+# Experanto experiments and stimuli share the same defaults and validation.
+# Convert the legacy contrast_scaler argument into a named mode so the
+# recorded settings can reproduce the same luminance mapping on replay.
 def resolve_experanto_normalizer(normalizer=None, contrast_scaler=None):
     """Resolve an Experanto normalizer configuration with explicit defaults."""
     if normalizer is not None and contrast_scaler is not None:
